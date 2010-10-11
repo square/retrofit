@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2010 Square, Inc. -->
+
+<!--
+  - Ivy module file, describing dependencies on other projects.
+  -
+  - @author Eric Burke (eric@squareup.com)
+  -->
+<ivy-module version="2.0">
+  <info organisation="com.squareup" module="retrofit"/>
+
+  <!-- Note: find these at http://mvnrepository.xml/ -->
+  <dependencies>
+    <dependency org="junit" name="junit" rev="4.8.1"/>
+  </dependencies>
+</ivy-module>
