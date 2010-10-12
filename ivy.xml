@@ -6,11 +6,24 @@
   -
   - @author Eric Burke (eric@squareup.com)
   -->
-<ivy-module version="2.0">
+<ivy-module
+    version="2.0"
+    xmlns:e="http://ant.apache.org/ivy/extra"
+    >
   <info organisation="com.squareup" module="retrofit"/>
+
+  <configurations>
+    <conf name="util" description="Basic utility classes."/>
+  </configurations>
+
+  <publications>
+    <artifact conf="util" name="retrofit-util" ext="jar"/>
+    <artifact conf="util" name="retrofit-util" ext="jar" e:classifier="src"/>
+  </publications>
 
   <!-- Note: find these at http://mvnrepository.xml/ -->
   <dependencies>
     <dependency org="junit" name="junit" rev="4.8.1"/>
   </dependencies>
+
 </ivy-module>

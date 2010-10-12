@@ -62,7 +62,7 @@
   </target>
 
   <target name="clean-libs" depends="clean"
-      description="Removes the 'lib' directory.">
+          description="Removes the 'lib' directory.">
     <delete dir="${lib.dir}"/>
   </target>
 
@@ -77,7 +77,7 @@
   </target>
 
   <target name="require.tests"
-      description="Sets a property so test failures abort the build.">
+          description="Sets a property so test failures abort the build.">
     <property name="require.tests" value="true"/>
   </target>
 
@@ -112,7 +112,29 @@
       <report todir="${testreports.dir}"/>
     </junitreport>
 
-    <echo message="${line.separator}Test report written to:${line.separator}${testreports.dir}/index.html"/>
+    <echo
+        message="${line.separator}Test report written to:${line.separator}${testreports.dir}/index.html"/>
+  </target>
+
+  <!--
+    - Publishes to the Ivy repository using the resolver named
+    - 'retrofit-resolver'.
+    -->
+  <target name="publish" depends="dist">
+    <ivy:publish
+        pubrevision="${retrofit.revision}"
+        resolver="retrofit-resolver"
+        forcedeliver="true"
+        update="true"
+        overwrite="true"
+        publishivy="true">
+      <!--
+        - This pattern selects which files will be published. The artifact
+        - pattern in ivy-settings.xml controls how the names matched here are
+        - published in the Ivy repository.
+        -->
+      <artifacts pattern="${build.dir}/[artifact]-[revision](-[classifier]).[ext]"/>
+    </ivy:publish>
   </target>
 
   <target name="dist" depends="clean,require.tests,test,jar"

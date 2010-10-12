@@ -4,7 +4,8 @@
 <!--
   - Ivy boilerplate build steps, helps keep the main buildfile clean.
   -->
-<project name="ivy-build" basedir="." default="init-ivy">
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+         name="ivy-build" basedir="." default="init-ivy">
 
   <property name="ivy.install.version" value="2.2.0"/>
   <condition property="ivy.home" value="${env.IVY_HOME}">
@@ -39,6 +40,8 @@
 
     <taskdef resource="org/apache/ivy/ant/antlib.xml"
              uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+
+    <ivy:configure file="ivy-settings.xml"/>
   </target>
 
 </project>
