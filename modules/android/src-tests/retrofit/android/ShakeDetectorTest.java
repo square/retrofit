@@ -1,8 +1,9 @@
 // Copyright 2010 Square, Inc.
 package retrofit.android;
 
-import java.util.List;
 import junit.framework.TestCase;
+
+import java.util.List;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class ShakeDetectorTest extends TestCase {

@@ -69,11 +69,34 @@
   <import file="build-macros.xml"/>
 
   <target name="compile" depends="prepare">
+    <!-- Build these in this particular order. -->
+    <compile.module module="core"/>
+
+    <compile.module module="io">
+      <compile.main.classpath>
+        <pathelement location="${build.dir}/core/main"/>
+      </compile.main.classpath>
+    </compile.module>
+
+    <compile.module module="http">
+      <compile.main.classpath>
+        <pathelement location="${build.dir}/core/main"/>
+        <pathelement location="${build.dir}/io/main"/>
+      </compile.main.classpath>
+      <compile.tests.classpath>
+        <pathelement location="${build.dir}/core/main"/>
+        <pathelement location="${build.dir}/io/main"/>
+      </compile.tests.classpath>
+    </compile.module>
+
     <compile.module module="android"/>
   </target>
 
   <target name="jar" depends="compile">
     <jar.module module="android"/>
+    <jar.module module="core"/>
+    <jar.module module="http"/>
+    <jar.module module="io"/>
   </target>
 
   <target name="require.tests"
@@ -94,6 +117,12 @@
       <classpath>
         <pathelement location="${build.dir}/android/main"/>
         <pathelement location="${build.dir}/android/tests"/>
+        <pathelement location="${build.dir}/core/main"/>
+        <pathelement location="${build.dir}/core/tests"/>
+        <pathelement location="${build.dir}/http/main"/>
+        <pathelement location="${build.dir}/http/tests"/>
+        <pathelement location="${build.dir}/io/main"/>
+        <pathelement location="${build.dir}/io/tests"/>
         <fileset dir="${lib.dir}" includes="*.jar"/>
       </classpath>
 
@@ -101,6 +130,15 @@
 
       <batchtest todir="${testreports.dir}">
         <fileset dir="modules/android/src-tests">
+          <include name="**/*Test.java"/>
+        </fileset>
+        <fileset dir="modules/core/src-tests">
+          <include name="**/*Test.java"/>
+        </fileset>
+        <fileset dir="modules/io/src-tests">
+          <include name="**/*Test.java"/>
+        </fileset>
+        <fileset dir="modules/http/src-tests">
           <include name="**/*Test.java"/>
         </fileset>
       </batchtest>
