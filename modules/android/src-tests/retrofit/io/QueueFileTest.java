@@ -1,5 +1,5 @@
 // Copyright 2010 Square, Inc.
-package retrofit.util;
+package retrofit.io;
 
 import junit.framework.ComparisonFailure;
 import junit.framework.TestCase;

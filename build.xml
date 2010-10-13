@@ -69,11 +69,11 @@
   <import file="build-macros.xml"/>
 
   <target name="compile" depends="prepare">
-    <compile.module module="util"/>
+    <compile.module module="android"/>
   </target>
 
   <target name="jar" depends="compile">
-    <jar.module module="util"/>
+    <jar.module module="android"/>
   </target>
 
   <target name="require.tests"
@@ -92,15 +92,15 @@
 
     <junit printsummary="true" haltonfailure="${require.tests}">
       <classpath>
-        <pathelement location="${build.dir}/util/main"/>
-        <pathelement location="${build.dir}/util/tests"/>
+        <pathelement location="${build.dir}/android/main"/>
+        <pathelement location="${build.dir}/android/tests"/>
         <fileset dir="${lib.dir}" includes="*.jar"/>
       </classpath>
 
       <formatter type="xml"/>
 
       <batchtest todir="${testreports.dir}">
-        <fileset dir="modules/util/src-tests">
+        <fileset dir="modules/android/src-tests">
           <include name="**/*Test.java"/>
         </fileset>
       </batchtest>

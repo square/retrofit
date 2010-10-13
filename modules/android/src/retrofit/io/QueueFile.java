@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit.util;
+package retrofit.io;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -278,7 +278,7 @@ public class QueueFile {
    */
   public synchronized void add(byte[] data, int offset, int count)
       throws IOException {
-    Objects.nonNull(data, "buffer");
+    nonNull(data, "buffer");
     if ((offset | count) < 0 || count > data.length - offset) {
       throw new IndexOutOfBoundsException();
     }
@@ -411,6 +411,21 @@ public class QueueFile {
     }
   }
 
+  /**
+   * Returns t unless it's null.
+   *
+   * @throws NullPointerException if t is null
+   */
+  private static <T> T nonNull(T t, String name) {
+    if (t == null) throw new NullPointerException(name);
+    return t;
+  }
+
+  /** Returns true if the two possibly objects are equal. */
+  private static <T> boolean equal(T a, T b) {
+    return a == b || a != null && a.equals(b);
+  }
+
   /** Reads a single element. */
   private class ElementInputStream extends InputStream {
     private int position;
@@ -423,7 +438,7 @@ public class QueueFile {
 
     @Override public int read(byte[] buffer, int offset, int length)
         throws IOException {
-      Objects.nonNull(buffer, "buffer");
+      nonNull(buffer, "buffer");
       if ((offset | length) < 0 || length > buffer.length - offset) {
         throw new ArrayIndexOutOfBoundsException();
       }

@@ -13,17 +13,19 @@
   <info organisation="com.squareup" module="retrofit"/>
 
   <configurations>
-    <conf name="util" description="Basic utility classes."/>
+    <conf name="android" description="Classes with Android dependencies."/>
   </configurations>
 
   <publications>
-    <artifact conf="util" name="retrofit-util" ext="jar"/>
-    <artifact conf="util" name="retrofit-util" ext="jar" e:classifier="src"/>
+    <artifact conf="android" name="retrofit-android" ext="jar"/>
+    <artifact conf="android" name="retrofit-android" ext="jar" e:classifier="src"/>
   </publications>
 
-  <!-- Note: find these at http://mvnrepository.xml/ -->
+  <!-- Note: find these at http://mvnrepository.com/ -->
   <dependencies>
     <dependency org="junit" name="junit" rev="4.8.1"/>
+    <!-- <dependency org="com.google.android" name="android" rev="2.2.1"/> -->
+    <dependency org="com.google.android" name="android-test" rev="2.2.1"/>
   </dependencies>
 
 </ivy-module>
