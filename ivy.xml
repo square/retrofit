@@ -26,9 +26,9 @@
     <dependency org="com.google.android" name="android-test" rev="2.2.1"/>
     <dependency org="com.google.code.gson" name="gson" rev="1.4"/>
     <dependency org="com.google.code.guice" name="guice" rev="1.0"/>
-    <dependency org="org.apache.httpcomponents" name="httpmime" rev="4.0.1"/>
+    <dependency org="org.apache.httpcomponents" name="httpmime" rev="4.1-alpha1"/>
     <dependency org="junit" name="junit" rev="4.8.1"/>
-    <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.0.1"/>
+    <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.1-alpha1"/>
     <dependency org="org.easymock" name="easymock" rev="2.5.2"/>
   </dependencies>
 
