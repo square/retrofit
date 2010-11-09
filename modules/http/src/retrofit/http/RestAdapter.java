@@ -5,7 +5,9 @@ import com.google.gson.JsonParseException;
 import com.google.inject.*;
 import com.google.inject.name.Named;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -44,6 +46,7 @@ import java.util.logging.Logger;
   @Inject private Executor executor;
   @Inject private MainThread mainThread;
   @Inject private Headers headers;
+  @Inject(optional = true) private HttpProfiler profiler;
 
   /**
    * Adapts a Java interface to a REST API. HTTP requests happen in a
@@ -108,9 +111,10 @@ import java.util.logging.Logger;
 
       try {
         String relativePath = getRelativePath(method);
+        final String apiUrl = server.apiUrl();
 
         // Construct POST HTTP request.
-        final HttpPost post = new HttpPost(server.apiUrl() + relativePath);
+        final HttpPost post = new HttpPost(apiUrl + relativePath);
         headers.setHeaders(post);
 
         // Convert all but the last method argument to HTTP request parameters.
@@ -163,8 +167,16 @@ import java.util.logging.Logger;
             genericParameterTypes);
         logger.fine(String.format("POSTing to %s.", post.getURI()));
 
-        httpClientProvider.get().execute(post, GsonResponseHandler.create(
-            resultType, callback));
+        final GsonResponseHandler<?> gsonResponseHandler =
+            GsonResponseHandler.create(resultType, callback);
+
+        // Optionally wrap the response handler for server call profiling.
+        ResponseHandler<? extends Void> rh = (profiler == null)
+            ? gsonResponseHandler
+            : new ProfilingResponseHandler(gsonResponseHandler, profiler,
+                HttpProfiler.Method.POST, apiUrl, relativePath);
+
+        httpClientProvider.get().execute(post, rh);
       } catch (IOException e) {
         logger.log(Level.WARNING, e.getMessage(), e);
         callback.networkError();
@@ -334,6 +346,44 @@ import java.util.logging.Logger;
         // The server returned us bad JSON!
         throw new ServerException(e);
       }
+    }
+  }
+
+  /**
+   * Sends server call times and response status codes to {@link HttpProfiler}.
+   */
+  private static class ProfilingResponseHandler
+      implements ResponseHandler<Void> {
+    private final ResponseHandler<Void> delegate;
+    private final HttpProfiler profiler;
+    private final String apiUrl;
+    private final String relativePath;
+    private final HttpProfiler.Method method;
+    private final long startTime = System.currentTimeMillis();
+
+    /**
+     * Wraps the delegate response handler.
+     */
+    private ProfilingResponseHandler(ResponseHandler<Void> delegate,
+                                     HttpProfiler profiler,
+                                     HttpProfiler.Method method,
+                                     String apiUrl,
+                                     String relativePath) {
+      this.delegate = delegate;
+      this.profiler = profiler;
+      this.method = method;
+      this.apiUrl = apiUrl;
+      this.relativePath = relativePath;
+    }
+
+    public Void handleResponse(HttpResponse httpResponse) throws IOException {
+      // Intercept the response and send data to profiler.
+      long elapsedTime = System.currentTimeMillis() - startTime;
+      int statusCode = httpResponse.getStatusLine().getStatusCode();
+      profiler.called(method, apiUrl, relativePath, elapsedTime, statusCode);
+
+      // Pass along the response to the normal handler.
+      return delegate.handleResponse(httpResponse);
     }
   }
 }
