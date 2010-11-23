@@ -149,6 +149,10 @@ public class QueueFile {
     raf.seek(0);
     raf.readFully(buffer);
     fileLength = readInt(buffer, 0);
+    if (fileLength > raf.length()) {
+      throw new IOException("File is truncated. Expected length: "
+          + fileLength + ", Actual length: " + raf.length());
+    }
     elementCount = readInt(buffer, 4);
     int firstOffset = readInt(buffer, 8);
     int lastOffset = readInt(buffer, 12);
@@ -360,14 +364,17 @@ public class QueueFile {
         last.position + Element.HEADER_LENGTH + last.length);
 
     // If the buffer is split, we need to make it contiguous
+    FileChannel channel = raf.getChannel();
     if (endOfLastElement < first.position) {
-      FileChannel channel = raf.getChannel();
       channel.position(fileLength); // destination position
       int count = endOfLastElement - Element.HEADER_LENGTH;
       if (channel.transferTo(HEADER_LENGTH, count, channel) != count) {
         throw new AssertionError("Copied insufficient number of bytes!");
       }
     }
+
+    // Sync new file length (considered metadata) to storage.
+    channel.force(true);    
 
     // Commit the expansion.
     if (last.position < first.position) {
