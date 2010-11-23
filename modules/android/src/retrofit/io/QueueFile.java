@@ -357,14 +357,17 @@ public class QueueFile {
       newLength = previousLength << 1;
       previousLength = newLength;
     } while (remainingBytes < elementLength);
+
+    // Set new file length (considered metadata) and sync it to storage.
     raf.setLength(newLength);
+    FileChannel channel = raf.getChannel();
+    channel.force(true);    
 
     // Calculate the position of the tail end of the data in the ring buffer
     int endOfLastElement = wrapPosition(
         last.position + Element.HEADER_LENGTH + last.length);
 
     // If the buffer is split, we need to make it contiguous
-    FileChannel channel = raf.getChannel();
     if (endOfLastElement < first.position) {
       channel.position(fileLength); // destination position
       int count = endOfLastElement - Element.HEADER_LENGTH;
@@ -372,9 +375,6 @@ public class QueueFile {
         throw new AssertionError("Copied insufficient number of bytes!");
       }
     }
-
-    // Sync new file length (considered metadata) to storage.
-    channel.force(true);    
 
     // Commit the expansion.
     if (last.position < first.position) {
