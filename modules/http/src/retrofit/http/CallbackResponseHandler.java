@@ -7,7 +7,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import retrofit.core.Callback;
-import retrofit.core.ClientMessage;
+import retrofit.core.ErrorResponse;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -115,7 +115,7 @@ public abstract class CallbackResponseHandler<T>
       String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ". Body: " + body);
-      callback.clientError(parseClientMessage(body));
+      callback.clientError(parseErrorResponse(body));
     } else {
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ".");
@@ -129,16 +129,15 @@ public abstract class CallbackResponseHandler<T>
    * <pre>
    * {
    *   "message_title": "Email Address Taken",
-   *   "message": "That email is already taken. Please enter another address.",
-   *   "button_label": "Change"
+   *   "message": "That email is already taken. Please enter another address."
    * }</pre>
    */
-  private static ClientMessage parseClientMessage(String body) {
+  private static ErrorResponse parseErrorResponse(String body) {
     try {
       ClientError error = new Gson().fromJson(body, ClientError.class);
       if (error != null) {
-        return new ClientMessage(
-            error.message_title, error.message, error.button_label);
+        return new ErrorResponse(
+            error.message_title, error.message);
       }
     } catch (Throwable t) {
       // The server error takes precedence.
@@ -177,6 +176,5 @@ public abstract class CallbackResponseHandler<T>
   static class ClientError {
     String message;
     String message_title;
-    String button_label;
   }
 }

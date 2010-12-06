@@ -33,9 +33,9 @@ public interface Callback<T> {
    * The server returned a client error. In most cases, this is a programming
    * error, but it can also signify a user input error.
    *
-   * @param message to show user, or null if no message was returned
+   * @param response to show user, or null if no message was returned
    */
-  void clientError(ClientMessage message);
+  void clientError(ErrorResponse response);
 
   /**
    * We reached the server, but it encountered an error. Please try again

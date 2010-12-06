@@ -2,7 +2,7 @@
 package retrofit.http;
 
 import retrofit.core.Callback;
-import retrofit.core.ClientMessage;
+import retrofit.core.ErrorResponse;
 import retrofit.core.MainThread;
 
 /**
@@ -49,10 +49,10 @@ public final class UiCallback<T> implements Callback<T> {
     });
   }
 
-  public void clientError(final ClientMessage message) {
+  public void clientError(final ErrorResponse response) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.clientError(message);
+        delegate.clientError(response);
       }
     });
   }
