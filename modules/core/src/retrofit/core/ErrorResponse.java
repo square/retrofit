@@ -14,9 +14,9 @@ public class ErrorResponse {
   /**
    * Constructs a new message, though arguments may be null.
    *
-   * @param title       a few words for a dialog title or heading, or null.
-   * @param message     a sentence or two with a more detailed, user friendly
-   *                    message, or null.
+   * @param title   a few words for a dialog title or heading, or null.
+   * @param message a sentence or two with a more detailed, user friendly
+   *                message, or null.
    */
   public ErrorResponse(String title, String message) {
     this.title = title;
@@ -31,5 +31,11 @@ public class ErrorResponse {
   /** Returns a sentence or two with a user friendly message. */
   public String getMessage() {
     return message;
+  }
+
+  @Override public String toString() {
+    return getClass().getSimpleName() + "["
+        + "title = " + title
+        + ", message = " + message + "]";
   }
 }
