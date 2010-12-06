@@ -7,6 +7,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import retrofit.core.Callback;
+import retrofit.core.ClientMessage;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -114,11 +115,34 @@ public abstract class CallbackResponseHandler<T>
       String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ". Body: " + body);
-      callback.clientError(parseServerMessage(statusCode, body));
+      callback.clientError(parseClientMessage(body));
     } else {
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ".");
       callback.clientError(null);
+    }
+    return null;
+  }
+
+  /**
+   * Parses a client error message, assuming the JSON looks like this:
+   * <pre>
+   * {
+   *   "message_title": "Email Address Taken",
+   *   "message": "That email is already taken. Please enter another address.",
+   *   "button_label": "Change"
+   * }</pre>
+   */
+  private static ClientMessage parseClientMessage(String body) {
+    try {
+      ClientError error = new Gson().fromJson(body, ClientError.class);
+      if (error != null) {
+        return new ClientMessage(
+            error.message_title, error.message, error.button_label);
+      }
+    } catch (Throwable t) {
+      // The server error takes precedence.
+      logger.log(Level.WARNING, t.getMessage(), t);
     }
     return null;
   }
@@ -145,5 +169,14 @@ public abstract class CallbackResponseHandler<T>
    */
   static class ServerError {
     String message;
+  }
+
+  /**
+   * Gson POJO for parsing client error messages.
+   */
+  static class ClientError {
+    String message;
+    String message_title;
+    String button_label;
   }
 }

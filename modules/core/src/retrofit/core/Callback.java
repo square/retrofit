@@ -35,7 +35,7 @@ public interface Callback<T> {
    *
    * @param message to show user, or null if no message was returned
    */
-  void clientError(String message);
+  void clientError(ClientMessage message);
 
   /**
    * We reached the server, but it encountered an error. Please try again
