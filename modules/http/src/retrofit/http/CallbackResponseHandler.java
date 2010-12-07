@@ -128,7 +128,7 @@ public abstract class CallbackResponseHandler<T>
    * Parses a client error message, assuming the JSON looks like this:
    * <pre>
    * {
-   *   "message_title": "Email Address Taken",
+   *   "title": "Email Address Taken",
    *   "message": "That email is already taken. Please enter another address."
    * }</pre>
    */
@@ -137,7 +137,7 @@ public abstract class CallbackResponseHandler<T>
       ClientError error = new Gson().fromJson(body, ClientError.class);
       if (error != null) {
         return new ErrorResponse(
-            error.message_title, error.message);
+            error.title, error.message);
       }
     } catch (Throwable t) {
       // The server error takes precedence.
@@ -164,17 +164,17 @@ public abstract class CallbackResponseHandler<T>
   }
 
   /**
-   * Used to parse server error messages.
+   * Gson POJO for parsing server error messages.
    */
   static class ServerError {
     String message;
   }
 
   /**
-   * Gson POJO for parsing client error messages.
+   * Gson POJO for parsing client errors.
    */
   static class ClientError {
     String message;
-    String message_title;
+    String title;
   }
 }
