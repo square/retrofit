@@ -23,12 +23,16 @@ public class TypedByteArray extends AbstractTypedBytes {
    * @throws NullPointerException if bytes or mimeType is null
    */
   public TypedByteArray(byte[] bytes, MimeType mimeType) {
-    super(mimeType, bytes.length);
+    super(mimeType);
     this.bytes = Objects.nonNull(bytes, "bytes");
   }
 
   public void writeTo(OutputStream out) throws IOException {
     out.write(bytes);
+  }
+
+  @Override public int length() {
+    return bytes.length;
   }
 
   @Override

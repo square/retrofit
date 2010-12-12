@@ -4,6 +4,8 @@ package retrofit.io;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class TypedFileTest extends TestCase {
@@ -28,5 +30,31 @@ public class TypedFileTest extends TestCase {
 
     assertEquals(file.getAbsolutePath() + " (PNG)",
         new TypedFile(file, MimeType.PNG).toString());
+  }
+
+  public void testLength() throws IOException {
+    File tempFile = File.createTempFile("foo", ".tmp");
+    try {
+      TypedFile typedFile = new TypedFile(tempFile, MimeType.PNG);
+      assertEquals("length", 0, typedFile.length());
+
+      writeToFile(tempFile, new byte[]{0, 1, 2, 3, 4});
+
+      assertEquals("file length", 5, tempFile.length());
+      assertEquals("typed file length", 5, typedFile.length());
+
+    } finally {
+      //noinspection ResultOfMethodCallIgnored
+      tempFile.delete();
+    }
+  }
+
+  private void writeToFile(File file, byte[] data) throws IOException {
+    FileOutputStream fos = new FileOutputStream(file);
+    try {
+      fos.write(data);
+    } finally {
+      fos.close();
+    }
   }
 }
