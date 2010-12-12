@@ -23,7 +23,7 @@ public class TypedFile extends AbstractTypedBytes {
    * @throws NullPointerException if file or mimeType is null
    */
   public TypedFile(File file, MimeType mimeType) {
-    super(mimeType, (int) file.length());
+    super(mimeType);
     this.file = Objects.nonNull(file, "file");
   }
 
@@ -69,5 +69,9 @@ public class TypedFile extends AbstractTypedBytes {
   @Override
   public int hashCode() {
     return file.hashCode();
+  }
+
+  @Override public int length() {
+    return (int) file.length();
   }
 }

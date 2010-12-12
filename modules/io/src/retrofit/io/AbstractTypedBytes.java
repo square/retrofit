@@ -14,15 +14,13 @@ public abstract class AbstractTypedBytes implements TypedBytes, Serializable {
   private static final long serialVersionUID = 0;
 
   private final MimeType mimeType;
-  private final int length;
 
   /**
    * Stores the mime type.
    *
    * @throws NullPointerException if mimeType is null
    */
-  public AbstractTypedBytes(MimeType mimeType, int length) {
-    this.length = length;
+  public AbstractTypedBytes(MimeType mimeType) {
     this.mimeType = Objects.nonNull(mimeType, "mimeType");
   }
 
@@ -30,7 +28,6 @@ public abstract class AbstractTypedBytes implements TypedBytes, Serializable {
     return mimeType;
   }
 
-  public int length() {
-    return length;
-  }
+  /** Returns the length in bytes. */
+  public abstract int length();
 }
