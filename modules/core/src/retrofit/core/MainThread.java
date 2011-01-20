@@ -20,6 +20,13 @@ public interface MainThread extends Executor {
   void executeDelayed(Runnable r, long delay);
 
   /**
+   * Executes a runnable and waits until it has finished.
+   *
+   * @param r to execute
+   */
+  void executeSynchronously(Runnable r);
+
+  /**
    * Removes pending posts of Runnable r that are in the message queue.
    *
    * @param r to remove

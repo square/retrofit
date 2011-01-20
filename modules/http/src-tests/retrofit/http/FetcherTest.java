@@ -125,6 +125,10 @@ public class FetcherTest extends TestCase {
       throw new UnsupportedOperationException();
     }
 
+    public void executeSynchronously(Runnable r) {
+      throw new UnsupportedOperationException();
+    }
+
     public void cancel(Runnable r) {
       throw new UnsupportedOperationException();
     }
