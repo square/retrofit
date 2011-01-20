@@ -2,14 +2,23 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.google.inject.*;
+import com.google.inject.Binder;
+import com.google.inject.Inject;
+import com.google.inject.Module;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URIUtils;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.MultipartEntity;
@@ -25,7 +34,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -113,59 +129,28 @@ import java.util.logging.Logger;
         String relativePath = getRelativePath(method);
         final String apiUrl = server.apiUrl();
 
-        // Construct POST HTTP request.
-        final HttpPost post = new HttpPost(apiUrl + relativePath);
-        headers.setHeaders(post);
-
-        // Convert all but the last method argument to HTTP request parameters.
-        Type[] genericParameterTypes = method.getGenericParameterTypes();
-        Class<?>[] parameterTypes = method.getParameterTypes();
-
-        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        int count = parameterAnnotations.length - 1;
-
-        if (useMultipart(parameterTypes)) {
-          MultipartEntity form = new MultipartEntity(
-              HttpMultipartMode.BROWSER_COMPATIBLE);
-          for (int i = 0; i < count; i++) {
-            Object arg = args[i];
-            if (arg == null) continue;
-            Annotation[] annotations = parameterAnnotations[i];
-            String name = getName(annotations, method, i);
-            Class<?> type = parameterTypes[i];
-
-            if (TypedBytes.class.isAssignableFrom(type)) {
-              TypedBytes typedBytes = (TypedBytes) arg;
-              form.addPart(name, new TypedBytesBody(typedBytes, name));
-            } else {
-              try {
-                form.addPart(name, new StringBody(String.valueOf(arg)));
-              } catch (UnsupportedEncodingException e) {
-                throw new AssertionError(e);
-              }
-            }
-          }
-          post.setEntity(form);
-        } else {
-          List<BasicNameValuePair> pairs
-              = new ArrayList<BasicNameValuePair>(count);
-          for (int i = 0; i < count; i++) {
-            Object arg = args[i];
-            if (arg == null) continue;
-            String name = getName(parameterAnnotations[i], method, i);
-            pairs.add(new BasicNameValuePair(name, String.valueOf(arg)));
-          }
-          try {
-            post.setEntity(new UrlEncodedFormEntity(pairs));
-          } catch (UnsupportedEncodingException e) {
-            throw new AssertionError(e);
-          }
+        // Construct HTTP request.
+        HttpUriRequest request;
+        HttpMethod.Type requestType = getRequestType(method);
+        switch (requestType) {
+          case GET:
+            request = createGet(apiUrl, relativePath, method, args);
+            break;
+          case POST:
+            request = createPost(apiUrl, relativePath, method, args);
+            break;
+          default:
+            throw new IllegalStateException(
+                "Unrecognized HTTP Method: " + requestType);
         }
+        headers.setHeaders(request);
 
         // The last parameter should be of type Callback<T>. Determine T.
+        Type[] genericParameterTypes = method.getGenericParameterTypes();
         final Type resultType = getCallbackParameterType(method,
             genericParameterTypes);
-        logger.fine(String.format("POSTing to %s.", post.getURI()));
+        logger.fine(String.format("Sending " + requestType + " request to %s.",
+            request.getURI()));
 
         final GsonResponseHandler<?> gsonResponseHandler =
             GsonResponseHandler.create(resultType, callback);
@@ -176,12 +161,104 @@ import java.util.logging.Logger;
             : new ProfilingResponseHandler(gsonResponseHandler, profiler,
                 HttpProfiler.Method.POST, apiUrl, relativePath);
 
-        httpClientProvider.get().execute(post, rh);
+        httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
         logger.log(Level.WARNING, e.getMessage(), e);
         callback.networkError();
       } catch (Throwable t) {
         callback.unexpectedError(t);
+      }
+    }
+
+    /**
+     * Converts all but the last method argument to a list of HTTP request
+     * parameters.
+     */
+    private List<NameValuePair> createParamList(Method method, Object[] args) {
+
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      int count = parameterAnnotations.length - 1;
+
+      List<NameValuePair> params = new ArrayList<NameValuePair>();
+      for (int i = 0; i < count; i++) {
+        Object arg = args[i];
+        if (arg == null) continue;
+        String name = getName(parameterAnnotations[i], method, i);
+        params.add(new BasicNameValuePair(name, String.valueOf(arg)));
+      }
+
+      return params;
+    }
+
+    private HttpGet createGet(String apiUrl, String relativePath,
+        Method method, Object[] args) throws URISyntaxException {
+
+      List<NameValuePair> queryParams = createParamList(method, args);
+      String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
+
+      URI uri = URIUtils.createURI(scheme(apiUrl), host(apiUrl), -1,
+          relativePath, queryString, null);
+      return new HttpGet(uri);
+    }
+
+    private HttpPost createPost(String apiUrl, String relativePath,
+        Method method, Object[] args) throws URISyntaxException {
+      URI uri = URIUtils.createURI(scheme(apiUrl), host(apiUrl), -1,
+          relativePath, null, null);
+      HttpPost post = new HttpPost(uri);
+      addParamsToPost(post, method, args);
+      return post;
+    }
+
+    private String scheme(String apiUrl) {
+      return apiUrl.substring(0, apiUrl.indexOf("://"));
+    }
+
+    private String host(String apiUrl) {
+      String host = apiUrl.substring(
+          apiUrl.indexOf("://") + 3, apiUrl.length());
+      if (host.endsWith("/")) host = host.substring(0, host.length() - 1);
+      return host;
+    }
+
+    private void addParamsToPost(HttpPost post, Method method, Object[] args) {
+
+      // Convert all but the last method argument to HTTP request parameters.
+
+      Class<?>[] parameterTypes = method.getParameterTypes();
+
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      int count = parameterAnnotations.length - 1;
+
+      if (useMultipart(parameterTypes)) {
+        MultipartEntity form = new MultipartEntity(
+            HttpMultipartMode.BROWSER_COMPATIBLE);
+        for (int i = 0; i < count; i++) {
+          Object arg = args[i];
+          if (arg == null) continue;
+          Annotation[] annotations = parameterAnnotations[i];
+          String name = getName(annotations, method, i);
+          Class<?> type = parameterTypes[i];
+
+          if (TypedBytes.class.isAssignableFrom(type)) {
+            TypedBytes typedBytes = (TypedBytes) arg;
+            form.addPart(name, new TypedBytesBody(typedBytes, name));
+          } else {
+            try {
+              form.addPart(name, new StringBody(String.valueOf(arg)));
+            } catch (UnsupportedEncodingException e) {
+              throw new AssertionError(e);
+            }
+          }
+        }
+        post.setEntity(form);
+      } else {
+        try {
+          List<NameValuePair> paramList = createParamList(method, args);
+          post.setEntity(new UrlEncodedFormEntity(paramList));
+        } catch (UnsupportedEncodingException e) {
+          throw new AssertionError(e);
+        }
       }
     }
 
@@ -262,6 +339,15 @@ import java.util.logging.Logger;
       if (pathAnnotation == null) throw new IllegalArgumentException(method
           + " is missing an @Path annotation.");
       return pathAnnotation.value();
+    }
+
+    private HttpMethod.Type getRequestType(Method method) {
+      HttpMethod requestTypeAnnotation = method.getAnnotation(
+          HttpMethod.class);
+
+      // Default to POST.
+      return requestTypeAnnotation == null ? HttpMethod.Type.POST :
+          requestTypeAnnotation.value();
     }
 
   }
