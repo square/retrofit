@@ -11,5 +11,5 @@ import org.apache.http.HttpMessage;
 public interface Headers {
 
   /** Sets headers on the given message. */
-  public void setHeaders(HttpMessage message);
+  public void setOn(HttpMessage message);
 }
