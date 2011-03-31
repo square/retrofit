@@ -20,6 +20,7 @@ public class Files {
       try {
         int read;
         while ((read = in.read(buffer)) > -1) out.write(buffer, 0, read);
+        out.getFD().sync();
       } finally {
         out.close();
       }
