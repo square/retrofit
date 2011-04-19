@@ -32,8 +32,11 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -67,10 +70,10 @@ import retrofit.io.TypedBytes;
    * Adapts a Java interface to a REST API. HTTP requests happen in a
    * background thread. Callbacks happen in the UI thread.
    *
-   * <p>Gets the relative path for a given method from a {@link GET} or
-   * {@link POST} annotation on the method. Gets the names of URL parameters
-   * from {@link com.google.inject.name.Named} annotations on the method
-   * parameters.
+   * <p>Gets the relative path for a given method from a {@link GET},
+   * {@link POST}, {@link PUT}, or {@link DELETE} annotation on the method.
+   * Gets the names of URL parameters from {@link com.google.inject.name.Named}
+   * annotations on the method parameters.
    *
    * <p>The last method parameter should be of type {@link Callback}. The
    * JSON HTTP response will be converted to the callback's parameter type
@@ -91,11 +94,11 @@ import retrofit.io.TypedBytes;
   @SuppressWarnings("unchecked")
   public static <T> Module service(final Class<T> type) {
     return new Module() {
-      public void configure(Binder binder) {
+      @Override public void configure(Binder binder) {
         binder.bind(type).toProvider(new Provider<T>() {
           @Inject RestAdapter restAdapter;
 
-          public T get() {
+          @Override public T get() {
             RestAdapter.RestHandler handler = restAdapter.new RestHandler();
             return (T) Proxy.newProxyInstance(type.getClassLoader(),
                 new Class<?>[] { type }, handler);
@@ -122,27 +125,37 @@ import retrofit.io.TypedBytes;
   }
 
   private static RequestLine readHttpMethodAnnotation(Method method) {
-    GET getAnnotation = method.getAnnotation(GET.class);
-    boolean hasGet = getAnnotation != null;
+    Annotation httpMethod = findAnnotation(method, GET.class, null);
+    httpMethod = findAnnotation(method, POST.class, httpMethod);
+    httpMethod = findAnnotation(method, PUT.class, httpMethod);
+    httpMethod = findAnnotation(method, DELETE.class, httpMethod);
 
-    POST postAnnotation = method.getAnnotation(POST.class);
-    boolean hasPost = postAnnotation != null;
-
-    if (hasGet && hasPost) {
-      throw new IllegalArgumentException(
-          "Method annotated with both GET and POST: " + method.getName());
-    }
-
-    if (hasGet) {
-      return new RequestLine(getAnnotation.value(), HttpMethod.GET);
-    } else if (hasPost) {
-      return new RequestLine(postAnnotation.value(), HttpMethod.POST);
+    if (httpMethod instanceof GET) {
+      return new RequestLine(((GET) httpMethod).value(), HttpMethod.GET);
+    } else if (httpMethod instanceof POST) {
+      return new RequestLine(((POST) httpMethod).value(), HttpMethod.POST);
+    } else if (httpMethod instanceof PUT) {
+      return new RequestLine(((PUT) httpMethod).value(), HttpMethod.PUT);
+    } else if (httpMethod instanceof DELETE) {
+      return new RequestLine(((DELETE) httpMethod).value(), HttpMethod.DELETE);
     } else {
       throw new IllegalArgumentException(
-          "Method not annotated with GET or POST: " + method.getName());
+          "Method not annotated with GET, POST, PUT, or DELETE: "
+            + method.getName());
     }
   }
 
+  private static <T extends Annotation> T findAnnotation(Method method,
+      Class<T> annotationClass, Annotation previousFind) {
+    T annotation = method.getAnnotation(annotationClass);
+    if (annotation != null && previousFind != null) {
+      throw new IllegalArgumentException(
+          "Method annotated with multiple HTTP method annotations: "
+            + annotationClass.getSimpleName() + " and " + previousFind.getClass().getName());
+    }
+
+    return annotation;
+  }
   /** Gets the parameter name from the @Named annotation. */
   private static String getName(Annotation[] annotations, Method method,
       int parameterIndex) {
@@ -170,80 +183,52 @@ import retrofit.io.TypedBytes;
   private static enum HttpMethod {
 
     GET {
-      HttpUriRequest createFrom(HttpRequestBuilder builder)
+      @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
           throws URISyntaxException {
         List<NameValuePair> queryParams = builder.createParamList();
         String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
         URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
             builder.getRelativePath(), queryString, null);
-        HttpGet httpGet = new HttpGet(uri);
-        builder.getHeaders().setOn(httpGet);
-        return httpGet;
+        HttpGet request = new HttpGet(uri);
+        builder.getHeaders().setOn(request);
+        return request;
       }
     },
 
     POST {
-      HttpUriRequest createFrom(HttpRequestBuilder builder)
+      @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
           throws URISyntaxException {
         URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
             builder.getRelativePath(), null, null);
-        HttpPost post = new HttpPost(uri);
-        addParamsToPost(post, builder);
-        builder.getHeaders().setOn(post);
-        return post;
+        HttpPost request = new HttpPost(uri);
+        addParams(request, builder);
+        builder.getHeaders().setOn(request);
+        return request;
       }
+    },
 
-      /**
-       * Adds all but the last method argument as parameters of HTTP post
-       * object.
-       */
-      private void addParamsToPost(HttpPost post, HttpRequestBuilder builder) {
-        Method method = builder.getMethod();
-        Object[] args = builder.getArgs();
-        Class<?>[] parameterTypes = method.getParameterTypes();
-
-        Annotation[][] parameterAnnotations =
-            method.getParameterAnnotations();
-        int count = parameterAnnotations.length - 1;
-
-        if (useMultipart(parameterTypes)) {
-          MultipartEntity form = new MultipartEntity(
-              HttpMultipartMode.BROWSER_COMPATIBLE);
-          for (int i = 0; i < count; i++) {
-            Object arg = args[i];
-            if (arg == null) continue;
-            Annotation[] annotations = parameterAnnotations[i];
-            String name = getName(annotations, method, i);
-            Class<?> type = parameterTypes[i];
-
-            if (TypedBytes.class.isAssignableFrom(type)) {
-              TypedBytes typedBytes = (TypedBytes) arg;
-              form.addPart(name, new TypedBytesBody(typedBytes, name));
-            } else {
-              try {
-                form.addPart(name, new StringBody(String.valueOf(arg)));
-              } catch (UnsupportedEncodingException e) {
-                throw new AssertionError(e);
-              }
-            }
-          }
-          post.setEntity(form);
-        } else {
-          try {
-            List<NameValuePair> paramList = builder.createParamList();
-            post.setEntity(new UrlEncodedFormEntity(paramList));
-          } catch (UnsupportedEncodingException e) {
-            throw new AssertionError(e);
-          }
-        }
+    PUT {
+      @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
+          throws URISyntaxException {
+        URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
+            builder.getRelativePath(), null, null);
+        HttpPut request = new HttpPut(uri);
+        addParams(request, builder);
+        builder.getHeaders().setOn(request);
+        return request;
       }
+    },
 
-      /** Returns true if the post contains a file upload. */
-      private boolean useMultipart(Class<?>[] parameterTypes) {
-        for (Class<?> parameterType : parameterTypes) {
-          if (TypedBytes.class.isAssignableFrom(parameterType)) return true;
-        }
-        return false;
+    DELETE {
+      @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
+          throws URISyntaxException {
+        List<NameValuePair> queryParams = builder.createParamList();
+        String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
+        URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
+            builder.getRelativePath(), queryString, null);
+        HttpDelete request = new HttpDelete(uri);
+        builder.getHeaders().setOn(request);
+        return request;
       }
     };
 
@@ -252,6 +237,61 @@ import retrofit.io.TypedBytes;
      */
     abstract HttpUriRequest createFrom(HttpRequestBuilder builder)
         throws URISyntaxException;
+
+    /**
+     * Adds all but the last method argument as parameters of HTTP request
+     * object.
+     */
+    private static void addParams(HttpEntityEnclosingRequestBase request,
+        HttpRequestBuilder builder) {
+      Method method = builder.getMethod();
+      Object[] args = builder.getArgs();
+      Class<?>[] parameterTypes = method.getParameterTypes();
+
+      Annotation[][] parameterAnnotations =
+          method.getParameterAnnotations();
+      int count = parameterAnnotations.length - 1;
+
+      if (useMultipart(parameterTypes)) {
+        MultipartEntity form = new MultipartEntity(
+            HttpMultipartMode.BROWSER_COMPATIBLE);
+        for (int i = 0; i < count; i++) {
+          Object arg = args[i];
+          if (arg == null) continue;
+          Annotation[] annotations = parameterAnnotations[i];
+          String name = getName(annotations, method, i);
+          Class<?> type = parameterTypes[i];
+
+          if (TypedBytes.class.isAssignableFrom(type)) {
+            TypedBytes typedBytes = (TypedBytes) arg;
+            form.addPart(name, new TypedBytesBody(typedBytes, name));
+          } else {
+            try {
+              form.addPart(name, new StringBody(String.valueOf(arg)));
+            } catch (UnsupportedEncodingException e) {
+              throw new AssertionError(e);
+            }
+          }
+        }
+        request.setEntity(form);
+      } else {
+        try {
+          List<NameValuePair> paramList = builder.createParamList();
+          request.setEntity(new UrlEncodedFormEntity(paramList));
+        } catch (UnsupportedEncodingException e) {
+          throw new AssertionError(e);
+        }
+      }
+    }
+
+    /** Returns true if the parameters contain a file upload. */
+    private static boolean useMultipart(Class<?>[] parameterTypes) {
+      for (Class<?> parameterType : parameterTypes) {
+        if (TypedBytes.class.isAssignableFrom(parameterType)) return true;
+      }
+      return false;
+    }
+
   }
 
   /**
@@ -344,11 +384,11 @@ import retrofit.io.TypedBytes;
 
   private class RestHandler implements InvocationHandler {
 
-    public Object invoke(Object proxy, final Method method,
+    @Override public Object invoke(Object proxy, final Method method,
         final Object[] args) {
       // Execute HTTP request in the background.
       executor.execute(new Runnable() {
-        @SuppressWarnings("unchecked")
+        @Override @SuppressWarnings("unchecked")
         public void run() {
           backgroundInvoke(method, args);
         }
@@ -383,7 +423,7 @@ import retrofit.io.TypedBytes;
             GsonResponseHandler.create(resultType, callback);
 
         // Optionally wrap the response handler for server call profiling.
-        ResponseHandler<? extends Void> rh = (profiler == null) ?
+        ResponseHandler<Void> rh = (profiler == null) ?
             gsonResponseHandler : createProfiler(gsonResponseHandler, profiler,
                 method, server.apiUrl());
 
@@ -471,19 +511,19 @@ import retrofit.io.TypedBytes;
       this.name = baseName + "." + typedBytes.mimeType().extension();
     }
 
-    public long getContentLength() {
+    @Override public long getContentLength() {
       return typedBytes.length();
     }
 
-    public String getFilename() {
+    @Override public String getFilename() {
       return name;
     }
 
-    public String getCharset() {
+    @Override public String getCharset() {
       return null;
     }
 
-    public String getTransferEncoding() {
+    @Override public String getTransferEncoding() {
       return MIME.ENC_BINARY;
     }
 
@@ -570,7 +610,7 @@ import retrofit.io.TypedBytes;
       this.relativePath = relativePath;
     }
 
-    public Void handleResponse(HttpResponse httpResponse) throws IOException {
+    @Override public Void handleResponse(HttpResponse httpResponse) throws IOException {
       // Intercept the response and send data to profiler.
       long elapsedTime = System.currentTimeMillis() - startTime;
       int statusCode = httpResponse.getStatusLine().getStatusCode();
