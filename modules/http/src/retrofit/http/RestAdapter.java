@@ -1,7 +1,5 @@
 package retrofit.http;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Module;
@@ -9,7 +7,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
@@ -22,11 +19,11 @@ import java.lang.reflect.WildcardType;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -112,10 +109,37 @@ import retrofit.io.TypedBytes;
     private final String relativePath;
     private final HttpMethod httpMethod;
 
-    public RequestLine(String relativePath, HttpMethod method) {
-      this.relativePath = relativePath;
-      this.httpMethod = method;
+    private RequestLine(retrofit.http.HttpMethod.Type methodType,
+        Annotation methodAnnotation) {
+      relativePath = getValue(methodAnnotation);
+      httpMethod = fromType(methodType);
     }
+
+    private static HttpMethod fromType(
+        retrofit.http.HttpMethod.Type methodType)
+        throws AssertionError {
+      switch (methodType) {
+        case DELETE: return HttpMethod.DELETE;
+        case GET:    return HttpMethod.GET;
+        case POST:   return HttpMethod.POST;
+        case PUT:    return HttpMethod.PUT;
+        default:
+          throw new AssertionError("This line should be unreachable. Has a" +
+          		" new kind of http method annotation been added?");
+      }
+    }
+
+    private static String getValue(Annotation methodAnnotation) {
+      try {
+        final Method valueMethod = methodAnnotation.annotationType()
+            .getMethod("value");
+        return (String) valueMethod.invoke(methodAnnotation);
+
+      } catch (Exception ex) {
+        throw new IllegalStateException("Failed to extract method path", ex);
+      }
+    }
+
     public String getRelativePath() {
       return relativePath;
     }
@@ -124,38 +148,36 @@ import retrofit.io.TypedBytes;
     }
   }
 
+  /**
+   * Looks for exactly one annotation of type {@link DELETE}, {@link GET},
+   * {@link POST}, or {@link PUT} and extracts its path data.  Throws an
+   * {@link IllegalStateException} if none or multiple are found.
+   */
   private static RequestLine readHttpMethodAnnotation(Method method) {
-    Annotation httpMethod = findAnnotation(method, GET.class, null);
-    httpMethod = findAnnotation(method, POST.class, httpMethod);
-    httpMethod = findAnnotation(method, PUT.class, httpMethod);
-    httpMethod = findAnnotation(method, DELETE.class, httpMethod);
+    Annotation[] annotations = method.getAnnotations();
+    RequestLine found = null;
+    for (Annotation annotation : annotations) {
+      // look for an HttpMethod annotation describing the type:
+      final retrofit.http.HttpMethod typeAnnotation = annotation.annotationType()
+          .getAnnotation(retrofit.http.HttpMethod.class);
+      if (typeAnnotation != null) {
+        if (found != null) {
+          throw new IllegalStateException(
+              "Method annotated with multiple HTTP method annotations: "
+                + method.toString());
+        }
+        found = new RequestLine(typeAnnotation.value(), annotation);
+      }
+    }
 
-    if (httpMethod instanceof GET) {
-      return new RequestLine(((GET) httpMethod).value(), HttpMethod.GET);
-    } else if (httpMethod instanceof POST) {
-      return new RequestLine(((POST) httpMethod).value(), HttpMethod.POST);
-    } else if (httpMethod instanceof PUT) {
-      return new RequestLine(((PUT) httpMethod).value(), HttpMethod.PUT);
-    } else if (httpMethod instanceof DELETE) {
-      return new RequestLine(((DELETE) httpMethod).value(), HttpMethod.DELETE);
-    } else {
-      throw new IllegalArgumentException(
+    if (found == null) {
+      throw new IllegalStateException(
           "Method not annotated with GET, POST, PUT, or DELETE: "
-            + method.getName());
+            + method.toString());
     }
+    return found;
   }
 
-  private static <T extends Annotation> T findAnnotation(Method method,
-      Class<T> annotationClass, Annotation previousFind) {
-    T annotation = method.getAnnotation(annotationClass);
-    if (annotation != null && previousFind != null) {
-      throw new IllegalArgumentException(
-          "Method annotated with multiple HTTP method annotations: "
-            + annotationClass.getSimpleName() + " and " + previousFind.getClass().getName());
-    }
-
-    return annotation;
-  }
   /** Gets the parameter name from the @Named annotation. */
   private static String getName(Annotation[] annotations, Method method,
       int parameterIndex) {
@@ -185,7 +207,7 @@ import retrofit.io.TypedBytes;
     GET {
       @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
           throws URISyntaxException {
-        List<NameValuePair> queryParams = builder.createParamList();
+        List<NameValuePair> queryParams = builder.getParamList(false);
         String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
         URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
             builder.getRelativePath(), queryString, null);
@@ -222,7 +244,7 @@ import retrofit.io.TypedBytes;
     DELETE {
       @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
           throws URISyntaxException {
-        List<NameValuePair> queryParams = builder.createParamList();
+        List<NameValuePair> queryParams = builder.getParamList(false);
         String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
         URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
             builder.getRelativePath(), queryString, null);
@@ -276,7 +298,7 @@ import retrofit.io.TypedBytes;
         request.setEntity(form);
       } else {
         try {
-          List<NameValuePair> paramList = builder.createParamList();
+          List<NameValuePair> paramList = builder.getParamList(true);
           request.setEntity(new UrlEncodedFormEntity(paramList));
         } catch (UnsupportedEncodingException e) {
           throw new AssertionError(e);
@@ -303,13 +325,15 @@ import retrofit.io.TypedBytes;
     private Object[] args;
     private HttpMethod httpMethod;
     private String apiUrl;
-    private String relativePath;
+    private String replacedRelativePath;
     private Headers headers;
+    private String originalRelativePath;
+    private List<NameValuePair> nonPathParams;
 
     public HttpRequestBuilder setMethod(Method method) {
       this.javaMethod = method;
       RequestLine requestLine = readHttpMethodAnnotation(method);
-      this.relativePath = requestLine.getRelativePath();
+      this.originalRelativePath = requestLine.getRelativePath();
       this.httpMethod = requestLine.getHttpMethod();
       return this;
     }
@@ -319,21 +343,12 @@ import retrofit.io.TypedBytes;
     }
 
     public String getRelativePath() {
-      if (hasPathParameters()) {
-        String replacedPath = relativePath;
-        List<NameValuePair> paramList = createParamList();
-        for (NameValuePair pair : paramList) {
-          replacedPath = replacedPath.replaceAll(
-              "\\{" + pair.getName() + "\\}", replacedPath);
-        }
-
-        return replacedPath;
-      }
-      return relativePath;
+      return replacedRelativePath != null ? replacedRelativePath
+          : originalRelativePath;
     }
 
     private boolean hasPathParameters() {
-      return relativePath.contains("{");
+      return originalRelativePath.contains("{");
     }
 
     public HttpRequestBuilder setApiUrl(String apiUrl) {
@@ -373,9 +388,19 @@ import retrofit.io.TypedBytes;
 
     /**
      * Converts all but the last method argument to a list of HTTP request
+     * parameters.  If includePathParams is true, path parameters (like id in
+     * "/entity/{id}"Êwill be included in this list.
+     */
+    public List<NameValuePair> getParamList(boolean includePathParams) {
+      if (includePathParams || nonPathParams == null) return createParamListN();
+      return nonPathParams;
+    }
+
+    /**
+     * Converts all but the last method argument to a list of HTTP request
      * parameters.
      */
-    public List<NameValuePair> createParamList() {
+    private List<NameValuePair> createParamListN() {
       Annotation[][] parameterAnnotations =
           javaMethod.getParameterAnnotations();
       int count = parameterAnnotations.length - 1;
@@ -392,6 +417,26 @@ import retrofit.io.TypedBytes;
     }
 
     public HttpUriRequest build() throws URISyntaxException {
+      // special handling if there are path parameters:
+      if (hasPathParameters()) {
+        List<NameValuePair> paramList = createParamListN();
+
+        String replacedPath = originalRelativePath;
+        Iterator<NameValuePair> itor = paramList.iterator();
+        while (itor.hasNext()) {
+          NameValuePair pair = itor.next();
+          String paramName = pair.getName();
+          if (replacedPath.contains("{" + paramName + "}")) {
+            replacedPath = replacedPath.replaceAll(
+                "\\{" + paramName + "\\}", pair.getValue());
+            itor.remove();
+          }
+        }
+
+        replacedRelativePath = replacedPath;
+        nonPathParams = paramList;
+      }
+
       return httpMethod.createFrom(this);
     }
   }
@@ -446,6 +491,7 @@ import retrofit.io.TypedBytes;
         logger.log(Level.WARNING, e.getMessage(), e);
         callback.networkError();
       } catch (Throwable t) {
+        t.printStackTrace();
         callback.unexpectedError(t);
       }
     }
@@ -551,49 +597,6 @@ import retrofit.io.TypedBytes;
        * exists before we even try to upload it.
        */
       typedBytes.writeTo(out);
-    }
-  }
-
-  /**
-   * Converts JSON response to an object using Gson and then passes it to {@link
-   * Callback#call(T)}.
-   */
-  static class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
-
-    private final Type type;
-
-    GsonResponseHandler(Type type, UiCallback<T> callback) {
-      super(callback);
-      this.type = type;
-    }
-
-    static <T> GsonResponseHandler<T> create(Type type,
-        UiCallback<T> callback) {
-      return new GsonResponseHandler<T>(type, callback);
-    }
-
-    @Override protected T parse(HttpEntity entity) throws IOException,
-        ServerException {
-      try {
-        if (logger.isLoggable(Level.FINE)) {
-          entity = HttpClients.copyAndLog(entity);
-        }
-
-        // TODO: Use specified encoding.
-        InputStreamReader in = new InputStreamReader(entity.getContent(),
-            "UTF-8");
-
-        /*
-         * It technically isn't safe for fromJson() to return T here.
-         * We derived type from Callback<T>, so we know we're safe.
-         */
-        @SuppressWarnings("unchecked")
-        T t = (T) new Gson().fromJson(in, type);
-        return t;
-      } catch (JsonParseException e) {
-        // The server returned us bad JSON!
-        throw new ServerException(e);
-      }
     }
   }
 
