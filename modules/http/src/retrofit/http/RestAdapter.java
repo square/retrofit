@@ -319,7 +319,21 @@ import retrofit.io.TypedBytes;
     }
 
     public String getRelativePath() {
+      if (hasPathParameters()) {
+        String replacedPath = relativePath;
+        List<NameValuePair> paramList = createParamList();
+        for (NameValuePair pair : paramList) {
+          replacedPath = replacedPath.replaceAll(
+              "\\{" + pair.getName() + "\\}", replacedPath);
+        }
+
+        return replacedPath;
+      }
       return relativePath;
+    }
+
+    private boolean hasPathParameters() {
+      return relativePath.contains("{");
     }
 
     public HttpRequestBuilder setApiUrl(String apiUrl) {
