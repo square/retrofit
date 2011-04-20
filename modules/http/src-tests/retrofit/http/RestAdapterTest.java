@@ -311,7 +311,7 @@ public class RestAdapterTest extends TestCase {
 
   private static class Response {
     final String text;
-    public Response() {
+    @SuppressWarnings("unused") public Response() {
       this("");
     }
     public Response(String text) {
