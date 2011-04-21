@@ -46,8 +46,11 @@ public class Files {
   /** Write the byte array to the file. */
   public static void writeFile(File file, byte[] bytes) throws IOException {
     FileOutputStream out = new FileOutputStream(file);
-    out.write(bytes);
-    out.close();
+    try {
+      out.write(bytes);
+    } finally {
+      out.close();
+    }
   }
 
   /**
