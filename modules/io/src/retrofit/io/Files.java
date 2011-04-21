@@ -43,14 +43,14 @@ public class Files {
     }
   }
 
-  /** Write the byte array to the file */
+  /** Write the byte array to the file. */
   public static void writeFile(File file, byte[] bytes) throws IOException {
     FileOutputStream out = new FileOutputStream(file);
     out.write(bytes);
     out.close();
   }
 
-  /** Write the String to the file */
+  /** Write the String to the file. */
   public static void writeFile(File file, String string) throws IOException {
     FileWriter out = new FileWriter(file);
     out.write(string);
@@ -59,14 +59,14 @@ public class Files {
 
   /**
    * Create the indicated directory, if it doesn't already exist.
-   * @throws AssertionError if there is an error creating the directory
+   * @throws IllegalStateException if there is an error creating the directory.
    * @throws IllegalArgumentException if param represents a file instead
-   * of a directory
+   * of a directory.
    */
   public static void makeDirectory(File directory) {
     if (!directory.exists()) {
       if (!directory.mkdirs()) {
-        throw new AssertionError("Error creating " + directory + ".");
+        throw new IllegalStateException("Error creating " + directory + ".");
       }
     } else {
       if (!directory.isDirectory()) {
@@ -76,7 +76,10 @@ public class Files {
     }
   }
 
-  /** Build a File object from the given parts. */
+  /**
+   * Build a File object from the given parts, appending each path part to
+   * the part before.
+   */
   public static File build(File baseFile, String... parts) {
     File file = baseFile;
     for (String part : parts) {
