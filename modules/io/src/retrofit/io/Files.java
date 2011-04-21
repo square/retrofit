@@ -42,4 +42,46 @@ public class Files {
       in.close();
     }
   }
+
+  /** Write the byte array to the file */
+  public static void writeFile(File file, byte[] bytes) throws IOException {
+    FileOutputStream out = new FileOutputStream(file);
+    out.write(bytes);
+    out.close();
+  }
+
+  /** Write the String to the file */
+  public static void writeFile(File file, String string) throws IOException {
+    FileWriter out = new FileWriter(file);
+    out.write(string);
+    out.close();
+  }
+
+  /**
+   * Create the indicated directory, if it doesn't already exist.
+   * @throws AssertionError if there is an error creating the directory
+   * @throws IllegalArgumentException if param represents a file instead
+   * of a directory
+   */
+  public static void makeDirectory(File directory) {
+    if (!directory.exists()) {
+      if (!directory.mkdirs()) {
+        throw new AssertionError("Error creating " + directory + ".");
+      }
+    } else {
+      if (!directory.isDirectory()) {
+        throw new IllegalArgumentException("File " + directory +
+            " is not a directory");
+      }
+    }
+  }
+
+  /** Build a File object from the given parts. */
+  public static File build(File baseFile, String... parts) {
+    File file = baseFile;
+    for (String part : parts) {
+      file = new File(file, part);
+    }
+    return file;
+  }
 }
