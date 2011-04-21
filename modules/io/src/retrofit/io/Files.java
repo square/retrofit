@@ -50,13 +50,6 @@ public class Files {
     out.close();
   }
 
-  /** Write the String to the file. */
-  public static void writeFile(File file, String string) throws IOException {
-    FileWriter out = new FileWriter(file);
-    out.write(string);
-    out.close();
-  }
-
   /**
    * Create the indicated directory, if it doesn't already exist.
    * @throws IllegalStateException if there is an error creating the directory.
@@ -78,7 +71,7 @@ public class Files {
 
   /**
    * Build a File object from the given parts, appending each path part to
-   * the part before.
+   * the preceding part.
    */
   public static File build(File baseFile, String... parts) {
     File file = baseFile;
