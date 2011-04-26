@@ -2,16 +2,14 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import retrofit.core.Callback;
-import retrofit.core.ErrorResponse;
-
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Support for response handlers that invoke {@link Callback}.
@@ -37,7 +35,7 @@ public abstract class CallbackResponseHandler<T>
 
   /**
    * Parses the HTTP entity and creates an object that will be passed to
-   * {@link Callback#call}. Invoked in background thread.
+   * {@link Callback#call(T)}. Invoked in background thread.
    *
    * @param entity HTTP entity to read and parse, not null
    * @throws IOException if a network error occurs
@@ -115,33 +113,16 @@ public abstract class CallbackResponseHandler<T>
       String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ". Body: " + body);
-      callback.clientError(parseErrorResponse(body));
+      try {
+        callback.clientError(parse(entity));
+      } catch (ServerException e) {
+        logger.log(Level.WARNING, e.getMessage(), e);
+        callback.serverError(null);
+      }
     } else {
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ".");
       callback.clientError(null);
-    }
-    return null;
-  }
-
-  /**
-   * Parses a client error message, assuming the JSON looks like this:
-   * <pre>
-   * {
-   *   "title": "Email Address Taken",
-   *   "message": "That email is already taken. Please enter another address."
-   * }</pre>
-   */
-  private static ErrorResponse parseErrorResponse(String body) {
-    try {
-      ClientError error = new Gson().fromJson(body, ClientError.class);
-      if (error != null) {
-        return new ErrorResponse(
-            error.title, error.message);
-      }
-    } catch (Throwable t) {
-      // The server error takes precedence.
-      logger.log(Level.WARNING, t.getMessage(), t);
     }
     return null;
   }
@@ -168,13 +149,5 @@ public abstract class CallbackResponseHandler<T>
    */
   static class ServerError {
     String message;
-  }
-
-  /**
-   * Gson POJO for parsing client errors.
-   */
-  static class ClientError {
-    String message;
-    String title;
   }
 }
