@@ -43,21 +43,12 @@ public class Files {
     }
   }
 
-  /** Write the byte array to the file. */
-  public static void writeFile(File file, byte[] bytes) throws IOException {
-    FileOutputStream out = new FileOutputStream(file);
-    try {
-      out.write(bytes);
-    } finally {
-      out.close();
-    }
-  }
-
   /**
    * Create the indicated directory, if it doesn't already exist.
+   *
    * @throws IllegalStateException if there is an error creating the directory.
    * @throws IllegalArgumentException if param represents a file instead
-   * of a directory.
+   *  of a directory.
    */
   public static void makeDirectory(File directory) {
     if (!directory.exists()) {
