@@ -9,6 +9,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.entity.BufferedHttpEntity;
 import retrofit.core.Callback;
 
 /**
@@ -109,12 +110,15 @@ public abstract class CallbackResponseHandler<T>
 
     // 4XX error
     if (entity != null) {
+      /** Construct BufferedHttpEntity so that we can read it multiple times. */
+      HttpEntity bufferedEntity = new BufferedHttpEntity(entity);
       // TODO: Use specified encoding.
-      String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
+      String body = new String(HttpClients.entityToBytes(bufferedEntity),
+          "UTF-8");
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ". Body: " + body);
       try {
-        callback.clientError(parse(entity));
+        callback.clientError(parse(bufferedEntity));
       } catch (ServerException e) {
         logger.log(Level.WARNING, e.getMessage(), e);
         callback.serverError(null);
