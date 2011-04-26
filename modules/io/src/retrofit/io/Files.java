@@ -42,4 +42,36 @@ public class Files {
       in.close();
     }
   }
+
+  /**
+   * Create the indicated directory, if it doesn't already exist.
+   *
+   * @throws IllegalStateException if there is an error creating the directory.
+   * @throws IllegalArgumentException if param represents a file instead
+   *  of a directory.
+   */
+  public static void makeDirectory(File directory) {
+    if (!directory.exists()) {
+      if (!directory.mkdirs()) {
+        throw new IllegalStateException("Error creating " + directory + ".");
+      }
+    } else {
+      if (!directory.isDirectory()) {
+        throw new IllegalArgumentException("File " + directory +
+            " is not a directory");
+      }
+    }
+  }
+
+  /**
+   * Build a File object from the given parts, appending each path part to
+   * the preceding part.
+   */
+  public static File build(File baseFile, String... parts) {
+    File file = baseFile;
+    for (String part : parts) {
+      file = new File(file, part);
+    }
+    return file;
+  }
 }
