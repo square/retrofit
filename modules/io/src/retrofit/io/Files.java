@@ -74,4 +74,16 @@ public class Files {
     }
     return file;
   }
+
+  /**
+   * Delete the given file, returning <code>true</code> if the file is gone
+   * (that is, if the delete succeeds, or was never there in the first place).
+   * A return value of <code>false</code> indicates that the delete failed.
+   */
+  public static boolean delete(File file) throws IllegalAccessException {
+    if (file == null) {
+      throw new IllegalArgumentException("Cannot delete a null file.");
+    }
+    return !file.exists() || file.delete();
+  }
 }
