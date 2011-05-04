@@ -97,6 +97,28 @@ public class RestAdapterTest extends TestCase {
   }
 
   @SuppressWarnings("unchecked")
+  public void testServiceDeleteWithFixedParam() throws IOException {
+    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
+        + "id=" + ID);
+    replayAll();
+
+    DeleteService service = injector.getInstance(DeleteService.class);
+    service.deleteWithFixedParam(ID, mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testServiceDeleteWithMultipleFixedParam() throws IOException {
+    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL
+        + "filter=merchant&name2=value2&"+ "id=" + ID);
+    replayAll();
+
+    DeleteService service = injector.getInstance(DeleteService.class);
+    service.deleteWithMultipleFixedParams(ID, mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
   public void testServiceDeletePathParam() throws IOException {
     expectLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
@@ -123,6 +145,28 @@ public class RestAdapterTest extends TestCase {
 
     GetService service = injector.getInstance(GetService.class);
     service.getWithParam(ID, mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testServiceGetWithFixedParam() throws IOException {
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
+        + "id=" + ID);
+    replayAll();
+
+    GetService service = injector.getInstance(GetService.class);
+    service.getWithFixedParam(ID, mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testServiceGetWithMultipleFixedParams() throws IOException {
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL
+        + "filter=merchant&name2=value2&"+ "id=" + ID);
+    replayAll();
+
+    GetService service = injector.getInstance(GetService.class);
+    service.getWithMultipleFixedParams(ID, mockCallback);
     verifyAll();
   }
 
@@ -275,6 +319,18 @@ public class RestAdapterTest extends TestCase {
     @DELETE(ENTITY) void deleteWithParam(@Named("id") String id,
         Callback<Response> callback);
 
+    @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
+    void deleteWithFixedParam(@Named("id") String id,
+        Callback<Response> callback);
+
+    @DELETE(ENTITY)
+    @QueryParams({
+      @QueryParam(name="filter", value="merchant"),
+      @QueryParam(name="name2", value="value2")
+    })
+    void deleteWithMultipleFixedParams(@Named("id") String id,
+        Callback<Response> callback);
+
     @DELETE(ENTITY_PATH_PARAM) void deleteWithPathParam(@Named("id") String id,
         Callback<Response> callback);
   }
@@ -283,6 +339,17 @@ public class RestAdapterTest extends TestCase {
     @GET(ENTITY) void get(Callback<Response> callback);
 
     @GET(ENTITY) void getWithParam(@Named("id") String id,
+        Callback<Response> callback);
+
+    @GET(ENTITY) @QueryParam(name="filter", value="merchant")
+    void getWithFixedParam(@Named("id") String id, Callback<Response> callback);
+
+    @GET(ENTITY)
+    @QueryParams({
+      @QueryParam(name="filter", value="merchant"),
+      @QueryParam(name="name2", value="value2")
+    })
+    void getWithMultipleFixedParams(@Named("id") String id,
         Callback<Response> callback);
 
     @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id,

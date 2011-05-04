@@ -7,7 +7,7 @@ import org.apache.http.entity.mime.content.AbstractContentBody;
 import retrofit.io.TypedBytes;
 
 /** Adapts ContentBody to TypedBytes. */
-class TypedBytesBody extends AbstractContentBody {
+public class TypedBytesBody extends AbstractContentBody {
   private final TypedBytes typedBytes;
   private final String name;
 

@@ -99,7 +99,24 @@ final class HttpRequestBuilder {
         javaMethod.getParameterAnnotations();
     int count = parameterAnnotations.length - 1;
 
-    List<NameValuePair> params = new ArrayList<NameValuePair>();
+    List<NameValuePair> params = new ArrayList<NameValuePair>(count);
+
+    // Add query parameter(s), if specified.
+    QueryParams queryParams = javaMethod.getAnnotation(QueryParams.class);
+    if (queryParams != null) {
+      QueryParam[] annotations = queryParams.value();
+      for (QueryParam annotation : annotations) {
+        params.add(addPair(annotation));
+      }
+    }
+
+    // Also check for a single specified query parameter.
+    QueryParam queryParam = javaMethod.getAnnotation(QueryParam.class);
+    if (queryParam != null) {
+      params.add(addPair(queryParam));
+    }
+
+    // Add arguments as parameters.
     for (int i = 0; i < count; i++) {
       Object arg = args[i];
       if (arg == null) continue;
@@ -108,6 +125,10 @@ final class HttpRequestBuilder {
     }
 
     return params;
+  }
+
+  protected BasicNameValuePair addPair(QueryParam queryParam) {
+    return new BasicNameValuePair(queryParam.name(), queryParam.value());
   }
 
   public HttpUriRequest build() throws URISyntaxException {
