@@ -28,9 +28,9 @@ public abstract class CallbackResponseHandler<T>
   private static final int BAD_GATEWAY = 502;
   private static final int GATEWAY_TIMEOUT = 504;
 
-  private final UiCallback<T> callback;
+  private final Callback<T> callback;
 
-  public CallbackResponseHandler(UiCallback<T> callback) {
+  public CallbackResponseHandler(Callback<T> callback) {
     this.callback = callback;
   }
 

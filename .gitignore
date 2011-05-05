@@ -2,3 +2,6 @@ lib
 out
 build
 
+.classpath
+.project
+eclipsebin

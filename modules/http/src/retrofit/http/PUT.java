@@ -3,18 +3,17 @@ package retrofit.http;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Type of HTTP request to make.
+ * Make a PUT request to a REST path relative to base URL.
  *
- * @author Rob Dickerson (rdickerson@squareup.com)
  * @author Patrick Forhan (patrick@squareup.com)
  */
-@Target({ METHOD, ANNOTATION_TYPE })
+@Target({ METHOD })
 @Retention(RUNTIME)
-public @interface HttpMethod {
-  HttpMethodType value();
+@HttpMethod(value = HttpMethodType.PUT)
+public @interface PUT {
+  String value();
 }
