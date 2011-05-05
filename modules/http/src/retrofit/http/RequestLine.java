@@ -18,23 +18,23 @@ final class RequestLine {
     httpMethod = methodType;
   }
 
-  public String getRelativePath() {
+  String getRelativePath() {
     return relativePath;
   }
 
-  public HttpMethodType getHttpMethod() {
+  HttpMethodType getHttpMethod() {
     return httpMethod;
   }
 
   /** Using reflection, get the value field of the specified annotation. */
-  private static String getValue(Annotation methodAnnotation) {
+  private static String getValue(Annotation annotation) {
     try {
-      final Method valueMethod = methodAnnotation.annotationType()
+      final Method valueMethod = annotation.annotationType()
           .getMethod("value");
-      return (String) valueMethod.invoke(methodAnnotation);
+      return (String) valueMethod.invoke(annotation);
 
     } catch (Exception ex) {
-      throw new IllegalStateException("Failed to extract method path", ex);
+      throw new IllegalStateException("Failed to extract URI path", ex);
     }
   }
 

@@ -31,10 +31,7 @@ public enum HttpMethodType {
   GET {
     @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
         throws URISyntaxException {
-      List<NameValuePair> queryParams = builder.getParamList(false);
-      String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
-      URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
-          builder.getRelativePath(), queryString, null);
+      URI uri = getParameterizedUri(builder);
       HttpGet request = new HttpGet(uri);
       builder.getHeaders().setOn(request);
       return request;
@@ -44,8 +41,7 @@ public enum HttpMethodType {
   POST {
     @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
         throws URISyntaxException {
-      URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
-          builder.getRelativePath(), null, null);
+      URI uri = getUri(builder);
       HttpPost request = new HttpPost(uri);
       addParams(request, builder);
       builder.getHeaders().setOn(request);
@@ -56,8 +52,7 @@ public enum HttpMethodType {
   PUT {
     @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
         throws URISyntaxException {
-      URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
-          builder.getRelativePath(), null, null);
+      URI uri = getUri(builder);
       HttpPut request = new HttpPut(uri);
       addParams(request, builder);
       builder.getHeaders().setOn(request);
@@ -68,10 +63,7 @@ public enum HttpMethodType {
   DELETE {
     @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
         throws URISyntaxException {
-      List<NameValuePair> queryParams = builder.getParamList(false);
-      String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
-      URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
-          builder.getRelativePath(), queryString, null);
+      URI uri = getParameterizedUri(builder);
       HttpDelete request = new HttpDelete(uri);
       builder.getHeaders().setOn(request);
       return request;
@@ -87,6 +79,22 @@ public enum HttpMethodType {
    */
   abstract HttpUriRequest createFrom(HttpRequestBuilder builder)
       throws URISyntaxException;
+
+  /** Gets a URI with no query parameters specified. */
+  private static URI getUri(HttpRequestBuilder builder) throws URISyntaxException {
+    return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
+        builder.getRelativePath(), null, null);
+  }
+
+  /** Gets a URI with parameters specified as query string parameters. */
+  private static URI getParameterizedUri(HttpRequestBuilder builder)
+      throws URISyntaxException {
+    List<NameValuePair> queryParams = builder.getParamList(false);
+    String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
+    URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
+        builder.getRelativePath(), queryString, null);
+    return uri;
+  }
 
   /**
    * Adds all but the last method argument as parameters of HTTP request
@@ -109,7 +117,7 @@ public enum HttpMethodType {
         Object arg = args[i];
         if (arg == null) continue;
         Annotation[] annotations = parameterAnnotations[i];
-        String name = RestAdapter.getName(annotations, method, i);
+        String name = HttpRequestBuilder.getName(annotations, method, i);
         Class<?> type = parameterTypes[i];
 
         if (TypedBytes.class.isAssignableFrom(type)) {

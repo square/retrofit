@@ -1,5 +1,6 @@
 package retrofit.http;
 
+import com.google.inject.name.Named;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
@@ -11,69 +12,74 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
 
 /**
- * Builds HTTP requests from Java method invocations.
+ * Builds HTTP requests from Java method invocations.  Handles "path parameters"
+ * in the apiUrl in the form of "path/to/url/{id}/action" where a parameter
+ * &#64;{@link Named}("id") is inserted into the url.  Note that this
+ * replacement can be recursive if:
+ * <ol>
+ * <li> multiple sets of brackets are nested ("path/to/{{key}a}
+ * <li> the order of &#64;{@link Named} values go from innermost to outermost
+ * <li> the values replaced correspond to &#64;{@link Named} parameters.
+ * </ol>
  */
 final class HttpRequestBuilder {
 
   private Method javaMethod;
   private Object[] args;
-  private HttpMethodType httpMethod;
   private String apiUrl;
   private String replacedRelativePath;
   private Headers headers;
-  private String originalRelativePath;
   private List<NameValuePair> nonPathParams;
+  private RequestLine requestLine;
 
-  public HttpRequestBuilder setMethod(Method method) {
+  HttpRequestBuilder setMethod(Method method) {
     this.javaMethod = method;
-    RequestLine requestLine = RequestLine.fromMethod(method);
-    this.originalRelativePath = requestLine.getRelativePath();
-    this.httpMethod = requestLine.getHttpMethod();
+    requestLine = RequestLine.fromMethod(method);
     return this;
   }
 
-  public Method getMethod() {
+  Method getMethod() {
     return javaMethod;
   }
 
-  public String getRelativePath() {
+  String getRelativePath() {
     return replacedRelativePath != null ? replacedRelativePath
-        : originalRelativePath;
+        : requestLine.getRelativePath();
   }
 
   private boolean hasPathParameters() {
-    return originalRelativePath.contains("{");
+    return requestLine.getRelativePath().contains("{");
   }
 
-  public HttpRequestBuilder setApiUrl(String apiUrl) {
+  HttpRequestBuilder setApiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
     return this;
   }
 
   /** The last argument is assumed to be the Callback and is ignored. */
-  public HttpRequestBuilder setArgs(Object[] args) {
+  HttpRequestBuilder setArgs(Object[] args) {
     this.args = args;
     return this;
   }
 
-  public Object[] getArgs() {
+  Object[] getArgs() {
     return args;
   }
 
-  public HttpRequestBuilder setHeaders(Headers headers) {
+  HttpRequestBuilder setHeaders(Headers headers) {
     this.headers = headers;
     return this;
   }
 
-  public Headers getHeaders() {
+  Headers getHeaders() {
     return headers;
   }
 
-  public String getScheme() {
+  String getScheme() {
     return apiUrl.substring(0, apiUrl.indexOf("://"));
   }
 
-  public String getHost() {
+  String getHost() {
     String host = apiUrl.substring(
         apiUrl.indexOf("://") + 3, apiUrl.length());
     if (host.endsWith("/")) host = host.substring(0, host.length() - 1);
@@ -85,7 +91,7 @@ final class HttpRequestBuilder {
    * parameters.  If includePathParams is true, path parameters (like id in
    * "/entity/{id}" will be included in this list.
    */
-  public List<NameValuePair> getParamList(boolean includePathParams) {
+  List<NameValuePair> getParamList(boolean includePathParams) {
     if (includePathParams || nonPathParams == null) return createParamList();
     return nonPathParams;
   }
@@ -120,23 +126,23 @@ final class HttpRequestBuilder {
     for (int i = 0; i < count; i++) {
       Object arg = args[i];
       if (arg == null) continue;
-      String name = RestAdapter.getName(parameterAnnotations[i], javaMethod, i);
+      String name = getName(parameterAnnotations[i], javaMethod, i);
       params.add(new BasicNameValuePair(name, String.valueOf(arg)));
     }
 
     return params;
   }
 
-  protected BasicNameValuePair addPair(QueryParam queryParam) {
+  private BasicNameValuePair addPair(QueryParam queryParam) {
     return new BasicNameValuePair(queryParam.name(), queryParam.value());
   }
 
-  public HttpUriRequest build() throws URISyntaxException {
-    // special handling if there are path parameters:
+  HttpUriRequest build() throws URISyntaxException {
+    // Alter parameter list if path parameters are present.
     if (hasPathParameters()) {
       List<NameValuePair> paramList = createParamList();
 
-      String replacedPath = originalRelativePath;
+      String replacedPath = requestLine.getRelativePath();
       Iterator<NameValuePair> itor = paramList.iterator();
       while (itor.hasNext()) {
         NameValuePair pair = itor.next();
@@ -152,6 +158,30 @@ final class HttpRequestBuilder {
       nonPathParams = paramList;
     }
 
-    return httpMethod.createFrom(this);
+    return requestLine.getHttpMethod().createFrom(this);
+  }
+
+  /** Gets the parameter name from the @Named annotation. */
+  static String getName(Annotation[] annotations, Method method,
+      int parameterIndex) {
+    return findAnnotation(annotations, Named.class, method,
+        parameterIndex).value();
+  }
+
+  /**
+   * Finds a parameter annotation.
+   *
+   * @throws IllegalArgumentException if the annotation isn't found
+   */
+  private static <A extends Annotation> A findAnnotation(
+      Annotation[] annotations, Class<A> annotationType, Method method,
+      int parameterIndex) {
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType() == annotationType) {
+        return annotationType.cast(annotation);
+      }
+    }
+    throw new IllegalArgumentException(annotationType + " missing on"
+        + " parameter #" + parameterIndex + " of " + method + ".");
   }
 }

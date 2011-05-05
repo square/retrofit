@@ -14,13 +14,13 @@ import retrofit.core.Callback;
  * Converts JSON response to an object using Gson and then passes it to {@link
  * Callback#call(T)}.
  */
-public class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
+class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
   private static final Logger logger =
     Logger.getLogger(GsonResponseHandler.class.getName());
 
   private final Type type;
 
-  GsonResponseHandler(Type type, Callback<T> callback) {
+  private GsonResponseHandler(Type type, Callback<T> callback) {
     super(callback);
     this.type = type;
   }

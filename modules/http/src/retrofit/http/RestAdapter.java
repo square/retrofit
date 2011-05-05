@@ -5,9 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -80,30 +78,6 @@ import retrofit.core.MainThread;
         });
       }
     };
-  }
-
-  /** Gets the parameter name from the @Named annotation. */
-  static String getName(Annotation[] annotations, Method method,
-      int parameterIndex) {
-    return findAnnotation(annotations, Named.class, method,
-        parameterIndex).value();
-  }
-
-  /**
-   * Finds a parameter annotation.
-   *
-   * @throws IllegalArgumentException if the annotation isn't found
-   */
-  private static <A extends Annotation> A findAnnotation(
-      Annotation[] annotations, Class<A> annotationType, Method method,
-      int parameterIndex) {
-    for (Annotation annotation : annotations) {
-      if (annotation.annotationType() == annotationType) {
-        return annotationType.cast(annotation);
-      }
-    }
-    throw new IllegalArgumentException(annotationType + " missing on"
-        + " parameter #" + parameterIndex + " of " + method + ".");
   }
 
   private class RestHandler implements InvocationHandler {
