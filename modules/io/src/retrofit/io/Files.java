@@ -91,18 +91,6 @@ public class Files {
   }
 
   /**
-   * This class delays loading the native library until
-   * {@link Files#sync(java.io.File)} is called.
-   */
-  private static class Native {
-    static {
-      System.loadLibrary("retrofit");
-    }
-
-    static native void sync(String path);
-  }
-
-  /**
    * Ensures changes to the given directory have been written to storage.
    * Returns after all pending changes have been written. Helps prevent
    * data corruption in the event of a system crash.
@@ -115,4 +103,16 @@ public class Files {
   public static void sync(File directory) throws IOException {
     Native.sync(directory.getPath());
   }
+}
+
+/**
+ * Delays loading the native library until {@link Files#sync(java.io.File)}
+ * is called.
+ */
+class Native {
+  static {
+    System.loadLibrary("retrofit");
+  }
+
+  static native void sync(String path);
 }

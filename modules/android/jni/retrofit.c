@@ -8,7 +8,7 @@ static void throwException(JNIEnv* env, const char* typeName,
   (*env)->ThrowNew(env, (*env)->FindClass(env, typeName), message);
 }
 
-void Java_retrofit_io_Files$Native_sync(JNIEnv* env, jclass javaType,
+void Java_retrofit_io_Native_sync(JNIEnv* env, jclass javaType,
     jstring javaPath) {
   const char* path = (*env)->GetStringUTFChars(env, javaPath, NULL);
   // assert path != NULL
