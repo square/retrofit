@@ -1,0 +1,13 @@
+The native portions of Retofit's Android module live in ./jni.
+
+Building:
+
+  ./build-jni.sh
+
+Installation:
+
+  Copy ./libs to your Android project root.
+
+Testing:
+
+  ?
