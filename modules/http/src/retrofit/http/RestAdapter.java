@@ -129,6 +129,7 @@ import retrofit.core.MainThread;
         logger.log(Level.WARNING, e.getMessage(), e);
         callback.networkError();
       } catch (Throwable t) {
+        logger.log(Level.WARNING, t.getMessage(), t);
         callback.unexpectedError(t);
       }
     }
