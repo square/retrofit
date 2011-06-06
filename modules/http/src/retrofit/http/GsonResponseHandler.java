@@ -1,7 +1,5 @@
 package retrofit.http;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -9,6 +7,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import retrofit.core.Callback;
+import retrofit.internal.gson.Gson;
+import retrofit.internal.gson.JsonParseException;
 
 /**
  * Converts JSON response to an object using Gson and then passes it to {@link

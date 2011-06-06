@@ -1,6 +1,5 @@
 package retrofit.http;
 
-import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -25,6 +24,7 @@ import org.easymock.IAnswer;
 import org.junit.Before;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
+import retrofit.internal.gson.Gson;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
