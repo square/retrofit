@@ -68,7 +68,23 @@
 
   <import file="build-macros.xml"/>
 
-  <target name="compile" depends="prepare">
+  <target name="repackage-gson" depends="prepare">
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask">
+      <classpath>
+        <fileset dir="lib" includes="jarjar*.jar"/>
+      </classpath>
+    </taskdef>
+    <jarjar jarfile="${build.dir}/retrofit-gson-1.6.jar">
+      <zipfileset src="lib/gson-1.6.jar"/>
+      <rule pattern="com.google.gson.**" result="retrofit.internal.gson.@1"/>
+    </jarjar>
+    <jarjar jarfile="${build.dir}/retrofit-gson-1.6-sources.jar">
+      <zipfileset src="lib/gson-1.6-sources.jar"/>
+      <rule pattern="com.google.gson.**" result="retrofit.internal.gson.@1"/>
+    </jarjar>
+  </target>
+
+  <target name="compile" depends="repackage-gson">
     <!-- Build these in this particular order. -->
     <compile.module module="core"/>
 
@@ -82,10 +98,12 @@
       <compile.main.classpath>
         <pathelement location="${build.dir}/core/main"/>
         <pathelement location="${build.dir}/io/main"/>
+	      <pathelement location="${build.dir}/retrofit-gson-1.6.jar"/>
       </compile.main.classpath>
       <compile.tests.classpath>
         <pathelement location="${build.dir}/core/main"/>
         <pathelement location="${build.dir}/io/main"/>
+        <pathelement location="${build.dir}/retrofit-gson-1.6.jar"/>
       </compile.tests.classpath>
     </compile.module>
 
@@ -123,6 +141,7 @@
         <pathelement location="${build.dir}/http/tests"/>
         <pathelement location="${build.dir}/io/main"/>
         <pathelement location="${build.dir}/io/tests"/>
+        <fileset dir="${build.dir}" includes="retrofit-gson*.jar"/>
         <fileset dir="${lib.dir}" includes="*.jar"/>
       </classpath>
 

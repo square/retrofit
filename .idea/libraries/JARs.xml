@@ -2,6 +2,7 @@
   <library name="JARs">
     <CLASSES>
       <root url="file://$PROJECT_DIR$/lib" />
+      <root url="jar://$PROJECT_DIR$/build/retrofit-gson-1.6.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

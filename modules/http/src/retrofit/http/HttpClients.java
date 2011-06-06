@@ -1,15 +1,14 @@
 // Copyright 2010 Square, Inc.
 package retrofit.http;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.entity.ByteArrayEntity;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.entity.ByteArrayEntity;
 
 /**
  * Utility methods for dealing with HttpClient.
