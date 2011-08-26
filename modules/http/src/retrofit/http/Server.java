@@ -4,7 +4,8 @@ package retrofit.http;
 import java.util.Properties;
 
 /**
- * Server information.
+ * Server information. Applications may extend this class and return different URLs over time.
+ * Callers should always consult the Server instance for the latest values rather than caching URLs.
  *
  * @author Bob Lee (bob@squareup.com)
  */
@@ -14,7 +15,7 @@ public class Server {
   private final String webUrl;
   private final boolean ignoreSslWarnings;
 
-  Server(String apiUrl, String webUrl, boolean ignoreSslWarnings) {
+  protected Server(String apiUrl, String webUrl, boolean ignoreSslWarnings) {
     this.apiUrl = apiUrl;
     this.webUrl = webUrl;
     this.ignoreSslWarnings = ignoreSslWarnings;
