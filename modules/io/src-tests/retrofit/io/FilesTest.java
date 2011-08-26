@@ -24,7 +24,9 @@ public class FilesTest extends TestCase {
   }
 
   public void testDeleteFileThatDoesntExist() throws Exception {
-    File tmpFile = new File("/foobar");
+    File tmpFile = File.createTempFile("foobar", ".tmp");
+    assertTrue("unable to delete temporary file", tmpFile.delete());
+
     assertFalse(tmpFile.exists());
     assertTrue(Files.delete(tmpFile));
     assertFalse(tmpFile.exists());
