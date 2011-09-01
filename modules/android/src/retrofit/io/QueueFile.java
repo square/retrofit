@@ -15,7 +15,11 @@
  */
 package retrofit.io;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
@@ -361,7 +365,7 @@ public class QueueFile {
     // Set new file length (considered metadata) and sync it to storage.
     raf.setLength(newLength);
     FileChannel channel = raf.getChannel();
-    channel.force(true);    
+    channel.force(true);
 
     // Calculate the position of the tail end of the data in the ring buffer
     int endOfLastElement = wrapPosition(
@@ -428,11 +432,6 @@ public class QueueFile {
     return t;
   }
 
-  /** Returns true if the two possibly objects are equal. */
-  private static <T> boolean equal(T a, T b) {
-    return a == b || a != null && a.equals(b);
-  }
-
   /** Reads a single element. */
   private class ElementInputStream extends InputStream {
     private int position;
@@ -495,8 +494,9 @@ public class QueueFile {
 
   /** Clears this queue. Truncates the file to the initial size. */
   public synchronized void clear() throws IOException {
-    if (fileLength > INITIAL_LENGTH) raf.setLength(INITIAL_LENGTH);
     writeHeader(INITIAL_LENGTH, 0, 0, 0);
+    raf.getChannel().force(true);
+    if (fileLength > INITIAL_LENGTH) raf.setLength(INITIAL_LENGTH);
     elementCount = 0;
     first = last = Element.NULL;
     fileLength = INITIAL_LENGTH;
@@ -519,7 +519,7 @@ public class QueueFile {
       forEach(new ElementReader() {
         boolean first = true;
 
-        public void read(InputStream in, int length) throws IOException {
+        @Override public void read(InputStream in, int length) throws IOException {
           if (first) {
             first = false;
           } else {

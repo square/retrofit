@@ -1,14 +1,17 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import junit.framework.ComparisonFailure;
-import junit.framework.TestCase;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Logger;
+import junit.framework.ComparisonFailure;
+import junit.framework.TestCase;
 
 /**
  * Tests for QueueFile.
@@ -214,7 +217,7 @@ public class QueueFileTest extends TestCase {
     queueFile.add(b);
 
     queueFile.peek(new QueueFile.ElementReader() {
-      public void read(InputStream in, int length) throws IOException {
+      @Override public void read(InputStream in, int length) throws IOException {
         assertEquals(length, 2);
         byte[] actual = new byte[length];
         in.read(actual);
@@ -223,7 +226,7 @@ public class QueueFileTest extends TestCase {
     });
 
     queueFile.peek(new QueueFile.ElementReader() {
-      public void read(InputStream in, int length) throws IOException {
+      @Override public void read(InputStream in, int length) throws IOException {
         assertEquals(length, 2);
         assertEquals(1, in.read());
         assertEquals(2, in.read());
@@ -234,7 +237,7 @@ public class QueueFileTest extends TestCase {
     queueFile.remove();
 
     queueFile.peek(new QueueFile.ElementReader() {
-      public void read(InputStream in, int length) throws IOException {
+      @Override public void read(InputStream in, int length) throws IOException {
         assertEquals(length, 3);
         byte[] actual = new byte[length];
         in.read(actual);
@@ -256,7 +259,7 @@ public class QueueFileTest extends TestCase {
 
     final int[] iteration = new int[]{0};
     QueueFile.ElementReader elementReader = new QueueFile.ElementReader() {
-      public void read(InputStream in, int length) throws IOException {
+      @Override public void read(InputStream in, int length) throws IOException {
         if (iteration[0] == 0) {
           assertEquals(length, 2);
           byte[] actual = new byte[length];
