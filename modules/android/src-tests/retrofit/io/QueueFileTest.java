@@ -209,7 +209,7 @@ public class QueueFileTest extends TestCase {
     assertEquals(values[99], queueFile.peek());
   }
 
-  public void testPeakWithElementReader() throws IOException {
+  public void testPeekWithElementReader() throws IOException {
     QueueFile queueFile = new QueueFile(file);
     final byte[] a = {1, 2};
     queueFile.add(a);
