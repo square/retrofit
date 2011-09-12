@@ -7,6 +7,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
@@ -23,6 +25,8 @@ import org.apache.http.message.BasicNameValuePair;
  * </ol>
  */
 final class HttpRequestBuilder {
+  private static final Logger logger =
+      Logger.getLogger(HttpRequestBuilder.class.getName());
 
   private Method javaMethod;
   private Object[] args;
@@ -158,7 +162,9 @@ final class HttpRequestBuilder {
       nonPathParams = paramList;
     }
 
-    return requestLine.getHttpMethod().createFrom(this);
+    HttpUriRequest request = requestLine.getHttpMethod().createFrom(this);
+    if (logger.isLoggable(Level.FINE)) logger.fine("Request params: "+getParamList(true));
+    return request;
   }
 
   /** Gets the parameter name from the @Named annotation. */

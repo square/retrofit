@@ -56,7 +56,17 @@ public class HttpClients {
   public static HttpEntity copyAndLog(HttpEntity entity) throws IOException {
     byte[] bytes = entityToBytes(entity);
     // TODO: Use correct encoding.
-    logger.fine("Response: " + new String(bytes));
+    if (logger.isLoggable(Level.FINE)) {
+      final int chunkSize = 4000;
+      logger.fine("-Response:");
+      for (int i = 0; i < bytes.length; i += chunkSize) {
+        int end = i + chunkSize;
+        logger.fine(((end > bytes.length) ? new String(bytes, i, bytes.length - i)
+                                          : new String(bytes, i, chunkSize)));
+      }
+      logger.fine("-end response.");
+    }
+
     return new ByteArrayEntity(bytes);
   }
 }
