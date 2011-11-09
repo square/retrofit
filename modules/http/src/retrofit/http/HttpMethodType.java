@@ -19,6 +19,7 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.protocol.HTTP;
 import retrofit.io.TypedBytes;
 
 /**
@@ -135,7 +136,8 @@ public enum HttpMethodType {
     } else {
       try {
         List<NameValuePair> paramList = builder.getParamList(true);
-        request.setEntity(new UrlEncodedFormEntity(paramList));
+          // TODO: Use specified encoding. (See CallbackResponseHandler et al)
+          request.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
       } catch (UnsupportedEncodingException e) {
         throw new AssertionError(e);
       }
