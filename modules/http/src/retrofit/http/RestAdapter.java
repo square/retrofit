@@ -124,6 +124,7 @@ import retrofit.core.MainThread;
             gsonResponseHandler : createProfiler(gsonResponseHandler, profiler,
                 method, server.apiUrl());
 
+        callback.preInvoke();
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
         logger.log(Level.WARNING, e.getMessage(), e);

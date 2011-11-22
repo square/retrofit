@@ -12,6 +12,11 @@ package retrofit.core;
 public interface Callback<T> {
 
   /**
+   * Notification that the call has been constructed and we're about to contact the server.
+   */
+  void preInvoke();
+
+  /**
    * Handles a response.
    *
    * @param t response
