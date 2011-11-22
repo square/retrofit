@@ -254,17 +254,20 @@ public class RestAdapterTest extends TestCase {
   }
 
   private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass,
-      String requestUrl) throws UnsupportedEncodingException, IOException {
+      String requestUrl) throws IOException {
     expectExecution(mockExecutor);
-    expectExecution(mockMainThread);
+    expectExecution(mockMainThread); // For preInvoke()
+    expectExecution(mockMainThread); // For call()
     expectSetOnWithRequest(requestClass, requestUrl);
     Response response = new Response("some text");
     expectResponseCalls(new Gson().toJson(response));
     expectHttpClientExecute();
-    expectCall(response);
+    expectCallbacks(response);
   }
 
-  @SuppressWarnings("unchecked") private void expectCall(Response response) {
+  @SuppressWarnings("unchecked") private void expectCallbacks(Response response) {
+    mockCallback.preInvoke();
+    expectLastCall().once();
     mockCallback.call(response);
     expectLastCall().once();
   }
@@ -388,7 +391,7 @@ public class RestAdapterTest extends TestCase {
       return 7;
     }
     @Override public boolean equals(Object obj) {
-      return text.equals(((Response)obj).text);
+      return obj instanceof Response && text.equals(((Response)obj).text);
     }
 
   }
