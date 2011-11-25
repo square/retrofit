@@ -7,8 +7,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import retrofit.core.Callback;
-import retrofit.internal.gson.Gson;
 import retrofit.internal.gson.JsonParseException;
+
+import static retrofit.http.GsonProvider.gson;
 
 /**
  * Converts JSON response to an object using Gson and then passes it to {@link
@@ -46,7 +47,7 @@ class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
        * We derived type from Callback<T>, so we know we're safe.
        */
       @SuppressWarnings("unchecked")
-      T t = (T) new Gson().fromJson(in, type);
+      T t = (T) gson().fromJson(in, type);
       return t;
     } catch (JsonParseException e) {
       // The server returned us bad JSON!
