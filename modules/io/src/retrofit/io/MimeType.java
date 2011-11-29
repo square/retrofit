@@ -8,6 +8,7 @@ package retrofit.io;
  */
 public enum MimeType {
 
+  JSON("application/json", "json"),
   GIF("image/gif", "gif"),
   PNG("image/png", "png"),
   JPEG("image/jpeg", "jpg");

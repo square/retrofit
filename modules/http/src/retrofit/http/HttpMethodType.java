@@ -34,7 +34,7 @@ public enum HttpMethodType {
         throws URISyntaxException {
       URI uri = getParameterizedUri(builder);
       HttpGet request = new HttpGet(uri);
-      builder.getHeaders().setOn(request);
+      builder.getHeaders().setOn(request, builder.getMimeType());
       return request;
     }
   },
@@ -45,7 +45,7 @@ public enum HttpMethodType {
       URI uri = getUri(builder);
       HttpPost request = new HttpPost(uri);
       addParams(request, builder);
-      builder.getHeaders().setOn(request);
+      builder.getHeaders().setOn(request, builder.getMimeType());
       return request;
     }
   },
@@ -56,7 +56,7 @@ public enum HttpMethodType {
       URI uri = getUri(builder);
       HttpPut request = new HttpPut(uri);
       addParams(request, builder);
-      builder.getHeaders().setOn(request);
+      builder.getHeaders().setOn(request, builder.getMimeType());
       return request;
     }
   },
@@ -66,7 +66,7 @@ public enum HttpMethodType {
         throws URISyntaxException {
       URI uri = getParameterizedUri(builder);
       HttpDelete request = new HttpDelete(uri);
-      builder.getHeaders().setOn(request);
+      builder.getHeaders().setOn(request, builder.getMimeType());
       return request;
     }
   };
@@ -92,9 +92,8 @@ public enum HttpMethodType {
       throws URISyntaxException {
     List<NameValuePair> queryParams = builder.getParamList(false);
     String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
-    URI uri = URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
-        builder.getRelativePath(), queryString, null);
-    return uri;
+    return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1, builder.getRelativePath(),
+        queryString, null);
   }
 
   /**
@@ -111,7 +110,7 @@ public enum HttpMethodType {
         method.getParameterAnnotations();
     int count = parameterAnnotations.length - 1;
 
-    if (useMultipart(parameterTypes)) {
+    if (useMultipart(parameterTypes, parameterAnnotations)) {
       MultipartEntity form = new MultipartEntity(
           HttpMultipartMode.BROWSER_COMPATIBLE);
       for (int i = 0; i < count; i++) {
@@ -135,9 +134,15 @@ public enum HttpMethodType {
       request.setEntity(form);
     } else {
       try {
-        List<NameValuePair> paramList = builder.getParamList(true);
+        if (builder.getSingleEntity() != null) {
+          final TypedBytesEntity entity = new TypedBytesEntity(builder.getSingleEntity());
+          request.setEntity(entity);
+          request.addHeader("Content-Type", entity.getMimeType().mimeName());
+        } else {
+          List<NameValuePair> paramList = builder.getParamList(true);
           // TODO: Use specified encoding. (See CallbackResponseHandler et al)
           request.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
+        }
       } catch (UnsupportedEncodingException e) {
         throw new AssertionError(e);
       }
@@ -145,9 +150,21 @@ public enum HttpMethodType {
   }
 
   /** Returns true if the parameters contain a file upload. */
-  private static boolean useMultipart(Class<?>[] parameterTypes) {
-    for (Class<?> parameterType : parameterTypes) {
-      if (TypedBytes.class.isAssignableFrom(parameterType)) return true;
+  private static boolean useMultipart(Class<?>[] parameterTypes, Annotation[][] parameterAnnotations) {
+    for (int i = 0; i < parameterTypes.length; i++) {
+      Class<?> parameterType = parameterTypes[i];
+      Annotation[] annotations = parameterAnnotations[i];
+      if (TypedBytes.class.isAssignableFrom(parameterType)
+          && !hasSingleEntityAnnotation(annotations)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasSingleEntityAnnotation(Annotation[] annotations) {
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType().equals(SingleEntity.class)) return true;
     }
     return false;
   }
