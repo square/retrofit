@@ -10,7 +10,8 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.BufferedHttpEntity;
 import retrofit.core.Callback;
-import retrofit.internal.gson.Gson;
+
+import static retrofit.http.GsonProvider.gson;
 
 /**
  * Support for response handlers that invoke {@link Callback}.
@@ -138,7 +139,7 @@ public abstract class CallbackResponseHandler<T>
     if (statusCode == BAD_GATEWAY || statusCode == GATEWAY_TIMEOUT
         || statusCode < 500) {
       try {
-        ServerError serverError = new Gson().fromJson(body, ServerError.class);
+        ServerError serverError = gson().fromJson(body, ServerError.class);
         if (serverError != null) return serverError.message;
       } catch (Throwable t) {
         // The server error takes precedence.

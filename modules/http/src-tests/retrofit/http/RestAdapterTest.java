@@ -24,7 +24,6 @@ import org.easymock.IAnswer;
 import org.junit.Before;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
-import retrofit.internal.gson.Gson;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
@@ -33,6 +32,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static retrofit.http.GsonProvider.gson;
 import static retrofit.http.RestAdapter.service;
 
 public class RestAdapterTest extends TestCase {
@@ -260,7 +260,7 @@ public class RestAdapterTest extends TestCase {
     expectExecution(mockMainThread); // For call()
     expectSetOnWithRequest(requestClass, requestUrl);
     Response response = new Response("some text");
-    expectResponseCalls(new Gson().toJson(response));
+    expectResponseCalls(gson().toJson(response));
     expectHttpClientExecute();
     expectCallbacks(response);
   }
@@ -294,7 +294,8 @@ public class RestAdapterTest extends TestCase {
   private <T extends HttpUriRequest> void expectSetOnWithRequest(
       final Class<T> expectedRequestClass, final String expectedUri) {
     final Capture<HttpMessage> capture = new Capture<HttpMessage>();
-    mockHeaders.setOn(capture(capture));
+    final Capture<String> captureMime = new Capture<String>();
+    mockHeaders.setOn(capture(capture), capture(captureMime));
     expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override public Object answer() throws Throwable {
         T request = expectedRequestClass.cast(capture.getValue());
