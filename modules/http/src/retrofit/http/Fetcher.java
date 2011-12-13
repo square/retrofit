@@ -14,6 +14,7 @@ import org.apache.http.client.methods.HttpGet;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
 import retrofit.core.ProgressListener;
+import retrofit.internal.gson.Gson;
 import retrofit.io.ByteSink;
 
 import static retrofit.core.internal.Objects.nonNull;
@@ -29,12 +30,13 @@ public class Fetcher {
 
   // TODO: Support conditional get.
 
+  private final Gson gson;
   private final Provider<HttpClient> httpClientProvider;
   private final Executor executor;
   private final MainThread mainThread;
 
-  @Inject Fetcher(Provider<HttpClient> httpClientProvider, Executor executor,
-      MainThread mainThread) {
+  @Inject Fetcher(Gson gson, Provider<HttpClient> httpClientProvider, Executor executor, MainThread mainThread) {
+    this.gson = gson;
     this.httpClientProvider = httpClientProvider;
     this.executor = executor;
     this.mainThread = mainThread;
@@ -57,7 +59,7 @@ public class Fetcher {
     executor.execute(new Runnable() {
       public void run() {
         try {
-          httpClientProvider.get().execute(get, new DownloadHandler(destination,
+          httpClientProvider.get().execute(get, new DownloadHandler(gson, destination,
               uiCallback, progressListener, mainThread));
         } catch (IOException e) {
           logger.log(Level.WARNING, "fetch exception", e);
@@ -81,10 +83,10 @@ public class Fetcher {
     private final MainThread mainThread;
     private final ProgressUpdate progressUpdate = new ProgressUpdate();
 
-    DownloadHandler(ByteSink.Factory destination,
+    DownloadHandler(Gson gson, ByteSink.Factory destination,
         UiCallback<Void> callback, ProgressListener progressListener,
         MainThread mainThread) {
-      super(callback);
+      super(gson, callback);
       this.destination = destination;
       this.progressListener = progressListener;
       this.mainThread = mainThread;

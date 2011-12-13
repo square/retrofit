@@ -4,14 +4,15 @@ package retrofit.http;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.inject.Inject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.BufferedHttpEntity;
 import retrofit.core.Callback;
-
-import static retrofit.http.GsonProvider.gson;
+import retrofit.internal.gson.Gson;
 
 /**
  * Support for response handlers that invoke {@link Callback}.
@@ -30,8 +31,11 @@ public abstract class CallbackResponseHandler<T>
   private static final int GATEWAY_TIMEOUT = 504;
 
   private final Callback<T> callback;
+  
+  private final Gson gson;
 
-  public CallbackResponseHandler(Callback<T> callback) {
+  protected CallbackResponseHandler(Gson gson, Callback<T> callback) {
+    this.gson = gson;
     this.callback = callback;
   }
 
@@ -135,11 +139,11 @@ public abstract class CallbackResponseHandler<T>
   /**
    * Parses a server error message.
    */
-  private static String parseServerMessage(int statusCode, String body) {
+  private String parseServerMessage(int statusCode, String body) {
     if (statusCode == BAD_GATEWAY || statusCode == GATEWAY_TIMEOUT
         || statusCode < 500) {
       try {
-        ServerError serverError = gson().fromJson(body, ServerError.class);
+        ServerError serverError = gson.fromJson(body, ServerError.class);
         if (serverError != null) return serverError.message;
       } catch (Throwable t) {
         // The server error takes precedence.

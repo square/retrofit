@@ -21,6 +21,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
+import retrofit.internal.gson.Gson;
 
 /**
  * Converts Java method calls to Rest calls.
@@ -36,6 +37,7 @@ import retrofit.core.MainThread;
   @Inject private Executor executor;
   @Inject private MainThread mainThread;
   @Inject private Headers headers;
+  @Inject private Gson gson;
   @Inject(optional = true) private HttpProfiler profiler;
 
   /**
@@ -102,7 +104,7 @@ import retrofit.core.MainThread;
       try {
 
         // Construct HTTP request.
-        HttpUriRequest request = new HttpRequestBuilder()
+        HttpUriRequest request = new HttpRequestBuilder(gson)
             .setMethod(method)
             .setArgs(args)
             .setApiUrl(server.apiUrl())
@@ -117,7 +119,7 @@ import retrofit.core.MainThread;
             request.getURI());
 
         final GsonResponseHandler<?> gsonResponseHandler =
-            GsonResponseHandler.create(resultType, callback);
+            GsonResponseHandler.create(gson, resultType, callback);
 
         // Optionally wrap the response handler for server call profiling.
         ResponseHandler<Void> rh = (profiler == null) ?

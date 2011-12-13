@@ -1,6 +1,14 @@
 package retrofit.http;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.message.BasicNameValuePair;
+import retrofit.internal.gson.Gson;
+import retrofit.io.MimeType;
+import retrofit.io.TypedBytes;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -14,13 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.message.BasicNameValuePair;
-import retrofit.io.MimeType;
-import retrofit.io.TypedBytes;
-
-import static retrofit.http.GsonProvider.gson;
 
 /**
  * Builds HTTP requests from Java method invocations.  Handles "path parameters"
@@ -36,6 +37,8 @@ import static retrofit.http.GsonProvider.gson;
 final class HttpRequestBuilder {
   private static final Logger logger = Logger.getLogger(HttpRequestBuilder.class.getName());
 
+  private final Gson gson;
+
   private Method javaMethod;
   private Object[] args;
   private String apiUrl;
@@ -44,6 +47,10 @@ final class HttpRequestBuilder {
   private List<NameValuePair> nonPathParams;
   private RequestLine requestLine;
   private TypedBytes singleEntity;
+  
+  HttpRequestBuilder(Gson gson) {
+    this.gson = gson;
+  }
 
   HttpRequestBuilder setMethod(Method method) {
     this.javaMethod = method;
@@ -270,7 +277,7 @@ final class HttpRequestBuilder {
     }
 
     protected String toJson() {
-      return gson().toJson(obj);
+      return gson.toJson(obj);
     }
   }
 }
