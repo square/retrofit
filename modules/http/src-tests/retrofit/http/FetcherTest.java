@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
 import retrofit.core.ProgressListener;
+import retrofit.internal.gson.Gson;
 import retrofit.io.ByteSink;
 
 import java.io.ByteArrayOutputStream;
@@ -59,7 +60,7 @@ public class FetcherTest extends TestCase {
 
     replayAll();
 
-    Fetcher fetcher = new Fetcher(new Provider<HttpClient>() {
+    Fetcher fetcher = new Fetcher(new Gson(), new Provider<HttpClient>() {
       public HttpClient get() {
         return httpClient;
       }

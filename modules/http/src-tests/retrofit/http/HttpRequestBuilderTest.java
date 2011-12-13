@@ -2,21 +2,22 @@
 package retrofit.http;
 
 import com.google.inject.name.Named;
-import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
-import java.util.Set;
-import java.util.UUID;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import retrofit.core.Callback;
+import retrofit.internal.gson.Gson;
+
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Method;
+import java.net.URISyntaxException;
+import java.util.Set;
+import java.util.UUID;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest extends TestCase {
-
   public static final String API_URL = "http://taqueria.com/lengua/taco";
   public static final Headers BLANK_HEADERS = new Headers() {
     @Override public void setOn(HttpMessage message, String mimeType) {
@@ -183,7 +184,7 @@ public class HttpRequestBuilderTest extends TestCase {
   }
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
-    return new HttpRequestBuilder().setMethod(method)
+    return new HttpRequestBuilder(new Gson()).setMethod(method)
         .setArgs(args)
         .setApiUrl(API_URL)
         .setHeaders(BLANK_HEADERS)

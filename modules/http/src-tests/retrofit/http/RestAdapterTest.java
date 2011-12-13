@@ -4,9 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Executor;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
@@ -24,6 +21,11 @@ import org.easymock.IAnswer;
 import org.junit.Before;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
+import retrofit.internal.gson.Gson;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
@@ -32,7 +34,6 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static retrofit.http.GsonProvider.gson;
 import static retrofit.http.RestAdapter.service;
 
 public class RestAdapterTest extends TestCase {
@@ -50,6 +51,7 @@ public class RestAdapterTest extends TestCase {
   private Headers mockHeaders;
   @SuppressWarnings("rawtypes") private Callback mockCallback;
   private HttpResponse mockResponse;
+  private Gson gson = new Gson();
 
   @Override @Before public void setUp() throws Exception {
     mockHttpClient = createMock(HttpClient.class);
@@ -260,7 +262,7 @@ public class RestAdapterTest extends TestCase {
     expectExecution(mockMainThread); // For call()
     expectSetOnWithRequest(requestClass, requestUrl);
     Response response = new Response("some text");
-    expectResponseCalls(gson().toJson(response));
+    expectResponseCalls(gson.toJson(response));
     expectHttpClientExecute();
     expectCallbacks(response);
   }
