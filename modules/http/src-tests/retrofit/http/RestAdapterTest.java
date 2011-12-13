@@ -27,7 +27,13 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Executor;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.isA;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static retrofit.http.RestAdapter.service;
 
 public class RestAdapterTest extends TestCase {
