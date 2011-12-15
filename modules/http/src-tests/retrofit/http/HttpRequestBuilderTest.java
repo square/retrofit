@@ -217,10 +217,10 @@ public class HttpRequestBuilderTest extends TestCase {
     @Override public void networkError() {
     }
 
-    @Override public void clientError(SimpleResponse response) {
+    @Override public void clientError(SimpleResponse response, int statusCode) {
     }
 
-    @Override public void serverError(String message) {
+    @Override public void serverError(String message, int statusCode) {
     }
 
     @Override public void unexpectedError(Throwable t) {

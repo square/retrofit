@@ -193,6 +193,26 @@ public class RestAdapterTest extends TestCase {
   }
 
   @SuppressWarnings("unchecked")
+  public void testServicePostSimpleClientError() throws IOException {
+    expectLifecycleClientError(HttpPost.class, BASE_URL);
+    replayAll();
+
+    PostService service = injector.getInstance(PostService.class);
+    service.post(mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testServicePostSimpleServerError() throws IOException {
+    expectLifecycleServerError(HttpPost.class, BASE_URL);
+    replayAll();
+
+    PostService service = injector.getInstance(PostService.class);
+    service.post(mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
   public void testServicePostParam() throws IOException {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
@@ -246,31 +266,65 @@ public class RestAdapterTest extends TestCase {
   // Utility Methods:
   //
   private void replayAll() {
-    replay(mockExecutor, mockHeaders, mockHttpClient, mockMainThread,
-        mockCallback, mockResponse);
+    replay(mockExecutor, mockHeaders, mockHttpClient, mockMainThread, mockCallback, mockResponse);
   }
 
   private void verifyAll() {
-    verify(mockExecutor, mockHeaders, mockHttpClient, mockMainThread,
-        mockCallback, mockResponse);
+    verify(mockExecutor, mockHeaders, mockHttpClient, mockMainThread, mockCallback, mockResponse);
   }
 
   private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass,
       String requestUrl) throws IOException {
+    Response response = expectCallAndResponse(requestClass, requestUrl);
+    expectResponseCalls(gson.toJson(response), 200);
+    expectHttpClientExecute();
+    expectCallbacks(response);
+  }
+
+  private <T extends HttpUriRequest> void expectLifecycleClientError(Class<T> requestClass,
+      String requestUrl) throws IOException {
+    Response response = expectCallAndResponse(requestClass, requestUrl);
+    expectResponseCalls(gson.toJson(response), 409);
+    expectHttpClientExecute();
+    expectClientErrorCallbacks(response, 409);
+  }
+
+  private <T extends HttpUriRequest> void expectLifecycleServerError(Class<T> requestClass,
+      String requestUrl) throws IOException {
+    Response response = expectCallAndResponse(requestClass, requestUrl);
+    expectResponseCalls(gson.toJson(response), 501);
+    expectHttpClientExecute();
+    expectServerErrorCallbacks(501);
+  }
+
+  private <T extends HttpUriRequest> Response expectCallAndResponse(Class<T> requestClass,
+      String requestUrl) {
     expectExecution(mockExecutor);
     expectExecution(mockMainThread); // For preInvoke()
     expectExecution(mockMainThread); // For call()
     expectSetOnWithRequest(requestClass, requestUrl);
-    Response response = new Response("some text");
-    expectResponseCalls(gson.toJson(response));
-    expectHttpClientExecute();
-    expectCallbacks(response);
+    return new Response("some text");
   }
 
   @SuppressWarnings("unchecked") private void expectCallbacks(Response response) {
     mockCallback.preInvoke();
     expectLastCall().once();
     mockCallback.call(response);
+    expectLastCall().once();
+  }
+
+  @SuppressWarnings("unchecked") private void expectClientErrorCallbacks(Response response,
+      int statusCode) {
+    mockCallback.preInvoke();
+    expectLastCall().once();
+    mockCallback.clientError(response, statusCode);
+    expectLastCall().once();
+  }
+
+  @SuppressWarnings("unchecked") private void expectServerErrorCallbacks(int statusCode) {
+    mockCallback.preInvoke();
+    expectLastCall().once();
+    mockCallback.serverError(null, statusCode);
     expectLastCall().once();
   }
 
@@ -287,10 +341,10 @@ public class RestAdapterTest extends TestCase {
     });
   }
 
-  private void expectResponseCalls(String jsonToReturn)
+  private void expectResponseCalls(String jsonToReturn, int statusCode)
       throws UnsupportedEncodingException {
     expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
-    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 200, ""));
+    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
   }
 
   private <T extends HttpUriRequest> void expectSetOnWithRequest(

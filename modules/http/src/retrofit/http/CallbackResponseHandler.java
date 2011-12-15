@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.inject.Inject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -84,7 +83,7 @@ public abstract class CallbackResponseHandler<T>
     if (statusCode >= 200 && statusCode < 300) {
       if (entity == null) {
         logger.fine("Missing entity for " + statusCode + " response.");
-        callback.serverError(null);
+        callback.serverError(null, statusCode);
         return null;
       }
 
@@ -92,7 +91,7 @@ public abstract class CallbackResponseHandler<T>
         callback.call(parse(entity));
       } catch (ServerException e) {
         logger.log(Level.WARNING, e.getMessage(), e);
-        callback.serverError(null);
+        callback.serverError(null, statusCode);
       }
       return null;
     }
@@ -104,11 +103,11 @@ public abstract class CallbackResponseHandler<T>
         String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
         logger.fine("Server returned " + statusCode + ", "
             + statusLine.getReasonPhrase() + ". Body: " + body);
-        callback.serverError(parseServerMessage(statusCode, body));
+        callback.serverError(parseServerMessage(statusCode, body), statusCode);
       } else {
         logger.fine("Server returned " + statusCode + ", "
             + statusLine.getReasonPhrase() + ".");
-        callback.serverError(null);
+        callback.serverError(null, statusCode);
       }
       return null;
     }
@@ -123,15 +122,15 @@ public abstract class CallbackResponseHandler<T>
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ". Body: " + body);
       try {
-        callback.clientError(parse(bufferedEntity));
+        callback.clientError(parse(bufferedEntity), statusCode);
       } catch (ServerException e) {
         logger.log(Level.WARNING, e.getMessage(), e);
-        callback.serverError(null);
+        callback.serverError(null, statusCode);
       }
     } else {
       logger.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ".");
-      callback.clientError(null);
+      callback.clientError(null, statusCode);
     }
     return null;
   }

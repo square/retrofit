@@ -56,18 +56,18 @@ public final class UiCallback<T> implements Callback<T> {
     });
   }
 
-  public void clientError(final T response) {
+  public void clientError(final T response, final int statusCode) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.clientError(response);
+        delegate.clientError(response, statusCode);
       }
     });
   }
 
-  public void serverError(final String message) {
+  public void serverError(final String message, final int statusCode) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.serverError(message);
+        delegate.serverError(message, statusCode);
       }
     });
   }
