@@ -38,17 +38,20 @@ public interface Callback<T> {
    * The server returned a client error. In most cases, this is a programming
    * error, but it can also signify a user input error.
    *
+   * @param statusCode the HTTP response code, typically 4XX
+   *
    * @return response object or null if server returned an empty response.
    */
-  void clientError(T response);
+  void clientError(T response, int statusCode);
 
   /**
-   * We reached the server, but it encountered an error. Please try again
-   * later.
+   * We reached the server, but it encountered an error (5xx) or its response
+   * was unparseable. Please try again later.
    *
    * @param message to show user, or null if no message was returned
+   * @param statusCode the HTTP response code
    */
-  void serverError(String message);
+  void serverError(String message, int statusCode);
 
   /**
    * An unexpected error occurred. Called if the framework throws an unexpected
