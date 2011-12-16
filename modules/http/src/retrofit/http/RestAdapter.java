@@ -29,8 +29,7 @@ import retrofit.internal.gson.Gson;
  * @author Bob Lee (bob@squareup.com)
  */
 @Singleton public class RestAdapter {
-  private static final Logger logger =
-      Logger.getLogger(RestAdapter.class.getName());
+  private static final Logger logger = Logger.getLogger(RestAdapter.class.getName());
 
   @Inject private Server server;
   @Inject private Provider<HttpClient> httpClientProvider;
@@ -41,18 +40,16 @@ import retrofit.internal.gson.Gson;
   @Inject(optional = true) private HttpProfiler profiler;
 
   /**
-   * Adapts a Java interface to a REST API. HTTP requests happen in a
-   * background thread. Callbacks happen in the UI thread.
+   * Adapts a Java interface to a REST API. HTTP requests happen in a background thread. Callbacks
+   * happen in the UI thread.
    *
-   * <p>Gets the relative path for a given method from a {@link GET},
-   * {@link POST}, {@link PUT}, or {@link DELETE} annotation on the method.
-   * Gets the names of URL parameters from {@link com.google.inject.name.Named}
-   * annotations on the method parameters.
+   * <p>Gets the relative path for a given method from a {@link GET}, {@link POST}, {@link PUT}, or
+   * {@link DELETE} annotation on the method. Gets the names of URL parameters from {@link
+   * com.google.inject.name.Named} annotations on the method parameters.
    *
-   * <p>The last method parameter should be of type {@link Callback}. The
-   * JSON HTTP response will be converted to the callback's parameter type
-   * using GSON. If the callback parameter type uses a wildcard, the
-   * lower bound will be used as the conversion type.
+   * <p>The last method parameter should be of type {@link Callback}. The JSON HTTP response will be
+   * converted to the callback's parameter type using GSON. If the callback parameter type uses a
+   * wildcard, the lower bound will be used as the conversion type.
    *
    * <p>For example:
    *
@@ -74,8 +71,8 @@ import retrofit.internal.gson.Gson;
 
           @Override public T get() {
             RestAdapter.RestHandler handler = restAdapter.new RestHandler();
-            return (T) Proxy.newProxyInstance(type.getClassLoader(),
-                new Class<?>[] { type }, handler);
+            return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type},
+                handler);
           }
         });
       }
@@ -84,49 +81,46 @@ import retrofit.internal.gson.Gson;
 
   private class RestHandler implements InvocationHandler {
 
-    @Override public Object invoke(Object proxy, final Method method,
-        final Object[] args) {
-      // Execute HTTP request in the background.
-      executor.execute(new Runnable() {
-        @Override public void run() {
-          backgroundInvoke(method, args);
-        }
-      });
-
-      // Methods should return void.
-      return null;
-    }
-
-    private void backgroundInvoke(Method method, Object[] args) {
-      UiCallback<?> callback = UiCallback.create(
-          (Callback<?>) args[args.length - 1], mainThread);
-
+    @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+      // Construct HTTP request.
+      final UiCallback<?> callback = UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
       try {
-
-        // Construct HTTP request.
-        HttpUriRequest request = new HttpRequestBuilder(gson)
-            .setMethod(method)
+        // Build the request (headers in particular) on the main thread.
+        final HttpUriRequest request = new HttpRequestBuilder(gson).setMethod(method)
             .setArgs(args)
             .setApiUrl(server.apiUrl())
             .setHeaders(headers)
             .build();
 
+        // Execute HTTP request in the background.
+        executor.execute(new Runnable() {
+          @Override public void run() {
+            backgroundInvoke(request, method, callback);
+          }
+        });
+      } catch (Throwable e) {
+        callback.unexpectedError(e);
+      }
+
+      // Methods should return void.
+      return null;
+    }
+
+    private void backgroundInvoke(HttpUriRequest request, Method method, UiCallback<?> callback) {
+
+      try {
         // The last parameter should be of type Callback<T>. Determine T.
         Type[] genericParameterTypes = method.getGenericParameterTypes();
-        final Type resultType = getCallbackParameterType(method,
-            genericParameterTypes);
-        logger.fine("Sending " + request.getMethod() + " to " +
-            request.getURI());
+        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
+        logger.fine("Sending " + request.getMethod() + " to " + request.getURI());
 
         final GsonResponseHandler<?> gsonResponseHandler =
             GsonResponseHandler.create(gson, resultType, callback);
 
         // Optionally wrap the response handler for server call profiling.
-        ResponseHandler<Void> rh = (profiler == null) ?
-            gsonResponseHandler : createProfiler(gsonResponseHandler, profiler,
-                method, server.apiUrl());
+        ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
+            : createProfiler(gsonResponseHandler, profiler, method, server.apiUrl());
 
-        callback.preInvoke();
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
         logger.log(Level.WARNING, e.getMessage(), e);
@@ -137,28 +131,23 @@ import retrofit.internal.gson.Gson;
       }
     }
 
-    /**
-     * Wraps a {@code GsonResponseHandler} with a
-     * {@code ProfilingResponseHandler}.
-     */
-    private ProfilingResponseHandler createProfiler(
-        ResponseHandler<Void> handlerToWrap, HttpProfiler profiler,
-        Method method, String apiUrl) {
+    /** Wraps a {@code GsonResponseHandler} with a {@code ProfilingResponseHandler}. */
+    private ProfilingResponseHandler createProfiler(ResponseHandler<Void> handlerToWrap,
+        HttpProfiler profiler, Method method, String apiUrl) {
       RequestLine requestLine = RequestLine.fromMethod(method);
 
       HttpMethodType httpMethod = requestLine.getHttpMethod();
       HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
 
-      return new ProfilingResponseHandler(handlerToWrap, profiler,
-          profilerMethod, apiUrl, requestLine.getRelativePath());
+      return new ProfilingResponseHandler(handlerToWrap, profiler, profilerMethod, apiUrl,
+          requestLine.getRelativePath());
     }
 
-    private static final String NOT_CALLBACK = "Last parameter of %s must be"
-        + " of type Callback<X> or Callback<? super X>.";
+    private static final String NOT_CALLBACK =
+        "Last parameter of %s must be" + " of type Callback<X> or Callback<? super X>.";
 
     /** Gets the callback parameter type. */
-    private Type getCallbackParameterType(Method method,
-        Type[] parameterTypes) {
+    private Type getCallbackParameterType(Method method, Type[] parameterTypes) {
       Type lastType = parameterTypes[parameterTypes.length - 1];
 
       /*
@@ -193,11 +182,8 @@ import retrofit.internal.gson.Gson;
     }
   }
 
-  /**
-   * Sends server call times and response status codes to {@link HttpProfiler}.
-   */
-  private static class ProfilingResponseHandler
-      implements ResponseHandler<Void> {
+  /** Sends server call times and response status codes to {@link HttpProfiler}. */
+  private static class ProfilingResponseHandler implements ResponseHandler<Void> {
     private final ResponseHandler<Void> delegate;
     private final HttpProfiler profiler;
     private final String apiUrl;
@@ -205,14 +191,9 @@ import retrofit.internal.gson.Gson;
     private final HttpProfiler.Method method;
     private final long startTime = System.currentTimeMillis();
 
-    /**
-     * Wraps the delegate response handler.
-     */
-    private ProfilingResponseHandler(ResponseHandler<Void> delegate,
-                                     HttpProfiler profiler,
-                                     HttpProfiler.Method method,
-                                     String apiUrl,
-                                     String relativePath) {
+    /** Wraps the delegate response handler. */
+    private ProfilingResponseHandler(ResponseHandler<Void> delegate, HttpProfiler profiler,
+        HttpProfiler.Method method, String apiUrl, String relativePath) {
       this.delegate = delegate;
       this.profiler = profiler;
       this.method = method;

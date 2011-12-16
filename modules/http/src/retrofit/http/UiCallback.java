@@ -24,14 +24,6 @@ public final class UiCallback<T> implements Callback<T> {
     return new UiCallback<T>(delegate, mainThread);
   }
 
-  @Override public void preInvoke() {
-    mainThread.execute(new Runnable() {
-      public void run() {
-        delegate.preInvoke();
-      }
-    });
-  }
-
   public void call(final T t) {
     mainThread.execute(new Runnable() {
       public void run() {
