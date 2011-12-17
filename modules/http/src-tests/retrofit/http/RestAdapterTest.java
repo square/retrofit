@@ -4,6 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Executor;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
@@ -22,10 +25,6 @@ import org.junit.Before;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
 import retrofit.internal.gson.Gson;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
@@ -284,30 +283,23 @@ public class RestAdapterTest extends TestCase {
   private <T extends HttpUriRequest> Response expectCallAndResponse(Class<T> requestClass,
       String requestUrl) {
     expectExecution(mockExecutor);
-    expectExecution(mockMainThread); // For preInvoke()
     expectExecution(mockMainThread); // For call()
     expectSetOnWithRequest(requestClass, requestUrl);
     return new Response("some text");
   }
 
   @SuppressWarnings("unchecked") private void expectCallbacks(Response response) {
-    mockCallback.preInvoke();
-    expectLastCall().once();
     mockCallback.call(response);
     expectLastCall().once();
   }
 
   @SuppressWarnings("unchecked") private void expectClientErrorCallbacks(Response response,
       int statusCode) {
-    mockCallback.preInvoke();
-    expectLastCall().once();
     mockCallback.clientError(response, statusCode);
     expectLastCall().once();
   }
 
   @SuppressWarnings("unchecked") private void expectServerErrorCallbacks(int statusCode) {
-    mockCallback.preInvoke();
-    expectLastCall().once();
     mockCallback.serverError(null, statusCode);
     expectLastCall().once();
   }

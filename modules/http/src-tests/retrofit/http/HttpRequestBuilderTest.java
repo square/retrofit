@@ -2,6 +2,11 @@
 package retrofit.http;
 
 import com.google.inject.name.Named;
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Method;
+import java.net.URISyntaxException;
+import java.util.Set;
+import java.util.UUID;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.client.methods.HttpGet;
@@ -9,12 +14,6 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import retrofit.core.Callback;
 import retrofit.internal.gson.Gson;
-
-import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
-import java.util.Set;
-import java.util.UUID;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest extends TestCase {
@@ -205,9 +204,6 @@ public class HttpRequestBuilderTest extends TestCase {
   }
 
   private class MyCallback implements Callback<SimpleResponse> {
-    @Override public void preInvoke() {
-    }
-
     @Override public void call(SimpleResponse simpleResponse) {
     }
 
