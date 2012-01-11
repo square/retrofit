@@ -74,12 +74,12 @@
         <fileset dir="lib" includes="jarjar*.jar"/>
       </classpath>
     </taskdef>
-    <jarjar jarfile="${build.dir}/retrofit-gson-1.6.jar">
-      <zipfileset src="lib/gson-1.6.jar"/>
+    <jarjar jarfile="${build.dir}/retrofit-gson-2.1.jar">
+      <zipfileset src="lib/gson-2.1.jar"/>
       <rule pattern="com.google.gson.**" result="retrofit.internal.gson.@1"/>
     </jarjar>
-    <jarjar jarfile="${build.dir}/retrofit-gson-1.6-sources.jar">
-      <zipfileset src="lib/gson-1.6-sources.jar"/>
+    <jarjar jarfile="${build.dir}/retrofit-gson-2.1-sources.jar">
+      <zipfileset src="lib/gson-2.1-sources.jar"/>
       <rule pattern="com.google.gson.**" result="retrofit.internal.gson.@1"/>
     </jarjar>
   </target>
@@ -98,12 +98,12 @@
       <compile.main.classpath>
         <pathelement location="${build.dir}/core/main"/>
         <pathelement location="${build.dir}/io/main"/>
-	      <pathelement location="${build.dir}/retrofit-gson-1.6.jar"/>
+	      <pathelement location="${build.dir}/retrofit-gson-2.1.jar"/>
       </compile.main.classpath>
       <compile.tests.classpath>
         <pathelement location="${build.dir}/core/main"/>
         <pathelement location="${build.dir}/io/main"/>
-        <pathelement location="${build.dir}/retrofit-gson-1.6.jar"/>
+        <pathelement location="${build.dir}/retrofit-gson-2.1.jar"/>
       </compile.tests.classpath>
     </compile.module>
 
