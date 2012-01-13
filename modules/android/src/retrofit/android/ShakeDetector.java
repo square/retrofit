@@ -5,7 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +61,10 @@ public class ShakeDetector implements SensorEventListener {
     return accelerometer != null;
   }
 
-  /** Stops listening, ignored on devices without appropriate hardware. */
+  /**
+   * Stops listening.  Safe to call when already stopped.  Ignored on devices
+   * without appropriate hardware.
+   */
   public void stop() {
     if (accelerometer != null) {
       sensorManager.unregisterListener(this, accelerometer);
@@ -71,7 +73,7 @@ public class ShakeDetector implements SensorEventListener {
     }
   }
 
-  public void onSensorChanged(SensorEvent event) {
+  @Override public void onSensorChanged(SensorEvent event) {
     boolean accelerating = isAccelerating(event);
     long timestamp = event.timestamp;
     queue.add(timestamp, accelerating);
@@ -223,6 +225,6 @@ public class ShakeDetector implements SensorEventListener {
     }
   }
 
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+  @Override public void onAccuracyChanged(Sensor sensor, int accuracy) {
   }
 }
