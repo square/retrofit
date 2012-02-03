@@ -208,7 +208,6 @@ final class HttpRequestBuilder {
     }
 
     HttpUriRequest request = requestLine.getHttpMethod().createFrom(this);
-    if (logger.isLoggable(Level.FINE)) logger.fine("Request params: " + getParamList(true));
     return request;
   }
 
