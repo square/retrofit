@@ -82,33 +82,30 @@ import retrofit.internal.gson.Gson;
   private class RestHandler implements InvocationHandler {
 
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+      // Execute HTTP request in the background.
+      executor.execute(new Runnable() {
+        @Override public void run() {
+          backgroundInvoke(method, args);
+        }
+      });
+
+      // Methods should return void.
+      return null;
+    }
+
+    private void backgroundInvoke(Method method, final Object[] args) {
       // Construct HTTP request.
-      final UiCallback<?> callback = UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
+      final UiCallback<?> callback =
+          UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
+
       try {
-        // Build the request (headers in particular) on the main thread.
+        // Build the request and headers.
         final HttpUriRequest request = new HttpRequestBuilder(gson).setMethod(method)
             .setArgs(args)
             .setApiUrl(server.apiUrl())
             .setHeaders(headers)
             .build();
 
-        // Execute HTTP request in the background.
-        executor.execute(new Runnable() {
-          @Override public void run() {
-            backgroundInvoke(request, method, callback);
-          }
-        });
-      } catch (Throwable e) {
-        callback.unexpectedError(e);
-      }
-
-      // Methods should return void.
-      return null;
-    }
-
-    private void backgroundInvoke(HttpUriRequest request, Method method, UiCallback<?> callback) {
-
-      try {
         // The last parameter should be of type Callback<T>. Determine T.
         Type[] genericParameterTypes = method.getGenericParameterTypes();
         final Type resultType = getCallbackParameterType(method, genericParameterTypes);
