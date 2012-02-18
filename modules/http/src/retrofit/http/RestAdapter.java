@@ -120,10 +120,10 @@ import retrofit.internal.gson.Gson;
 
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
-        logger.log(Level.WARNING, e.getMessage(), e);
+        logger.log(Level.WARNING, e.getMessage() + " from " + server.apiUrl(), e);
         callback.networkError();
       } catch (Throwable t) {
-        logger.log(Level.WARNING, t.getMessage(), t);
+        logger.log(Level.WARNING, t.getMessage() + " from " + server.apiUrl(), t);
         callback.unexpectedError(t);
       }
     }
