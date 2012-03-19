@@ -143,6 +143,15 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
+  @SuppressWarnings("unchecked") public void testServiceGetMultiValueParam() throws IOException {
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID+"&id="+ID);
+    replayAll();
+
+    GetService service = injector.getInstance(GetService.class);
+    service.getWithMultiValueParam(new String[]{ID,ID}, mockCallback);
+    verifyAll();
+  }
+
   @SuppressWarnings("unchecked") public void testServiceGetWithFixedParam() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
         + "id=" + ID);
@@ -390,6 +399,9 @@ public class RestAdapterTest extends TestCase {
 
     @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id,
         Callback<Response> callback);
+
+    @GET(ENTITY) void getWithMultiValueParam(@Named("id") String[] id,
+            Callback<Response> callback);
   }
 
   private interface PostService {
