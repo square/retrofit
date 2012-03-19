@@ -1,22 +1,16 @@
 package retrofit.http;
 
+import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Executor;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicStatusLine;
 import org.easymock.Capture;
@@ -24,15 +18,12 @@ import org.easymock.IAnswer;
 import org.junit.Before;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
-import retrofit.internal.gson.Gson;
 
-import static org.easymock.EasyMock.capture;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.isA;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Executor;
+
+import static org.easymock.EasyMock.*;
 import static retrofit.http.RestAdapter.service;
 
 public class RestAdapterTest extends TestCase {
@@ -145,6 +136,16 @@ public class RestAdapterTest extends TestCase {
 
     GetService service = injector.getInstance(GetService.class);
     service.getWithParam(ID, mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testServiceGetMultiValueParam() throws IOException {
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID+"&"+"id="+ID);
+    replayAll();
+
+    GetService service = injector.getInstance(GetService.class);
+    service.getWithMultiValueParam(new String[] {ID,ID}, mockCallback);
     verifyAll();
   }
 
@@ -339,6 +340,9 @@ public class RestAdapterTest extends TestCase {
     @GET(ENTITY) void get(Callback<Response> callback);
 
     @GET(ENTITY) void getWithParam(@Named("id") String id,
+        Callback<Response> callback);
+
+    @GET(ENTITY) void getWithMultiValueParam(@Named("id") String[] ids,
         Callback<Response> callback);
 
     @GET(ENTITY) @QueryParam(name="filter", value="merchant")
