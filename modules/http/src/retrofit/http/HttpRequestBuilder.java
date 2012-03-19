@@ -110,9 +110,7 @@ final class HttpRequestBuilder {
     return nonPathParams;
   }
 
-  /**
-   * Converts all but the last method argument to a list of HTTP request parameters.
-   */
+  /* Converts all but the last method argument to a list of HTTP request parameters. */
   private List<NameValuePair> createParamList() {
     Annotation[][] parameterAnnotations = javaMethod.getParameterAnnotations();
     int count = parameterAnnotations.length - 1;
@@ -144,8 +142,8 @@ final class HttpRequestBuilder {
           String name = getName(parameterAnnotations[i], javaMethod, i);
           if (arg.getClass().isArray()) {
             Object[] array = (Object[]) arg;
-            for (Object anArray : array) {
-              params.add(new BasicNameValuePair(name, String.valueOf(anArray)));
+            for (Object o : array) {
+              params.add(new BasicNameValuePair(name, String.valueOf(o)));
             }
           } else {
             params.add(new BasicNameValuePair(name, String.valueOf(arg)));
