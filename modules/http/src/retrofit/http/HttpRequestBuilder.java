@@ -1,6 +1,5 @@
 package retrofit.http;
 
-import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +45,7 @@ final class HttpRequestBuilder {
   private List<NameValuePair> nonPathParams;
   private RequestLine requestLine;
   private TypedBytes singleEntity;
-  
+
   HttpRequestBuilder(Gson gson) {
     this.gson = gson;
   }
@@ -255,10 +253,10 @@ final class HttpRequestBuilder {
   }
 
   private class JsonTypedBytes implements TypedBytes {
-    private Object obj;
+    private String json;
 
     public JsonTypedBytes(Object obj) {
-      this.obj = obj;
+      this.json = gson.toJson(obj);
     }
 
     @Override public MimeType mimeType() {
@@ -266,17 +264,12 @@ final class HttpRequestBuilder {
     }
 
     @Override public int length() {
-      return toJson().length();
+      return json.length();
     }
 
     @Override public void writeTo(OutputStream out) throws IOException {
-      final String str = toJson();
       // TODO use requested encoding?
-      out.write(str.getBytes("UTF-8"));
-    }
-
-    protected String toJson() {
-      return gson.toJson(obj);
+      out.write(json.getBytes("UTF-8"));
     }
   }
 }
