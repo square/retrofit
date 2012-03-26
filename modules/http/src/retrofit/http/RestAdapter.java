@@ -82,18 +82,6 @@ import retrofit.internal.gson.Gson;
   private class RestHandler implements InvocationHandler {
 
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
-      // Execute HTTP request in the background.
-      executor.execute(new Runnable() {
-        @Override public void run() {
-          backgroundInvoke(method, args);
-        }
-      });
-
-      // Methods should return void.
-      return null;
-    }
-
-    private void backgroundInvoke(Method method, final Object[] args) {
       // Construct HTTP request.
       final UiCallback<?> callback =
           UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
@@ -115,9 +103,27 @@ import retrofit.internal.gson.Gson;
             GsonResponseHandler.create(gson, resultType, callback);
 
         // Optionally wrap the response handler for server call profiling.
-        ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
+        final ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
             : createProfiler(gsonResponseHandler, profiler, method, server.apiUrl());
 
+        // Execute HTTP request in the background.
+        executor.execute(new Runnable() {
+          @Override public void run() {
+            backgroundInvoke(request, rh, callback);
+          }
+        });
+
+      } catch (Throwable t) {
+        logger.log(Level.WARNING, t.getMessage() + " from " + server.apiUrl(), t);
+        callback.unexpectedError(t);
+      }
+
+      // Methods should return void.
+      return null;
+    }
+
+    private void backgroundInvoke(HttpUriRequest request, ResponseHandler<Void> rh, UiCallback<?> callback) {
+      try {
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
         logger.log(Level.WARNING, e.getMessage() + " from " + server.apiUrl(), e);
