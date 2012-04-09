@@ -108,7 +108,7 @@ final class HttpRequestBuilder {
     return nonPathParams;
   }
 
-  /** Converts all but the last method argument to a list of HTTP request parameters. */
+  /* Converts all but the last method argument to a list of HTTP request parameters. */
   private List<NameValuePair> createParamList() {
     Annotation[][] parameterAnnotations = javaMethod.getParameterAnnotations();
     int count = parameterAnnotations.length - 1;
@@ -138,7 +138,14 @@ final class HttpRequestBuilder {
         final Class<? extends Annotation> type = annotation.annotationType();
         if (type == Named.class) {
           String name = getName(parameterAnnotations[i], javaMethod, i);
-          params.add(new BasicNameValuePair(name, String.valueOf(arg)));
+          if (arg.getClass().isArray()) {
+            Object[] array = (Object[]) arg;
+            for (Object o : array) {
+              params.add(new BasicNameValuePair(name, String.valueOf(o)));
+            }
+          } else {
+            params.add(new BasicNameValuePair(name, String.valueOf(arg)));
+          }
         } else if (type == SingleEntity.class) {
           if (arg instanceof TypedBytes) { // Let the object specify its own entity representation.
             singleEntity = (TypedBytes) arg;
