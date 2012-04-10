@@ -8,9 +8,7 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-/**
- * @author Eric Burke (eric@squareup.com)
- */
+/** @author Eric Burke (eric@squareup.com) */
 public class TypedFileTest {
   public void testNotEquals() {
     TypedFile a = new TypedFile(new File("a.png"), MimeType.PNG);

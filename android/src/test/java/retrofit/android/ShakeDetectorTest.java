@@ -8,18 +8,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-/**
- * @author Eric Burke (eric@squareup.com)
- */
+/** @author Eric Burke (eric@squareup.com) */
 public class ShakeDetectorTest {
   public void testInitialShaking() {
     ShakeDetector.SampleQueue q = new ShakeDetector.SampleQueue();
     assertFalse("shaking", q.isShaking());
   }
 
-  /**
-   * Tests LG Ally sample rate.
-   */
+  /** Tests LG Ally sample rate. */
   public void testShakingSampleCount3() {
     ShakeDetector.SampleQueue q = new ShakeDetector.SampleQueue();
 

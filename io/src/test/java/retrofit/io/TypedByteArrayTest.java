@@ -4,9 +4,7 @@ package retrofit.io;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-/**
- * @author Eric Burke (eric@squareup.com)
- */
+/** @author Eric Burke (eric@squareup.com) */
 public class TypedByteArrayTest {
   public void testEquals() {
     TypedByteArray a1 = new TypedByteArray(new byte[]{10, 20}, MimeType.GIF);

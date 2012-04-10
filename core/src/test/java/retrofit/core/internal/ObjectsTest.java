@@ -4,9 +4,7 @@ package retrofit.core.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-/**
- * @author Eric Burke (eric@squareup.com)
- */
+/** @author Eric Burke (eric@squareup.com) */
 public class ObjectsTest {
   public void testNonNull() {
     Objects.nonNull(10, "whatever");
