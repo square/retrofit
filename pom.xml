@@ -55,6 +55,10 @@
         <!-- Test Dependencies -->
         <junit.version>4.10</junit.version>
         <easymock.version>3.1</easymock.version>
+
+        <!-- Snapshot Repository URL (override in ~/.m2/settings.xml profile) -->
+        <snapshot.repo.id>example-nexus</snapshot.repo.id>
+        <snapshot.repo.url>http://example.com/snapshots</snapshot.repo.url>
     </properties>
 
     <scm>
@@ -157,4 +161,11 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>${snapshot.repo.id}</id>
+            <url>${snapshot.repo.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
