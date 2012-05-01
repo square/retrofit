@@ -23,6 +23,14 @@
         </dependency>
 
         <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>retrofit-android-native</artifactId>
+            <version>${project.version}</version>
+            <type>so</type>
+            <classifier>armeabi</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>

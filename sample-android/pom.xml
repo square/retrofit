@@ -26,11 +26,6 @@
             <artifactId>retrofit-android</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.squareup</groupId>
-            <artifactId>retrofit-io</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>

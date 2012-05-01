@@ -5,6 +5,7 @@
     <excludeFromCompile>
       <directory url="file://$PROJECT_DIR$/sample-android/target/generated-sources/r" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/sample-android/target/generated-sources/aidl" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/sample-android/gen" includeSubdirectories="true" />
     </excludeFromCompile>
     <resourceExtensions />
     <wildcardResourcePatterns>
