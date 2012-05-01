@@ -111,7 +111,7 @@ public class Files {
  */
 class Native {
   static {
-    System.loadLibrary("retrofit");
+    System.loadLibrary("retrofit-android-native");
   }
 
   static native void sync(String path);
