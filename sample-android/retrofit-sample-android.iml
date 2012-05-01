@@ -22,10 +22,11 @@
         <option name="CUSTOM_DEBUG_KEYSTORE_PATH" value="" />
         <option name="PACK_TEST_CODE" value="false" />
         <option name="RUN_PROGUARD" value="false" />
-        <option name="PROGUARD_CFG_PATH" value="/proguard.cfg" />
+        <option name="PROGUARD_CFG_PATH" value="/proguard-project.txt" />
         <resOverlayFolders>
           <path>/res-overlay</path>
         </resOverlayFolders>
+        <includeSystemProguardFile>true</includeSystemProguardFile>
       </configuration>
     </facet>
   </component>
@@ -37,6 +38,7 @@
       <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/aidl" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/r" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/annotations" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target/classes" />
       <excludeFolder url="file://$MODULE_DIR$/target/generated-sources/combined-assets" />
       <excludeFolder url="file://$MODULE_DIR$/target/generated-sources/combined-resources" />
