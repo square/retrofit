@@ -53,18 +53,19 @@ public class HttpClients {
   /**
    * Copies a response (so we can read it a second time) and logs it.
    */
-  public static HttpEntity copyAndLog(HttpEntity entity) throws IOException {
+  public static HttpEntity copyAndLog(HttpEntity entity, String url, String startTime)
+      throws IOException {
     byte[] bytes = entityToBytes(entity);
     // TODO: Use correct encoding.
     if (logger.isLoggable(Level.FINE)) {
       final int chunkSize = 4000;
-      logger.fine("-Response:");
+      logger.fine("----Response from " + url + " at " + startTime + ":");
       for (int i = 0; i < bytes.length; i += chunkSize) {
         int end = i + chunkSize;
         logger.fine(((end > bytes.length) ? new String(bytes, i, bytes.length - i)
                                           : new String(bytes, i, chunkSize)));
       }
-      logger.fine("-end response.");
+      logger.fine("----end response.");
     }
 
     return new ByteArrayEntity(bytes);

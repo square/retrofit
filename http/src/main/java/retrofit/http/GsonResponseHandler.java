@@ -2,14 +2,13 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import org.apache.http.HttpEntity;
-import retrofit.core.Callback;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.HttpEntity;
+import retrofit.core.Callback;
 
 /**
  * Converts JSON response to an object using Gson and then passes it to {@link
@@ -21,23 +20,28 @@ class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
 
   private final Gson gson;
   private final Type type;
+  private final String url;
+  private final String startTime;
 
-  private GsonResponseHandler(Gson gson, Type type, Callback<T> callback) {
+  private GsonResponseHandler(Gson gson, Type type, Callback<T> callback, String url,
+      String startTime) {
     super(gson, callback);
     this.gson = gson;
     this.type = type;
+    this.url = url;
+    this.startTime = startTime;
   }
 
-  static <T> GsonResponseHandler<T> create(Gson gson, Type type,
-      Callback<T> callback) {
-    return new GsonResponseHandler<T>(gson, type, callback);
+  static <T> GsonResponseHandler<T> create(Gson gson, Type type, Callback<T> callback, String url,
+      String startTime) {
+    return new GsonResponseHandler<T>(gson, type, callback, url, startTime);
   }
 
   @Override protected T parse(HttpEntity entity) throws IOException,
       ServerException {
     try {
       if (logger.isLoggable(Level.FINE)) {
-        entity = HttpClients.copyAndLog(entity);
+        entity = HttpClients.copyAndLog(entity, url, startTime);
       }
 
       // TODO: Use specified encoding.
