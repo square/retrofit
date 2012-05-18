@@ -21,7 +21,7 @@ import retrofit.core.Callback;
 public abstract class CallbackResponseHandler<T>
     implements ResponseHandler<Void> {
 
-  private static final Logger logger =
+  private static final Logger LOGGER =
       Logger.getLogger(CallbackResponseHandler.class.getName());
 
   private static final int UNAUTHORIZED = 401;
@@ -66,13 +66,13 @@ public abstract class CallbackResponseHandler<T>
     int statusCode = statusLine.getStatusCode();
 
     if (statusCode == UNAUTHORIZED) {
-      logger.fine("Session expired.");
+      LOGGER.fine("Session expired.");
       callback.sessionExpired();
       return null;
     }
 
     if (statusCode == FORBIDDEN) {
-      logger.fine("Account disabled.");
+      LOGGER.fine("Account disabled.");
       callback.sessionExpired();
       return null;
     }
@@ -82,7 +82,7 @@ public abstract class CallbackResponseHandler<T>
     // 2XX == successful request
     if (statusCode >= 200 && statusCode < 300) {
       if (entity == null) {
-        logger.fine("Missing entity for " + statusCode + " response.");
+        LOGGER.fine("Missing entity for " + statusCode + " response.");
         callback.serverError(null, statusCode);
         return null;
       }
@@ -90,7 +90,7 @@ public abstract class CallbackResponseHandler<T>
       try {
         callback.call(parse(entity));
       } catch (ServerException e) {
-        logger.log(Level.WARNING, e.getMessage(), e);
+        LOGGER.log(Level.WARNING, e.getMessage(), e);
         callback.serverError(null, statusCode);
       }
       return null;
@@ -101,11 +101,11 @@ public abstract class CallbackResponseHandler<T>
       if (entity != null) {
         // TODO: Use specified encoding.
         String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
-        logger.fine("Server returned " + statusCode + ", "
+        LOGGER.fine("Server returned " + statusCode + ", "
             + statusLine.getReasonPhrase() + ". Body: " + body);
         callback.serverError(parseServerMessage(statusCode, body), statusCode);
       } else {
-        logger.fine("Server returned " + statusCode + ", "
+        LOGGER.fine("Server returned " + statusCode + ", "
             + statusLine.getReasonPhrase() + ".");
         callback.serverError(null, statusCode);
       }
@@ -119,16 +119,16 @@ public abstract class CallbackResponseHandler<T>
       // TODO: Use specified encoding.
       String body = new String(HttpClients.entityToBytes(bufferedEntity),
           "UTF-8");
-      logger.fine("Server returned " + statusCode + ", "
+      LOGGER.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ". Body: " + body);
       try {
         callback.clientError(parse(bufferedEntity), statusCode);
       } catch (ServerException e) {
-        logger.log(Level.WARNING, e.getMessage(), e);
+        LOGGER.log(Level.WARNING, e.getMessage(), e);
         callback.serverError(null, statusCode);
       }
     } else {
-      logger.fine("Server returned " + statusCode + ", "
+      LOGGER.fine("Server returned " + statusCode + ", "
           + statusLine.getReasonPhrase() + ".");
       callback.clientError(null, statusCode);
     }
@@ -146,7 +146,7 @@ public abstract class CallbackResponseHandler<T>
         if (serverError != null) return serverError.message;
       } catch (Throwable t) {
         // The server error takes precedence.
-        logger.log(Level.WARNING, t.getMessage(), t);
+        LOGGER.log(Level.WARNING, t.getMessage(), t);
       }
     }
     return null;

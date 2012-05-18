@@ -62,8 +62,7 @@ public class Files {
       }
     } else {
       if (!directory.isDirectory()) {
-        throw new IllegalArgumentException("File " + directory +
-            " is not a directory");
+        throw new IllegalArgumentException("File " + directory + " is not a directory");
       }
     }
   }
