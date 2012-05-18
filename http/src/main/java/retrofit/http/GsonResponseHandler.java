@@ -15,7 +15,7 @@ import retrofit.core.Callback;
  * Callback#call(T)}.
  */
 class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
-  private static final Logger logger =
+  private static final Logger LOGGER =
     Logger.getLogger(GsonResponseHandler.class.getName());
 
   private final Gson gson;
@@ -40,7 +40,7 @@ class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
   @Override protected T parse(HttpEntity entity) throws IOException,
       ServerException {
     try {
-      if (logger.isLoggable(Level.FINE)) {
+      if (LOGGER.isLoggable(Level.FINE)) {
         entity = HttpClients.copyAndLog(entity, url, startTime);
       }
 

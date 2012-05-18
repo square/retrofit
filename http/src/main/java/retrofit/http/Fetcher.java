@@ -25,7 +25,7 @@ import static retrofit.core.internal.Objects.nonNull;
  * @author Bob Lee (bob@squareup.com)
  */
 public class Fetcher {
-  private static final Logger logger =
+  private static final Logger LOGGER =
       Logger.getLogger(Fetcher.class.getName());
 
   // TODO: Support conditional get.
@@ -62,7 +62,7 @@ public class Fetcher {
           httpClientProvider.get().execute(get, new DownloadHandler(gson, destination,
               uiCallback, progressListener, mainThread));
         } catch (IOException e) {
-          logger.log(Level.WARNING, "fetch exception", e);
+          LOGGER.log(Level.WARNING, "fetch exception", e);
           uiCallback.networkError();
         } catch (Throwable t) {
           uiCallback.unexpectedError(t);

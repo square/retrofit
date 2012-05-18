@@ -16,7 +16,7 @@ import org.apache.http.entity.ByteArrayEntity;
  * @author Bob Lee (bob@squareup.com)
  */
 public class HttpClients {
-  private static final Logger logger =
+  private static final Logger LOGGER =
       Logger.getLogger(HttpClients.class.getName());
 
   /**
@@ -42,7 +42,7 @@ public class HttpClients {
       if (entity != null) body = new String(entityToBytes(entity));
     } catch (Throwable t) {
       // The original error takes precedence.
-      logger.log(Level.WARNING, "Response entity to String conversion.", t);
+      LOGGER.log(Level.WARNING, "Response entity to String conversion.", t);
     }
     return new IOException("Unexpected response."
         + " Code: " + statusLine.getStatusCode()
@@ -57,15 +57,15 @@ public class HttpClients {
       throws IOException {
     byte[] bytes = entityToBytes(entity);
     // TODO: Use correct encoding.
-    if (logger.isLoggable(Level.FINE)) {
+    if (LOGGER.isLoggable(Level.FINE)) {
       final int chunkSize = 4000;
-      logger.fine("----Response from " + url + " at " + startTime + ":");
+      LOGGER.fine("----Response from " + url + " at " + startTime + ":");
       for (int i = 0; i < bytes.length; i += chunkSize) {
         int end = i + chunkSize;
-        logger.fine(((end > bytes.length) ? new String(bytes, i, bytes.length - i)
+        LOGGER.fine(((end > bytes.length) ? new String(bytes, i, bytes.length - i)
                                           : new String(bytes, i, chunkSize)));
       }
-      logger.fine("----end response.");
+      LOGGER.fine("----end response.");
     }
 
     return new ByteArrayEntity(bytes);

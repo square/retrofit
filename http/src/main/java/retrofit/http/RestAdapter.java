@@ -31,7 +31,7 @@ import retrofit.core.MainThread;
  * @author Bob Lee (bob@squareup.com)
  */
 @Singleton public class RestAdapter {
-  private static final Logger logger = Logger.getLogger(RestAdapter.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
 
   @Inject private Server server;
   @Inject private Provider<HttpClient> httpClientProvider;
@@ -108,7 +108,7 @@ import retrofit.core.MainThread;
         // The last parameter should be of type Callback<T>. Determine T.
         Type[] genericParameterTypes = method.getGenericParameterTypes();
         final Type resultType = getCallbackParameterType(method, genericParameterTypes);
-        logger.fine("Sending " + request.getMethod() + " to " + request.getURI());
+        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
         final Date start = new Date();
         startTime = dateFormat.get().format(start);
 
@@ -128,7 +128,7 @@ import retrofit.core.MainThread;
           }
         });
       } catch (Throwable t) {
-        logger.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
+        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
         callback.unexpectedError(t);
       }
 
@@ -141,10 +141,10 @@ import retrofit.core.MainThread;
       try {
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
-        logger.log(Level.WARNING, e.getMessage() + " from " + url + " at " + startTime, e);
+        LOGGER.log(Level.WARNING, e.getMessage() + " from " + url + " at " + startTime, e);
         callback.networkError();
       } catch (Throwable t) {
-        logger.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
+        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
         callback.unexpectedError(t);
       }
     }

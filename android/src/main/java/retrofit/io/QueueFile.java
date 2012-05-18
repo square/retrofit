@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  * @author Bob Lee (bob@squareup.com)
  */
 public class QueueFile {
-  private static final Logger logger =
+  private static final Logger LOGGER =
       Logger.getLogger(QueueFile.class.getName());
 
   /** Initial file size in bytes. */
@@ -501,7 +501,8 @@ public class QueueFile {
   public synchronized void clear() throws IOException {
     writeHeader(INITIAL_LENGTH, 0, 0, 0);
     elementCount = 0;
-    first = last = Element.NULL;
+    first = Element.NULL;
+    last = Element.NULL;
     fileLength = INITIAL_LENGTH;
     if (fileLength > INITIAL_LENGTH) setLength(INITIAL_LENGTH);
   }
@@ -533,7 +534,7 @@ public class QueueFile {
         }
       });
     } catch (IOException e) {
-      logger.log(Level.WARNING, "read error", e);
+      LOGGER.log(Level.WARNING, "read error", e);
     }
     builder.append("]]");
     return builder.toString();
@@ -590,6 +591,6 @@ public class QueueFile {
      *               which case it reads all the remaining bytes. Not buffered.
      * @param length of element data in bytes
      */
-    public void read(InputStream in, int length) throws IOException;
+    void read(InputStream in, int length) throws IOException;
   }
 }

@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  * </ol>
  */
 final class HttpRequestBuilder {
-  private static final Logger logger = Logger.getLogger(HttpRequestBuilder.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(HttpRequestBuilder.class.getName());
 
   private final Gson gson;
 
