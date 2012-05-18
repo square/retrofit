@@ -31,7 +31,7 @@ public class TypedBytesEntity extends AbstractHttpEntity {
     return typedBytes.length();
   }
 
-  @Override public InputStream getContent() throws IOException, IllegalStateException {
+  @Override public InputStream getContent() throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     typedBytes.writeTo(out);
     return new ByteArrayInputStream(out.toByteArray());

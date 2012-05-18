@@ -154,8 +154,8 @@ public class ShakeDetector implements SensorEventListener {
 
     /** Purges samples with timestamps older than cutoff. */
     void purge(long cutoff) {
-      while (sampleCount >= MIN_QUEUE_SIZE &&
-          oldest != null && cutoff - oldest.timestamp > 0) {
+      while (sampleCount >= MIN_QUEUE_SIZE
+          && oldest != null && cutoff - oldest.timestamp > 0) {
         // Remove sample.
         Sample removed = oldest;
         if (removed.accelerating) acceleratingCount--;

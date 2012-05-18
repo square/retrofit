@@ -11,5 +11,5 @@ import org.apache.http.HttpMessage;
 public interface Headers {
 
   /** Sets headers on the given message, with the specified MIME type */
-  public void setOn(HttpMessage message, String mimeType);
+  void setOn(HttpMessage message, String mimeType);
 }
