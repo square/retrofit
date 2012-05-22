@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.BufferedHttpEntity;
@@ -22,10 +23,6 @@ public abstract class CallbackResponseHandler<T>
 
   private static final Logger LOGGER =
       Logger.getLogger(CallbackResponseHandler.class.getName());
-
-  private static final int UNAUTHORIZED = 401;
-  private static final int BAD_GATEWAY = 502;
-  private static final int GATEWAY_TIMEOUT = 504;
 
   private final Callback<T> callback;
 
@@ -63,7 +60,7 @@ public abstract class CallbackResponseHandler<T>
     StatusLine statusLine = response.getStatusLine();
     int statusCode = statusLine.getStatusCode();
 
-    if (statusCode == UNAUTHORIZED) {
+    if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
       LOGGER.fine("Session expired.");
       callback.sessionExpired();
       return null;
@@ -131,7 +128,7 @@ public abstract class CallbackResponseHandler<T>
    * Parses a server error message.
    */
   private String parseServerMessage(int statusCode, String body) {
-    if (statusCode == BAD_GATEWAY || statusCode == GATEWAY_TIMEOUT
+    if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_GATEWAY_TIMEOUT
         || statusCode < 500) {
       try {
         ServerError serverError = gson.fromJson(body, ServerError.class);
