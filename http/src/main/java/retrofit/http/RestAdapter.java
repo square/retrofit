@@ -6,6 +6,13 @@ import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpUriRequest;
+import retrofit.core.Callback;
+import retrofit.core.MainThread;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -18,12 +25,6 @@ import java.util.Date;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpUriRequest;
-import retrofit.core.Callback;
-import retrofit.core.MainThread;
 
 /**
  * Converts Java method calls to Rest calls.
@@ -70,19 +71,29 @@ import retrofit.core.MainThread;
    *
    * @param type to implement
    */
-  @SuppressWarnings("unchecked")
   public static <T> Module service(final Class<T> type) {
     return new Module() {
       @Override public void configure(Binder binder) {
-        binder.bind(type).toProvider(new Provider<T>() {
-          @Inject RestAdapter restAdapter;
+        binder.bind(type).toProvider(createProvider(type));
+      }
+    };
+  }
 
-          @Override public T get() {
-            RestAdapter.RestHandler handler = restAdapter.new RestHandler();
-            return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type},
-                handler);
-          }
-        });
+  /**
+   * Creates the {@link Provider} instances used by {@link #service(Class)}. Can be used by clients that
+   * want more control over the implementation of their service interfaces, e.g. to wrap them
+   * with caching logic.
+   * <p>
+   * Before use the provider must be injected via {@link com.google.inject.Injector#injectMembers}.
+   */
+  public static <T> Provider<T> createProvider(final Class<T> type) {
+    return new Provider<T>() {
+      @Inject RestAdapter restAdapter;
+
+      @SuppressWarnings("unchecked")
+      @Override public T get() {
+        RestAdapter.RestHandler handler = restAdapter.new RestHandler();
+        return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
       }
     };
   }
