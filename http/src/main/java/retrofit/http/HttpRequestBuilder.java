@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -203,8 +202,7 @@ final class HttpRequestBuilder {
       }
     }
 
-    HttpUriRequest request = requestLine.getHttpMethod().createFrom(this);
-    return request;
+    return requestLine.getHttpMethod().createFrom(this);
   }
 
   private String doReplace(String replacedPath, String paramName, String newVal) {
