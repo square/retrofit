@@ -130,6 +130,10 @@ public class FetcherTest extends TestCase {
       throw new UnsupportedOperationException();
     }
 
+    @Override public void executeOnMain(Runnable r) {
+      throw new UnsupportedOperationException();
+    }
+
     public void cancel(Runnable r) {
       throw new UnsupportedOperationException();
     }
