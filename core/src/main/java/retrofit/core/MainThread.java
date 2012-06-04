@@ -36,6 +36,9 @@ public interface MainThread extends Executor {
   /**
    * Executes a runnable immediately if we're on the main thread, otherwise
    * posts it to be run later on the main thread.
+   * <p>
+   * Unlike {@link #executeSynchronously(Runnable)}, this method will be
+   * synchronous if called from the main thread, and asynchronous otherwise.
    */
   void executeOnMain(Runnable r);
 
