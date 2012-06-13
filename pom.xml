@@ -69,6 +69,17 @@
         <developerConnection>scm:git:ssh://git@github.com/square/retrofit.git</developerConnection>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>${retrofit.repo.id}</id>
+            <url>${retrofit.repo.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>${retrofit.snapshot.repo.id}</id>
+            <url>${retrofit.snapshot.repo.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <issueManagement>
         <system>GitHub Issues</system>
         <url>http://github.com/square/retrofit/issues</url>
@@ -173,15 +184,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>${retrofit.repo.id}</id>
-            <url>${retrofit.repo.url}</url>
-        </repository>
-        <snapshotRepository>
-            <id>${retrofit.snapshot.repo.id}</id>
-            <url>${retrofit.snapshot.repo.url}</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
