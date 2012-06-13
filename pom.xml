@@ -56,9 +56,11 @@
         <junit.version>4.10</junit.version>
         <easymock.version>3.1</easymock.version>
 
-        <!-- Snapshot Repository URL (override in ~/.m2/settings.xml profile) -->
-        <snapshot.repo.id>example-nexus</snapshot.repo.id>
-        <snapshot.repo.url>http://example.com/snapshots</snapshot.repo.url>
+        <!-- Deployment Repository URLs (override in ~/.m2/settings.xml profile) -->
+        <retrofit.repo.id>example-nexus</retrofit.repo.id>
+        <retrofit.repo.url>http://example.com/releases</retrofit.repo.url>
+        <retrofit.snapshot.repo.id>example-nexus</retrofit.snapshot.repo.id>
+        <retrofit.snapshot.repo.url>http://example.com/snapshots</retrofit.snapshot.repo.url>
     </properties>
 
     <scm>
@@ -173,9 +175,13 @@
     </build>
 
     <distributionManagement>
+        <repository>
+            <id>${retrofit.repo.id}</id>
+            <url>${retrofit.repo.url}</url>
+        </repository>
         <snapshotRepository>
-            <id>${snapshot.repo.id}</id>
-            <url>${snapshot.repo.url}</url>
+            <id>${retrofit.snapshot.repo.id}</id>
+            <url>${retrofit.snapshot.repo.url}</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
