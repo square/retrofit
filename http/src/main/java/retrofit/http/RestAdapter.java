@@ -6,9 +6,11 @@ import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
@@ -23,6 +25,7 @@ import java.lang.reflect.WildcardType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -128,7 +131,7 @@ import java.util.logging.Logger;
 
         // Optionally wrap the response handler for server call profiling.
         final ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
-            : createProfiler(gsonResponseHandler, profiler, method, server.apiUrl(), start);
+            : createProfiler(gsonResponseHandler, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
 
         // Execute HTTP request in the background.
         final String finalUrl = url;
@@ -147,6 +150,24 @@ import java.util.logging.Logger;
       return null;
     }
 
+    private HttpProfiler.RequestInformation getRequestInfo(Method method, HttpUriRequest request) {
+      RequestLine requestLine = RequestLine.fromMethod(method);
+      HttpMethodType httpMethod = requestLine.getHttpMethod();
+      HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
+
+      long contentLength = 0;
+      String contentType = null;
+      if (request instanceof HttpEntityEnclosingRequestBase) {
+        HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
+        HttpEntity entity = entityReq.getEntity();
+        contentLength = entity.getContentLength();
+        contentType = entity.getContentType().getValue();
+      }
+
+      return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
+          contentLength, contentType);
+    }
+
     private void backgroundInvoke(HttpUriRequest request, ResponseHandler<Void> rh,
         UiCallback<?> callback, String url, String startTime) {
       try {
@@ -161,15 +182,15 @@ import java.util.logging.Logger;
     }
 
     /** Wraps a {@code GsonResponseHandler} with a {@code ProfilingResponseHandler}. */
-    private ProfilingResponseHandler createProfiler(ResponseHandler<Void> handlerToWrap,
-        HttpProfiler profiler, Method method, String apiUrl, Date start) {
-      RequestLine requestLine = RequestLine.fromMethod(method);
+    private <T> ProfilingResponseHandler<T> createProfiler(ResponseHandler<Void> handlerToWrap,
+        HttpProfiler<T> profiler, HttpProfiler.RequestInformation requestInfo, Date start) {
 
-      HttpMethodType httpMethod = requestLine.getHttpMethod();
-      HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
 
-      return new ProfilingResponseHandler(handlerToWrap, profiler, profilerMethod, apiUrl,
-          requestLine.getRelativePath(), start.getTime());
+      ProfilingResponseHandler<T> responseHandler = new ProfilingResponseHandler<T>(handlerToWrap, profiler,
+          requestInfo, start.getTime());
+      responseHandler.beforeCall();
+
+      return responseHandler;
     }
 
     private static final String NOT_CALLBACK =
@@ -212,30 +233,40 @@ import java.util.logging.Logger;
   }
 
   /** Sends server call times and response status codes to {@link HttpProfiler}. */
-  private static class ProfilingResponseHandler implements ResponseHandler<Void> {
+  private static class ProfilingResponseHandler<T> implements ResponseHandler<Void> {
     private final ResponseHandler<Void> delegate;
-    private final HttpProfiler profiler;
-    private final String apiUrl;
-    private final String relativePath;
-    private final HttpProfiler.Method method;
+    private final HttpProfiler<T> profiler;
+    private final HttpProfiler.RequestInformation requestInfo;
     private final long startTime;
+    private final AtomicReference<T> beforeCallData = new AtomicReference<T>();
 
     /** Wraps the delegate response handler. */
-    private ProfilingResponseHandler(ResponseHandler<Void> delegate, HttpProfiler profiler,
-        HttpProfiler.Method method, String apiUrl, String relativePath, long startTime) {
+    private ProfilingResponseHandler(ResponseHandler<Void> delegate, HttpProfiler<T> profiler,
+        HttpProfiler.RequestInformation requestInfo, long startTime) {
       this.delegate = delegate;
       this.profiler = profiler;
-      this.method = method;
-      this.apiUrl = apiUrl;
-      this.relativePath = relativePath;
+      this.requestInfo = requestInfo;
       this.startTime = startTime;
+    }
+
+    public void beforeCall() {
+      try {
+        beforeCallData.set(profiler.beforeCall());
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "Error occurred in HTTP profiler beforeCall().", e);
+      }
     }
 
     @Override public Void handleResponse(HttpResponse httpResponse) throws IOException {
       // Intercept the response and send data to profiler.
       long elapsedTime = System.currentTimeMillis() - startTime;
       int statusCode = httpResponse.getStatusLine().getStatusCode();
-      profiler.called(method, apiUrl, relativePath, elapsedTime, statusCode);
+
+      try {
+        profiler.afterCall(requestInfo, elapsedTime, statusCode, beforeCallData.get());
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "Error occurred in HTTP profiler afterCall().", e);
+      }
 
       // Pass along the response to the normal handler.
       return delegate.handleResponse(httpResponse);
