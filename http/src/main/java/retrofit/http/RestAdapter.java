@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -161,7 +162,9 @@ import java.util.logging.Logger;
         HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
         HttpEntity entity = entityReq.getEntity();
         contentLength = entity.getContentLength();
-        contentType = entity.getContentType().getValue();
+
+        Header entityContentType = entity.getContentType();
+        contentType = entityContentType != null ? entityContentType.getValue() : null;
       }
 
       return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
