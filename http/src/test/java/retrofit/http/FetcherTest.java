@@ -2,7 +2,6 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import com.google.inject.Provider;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.http.HttpEntity;
@@ -16,6 +15,7 @@ import retrofit.core.MainThread;
 import retrofit.core.ProgressListener;
 import retrofit.io.ByteSink;
 
+import javax.inject.Provider;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

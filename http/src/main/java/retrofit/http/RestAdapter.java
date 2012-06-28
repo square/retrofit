@@ -2,19 +2,7 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.inject.Binder;
-import com.google.inject.Inject;
 import com.google.inject.Module;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
-import retrofit.core.Callback;
-import retrofit.core.MainThread;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -28,6 +16,17 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
+import retrofit.core.Callback;
+import retrofit.core.MainThread;
 
 /**
  * Converts Java method calls to Rest calls.
@@ -43,7 +42,7 @@ import java.util.logging.Logger;
   @Inject private MainThread mainThread;
   @Inject private Headers headers;
   @Inject private Gson gson;
-  @Inject(optional = true) private HttpProfiler profiler;
+  @Inject private HttpProfiler profiler = HttpProfiler.NONE;
 
   private ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
     @Override protected SimpleDateFormat initialValue() {
@@ -83,20 +82,27 @@ import java.util.logging.Logger;
   }
 
   /**
+   * Returns a new instance of {@code type} that uses {@code restAdapter} to
+   * convert Java method calls to Rest calls.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T create(RestAdapter restAdapter, Class<T> type) {
+    RestAdapter.RestHandler handler = restAdapter.new RestHandler();
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+  }
+
+  /**
    * Creates the {@link Provider} instances used by {@link #service(Class)}. Can be used by clients that
    * want more control over the implementation of their service interfaces, e.g. to wrap them
    * with caching logic.
    * <p>
    * Before use the provider must be injected via {@link com.google.inject.Injector#injectMembers}.
    */
-  public static <T> Provider<T> createProvider(final Class<T> type) {
-    return new Provider<T>() {
+  public static <T> com.google.inject.Provider<T> createProvider(final Class<T> type) {
+    return new com.google.inject.Provider<T>() {
       @Inject RestAdapter restAdapter;
-
-      @SuppressWarnings("unchecked")
       @Override public T get() {
-        RestAdapter.RestHandler handler = restAdapter.new RestHandler();
-        return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+        return create(restAdapter, type);
       }
     };
   }
@@ -130,7 +136,8 @@ import java.util.logging.Logger;
             GsonResponseHandler.create(gson, resultType, callback, url, startTime);
 
         // Optionally wrap the response handler for server call profiling.
-        final ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
+        final ResponseHandler<Void> rh = (profiler == HttpProfiler.NONE)
+            ? gsonResponseHandler
             : createProfiler(gsonResponseHandler, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
 
         // Execute HTTP request in the background.
