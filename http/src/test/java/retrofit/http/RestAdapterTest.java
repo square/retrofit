@@ -50,6 +50,7 @@ public class RestAdapterTest extends TestCase {
   private Headers mockHeaders;
   @SuppressWarnings("rawtypes") private Callback mockCallback;
   private HttpResponse mockResponse;
+  private HttpProfiler mockProfiler;
   private Gson gson = new Gson();
 
   @Override @Before public void setUp() throws Exception {
@@ -59,6 +60,7 @@ public class RestAdapterTest extends TestCase {
     mockHeaders    = createMock(Headers.class);
     mockCallback   = createMock(Callback.class);
     mockResponse   = createMock(HttpResponse.class);
+    mockProfiler   = createMock(HttpProfiler.class);
 
     injector = Guice.createInjector(
         new AbstractModule() {
@@ -69,6 +71,7 @@ public class RestAdapterTest extends TestCase {
             bind(Executor.class).toInstance(mockExecutor);
             bind(MainThread.class).toInstance(mockMainThread);
             bind(Headers.class).toInstance(mockHeaders);
+            bind(HttpProfiler.class).toInstance(HttpProfiler.NONE);
             install(service(DeleteService.class));
             install(service(GetService.class));
             install(service(PostService.class));

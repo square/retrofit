@@ -2,13 +2,13 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
+import javax.inject.Provider;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
