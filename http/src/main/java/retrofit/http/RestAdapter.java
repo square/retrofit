@@ -83,13 +83,13 @@ import retrofit.core.MainThread;
   }
 
   /**
-   * Returns a new instance of {@code type} that uses {@code restAdapter} to
+   * Returns a new instance of {@code type} that uses this RestAdapter to
    * convert Java method calls to Rest calls.
    */
   @SuppressWarnings("unchecked")
-  public static <T> T create(RestAdapter restAdapter, Class<T> type) {
-    RestAdapter.RestHandler handler = restAdapter.new RestHandler();
-    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+  public <T> T create(Class<T> type) {
+    return (T) Proxy.newProxyInstance(type.getClassLoader(),
+        new Class<?>[] {type}, new RestHandler());
   }
 
   /**
@@ -103,7 +103,7 @@ import retrofit.core.MainThread;
     return new com.google.inject.Provider<T>() {
       @Inject RestAdapter restAdapter;
       @Override public T get() {
-        return create(restAdapter, type);
+        return restAdapter.create(type);
       }
     };
   }
