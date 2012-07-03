@@ -1,15 +1,18 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.util.EntityUtils;
 import retrofit.core.Callback;
 import retrofit.core.MainThread;
 
@@ -101,9 +104,6 @@ import java.util.logging.Logger;
   private class RestHandler implements InvocationHandler {
 
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
-      // Construct HTTP request.
-      final UiCallback<?> callback =
-          UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
 
       String url = server.apiUrl();
       String startTime = "NULL";
@@ -116,40 +116,122 @@ import java.util.logging.Logger;
             .build();
         url = request.getURI().toString();
 
-        // The last parameter should be of type Callback<T>. Determine T.
-        Type[] genericParameterTypes = method.getGenericParameterTypes();
-        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
         LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
         final Date start = new Date();
         startTime = dateFormat.get().format(start);
 
-        final GsonResponseHandler<?> gsonResponseHandler =
-            GsonResponseHandler.create(gson, resultType, callback, url, startTime);
-
-        // Optionally wrap the response handler for server call profiling.
-        final ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
-            : createProfiler(gsonResponseHandler, profiler, method, server.apiUrl(), start);
-
         // Execute HTTP request in the background.
         final String finalUrl = url;
         final String finalStartTime = startTime;
-        executor.execute(new Runnable() {
-          @Override public void run() {
-            backgroundInvoke(request, rh, callback, finalUrl, finalStartTime);
-          }
-        });
+
+        // Get the last arg, will determine if we have a callback or not
+        final Object lastArg = (args == null || args.length == 0)? null : args[args.length - 1];
+
+        // Going the Async way
+        if (lastArg instanceof Callback<?>) {
+
+            executor.execute(new Runnable() {
+              @Override public void run() {
+                backgroundInvoke(request, method, finalUrl, start, (Callback<?>)lastArg);
+              }
+            });
+        // The last arg is not a Callback - we do the request on the current thread
+        } else {
+            return foregroundInvoke(request, method, finalUrl, finalStartTime);
+        }
       } catch (Throwable t) {
         LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
-        callback.unexpectedError(t);
       }
 
       // Methods should return void.
       return null;
     }
 
-    private void backgroundInvoke(HttpUriRequest request, ResponseHandler<Void> rh,
-        UiCallback<?> callback, String url, String startTime) {
-      try {
+      /**
+       * Invoking the Http request on the current thread. The result will be returned by this method.
+       * In case of an error response (404, 501 etc.) a ResponseNotOKException will be thrown.
+       * @param request
+       * @param method
+       * @param url
+       * @param startTime
+       * @return The response from the server
+       * @throws Throwable
+       */
+    private Object foregroundInvoke(HttpUriRequest request, Method method, String url, String startTime) throws Throwable {
+        HttpResponse response = httpClientProvider.get().execute(request);
+
+        int statusCode = response.getStatusLine().getStatusCode();
+        HttpEntity entity = response.getEntity();
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            entity = HttpClients.copyAndLog(entity, url, startTime);
+        }
+
+        // If we got an OK response and non-empty entity - let parse it!
+        if (statusCode >= 200 && statusCode < 300) {
+            if (entity != null) {
+                // TODO: Use specified encoding.
+                String bodyString = EntityUtils.toString(entity, "UTF-8");
+
+                // If the return type is not void,
+                // parse the body with the Gson parser, The return type of the method is the object here
+                if (!method.getReturnType().equals(void.class)) {
+                    try {
+                        return gson.fromJson(bodyString, method.getReturnType());
+                    } catch (JsonSyntaxException e) {
+                        Throwable ex = e.getCause();
+                        // If from some reason we get an IllegalStateException,
+                        // let's document the body for further investigation (helped me in the past)
+                        if (ex instanceof IllegalStateException) {
+                            String msg = ex.getMessage();
+                            msg += " | Body is: " + bodyString;
+                            IllegalStateException ise = new IllegalStateException(msg);
+                            ise.setStackTrace(e.getStackTrace());
+                            throw ise;
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+            }
+        } else {
+            ResponseNotOKException exception = new ResponseNotOKException(statusCode);
+
+            if (entity != null) {
+                try {
+                    String dataString = EntityUtils.toString(entity);
+                    exception = new ResponseNotOKException(statusCode, dataString);
+                } catch (IllegalStateException e) {
+                    // Could happen if the content has been consumed already. We'll ignore that situation
+                }
+            }
+
+            throw exception;
+        }
+
+        return null;
+    }
+
+    private void backgroundInvoke(HttpUriRequest request, Method method, String url, Date start, Callback<?> callbackObj) {
+
+        // The last parameter should be of type Callback<T>. Determine T.
+        Type[] genericParameterTypes = method.getGenericParameterTypes();
+        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
+
+        // Construct HTTP request.
+        final UiCallback<?> callback =
+                UiCallback.create(callbackObj, mainThread);
+
+        String startTime = dateFormat.get().format(start);
+
+        final GsonResponseHandler<?> gsonResponseHandler =
+                GsonResponseHandler.create(gson, resultType, callback, url, startTime);
+
+        // Optionally wrap the response handler for server call profiling.
+        final ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
+                : createProfiler(gsonResponseHandler, profiler, method, server.apiUrl(), start);
+
+        try {
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
         LOGGER.log(Level.WARNING, e.getMessage() + " from " + url + " at " + startTime, e);

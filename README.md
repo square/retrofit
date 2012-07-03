@@ -25,6 +25,9 @@ example interface:
       @GET("foo/bar")
       void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
 
+      @GET("foo/bar")
+      SimpleResponse normalGetSynchronous(@Named("id") String id) throws ResponseNotOKException;
+
       // Produces a url like "foo/idValue/bar?category=categoryValue".
       @GET("foo/{id}/bar")
       void getWithPathParam(@Named("id") String id, @Named("category") String category, Callback<SimpleResponse> callback);
@@ -38,9 +41,13 @@ example interface:
       void singleEntityPost(@SingleEntity MyJsonObj card, @Named("id") String id, Callback<SimpleResponse> callback);
     }
 
-Note that each method _must_ have a `Callback` object at the end of the parameter list.  This is how
-your application will handle the results of your network calls: errors and successful responses are
-both handled by the `Callback` interface.
+If the method has a `Callback` object at the end of the parameter list - the method will run asynchronously:
+errors and successful responses are both handled by the `Callback` interface.
+
+If the method doesn't have a `Callback' argument, it will be run synchronously on the current thread.
+This is useful in case you're calling multiple Http requests in a background process (a Service for
+instance). Thus, saving the trouble of many Callbacks calling each other. See `normalGetSynchronous`
+above for an example. Note: a ResponseNotOKException will be thrown in case of an error response.
 
 If you want to use the `@SingleEntity` method of specifying request body (see `singleEntityPost` above),
 your `MyJsonObject` will need to implement `TypedBytes`.  For convenience, you can extend

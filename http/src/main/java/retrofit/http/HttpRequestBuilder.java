@@ -108,9 +108,9 @@ final class HttpRequestBuilder {
   /** Converts all but the last method argument to a list of HTTP request parameters. */
   private List<NameValuePair> createParamList() {
     Annotation[][] parameterAnnotations = javaMethod.getParameterAnnotations();
-    int count = parameterAnnotations.length - 1;
+    int count = parameterAnnotations.length;
 
-    List<NameValuePair> params = new ArrayList<NameValuePair>(count);
+    List<NameValuePair> params = new ArrayList<NameValuePair>();
 
     // Add query parameter(s), if specified.
     QueryParams queryParams = javaMethod.getAnnotation(QueryParams.class);

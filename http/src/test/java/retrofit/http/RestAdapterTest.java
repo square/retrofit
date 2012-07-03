@@ -134,12 +134,43 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
+  @SuppressWarnings("unchecked") public void testServiceGetSimpleNoCallback() throws IOException {
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL, false);
+    replayAll();
+
+    GetService service = injector.getInstance(GetService.class);
+    try {
+      service.get();
+    } catch (ResponseNotOKException e) {
+      e.printStackTrace();
+    } catch (Throwable throwable) {
+      throwable.printStackTrace();
+    }
+
+      verifyAll();
+  }
+
   @SuppressWarnings("unchecked") public void testServiceGetParam() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
     GetService service = injector.getInstance(GetService.class);
     service.getWithParam(ID, mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked") public void testServiceGetParamNoCallback() throws IOException {
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID, false);
+    replayAll();
+
+    GetService service = injector.getInstance(GetService.class);
+      try {
+          service.getWithParam(ID);
+      } catch (ResponseNotOKException e) {
+          e.printStackTrace();
+      } catch (Throwable throwable) {
+          throwable.printStackTrace();
+      }
     verifyAll();
   }
 
@@ -179,6 +210,19 @@ public class RestAdapterTest extends TestCase {
 
     PostService service = injector.getInstance(PostService.class);
     service.post(mockCallback);
+    verifyAll();
+  }
+
+  @SuppressWarnings("unchecked") public void testServicePostSimpleClientErrorNoCallback() throws IOException {
+    expectLifecycleClientError(HttpPost.class, BASE_URL, false);
+    replayAll();
+
+    PostService service = injector.getInstance(PostService.class);
+      try {
+          service.post();
+      } catch (ResponseNotOKException e) {
+          e.printStackTrace();
+      }
     verifyAll();
   }
 
@@ -257,19 +301,38 @@ public class RestAdapterTest extends TestCase {
   }
 
   private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass,
-      String requestUrl) throws IOException {
-    Response response = expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(gson.toJson(response), 200);
-    expectHttpClientExecute();
-    expectCallbacks(response);
+     String requestUrl) throws IOException {
+      // Default case - there's a callback
+      expectLifecycle(requestClass, requestUrl, true);
+  }
+  private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass,
+     String requestUrl, boolean usingCallback) throws IOException {
+        Response response = usingCallback ? expectCallAndResponse(requestClass, requestUrl) : expectResponse(requestClass,requestUrl);
+        expectResponseCalls(gson.toJson(response), 200);
+        if (usingCallback) {
+          expectCallbacks(response);
+          expectHttpClientExecute();
+        } else {
+          expectHttpClientExecuteNoCallback();
+        }
   }
 
   private <T extends HttpUriRequest> void expectLifecycleClientError(Class<T> requestClass,
       String requestUrl) throws IOException {
-    Response response = expectCallAndResponse(requestClass, requestUrl);
+      // Default behavior - has a callback
+      expectLifecycleClientError(requestClass,requestUrl, true);
+  }
+
+  private <T extends HttpUriRequest> void expectLifecycleClientError(Class<T> requestClass,
+      String requestUrl, boolean usingCallback) throws IOException {
+    Response response = usingCallback ? expectCallAndResponse(requestClass, requestUrl): expectResponse(requestClass, requestUrl);
     expectResponseCalls(gson.toJson(response), 409);
-    expectHttpClientExecute();
-    expectClientErrorCallbacks(response, 409);
+    if (!usingCallback)
+        expectHttpClientExecuteNoCallback();
+    else {
+        expectHttpClientExecute();
+        expectClientErrorCallbacks(response, 409);
+    }
   }
 
   private <T extends HttpUriRequest> void expectLifecycleServerError(Class<T> requestClass,
@@ -278,6 +341,12 @@ public class RestAdapterTest extends TestCase {
     expectResponseCalls(gson.toJson(response), 501);
     expectHttpClientExecute();
     expectServerErrorCallbacks(501);
+  }
+
+  private <T extends HttpUriRequest> Response expectResponse(Class<T> requestClass,
+                                                             String requestUrl) {
+      expectSetOnWithRequest(requestClass, requestUrl);
+      return new Response("some text");
   }
 
   private <T extends HttpUriRequest> Response expectCallAndResponse(Class<T> requestClass,
@@ -304,7 +373,11 @@ public class RestAdapterTest extends TestCase {
     expectLastCall().once();
   }
 
-  private void expectHttpClientExecute() throws IOException {
+    private void expectHttpClientExecuteNoCallback() throws IOException {
+        expect(mockHttpClient.execute(isA(HttpUriRequest.class))).andReturn(mockResponse);
+    }
+
+    private void expectHttpClientExecute() throws IOException {
     final Capture<GsonResponseHandler<?>> capture
         = new Capture<GsonResponseHandler<?>>();
     mockHttpClient.execute(isA(HttpUriRequest.class), capture(capture));
@@ -317,7 +390,7 @@ public class RestAdapterTest extends TestCase {
     });
   }
 
-  private void expectResponseCalls(String jsonToReturn, int statusCode)
+    private void expectResponseCalls(String jsonToReturn, int statusCode)
       throws UnsupportedEncodingException {
     expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
     expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
@@ -329,11 +402,12 @@ public class RestAdapterTest extends TestCase {
     final Capture<String> captureMime = new Capture<String>();
     mockHeaders.setOn(capture(capture), capture(captureMime));
     expectLastCall().andAnswer(new IAnswer<Object>() {
-      @Override public Object answer() throws Throwable {
-        T request = expectedRequestClass.cast(capture.getValue());
-        assertEquals("uri should match expectations", expectedUri, request.getURI().toString());
-        return null;
-      }
+        @Override
+        public Object answer() throws Throwable {
+            T request = expectedRequestClass.cast(capture.getValue());
+            assertEquals("uri should match expectations", expectedUri, request.getURI().toString());
+            return null;
+        }
     });
   }
 
@@ -373,9 +447,11 @@ public class RestAdapterTest extends TestCase {
 
   private interface GetService {
     @GET(ENTITY) void get(Callback<Response> callback);
+    @GET(ENTITY) Response get() throws ResponseNotOKException;
 
     @GET(ENTITY) void getWithParam(@Named("id") String id,
         Callback<Response> callback);
+    @GET(ENTITY) Response getWithParam(@Named("id") String id) throws ResponseNotOKException;
 
     @GET(ENTITY) @QueryParam(name="filter", value="merchant")
     void getWithFixedParam(@Named("id") String id, Callback<Response> callback);
@@ -393,6 +469,7 @@ public class RestAdapterTest extends TestCase {
   }
 
   private interface PostService {
+    @POST(ENTITY) Response post() throws ResponseNotOKException;
     @POST(ENTITY) void post(Callback<Response> callback);
 
     @POST(ENTITY) void postWithParam(@Named("id") String id,
