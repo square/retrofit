@@ -45,9 +45,9 @@ If the method has a `Callback` object at the end of the parameter list - the met
 errors and successful responses are both handled by the `Callback` interface.
 
 If the method doesn't have a `Callback' argument, it will be run synchronously on the current thread.
-This is useful in case you're calling multiple Http requests in a background process (a Service for
-instance). Thus, saving the trouble of many Callbacks calling each other. See `normalGetSynchronous`
-above for an example. Note: a ResponseNotOKException will be thrown in case of an error response.
+This is useful in case you're calling multiple Http requests in a background process. Thus, saving the
+trouble of many Callbacks calling each other. See `normalGetSynchronous` above for an example.
+Note: a ResponseNotOKException will be thrown in case of an error response.
 
 If you want to use the `@SingleEntity` method of specifying request body (see `singleEntityPost` above),
 your `MyJsonObject` will need to implement `TypedBytes`.  For convenience, you can extend
