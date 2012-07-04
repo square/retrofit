@@ -150,12 +150,9 @@ import java.util.logging.Logger;
       /**
        * Invoking the Http request on the current thread. The result will be returned by this method.
        * In case of an error response (404, 501 etc.) a ResponseNotOKException will be thrown.
-       * @param request
-       * @param method
-       * @param url
-       * @param startTime
        * @return The response from the server
-       * @throws Throwable
+       * @throws Throwable if there's a connection problem
+       * @throws ResponseNotOKException we got a bad response - the Http response code is not in the 200-299 range
        */
     private Object foregroundInvoke(HttpUriRequest request, Method method, String url, String startTime) throws Throwable {
         HttpResponse response = httpClientProvider.get().execute(request);

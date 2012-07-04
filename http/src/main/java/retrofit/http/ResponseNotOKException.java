@@ -1,11 +1,9 @@
 package retrofit.http;
 
 /**
- * Created by IntelliJ IDEA.
- * User: udic
- * Date: 02/02/12
- * Time: 21:07
- * To change this template use File | Settings | File Templates.
+ * Get thrown when an http response code is not OK (in the range of 200-299)
+ *
+ * @author Udi Cohen (udinic@gmail.com)
  */
 public class ResponseNotOKException extends Exception {
 
@@ -17,7 +15,7 @@ public class ResponseNotOKException extends Exception {
     }
     
     public ResponseNotOKException(int statusCode) {
-        super();    //To change body of overridden methods use File | Settings | File Templates.
+        super();
         this.statusCode = statusCode;
     }
     
