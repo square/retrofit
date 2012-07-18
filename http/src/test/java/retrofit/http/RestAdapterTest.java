@@ -1,13 +1,11 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.name.Named;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Executor;
+import javax.inject.Named;
+import javax.inject.Provider;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
@@ -33,7 +31,6 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static retrofit.http.RestAdapter.service;
 
 public class RestAdapterTest extends TestCase {
   private static final String ID = "123";
@@ -43,14 +40,13 @@ public class RestAdapterTest extends TestCase {
   private static final String PATH_URL_PREFIX = BASE_URL + "/";
   private static final String GET_DELETE_SIMPLE_URL = BASE_URL + "?";
 
-  private Injector injector;
+  private RestAdapter restAdapter;
   private HttpClient mockHttpClient;
   private Executor mockExecutor;
   private MainThread mockMainThread;
   private Headers mockHeaders;
   @SuppressWarnings("rawtypes") private Callback mockCallback;
   private HttpResponse mockResponse;
-  private HttpProfiler mockProfiler;
   private Gson gson = new Gson();
 
   @Override @Before public void setUp() throws Exception {
@@ -60,31 +56,22 @@ public class RestAdapterTest extends TestCase {
     mockHeaders    = createMock(Headers.class);
     mockCallback   = createMock(Callback.class);
     mockResponse   = createMock(HttpResponse.class);
-    mockProfiler   = createMock(HttpProfiler.class);
 
-    injector = Guice.createInjector(
-        new AbstractModule() {
-          @Override protected void configure() {
-            bind(Server.class).toInstance(new Server("http://host/api/",
-                "http://host/web/", true));
-            bind(HttpClient.class).toInstance(mockHttpClient);
-            bind(Executor.class).toInstance(mockExecutor);
-            bind(MainThread.class).toInstance(mockMainThread);
-            bind(Headers.class).toInstance(mockHeaders);
-            bind(HttpProfiler.class).toInstance(HttpProfiler.NONE);
-            install(service(DeleteService.class));
-            install(service(GetService.class));
-            install(service(PostService.class));
-            install(service(PutService.class));
-          }
-        });
+    Server server = new Server("http://host/api/", "http://host/web/", true);
+    Provider<HttpClient> httpClientProvider = new Provider<HttpClient>() {
+      @Override public HttpClient get() {
+        return mockHttpClient;
+      }
+    };
+    restAdapter = new RestAdapter(server, httpClientProvider, mockExecutor, mockMainThread,
+        mockHeaders, gson, HttpProfiler.NONE);
   }
 
   @SuppressWarnings("unchecked") public void testServiceDeleteSimple() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL);
     replayAll();
 
-    DeleteService service = injector.getInstance(DeleteService.class);
+    DeleteService service = restAdapter.create(DeleteService.class);
     service.delete(mockCallback);
     verifyAll();
   }
@@ -93,7 +80,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
-    DeleteService service = injector.getInstance(DeleteService.class);
+    DeleteService service = restAdapter.create(DeleteService.class);
     service.deleteWithParam(ID, mockCallback);
     verifyAll();
   }
@@ -103,7 +90,7 @@ public class RestAdapterTest extends TestCase {
         + "id=" + ID);
     replayAll();
 
-    DeleteService service = injector.getInstance(DeleteService.class);
+    DeleteService service = restAdapter.create(DeleteService.class);
     service.deleteWithFixedParam(ID, mockCallback);
     verifyAll();
   }
@@ -114,7 +101,7 @@ public class RestAdapterTest extends TestCase {
         + "filter=merchant&name2=value2&"+ "id=" + ID);
     replayAll();
 
-    DeleteService service = injector.getInstance(DeleteService.class);
+    DeleteService service = restAdapter.create(DeleteService.class);
     service.deleteWithMultipleFixedParams(ID, mockCallback);
     verifyAll();
   }
@@ -123,7 +110,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
 
-    DeleteService service = injector.getInstance(DeleteService.class);
+    DeleteService service = restAdapter.create(DeleteService.class);
     service.deleteWithPathParam(ID, mockCallback);
     verifyAll();
   }
@@ -132,7 +119,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL);
     replayAll();
 
-    GetService service = injector.getInstance(GetService.class);
+    GetService service = restAdapter.create(GetService.class);
     service.get(mockCallback);
     verifyAll();
   }
@@ -141,7 +128,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
-    GetService service = injector.getInstance(GetService.class);
+    GetService service = restAdapter.create(GetService.class);
     service.getWithParam(ID, mockCallback);
     verifyAll();
   }
@@ -151,7 +138,7 @@ public class RestAdapterTest extends TestCase {
         + "id=" + ID);
     replayAll();
 
-    GetService service = injector.getInstance(GetService.class);
+    GetService service = restAdapter.create(GetService.class);
     service.getWithFixedParam(ID, mockCallback);
     verifyAll();
   }
@@ -162,7 +149,7 @@ public class RestAdapterTest extends TestCase {
         + "filter=merchant&name2=value2&"+ "id=" + ID);
     replayAll();
 
-    GetService service = injector.getInstance(GetService.class);
+    GetService service = restAdapter.create(GetService.class);
     service.getWithMultipleFixedParams(ID, mockCallback);
     verifyAll();
   }
@@ -171,7 +158,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
 
-    GetService service = injector.getInstance(GetService.class);
+    GetService service = restAdapter.create(GetService.class);
     service.getWithPathParam(ID, mockCallback);
     verifyAll();
   }
@@ -180,7 +167,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
 
-    PostService service = injector.getInstance(PostService.class);
+    PostService service = restAdapter.create(PostService.class);
     service.post(mockCallback);
     verifyAll();
   }
@@ -189,7 +176,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycleClientError(HttpPost.class, BASE_URL);
     replayAll();
 
-    PostService service = injector.getInstance(PostService.class);
+    PostService service = restAdapter.create(PostService.class);
     service.post(mockCallback);
     verifyAll();
   }
@@ -198,7 +185,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycleServerError(HttpPost.class, BASE_URL);
     replayAll();
 
-    PostService service = injector.getInstance(PostService.class);
+    PostService service = restAdapter.create(PostService.class);
     service.post(mockCallback);
     verifyAll();
   }
@@ -207,7 +194,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
 
-    PostService service = injector.getInstance(PostService.class);
+    PostService service = restAdapter.create(PostService.class);
     service.postWithParam(ID, mockCallback);
     verifyAll();
   }
@@ -216,7 +203,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpPost.class, PATH_URL_PREFIX + ID);
     replayAll();
 
-    PostService service = injector.getInstance(PostService.class);
+    PostService service = restAdapter.create(PostService.class);
     service.postWithPathParam(ID, mockCallback);
     verifyAll();
   }
@@ -225,7 +212,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpPut.class, BASE_URL);
     replayAll();
 
-    PutService service = injector.getInstance(PutService.class);
+    PutService service = restAdapter.create(PutService.class);
     service.put(mockCallback);
     verifyAll();
   }
@@ -234,7 +221,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpPut.class, BASE_URL);
     replayAll();
 
-    PutService service = injector.getInstance(PutService.class);
+    PutService service = restAdapter.create(PutService.class);
     service.putWithParam(ID, mockCallback);
     verifyAll();
   }
@@ -243,7 +230,7 @@ public class RestAdapterTest extends TestCase {
     expectLifecycle(HttpPut.class, PATH_URL_PREFIX + ID);
     replayAll();
 
-    PutService service = injector.getInstance(PutService.class);
+    PutService service = restAdapter.create(PutService.class);
     service.putWithPathParam(ID, mockCallback);
     verifyAll();
   }

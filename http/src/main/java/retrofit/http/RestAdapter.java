@@ -1,8 +1,6 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import com.google.inject.Binder;
-import com.google.inject.Module;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -37,19 +35,31 @@ import retrofit.core.MainThread;
 @Singleton public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
 
-  @Inject private Server server;
-  @Inject private Provider<HttpClient> httpClientProvider;
-  @Inject private Executor executor;
-  @Inject private MainThread mainThread;
-  @Inject private Headers headers;
-  @Inject private Gson gson;
-  @Inject private HttpProfiler profiler = HttpProfiler.NONE;
+  private final Server server;
+  private final Provider<HttpClient> httpClientProvider;
+  private final Executor executor;
+  private final MainThread mainThread;
+  private final Headers headers;
+  private final Gson gson;
+  private final HttpProfiler profiler;
 
-  private ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
+  private final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
     @Override protected SimpleDateFormat initialValue() {
       return new SimpleDateFormat("HH:mm:ss");
     }
   };
+
+  @Inject
+  RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor,
+      MainThread mainThread, Headers headers, Gson gson, HttpProfiler profiler) {
+    this.server = server;
+    this.httpClientProvider = httpClientProvider;
+    this.executor = executor;
+    this.mainThread = mainThread;
+    this.headers = headers;
+    this.gson = gson;
+    this.profiler = profiler;
+  }
 
   /**
    * Adapts a Java interface to a REST API. HTTP requests happen in a background thread. Callbacks
@@ -57,7 +67,7 @@ import retrofit.core.MainThread;
    *
    * <p>Gets the relative path for a given method from a {@link GET}, {@link POST}, {@link PUT}, or
    * {@link DELETE} annotation on the method. Gets the names of URL parameters from {@link
-   * com.google.inject.name.Named} annotations on the method parameters.
+   * javax.inject.Named} annotations on the method parameters.
    *
    * <p>The last method parameter should be of type {@link Callback}. The JSON HTTP response will be
    * converted to the callback's parameter type using GSON. If the callback parameter type uses a
@@ -74,38 +84,10 @@ import retrofit.core.MainThread;
    *
    * @param type to implement
    */
-  public static <T> Module service(final Class<T> type) {
-    return new Module() {
-      @Override public void configure(Binder binder) {
-        binder.bind(type).toProvider(createProvider(type));
-      }
-    };
-  }
-
-  /**
-   * Returns a new instance of {@code type} that uses this RestAdapter to
-   * convert Java method calls to Rest calls.
-   */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> type) {
     return (T) Proxy.newProxyInstance(type.getClassLoader(),
         new Class<?>[] {type}, new RestHandler());
-  }
-
-  /**
-   * Creates the {@link Provider} instances used by {@link #service(Class)}. Can be used by clients that
-   * want more control over the implementation of their service interfaces, e.g. to wrap them
-   * with caching logic.
-   * <p>
-   * Before use the provider must be injected via {@link com.google.inject.Injector#injectMembers}.
-   */
-  public static <T> com.google.inject.Provider<T> createProvider(final Class<T> type) {
-    return new com.google.inject.Provider<T>() {
-      @Inject RestAdapter restAdapter;
-      @Override public T get() {
-        return restAdapter.create(type);
-      }
-    };
   }
 
   private class RestHandler implements InvocationHandler {
