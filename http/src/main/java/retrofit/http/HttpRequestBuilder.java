@@ -1,7 +1,7 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import com.google.inject.name.Named;
+import javax.inject.Named;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
