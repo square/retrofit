@@ -2,12 +2,12 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import com.google.inject.name.Named;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Set;
 import java.util.UUID;
+import javax.inject.Named;
 import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.client.methods.HttpGet;
