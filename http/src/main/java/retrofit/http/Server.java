@@ -35,6 +35,10 @@ public class Server {
     return webUrl;
   }
 
+  public String getType() {
+    return "production";
+  }
+
   /**
    * Returns true if we should ignore SSL warnings. Returns false by default.
    * Ignored for development servers.
