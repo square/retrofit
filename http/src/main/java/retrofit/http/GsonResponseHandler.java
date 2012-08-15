@@ -5,6 +5,8 @@ import com.google.gson.JsonParseException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
@@ -21,27 +23,29 @@ class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
   private final Gson gson;
   private final Type type;
   private final String url;
-  private final String startTime;
+  private final Date start;
+  private ThreadLocal<SimpleDateFormat> dateFormat;
 
-  private GsonResponseHandler(Gson gson, Type type, Callback<T> callback, String url,
-      String startTime) {
+  private GsonResponseHandler(Gson gson, Type type, Callback<T> callback, String url, Date start,
+      ThreadLocal<SimpleDateFormat> dateFormat) {
     super(gson, callback);
     this.gson = gson;
     this.type = type;
     this.url = url;
-    this.startTime = startTime;
+    this.start = start;
+    this.dateFormat = dateFormat;
   }
 
   static <T> GsonResponseHandler<T> create(Gson gson, Type type, Callback<T> callback, String url,
-      String startTime) {
-    return new GsonResponseHandler<T>(gson, type, callback, url, startTime);
+      Date startTime, ThreadLocal<SimpleDateFormat> dateFormat) {
+    return new GsonResponseHandler<T>(gson, type, callback, url, startTime, dateFormat);
   }
 
   @Override protected T parse(HttpEntity entity) throws IOException,
       ServerException {
     try {
       if (LOGGER.isLoggable(Level.FINE)) {
-        entity = HttpClients.copyAndLog(entity, url, startTime);
+        entity = HttpClients.copyAndLog(entity, url, start, dateFormat.get());
       }
 
       // TODO: Use specified encoding.
