@@ -62,7 +62,7 @@ public class HttpClients {
     // TODO: Use correct encoding.
     if (LOGGER.isLoggable(Level.FINE)) {
       final int chunkSize = 4000;
-      long msElapsed = new Date().getTime() - start.getTime();
+      long msElapsed = System.currentTimeMillis() - start.getTime();
       final String startTime = dateFormat.format(start);
       LOGGER.fine("----Response from " + url + " at " + startTime + " (" + msElapsed + "ms):");
       for (int i = 0; i < bytes.length; i += chunkSize) {
