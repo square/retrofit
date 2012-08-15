@@ -34,6 +34,7 @@ import retrofit.core.MainThread;
  */
 @Singleton public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
+  public static final String DEBUGGING_DATE_FORMAT = "HH:mm:ss";
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
@@ -45,7 +46,7 @@ import retrofit.core.MainThread;
 
   private final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
     @Override protected SimpleDateFormat initialValue() {
-      return new SimpleDateFormat("HH:mm:ss");
+      return new SimpleDateFormat(DEBUGGING_DATE_FORMAT);
     }
   };
 
@@ -116,7 +117,7 @@ import retrofit.core.MainThread;
         startTime = dateFormat.get().format(start);
 
         final GsonResponseHandler<?> gsonResponseHandler =
-            GsonResponseHandler.create(gson, resultType, callback, url, startTime);
+            GsonResponseHandler.create(gson, resultType, callback, url, start, dateFormat);
 
         // Optionally wrap the response handler for server call profiling.
         final ResponseHandler<Void> rh = (profiler == HttpProfiler.NONE)

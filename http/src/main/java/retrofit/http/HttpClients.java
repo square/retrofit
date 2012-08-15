@@ -3,6 +3,8 @@ package retrofit.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
@@ -53,13 +55,16 @@ public class HttpClients {
   /**
    * Copies a response (so we can read it a second time) and logs it.
    */
-  public static HttpEntity copyAndLog(HttpEntity entity, String url, String startTime)
+  public static HttpEntity copyAndLog(HttpEntity entity, String url, Date start,
+      SimpleDateFormat dateFormat)
       throws IOException {
     byte[] bytes = entityToBytes(entity);
     // TODO: Use correct encoding.
     if (LOGGER.isLoggable(Level.FINE)) {
       final int chunkSize = 4000;
-      LOGGER.fine("----Response from " + url + " at " + startTime + ":");
+      long msElapsed = new Date().getTime() - start.getTime();
+      final String startTime = dateFormat.format(start);
+      LOGGER.fine("----Response from " + url + " at " + startTime + " (" + msElapsed + "ms):");
       for (int i = 0; i < bytes.length; i += chunkSize) {
         int end = i + chunkSize;
         LOGGER.fine(((end > bytes.length) ? new String(bytes, i, bytes.length - i)
