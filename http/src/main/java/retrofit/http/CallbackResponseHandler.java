@@ -25,12 +25,17 @@ public abstract class CallbackResponseHandler<T>
       Logger.getLogger(CallbackResponseHandler.class.getName());
 
   private final Callback<T> callback;
-
   private final Gson gson;
+  private String requestUrl; // Can be null.
 
   protected CallbackResponseHandler(Gson gson, Callback<T> callback) {
+    this(gson, callback, null);
+  }
+
+  protected CallbackResponseHandler(Gson gson, Callback<T> callback, String requestUrl) {
     this.gson = gson;
     this.callback = callback;
+    this.requestUrl = requestUrl;
   }
 
   /**
@@ -61,7 +66,7 @@ public abstract class CallbackResponseHandler<T>
     int statusCode = statusLine.getStatusCode();
 
     if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
-      LOGGER.fine("Session expired.");
+      LOGGER.fine("Session expired.  Request url " + requestUrl);
       callback.sessionExpired();
       return null;
     }
@@ -71,7 +76,7 @@ public abstract class CallbackResponseHandler<T>
     // 2XX == successful request
     if (statusCode >= 200 && statusCode < 300) {
       if (entity == null) {
-        LOGGER.fine("Missing entity for " + statusCode + " response.");
+        LOGGER.fine("Missing entity for " + statusCode + " response.  Url " + requestUrl);
         callback.serverError(null, statusCode);
         return null;
       }
@@ -91,11 +96,11 @@ public abstract class CallbackResponseHandler<T>
         // TODO: Use specified encoding.
         String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
         LOGGER.fine("Server returned " + statusCode + ", "
-            + statusLine.getReasonPhrase() + ". Body: " + body);
+            + statusLine.getReasonPhrase() + ". Body: " + body + ". Request url " + requestUrl);
         callback.serverError(parseServerMessage(statusCode, body), statusCode);
       } else {
         LOGGER.fine("Server returned " + statusCode + ", "
-            + statusLine.getReasonPhrase() + ".");
+            + statusLine.getReasonPhrase() + ". Request url " + requestUrl);
         callback.serverError(null, statusCode);
       }
       return null;
@@ -109,7 +114,7 @@ public abstract class CallbackResponseHandler<T>
       String body = new String(HttpClients.entityToBytes(bufferedEntity),
           "UTF-8");
       LOGGER.fine("Server returned " + statusCode + ", "
-          + statusLine.getReasonPhrase() + ". Body: " + body);
+          + statusLine.getReasonPhrase() + ". Body: " + body + ". Request url " + requestUrl);
       try {
         callback.clientError(parse(bufferedEntity), statusCode);
       } catch (ServerException e) {
@@ -118,7 +123,7 @@ public abstract class CallbackResponseHandler<T>
       }
     } else {
       LOGGER.fine("Server returned " + statusCode + ", "
-          + statusLine.getReasonPhrase() + ".");
+          + statusLine.getReasonPhrase() + ". Request url " + requestUrl);
       callback.clientError(null, statusCode);
     }
     return null;

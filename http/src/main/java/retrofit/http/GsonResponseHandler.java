@@ -28,7 +28,7 @@ class GsonResponseHandler<T> extends CallbackResponseHandler<T> {
 
   private GsonResponseHandler(Gson gson, Type type, Callback<T> callback, String url, Date start,
       ThreadLocal<SimpleDateFormat> dateFormat) {
-    super(gson, callback);
+    super(gson, callback, url);
     this.gson = gson;
     this.type = type;
     this.url = url;
