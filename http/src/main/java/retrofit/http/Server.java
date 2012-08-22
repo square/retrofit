@@ -1,8 +1,6 @@
 // Copyright 2010 Square, Inc.
 package retrofit.http;
 
-import java.util.Properties;
-
 /**
  * Server information. Applications may extend this class and return different URLs over time.
  * Callers should always consult the Server instance for the latest values rather than caching URLs.
@@ -11,13 +9,33 @@ import java.util.Properties;
  */
 public class Server {
 
+  public static final String DEFAULT_TYPE = "production";
+
   private final String apiUrl;
   private final String webUrl;
+  private final String type;
   private final boolean ignoreSslWarnings;
 
-  protected Server(String apiUrl, String webUrl, boolean ignoreSslWarnings) {
+  public Server(String apiUrl, String webUrl) {
+    this(apiUrl, webUrl, false);
+  }
+
+  public Server(String apiUrl, String webUrl, boolean ignoreSslWarnings) {
+    this(apiUrl, webUrl, DEFAULT_TYPE, ignoreSslWarnings);
+  }
+
+  public Server(String apiUrl, String webUrl, String type, boolean ignoreSslWarnings) {
+    if (!apiUrl.endsWith("/")) {
+      apiUrl += "/";
+    }
     this.apiUrl = apiUrl;
+
+    if (!webUrl.endsWith("/")) {
+      webUrl += "/";
+    }
     this.webUrl = webUrl;
+
+    this.type = type;
     this.ignoreSslWarnings = ignoreSslWarnings;
   }
 
@@ -35,8 +53,11 @@ public class Server {
     return webUrl;
   }
 
-  public String getType() {
-    return "production";
+  /**
+   * Gets a human-readable server type for differentiating between multiple instances.
+   */
+  public String type() {
+    return type;
   }
 
   /**
@@ -45,19 +66,5 @@ public class Server {
    */
   public boolean ignoreSslWarnings() {
     return ignoreSslWarnings;
-  }
-
-  /**
-   * Creates a Server instance from Properties. Requires "api.url" and
-   * "web.url". "disable.ssl.warnings" is optional.
-   */
-  public static Server from(Properties properties) {
-    String apiUrl = properties.getProperty("api.url");
-    if (apiUrl == null) throw new NullPointerException("Missing api.url.");
-    String webUrl = properties.getProperty("web.url");
-    if (webUrl == null) throw new NullPointerException("Missing web.url.");
-    String disableSslWarnings = properties.getProperty("disable.ssl.warnings",
-        "false");
-    return new Server(apiUrl, webUrl, Boolean.valueOf(disableSslWarnings));
   }
 }
