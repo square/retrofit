@@ -10,7 +10,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.squareup</groupId>
     <artifactId>retrofit-core</artifactId>
     <packaging>jar</packaging>
     <name>Retrofit Core</name>
