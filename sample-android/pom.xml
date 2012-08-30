@@ -10,7 +10,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.squareup</groupId>
     <artifactId>retrofit-sample-android</artifactId>
     <packaging>apk</packaging>
     <name>Retrofit Sample: Android</name>
