@@ -10,9 +10,6 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
-import retrofit.core.Callback;
-import retrofit.core.MainThread;
-import retrofit.core.ProgressListener;
 import retrofit.io.ByteSink;
 
 import javax.inject.Provider;

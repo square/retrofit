@@ -4,7 +4,7 @@ package retrofit.android;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import retrofit.core.MainThread;
+import retrofit.http.MainThread;
 
 import java.util.concurrent.CountDownLatch;
 

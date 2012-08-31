@@ -1,7 +1,7 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import retrofit.core.internal.Objects;
+import retrofit.io.internal.Objects;
 
 import java.io.Serializable;
 

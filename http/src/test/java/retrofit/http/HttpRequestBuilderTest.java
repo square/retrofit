@@ -13,7 +13,6 @@ import org.apache.http.HttpMessage;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
-import retrofit.core.Callback;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest extends TestCase {
