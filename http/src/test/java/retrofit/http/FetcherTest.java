@@ -2,7 +2,6 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import junit.framework.Assert;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -150,9 +149,9 @@ public class FetcherTest {
     public <T> T execute(HttpUriRequest request,
         ResponseHandler<? extends T> responseHandler) throws IOException {
       calls++;
-      Assert.assertEquals(FetcherTest.URL, request.getURI().toString());
+      assertThat(request.getURI().toString()).isEqualTo(FetcherTest.URL);
       T t = responseHandler.handleResponse(response);
-      Assert.assertNull(t);
+      assertThat(t).isNull();
       return t;
     }
   }

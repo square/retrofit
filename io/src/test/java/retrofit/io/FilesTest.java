@@ -20,18 +20,18 @@ public class FilesTest {
     pw.println("content");
     pw.close();
 
-    assertThat(tmpFile.exists()).isTrue();
+    assertThat(tmpFile).exists();
     assertThat(Files.delete(tmpFile)).isTrue();
-    assertThat(tmpFile.exists()).isFalse();
+    assertThat(tmpFile).doesNotExist();
   }
 
   @Test public void testDeleteFileThatDoesntExist() throws Exception {
     File tmpFile = File.createTempFile("foobar", ".tmp");
     assertThat(tmpFile.delete()).as("unable to delete temporary file").isTrue();
 
-    assertThat(tmpFile.exists()).isFalse();
+    assertThat(tmpFile).doesNotExist();
     assertThat(Files.delete(tmpFile)).isTrue();
-    assertThat(tmpFile.exists()).isFalse();
+    assertThat(tmpFile).doesNotExist();
   }
 
   @Test public void testDeleteNullFile() throws Exception {
