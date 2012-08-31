@@ -33,7 +33,6 @@
     <url>http://github.com/square/retrofit/</url>
 
     <modules>
-        <module>android</module>
         <module>android-native</module>
         <module>http</module>
         <module>io</module>
