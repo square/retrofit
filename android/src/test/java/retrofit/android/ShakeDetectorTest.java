@@ -2,21 +2,21 @@
 package retrofit.android;
 
 
+import org.junit.Test;
+
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.fest.assertions.Assertions.assertThat;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class ShakeDetectorTest {
-  public void testInitialShaking() {
+  @Test public void testInitialShaking() {
     ShakeDetector.SampleQueue q = new ShakeDetector.SampleQueue();
-    assertFalse("shaking", q.isShaking());
+    assertThat(q.isShaking()).isFalse();
   }
 
   /** Tests LG Ally sample rate. */
-  public void testShakingSampleCount3() {
+  @Test public void testShakingSampleCount3() {
     ShakeDetector.SampleQueue q = new ShakeDetector.SampleQueue();
 
     // These times approximate the data rate of the slowest device we've
@@ -29,26 +29,26 @@ public class ShakeDetectorTest {
     q.add(1600000000L, false);
     q.add(1900000000L, false);
     assertContent(q, false, false, false, false);
-    assertFalse("shaking", q.isShaking());
+    assertThat(q.isShaking()).isFalse();
 
     // The oldest two entries will be removed.
     q.add(2200000000L, true);
     q.add(2500000000L, true);
     assertContent(q, false, false, true, true);
-    assertFalse("shaking", q.isShaking());
+    assertThat(q.isShaking()).isFalse();
 
     // Another entry should be removed, now 3 out of 4 are true.
     q.add(2800000000L, true);
     assertContent(q, false, true, true, true);
-    assertTrue("shaking", q.isShaking());
+    assertThat(q.isShaking()).isTrue();
 
     q.add(3100000000L, false);
     assertContent(q, true, true, true, false);
-    assertTrue("shaking", q.isShaking());
+    assertThat(q.isShaking()).isTrue();
 
     q.add(3400000000L, false);
     assertContent(q, true, true, false, false);
-    assertFalse("shaking", q.isShaking());
+    assertThat(q.isShaking()).isFalse();
   }
 
   private void assertContent(ShakeDetector.SampleQueue q, boolean... expected) {
@@ -59,20 +59,20 @@ public class ShakeDetectorTest {
       sb.append(String.format("[%b,%d] ", s.accelerating, s.timestamp));
     }
 
-    assertEquals(sb.toString(), expected.length, samples.size());
+    assertThat(samples.size()).isEqualTo(expected.length).as(sb.toString());
     for (int i = 0; i < expected.length; i++) {
-      assertEquals("sample[" + i + "] accelerating",
-          expected[i], samples.get(i).accelerating);
+      assertThat(samples.get(i).accelerating).isEqualTo(expected[i])
+          .as("sample[" + i + "] accelerating");
     }
   }
 
-  public void testClear() {
+  @Test public void testClear() {
     ShakeDetector.SampleQueue q = new ShakeDetector.SampleQueue();
     q.add(1000000000L, true);
     q.add(1200000000L, true);
     q.add(1400000000L, true);
-    assertTrue("shaking", q.isShaking());
+    assertThat(q.isShaking()).isTrue();
     q.clear();
-    assertFalse("shaking", q.isShaking());
+    assertThat(q.isShaking()).isFalse();
   }
 }

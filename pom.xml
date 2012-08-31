@@ -59,6 +59,7 @@
 
         <!-- Test Dependencies -->
         <junit.version>4.10</junit.version>
+        <fest.version>1.4</fest.version>
         <easymock.version>3.1</easymock.version>
     </properties>
 
@@ -137,6 +138,11 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.easytesting</groupId>
+                <artifactId>fest-assert</artifactId>
+                <version>${fest.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
