@@ -3,6 +3,7 @@ package retrofit.io;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,7 +14,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
+import static org.fest.assertions.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -30,7 +31,7 @@ public class QueueFileTest {
    * Takes up 33401 bytes in the queue (N*(N+1)/2+4*N). Picked 254 instead of
    * 255 so that the number of bytes isn't a multiple of 4.
    */
-  private static int N = 254; //
+  private static int N = 254;
   private static byte[][] values = new byte[N][];
 
   static {
@@ -44,27 +45,27 @@ public class QueueFileTest {
 
   private File file;
 
-  @Before protected void setUp() throws Exception {
+  @Before public void setUp() throws Exception {
     file = File.createTempFile("test.queue", null);
     file.delete();
   }
 
-  @After protected void tearDown() throws Exception {
+  @After public void tearDown() throws Exception {
     file.delete();
   }
 
-  public void testAddOneElement() throws IOException {
+  @Test public void testAddOneElement() throws IOException {
     // This test ensures that we update 'first' correctly.
     QueueFile queue = new QueueFile(file);
     byte[] expected = values[253];
     queue.add(expected);
-    assertEquals(expected, queue.peek());
+    assertThat(queue.peek()).isEqualTo(expected);
     queue.close();
     queue = new QueueFile(file);
-    assertEquals(expected, queue.peek());
+    assertThat(queue.peek()).isEqualTo(expected);
   }
 
-  public void testAddAndRemoveElements() throws IOException {
+  @Test public void testAddAndRemoveElements() throws IOException {
     long start = System.nanoTime();
 
     Queue<byte[]> expected = new LinkedList<byte[]>();
@@ -79,7 +80,7 @@ public class QueueFileTest {
       // Leave N elements in round N, 15 total for 5 rounds. Removing all the
       // elements would be like starting with an empty queue.
       for (int i = 0; i < N - round - 1; i++) {
-        assertEquals(expected.remove(), queue.peek());
+        assertThat(queue.peek()).isEqualTo(expected.remove());
         queue.remove();
       }
       queue.close();
@@ -87,10 +88,10 @@ public class QueueFileTest {
 
     // Remove and validate remaining 15 elements.
     QueueFile queue = new QueueFile(file);
-    assertEquals(15, queue.size());
-    assertEquals(expected.size(), queue.size());
+    assertThat(queue.size()).isEqualTo(15);
+    assertThat(queue.size()).isEqualTo(expected.size());
     while (!expected.isEmpty()) {
-      assertEquals(expected.remove(), queue.peek());
+      assertThat(queue.peek()).isEqualTo(expected.remove());
       queue.remove();
     }
     queue.close();
@@ -102,7 +103,7 @@ public class QueueFileTest {
   }
 
   /** Tests queue expansion when the data crosses EOF. */
-  public void testSplitExpansion() throws IOException {
+  @Test public void testSplitExpansion() throws IOException {
     // This should result in 3560 bytes.
     int max = 80;
 
@@ -116,7 +117,7 @@ public class QueueFileTest {
 
     // Remove all but 1.
     for (int i = 1; i < max; i++) {
-      assertEquals(expected.remove(), queue.peek());
+      assertThat(queue.peek()).isEqualTo(expected.remove());
       queue.remove();
     }
 
@@ -127,14 +128,14 @@ public class QueueFileTest {
     }
 
     while (!expected.isEmpty()) {
-      assertEquals(expected.remove(), queue.peek());
+      assertThat(queue.peek()).isEqualTo(expected.remove());
       queue.remove();
     }
 
     queue.close();
   }
 
-  public void testFailedAdd() throws IOException {
+  @Test public void testFailedAdd() throws IOException {
     QueueFile queueFile = new QueueFile(file);
     queueFile.add(values[253]);
     queueFile.close();
@@ -155,13 +156,13 @@ public class QueueFileTest {
     queueFile.close();
 
     queueFile = new QueueFile(file);
-    assertEquals(2, queueFile.size());
-    assertEquals(values[253], queueFile.peek());
+    assertThat(queueFile.size()).isEqualTo(2);
+    assertThat(queueFile.peek()).isEqualTo(values[253]);
     queueFile.remove();
-    assertEquals(values[251], queueFile.peek());
+    assertThat(queueFile.peek()).isEqualTo(values[251]);
   }
 
-  public void testFailedRemoval() throws IOException {
+  @Test public void testFailedRemoval() throws IOException {
     QueueFile queueFile = new QueueFile(file);
     queueFile.add(values[253]);
     queueFile.close();
@@ -177,15 +178,15 @@ public class QueueFileTest {
     queueFile.close();
 
     queueFile = new QueueFile(file);
-    assertEquals(1, queueFile.size());
-    assertEquals(values[253], queueFile.peek());
+    assertThat(queueFile.size()).isEqualTo(1);
+    assertThat(queueFile.peek()).isEqualTo(values[253]);
 
     queueFile.add(values[99]);
     queueFile.remove();
-    assertEquals(values[99], queueFile.peek());
+    assertThat(queueFile.peek()).isEqualTo(values[99]);
   }
 
-  public void testFailedExpansion() throws IOException {
+  @Test public void testFailedExpansion() throws IOException {
     QueueFile queueFile = new QueueFile(file);
     queueFile.add(values[253]);
     queueFile.close();
@@ -203,16 +204,16 @@ public class QueueFileTest {
 
     queueFile = new QueueFile(file);
 
-    assertEquals(1, queueFile.size());
-    assertEquals(values[253], queueFile.peek());
-    assertEquals(4096, queueFile.fileLength);
+    assertThat(queueFile.size()).isEqualTo(1);
+    assertThat(queueFile.peek()).isEqualTo(values[253]);
+    assertThat(queueFile.fileLength).isEqualTo(4096);
 
     queueFile.add(values[99]);
     queueFile.remove();
-    assertEquals(values[99], queueFile.peek());
+    assertThat(queueFile.peek()).isEqualTo(values[99]);
   }
 
-  public void testPeekWithElementReader() throws IOException {
+  @Test public void testPeekWithElementReader() throws IOException {
     QueueFile queueFile = new QueueFile(file);
     final byte[] a = {1, 2};
     queueFile.add(a);
@@ -221,19 +222,19 @@ public class QueueFileTest {
 
     queueFile.peek(new QueueFile.ElementReader() {
       @Override public void read(InputStream in, int length) throws IOException {
-        assertEquals(length, 2);
+        assertThat(length).isEqualTo(2);
         byte[] actual = new byte[length];
         in.read(actual);
-        assertEquals(a, actual);
+        assertThat(actual).isEqualTo(a);
       }
     });
 
     queueFile.peek(new QueueFile.ElementReader() {
       @Override public void read(InputStream in, int length) throws IOException {
-        assertEquals(length, 2);
-        assertEquals(1, in.read());
-        assertEquals(2, in.read());
-        assertEquals(-1, in.read());
+        assertThat(length).isEqualTo(2);
+        assertThat(in.read()).isEqualTo(1);
+        assertThat(in.read()).isEqualTo(2);
+        assertThat(in.read()).isEqualTo(-1);
       }
     });
 
@@ -241,18 +242,18 @@ public class QueueFileTest {
 
     queueFile.peek(new QueueFile.ElementReader() {
       @Override public void read(InputStream in, int length) throws IOException {
-        assertEquals(length, 3);
+        assertThat(length).isEqualTo(3);
         byte[] actual = new byte[length];
         in.read(actual);
-        assertEquals(b, actual);
+        assertThat(actual).isEqualTo(b);
       }
     });
 
-    assertEquals(b, queueFile.peek());
-    assertEquals(1, queueFile.size());
+    assertThat(queueFile.peek()).isEqualTo(b);
+    assertThat(queueFile.size()).isEqualTo(1);
   }
 
-  public void testForEach() throws IOException {
+  @Test public void testForEach() throws IOException {
     QueueFile queueFile = new QueueFile(file);
 
     final byte[] a = {1, 2};
@@ -264,15 +265,15 @@ public class QueueFileTest {
     QueueFile.ElementReader elementReader = new QueueFile.ElementReader() {
       @Override public void read(InputStream in, int length) throws IOException {
         if (iteration[0] == 0) {
-          assertEquals(length, 2);
+          assertThat(length).isEqualTo(2);
           byte[] actual = new byte[length];
           in.read(actual);
-          assertEquals(a, actual);
+          assertThat(actual).isEqualTo(a);
         } else if (iteration[0] == 1) {
-          assertEquals(length, 3);
+          assertThat(length).isEqualTo(3);
           byte[] actual = new byte[length];
           in.read(actual);
-          assertEquals(b, actual);
+          assertThat(actual).isEqualTo(b);
         } else {
           fail();
         }
@@ -282,8 +283,8 @@ public class QueueFileTest {
 
     queueFile.forEach(elementReader);
 
-    assertEquals(a, queueFile.peek());
-    assertEquals(2, iteration[0]);
+    assertThat(queueFile.peek()).isEqualTo(a);
+    assertThat(iteration[0]).isEqualTo(2);
   }
 
   /**
@@ -291,7 +292,7 @@ public class QueueFileTest {
    * QueueFile was forced to expand in size and a portion of the final Element
    * had been wrapped into space at the beginning of the file.
    */
-  public void testFileExpansionDoesntCorruptWrappedElements()
+  @Test public void testFileExpansionDoesntCorruptWrappedElements()
       throws IOException {
     QueueFile queue = new QueueFile(file);
 
@@ -326,9 +327,8 @@ public class QueueFileTest {
       queue.remove();
 
       for (int i = 0; i < value.length; i++) {
-        assertEquals(
-            "Block " + (blockNum + 1) + " corrupted at byte index " + i,
-            (byte) (blockNum + 1), value[i]);
+        assertThat(value[i]).isEqualTo((byte) (blockNum + 1))
+            .as("Block " + (blockNum + 1) + " corrupted at byte index " + i);
       }
     }
 
@@ -342,7 +342,7 @@ public class QueueFileTest {
    * Elements have been written to empty buffer space at the start does the
    * expansion correctly update all their positions?
    */
-  public void testFileExpansionCorrectlyMovesElements() throws IOException {
+  @Test public void testFileExpansionCorrectlyMovesElements() throws IOException {
     QueueFile queue = new QueueFile(file);
 
     // Create test data - 1k blocks marked consecutively 1, 2, 3, 4 and 5.
@@ -394,9 +394,8 @@ public class QueueFileTest {
       queue.remove();
 
       for (int i = 0; i < value.length; i++) {
-        assertEquals("Block " + (expectedBlockNumber) +
-            " corrupted at byte index " + i,
-            expectedBlockNumber, value[i]);
+        assertThat(value[i]).isEqualTo(expectedBlockNumber)
+            .as("Block " + expectedBlockNumber + " corrupted at byte index " + i);
       }
     }
 

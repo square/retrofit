@@ -1,39 +1,40 @@
 // Copyright 2011 Square, Inc.
 package retrofit.io;
 
+import org.junit.Test;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.fest.assertions.Assertions.assertThat;
+import static org.fest.assertions.Fail.fail;
 
 /**
  * @author Paul Hawke (psh@squareup.com)
  */
 public class FilesTest {
-  public void testDelete() throws Exception {
+  @Test public void testDelete() throws Exception {
     File tmpFile = File.createTempFile("prefix", ".tmp");
     PrintWriter pw = new PrintWriter(new FileWriter(tmpFile));
     pw.println("content");
     pw.close();
 
-    assertTrue(tmpFile.exists());
-    assertTrue(Files.delete(tmpFile));
-    assertFalse(tmpFile.exists());
+    assertThat(tmpFile.exists()).isTrue();
+    assertThat(Files.delete(tmpFile)).isTrue();
+    assertThat(tmpFile.exists()).isFalse();
   }
 
-  public void testDeleteFileThatDoesntExist() throws Exception {
+  @Test public void testDeleteFileThatDoesntExist() throws Exception {
     File tmpFile = File.createTempFile("foobar", ".tmp");
-    assertTrue("unable to delete temporary file", tmpFile.delete());
+    assertThat(tmpFile.delete()).as("unable to delete temporary file").isTrue();
 
-    assertFalse(tmpFile.exists());
-    assertTrue(Files.delete(tmpFile));
-    assertFalse(tmpFile.exists());
+    assertThat(tmpFile.exists()).isFalse();
+    assertThat(Files.delete(tmpFile)).isTrue();
+    assertThat(tmpFile.exists()).isFalse();
   }
 
-  public void testDeleteNullFile() throws Exception {
+  @Test public void testDeleteNullFile() throws Exception {
     try {
       Files.delete(null);
       fail("Expected an IAE");

@@ -1,48 +1,49 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
+import org.junit.Test;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.fest.assertions.Assertions.assertThat;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class TypedFileTest {
-  public void testNotEquals() {
+  @Test public void testNotEquals() {
     TypedFile a = new TypedFile(new File("a.png"), MimeType.PNG);
     TypedFile b = new TypedFile(new File("b.png"), MimeType.PNG);
 
-    assertFalse("equals", a.equals(b));
-    assertFalse("hash code", a.hashCode() == b.hashCode());
+    assertThat(a).isNotEqualTo(b);
+    assertThat(a.hashCode()).isNotEqualTo(b.hashCode());
   }
 
-  public void testEquals() {
+  @Test public void testEquals() {
     TypedFile a1 = new TypedFile(new File("a.png"), MimeType.PNG);
     TypedFile a2 = new TypedFile(new File("a.png"), MimeType.PNG);
 
-    assertEquals(a1, a2);
-    assertEquals("hash code", a1.hashCode(), a2.hashCode());
+    assertThat(a1).isEqualTo(a2);
+    assertThat(a1.hashCode()).isEqualTo(a2.hashCode());
   }
 
-  public void testToString() {
+  @Test public void testToString() {
     File file = new File("/path/to/file.png");
 
-    assertEquals(file.getAbsolutePath() + " (PNG)",
-        new TypedFile(file, MimeType.PNG).toString());
+    assertThat(new TypedFile(file, MimeType.PNG).toString())
+        .isEqualTo(file.getAbsolutePath() + " (PNG)");
   }
 
-  public void testLength() throws IOException {
+  @Test public void testLength() throws IOException {
     File tempFile = File.createTempFile("foo", ".tmp");
     try {
       TypedFile typedFile = new TypedFile(tempFile, MimeType.PNG);
-      assertEquals("length", 0, typedFile.length());
+      assertThat(typedFile.length()).isZero();
 
       writeToFile(tempFile, new byte[]{0, 1, 2, 3, 4});
 
-      assertEquals("file length", 5, tempFile.length());
-      assertEquals("typed file length", 5, typedFile.length());
+      assertThat(tempFile.length()).isEqualTo(5);
+      assertThat(typedFile.length()).isEqualTo(5);
 
     } finally {
       //noinspection ResultOfMethodCallIgnored

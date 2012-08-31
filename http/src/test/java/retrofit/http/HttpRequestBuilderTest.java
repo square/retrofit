@@ -2,20 +2,24 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
+import org.apache.http.HttpMessage;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.junit.Test;
+
+import javax.inject.Named;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Named;
-import junit.framework.TestCase;
-import org.apache.http.HttpMessage;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
+
+import static org.fest.assertions.Assertions.assertThat;
+import static org.fest.assertions.Fail.fail;
 
 /** @author Eric Denman (edenman@squareup.com) */
-public class HttpRequestBuilderTest extends TestCase {
+public class HttpRequestBuilderTest {
   public static final String API_URL = "http://taqueria.com/lengua/taco";
   public static final Headers BLANK_HEADERS = new Headers() {
     @Override public void setOn(HttpMessage message, String mimeType) {
@@ -36,28 +40,28 @@ public class HttpRequestBuilderTest extends TestCase {
 
   private void expectParams(String path, String... expected) {
     Set<String> calculated = HttpRequestBuilder.getPathParameters(path);
-    assertEquals(expected.length, calculated.size());
+    assertThat(calculated.size()).isEqualTo(expected.length);
     for (String val : expected) {
-      assertTrue(calculated.contains(val));
+      assertThat(calculated).contains(val);
     }
   }
 
-  public void testNormalGet() throws Exception {
+  @Test public void testNormalGet() throws Exception {
     Method method =
         MyService.class.getMethod("normalGet", String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
     Object[] args = new Object[] {expectedId, new MyCallback()};
     HttpUriRequest request = build(method, args);
 
-    assertTrue(request instanceof HttpGet);
+    assertThat(request).isInstanceOf(HttpGet.class);
 
     HttpGet put = (HttpGet) request;
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
-    assertEquals(API_URL + "/foo/bar?id=" + expectedId, uri);
+    assertThat(uri).isEqualTo(API_URL + "/foo/bar?id=" + expectedId);
   }
 
-  public void testGetWithPathParam() throws Exception {
+  @Test public void testGetWithPathParam() throws Exception {
     Method method =
         MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
@@ -65,15 +69,15 @@ public class HttpRequestBuilderTest extends TestCase {
     Object[] args = new Object[] {expectedId, category, new MyCallback()};
     HttpUriRequest request = build(method, args);
 
-    assertTrue(request instanceof HttpGet);
+    assertThat(request).isInstanceOf(HttpGet.class);
 
     HttpGet put = (HttpGet) request;
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
-    assertEquals(API_URL + "/foo/" + expectedId + "/bar?category=" + category, uri);
+    assertThat(uri).isEqualTo(API_URL + "/foo/" + expectedId + "/bar?category=" + category);
   }
 
-  public void testSingleEntityWithPathParams() throws Exception {
+  @Test public void testSingleEntityWithPathParams() throws Exception {
     Method method =
         MyService.class.getMethod("singleEntityPut", MyJsonObj.class, String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
@@ -81,21 +85,21 @@ public class HttpRequestBuilderTest extends TestCase {
     Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, new MyCallback()};
     HttpUriRequest request = build(method, args);
 
-    assertTrue(request instanceof HttpPut);
+    assertThat(request).isInstanceOf(HttpPut.class);
 
     HttpPut put = (HttpPut) request;
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
-    assertEquals(API_URL + "/foo/bar/" + expectedId, uri);
+    assertThat(uri).isEqualTo(API_URL + "/foo/bar/" + expectedId);
 
     // Make sure the request body has the json string.
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     put.getEntity().writeTo(out);
     final String requestBody = out.toString();
-    assertEquals("{\"bodyText\":\"" + bodyText + "\"}", requestBody);
+    assertThat(requestBody).isEqualTo("{\"bodyText\":\"" + bodyText + "\"}");
   }
 
-  public void testNormalPutWithPathParams() throws Exception {
+  @Test public void testNormalPutWithPathParams() throws Exception {
     Method method =
         MyService.class.getMethod("normalPut", String.class, String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
@@ -103,21 +107,21 @@ public class HttpRequestBuilderTest extends TestCase {
     Object[] args = new Object[] {expectedId, bodyText, new MyCallback()};
     HttpUriRequest request = build(method, args);
 
-    assertTrue(request instanceof HttpPut);
+    assertThat(request).isInstanceOf(HttpPut.class);
 
     HttpPut put = (HttpPut) request;
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
-    assertEquals(API_URL + "/foo/bar/" + expectedId, uri);
+    assertThat(uri).isEqualTo(API_URL + "/foo/bar/" + expectedId);
 
     // Make sure the request body has the json string.
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     put.getEntity().writeTo(out);
     final String requestBody = out.toString();
-    assertEquals("id=" + expectedId + "&body=" + bodyText, requestBody);
+    assertThat(requestBody).isEqualTo("id=" + expectedId + "&body=" + bodyText);
   }
 
-  public void testSingleEntityWithTooManyParams() throws Exception {
+  @Test public void testSingleEntityWithTooManyParams() throws Exception {
     Method method =
         MyService.class.getMethod("tooManyParams", MyJsonObj.class, String.class, String.class,
             Callback.class);
@@ -127,12 +131,11 @@ public class HttpRequestBuilderTest extends TestCase {
     try {
       build(method, args);
       fail("Didn't throw exception with too many params");
-    } catch (IllegalArgumentException e) {
-      // Expected
+    } catch (IllegalArgumentException expected) {
     }
   }
 
-  public void testSingleEntityWithNoPathParam() throws Exception {
+  @Test public void testSingleEntityWithNoPathParam() throws Exception {
     Method method =
         MyService.class.getMethod("singleEntityNoPathParam", MyJsonObj.class, Callback.class);
     String bodyText = UUID.randomUUID().toString();
@@ -140,20 +143,18 @@ public class HttpRequestBuilderTest extends TestCase {
     try {
       build(method, args);
       fail("Didn't throw exception with too few params");
-    } catch (IllegalArgumentException e) {
-      // Expected
+    } catch (IllegalArgumentException expected) {
     }
   }
 
-  public void testRegularWithNoPathParam() throws Exception {
+  @Test public void testRegularWithNoPathParam() throws Exception {
     Method method = MyService.class.getMethod("regularNoPathParam", String.class, Callback.class);
     String otherParam = UUID.randomUUID().toString();
     Object[] args = new Object[] {otherParam, new MyCallback()};
     try {
       build(method, args);
       fail("Didn't throw exception with too few params");
-    } catch (IllegalArgumentException e) {
-      // Expected
+    } catch (IllegalArgumentException expected) {
     }
   }
 

@@ -1,12 +1,6 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Executor;
-import javax.inject.Named;
-import javax.inject.Provider;
-import junit.framework.TestCase;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
@@ -21,6 +15,13 @@ import org.apache.http.message.BasicStatusLine;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.junit.Before;
+import org.junit.Test;
+
+import javax.inject.Named;
+import javax.inject.Provider;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
@@ -29,8 +30,9 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.fest.assertions.Assertions.assertThat;
 
-public class RestAdapterTest extends TestCase {
+public class RestAdapterTest {
   private static final String ID = "123";
   private static final String ENTITY = "entity";
   private static final String ENTITY_PATH_PARAM = "entity/{id}";
@@ -47,7 +49,7 @@ public class RestAdapterTest extends TestCase {
   private HttpResponse mockResponse;
   private Gson gson = new Gson();
 
-  @Override @Before public void setUp() throws Exception {
+  @Before public void setUp() throws Exception {
     mockHttpClient = createMock(HttpClient.class);
     mockExecutor   = createMock(Executor.class);
     mockMainThread = createMock(MainThread.class);
@@ -65,7 +67,8 @@ public class RestAdapterTest extends TestCase {
         mockHeaders, gson, HttpProfiler.NONE);
   }
 
-  @SuppressWarnings("unchecked") public void testServiceDeleteSimple() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceDeleteSimple() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL);
     replayAll();
 
@@ -74,7 +77,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceDeleteParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceDeleteParam() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
@@ -83,7 +87,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceDeleteWithFixedParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceDeleteWithFixedParam() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
         + "id=" + ID);
     replayAll();
@@ -94,7 +99,7 @@ public class RestAdapterTest extends TestCase {
   }
 
   @SuppressWarnings("unchecked")
-  public void testServiceDeleteWithMultipleFixedParam() throws IOException {
+  @Test public void testServiceDeleteWithMultipleFixedParam() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL
         + "filter=merchant&name2=value2&"+ "id=" + ID);
     replayAll();
@@ -104,7 +109,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceDeletePathParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceDeletePathParam() throws IOException {
     expectLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
 
@@ -113,7 +119,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceGetSimple() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceGetSimple() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL);
     replayAll();
 
@@ -122,7 +129,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceGetParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceGetParam() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
@@ -131,7 +139,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceGetWithFixedParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceGetWithFixedParam() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
         + "id=" + ID);
     replayAll();
@@ -142,7 +151,7 @@ public class RestAdapterTest extends TestCase {
   }
 
   @SuppressWarnings("unchecked")
-  public void testServiceGetWithMultipleFixedParams() throws IOException {
+  @Test public void testServiceGetWithMultipleFixedParams() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL
         + "filter=merchant&name2=value2&"+ "id=" + ID);
     replayAll();
@@ -152,7 +161,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServiceGetPathParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServiceGetPathParam() throws IOException {
     expectLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
 
@@ -161,7 +171,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePostSimple() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePostSimple() throws IOException {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
 
@@ -170,7 +181,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePostSimpleClientError() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePostSimpleClientError() throws IOException {
     expectLifecycleClientError(HttpPost.class, BASE_URL);
     replayAll();
 
@@ -179,7 +191,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePostSimpleServerError() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePostSimpleServerError() throws IOException {
     expectLifecycleServerError(HttpPost.class, BASE_URL);
     replayAll();
 
@@ -188,7 +201,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePostParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePostParam() throws IOException {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
 
@@ -197,7 +211,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePostPathParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePostPathParam() throws IOException {
     expectLifecycle(HttpPost.class, PATH_URL_PREFIX + ID);
     replayAll();
 
@@ -206,7 +221,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePutSimple() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePutSimple() throws IOException {
     expectLifecycle(HttpPut.class, BASE_URL);
     replayAll();
 
@@ -215,7 +231,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePutParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePutParam() throws IOException {
     expectLifecycle(HttpPut.class, BASE_URL);
     replayAll();
 
@@ -224,7 +241,8 @@ public class RestAdapterTest extends TestCase {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked") public void testServicePutPathParam() throws IOException {
+  @SuppressWarnings("unchecked")
+  @Test public void testServicePutPathParam() throws IOException {
     expectLifecycle(HttpPut.class, PATH_URL_PREFIX + ID);
     replayAll();
 
@@ -319,7 +337,7 @@ public class RestAdapterTest extends TestCase {
     expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override public Object answer() throws Throwable {
         T request = expectedRequestClass.cast(capture.getValue());
-        assertEquals("uri should match expectations", expectedUri, request.getURI().toString());
+        assertThat(request.getURI().toString()).isEqualTo(expectedUri);
         return null;
       }
     });
