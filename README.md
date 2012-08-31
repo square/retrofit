@@ -7,7 +7,6 @@ Modules:
 
  *  IO - Utility classes for doing low-level java I/O.
  *  HTTP - Abstracts away the messy logic of making network calls (depends on IO).
- *  Android - Contains Android-specific utility classes.
 
 
 Http Usage
