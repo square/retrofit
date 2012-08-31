@@ -3,13 +3,13 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import junit.framework.Assert;
-import junit.framework.TestCase;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.junit.Test;
 import retrofit.io.ByteSink;
 
 import javax.inject.Provider;
@@ -19,14 +19,20 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.anyInt;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.fest.assertions.Assertions.assertThat;
 
 /**
  * Fetcher test cases.
  *
  * @author Bob Lee (bob@squareup.com)
  */
-public class FetcherTest extends TestCase {
+public class FetcherTest {
 
   private static final String URL = "http://crazybob.org/";
 
@@ -39,7 +45,7 @@ public class FetcherTest extends TestCase {
   private ProgressListener progressListener
       = createMock(ProgressListener.class);
 
-  public void testSuccessfulFetch() throws Exception {
+  @Test public void testSuccessfulFetch() throws Exception {
     DummyInputStream in = new DummyInputStream();
     final SingletonHttpClient httpClient = new SingletonHttpClient(response);
     DummyExecutor executor = new DummyExecutor();
@@ -65,12 +71,10 @@ public class FetcherTest extends TestCase {
     fetcher.fetch(URL, sinkFactory, callback, progressListener);
 
     verifyAll();
-    assertEquals(1, executor.calls);
-    assertTrue(uiThread.calls > 1); // result + progress updates
-    assertEquals(1, httpClient.calls);
-    byte[] output = sink.toArray();
-    assertTrue("Expected {1, 2, 3}. Got " + Arrays.toString(output),
-        Arrays.equals(new byte[] { 1, 2, 3 }, output));
+    assertThat(executor.calls).isEqualTo(1);
+    assertThat(uiThread.calls).isGreaterThan(1); // result + progress updates
+    assertThat(httpClient.calls).isEqualTo(1);
+    assertThat(sink.toArray()).isEqualTo(new byte[] { 1, 2, 3 });
   }
 
   private void replayAll() {
