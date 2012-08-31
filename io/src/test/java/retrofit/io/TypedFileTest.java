@@ -42,7 +42,7 @@ public class TypedFileTest {
 
       writeToFile(tempFile, new byte[]{0, 1, 2, 3, 4});
 
-      assertThat(tempFile.length()).isEqualTo(5);
+      assertThat(tempFile).hasSize(5);
       assertThat(typedFile.length()).isEqualTo(5);
 
     } finally {

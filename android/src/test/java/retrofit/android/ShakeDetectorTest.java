@@ -59,7 +59,7 @@ public class ShakeDetectorTest {
       sb.append(String.format("[%b,%d] ", s.accelerating, s.timestamp));
     }
 
-    assertThat(samples.size()).isEqualTo(expected.length).as(sb.toString());
+    assertThat(samples).hasSize(expected.length);
     for (int i = 0; i < expected.length; i++) {
       assertThat(samples.get(i).accelerating).isEqualTo(expected[i])
           .as("sample[" + i + "] accelerating");
