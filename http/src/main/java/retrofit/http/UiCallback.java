@@ -1,9 +1,6 @@
 // Copyright 2010 Square, Inc.
 package retrofit.http;
 
-import retrofit.core.Callback;
-import retrofit.core.MainThread;
-
 /**
  * Executes callback methods in the UI thread.
  *

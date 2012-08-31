@@ -1,5 +1,5 @@
 // Copyright 2010 Square, Inc.
-package retrofit.core.internal;
+package retrofit.io.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

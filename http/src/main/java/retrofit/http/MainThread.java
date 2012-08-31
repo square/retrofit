@@ -1,5 +1,5 @@
 // Copyright 2010 Square, Inc.
-package retrofit.core;
+package retrofit.http;
 
 import java.util.concurrent.Executor;
 

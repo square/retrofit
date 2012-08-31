@@ -21,8 +21,6 @@ import org.apache.http.message.BasicStatusLine;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.junit.Before;
-import retrofit.core.Callback;
-import retrofit.core.MainThread;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
