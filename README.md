@@ -8,8 +8,7 @@ Modules:
  *  IO - Utility classes for doing low-level java I/O.
  *  HTTP - Abstracts away the messy logic of making network calls (depends on IO).
  *  Core - Some interfaces and utilities used by the other retrofit modules.
- *  Android - Contains two Android-specific utility classes: `ShakeDetector` (for detecting device
-    shakes) and `QueueFile` (for storing a queue on the android file-system).
+ *  Android - Contains Android-specific utility classes.
 
 
 Http Usage
