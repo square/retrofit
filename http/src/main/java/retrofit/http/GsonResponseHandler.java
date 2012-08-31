@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
-import retrofit.core.Callback;
 
 /**
  * Converts JSON response to an object using Gson and then passes it to {@link

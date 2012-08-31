@@ -20,17 +20,17 @@
             <artifactId>android</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+          <groupId>com.squareup</groupId>
+          <artifactId>retrofit-http</artifactId>
+          <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-      <dependency>
-        <groupId>com.squareup</groupId>
-        <artifactId>retrofit-core</artifactId>
-        <version>${project.version}</version>
-      </dependency>
     </dependencies>
 
     <build>

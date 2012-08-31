@@ -24,8 +24,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
-import retrofit.core.Callback;
-import retrofit.core.MainThread;
 
 /**
  * Converts Java method calls to Rest calls.

@@ -11,7 +11,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.BufferedHttpEntity;
-import retrofit.core.Callback;
 
 /**
  * Support for response handlers that invoke {@link Callback}.
