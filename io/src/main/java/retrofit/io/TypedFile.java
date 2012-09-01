@@ -1,7 +1,7 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import retrofit.io.internal.Objects;
+import retrofit.internal.Objects;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +41,7 @@ public class TypedFile extends AbstractTypedBytes {
    *
    * @param destination file
    * @return destination
-   * @throws IOException if the move fails
+   * @throws java.io.IOException if the move fails
    */
   public void moveTo(TypedFile destination) throws IOException {
     if (mimeType() != destination.mimeType()) {

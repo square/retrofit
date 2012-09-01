@@ -1,6 +1,7 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
+import org.fest.assertions.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.fest.assertions.Fail.fail;
 
 /**
  * Tests for QueueFile.
@@ -156,7 +157,7 @@ public class QueueFileTest {
     queueFile.close();
 
     queueFile = new QueueFile(file);
-    assertThat(queueFile.size()).isEqualTo(2);
+    Assertions.assertThat(queueFile.size()).isEqualTo(2);
     assertThat(queueFile.peek()).isEqualTo(values[253]);
     queueFile.remove();
     assertThat(queueFile.peek()).isEqualTo(values[251]);

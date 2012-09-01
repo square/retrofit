@@ -119,7 +119,7 @@ public class QueueFile {
 
   /**
    * Stores int in buffer. The behavior is equivalent to calling {@link
-   * RandomAccessFile#writeInt}.
+   * java.io.RandomAccessFile#writeInt}.
    */
   private static void writeInt(byte[] buffer, int offset, int value) {
     buffer[offset] = (byte) (value >> 24);
@@ -130,7 +130,7 @@ public class QueueFile {
 
   /**
    * Stores int values in buffer. The behavior is equivalent to calling {@link
-   * RandomAccessFile#writeInt} for each value.
+   * java.io.RandomAccessFile#writeInt} for each value.
    */
   private static void writeInts(byte[] buffer, int... values) {
     int offset = 0;
@@ -478,7 +478,7 @@ public class QueueFile {
   /**
    * Removes the eldest element.
    *
-   * @throws NoSuchElementException if the queue is empty
+   * @throws java.util.NoSuchElementException if the queue is empty
    */
   public synchronized void remove() throws IOException {
     if (isEmpty()) throw new NoSuchElementException();
