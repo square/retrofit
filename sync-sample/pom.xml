@@ -11,19 +11,20 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>retrofit-io</artifactId>
-  <name>I/O</name>
+  <artifactId>retrofit-sync-sample</artifactId>
+  <packaging>apk</packaging>
+  <name>Directory Sync Sample</name>
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <groupId>com.google.android</groupId>
+      <artifactId>android</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.easytesting</groupId>
-      <artifactId>fest-assert</artifactId>
-      <scope>test</scope>
+      <groupId>com.squareup</groupId>
+      <artifactId>retrofit-sync</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

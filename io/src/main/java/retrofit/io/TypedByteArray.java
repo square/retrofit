@@ -1,7 +1,7 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import retrofit.io.internal.Objects;
+import retrofit.internal.Objects;
 
 import java.io.IOException;
 import java.io.OutputStream;
