@@ -11,8 +11,8 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>retrofit-io</artifactId>
-  <name>I/O</name>
+  <artifactId>retrofit-queue</artifactId>
+  <name>Queue</name>
 
   <dependencies>
     <dependency>
@@ -29,12 +29,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>com.jayway.maven.plugins.android.generation2</groupId>
-        <artifactId>android-maven-plugin</artifactId>
-        <extensions>true</extensions>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>

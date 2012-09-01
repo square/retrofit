@@ -15,7 +15,7 @@ import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static retrofit.io.internal.Objects.nonNull;
+import static retrofit.internal.Objects.nonNull;
 
 /**
  * Fetches URL contents to files.
