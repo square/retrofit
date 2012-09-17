@@ -57,7 +57,7 @@ public class RestAdapterTest {
     mockCallback   = createMock(Callback.class);
     mockResponse   = createMock(HttpResponse.class);
 
-    Server server = new Server("http://host/api/", "http://host/web/", true);
+    Server server = new Server("http://host/api/");
     Provider<HttpClient> httpClientProvider = new Provider<HttpClient>() {
       @Override public HttpClient get() {
         return mockHttpClient;
