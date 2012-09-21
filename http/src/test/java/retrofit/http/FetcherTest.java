@@ -1,9 +1,9 @@
-// Copyright 2010 Square, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
-import com.google.gson.Gson;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
@@ -40,9 +40,8 @@ public class FetcherTest {
   private HttpEntity entity = createMock(HttpEntity.class);
   private HttpResponse response = createMock(HttpResponse.class);
   @SuppressWarnings("unchecked")
-  private Callback<Void> callback = createMock(Callback.class);
-  private ProgressListener progressListener
-      = createMock(ProgressListener.class);
+  private Callback<Void, Void, Void> callback = createMock(Callback.class);
+  private ProgressListener progressListener = createMock(ProgressListener.class);
 
   @Test public void testSuccessfulFetch() throws Exception {
     DummyInputStream in = new DummyInputStream();
@@ -52,7 +51,7 @@ public class FetcherTest {
     ArraySink sink = new ArraySink();
 
     expect(response.getStatusLine()).andReturn(statusLine);
-    expect(statusLine.getStatusCode()).andReturn(200);
+    expect(statusLine.getStatusCode()).andReturn(HttpStatus.SC_OK);
     expect(response.getEntity()).andReturn(entity);
     expect(entity.getContentLength()).andReturn(3L);
     expect(entity.getContent()).andReturn(in);
@@ -62,7 +61,7 @@ public class FetcherTest {
 
     replayAll();
 
-    Fetcher fetcher = new Fetcher(new Gson(), new Provider<HttpClient>() {
+    Fetcher fetcher = new Fetcher(new Provider<HttpClient>() {
       public HttpClient get() {
         return httpClient;
       }
