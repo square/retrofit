@@ -39,7 +39,6 @@
     <module>sync</module>
     <module>sync-native</module>
     <module>sync-sample</module>
-    <module>queue</module>
   </modules>
 
   <properties>
