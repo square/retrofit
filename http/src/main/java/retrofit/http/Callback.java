@@ -6,17 +6,20 @@ package retrofit.http;
  * method for each possible outcome. One and only one method will be invoked in
  * response to a given request.
  *
- * @param <T> expected response type
+ * @param <R> expected response type
+ * @param <CE> client error response type
+ * @param <SE> server error response type
+ *
  * @author Bob Lee (bob@squareup.com)
  */
-public interface Callback<T> {
+public interface Callback<R, CE, SE> {
 
   /**
    * Handles a response.
    *
-   * @param t response
+   * @param response object or null if server returned an empty response
    */
-  void call(T t);
+  void call(R response);
 
   /**
    * The session expired or the account has been disabled. Prompt the user to
@@ -33,20 +36,19 @@ public interface Callback<T> {
    * The server returned a client error. In most cases, this is a programming
    * error, but it can also signify a user input error.
    *
+   * @param response object or null if server returned an empty response.
    * @param statusCode the HTTP response code, typically 4XX
-   *
-   * @return response object or null if server returned an empty response.
    */
-  void clientError(T response, int statusCode);
+  void clientError(CE response, int statusCode);
 
   /**
    * We reached the server, but it encountered an error (5xx) or its response
    * was unparseable. Please try again later.
    *
-   * @param message to show user, or null if no message was returned
+   * @param response object or null if server returned an empty response.
    * @param statusCode the HTTP response code
    */
-  void serverError(String message, int statusCode);
+  void serverError(SE response, int statusCode);
 
   /**
    * An unexpected error occurred. Called if the framework throws an unexpected

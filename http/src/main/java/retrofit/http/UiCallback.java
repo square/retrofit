@@ -1,4 +1,4 @@
-// Copyright 2010 Square, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 /**
@@ -6,25 +6,24 @@ package retrofit.http;
  *
  * @author Bob Lee (bob@squareup.com)
  */
-public final class UiCallback<T> implements Callback<T> {
+public final class UiCallback<T, CE, SE> implements Callback<T, CE, SE> {
 
-  final Callback<T> delegate;
+  final Callback<T, CE, SE> delegate;
   final MainThread mainThread;
 
-  UiCallback(Callback<T> delegate, MainThread mainThread) {
+  UiCallback(Callback<T, CE, SE> delegate, MainThread mainThread) {
     this.delegate = delegate;
     this.mainThread = mainThread;
   }
 
-  public static <T> UiCallback<T> create(Callback<T> delegate,
-      MainThread mainThread) {
-    return new UiCallback<T>(delegate, mainThread);
+  public static <T, CE, SE> UiCallback<T, CE, SE> create(Callback<T, CE, SE> delegate, MainThread mainThread) {
+    return new UiCallback<T, CE, SE>(delegate, mainThread);
   }
 
-  public void call(final T t) {
+  public void call(final T response) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.call(t);
+        delegate.call(response);
       }
     });
   }
@@ -45,7 +44,7 @@ public final class UiCallback<T> implements Callback<T> {
     });
   }
 
-  public void clientError(final T response, final int statusCode) {
+  public void clientError(final CE response, final int statusCode) {
     mainThread.execute(new Runnable() {
       public void run() {
         delegate.clientError(response, statusCode);
@@ -53,10 +52,10 @@ public final class UiCallback<T> implements Callback<T> {
     });
   }
 
-  public void serverError(final String message, final int statusCode) {
+  public void serverError(final SE response, final int statusCode) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.serverError(message, statusCode);
+        delegate.serverError(response, statusCode);
       }
     });
   }
