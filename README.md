@@ -7,7 +7,6 @@ Modules:
 
  * http - Abstracts away the messy logic of making network calls (depends on 'io').
  * io - Utility classes for doing low-level java I/O.
- * queue - File-based queue.
  * sync - Directory write synchronization.
 
 
