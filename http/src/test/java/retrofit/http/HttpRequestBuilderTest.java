@@ -12,6 +12,7 @@ import javax.inject.Named;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,7 +27,7 @@ public class HttpRequestBuilderTest {
     }
   };
 
-  public void testRegex() throws Exception {
+  @Test public void testRegex() throws Exception {
     expectParams("");
     expectParams("foo");
     expectParams("foo/bar");
@@ -75,6 +76,22 @@ public class HttpRequestBuilderTest {
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
     assertThat(uri).isEqualTo(API_URL + "/foo/" + expectedId + "/bar?category=" + category);
+  }
+
+  @Test public void testGetWithPathParamAndWhitespaceValue() throws Exception {
+    Method method =
+        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    String expectedId = "I have spaces buddy";
+    String category = UUID.randomUUID().toString();
+    Object[] args = new Object[] {expectedId, category, new MyCallback()};
+    HttpUriRequest request = build(method, args);
+
+    assertThat(request).isInstanceOf(HttpGet.class);
+
+    HttpGet put = (HttpGet) request;
+    // Make sure the url param got translated.
+    final String uri = put.getURI().toString();
+    assertThat(uri).isEqualTo(API_URL + "/foo/" + URLEncoder.encode(expectedId, "UTF-8") + "/bar?category=" + category);
   }
 
   @Test public void testSingleEntityWithPathParams() throws Exception {
