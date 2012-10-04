@@ -1,18 +1,20 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import javax.inject.Named;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
 import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -181,7 +183,13 @@ final class HttpRequestBuilder {
           }
         }
         if (found != null) {
-          replacedPath = doReplace(replacedPath, found.getName(), found.getValue());
+          String value;
+          try {
+            value = URLEncoder.encode(found.getValue(), "UTF-8");
+          } catch (UnsupportedEncodingException e) {
+            throw new AssertionError(e);
+          }
+          replacedPath = doReplace(replacedPath, found.getName(), value);
           paramList.remove(found);
         } else {
           throw new IllegalArgumentException(
