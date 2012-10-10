@@ -224,7 +224,7 @@ public class HttpRequestBuilderTest {
     @Override public void call(SimpleResponse simpleResponse) {
     }
 
-    @Override public void sessionExpired() {
+    @Override public void sessionExpired(ServerError error) {
     }
 
     @Override public void networkError() {
@@ -233,7 +233,7 @@ public class HttpRequestBuilderTest {
     @Override public void clientError(SimpleResponse response, int statusCode) {
     }
 
-    @Override public void serverError(String message, int statusCode) {
+    @Override public void serverError(ServerError error, int statusCode) {
     }
 
     @Override public void unexpectedError(Throwable t) {

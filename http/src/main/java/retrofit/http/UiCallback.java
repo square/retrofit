@@ -29,10 +29,10 @@ public final class UiCallback<T> implements Callback<T> {
     });
   }
 
-  public void sessionExpired() {
+  public void sessionExpired(final ServerError error) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.sessionExpired();
+        delegate.sessionExpired(error);
       }
     });
   }
@@ -53,10 +53,10 @@ public final class UiCallback<T> implements Callback<T> {
     });
   }
 
-  public void serverError(final String message, final int statusCode) {
+  public void serverError(final ServerError error, final int statusCode) {
     mainThread.execute(new Runnable() {
       public void run() {
-        delegate.serverError(message, statusCode);
+        delegate.serverError(error, statusCode);
       }
     });
   }
