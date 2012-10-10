@@ -1,20 +1,14 @@
-// Copyright 2012 Square, Inc.
+// Copyright 2008 Google, Inc.
 package retrofit.http;
 
-/**
- * Helper methods for dealing with generic types via reflection.
- *
- * @author Jake Wharton (jw@squareup.com)
- */
 import java.lang.reflect.Type;
 
+/** Helper methods for dealing with generic types via reflection copied from Guice's {@code MoreTypes} class.. */
 class Types {
   /**
    * Returns the generic supertype for {@code supertype}. For example, given a class {@code
    * IntegerSet}, the result for when supertype is {@code Set.class} is {@code Set<Integer>} and the
    * result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
-   * <p/>
-   * NOTE: This method is copied from Guice's {@code MoreTypes} class.
    */
   static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
     if (toResolve == rawType) {
