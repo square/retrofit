@@ -2,15 +2,17 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.BufferedHttpEntity;
+import retrofit.http.Callback.ServerError;
+
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Support for response handlers that invoke {@link Callback}.
@@ -63,14 +65,21 @@ public abstract class CallbackResponseHandler<T>
 
     StatusLine statusLine = response.getStatusLine();
     int statusCode = statusLine.getStatusCode();
+    HttpEntity entity = response.getEntity();
 
     if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
-      LOGGER.fine("Session expired.  Request url " + requestUrl);
-      callback.sessionExpired();
+      if (entity != null) {
+        // TODO: Use specified encoding.
+        String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
+        LOGGER.fine("Session expired. Body: " + body + ". Request url " + requestUrl);
+        callback.sessionExpired(parseServerMessage(statusCode, body));
+      } else {
+        LOGGER.fine("Session expired.  Request url " + requestUrl);
+        callback.sessionExpired(null);
+      }
       return null;
     }
 
-    HttpEntity entity = response.getEntity();
 
     // 2XX == successful request
     if (statusCode >= 200 && statusCode < 300) {
@@ -131,24 +140,16 @@ public abstract class CallbackResponseHandler<T>
   /**
    * Parses a server error message.
    */
-  private String parseServerMessage(int statusCode, String body) {
+  private ServerError parseServerMessage(int statusCode, String body) {
     if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_GATEWAY_TIMEOUT
         || statusCode < 500) {
       try {
-        ServerError serverError = gson.fromJson(body, ServerError.class);
-        if (serverError != null) return serverError.message;
+        return gson.fromJson(body, ServerError.class);
       } catch (Throwable t) {
         // The server error takes precedence.
         LOGGER.log(Level.WARNING, t.getMessage(), t);
       }
     }
     return null;
-  }
-
-  /**
-   * Gson POJO for parsing server error messages.
-   */
-  static class ServerError {
-    String message;
   }
 }

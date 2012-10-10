@@ -1,6 +1,7 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
@@ -15,12 +16,16 @@ import org.apache.http.message.BasicStatusLine;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
@@ -251,6 +256,47 @@ public class RestAdapterTest {
     verifyAll();
   }
 
+  @Test public void testConcreteCallbackTypes() {
+    Type[] expected = new Type[] { Response.class };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("a"))).as("a").isEqualTo(expected);
+  }
+
+  @Test public void testConcreteCallbackTypesWithParams() {
+    Type[] expected = new Type[] { Response.class };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("b"))).as("b").isEqualTo(expected);
+  }
+
+  @Test public void testGenericCallbackTypes() {
+    Type[] expected = new Type[] { Response.class };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("c"))).as("c").isEqualTo(expected);
+  }
+
+  @Test public void testGenericCallbackTypesWithParams() {
+    Type[] expected = new Type[] { Response.class };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("d"))).as("d").isEqualTo(expected);
+  }
+
+  @Test public void testWildcardGenericCallbackTypes() {
+    Type[] expected = new Type[] { Response.class };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("e"))).as("e").isEqualTo(expected);
+  }
+
+  @Test public void testGenericCallbackWithGenericType() {
+    Type[] expected = new Type[] { new TypeToken<List<String>>() {}.getType() };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("f"))).as("f").isEqualTo(expected);
+  }
+
+  @Ignore // TODO support this case!
+  @Test public void testExtendingGenericCallback() {
+    Type[] expected = new Type[] { Response.class };
+    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("g"))).as("g").isEqualTo(expected);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testMissingCallbackTypes() {
+    RestAdapter.getCallbackParameterTypes(getTypeTestMethod("h"));
+  }
+
   //
   // Utility Methods:
   //
@@ -432,6 +478,33 @@ public class RestAdapterTest {
     @Override public boolean equals(Object obj) {
       return obj instanceof Response && text.equals(((Response)obj).text);
     }
+  }
 
+  @SuppressWarnings("UnusedDeclaration")
+  private interface TypeTestService {
+    @GET(ENTITY) void a(ResponseCallback c);
+    @GET(ENTITY) void b(@Named("id") String id, ResponseCallback c);
+    @GET(ENTITY) void c(Callback<Response> c);
+    @GET(ENTITY) void d(@Named("id") String id, Callback<Response> c);
+    @GET(ENTITY) void e(Callback<? extends Response> c);
+    @GET(ENTITY) void f(Callback<List<String>> c);
+    @GET(ENTITY) void g(ExtendingCallback<Response> callback);
+    @GET(ENTITY) void h(@Named("id") String id);
+  }
+
+  private static Method getTypeTestMethod(String name) {
+    Method[] methods = TypeTestService.class.getDeclaredMethods();
+    for (Method method : methods) {
+      if (method.getName().equals(name)) {
+        return method;
+      }
+    }
+    throw new IllegalArgumentException("Unknown method '" + name + "' on " + TypeTestService.class.getSimpleName());
+  }
+
+  private interface ResponseCallback extends Callback<Response> {
+  }
+
+  private interface ExtendingCallback<T> extends Callback<T> {
   }
 }

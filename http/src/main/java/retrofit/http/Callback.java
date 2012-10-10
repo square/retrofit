@@ -21,8 +21,10 @@ public interface Callback<T> {
   /**
    * The session expired or the account has been disabled. Prompt the user to
    * log in again.
+   *
+   * @param error message to show user, or null if no message was returned
    */
-  void sessionExpired();
+  void sessionExpired(ServerError error);
 
   /**
    * Couldn't reach the server. Check network settings and try again.
@@ -43,10 +45,10 @@ public interface Callback<T> {
    * We reached the server, but it encountered an error (5xx) or its response
    * was unparseable. Please try again later.
    *
-   * @param message to show user, or null if no message was returned
+   * @param error message to show user, or null if no message was returned
    * @param statusCode the HTTP response code
    */
-  void serverError(String message, int statusCode);
+  void serverError(ServerError error, int statusCode);
 
   /**
    * An unexpected error occurred. Called if the framework throws an unexpected
@@ -55,4 +57,14 @@ public interface Callback<T> {
    * would have been caught sooner. The user should try updating their client.
    */
   void unexpectedError(Throwable t);
+
+
+  /** JSON object for parsing server error responses. */
+  static class ServerError {
+    public final String message;
+
+    public ServerError(String message) {
+      this.message = message;
+    }
+  }
 }
