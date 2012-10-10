@@ -1,6 +1,17 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -14,16 +25,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
 
 /**
  * Converts Java method calls to Rest calls.
@@ -108,8 +109,8 @@ import org.apache.http.client.methods.HttpUriRequest;
         url = request.getURI().toString();
 
         // The last parameter should be of type Callback<T>. Determine T.
-        Type[] genericParameterTypes = method.getGenericParameterTypes();
-        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
+        Type[] resultTypes = getCallbackParameterTypes(method);
+        final Type resultType = resultTypes[resultTypes.length - 1];
         LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
         final Date start = new Date();
         startTime = dateFormat.get().format(start);
@@ -183,44 +184,36 @@ import org.apache.http.client.methods.HttpUriRequest;
 
       return responseHandler;
     }
+  }
 
-    private static final String NOT_CALLBACK =
-        "Last parameter of %s must be" + " of type Callback<X> or Callback<? super X>.";
-
-    /** Gets the callback parameter type. */
-    private Type getCallbackParameterType(Method method, Type[] parameterTypes) {
-      Type lastType = parameterTypes[parameterTypes.length - 1];
-
-      /*
-       * Note: When more than one parameter is present, we seem to get
-       * ParameterizedType Callback<? extends Object> instead of
-       * WilcardType Callback<? super Foo> like we expected. File a bug.
-       */
-      if (lastType instanceof ParameterizedType) {
-        ParameterizedType pType = (ParameterizedType) lastType;
-        if (pType.getRawType() != Callback.class) {
-          throw notCallback(method);
-        }
-        return pType.getActualTypeArguments()[0];
-      }
-
-      if (lastType instanceof WildcardType) {
-        // Example: ? super SimpleResponse
-        // Use the lower bound.
-        WildcardType wildcardType = (WildcardType) lastType;
-        Type[] lowerBounds = wildcardType.getLowerBounds();
-        if (lowerBounds.length != 1) {
-          throw notCallback(method);
-        }
-        return lowerBounds[0];
-      }
-
-      throw notCallback(method);
+  /** Get the callback parameter types. */
+  static Type[] getCallbackParameterTypes(Method method) {
+    Type[] parameterTypes = method.getGenericParameterTypes();
+    Type callbackType = parameterTypes[parameterTypes.length - 1];
+    Class<?> callbackClass;
+    if (callbackType instanceof Class) {
+      callbackClass = (Class<?>) callbackType;
+    } else if (callbackType instanceof ParameterizedType) {
+      callbackClass = (Class<?>) ((ParameterizedType) callbackType).getRawType();
+    } else {
+      throw new ClassCastException(
+          String.format("Last parameter of %s must be a Class or ParameterizedType", method));
     }
-
-    private IllegalArgumentException notCallback(Method method) {
-      return new IllegalArgumentException(String.format(NOT_CALLBACK, method));
+    if (Callback.class.isAssignableFrom(callbackClass)) {
+      callbackType = Types.getGenericSupertype(callbackType, callbackClass, Callback.class);
+      if (callbackType instanceof ParameterizedType) {
+        Type[] types = ((ParameterizedType) callbackType).getActualTypeArguments();
+        for (int i = 0; i < types.length; i++) {
+          Type type = types[i];
+          if (type instanceof WildcardType) {
+            types[i] = ((WildcardType) type).getUpperBounds()[0];
+          }
+        }
+        return types;
+      }
     }
+    throw new IllegalArgumentException(
+        String.format("Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.", method));
   }
 
   /** Sends server call times and response status codes to {@link HttpProfiler}. */
