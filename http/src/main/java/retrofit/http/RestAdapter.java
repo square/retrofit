@@ -1,6 +1,5 @@
 package retrofit.http;
 
-import com.google.gson.Gson;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -19,8 +18,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -33,31 +35,28 @@ import java.util.logging.Logger;
  */
 @Singleton public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
-  public static final String DEBUGGING_DATE_FORMAT = "HH:mm:ss";
+  static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
+    @Override protected DateFormat initialValue() {
+      return new SimpleDateFormat("HH:mm:ss");
+    }
+  };
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
   private final Executor executor;
   private final MainThread mainThread;
   private final Headers headers;
-  private final Gson gson;
+  private final Converter converter;
   private final HttpProfiler profiler;
 
-  private final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
-    @Override protected SimpleDateFormat initialValue() {
-      return new SimpleDateFormat(DEBUGGING_DATE_FORMAT);
-    }
-  };
-
-  @Inject
-  RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor,
-      MainThread mainThread, Headers headers, Gson gson, HttpProfiler profiler) {
+  @Inject public RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor,
+      MainThread mainThread, Headers headers, Converter converter, HttpProfiler profiler) {
     this.server = server;
     this.httpClientProvider = httpClientProvider;
     this.executor = executor;
     this.mainThread = mainThread;
     this.headers = headers;
-    this.gson = gson;
+    this.converter = converter;
     this.profiler = profiler;
   }
 
@@ -91,44 +90,57 @@ import java.util.logging.Logger;
   }
 
   private class RestHandler implements InvocationHandler {
+    private final Map<Method, Type> responseTypeCache = new HashMap<Method, Type>();
 
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+      // Determine whether or not the execution will be synchronous.
+      boolean isSynchronousInvocation = methodWantsSynchronousInvocation(method);
+      if (isSynchronousInvocation) {
+        // TODO support synchronous invocations!
+        throw new UnsupportedOperationException("Synchronous invocation not supported.");
+      }
+
       // Construct HTTP request.
-      final UiCallback<?> callback =
+      final Callback<?> callback =
           UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
 
       String url = server.apiUrl();
       String startTime = "NULL";
       try {
         // Build the request and headers.
-        final HttpUriRequest request = new HttpRequestBuilder(gson).setMethod(method)
+        final HttpUriRequest request = new HttpRequestBuilder(converter) //
+            .setMethod(method)
             .setArgs(args)
             .setApiUrl(server.apiUrl())
             .setHeaders(headers)
             .build();
         url = request.getURI().toString();
 
-        // The last parameter should be of type Callback<T>. Determine T.
-        Type[] resultTypes = getCallbackParameterTypes(method);
-        final Type resultType = resultTypes[resultTypes.length - 1];
+        // Determine deserialization type by method return type or generic parameter to Callback argument.
+        Type type = responseTypeCache.get(method);
+        if (type == null) {
+          type = getResponseObjectType(method, isSynchronousInvocation);
+          responseTypeCache.put(method, type);
+        }
+
         LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
         final Date start = new Date();
-        startTime = dateFormat.get().format(start);
+        startTime = DATE_FORMAT.get().format(start);
 
-        final GsonResponseHandler<?> gsonResponseHandler =
-            GsonResponseHandler.create(gson, resultType, callback, url, start, dateFormat);
+        ResponseHandler<Void> rh = new CallbackResponseHandler(callback, type, converter, url, start, DATE_FORMAT);
 
         // Optionally wrap the response handler for server call profiling.
-        final ResponseHandler<Void> rh = (profiler == HttpProfiler.NONE)
-            ? gsonResponseHandler
-            : createProfiler(gsonResponseHandler, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
+        if (profiler != HttpProfiler.NONE) {
+          rh = createProfiler(rh, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
+        }
 
         // Execute HTTP request in the background.
         final String finalUrl = url;
         final String finalStartTime = startTime;
+        final ResponseHandler<Void> finalResponseHandler = rh;
         executor.execute(new Runnable() {
           @Override public void run() {
-            backgroundInvoke(request, rh, callback, finalUrl, finalStartTime);
+            invokeRequest(request, finalResponseHandler, callback, finalUrl, finalStartTime);
           }
         });
       } catch (Throwable t) {
@@ -160,8 +172,8 @@ import java.util.logging.Logger;
           contentLength, contentType);
     }
 
-    private void backgroundInvoke(HttpUriRequest request, ResponseHandler<Void> rh,
-        UiCallback<?> callback, String url, String startTime) {
+    private void invokeRequest(HttpUriRequest request, ResponseHandler<Void> rh,
+        Callback<?> callback, String url, String startTime) {
       try {
         httpClientProvider.get().execute(request, rh);
       } catch (IOException e) {
@@ -177,7 +189,6 @@ import java.util.logging.Logger;
     private <T> ProfilingResponseHandler<T> createProfiler(ResponseHandler<Void> handlerToWrap,
         HttpProfiler<T> profiler, HttpProfiler.RequestInformation requestInfo, Date start) {
 
-
       ProfilingResponseHandler<T> responseHandler = new ProfilingResponseHandler<T>(handlerToWrap, profiler,
           requestInfo, start.getTime());
       responseHandler.beforeCall();
@@ -186,8 +197,31 @@ import java.util.logging.Logger;
     }
   }
 
+  /**
+   * Determine whether or not execution for a method should be done synchronously.
+   *
+   * @throws IllegalArgumentException if the supplied {@code method} has both a return type and {@link Callback}
+   *     argument or neither of the two.
+   */
+  static boolean methodWantsSynchronousInvocation(Method method) {
+    boolean hasReturnType = method.getReturnType() != void.class;
+
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    boolean hasCallback = parameterTypes.length > 0
+        && Callback.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
+
+    if ((hasReturnType && hasCallback) || (!hasReturnType && !hasCallback)) {
+      throw new IllegalArgumentException("Method must have either a return type or Callback as last argument.");
+    }
+    return hasReturnType;
+  }
+
   /** Get the callback parameter types. */
-  static Type[] getCallbackParameterTypes(Method method) {
+  static Type getResponseObjectType(Method method, boolean isSynchronousInvocation) {
+    if (isSynchronousInvocation) {
+      return method.getGenericReturnType();
+    }
+
     Type[] parameterTypes = method.getGenericParameterTypes();
     Type callbackType = parameterTypes[parameterTypes.length - 1];
     Class<?> callbackClass;
@@ -209,7 +243,7 @@ import java.util.logging.Logger;
             types[i] = ((WildcardType) type).getUpperBounds()[0];
           }
         }
-        return types;
+        return types[0];
       }
     }
     throw new IllegalArgumentException(

@@ -1,16 +1,17 @@
-// Copyright 2010 Square, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
-import com.google.gson.Gson;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.entity.BufferedHttpEntity;
 import retrofit.http.Callback.ServerError;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,68 +19,76 @@ import java.util.logging.Logger;
  * Support for response handlers that invoke {@link Callback}.
  *
  * @author Bob Lee (bob@squareup.com)
+ * @author Jake Wharton (jw@squareup.com)
  */
-public abstract class CallbackResponseHandler<T>
-    implements ResponseHandler<Void> {
+public class CallbackResponseHandler<R> implements ResponseHandler<Void> {
 
-  private static final Logger LOGGER =
-      Logger.getLogger(CallbackResponseHandler.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(CallbackResponseHandler.class.getName());
 
-  private final Callback<T> callback;
-  private final Gson gson;
-  private String requestUrl; // Can be null.
+  private final Callback<R> callback;
+  private final Type callbackType;
+  private final Converter converter;
+  private final String requestUrl; // Can be null.
+  private final Date start;
+  private final ThreadLocal<DateFormat> dateFormat;
 
-  protected CallbackResponseHandler(Gson gson, Callback<T> callback) {
-    this(gson, callback, null);
-  }
-
-  protected CallbackResponseHandler(Gson gson, Callback<T> callback, String requestUrl) {
-    this.gson = gson;
+  protected CallbackResponseHandler(Callback<R> callback, Type callbackType, Converter converter, String requestUrl,
+        Date start, ThreadLocal<DateFormat> dateFormat) {
     this.callback = callback;
+    this.callbackType = callbackType;
+    this.converter = converter;
     this.requestUrl = requestUrl;
+    this.start = start;
+    this.dateFormat = dateFormat;
   }
 
   /**
    * Parses the HTTP entity and creates an object that will be passed to
-   * {@link Callback#call(T)}. Invoked in background thread.
+   * {@link Callback#call(R)}. Invoked in background thread.
    *
    * @param entity HTTP entity to read and parse, not null
-   * @throws IOException if a network error occurs
-   * @throws ServerException if the server returns an unexpected response
-   * @throws RuntimeException if an unexpected error occurs
+   * @param type destination object type which is guaranteed to match <T>
    * @return parsed response
+   * @throws ConversionException if the server returns an unexpected response
    */
-  protected abstract T parse(HttpEntity entity) throws IOException,
-      ServerException;
-
-  @SuppressWarnings("unchecked")
-  public Void handleResponse(HttpResponse response) throws IOException {
-    /*
-     * Note: An IOException thrown from here (while downloading the HTTP
-     * entity, for example) will propagate to the caller and be reported as a
-     * network error.
-     *
-     * Callback methods actually execute in the main thread, so we don't
-     * have to worry about unhandled exceptions thrown by them.
-     */
-
-    StatusLine statusLine = response.getStatusLine();
-    int statusCode = statusLine.getStatusCode();
-    HttpEntity entity = response.getEntity();
-
-    if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
-      if (entity != null) {
-        // TODO: Use specified encoding.
-        String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
-        LOGGER.fine("Session expired. Body: " + body + ". Request url " + requestUrl);
-        callback.sessionExpired(parseServerMessage(statusCode, body));
-      } else {
-        LOGGER.fine("Session expired.  Request url " + requestUrl);
-        callback.sessionExpired(null);
+  protected Object parse(HttpEntity entity, Type type) throws ConversionException {
+    if (LOGGER.isLoggable(Level.FINE)) {
+      try {
+        entity = HttpClients.copyAndLog(entity, requestUrl, start, dateFormat.get());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
-      return null;
     }
 
+    return converter.to(entity, type);
+  }
+
+  @SuppressWarnings("unchecked") // Type is extracted from generic properties so cast is safe.
+  public Void handleResponse(HttpResponse response) throws IOException {
+    // Note: An IOException thrown from here (while downloading the HTTP
+    // entity, for example) will propagate to the caller and be reported as a
+    // network error.
+    //
+    // Callback methods actually execute in the main thread, so we don't
+    // have to worry about unhandled exceptions thrown by them.
+
+    HttpEntity entity = response.getEntity();
+    StatusLine statusLine = response.getStatusLine();
+    int statusCode = statusLine.getStatusCode();
+
+    if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
+      LOGGER.fine("Session expired.  Request url " + requestUrl);
+      ServerError error = null;
+      try {
+        error = (ServerError) parse(entity, ServerError.class);
+        LOGGER.fine("Server returned " + HttpStatus.SC_UNAUTHORIZED + ", " + statusLine.getReasonPhrase() + ". Body: "
+            + error + ". Request url " + requestUrl);
+      } catch (ConversionException e) {
+        LOGGER.log(Level.WARNING, e.getMessage(), e);
+      }
+      callback.sessionExpired(error);
+      return null;
+    }
 
     // 2XX == successful request
     if (statusCode >= 200 && statusCode < 300) {
@@ -90,8 +99,9 @@ public abstract class CallbackResponseHandler<T>
       }
 
       try {
-        callback.call(parse(entity));
-      } catch (ServerException e) {
+        R result = (R) parse(entity, callbackType);
+        callback.call(result);
+      } catch (ConversionException e) {
         LOGGER.log(Level.WARNING, e.getMessage(), e);
         callback.serverError(null, statusCode);
       }
@@ -100,56 +110,34 @@ public abstract class CallbackResponseHandler<T>
 
     // 5XX == server error
     if (statusCode >= 500) {
-      if (entity != null) {
-        // TODO: Use specified encoding.
-        String body = new String(HttpClients.entityToBytes(entity), "UTF-8");
-        LOGGER.fine("Server returned " + statusCode + ", "
-            + statusLine.getReasonPhrase() + ". Body: " + body + ". Request url " + requestUrl);
-        callback.serverError(parseServerMessage(statusCode, body), statusCode);
-      } else {
-        LOGGER.fine("Server returned " + statusCode + ", "
-            + statusLine.getReasonPhrase() + ". Request url " + requestUrl);
-        callback.serverError(null, statusCode);
+      ServerError error = null;
+      try {
+        error = (ServerError) parse(entity, ServerError.class);
+        LOGGER.fine("Server returned " + statusCode + ", " + statusLine.getReasonPhrase() + ". Body: " + error
+            + ". Request url " + requestUrl);
+      } catch (ConversionException e) {
+        LOGGER.log(Level.WARNING, e.getMessage(), e);
       }
+      callback.serverError(error, statusCode);
       return null;
     }
 
     // 4XX error
     if (entity != null) {
-      /** Construct BufferedHttpEntity so that we can read it multiple times. */
-      HttpEntity bufferedEntity = new BufferedHttpEntity(entity);
-      // TODO: Use specified encoding.
-      String body = new String(HttpClients.entityToBytes(bufferedEntity),
-          "UTF-8");
-      LOGGER.fine("Server returned " + statusCode + ", "
-          + statusLine.getReasonPhrase() + ". Body: " + body + ". Request url " + requestUrl);
+      R error = null;
       try {
-        callback.clientError(parse(bufferedEntity), statusCode);
-      } catch (ServerException e) {
+        error = (R) parse(entity, callbackType);
+        LOGGER.fine("Server returned " + statusCode + ", " + statusLine.getReasonPhrase() + ". Body: " + error
+            + ". Request url " + requestUrl);
+      } catch (ConversionException e) {
         LOGGER.log(Level.WARNING, e.getMessage(), e);
-        callback.serverError(null, statusCode);
       }
-    } else {
-      LOGGER.fine("Server returned " + statusCode + ", "
-          + statusLine.getReasonPhrase() + ". Request url " + requestUrl);
-      callback.clientError(null, statusCode);
+      callback.clientError(error, statusCode);
+      return null;
     }
-    return null;
-  }
 
-  /**
-   * Parses a server error message.
-   */
-  private ServerError parseServerMessage(int statusCode, String body) {
-    if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_GATEWAY_TIMEOUT
-        || statusCode < 500) {
-      try {
-        return gson.fromJson(body, ServerError.class);
-      } catch (Throwable t) {
-        // The server error takes precedence.
-        LOGGER.log(Level.WARNING, t.getMessage(), t);
-      }
-    }
+    LOGGER.fine("Server returned " + statusCode + ", " + statusLine.getReasonPhrase() + ". Request url " + requestUrl);
+    callback.clientError(null, statusCode);
     return null;
   }
 }
