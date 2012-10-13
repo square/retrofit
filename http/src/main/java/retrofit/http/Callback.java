@@ -36,8 +36,6 @@ public interface Callback<T> {
    * error, but it can also signify a user input error.
    *
    * @param statusCode the HTTP response code, typically 4XX
-   *
-   * @return response object or null if server returned an empty response.
    */
   void clientError(T response, int statusCode);
 
