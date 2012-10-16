@@ -1,15 +1,11 @@
 package retrofit.http;
 
-import com.google.gson.Gson;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
-import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
 import javax.inject.Named;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -34,7 +30,7 @@ import java.util.regex.Pattern;
  * </ol>
  */
 final class HttpRequestBuilder {
-  private final Gson gson;
+  private final Converter converter;
 
   private Method javaMethod;
   private Object[] args;
@@ -45,8 +41,8 @@ final class HttpRequestBuilder {
   private RequestLine requestLine;
   private TypedBytes singleEntity;
 
-  HttpRequestBuilder(Gson gson) {
-    this.gson = gson;
+  HttpRequestBuilder(Converter converter) {
+    this.converter = converter;
   }
 
   HttpRequestBuilder setMethod(Method method) {
@@ -139,10 +135,12 @@ final class HttpRequestBuilder {
           String name = getName(parameterAnnotations[i], javaMethod, i);
           params.add(new BasicNameValuePair(name, String.valueOf(arg)));
         } else if (type == SingleEntity.class) {
-          if (arg instanceof TypedBytes) { // Let the object specify its own entity representation.
+          if (arg instanceof TypedBytes) {
+            // Let the object specify its own entity representation.
             singleEntity = (TypedBytes) arg;
-          } else { // Just an object: serialize it with json
-            singleEntity = new JsonTypedBytes(arg);
+          } else {
+            // Just an object: serialize it with supplied converter
+            singleEntity = converter.from(arg);
           }
         }
       }
@@ -254,26 +252,5 @@ final class HttpRequestBuilder {
     }
     throw new IllegalArgumentException(
         annotationType + " missing on" + " parameter #" + parameterIndex + " of " + method + ".");
-  }
-
-  private class JsonTypedBytes implements TypedBytes {
-    private String json;
-
-    public JsonTypedBytes(Object obj) {
-      this.json = gson.toJson(obj);
-    }
-
-    @Override public MimeType mimeType() {
-      return MimeType.JSON;
-    }
-
-    @Override public int length() {
-      return json.length();
-    }
-
-    @Override public void writeTo(OutputStream out) throws IOException {
-      // TODO use requested encoding?
-      out.write(json.getBytes("UTF-8"));
-    }
   }
 }
