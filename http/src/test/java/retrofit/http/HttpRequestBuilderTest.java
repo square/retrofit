@@ -21,8 +21,9 @@ import static org.fest.assertions.Fail.fail;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest {
-  public static final String API_URL = "http://taqueria.com/lengua/taco";
-  public static final Headers BLANK_HEADERS = new Headers() {
+  private static final Gson GSON = new Gson();
+  private static final String API_URL = "http://taqueria.com/lengua/taco";
+  private static final Headers BLANK_HEADERS = new Headers() {
     @Override public void setOn(HttpMessage message, String mimeType) {
     }
   };
@@ -200,7 +201,8 @@ public class HttpRequestBuilderTest {
   }
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
-    return new HttpRequestBuilder(new Gson()).setMethod(method)
+    return new HttpRequestBuilder(new GsonConverter(GSON)) //
+        .setMethod(method)
         .setArgs(args)
         .setApiUrl(API_URL)
         .setHeaders(BLANK_HEADERS)

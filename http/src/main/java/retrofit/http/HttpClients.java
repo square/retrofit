@@ -1,16 +1,17 @@
 // Copyright 2010 Square, Inc.
 package retrofit.http;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.entity.ByteArrayEntity;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utility methods for dealing with HttpClient.
@@ -55,8 +56,7 @@ public class HttpClients {
   /**
    * Copies a response (so we can read it a second time) and logs it.
    */
-  public static HttpEntity copyAndLog(HttpEntity entity, String url, Date start,
-      SimpleDateFormat dateFormat)
+  public static HttpEntity copyAndLog(HttpEntity entity, String url, Date start, DateFormat dateFormat)
       throws IOException {
     byte[] bytes = entityToBytes(entity);
     // TODO: Use correct encoding.

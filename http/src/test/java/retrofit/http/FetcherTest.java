@@ -1,7 +1,6 @@
 // Copyright 2010 Square, Inc.
 package retrofit.http;
 
-import com.google.gson.Gson;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -62,7 +61,7 @@ public class FetcherTest {
 
     replayAll();
 
-    Fetcher fetcher = new Fetcher(new Gson(), new Provider<HttpClient>() {
+    Fetcher fetcher = new Fetcher(new Provider<HttpClient>() {
       public HttpClient get() {
         return httpClient;
       }

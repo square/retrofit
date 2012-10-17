@@ -1,9 +1,11 @@
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
@@ -18,6 +20,7 @@ import org.easymock.IAnswer;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import retrofit.http.Callback.ServerError;
 
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -30,6 +33,7 @@ import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
@@ -44,22 +48,22 @@ public class RestAdapterTest {
   private static final String BASE_URL = "http://host/api/entity";
   private static final String PATH_URL_PREFIX = BASE_URL + "/";
   private static final String GET_DELETE_SIMPLE_URL = BASE_URL + "?";
+  private static final Gson GSON = new Gson();
 
   private RestAdapter restAdapter;
   private HttpClient mockHttpClient;
   private Executor mockExecutor;
   private MainThread mockMainThread;
   private Headers mockHeaders;
-  @SuppressWarnings("rawtypes") private Callback mockCallback;
+  private ResponseCallback mockCallback;
   private HttpResponse mockResponse;
-  private Gson gson = new Gson();
 
   @Before public void setUp() throws Exception {
     mockHttpClient = createMock(HttpClient.class);
     mockExecutor   = createMock(Executor.class);
     mockMainThread = createMock(MainThread.class);
     mockHeaders    = createMock(Headers.class);
-    mockCallback   = createMock(Callback.class);
+    mockCallback   = createMock(ResponseCallback.class);
     mockResponse   = createMock(HttpResponse.class);
 
     Server server = new Server("http://host/api/");
@@ -68,11 +72,10 @@ public class RestAdapterTest {
         return mockHttpClient;
       }
     };
-    restAdapter = new RestAdapter(server, httpClientProvider, mockExecutor, mockMainThread,
-        mockHeaders, gson, HttpProfiler.NONE);
+    restAdapter = new RestAdapter(server, httpClientProvider, mockExecutor, mockMainThread, mockHeaders,
+        new GsonConverter(GSON), HttpProfiler.NONE);
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceDeleteSimple() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL);
     replayAll();
@@ -82,7 +85,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceDeleteParam() throws IOException {
     expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
@@ -92,10 +94,8 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceDeleteWithFixedParam() throws IOException {
-    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
-        + "id=" + ID);
+    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -103,10 +103,8 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceDeleteWithMultipleFixedParam() throws IOException {
-    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL
-        + "filter=merchant&name2=value2&"+ "id=" + ID);
+    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&"+ "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -114,7 +112,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceDeletePathParam() throws IOException {
     expectLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
@@ -124,7 +121,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceGetSimple() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL);
     replayAll();
@@ -134,7 +130,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceGetParam() throws IOException {
     expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
@@ -144,10 +139,8 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceGetWithFixedParam() throws IOException {
-    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&"
-        + "id=" + ID);
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -155,10 +148,8 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceGetWithMultipleFixedParams() throws IOException {
-    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL
-        + "filter=merchant&name2=value2&"+ "id=" + ID);
+    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -166,7 +157,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServiceGetPathParam() throws IOException {
     expectLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
@@ -176,7 +166,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePostSimple() throws IOException {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
@@ -186,7 +175,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePostSimpleClientError() throws IOException {
     expectLifecycleClientError(HttpPost.class, BASE_URL);
     replayAll();
@@ -196,7 +184,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePostSimpleServerError() throws IOException {
     expectLifecycleServerError(HttpPost.class, BASE_URL);
     replayAll();
@@ -206,7 +193,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePostParam() throws IOException {
     expectLifecycle(HttpPost.class, BASE_URL);
     replayAll();
@@ -216,7 +202,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePostPathParam() throws IOException {
     expectLifecycle(HttpPost.class, PATH_URL_PREFIX + ID);
     replayAll();
@@ -226,7 +211,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePutSimple() throws IOException {
     expectLifecycle(HttpPut.class, BASE_URL);
     replayAll();
@@ -236,7 +220,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePutParam() throws IOException {
     expectLifecycle(HttpPut.class, BASE_URL);
     replayAll();
@@ -246,7 +229,6 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @SuppressWarnings("unchecked")
   @Test public void testServicePutPathParam() throws IOException {
     expectLifecycle(HttpPut.class, PATH_URL_PREFIX + ID);
     replayAll();
@@ -257,44 +239,79 @@ public class RestAdapterTest {
   }
 
   @Test public void testConcreteCallbackTypes() {
-    Type[] expected = new Type[] { Response.class };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("a"))).as("a").isEqualTo(expected);
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("a");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("a").isEqualTo(expected);
   }
 
   @Test public void testConcreteCallbackTypesWithParams() {
-    Type[] expected = new Type[] { Response.class };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("b"))).as("b").isEqualTo(expected);
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("b");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("b").isEqualTo(expected);
   }
 
   @Test public void testGenericCallbackTypes() {
-    Type[] expected = new Type[] { Response.class };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("c"))).as("c").isEqualTo(expected);
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("c");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("c").isEqualTo(expected);
   }
 
   @Test public void testGenericCallbackTypesWithParams() {
-    Type[] expected = new Type[] { Response.class };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("d"))).as("d").isEqualTo(expected);
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("d");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("d").isEqualTo(expected);
   }
 
   @Test public void testWildcardGenericCallbackTypes() {
-    Type[] expected = new Type[] { Response.class };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("e"))).as("e").isEqualTo(expected);
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("e");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("e").isEqualTo(expected);
   }
 
   @Test public void testGenericCallbackWithGenericType() {
-    Type[] expected = new Type[] { new TypeToken<List<String>>() {}.getType() };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("f"))).as("f").isEqualTo(expected);
+    Type expected = new TypeToken<List<String>>() {}.getType();
+    Method method = getTypeTestMethod("f");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("f").isEqualTo(expected);
   }
 
   @Ignore // TODO support this case!
   @Test public void testExtendingGenericCallback() {
-    Type[] expected = new Type[] { Response.class };
-    assertThat(RestAdapter.getCallbackParameterTypes(getTypeTestMethod("g"))).as("g").isEqualTo(expected);
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("g");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    assertThat(RestAdapter.getResponseObjectType(method, false)).as("g").isEqualTo(expected);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testMissingCallbackTypes() {
-    RestAdapter.getCallbackParameterTypes(getTypeTestMethod("h"));
+    Method method = getTypeTestMethod("h");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
+    RestAdapter.getResponseObjectType(method, false);
+  }
+
+  @Test public void testSynchronousResponse() {
+    Type expected = Response.class;
+    Method method = getTypeTestMethod("x");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isTrue();
+    assertThat(RestAdapter.getResponseObjectType(method, true)).as("x").isEqualTo(expected);
+  }
+
+  @Test public void testSynchronousGenericResponse() {
+    Type expected = new TypeToken<List<String>>() {}.getType();
+    Method method = getTypeTestMethod("y");
+    assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isTrue();
+    assertThat(RestAdapter.getResponseObjectType(method, true)).as("y").isEqualTo(expected);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testSynchronousWithAsyncCallback() {
+    RestAdapter.methodWantsSynchronousInvocation(getTypeTestMethod("z"));
   }
 
   //
@@ -308,10 +325,9 @@ public class RestAdapterTest {
     verify(mockExecutor, mockHeaders, mockHttpClient, mockMainThread, mockCallback, mockResponse);
   }
 
-  private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass,
-      String requestUrl) throws IOException {
+  private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass, String requestUrl) throws IOException {
     Response response = expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(gson.toJson(response), 200);
+    expectResponseCalls(GSON.toJson(response), HttpStatus.SC_OK);
     expectHttpClientExecute();
     expectCallbacks(response);
   }
@@ -319,50 +335,47 @@ public class RestAdapterTest {
   private <T extends HttpUriRequest> void expectLifecycleClientError(Class<T> requestClass,
       String requestUrl) throws IOException {
     Response response = expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(gson.toJson(response), 409);
+    expectResponseCalls(GSON.toJson(response), HttpStatus.SC_CONFLICT);
     expectHttpClientExecute();
-    expectClientErrorCallbacks(response, 409);
+    expectClientErrorCallbacks(response, HttpStatus.SC_CONFLICT);
   }
 
   private <T extends HttpUriRequest> void expectLifecycleServerError(Class<T> requestClass,
       String requestUrl) throws IOException {
-    Response response = expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(gson.toJson(response), 501);
+    expectCallAndResponse(requestClass, requestUrl);
+    expectResponseCalls(GSON.toJson(new ServerError("danger, danger!")), HttpStatus.SC_NOT_IMPLEMENTED);
     expectHttpClientExecute();
-    expectServerErrorCallbacks(501);
+    expectServerErrorCallbacks(HttpStatus.SC_NOT_IMPLEMENTED);
   }
 
-  private <T extends HttpUriRequest> Response expectCallAndResponse(Class<T> requestClass,
-      String requestUrl) {
+  private <T extends HttpUriRequest> Response expectCallAndResponse(Class<T> requestClass, String requestUrl) {
     expectExecution(mockExecutor);
     expectExecution(mockMainThread); // For call()
     expectSetOnWithRequest(requestClass, requestUrl);
     return new Response("some text");
   }
 
-  @SuppressWarnings("unchecked") private void expectCallbacks(Response response) {
+  private void expectCallbacks(Response response) {
     mockCallback.call(response);
     expectLastCall().once();
   }
 
-  @SuppressWarnings("unchecked") private void expectClientErrorCallbacks(Response response,
-      int statusCode) {
+  private void expectClientErrorCallbacks(Response response, int statusCode) {
     mockCallback.clientError(response, statusCode);
     expectLastCall().once();
   }
 
-  @SuppressWarnings("unchecked") private void expectServerErrorCallbacks(int statusCode) {
-    mockCallback.serverError(null, statusCode);
+  private void expectServerErrorCallbacks(int statusCode) {
+    mockCallback.serverError(isA(ServerError.class), eq(statusCode));
     expectLastCall().once();
   }
 
   private void expectHttpClientExecute() throws IOException {
-    final Capture<GsonResponseHandler<?>> capture
-        = new Capture<GsonResponseHandler<?>>();
+    final Capture<CallbackResponseHandler> capture = new Capture<CallbackResponseHandler>();
     mockHttpClient.execute(isA(HttpUriRequest.class), capture(capture));
     expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override public Object answer() throws Throwable {
-        GsonResponseHandler<?> responseHandler = capture.getValue();
+        CallbackResponseHandler responseHandler = capture.getValue();
         responseHandler.handleResponse(mockResponse);
         return null;
       }
@@ -372,11 +385,12 @@ public class RestAdapterTest {
   private void expectResponseCalls(String jsonToReturn, int statusCode)
       throws UnsupportedEncodingException {
     expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
-    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
+    expect(mockResponse.getStatusLine())
+        .andReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
   }
 
-  private <T extends HttpUriRequest> void expectSetOnWithRequest(
-      final Class<T> expectedRequestClass, final String expectedUri) {
+  private <T extends HttpUriRequest> void expectSetOnWithRequest(final Class<T> expectedRequestClass,
+        final String expectedUri) {
     final Capture<HttpMessage> capture = new Capture<HttpMessage>();
     final Capture<String> captureMime = new Capture<String>();
     mockHeaders.setOn(capture(capture), capture(captureMime));
@@ -482,6 +496,7 @@ public class RestAdapterTest {
 
   @SuppressWarnings("UnusedDeclaration")
   private interface TypeTestService {
+    // Asynchronous
     @GET(ENTITY) void a(ResponseCallback c);
     @GET(ENTITY) void b(@Named("id") String id, ResponseCallback c);
     @GET(ENTITY) void c(Callback<Response> c);
@@ -490,6 +505,10 @@ public class RestAdapterTest {
     @GET(ENTITY) void f(Callback<List<String>> c);
     @GET(ENTITY) void g(ExtendingCallback<Response> callback);
     @GET(ENTITY) void h(@Named("id") String id);
+    // Synchronous
+    @GET(ENTITY) Response x();
+    @GET(ENTITY) List<String> y();
+    @GET(ENTITY) Response z(Callback<Response> callback);
   }
 
   private static Method getTypeTestMethod(String name) {
