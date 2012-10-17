@@ -98,7 +98,7 @@ public class Fetcher {
           try {
             byte[] buffer = new byte[4096];
             int read;
-            while ((read = in.read(buffer)) > -1) {
+            while ((read = in.read(buffer)) != -1) {
               out.write(buffer, read);
               if (progressListener != null) {
                 totalRead += read;
