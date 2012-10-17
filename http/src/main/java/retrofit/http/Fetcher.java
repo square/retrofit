@@ -71,9 +71,6 @@ public class Fetcher {
   }
 
   static class DownloadHandler extends CallbackResponseHandler<Void> {
-    /** Throttles how often we send progress updates. Specified in %. */
-    private static final int PROGRESS_GRANULARITY = 5;
-
     private final ByteSink.Factory destination;
     private final ProgressListener progressListener;
     private final MainThread mainThread;
@@ -93,8 +90,8 @@ public class Fetcher {
         InputStream in = entity.getContent();
         try {
           ByteSink out = destination.newSink();
-          final int total = (int) entity.getContentLength();
-          int totalRead = 0;
+          final long total = entity.getContentLength();
+          long totalRead = 0;
           try {
             byte[] buffer = new byte[4096];
             int read;
@@ -102,10 +99,12 @@ public class Fetcher {
               out.write(buffer, read);
               if (progressListener != null) {
                 totalRead += read;
-                int percent = totalRead * 100 / total;
-                if (percent - progressUpdate.percent > PROGRESS_GRANULARITY) {
-                  progressUpdate.percent = percent;
-                  mainThread.execute(progressUpdate);
+                progressUpdate.percent = 1f * totalRead / total;
+                synchronized (progressUpdate) {
+                  if (progressUpdate.run) {
+                    progressUpdate.run = false;
+                    mainThread.execute(progressUpdate);
+                  }
                 }
               }
             }
@@ -123,9 +122,17 @@ public class Fetcher {
 
     /** Invokes ProgressListener in UI thread. */
     private class ProgressUpdate implements Runnable {
-      private volatile int percent;
+      /** Amount to report when run. */
+      volatile float percent;
+
+      /** Whether or not this update has been run. Synchronized on 'this'. */
+      boolean run = true;
+
       public void run() {
         progressListener.hearProgress(percent);
+        synchronized (this) {
+          run = true;
+        }
       }
     }
   }

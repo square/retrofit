@@ -1,4 +1,4 @@
-// Copyright 2010 Square, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 /**
@@ -11,7 +11,7 @@ public interface ProgressListener {
   /**
    * Hears a progress update.
    *
-   * @param percent 0-100
+   * @param percent Float bounded by (0..1].
    */
-  void hearProgress(int percent);
+  void hearProgress(float percent);
 }

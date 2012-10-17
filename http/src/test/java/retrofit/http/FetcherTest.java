@@ -17,7 +17,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
-import static org.easymock.EasyMock.anyInt;
+import static org.easymock.EasyMock.anyFloat;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -40,8 +40,7 @@ public class FetcherTest {
   private HttpResponse response = createMock(HttpResponse.class);
   @SuppressWarnings("unchecked")
   private Callback<Void> callback = createMock(Callback.class);
-  private ProgressListener progressListener
-      = createMock(ProgressListener.class);
+  private ProgressListener progressListener = createMock(ProgressListener.class);
 
   @Test public void testSuccessfulFetch() throws Exception {
     DummyInputStream in = new DummyInputStream();
@@ -56,7 +55,8 @@ public class FetcherTest {
     expect(entity.getContentLength()).andReturn(3L);
     expect(entity.getContent()).andReturn(in);
     expect(sinkFactory.newSink()).andReturn(sink);
-    progressListener.hearProgress(anyInt()); expectLastCall().atLeastOnce();
+    progressListener.hearProgress(anyFloat());
+    expectLastCall().atLeastOnce();
     callback.call(null);
 
     replayAll();
