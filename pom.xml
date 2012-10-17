@@ -185,6 +185,7 @@
             <failsOnError>true</failsOnError>
             <!-- Relative to module directory. -->
             <configLocation>../checkstyle.xml</configLocation>
+            <consoleOutput>true</consoleOutput>
           </configuration>
           <executions>
             <execution>
