@@ -8,9 +8,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -33,7 +31,7 @@ import java.util.logging.Logger;
  *
  * @author Bob Lee (bob@squareup.com)
  */
-@Singleton public class RestAdapter {
+public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
   static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
     @Override protected DateFormat initialValue() {
@@ -49,8 +47,8 @@ import java.util.logging.Logger;
   private final Converter converter;
   private final HttpProfiler profiler;
 
-  @Inject public RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor,
-      MainThread mainThread, Headers headers, Converter converter, HttpProfiler profiler) {
+  public RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor, MainThread mainThread,
+      Headers headers, Converter converter, HttpProfiler profiler) {
     this.server = server;
     this.httpClientProvider = httpClientProvider;
     this.executor = executor;
