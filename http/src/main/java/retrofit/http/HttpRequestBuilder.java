@@ -33,6 +33,7 @@ final class HttpRequestBuilder {
   private final Converter converter;
 
   private Method javaMethod;
+  private boolean isSynchronous;
   private Object[] args;
   private String apiUrl;
   private String replacedRelativePath;
@@ -45,8 +46,9 @@ final class HttpRequestBuilder {
     this.converter = converter;
   }
 
-  HttpRequestBuilder setMethod(Method method) {
+  HttpRequestBuilder setMethod(Method method, boolean isSynchronous) {
     this.javaMethod = method;
+    this.isSynchronous = isSynchronous;
     requestLine = RequestLine.fromMethod(method);
     return this;
   }
@@ -106,7 +108,10 @@ final class HttpRequestBuilder {
   /** Converts all but the last method argument to a list of HTTP request parameters. */
   private List<NameValuePair> createParamList() {
     Annotation[][] parameterAnnotations = javaMethod.getParameterAnnotations();
-    int count = parameterAnnotations.length - 1;
+    int count = parameterAnnotations.length;
+    if (!isSynchronous) {
+      count -= 1;
+    }
 
     List<NameValuePair> params = new ArrayList<NameValuePair>(count);
 
