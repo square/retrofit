@@ -2,7 +2,6 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import org.apache.http.HttpMessage;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -23,10 +22,6 @@ import static org.fest.assertions.Fail.fail;
 public class HttpRequestBuilderTest {
   private static final Gson GSON = new Gson();
   private static final String API_URL = "http://taqueria.com/lengua/taco";
-  private static final Headers BLANK_HEADERS = new Headers() {
-    @Override public void setOn(HttpMessage message, String mimeType) {
-    }
-  };
 
   @Test public void testRegex() throws Exception {
     expectParams("");
@@ -205,7 +200,6 @@ public class HttpRequestBuilderTest {
         .setMethod(method)
         .setArgs(args)
         .setApiUrl(API_URL)
-        .setHeaders(BLANK_HEADERS)
         .build();
   }
 

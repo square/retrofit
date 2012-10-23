@@ -2,7 +2,6 @@ package retrofit.http;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -22,7 +21,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +45,7 @@ public class RestAdapter {
   private final Converter converter;
   private final HttpProfiler profiler;
 
-  public RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor, MainThread mainThread,
+  private RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor, MainThread mainThread,
       Headers headers, Converter converter, HttpProfiler profiler) {
     this.server = server;
     this.httpClientProvider = httpClientProvider;
@@ -128,7 +126,7 @@ public class RestAdapter {
         ResponseHandler<Void> rh = new CallbackResponseHandler(callback, type, converter, url, start, DATE_FORMAT);
 
         // Optionally wrap the response handler for server call profiling.
-        if (profiler != HttpProfiler.NONE) {
+        if (profiler != null) {
           rh = createProfiler(rh, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
         }
 
@@ -248,44 +246,84 @@ public class RestAdapter {
         String.format("Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.", method));
   }
 
-  /** Sends server call times and response status codes to {@link HttpProfiler}. */
-  private static class ProfilingResponseHandler<T> implements ResponseHandler<Void> {
-    private final ResponseHandler<Void> delegate;
-    private final HttpProfiler<T> profiler;
-    private final HttpProfiler.RequestInformation requestInfo;
-    private final long startTime;
-    private final AtomicReference<T> beforeCallData = new AtomicReference<T>();
+  /**
+   * Build a new {@link RestAdapter}.
+   * <p/>
+   * Calling the following methods is required before calling {@link #build()}:
+   * <ul>
+   *   <li>{@link #setServer(Server)}</li>
+   *   <li>{@link #setClient(javax.inject.Provider)}</li>
+   *   <li>{@link #setExecutor(java.util.concurrent.Executor)}</li>
+   *   <li>{@link #setMainThread(MainThread)}</li>
+   *   <li>{@link #setConverter(Converter)}</li>
+   * </ul>
+   */
+  public static class Builder {
+    private Server server;
+    private Provider<HttpClient> clientProvider;
+    private Executor executor;
+    private MainThread mainThread;
+    private Headers headers;
+    private Converter converter;
+    private HttpProfiler profiler;
 
-    /** Wraps the delegate response handler. */
-    private ProfilingResponseHandler(ResponseHandler<Void> delegate, HttpProfiler<T> profiler,
-        HttpProfiler.RequestInformation requestInfo, long startTime) {
-      this.delegate = delegate;
+    public Builder setServer(String endpoint) {
+      return setServer(new Server(endpoint));
+    }
+
+    public Builder setServer(Server server) {
+      this.server = server;
+      return this;
+    }
+
+    public Builder setClient(final HttpClient client) {
+      return setClient(new Provider<HttpClient>() {
+        @Override public HttpClient get() {
+          return client;
+        }
+      });
+    }
+
+    public Builder setClient(Provider<HttpClient> clientProvider) {
+      this.clientProvider = clientProvider;
+      return this;
+    }
+
+    public Builder setExecutor(Executor executor) {
+      this.executor = executor;
+      return this;
+    }
+
+    public Builder setMainThread(MainThread mainThread) {
+      this.mainThread = mainThread;
+      return this;
+    }
+
+    public Builder setHeaders(Headers headers) {
+      this.headers = headers;
+      return this;
+    }
+
+    public Builder setConverter(Converter converter) {
+      this.converter = converter;
+      return this;
+    }
+
+    public Builder setProfiler(HttpProfiler profiler) {
       this.profiler = profiler;
-      this.requestInfo = requestInfo;
-      this.startTime = startTime;
+      return this;
     }
 
-    public void beforeCall() {
-      try {
-        beforeCallData.set(profiler.beforeCall());
-      } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "Error occurred in HTTP profiler beforeCall().", e);
-      }
-    }
+    public RestAdapter build() {
+      if (server == null) throw new NullPointerException("server");
+      if (clientProvider == null) throw new NullPointerException("clientProvider");
+      if (converter == null) throw new NullPointerException("converter");
 
-    @Override public Void handleResponse(HttpResponse httpResponse) throws IOException {
-      // Intercept the response and send data to profiler.
-      long elapsedTime = System.currentTimeMillis() - startTime;
-      int statusCode = httpResponse.getStatusLine().getStatusCode();
+      // TODO Remove the following two when we support synchronous invocation as they will be allowed to be null.
+      if (executor == null) throw new NullPointerException("executor");
+      if (mainThread == null) throw new NullPointerException("mainThread");
 
-      try {
-        profiler.afterCall(requestInfo, elapsedTime, statusCode, beforeCallData.get());
-      } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "Error occurred in HTTP profiler afterCall().", e);
-      }
-
-      // Pass along the response to the normal handler.
-      return delegate.handleResponse(httpResponse);
+      return new RestAdapter(server, clientProvider, executor, mainThread, headers, converter, profiler);
     }
   }
 }
