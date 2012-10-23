@@ -6,7 +6,7 @@ package retrofit.http;
  *
  * @author Bob Lee (bob@squareup.com)
  */
-public final class UiCallback<T> implements Callback<T> {
+final class UiCallback<T> implements Callback<T> {
 
   final Callback<T> delegate;
   final MainThread mainThread;
