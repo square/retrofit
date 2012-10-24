@@ -34,11 +34,11 @@
   <url>http://github.com/square/retrofit/</url>
 
   <modules>
+    <module>examples</module>
     <module>http</module>
     <module>io</module>
     <module>sync</module>
     <module>sync-native</module>
-    <module>sync-sample</module>
   </modules>
 
   <properties>
