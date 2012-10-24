@@ -8,15 +8,6 @@ package retrofit.http;
  */
 public interface HttpProfiler<T> {
 
-  HttpProfiler<Void> NONE = new HttpProfiler<Void>() {
-    @Override public Void beforeCall() {
-      return null;
-    }
-    @Override public void afterCall(RequestInformation requestInfo,
-        long elapsedTime, int statusCode, Void beforeCallData) {
-    }
-  };
-
   /**
    * Invoked before an HTTP method call. The object returned by this method will be
    * passed to {@link #afterCall} when the call returns.

@@ -23,7 +23,6 @@ import org.junit.Test;
 import retrofit.http.Callback.ServerError;
 
 import javax.inject.Named;
-import javax.inject.Provider;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -66,14 +65,14 @@ public class RestAdapterTest {
     mockCallback   = createMock(ResponseCallback.class);
     mockResponse   = createMock(HttpResponse.class);
 
-    Server server = new Server("http://host/api/");
-    Provider<HttpClient> httpClientProvider = new Provider<HttpClient>() {
-      @Override public HttpClient get() {
-        return mockHttpClient;
-      }
-    };
-    restAdapter = new RestAdapter(server, httpClientProvider, mockExecutor, mockMainThread, mockHeaders,
-        new GsonConverter(GSON), HttpProfiler.NONE);
+    restAdapter = new RestAdapter.Builder()
+        .setServer("http://host/api/")
+        .setClient(mockHttpClient)
+        .setExecutor(mockExecutor)
+        .setMainThread(mockMainThread)
+        .setHeaders(mockHeaders)
+        .setConverter(new GsonConverter(GSON))
+        .build();
   }
 
   @Test public void testServiceDeleteSimple() throws IOException {
@@ -392,8 +391,7 @@ public class RestAdapterTest {
   private <T extends HttpUriRequest> void expectSetOnWithRequest(final Class<T> expectedRequestClass,
         final String expectedUri) {
     final Capture<HttpMessage> capture = new Capture<HttpMessage>();
-    final Capture<String> captureMime = new Capture<String>();
-    mockHeaders.setOn(capture(capture), capture(captureMime));
+    mockHeaders.setOn(capture(capture));
     expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override public Object answer() throws Throwable {
         T request = expectedRequestClass.cast(capture.getValue());

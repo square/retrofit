@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  * @author Bob Lee (bob@squareup.com)
  * @author Jake Wharton (jw@squareup.com)
  */
-public class CallbackResponseHandler<R> implements ResponseHandler<Void> {
+class CallbackResponseHandler<R> implements ResponseHandler<Void> {
 
   private static final Logger LOGGER = Logger.getLogger(CallbackResponseHandler.class.getName());
 
@@ -51,7 +51,7 @@ public class CallbackResponseHandler<R> implements ResponseHandler<Void> {
    * @return parsed response
    * @throws ConversionException if the server returns an unexpected response
    */
-  protected Object parse(HttpEntity entity, Type type) throws ConversionException {
+  private Object parse(HttpEntity entity, Type type) throws ConversionException {
     if (LOGGER.isLoggable(Level.FINE)) {
       try {
         entity = HttpClients.copyAndLog(entity, requestUrl, start, dateFormat.get());

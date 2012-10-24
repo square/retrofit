@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import org.apache.http.HttpMessage;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
@@ -34,7 +35,7 @@ public enum HttpMethodType {
         throws URISyntaxException {
       URI uri = getParameterizedUri(builder);
       HttpGet request = new HttpGet(uri);
-      builder.getHeaders().setOn(request, builder.getMimeType());
+      addHeaders(request, builder);
       return request;
     }
   },
@@ -45,7 +46,7 @@ public enum HttpMethodType {
       URI uri = getUri(builder);
       HttpPost request = new HttpPost(uri);
       addParams(request, builder);
-      builder.getHeaders().setOn(request, builder.getMimeType());
+      addHeaders(request, builder);
       return request;
     }
   },
@@ -56,7 +57,7 @@ public enum HttpMethodType {
       URI uri = getUri(builder);
       HttpPut request = new HttpPut(uri);
       addParams(request, builder);
-      builder.getHeaders().setOn(request, builder.getMimeType());
+      addHeaders(request, builder);
       return request;
     }
   },
@@ -66,7 +67,7 @@ public enum HttpMethodType {
         throws URISyntaxException {
       URI uri = getParameterizedUri(builder);
       HttpDelete request = new HttpDelete(uri);
-      builder.getHeaders().setOn(request, builder.getMimeType());
+      addHeaders(request, builder);
       return request;
     }
   };
@@ -94,6 +95,17 @@ public enum HttpMethodType {
     String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
     return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1, builder.getRelativePath(),
         queryString, null);
+  }
+
+  private static void addHeaders(HttpMessage message, HttpRequestBuilder builder) {
+    String mimeType = builder.getMimeType();
+    if (mimeType != null) {
+      message.addHeader("Content-Type", mimeType);
+    }
+    Headers headers = builder.getHeaders();
+    if (headers != null) {
+      headers.setOn(message);
+    }
   }
 
   /**

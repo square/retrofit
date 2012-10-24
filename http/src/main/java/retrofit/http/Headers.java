@@ -10,6 +10,6 @@ import org.apache.http.HttpMessage;
  */
 public interface Headers {
 
-  /** Sets headers on the given message, with the specified MIME type */
-  void setOn(HttpMessage message, String mimeType);
+  /** Sets headers on the given message */
+  void setOn(HttpMessage message);
 }
