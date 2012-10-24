@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class TypedFileTest {
@@ -42,7 +42,7 @@ public class TypedFileTest {
 
       writeToFile(tempFile, new byte[]{0, 1, 2, 3, 4});
 
-      assertThat(tempFile).hasSize(5);
+      assertThat(tempFile.length()).isEqualTo(5);
       assertThat(typedFile.length()).isEqualTo(5);
 
     } finally {

@@ -15,8 +15,8 @@ import java.net.URLEncoder;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.fest.assertions.Assertions.assertThat;
-import static org.fest.assertions.Fail.fail;
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Fail.fail;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest {
