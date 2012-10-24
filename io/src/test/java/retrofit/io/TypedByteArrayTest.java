@@ -3,7 +3,7 @@ package retrofit.io;
 
 import org.junit.Test;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 
 /** @author Eric Burke (eric@squareup.com) */

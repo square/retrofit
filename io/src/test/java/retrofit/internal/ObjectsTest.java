@@ -3,8 +3,8 @@ package retrofit.internal;
 
 import org.junit.Test;
 
-import static org.fest.assertions.Assertions.assertThat;
-import static org.fest.assertions.Fail.fail;
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Fail.fail;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class ObjectsTest {
