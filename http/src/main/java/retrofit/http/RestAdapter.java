@@ -57,16 +57,16 @@ public class RestAdapter {
   }
 
   /**
-   * Adapts a Java interface to a REST API. HTTP requests happen in a background thread. Callbacks
-   * happen in the UI thread.
+   * Adapts a Java interface to a REST API. HTTP requests happen on the provided {@link Executor} thread
+   * and callbacks happen on the provided {@link MainThread}.
    *
    * <p>Gets the relative path for a given method from a {@link GET}, {@link POST}, {@link PUT}, or
    * {@link DELETE} annotation on the method. Gets the names of URL parameters from {@link
    * javax.inject.Named} annotations on the method parameters.
    *
    * <p>The last method parameter should be of type {@link Callback}. The JSON HTTP response will be
-   * converted to the callback's parameter type using GSON. If the callback parameter type uses a
-   * wildcard, the lower bound will be used as the conversion type.
+   * converted to the callback's parameter type using the specified {@link Converter}. If the callback
+   * parameter type uses a wildcard, the lower bound will be used as the conversion type.
    *
    * <p>For example:
    *
