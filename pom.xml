@@ -54,7 +54,7 @@
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
     <gson.version>2.2.3-SNAPSHOT</gson.version>
-    <httpcomponents.version>4.2.2</httpcomponents.version>
+    <httpcomponents.version>4.0.1</httpcomponents.version>
     <javax.inject.version>1</javax.inject.version>
 
     <!-- Test Dependencies -->
