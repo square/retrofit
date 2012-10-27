@@ -1,8 +1,6 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import retrofit.internal.Objects;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -24,7 +22,8 @@ public class TypedByteArray extends AbstractTypedBytes {
    */
   public TypedByteArray(byte[] bytes, MimeType mimeType) {
     super(mimeType);
-    this.bytes = Objects.nonNull(bytes, "bytes");
+    if (bytes == null) throw new NullPointerException("bytes");
+    this.bytes = bytes;
   }
 
   public void writeTo(OutputStream out) throws IOException {
