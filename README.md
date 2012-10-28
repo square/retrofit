@@ -14,7 +14,7 @@ Http Usage
 ----------
 
 Create an interface for your API.  You can create as many of these interfaces as you like.  For
-each interface you create, calling `RestAdapter.service(MyInterface.class)` will create an
+each interface you create, calling `RestAdapter.create(MyInterface.class)` will create an
 instance of that API handler, which you can then store and use throughout your application.  An
 example interface:
 
