@@ -1,8 +1,6 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import retrofit.internal.Objects;
-
 import java.io.Serializable;
 
 /**
@@ -21,7 +19,8 @@ public abstract class AbstractTypedBytes implements TypedBytes, Serializable {
    * @throws NullPointerException if mimeType is null
    */
   public AbstractTypedBytes(MimeType mimeType) {
-    this.mimeType = Objects.nonNull(mimeType, "mimeType");
+    if (mimeType == null) throw new NullPointerException("mimeType");
+    this.mimeType = mimeType;
   }
 
   public MimeType mimeType() {

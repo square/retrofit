@@ -1,8 +1,6 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import retrofit.internal.Objects;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,7 +22,8 @@ public class TypedFile extends AbstractTypedBytes {
    */
   public TypedFile(File file, MimeType mimeType) {
     super(mimeType);
-    this.file = Objects.nonNull(file, "file");
+    if (file == null) throw new NullPointerException("file");
+    this.file = file;
   }
 
   /** Returns the file. */
