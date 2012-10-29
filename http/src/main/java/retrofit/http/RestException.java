@@ -28,7 +28,7 @@ public abstract class RestException extends RuntimeException {
   }
 
   /** An exception that is the result of an HTTP response. */
-  public static abstract class HttpException extends RestException {
+  public abstract static class HttpException extends RestException {
     private final int status;
     private final Object response;
 
