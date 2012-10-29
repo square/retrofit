@@ -39,7 +39,6 @@ public class TypedFile extends AbstractTypedBytes {
    * Atomically moves the contents of this file to a new location.
    *
    * @param destination file
-   * @return destination
    * @throws java.io.IOException if the move fails
    */
   public void moveTo(TypedFile destination) throws IOException {
