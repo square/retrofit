@@ -1,7 +1,6 @@
 // Copyright 2012 Square, Inc.
 package retrofit.http;
 
-import org.apache.http.HttpEntity;
 import retrofit.io.TypedBytes;
 
 import java.lang.reflect.Type;
@@ -15,13 +14,14 @@ public interface Converter {
   /**
    * Convert an HTTP response body to a concrete object of the specified type.
    *
-   * @param entity HTTP response body.
+   * @param body HTTP response body.
    * @param type Target object type.
    * @return Instance of {@code type} which will be cast by the caller.
    * @throws ConversionException If conversion was unable to complete. This will trigger a call to
-   * {@link Callback#serverError(retrofit.http.Callback.ServerError, int)}.
+   * {@link Callback#serverError(retrofit.http.Callback.ServerError, int)} or throw a
+   * {@link retrofit.http.RestException.ServerHttpException}.
    */
-  Object to(HttpEntity entity, Type type) throws ConversionException;
+  Object to(byte[] body, Type type) throws ConversionException;
 
   /**
    * Convert and object to appropriate representation for HTTP transport.

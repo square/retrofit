@@ -6,7 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.ProtocolVersion;
+import org.apache.http.HttpVersion;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -21,6 +21,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import retrofit.http.Callback.ServerError;
+import retrofit.http.RestException.ClientHttpException;
+import retrofit.http.RestException.ServerHttpException;
 
 import javax.inject.Named;
 import java.io.IOException;
@@ -39,6 +41,7 @@ import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.fail;
 
 public class RestAdapterTest {
   private static final String ID = "123";
@@ -48,6 +51,8 @@ public class RestAdapterTest {
   private static final String PATH_URL_PREFIX = BASE_URL + "/";
   private static final String GET_DELETE_SIMPLE_URL = BASE_URL + "?";
   private static final Gson GSON = new Gson();
+  private static final Response RESPONSE = new Response("some text");
+  private static final ServerError SERVER_ERROR = new ServerError("danger, danger!");
 
   private RestAdapter restAdapter;
   private HttpClient mockHttpClient;
@@ -75,8 +80,8 @@ public class RestAdapterTest {
         .build();
   }
 
-  @Test public void testServiceDeleteSimple() throws IOException {
-    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL);
+  @Test public void testServiceDeleteSimpleAsync() throws IOException {
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -84,8 +89,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceDeleteParam() throws IOException {
-    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+  @Test public void testServiceDeleteSimpleSync() throws IOException {
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL);
+    replayAll();
+
+    DeleteService service = restAdapter.create(DeleteService.class);
+    Response response = service.delete();
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceDeleteParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -93,8 +108,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceDeleteWithFixedParam() throws IOException {
-    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+  @Test public void testServiceDeleteParamSync() throws IOException {
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+    replayAll();
+
+    DeleteService service = restAdapter.create(DeleteService.class);
+    Response response = service.deleteWithParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceDeleteWithFixedParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -102,8 +127,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceDeleteWithMultipleFixedParam() throws IOException {
-    expectLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&"+ "id=" + ID);
+  @Test public void testServiceDeleteWithFixedParamSync() throws IOException {
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+    replayAll();
+
+    DeleteService service = restAdapter.create(DeleteService.class);
+    Response response = service.deleteWithFixedParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceDeleteWithMultipleFixedParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&" + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -111,8 +146,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceDeletePathParam() throws IOException {
-    expectLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
+  @Test public void testServiceDeleteWithMultipleFixedParamSync() throws IOException {
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&" + "id=" + ID);
+    replayAll();
+
+    DeleteService service = restAdapter.create(DeleteService.class);
+    Response response = service.deleteWithMultipleFixedParams(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceDeletePathParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -120,8 +165,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceGetSimple() throws IOException {
-    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL);
+  @Test public void testServiceDeletePathParamSync() throws IOException {
+    expectSyncLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
+    replayAll();
+
+    DeleteService service = restAdapter.create(DeleteService.class);
+    Response response = service.deleteWithPathParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceGetSimpleAsync() throws IOException {
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -129,8 +184,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceGetParam() throws IOException {
-    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+  @Test public void testServiceGetSimpleSync() throws IOException {
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL);
+    replayAll();
+
+    GetService service = restAdapter.create(GetService.class);
+    Response response = service.get();
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceGetParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -138,8 +203,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceGetWithFixedParam() throws IOException {
-    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+  @Test public void testServiceGetParamSync() throws IOException {
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+    replayAll();
+
+    GetService service = restAdapter.create(GetService.class);
+    Response response = service.getWithParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceGetWithFixedParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -147,8 +222,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceGetWithMultipleFixedParams() throws IOException {
-    expectLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&id=" + ID);
+  @Test public void testServiceGetWithFixedParamSync() throws IOException {
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+    replayAll();
+
+    GetService service = restAdapter.create(GetService.class);
+    Response response = service.getWithFixedParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceGetWithMultipleFixedParamsAsync() throws IOException {
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -156,8 +241,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServiceGetPathParam() throws IOException {
-    expectLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
+  @Test public void testServiceGetWithMultipleFixedParamsSync() throws IOException {
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&id=" + ID);
+    replayAll();
+
+    GetService service = restAdapter.create(GetService.class);
+    Response response = service.getWithMultipleFixedParams(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServiceGetPathParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -165,8 +260,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePostSimple() throws IOException {
-    expectLifecycle(HttpPost.class, BASE_URL);
+  @Test public void testServiceGetPathParamSync() throws IOException {
+    expectSyncLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
+    replayAll();
+
+    GetService service = restAdapter.create(GetService.class);
+    Response response = service.getWithPathParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServicePostSimpleAsync() throws IOException {
+    expectAsyncLifecycle(HttpPost.class, BASE_URL);
     replayAll();
 
     PostService service = restAdapter.create(PostService.class);
@@ -174,8 +279,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePostSimpleClientError() throws IOException {
-    expectLifecycleClientError(HttpPost.class, BASE_URL);
+  @Test public void testServicePostSimpleSync() throws IOException {
+    expectSyncLifecycle(HttpPost.class, BASE_URL);
+    replayAll();
+
+    PostService service = restAdapter.create(PostService.class);
+    Response response = service.post();
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServicePostSimpleClientErrorAsync() throws IOException {
+    expectAsyncLifecycleClientError(HttpPost.class, BASE_URL);
     replayAll();
 
     PostService service = restAdapter.create(PostService.class);
@@ -183,8 +298,21 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePostSimpleServerError() throws IOException {
-    expectLifecycleServerError(HttpPost.class, BASE_URL);
+  @Test public void testServicePostSimpleClientErrorSync() throws IOException {
+    expectSyncLifecycleClientError(HttpPost.class, BASE_URL);
+    replayAll();
+
+    PostService service = restAdapter.create(PostService.class);
+    try {
+      service.post();
+      fail("Expected client exception.");
+    } catch (ClientHttpException expected) {
+    }
+    verifyAll();
+  }
+
+  @Test public void testServicePostSimpleServerErrorAsync() throws IOException {
+    expectAsyncLifecycleServerError(HttpPost.class, BASE_URL);
     replayAll();
 
     PostService service = restAdapter.create(PostService.class);
@@ -192,8 +320,21 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePostParam() throws IOException {
-    expectLifecycle(HttpPost.class, BASE_URL);
+  @Test public void testServicePostSimpleServerErrorSync() throws IOException {
+    expectSyncLifecycleServerError(HttpPost.class, BASE_URL);
+    replayAll();
+
+    PostService service = restAdapter.create(PostService.class);
+    try {
+      service.post();
+      fail("Expected server exception");
+    } catch (ServerHttpException expected) {
+    }
+    verifyAll();
+  }
+
+  @Test public void testServicePostParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpPost.class, BASE_URL);
     replayAll();
 
     PostService service = restAdapter.create(PostService.class);
@@ -201,8 +342,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePostPathParam() throws IOException {
-    expectLifecycle(HttpPost.class, PATH_URL_PREFIX + ID);
+  @Test public void testServicePostParamSync() throws IOException {
+    expectSyncLifecycle(HttpPost.class, BASE_URL);
+    replayAll();
+
+    PostService service = restAdapter.create(PostService.class);
+    Response response = service.postWithParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServicePostPathParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpPost.class, PATH_URL_PREFIX + ID);
     replayAll();
 
     PostService service = restAdapter.create(PostService.class);
@@ -210,8 +361,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePutSimple() throws IOException {
-    expectLifecycle(HttpPut.class, BASE_URL);
+  @Test public void testServicePostPathParamSync() throws IOException {
+    expectSyncLifecycle(HttpPost.class, PATH_URL_PREFIX + ID);
+    replayAll();
+
+    PostService service = restAdapter.create(PostService.class);
+    Response response = service.postWithPathParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServicePutSimpleAsync() throws IOException {
+    expectAsyncLifecycle(HttpPut.class, BASE_URL);
     replayAll();
 
     PutService service = restAdapter.create(PutService.class);
@@ -219,8 +380,18 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePutParam() throws IOException {
-    expectLifecycle(HttpPut.class, BASE_URL);
+  @Test public void testServicePutSimpleSync() throws IOException {
+    expectSyncLifecycle(HttpPut.class, BASE_URL);
+    replayAll();
+
+    PutService service = restAdapter.create(PutService.class);
+    Response response = service.put();
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServicePutParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpPut.class, BASE_URL);
     replayAll();
 
     PutService service = restAdapter.create(PutService.class);
@@ -228,12 +399,32 @@ public class RestAdapterTest {
     verifyAll();
   }
 
-  @Test public void testServicePutPathParam() throws IOException {
-    expectLifecycle(HttpPut.class, PATH_URL_PREFIX + ID);
+  @Test public void testServicePutParamSync() throws IOException {
+    expectSyncLifecycle(HttpPut.class, BASE_URL);
+    replayAll();
+
+    PutService service = restAdapter.create(PutService.class);
+    Response response = service.putWithParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
+    verifyAll();
+  }
+
+  @Test public void testServicePutPathParamAsync() throws IOException {
+    expectAsyncLifecycle(HttpPut.class, PATH_URL_PREFIX + ID);
     replayAll();
 
     PutService service = restAdapter.create(PutService.class);
     service.putWithPathParam(ID, mockCallback);
+    verifyAll();
+  }
+
+  @Test public void testServicePutPathParamSync() throws IOException {
+    expectSyncLifecycle(HttpPut.class, PATH_URL_PREFIX + ID);
+    replayAll();
+
+    PutService service = restAdapter.create(PutService.class);
+    Response response = service.putWithPathParam(ID);
+    assertThat(response).isEqualTo(RESPONSE);
     verifyAll();
   }
 
@@ -324,68 +515,76 @@ public class RestAdapterTest {
     verify(mockExecutor, mockHeaders, mockHttpClient, mockMainThread, mockCallback, mockResponse);
   }
 
-  private <T extends HttpUriRequest> void expectLifecycle(Class<T> requestClass, String requestUrl) throws IOException {
-    Response response = expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(GSON.toJson(response), HttpStatus.SC_OK);
-    expectHttpClientExecute();
-    expectCallbacks(response);
+  private <T extends HttpUriRequest> void expectAsyncLifecycle(Class<T> requestClass, String requestUrl)
+      throws IOException {
+    expectAsynchronousInvocation();
+    expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_OK);
+    expectCallbacks();
   }
 
-  private <T extends HttpUriRequest> void expectLifecycleClientError(Class<T> requestClass,
-      String requestUrl) throws IOException {
-    Response response = expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(GSON.toJson(response), HttpStatus.SC_CONFLICT);
-    expectHttpClientExecute();
-    expectClientErrorCallbacks(response, HttpStatus.SC_CONFLICT);
+  private <T extends HttpUriRequest> void expectSyncLifecycle(Class<T> requestClass, String requestUrl)
+      throws IOException {
+    expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_OK);
   }
 
-  private <T extends HttpUriRequest> void expectLifecycleServerError(Class<T> requestClass,
-      String requestUrl) throws IOException {
-    expectCallAndResponse(requestClass, requestUrl);
-    expectResponseCalls(GSON.toJson(new ServerError("danger, danger!")), HttpStatus.SC_NOT_IMPLEMENTED);
-    expectHttpClientExecute();
+  private <T extends HttpUriRequest> void expectAsyncLifecycleClientError(Class<T> requestClass, String requestUrl)
+      throws IOException {
+    expectAsynchronousInvocation();
+    expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_CONFLICT);
+    expectClientErrorCallbacks(HttpStatus.SC_CONFLICT);
+  }
+
+  private <T extends HttpUriRequest> void expectSyncLifecycleClientError(Class<T> requestClass, String requestUrl)
+      throws IOException {
+    expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_CONFLICT);
+  }
+
+  private <T extends HttpUriRequest> void expectAsyncLifecycleServerError(Class<T> requestClass, String requestUrl)
+      throws IOException {
+    expectAsynchronousInvocation();
+    expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
     expectServerErrorCallbacks(HttpStatus.SC_NOT_IMPLEMENTED);
   }
 
-  private <T extends HttpUriRequest> Response expectCallAndResponse(Class<T> requestClass, String requestUrl) {
-    expectExecution(mockExecutor);
-    expectExecution(mockMainThread); // For call()
-    expectSetOnWithRequest(requestClass, requestUrl);
-    return new Response("some text");
+  private <T extends HttpUriRequest> void expectSyncLifecycleServerError(Class<T> requestClass, String requestUrl)
+      throws IOException {
+    expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
   }
 
-  private void expectCallbacks(Response response) {
-    mockCallback.call(response);
+  private void expectAsynchronousInvocation() {
+    expectExecution(mockExecutor);
+    expectExecution(mockMainThread); // For callback invocation.
+  }
+
+  private <T extends HttpUriRequest> void expectHttpExecution(Class<T> requestClass, String requestUrl,
+      Object response, int status) throws IOException {
+    expectSetOnWithRequest(requestClass, requestUrl);
+    expectResponseCalls(GSON.toJson(response), status);
+    expectHttpClientExecute();
+  }
+
+  private void expectCallbacks() {
+    mockCallback.call(RESPONSE);
     expectLastCall().once();
   }
 
-  private void expectClientErrorCallbacks(Response response, int statusCode) {
-    mockCallback.clientError(response, statusCode);
+  private void expectClientErrorCallbacks(int statusCode) {
+    mockCallback.clientError(RESPONSE, statusCode);
     expectLastCall().once();
   }
 
   private void expectServerErrorCallbacks(int statusCode) {
-    mockCallback.serverError(isA(ServerError.class), eq(statusCode));
+    mockCallback.serverError(eq(SERVER_ERROR), eq(statusCode));
     expectLastCall().once();
   }
 
   private void expectHttpClientExecute() throws IOException {
-    final Capture<CallbackResponseHandler> capture = new Capture<CallbackResponseHandler>();
-    mockHttpClient.execute(isA(HttpUriRequest.class), capture(capture));
-    expectLastCall().andAnswer(new IAnswer<Object>() {
-      @Override public Object answer() throws Throwable {
-        CallbackResponseHandler responseHandler = capture.getValue();
-        responseHandler.handleResponse(mockResponse);
-        return null;
-      }
-    });
+    expect(mockHttpClient.execute(isA(HttpUriRequest.class))).andReturn(mockResponse);
   }
 
-  private void expectResponseCalls(String jsonToReturn, int statusCode)
-      throws UnsupportedEncodingException {
+  private void expectResponseCalls(String jsonToReturn, int statusCode) throws UnsupportedEncodingException {
     expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
-    expect(mockResponse.getStatusLine())
-        .andReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
+    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, statusCode, ""));
   }
 
   private <T extends HttpUriRequest> void expectSetOnWithRequest(final Class<T> expectedRequestClass,
@@ -415,72 +614,86 @@ public class RestAdapterTest {
   private interface DeleteService {
 
     @DELETE(ENTITY) void delete(Callback<Response> callback);
+    @DELETE(ENTITY) Response delete();
 
-    @DELETE(ENTITY) void deleteWithParam(@Named("id") String id,
-        Callback<Response> callback);
+    @DELETE(ENTITY) void deleteWithParam(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY) Response deleteWithParam(@Named("id") String id);
 
     @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
-    void deleteWithFixedParam(@Named("id") String id,
-        Callback<Response> callback);
+    void deleteWithFixedParam(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
+    Response deleteWithFixedParam(@Named("id") String id);
 
     @DELETE(ENTITY)
     @QueryParams({
       @QueryParam(name="filter", value="merchant"),
       @QueryParam(name="name2", value="value2")
     })
-    void deleteWithMultipleFixedParams(@Named("id") String id,
-        Callback<Response> callback);
+    void deleteWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY)
+    @QueryParams({
+        @QueryParam(name="filter", value="merchant"),
+        @QueryParam(name="name2", value="value2")
+    })
+    Response deleteWithMultipleFixedParams(@Named("id") String id);
 
-    @DELETE(ENTITY_PATH_PARAM) void deleteWithPathParam(@Named("id") String id,
-        Callback<Response> callback);
+    @DELETE(ENTITY_PATH_PARAM) void deleteWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY_PATH_PARAM) Response deleteWithPathParam(@Named("id") String id);
   }
 
   private interface GetService {
     @GET(ENTITY) void get(Callback<Response> callback);
+    @GET(ENTITY) Response get();
 
-    @GET(ENTITY) void getWithParam(@Named("id") String id,
-        Callback<Response> callback);
+    @GET(ENTITY) void getWithParam(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY) Response getWithParam(@Named("id") String id);
 
     @GET(ENTITY) @QueryParam(name="filter", value="merchant")
     void getWithFixedParam(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY) @QueryParam(name="filter", value="merchant")
+    Response getWithFixedParam(@Named("id") String id);
 
     @GET(ENTITY)
     @QueryParams({
       @QueryParam(name="filter", value="merchant"),
       @QueryParam(name="name2", value="value2")
     })
-    void getWithMultipleFixedParams(@Named("id") String id,
-        Callback<Response> callback);
+    void getWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY)
+    @QueryParams({
+        @QueryParam(name="filter", value="merchant"),
+        @QueryParam(name="name2", value="value2")
+    })
+    Response getWithMultipleFixedParams(@Named("id") String id);
 
-    @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id,
-        Callback<Response> callback);
+    @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY_PATH_PARAM) Response getWithPathParam(@Named("id") String id);
   }
 
   private interface PostService {
     @POST(ENTITY) void post(Callback<Response> callback);
+    @POST(ENTITY) Response post();
 
-    @POST(ENTITY) void postWithParam(@Named("id") String id,
-        Callback<Response> callback);
+    @POST(ENTITY) void postWithParam(@Named("id") String id, Callback<Response> callback);
+    @POST(ENTITY) Response postWithParam(@Named("id") String id);
 
-    @POST(ENTITY_PATH_PARAM) void postWithPathParam(@Named("id") String id,
-        Callback<Response> callback);
+    @POST(ENTITY_PATH_PARAM) void postWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @POST(ENTITY_PATH_PARAM) Response postWithPathParam(@Named("id") String id);
   }
 
   private interface PutService {
     @PUT(ENTITY) void put(Callback<Response> callback);
+    @PUT(ENTITY) Response put();
 
-    @PUT(ENTITY) void putWithParam(@Named("id") String id,
-        Callback<Response> callback);
+    @PUT(ENTITY) void putWithParam(@Named("id") String id, Callback<Response> callback);
+    @PUT(ENTITY) Response putWithParam(@Named("id") String id);
 
-    @PUT(ENTITY_PATH_PARAM) void putWithPathParam(@Named("id") String id,
-        Callback<Response> callback);
+    @PUT(ENTITY_PATH_PARAM) void putWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @PUT(ENTITY_PATH_PARAM) Response putWithPathParam(@Named("id") String id);
   }
 
   private static class Response {
     final String text;
-    @SuppressWarnings("unused") public Response() {
-      this("");
-    }
     public Response(String text) {
       this.text = text;
     }
@@ -488,7 +701,7 @@ public class RestAdapterTest {
       return 7;
     }
     @Override public boolean equals(Object obj) {
-      return obj instanceof Response && text.equals(((Response)obj).text);
+      return obj instanceof Response && text.equals(((Response) obj).text);
     }
   }
 

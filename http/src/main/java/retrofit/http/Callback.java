@@ -58,11 +58,22 @@ public interface Callback<T> {
 
 
   /** JSON object for parsing server error responses. */
-  static class ServerError {
+  static final class ServerError {
     public final String message;
 
     public ServerError(String message) {
       this.message = message;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      ServerError that = (ServerError) o;
+      return message == null ? that.message == null : message.equals(that.message);
+    }
+
+    @Override public int hashCode() {
+      return message != null ? message.hashCode() : 0;
     }
   }
 }
