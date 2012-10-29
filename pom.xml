@@ -24,21 +24,18 @@
     <version>7</version>
   </parent>
 
-  <groupId>com.squareup</groupId>
-  <artifactId>retrofit</artifactId>
-  <version>0.8.0-SNAPSHOT</version>
+  <groupId>com.squareup.retrofit</groupId>
+  <artifactId>parent</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Retrofit</name>
-  <description>Reusable Java and Android code from Square, Inc. for simplified I/O, HTTP, and more.</description>
+  <name>Retrofit (Parent)</name>
+  <description>Type-safe REST client for Android and Java by Square, Inc.</description>
   <url>http://github.com/square/retrofit/</url>
 
   <modules>
-    <module>examples</module>
-    <module>http</module>
-    <module>io</module>
-    <module>sync</module>
-    <module>sync-native</module>
+    <module>retrofit</module>
+    <module>samples</module>
   </modules>
 
   <properties>
