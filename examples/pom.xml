@@ -20,5 +20,6 @@
 
   <modules>
     <module>directory-sync</module>
+    <module>twitter-client</module>
   </modules>
 </project>
