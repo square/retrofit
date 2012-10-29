@@ -5,21 +5,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.squareup</groupId>
-    <artifactId>retrofit</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <groupId>com.squareup.retrofit</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>retrofit-http</artifactId>
-  <name>HTTP</name>
+  <artifactId>retrofit</artifactId>
+  <name>Retrofit</name>
 
   <dependencies>
-    <dependency>
-      <groupId>com.squareup</groupId>
-      <artifactId>retrofit-io</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
