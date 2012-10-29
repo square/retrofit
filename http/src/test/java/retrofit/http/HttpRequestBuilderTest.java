@@ -197,7 +197,7 @@ public class HttpRequestBuilderTest {
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
     return new HttpRequestBuilder(new GsonConverter(GSON)) //
-        .setMethod(method)
+        .setMethod(method, false)
         .setArgs(args)
         .setApiUrl(API_URL)
         .build();

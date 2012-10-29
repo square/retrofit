@@ -19,7 +19,7 @@ instance of that API handler, which you can then store and use throughout your a
 example interface:
 
 ```java
-public interface DummyService {
+public interface DummyServiceAsync {
   // Produces a url like "foo/bar?id=idValue".
   @GET("foo/bar")
   void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
@@ -38,13 +38,21 @@ public interface DummyService {
 }
 ```
 
-Note that each method _must_ have a `Callback` object at the end of the parameter list.  This is how
-your application will handle the results of your network calls: errors and successful responses are
-both handled by the `Callback` interface.
+Each method has a `Callback` type specified at the end of the parameter list.  This is how your
+application will handle the results of your network calls asynchronously: errors and successful
+responses are both handled by the `Callback` interface.
 
 If you want to use the `@SingleEntity` method of specifying request body (see `singleEntityPost` above),
-your `MyJsonObject` will need to implement `TypedBytes`.  For convenience, you can extend
-`GsonRequestEntity` if you're just trying to send a JSON string in the request body.
+your `MyJsonObject` will need to implement `TypedBytes`.
+
+For synchronous execution, omit the `Callback` parameter and specify the response as the return type.
+
+```java
+public interface DummyServiceSync {
+  @GET("foo/bar")
+  SimpleResponse normalGet(@Named("id") String id);
+}
+```
 
 Also worth noting: for POST/PUT requests using default form encoding for the request entity (see
 normalPost), any path parameters are also included in the request body.  This is different from the

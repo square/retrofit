@@ -2,10 +2,20 @@ package retrofit.http;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.util.EntityUtils;
+import retrofit.http.Callback.ServerError;
+import retrofit.http.HttpProfiler.RequestInformation;
+import retrofit.http.RestException.ClientHttpException;
+import retrofit.http.RestException.HttpException;
+import retrofit.http.RestException.NetworkException;
+import retrofit.http.RestException.ServerHttpException;
+import retrofit.http.RestException.UnauthorizedHttpException;
+import retrofit.http.RestException.UnexpectedException;
 
 import javax.inject.Provider;
 import java.io.IOException;
@@ -15,27 +25,24 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.util.logging.Level.WARNING;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
 /**
  * Converts Java method calls to Rest calls.
  *
  * @author Bob Lee (bob@squareup.com)
+ * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
-  static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-    @Override protected DateFormat initialValue() {
-      return new SimpleDateFormat("HH:mm:ss");
-    }
-  };
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
@@ -57,23 +64,29 @@ public class RestAdapter {
   }
 
   /**
-   * Adapts a Java interface to a REST API. HTTP requests happen on the provided {@link Executor} thread
-   * and callbacks happen on the provided {@link MainThread}.
-   *
-   * <p>Gets the relative path for a given method from a {@link GET}, {@link POST}, {@link PUT}, or
-   * {@link DELETE} annotation on the method. Gets the names of URL parameters from {@link
-   * javax.inject.Named} annotations on the method parameters.
-   *
-   * <p>The last method parameter should be of type {@link Callback}. The JSON HTTP response will be
-   * converted to the callback's parameter type using the specified {@link Converter}. If the callback
-   * parameter type uses a wildcard, the lower bound will be used as the conversion type.
-   *
-   * <p>For example:
-   *
+   * Adapts a Java interface to a REST API.
+   * <p/>
+   * The relative path for a given method is obtained from a {@link GET}, {@link POST}, {@link PUT}, or {@link DELETE}
+   * annotation on the method. Gets the names of URL parameters from {@link javax.inject.Named} annotations on the
+   * method parameters.
+   * <p/>
+   * HTTP requests happen in one of two ways:
+   * <ul>
+   *   <li>On the provided {@link Executor} thread with callbacks marshaled to the provided {@link MainThread}. The last
+   *   method parameter should be of type {@link Callback}. The HTTP response will be converted to the callback's
+   *   parameter type using the specified {@link Converter}. If the callback parameter type uses a wildcard, the lower
+   *   bound will be used as the conversion type.</li>
+   *   <li>On the current thread returning the response or throwing a {@link RestException}. The HTTP response will be
+   *   converted to the method's return type using the specified {@link Converter}.</li>
+   * </ul>
+   * <p/>
+   * For example:
    * <pre>
    *   public interface MyApi {
-   *     &#64;POST("go") public void go(@Named("a") String a, @Named("b") int b,
-   *         Callback&lt;? super MyResult> callback);
+   *     &#64;POST("go") // Asynchronous execution.
+   *     public void go(@Named("a") String a, @Named("b") int b, Callback&lt;? super MyResult> callback);
+   *     &#64;POST("go") // Synchronous execution.
+   *     public MyResult go(@Named("a") String a, @Named("b") int b);
    *   }
    * </pre>
    *
@@ -81,31 +94,43 @@ public class RestAdapter {
    */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> type) {
-    return (T) Proxy.newProxyInstance(type.getClassLoader(),
-        new Class<?>[] {type}, new RestHandler());
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, new RestHandler());
   }
 
   private class RestHandler implements InvocationHandler {
     private final Map<Method, Type> responseTypeCache = new HashMap<Method, Type>();
 
+    @SuppressWarnings("unchecked")
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
-      // Determine whether or not the execution will be synchronous.
-      boolean isSynchronousInvocation = methodWantsSynchronousInvocation(method);
-      if (isSynchronousInvocation) {
-        // TODO support synchronous invocations!
-        throw new UnsupportedOperationException("Synchronous invocation not supported.");
+      if (methodWantsSynchronousInvocation(method)) {
+        return invokeRequest(method, args, true);
+      } else {
+        executor.execute(new CallbackRunnable(obtainCallback(args), mainThread) {
+          @Override public Object obtainResponse() {
+            return invokeRequest(method, args, false);
+          }
+        });
+        return null; // Asynchronous methods should have return type of void.
       }
+    }
 
-      // Construct HTTP request.
-      final Callback<?> callback =
-          UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
-
+    /**
+     * Execute an HTTP request.
+     *
+     * @return HTTP response object of specified {@code type}.
+     * @throws ClientHttpException if HTTP 4XX error occurred.
+     * @throws UnauthorizedHttpException if HTTP 401 error occurred.
+     * @throws ServerHttpException if HTTP 5XX error occurred.
+     * @throws NetworkException if the {@code request} URL was unreachable.
+     * @throws UnexpectedException if an unexpected exception was thrown while processing the request.
+     */
+    private Object invokeRequest(Method method, Object[] args, boolean isSynchronousInvocation) {
+      long start = System.nanoTime();
       String url = server.apiUrl();
-      String startTime = "NULL";
       try {
         // Build the request and headers.
         final HttpUriRequest request = new HttpRequestBuilder(converter) //
-            .setMethod(method)
+            .setMethod(method, isSynchronousInvocation)
             .setArgs(args)
             .setApiUrl(server.apiUrl())
             .setHeaders(headers)
@@ -119,78 +144,83 @@ public class RestAdapter {
           responseTypeCache.put(method, type);
         }
 
-        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
-        final Date start = new Date();
-        startTime = DATE_FORMAT.get().format(start);
-
-        ResponseHandler<Void> rh = new CallbackResponseHandler(callback, type, converter, url, start, DATE_FORMAT);
-
-        // Optionally wrap the response handler for server call profiling.
+        Object profilerObject = null;
         if (profiler != null) {
-          rh = createProfiler(rh, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
+          profilerObject = profiler.beforeCall();
         }
 
-        // Execute HTTP request in the background.
-        final String finalUrl = url;
-        final String finalStartTime = startTime;
-        final ResponseHandler<Void> finalResponseHandler = rh;
-        executor.execute(new Runnable() {
-          @Override public void run() {
-            invokeRequest(request, finalResponseHandler, callback, finalUrl, finalStartTime);
+        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
+        HttpResponse response = httpClientProvider.get().execute(request);
+        StatusLine statusLine = response.getStatusLine();
+        int statusCode = statusLine.getStatusCode();
+
+        if (profiler != null) {
+          long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+          RequestInformation requestInfo = getRequestInfo(server, method, request);
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        HttpEntity entity = response.getEntity();
+        byte[] body = null;
+        if (entity != null) {
+          body = EntityUtils.toByteArray(entity);
+        }
+
+        try {
+          if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+            return converter.to(body, type);
+          } else if (statusCode == SC_UNAUTHORIZED) { // 401 == unauthorized user
+            ServerError serverError = (ServerError) converter.to(body, ServerError.class);
+            throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), serverError);
+          } else if (statusCode >= 500) { // 5XX == server error
+            ServerError serverError = (ServerError) converter.to(body, ServerError.class);
+            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), serverError);
+          } else { // 4XX == client error
+            Object clientError = converter.to(body, type);
+            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(), clientError);
           }
-        });
-      } catch (Throwable t) {
-        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
-        callback.unexpectedError(t);
-      }
-
-      // Methods should return void.
-      return null;
-    }
-
-    private HttpProfiler.RequestInformation getRequestInfo(Method method, HttpUriRequest request) {
-      RequestLine requestLine = RequestLine.fromMethod(method);
-      HttpMethodType httpMethod = requestLine.getHttpMethod();
-      HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
-
-      long contentLength = 0;
-      String contentType = null;
-      if (request instanceof HttpEntityEnclosingRequestBase) {
-        HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
-        HttpEntity entity = entityReq.getEntity();
-        contentLength = entity.getContentLength();
-
-        Header entityContentType = entity.getContentType();
-        contentType = entityContentType != null ? entityContentType.getValue() : null;
-      }
-
-      return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
-          contentLength, contentType);
-    }
-
-    private void invokeRequest(HttpUriRequest request, ResponseHandler<Void> rh,
-        Callback<?> callback, String url, String startTime) {
-      try {
-        httpClientProvider.get().execute(request, rh);
+        } catch (ConversionException e) {
+          LOGGER.log(WARNING, e.getMessage() + " from " + url, e);
+          throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), e);
+        }
+      } catch (HttpException e) {
+        if (LOGGER.isLoggable(Level.FINE)) {
+          LOGGER.fine("Sever returned " + e.getStatus() + ", " + e.getMessage() + ". Body: " + e.getResponse()
+              + ". Url: " + e.getUrl());
+        }
+        throw e; // Allow any rest-related exceptions to pass through.
       } catch (IOException e) {
-        LOGGER.log(Level.WARNING, e.getMessage() + " from " + url + " at " + startTime, e);
-        callback.networkError();
+        LOGGER.log(WARNING, e.getMessage() + " from " + url, e);
+        throw new NetworkException(url, e);
       } catch (Throwable t) {
-        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
-        callback.unexpectedError(t);
+        LOGGER.log(WARNING, t.getMessage() + " from " + url, t);
+        throw new UnexpectedException(url, t);
       }
     }
+  }
 
-    /** Wraps a {@code GsonResponseHandler} with a {@code ProfilingResponseHandler}. */
-    private <T> ProfilingResponseHandler<T> createProfiler(ResponseHandler<Void> handlerToWrap,
-        HttpProfiler<T> profiler, HttpProfiler.RequestInformation requestInfo, Date start) {
+  private static Callback<?> obtainCallback(Object[] args) {
+    return (Callback<?>) args[args.length - 1];
+  }
 
-      ProfilingResponseHandler<T> responseHandler = new ProfilingResponseHandler<T>(handlerToWrap, profiler,
-          requestInfo, start.getTime());
-      responseHandler.beforeCall();
+  private static HttpProfiler.RequestInformation getRequestInfo(Server server, Method method, HttpUriRequest request) {
+    RequestLine requestLine = RequestLine.fromMethod(method);
+    HttpMethodType httpMethod = requestLine.getHttpMethod();
+    HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
 
-      return responseHandler;
+    long contentLength = 0;
+    String contentType = null;
+    if (request instanceof HttpEntityEnclosingRequestBase) {
+      HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
+      HttpEntity entity = entityReq.getEntity();
+      contentLength = entity.getContentLength();
+
+      Header entityContentType = entity.getContentType();
+      contentType = entityContentType != null ? entityContentType.getValue() : null;
     }
+
+    return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
+        contentLength, contentType);
   }
 
   /**
@@ -253,9 +283,12 @@ public class RestAdapter {
    * <ul>
    *   <li>{@link #setServer(Server)}</li>
    *   <li>{@link #setClient(javax.inject.Provider)}</li>
+   *   <li>{@link #setConverter(Converter)}</li>
+   * </ul>
+   * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following are also required:
+   * <ul>
    *   <li>{@link #setExecutor(java.util.concurrent.Executor)}</li>
    *   <li>{@link #setMainThread(MainThread)}</li>
-   *   <li>{@link #setConverter(Converter)}</li>
    * </ul>
    */
   public static class Builder {
@@ -318,10 +351,6 @@ public class RestAdapter {
       if (server == null) throw new NullPointerException("server");
       if (clientProvider == null) throw new NullPointerException("clientProvider");
       if (converter == null) throw new NullPointerException("converter");
-
-      // TODO Remove the following two when we support synchronous invocation as they will be allowed to be null.
-      if (executor == null) throw new NullPointerException("executor");
-      if (mainThread == null) throw new NullPointerException("mainThread");
 
       return new RestAdapter(server, clientProvider, executor, mainThread, headers, converter, profiler);
     }

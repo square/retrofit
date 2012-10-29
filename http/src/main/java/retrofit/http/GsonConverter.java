@@ -3,10 +3,10 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import org.apache.http.HttpEntity;
 import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -24,10 +24,10 @@ public class GsonConverter implements Converter {
     this.gson = gson;
   }
 
-  @Override public Object to(HttpEntity entity, Type type) throws ConversionException {
+  @Override public Object to(byte[] body, Type type) throws ConversionException {
     try {
       // TODO use actual encoding
-      InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8");
+      InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), "UTF-8");
       return gson.fromJson(isr, type);
     } catch (IOException e) {
       throw new ConversionException(e);
