@@ -2,6 +2,7 @@
 package retrofit.io;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -32,7 +33,16 @@ public class TypedFile extends AbstractTypedBytes {
   }
 
   public void writeTo(OutputStream out) throws IOException {
-    Files.copy(file, out);
+    byte[] buffer = new byte[4096];
+    FileInputStream in = new FileInputStream(file);
+    try {
+      int read;
+      while ((read = in.read(buffer)) != -1) {
+        out.write(buffer, 0, read);
+      }
+    } finally {
+      in.close();
+    }
   }
 
   /**
