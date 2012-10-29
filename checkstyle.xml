@@ -51,8 +51,8 @@
         <module name="LineLength">
             <property name="max" value="120"/>
         </module>
-        <!--module name="MethodLength"/-->
-        <!--module name="ParameterNumber"/-->
+        <module name="MethodLength"/>
+        <module name="ParameterNumber"/>
 
 
         <!-- Checks for whitespace                               -->
@@ -64,20 +64,20 @@
         <module name="NoWhitespaceBefore"/>
         <module name="OperatorWrap"/>
         <module name="ParenPad"/>
-        <!--module name="TypecastParenPad"/-->
+        <module name="TypecastParenPad"/>
         <module name="WhitespaceAfter"/>
         <module name="WhitespaceAround"/>
 
 
         <!-- Modifier Checks                                    -->
         <!-- See http://checkstyle.sf.net/config_modifiers.html -->
-        <!--module name="ModifierOrder"/-->
+        <module name="ModifierOrder"/>
         <module name="RedundantModifier"/>
 
 
         <!-- Checks for blocks. You know, those {}'s         -->
         <!-- See http://checkstyle.sf.net/config_blocks.html -->
-        <!--module name="AvoidNestedBlocks"/-->
+        <module name="AvoidNestedBlocks"/>
         <!--module name="EmptyBlock"/-->
         <module name="LeftCurly"/>
         <!--module name="NeedBraces"/-->
@@ -106,13 +106,13 @@
         <!--module name="DesignForExtension"/-->
         <!--module name="FinalClass"/-->
         <!--module name="HideUtilityClassConstructor"/-->
-        <!--module name="InterfaceIsType"/-->
+        <module name="InterfaceIsType"/>
         <!--module name="VisibilityModifier"/-->
 
 
         <!-- Miscellaneous other checks.                   -->
         <!-- See http://checkstyle.sf.net/config_misc.html -->
-        <!--module name="ArrayTypeStyle"/-->
+        <module name="ArrayTypeStyle"/>
         <!--module name="FinalParameters"/-->
         <!--module name="TodoComment"/-->
         <module name="UpperEll"/>
