@@ -31,8 +31,7 @@ import retrofit.io.TypedBytes;
 public enum HttpMethodType {
 
   GET {
-    @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
-        throws URISyntaxException {
+    @Override HttpUriRequest createFrom(HttpRequestBuilder builder) throws URISyntaxException {
       URI uri = getParameterizedUri(builder);
       HttpGet request = new HttpGet(uri);
       addHeaders(request, builder);
@@ -41,8 +40,7 @@ public enum HttpMethodType {
   },
 
   POST {
-    @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
-        throws URISyntaxException {
+    @Override HttpUriRequest createFrom(HttpRequestBuilder builder) throws URISyntaxException {
       URI uri = getUri(builder);
       HttpPost request = new HttpPost(uri);
       addParams(request, builder);
@@ -52,8 +50,7 @@ public enum HttpMethodType {
   },
 
   PUT {
-    @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
-        throws URISyntaxException {
+    @Override HttpUriRequest createFrom(HttpRequestBuilder builder) throws URISyntaxException {
       URI uri = getUri(builder);
       HttpPut request = new HttpPut(uri);
       addParams(request, builder);
@@ -63,8 +60,7 @@ public enum HttpMethodType {
   },
 
   DELETE {
-    @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
-        throws URISyntaxException {
+    @Override HttpUriRequest createFrom(HttpRequestBuilder builder) throws URISyntaxException {
       URI uri = getParameterizedUri(builder);
       HttpDelete request = new HttpDelete(uri);
       addHeaders(request, builder);
@@ -76,25 +72,19 @@ public enum HttpMethodType {
     return HttpProfiler.Method.valueOf(name());
   }
 
-  /**
-   * Create a request object from HttpRequestBuilder.
-   */
-  abstract HttpUriRequest createFrom(HttpRequestBuilder builder)
-      throws URISyntaxException;
+  /** Create a request object from HttpRequestBuilder. */
+  abstract HttpUriRequest createFrom(HttpRequestBuilder builder) throws URISyntaxException;
 
   /** Gets a URI with no query parameters specified. */
   private static URI getUri(HttpRequestBuilder builder) throws URISyntaxException {
-    return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1,
-        builder.getRelativePath(), null, null);
+    return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1, builder.getRelativePath(), null, null);
   }
 
   /** Gets a URI with parameters specified as query string parameters. */
-  private static URI getParameterizedUri(HttpRequestBuilder builder)
-      throws URISyntaxException {
+  private static URI getParameterizedUri(HttpRequestBuilder builder) throws URISyntaxException {
     List<NameValuePair> queryParams = builder.getParamList(false);
-    String queryString = URLEncodedUtils.format(queryParams, "UTF-8");
-    return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1, builder.getRelativePath(),
-        queryString, null);
+    String queryString = URLEncodedUtils.format(queryParams, HTTP.UTF_8);
+    return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1, builder.getRelativePath(), queryString, null);
   }
 
   private static void addHeaders(HttpMessage message, HttpRequestBuilder builder) {
@@ -108,23 +98,17 @@ public enum HttpMethodType {
     }
   }
 
-  /**
-   * Adds all but the last method argument as parameters of HTTP request
-   * object.
-   */
-  private static void addParams(HttpEntityEnclosingRequestBase request,
-      HttpRequestBuilder builder) {
+  /** Adds all but the last method argument as parameters of HTTP request object. */
+  private static void addParams(HttpEntityEnclosingRequestBase request, HttpRequestBuilder builder) {
     Method method = builder.getMethod();
     Object[] args = builder.getArgs();
     Class<?>[] parameterTypes = method.getParameterTypes();
 
-    Annotation[][] parameterAnnotations =
-        method.getParameterAnnotations();
+    Annotation[][] parameterAnnotations = method.getParameterAnnotations();
     int count = parameterAnnotations.length - 1;
 
     if (useMultipart(parameterTypes, parameterAnnotations)) {
-      MultipartEntity form = new MultipartEntity(
-          HttpMultipartMode.BROWSER_COMPATIBLE);
+      MultipartEntity form = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
       for (int i = 0; i < count; i++) {
         Object arg = args[i];
         if (arg == null) continue;
@@ -166,8 +150,7 @@ public enum HttpMethodType {
     for (int i = 0; i < parameterTypes.length; i++) {
       Class<?> parameterType = parameterTypes[i];
       Annotation[] annotations = parameterAnnotations[i];
-      if (TypedBytes.class.isAssignableFrom(parameterType)
-          && !hasSingleEntityAnnotation(annotations)) {
+      if (TypedBytes.class.isAssignableFrom(parameterType) && !hasSingleEntityAnnotation(annotations)) {
         return true;
       }
     }
@@ -180,5 +163,4 @@ public enum HttpMethodType {
     }
     return false;
   }
-
 }
