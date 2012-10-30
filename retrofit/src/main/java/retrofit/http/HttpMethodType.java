@@ -18,7 +18,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.protocol.HTTP;
@@ -101,7 +100,7 @@ public enum HttpMethodType {
   private static void addHeaders(HttpMessage message, HttpRequestBuilder builder) {
     String mimeType = builder.getMimeType();
     if (mimeType != null) {
-      message.addHeader(MIME.CONTENT_TYPE, mimeType);
+      message.addHeader(HTTP.CONTENT_TYPE, mimeType);
     }
     Headers headers = builder.getHeaders();
     if (headers != null) {
@@ -150,7 +149,7 @@ public enum HttpMethodType {
         if (builder.getSingleEntity() != null) {
           final TypedBytesEntity entity = new TypedBytesEntity(builder.getSingleEntity());
           request.setEntity(entity);
-          request.addHeader(MIME.CONTENT_TYPE, entity.getMimeType().mimeName());
+          request.addHeader(HTTP.CONTENT_TYPE, entity.getMimeType().mimeName());
         } else {
           List<NameValuePair> paramList = builder.getParamList(true);
           // TODO: Use specified encoding. (See CallbackResponseHandler et al)
