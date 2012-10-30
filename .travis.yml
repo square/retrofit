@@ -6,13 +6,3 @@ branches:
 
 notifications:
   email: false
-
-before_install:
-  - wget http://dl.google.com/android/android-sdk_r20.0.3-linux.tgz
-  - tar -zxf android-sdk_r20.0.3-linux.tgz
-  - export ANDROID_HOME=~/builds/square/retrofit/android-sdk-linux
-  - wget http://dl.google.com/android/ndk/android-ndk-r8b-linux-x86.tar.bz2
-  - tar -jxf android-ndk-r8b-linux-x86.tar.bz2
-  - export ANDROID_NDK_HOME=~/builds/square/retrofit/android-ndk-r8b
-  - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${ANDROID_NDK_HOME}
-  - android update sdk --filter 1,3 --no-ui --force

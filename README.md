@@ -1,17 +1,11 @@
 Retrofit
 ========
 
-Reusable Java and Android code from Square, Inc.
-
-Modules:
-
- * http - Abstracts away the messy logic of making network calls (depends on 'io').
- * io - Utility classes for doing low-level java I/O.
- * sync - Directory write synchronization.
+Type-safe REST client for Android and Java by Square, Inc.
 
 
-Http Usage
-----------
+Usage
+-----
 
 Create an interface for your API.  You can create as many of these interfaces as you like.  For
 each interface you create, calling `RestAdapter.create(MyInterface.class)` will create an
@@ -60,16 +54,20 @@ behavior of GET/DELETE, where path parameters are excluded from the query string
 
 
 
-Compilation
------------
 
-Retrofit is built using Maven and there is a very minimal amount of setup required for compilation.
+License
+=======
 
-Two environment variables are required which point to your Android SDK and native Android SDK. A common
-place to put these is in a `.bash_profile` file in your home directory.
+    Copyright 2012 Square, Inc.
 
-    export ANDROID_HOME=~/dev/android-sdk
-    export ANDROID_NDK_HOME=~/dev/android-ndk
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-With these two environment variables loaded you can compile the modules and sample application by running
-`mvn clean verify`. Each module's built artifact will be in its respective `target/` folder.
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
