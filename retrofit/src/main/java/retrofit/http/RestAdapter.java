@@ -46,18 +46,18 @@ public class RestAdapter {
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
-  private final Executor executor;
-  private final MainThread mainThread;
+  private final Executor httpExecutor;
+  private final Executor callbackExecutor;
   private final Headers headers;
   private final Converter converter;
   private final HttpProfiler profiler;
 
-  private RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor executor, MainThread mainThread,
-      Headers headers, Converter converter, HttpProfiler profiler) {
+  private RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor httpExecutor,
+      Executor callbackExecutor, Headers headers, Converter converter, HttpProfiler profiler) {
     this.server = server;
     this.httpClientProvider = httpClientProvider;
-    this.executor = executor;
-    this.mainThread = mainThread;
+    this.httpExecutor = httpExecutor;
+    this.callbackExecutor = callbackExecutor;
     this.headers = headers;
     this.converter = converter;
     this.profiler = profiler;
@@ -72,7 +72,7 @@ public class RestAdapter {
    * <p/>
    * HTTP requests happen in one of two ways:
    * <ul>
-   *   <li>On the provided {@link Executor} thread with callbacks marshaled to the provided {@link MainThread}. The last
+   *   <li>On the provided HTTP {@link Executor} with callbacks marshaled to the callback {@link Executor}. The last
    *   method parameter should be of type {@link Callback}. The HTTP response will be converted to the callback's
    *   parameter type using the specified {@link Converter}. If the callback parameter type uses a wildcard, the lower
    *   bound will be used as the conversion type.</li>
@@ -105,7 +105,7 @@ public class RestAdapter {
       if (methodWantsSynchronousInvocation(method)) {
         return invokeRequest(method, args, true);
       } else {
-        executor.execute(new CallbackRunnable(obtainCallback(args), mainThread) {
+        httpExecutor.execute(new CallbackRunnable(obtainCallback(args), callbackExecutor) {
           @Override public Object obtainResponse() {
             return invokeRequest(method, args, false);
           }
@@ -285,31 +285,33 @@ public class RestAdapter {
    *   <li>{@link #setClient(javax.inject.Provider)}</li>
    *   <li>{@link #setConverter(Converter)}</li>
    * </ul>
-   * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following are also required:
+   * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following is also required:
    * <ul>
-   *   <li>{@link #setExecutor(java.util.concurrent.Executor)}</li>
-   *   <li>{@link #setMainThread(MainThread)}</li>
+   *   <li>{@link #setExecutors(java.util.concurrent.Executor, java.util.concurrent.Executor)}</li>
    * </ul>
    */
   public static class Builder {
     private Server server;
     private Provider<HttpClient> clientProvider;
-    private Executor executor;
-    private MainThread mainThread;
+    private Executor httpExecutor;
+    private Executor callbackExecutor;
     private Headers headers;
     private Converter converter;
     private HttpProfiler profiler;
 
     public Builder setServer(String endpoint) {
+      if (endpoint == null) throw new NullPointerException("endpoint");
       return setServer(new Server(endpoint));
     }
 
     public Builder setServer(Server server) {
+      if (server == null) throw new NullPointerException("server");
       this.server = server;
       return this;
     }
 
     public Builder setClient(final HttpClient client) {
+      if (client == null) throw new NullPointerException("client");
       return setClient(new Provider<HttpClient>() {
         @Override public HttpClient get() {
           return client;
@@ -318,41 +320,43 @@ public class RestAdapter {
     }
 
     public Builder setClient(Provider<HttpClient> clientProvider) {
+      if (clientProvider == null) throw new NullPointerException("clientProvider");
       this.clientProvider = clientProvider;
       return this;
     }
 
-    public Builder setExecutor(Executor executor) {
-      this.executor = executor;
-      return this;
-    }
-
-    public Builder setMainThread(MainThread mainThread) {
-      this.mainThread = mainThread;
+    public Builder setExecutors(Executor httpExecutor, Executor callbackExecutor) {
+      if (httpExecutor == null || callbackExecutor == null) {
+        throw new IllegalArgumentException("Both httpExecutor or callbackExecutor must not be null.");
+      }
+      this.httpExecutor = httpExecutor;
+      this.callbackExecutor = callbackExecutor;
       return this;
     }
 
     public Builder setHeaders(Headers headers) {
+      if (headers == null) throw new NullPointerException("headers");
       this.headers = headers;
       return this;
     }
 
     public Builder setConverter(Converter converter) {
+      if (converter == null) throw new NullPointerException("converter");
       this.converter = converter;
       return this;
     }
 
     public Builder setProfiler(HttpProfiler profiler) {
+      if (profiler == null) throw new NullPointerException("profiler");
       this.profiler = profiler;
       return this;
     }
 
     public RestAdapter build() {
-      if (server == null) throw new NullPointerException("server");
-      if (clientProvider == null) throw new NullPointerException("clientProvider");
-      if (converter == null) throw new NullPointerException("converter");
-
-      return new RestAdapter(server, clientProvider, executor, mainThread, headers, converter, profiler);
+      if (server == null || clientProvider == null || converter == null) {
+        throw new IllegalArgumentException("Server, client, and converter are required.");
+      }
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers, converter, profiler);
     }
   }
 }
