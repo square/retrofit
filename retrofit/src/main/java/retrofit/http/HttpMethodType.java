@@ -105,7 +105,10 @@ public enum HttpMethodType {
     Class<?>[] parameterTypes = method.getParameterTypes();
 
     Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-    int count = parameterAnnotations.length - 1;
+    int count = parameterAnnotations.length;
+    if (!builder.isSynchronous()) {
+      count -= 1;
+    }
 
     if (useMultipart(parameterTypes, parameterAnnotations)) {
       MultipartEntity form = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);

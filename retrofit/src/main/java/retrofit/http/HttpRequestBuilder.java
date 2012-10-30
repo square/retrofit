@@ -57,6 +57,10 @@ final class HttpRequestBuilder {
     return javaMethod;
   }
 
+  boolean isSynchronous() {
+    return isSynchronous;
+  }
+
   String getRelativePath() {
     return replacedRelativePath != null ? replacedRelativePath : requestLine.getRelativePath();
   }
