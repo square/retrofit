@@ -19,13 +19,13 @@ import retrofit.http.RestException.UnexpectedException;
 
 import javax.inject.Provider;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -204,10 +204,13 @@ public class RestAdapter {
     }
   }
 
-  private static void logResponseBody(String url, byte[] body, int statusCode, long elapsedTime) {
+  private static void logResponseBody(String url, byte[] body, int statusCode, long elapsedTime)
+      throws UnsupportedEncodingException {
     LOGGER.fine("---- HTTP " + statusCode + " from " + url + " (" + elapsedTime + "ms)");
+    String bodyString = new String(body, "UTF-8");
     for (int i = 0; i < body.length; i += LOG_CHUNK_SIZE) {
-      LOGGER.fine(new String(Arrays.copyOfRange(body, i, LOG_CHUNK_SIZE)));
+      int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
+      LOGGER.fine(bodyString.substring(i, end));
     }
     LOGGER.fine("---- END HTTP");
   }
