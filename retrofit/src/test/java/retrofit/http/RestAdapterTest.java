@@ -56,25 +56,24 @@ public class RestAdapterTest {
 
   private RestAdapter restAdapter;
   private HttpClient mockHttpClient;
-  private Executor mockExecutor;
-  private MainThread mockMainThread;
+  private Executor mockHttpExecutor;
+  private Executor mockCallbackExecutor;
   private Headers mockHeaders;
   private ResponseCallback mockCallback;
   private HttpResponse mockResponse;
 
   @Before public void setUp() throws Exception {
     mockHttpClient = createMock(HttpClient.class);
-    mockExecutor   = createMock(Executor.class);
-    mockMainThread = createMock(MainThread.class);
-    mockHeaders    = createMock(Headers.class);
-    mockCallback   = createMock(ResponseCallback.class);
-    mockResponse   = createMock(HttpResponse.class);
+    mockHttpExecutor = createMock(Executor.class);
+    mockCallbackExecutor = createMock(Executor.class);
+    mockHeaders = createMock(Headers.class);
+    mockCallback = createMock(ResponseCallback.class);
+    mockResponse = createMock(HttpResponse.class);
 
     restAdapter = new RestAdapter.Builder()
         .setServer("http://host/api/")
         .setClient(mockHttpClient)
-        .setExecutor(mockExecutor)
-        .setMainThread(mockMainThread)
+        .setExecutors(mockHttpExecutor, mockCallbackExecutor)
         .setHeaders(mockHeaders)
         .setConverter(new GsonConverter(GSON))
         .build();
@@ -508,11 +507,11 @@ public class RestAdapterTest {
   // Utility Methods:
   //
   private void replayAll() {
-    replay(mockExecutor, mockHeaders, mockHttpClient, mockMainThread, mockCallback, mockResponse);
+    replay(mockHttpExecutor, mockHeaders, mockHttpClient, mockCallbackExecutor, mockCallback, mockResponse);
   }
 
   private void verifyAll() {
-    verify(mockExecutor, mockHeaders, mockHttpClient, mockMainThread, mockCallback, mockResponse);
+    verify(mockHttpExecutor, mockHeaders, mockHttpClient, mockCallbackExecutor, mockCallback, mockResponse);
   }
 
   private <T extends HttpUriRequest> void expectAsyncLifecycle(Class<T> requestClass, String requestUrl)
@@ -552,8 +551,8 @@ public class RestAdapterTest {
   }
 
   private void expectAsynchronousInvocation() {
-    expectExecution(mockExecutor);
-    expectExecution(mockMainThread); // For callback invocation.
+    expectExecution(mockHttpExecutor);
+    expectExecution(mockCallbackExecutor);
   }
 
   private <T extends HttpUriRequest> void expectHttpExecution(Class<T> requestClass, String requestUrl,
