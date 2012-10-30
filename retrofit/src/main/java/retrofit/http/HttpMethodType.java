@@ -29,7 +29,7 @@ import retrofit.io.TypedBytes;
  *
  * @author Patrick Forhan (patrick@squareup.com)
  */
-public enum HttpMethodType {
+enum HttpMethodType {
 
   GET {
     @Override HttpUriRequest createFrom(HttpRequestBuilder builder)
