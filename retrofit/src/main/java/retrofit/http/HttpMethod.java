@@ -15,6 +15,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({ METHOD, ANNOTATION_TYPE })
 @Retention(RUNTIME)
-public @interface HttpMethod {
+@interface HttpMethod {
   HttpMethodType value();
 }
