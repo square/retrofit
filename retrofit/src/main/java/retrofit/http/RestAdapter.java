@@ -25,6 +25,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -43,6 +44,7 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
  */
 public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
+  private static final int LOG_CHUNK_SIZE = 4000;
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
@@ -154,8 +156,8 @@ public class RestAdapter {
         StatusLine statusLine = response.getStatusLine();
         int statusCode = statusLine.getStatusCode();
 
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         if (profiler != null) {
-          long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
           RequestInformation requestInfo = getRequestInfo(server, method, request);
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
@@ -164,6 +166,9 @@ public class RestAdapter {
         byte[] body = null;
         if (entity != null) {
           body = EntityUtils.toByteArray(entity);
+        }
+        if (LOGGER.isLoggable(Level.FINE)) {
+          logResponseBody(url, body, statusCode, elapsedTime);
         }
 
         try {
@@ -197,6 +202,14 @@ public class RestAdapter {
         throw new UnexpectedException(url, t);
       }
     }
+  }
+
+  private static void logResponseBody(String url, byte[] body, int statusCode, long elapsedTime) {
+    LOGGER.fine("---- HTTP " + statusCode + " from " + url + " (" + elapsedTime + "ms)");
+    for (int i = 0; i < body.length; i += LOG_CHUNK_SIZE) {
+      LOGGER.fine(new String(Arrays.copyOfRange(body, i, LOG_CHUNK_SIZE)));
+    }
+    LOGGER.fine("---- END HTTP");
   }
 
   private static Callback<?> obtainCallback(Object[] args) {
