@@ -1,5 +1,5 @@
 // Copyright 2012 Square, Inc.
-package com.squareup.retrofit.example.twitter;
+package com.squareup.retrofit.sample.twitter;
 
 import com.google.gson.Gson;
 import org.apache.http.impl.client.DefaultHttpClient;
