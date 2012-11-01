@@ -134,7 +134,7 @@ public class RestAdapter {
         final HttpUriRequest request = new HttpRequestBuilder(converter) //
             .setMethod(method, isSynchronousInvocation)
             .setArgs(args)
-            .setApiUrl(server.apiUrl())
+            .setApiUrl(url)
             .setHeaders(headers)
             .build();
         url = request.getURI().toString();
