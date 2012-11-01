@@ -341,10 +341,16 @@ public class RestAdapter {
       return this;
     }
 
+    /**
+     * Executors used for asynchronous HTTP client downloads and callbacks.
+     *
+     * @param httpExecutor Executor on which HTTP client calls will be made.
+     * @param callbackExecutor Executor on which any {@link Callback} methods will be invoked. If this argument is
+     *                         {@code null} then callback methods will be run on the same thread as the HTTP client.
+     */
     public Builder setExecutors(Executor httpExecutor, Executor callbackExecutor) {
-      if (httpExecutor == null || callbackExecutor == null) {
-        throw new IllegalArgumentException("Both httpExecutor or callbackExecutor must not be null.");
-      }
+      if (httpExecutor == null) throw new NullPointerException("httpExecutor");
+      if (callbackExecutor == null) callbackExecutor = new SynchronousExecutor();
       this.httpExecutor = httpExecutor;
       this.callbackExecutor = callbackExecutor;
       return this;
@@ -373,6 +379,12 @@ public class RestAdapter {
         throw new IllegalArgumentException("Server, client, and converter are required.");
       }
       return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers, converter, profiler);
+    }
+  }
+
+  private static class SynchronousExecutor implements Executor {
+    @Override public void execute(Runnable runnable) {
+      runnable.run();
     }
   }
 }
