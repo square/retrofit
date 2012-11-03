@@ -118,6 +118,12 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
         <version>${httpcomponents.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
