@@ -44,8 +44,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testNormalGet() throws Exception {
-    Method method =
-        MyService.class.getMethod("normalGet", String.class, Callback.class);
+    Method method = MyService.class.getMethod("normalGet", String.class, MyCallback.class);
     String expectedId = UUID.randomUUID().toString();
     Object[] args = new Object[] {expectedId, new MyCallback()};
     HttpUriRequest request = build(method, args);
@@ -59,8 +58,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testGetWithPathParam() throws Exception {
-    Method method =
-        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    Method method = MyService.class.getMethod("getWithPathParam", String.class, String.class, MyCallback.class);
     String expectedId = UUID.randomUUID().toString();
     String category = UUID.randomUUID().toString();
     Object[] args = new Object[] {expectedId, category, new MyCallback()};
@@ -75,8 +73,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testGetWithPathParamAndWhitespaceValue() throws Exception {
-    Method method =
-        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    Method method = MyService.class.getMethod("getWithPathParam", String.class, String.class, MyCallback.class);
     String expectedId = "I have spaces buddy";
     String category = UUID.randomUUID().toString();
     Object[] args = new Object[] {expectedId, category, new MyCallback()};
@@ -91,8 +88,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithPathParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("singleEntityPut", MyJsonObj.class, String.class, Callback.class);
+    Method method = MyService.class.getMethod("singleEntityPut", MyJsonObj.class, String.class, MyCallback.class);
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, new MyCallback()};
@@ -113,8 +109,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testNormalPutWithPathParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("normalPut", String.class, String.class, Callback.class);
+    Method method = MyService.class.getMethod("normalPut", String.class, String.class, MyCallback.class);
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] {expectedId, bodyText, new MyCallback()};
@@ -136,8 +131,7 @@ public class HttpRequestBuilderTest {
 
   @Test public void testSingleEntityWithTooManyParams() throws Exception {
     Method method =
-        MyService.class.getMethod("tooManyParams", MyJsonObj.class, String.class, String.class,
-            Callback.class);
+        MyService.class.getMethod("tooManyParams", MyJsonObj.class, String.class, String.class, MyCallback.class);
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, "EXTRA", new MyCallback()};
@@ -149,8 +143,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithNoPathParam() throws Exception {
-    Method method =
-        MyService.class.getMethod("singleEntityNoPathParam", MyJsonObj.class, Callback.class);
+    Method method = MyService.class.getMethod("singleEntityNoPathParam", MyJsonObj.class, MyCallback.class);
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] {new MyJsonObj(bodyText), new MyCallback()};
     try {
@@ -161,7 +154,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testRegularWithNoPathParam() throws Exception {
-    Method method = MyService.class.getMethod("regularNoPathParam", String.class, Callback.class);
+    Method method = MyService.class.getMethod("regularNoPathParam", String.class, MyCallback.class);
     String otherParam = UUID.randomUUID().toString();
     Object[] args = new Object[] {otherParam, new MyCallback()};
     try {
@@ -173,26 +166,26 @@ public class HttpRequestBuilderTest {
 
   @SuppressWarnings({"UnusedDeclaration"}) // Methods are accessed by reflection.
   private static interface MyService {
-    @GET("foo/bar") void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
+    @GET("foo/bar") void normalGet(@Named("id") String id, MyCallback callback);
 
     @GET("foo/{id}/bar")
     void getWithPathParam(@Named("id") String id, @Named("category") String category,
-        Callback<SimpleResponse> callback);
+        MyCallback callback);
 
     @PUT("foo/bar/{id}") void singleEntityPut(@SingleEntity MyJsonObj card, @Named("id") String id,
-        Callback<SimpleResponse> callback);
+        MyCallback callback);
 
     @PUT("foo/bar/{id}") void normalPut(@Named("id") String id, @Named("body") String body,
-        Callback<SimpleResponse> callback);
+        MyCallback callback);
 
     @PUT("foo/bar/{id}") void tooManyParams(@SingleEntity MyJsonObj card, @Named("id") String id,
-        @Named("extra") String extraParam, Callback<SimpleResponse> callback);
+        @Named("extra") String extraParam, MyCallback callback);
 
     @PUT("foo/bar/{id}")
-    void singleEntityNoPathParam(@SingleEntity MyJsonObj card, Callback<SimpleResponse> callback);
+    void singleEntityNoPathParam(@SingleEntity MyJsonObj card, MyCallback callback);
 
     @PUT("foo/bar/{id}")
-    void regularNoPathParam(@Named("other") String other, Callback<SimpleResponse> callback);
+    void regularNoPathParam(@Named("other") String other, MyCallback callback);
   }
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
@@ -213,14 +206,13 @@ public class HttpRequestBuilderTest {
   }
 
   private static class SimpleResponse {
-
   }
 
-  private class MyCallback implements Callback<SimpleResponse> {
-    @Override public void call(SimpleResponse simpleResponse) {
+  private class MyCallback implements Callback<SimpleResponse, SimpleResponse, SimpleResponse> {
+    @Override public void call(SimpleResponse response) {
     }
 
-    @Override public void sessionExpired(ServerError error) {
+    @Override public void sessionExpired(SimpleResponse error) {
     }
 
     @Override public void networkError() {
@@ -229,7 +221,7 @@ public class HttpRequestBuilderTest {
     @Override public void clientError(SimpleResponse response, int statusCode) {
     }
 
-    @Override public void serverError(ServerError error, int statusCode) {
+    @Override public void serverError(SimpleResponse error, int statusCode) {
     }
 
     @Override public void unexpectedError(Throwable t) {
