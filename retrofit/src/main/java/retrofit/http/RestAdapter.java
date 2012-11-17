@@ -107,12 +107,22 @@ public class RestAdapter {
 
     @SuppressWarnings("unchecked")
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
-      if (methodWantsSynchronousInvocation(method)) {
-        return invokeRequest(method, args, true);
+      boolean isSynchronousInvocation = methodWantsSynchronousInvocation(method);
+
+      // Determine deserialization type by method return type or generic parameter to Callback argument.
+      Type[] responseTypes = responseTypeCache.get(method);
+      if (responseTypes == null) {
+        responseTypes = getResponseObjectTypes(type, method, isSynchronousInvocation);
+        responseTypeCache.put(method, responseTypes);
+      }
+
+      if (isSynchronousInvocation) {
+        return invokeRequest(method, args, responseTypes, true);
       } else {
-        httpExecutor.execute(new CallbackRunnable(obtainCallback(args), callbackExecutor) {
+        final Type[] finalResponseTypes = responseTypes;
+        httpExecutor.execute(new CallbackRunnable(obtainCallback(args), converter, callbackExecutor) {
           @Override public Object obtainResponse() {
-            return invokeRequest(method, args, false);
+            return invokeRequest(method, args, finalResponseTypes, false);
           }
         });
         return null; // Asynchronous methods should have return type of void.
@@ -129,7 +139,7 @@ public class RestAdapter {
      * @throws NetworkException if the {@code request} URL was unreachable.
      * @throws UnexpectedException if an unexpected exception was thrown while processing the request.
      */
-    private Object invokeRequest(Method method, Object[] args, boolean isSynchronousInvocation) {
+    private Object invokeRequest(Method method, Object[] args, Type[] responseTypes, boolean isSynchronousInvocation) {
       long start = System.nanoTime();
       String url = server.apiUrl();
       try {
@@ -141,16 +151,6 @@ public class RestAdapter {
             .setHeaders(headers)
             .build();
         url = request.getURI().toString();
-
-        // Determine deserialization type by method return type or generic parameter to Callback argument.
-        Type[] types = responseTypeCache.get(method);
-        if (types == null) {
-          types = getResponseObjectTypes(type, method, isSynchronousInvocation);
-          responseTypeCache.put(method, types);
-        }
-        Type type = types[0];
-        Type clientErrorType = types[1];
-        Type serverErrorType = types[2];
 
         Object profilerObject = null;
         if (profiler != null) {
@@ -177,18 +177,18 @@ public class RestAdapter {
           logResponseBody(url, body, statusCode, elapsedTime);
         }
 
+        Type type = responseTypes[0];
+        Type clientErrorType = responseTypes[1];
+        Type serverErrorType = responseTypes[2];
         try {
           if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
             return converter.to(body, type);
           } else if (statusCode == SC_UNAUTHORIZED) { // 401 == unauthorized user
-            Object serverError = converter.to(body, clientErrorType);
-            throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), serverError);
+            throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), clientErrorType, body);
           } else if (statusCode >= 500) { // 5XX == server error
-            Object serverError = converter.to(body, serverErrorType);
-            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), serverError);
+            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), serverErrorType, body);
           } else { // 4XX == client error
-            Object clientError = converter.to(body, clientErrorType);
-            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(), clientError);
+            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(), clientErrorType, body);
           }
         } catch (ConversionException e) {
           LOGGER.log(WARNING, e.getMessage() + " from " + url, e);

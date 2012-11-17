@@ -28,6 +28,8 @@ import java.util.NoSuchElementException;
 
 /**
  * Static methods for working with types.
+ * <p/>
+ * <strong>Note:</strong> this class comes from GSON 2.3.3
  *
  * @author Bob Lee
  * @author Jesse Wilson
