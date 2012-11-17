@@ -2,6 +2,7 @@
 package retrofit.http;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
@@ -30,17 +31,20 @@ public abstract class RestException extends RuntimeException {
   /** An exception that is the result of an HTTP response. */
   public abstract static class HttpException extends RestException {
     private final int status;
-    private final Object response;
+    private final Type responseType;
+    private final byte[] response;
 
-    protected HttpException(String url, int status, String message, Object response) {
+    protected HttpException(String url, int status, String message, Type responseType, byte[] response) {
       super(url, message);
       this.status = status;
+      this.responseType = responseType;
       this.response = response;
     }
 
     protected HttpException(String url, int status, String message, ConversionException cause) {
       super(url, message, cause);
       this.status = status;
+      this.responseType = null;
       this.response = null;
     }
 
@@ -48,7 +52,11 @@ public abstract class RestException extends RuntimeException {
       return status;
     }
 
-    public Object getResponse() {
+    public Type getResponseType() {
+      return responseType;
+    }
+
+    public byte[] getResponse() {
       return response;
     }
   }
@@ -58,8 +66,8 @@ public abstract class RestException extends RuntimeException {
    * input error.
    */
   public static class ClientHttpException extends HttpException {
-    public ClientHttpException(String url, int status, String message, Object response) {
-      super(url, status, message, response);
+    public ClientHttpException(String url, int status, String message, Type responseType, byte[] response) {
+      super(url, status, message, responseType, response);
     }
   }
 
@@ -67,8 +75,8 @@ public abstract class RestException extends RuntimeException {
    * We reached the server, but it encountered an error (5xx) or its response was unparseable. Please try again later.
    */
   public static class ServerHttpException extends HttpException {
-    public ServerHttpException(String url, int status, String message, Object response) {
-      super(url, status, message, response);
+    public ServerHttpException(String url, int status, String message, Type responseType, byte[] response) {
+      super(url, status, message, responseType, response);
     }
 
     public ServerHttpException(String url, int status, String message, ConversionException cause) {
@@ -78,8 +86,8 @@ public abstract class RestException extends RuntimeException {
 
   /** The session expired or the account has been disabled. Prompt the user to log in again. */
   public static class UnauthorizedHttpException extends HttpException {
-    public UnauthorizedHttpException(String url, String message, Object response) {
-      super(url, SC_UNAUTHORIZED, message, response);
+    public UnauthorizedHttpException(String url, String message, Type responseType, byte[] response) {
+      super(url, SC_UNAUTHORIZED, message, responseType, response);
     }
   }
 

@@ -1,23 +1,5 @@
 package retrofit.http;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.util.EntityUtils;
-import retrofit.http.Callback.ServerError;
-import retrofit.http.HttpProfiler.RequestInformation;
-import retrofit.http.RestException.ClientHttpException;
-import retrofit.http.RestException.HttpException;
-import retrofit.http.RestException.NetworkException;
-import retrofit.http.RestException.ServerHttpException;
-import retrofit.http.RestException.UnauthorizedHttpException;
-import retrofit.http.RestException.UnexpectedException;
-
-import javax.inject.Provider;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
@@ -32,6 +14,22 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Provider;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.util.EntityUtils;
+import retrofit.http.HttpProfiler.RequestInformation;
+import retrofit.http.RestException.ClientHttpException;
+import retrofit.http.RestException.HttpException;
+import retrofit.http.RestException.NetworkException;
+import retrofit.http.RestException.ServerHttpException;
+import retrofit.http.RestException.UnauthorizedHttpException;
+import retrofit.http.RestException.UnexpectedException;
 
 import static java.util.logging.Level.WARNING;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
@@ -96,20 +94,35 @@ public class RestAdapter {
    */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> type) {
-    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, new RestHandler());
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, new RestHandler(type));
   }
 
   private class RestHandler implements InvocationHandler {
-    private final Map<Method, Type> responseTypeCache = new HashMap<Method, Type>();
+    private final Map<Method, Type[]> responseTypeCache = new HashMap<Method, Type[]>();
+    private final Type type;
+
+    RestHandler(Type type) {
+      this.type = type;
+    }
 
     @SuppressWarnings("unchecked")
     @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
-      if (methodWantsSynchronousInvocation(method)) {
-        return invokeRequest(method, args, true);
+      boolean isSynchronousInvocation = methodWantsSynchronousInvocation(method);
+
+      // Determine deserialization type by method return type or generic parameter to Callback argument.
+      Type[] responseTypes = responseTypeCache.get(method);
+      if (responseTypes == null) {
+        responseTypes = getResponseObjectTypes(type, method, isSynchronousInvocation);
+        responseTypeCache.put(method, responseTypes);
+      }
+
+      if (isSynchronousInvocation) {
+        return invokeRequest(method, args, responseTypes, true);
       } else {
-        httpExecutor.execute(new CallbackRunnable(obtainCallback(args), callbackExecutor) {
+        final Type[] finalResponseTypes = responseTypes;
+        httpExecutor.execute(new CallbackRunnable(obtainCallback(args), converter, callbackExecutor) {
           @Override public Object obtainResponse() {
-            return invokeRequest(method, args, false);
+            return invokeRequest(method, args, finalResponseTypes, false);
           }
         });
         return null; // Asynchronous methods should have return type of void.
@@ -126,7 +139,7 @@ public class RestAdapter {
      * @throws NetworkException if the {@code request} URL was unreachable.
      * @throws UnexpectedException if an unexpected exception was thrown while processing the request.
      */
-    private Object invokeRequest(Method method, Object[] args, boolean isSynchronousInvocation) {
+    private Object invokeRequest(Method method, Object[] args, Type[] responseTypes, boolean isSynchronousInvocation) {
       long start = System.nanoTime();
       String url = server.apiUrl();
       try {
@@ -138,13 +151,6 @@ public class RestAdapter {
             .setHeaders(headers)
             .build();
         url = request.getURI().toString();
-
-        // Determine deserialization type by method return type or generic parameter to Callback argument.
-        Type type = responseTypeCache.get(method);
-        if (type == null) {
-          type = getResponseObjectType(method, isSynchronousInvocation);
-          responseTypeCache.put(method, type);
-        }
 
         Object profilerObject = null;
         if (profiler != null) {
@@ -171,18 +177,18 @@ public class RestAdapter {
           logResponseBody(url, body, statusCode, elapsedTime);
         }
 
+        Type type = responseTypes[0];
+        Type clientErrorType = responseTypes[1];
+        Type serverErrorType = responseTypes[2];
         try {
           if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
             return converter.to(body, type);
           } else if (statusCode == SC_UNAUTHORIZED) { // 401 == unauthorized user
-            ServerError serverError = (ServerError) converter.to(body, ServerError.class);
-            throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), serverError);
+            throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), clientErrorType, body);
           } else if (statusCode >= 500) { // 5XX == server error
-            ServerError serverError = (ServerError) converter.to(body, ServerError.class);
-            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), serverError);
+            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), serverErrorType, body);
           } else { // 4XX == client error
-            Object clientError = converter.to(body, type);
-            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(), clientError);
+            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(), clientErrorType, body);
           }
         } catch (ConversionException e) {
           LOGGER.log(WARNING, e.getMessage() + " from " + url, e);
@@ -215,8 +221,8 @@ public class RestAdapter {
     LOGGER.fine("---- END HTTP");
   }
 
-  private static Callback<?> obtainCallback(Object[] args) {
-    return (Callback<?>) args[args.length - 1];
+  private static Callback<?, ?, ?> obtainCallback(Object[] args) {
+    return (Callback<?, ?, ?>) args[args.length - 1];
   }
 
   private static HttpProfiler.RequestInformation getRequestInfo(Server server, Method method, HttpUriRequest request) {
@@ -259,37 +265,36 @@ public class RestAdapter {
   }
 
   /** Get the callback parameter types. */
-  static Type getResponseObjectType(Method method, boolean isSynchronousInvocation) {
+  static Type[] getResponseObjectTypes(Type type, Method method, boolean isSynchronousInvocation) {
     if (isSynchronousInvocation) {
-      return method.getGenericReturnType();
+      return new Type[] {
+          method.getGenericReturnType(),
+          Map.class,
+          Map.class
+      };
     }
 
     Type[] parameterTypes = method.getGenericParameterTypes();
-    Type callbackType = parameterTypes[parameterTypes.length - 1];
-    Class<?> callbackClass;
-    if (callbackType instanceof Class) {
-      callbackClass = (Class<?>) callbackType;
-    } else if (callbackType instanceof ParameterizedType) {
-      callbackClass = (Class<?>) ((ParameterizedType) callbackType).getRawType();
-    } else {
-      throw new ClassCastException(
-          String.format("Last parameter of %s must be a Class or ParameterizedType", method));
+    Type parameterType = parameterTypes[parameterTypes.length - 1];
+    Type callbackType = Types.resolve(type, Types.getRawType(type), parameterType);
+    Class<?> callbackClass = Types.getRawType(callbackType);
+    if (!Callback.class.isAssignableFrom(callbackClass)) {
+      throw new IllegalArgumentException(
+          String.format("Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.", method));
     }
-    if (Callback.class.isAssignableFrom(callbackClass)) {
-      callbackType = Types.getGenericSupertype(callbackType, callbackClass, Callback.class);
-      if (callbackType instanceof ParameterizedType) {
-        Type[] types = ((ParameterizedType) callbackType).getActualTypeArguments();
-        for (int i = 0; i < types.length; i++) {
-          Type type = types[i];
-          if (type instanceof WildcardType) {
-            types[i] = ((WildcardType) type).getUpperBounds()[0];
-          }
-        }
-        return types[0];
+
+    Type superType = Types.getGenericSupertype(callbackType, callbackClass, Callback.class);
+    Type[] types = ((ParameterizedType) superType).getActualTypeArguments();
+    for (int i = 0; i < types.length; i++) {
+      Type t = types[i];
+      if (t instanceof WildcardType) {
+        types[i] = ((WildcardType) t).getUpperBounds()[0];
       }
     }
-    throw new IllegalArgumentException(
-        String.format("Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.", method));
+    Type callType = Types.resolve(callbackType, callbackClass, types[0]);
+    Type sessionType = Types.resolve(callbackType, callbackClass, types[1]);
+    Type errorType = Types.resolve(callbackType, callbackClass, types[2]);
+    return new Type[] {callType, sessionType, errorType};
   }
 
   /**

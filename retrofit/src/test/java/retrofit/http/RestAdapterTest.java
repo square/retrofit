@@ -18,18 +18,16 @@ import org.apache.http.message.BasicStatusLine;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import retrofit.http.Callback.ServerError;
 import retrofit.http.RestException.ClientHttpException;
 import retrofit.http.RestException.ServerHttpException;
 
 import javax.inject.Named;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
@@ -52,6 +50,7 @@ public class RestAdapterTest {
   private static final String GET_DELETE_SIMPLE_URL = BASE_URL + "?";
   private static final Gson GSON = new Gson();
   private static final Response RESPONSE = new Response("some text");
+  private static final ClientError CLIENT_ERROR = new ClientError("you broke it!");
   private static final ServerError SERVER_ERROR = new ServerError("danger, danger!");
 
   private RestAdapter restAdapter;
@@ -428,74 +427,76 @@ public class RestAdapterTest {
   }
 
   @Test public void testConcreteCallbackTypes() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, ClientError.class, ServerError.class };
     Method method = getTypeTestMethod("a");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("a").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
   @Test public void testConcreteCallbackTypesWithParams() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, ClientError.class, ServerError.class };
     Method method = getTypeTestMethod("b");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("b").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
   @Test public void testGenericCallbackTypes() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, ClientError.class, ServerError.class };
     Method method = getTypeTestMethod("c");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("c").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
   @Test public void testGenericCallbackTypesWithParams() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, ClientError.class, ServerError.class };
     Method method = getTypeTestMethod("d");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("d").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
   @Test public void testWildcardGenericCallbackTypes() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, ClientError.class, ServerError.class };
     Method method = getTypeTestMethod("e");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("e").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
   @Test public void testGenericCallbackWithGenericType() {
-    Type expected = new TypeToken<List<String>>() {}.getType();
+    Type listType = new TypeToken<List<String>>() {}.getType();
+    Type[] expected = { listType, listType, listType };
     Method method = getTypeTestMethod("f");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("f").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
-  @Ignore // TODO support this case!
   @Test public void testExtendingGenericCallback() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, Response.class, ServerError.class };
     Method method = getTypeTestMethod("g");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    assertThat(RestAdapter.getResponseObjectType(method, false)).as("g").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false)).isEqualTo(expected);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testMissingCallbackTypes() {
     Method method = getTypeTestMethod("h");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isFalse();
-    RestAdapter.getResponseObjectType(method, false);
+    RestAdapter.getResponseObjectTypes(TypeTestService.class, method, false);
   }
 
   @Test public void testSynchronousResponse() {
-    Type expected = Response.class;
+    Type[] expected = { Response.class, Map.class, Map.class };
     Method method = getTypeTestMethod("x");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isTrue();
-    assertThat(RestAdapter.getResponseObjectType(method, true)).as("x").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, true)).isEqualTo(expected);
   }
 
   @Test public void testSynchronousGenericResponse() {
-    Type expected = new TypeToken<List<String>>() {}.getType();
+    Type listType = new TypeToken<List<String>>() {}.getType();
+    Type[] expected = { listType, Map.class, Map.class };
     Method method = getTypeTestMethod("y");
     assertThat(RestAdapter.methodWantsSynchronousInvocation(method)).isTrue();
-    assertThat(RestAdapter.getResponseObjectType(method, true)).as("y").isEqualTo(expected);
+    assertThat(RestAdapter.getResponseObjectTypes(TypeTestService.class, method, true)).isEqualTo(
+        expected);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -518,7 +519,8 @@ public class RestAdapterTest {
       throws IOException {
     expectAsynchronousInvocation();
     expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_OK);
-    expectCallbacks();
+    mockCallback.call(RESPONSE);
+    expectLastCall().once();
   }
 
   private <T extends HttpUriRequest> void expectSyncLifecycle(Class<T> requestClass, String requestUrl)
@@ -529,8 +531,9 @@ public class RestAdapterTest {
   private <T extends HttpUriRequest> void expectAsyncLifecycleClientError(Class<T> requestClass, String requestUrl)
       throws IOException {
     expectAsynchronousInvocation();
-    expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_CONFLICT);
-    expectClientErrorCallbacks(HttpStatus.SC_CONFLICT);
+    expectHttpExecution(requestClass, requestUrl, CLIENT_ERROR, HttpStatus.SC_CONFLICT);
+    mockCallback.clientError(CLIENT_ERROR, HttpStatus.SC_CONFLICT);
+    expectLastCall().once();
   }
 
   private <T extends HttpUriRequest> void expectSyncLifecycleClientError(Class<T> requestClass, String requestUrl)
@@ -542,7 +545,8 @@ public class RestAdapterTest {
       throws IOException {
     expectAsynchronousInvocation();
     expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
-    expectServerErrorCallbacks(HttpStatus.SC_NOT_IMPLEMENTED);
+    mockCallback.serverError(eq(SERVER_ERROR), eq(HttpStatus.SC_NOT_IMPLEMENTED));
+    expectLastCall().once();
   }
 
   private <T extends HttpUriRequest> void expectSyncLifecycleServerError(Class<T> requestClass, String requestUrl)
@@ -558,32 +562,9 @@ public class RestAdapterTest {
   private <T extends HttpUriRequest> void expectHttpExecution(Class<T> requestClass, String requestUrl,
       Object response, int status) throws IOException {
     expectSetOnWithRequest(requestClass, requestUrl);
-    expectResponseCalls(GSON.toJson(response), status);
-    expectHttpClientExecute();
-  }
-
-  private void expectCallbacks() {
-    mockCallback.call(RESPONSE);
-    expectLastCall().once();
-  }
-
-  private void expectClientErrorCallbacks(int statusCode) {
-    mockCallback.clientError(RESPONSE, statusCode);
-    expectLastCall().once();
-  }
-
-  private void expectServerErrorCallbacks(int statusCode) {
-    mockCallback.serverError(eq(SERVER_ERROR), eq(statusCode));
-    expectLastCall().once();
-  }
-
-  private void expectHttpClientExecute() throws IOException {
+    expect(mockResponse.getEntity()).andReturn(new StringEntity(GSON.toJson(response)));
+    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, status, ""));
     expect(mockHttpClient.execute(isA(HttpUriRequest.class))).andReturn(mockResponse);
-  }
-
-  private void expectResponseCalls(String jsonToReturn, int statusCode) throws UnsupportedEncodingException {
-    expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
-    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, statusCode, ""));
   }
 
   private <T extends HttpUriRequest> void expectSetOnWithRequest(final Class<T> expectedRequestClass,
@@ -611,15 +592,14 @@ public class RestAdapterTest {
   }
 
   private interface DeleteService {
-
-    @DELETE(ENTITY) void delete(Callback<Response> callback);
+    @DELETE(ENTITY) void delete(ResponseCallback callback);
     @DELETE(ENTITY) Response delete();
 
-    @DELETE(ENTITY) void deleteWithParam(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY) void deleteWithParam(@Named("id") String id, ResponseCallback callback);
     @DELETE(ENTITY) Response deleteWithParam(@Named("id") String id);
 
     @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
-    void deleteWithFixedParam(@Named("id") String id, Callback<Response> callback);
+    void deleteWithFixedParam(@Named("id") String id, ResponseCallback callback);
     @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
     Response deleteWithFixedParam(@Named("id") String id);
 
@@ -628,7 +608,7 @@ public class RestAdapterTest {
       @QueryParam(name="filter", value="merchant"),
       @QueryParam(name="name2", value="value2")
     })
-    void deleteWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
+    void deleteWithMultipleFixedParams(@Named("id") String id, ResponseCallback callback);
     @DELETE(ENTITY)
     @QueryParams({
         @QueryParam(name="filter", value="merchant"),
@@ -636,19 +616,19 @@ public class RestAdapterTest {
     })
     Response deleteWithMultipleFixedParams(@Named("id") String id);
 
-    @DELETE(ENTITY_PATH_PARAM) void deleteWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY_PATH_PARAM) void deleteWithPathParam(@Named("id") String id, ResponseCallback callback);
     @DELETE(ENTITY_PATH_PARAM) Response deleteWithPathParam(@Named("id") String id);
   }
 
   private interface GetService {
-    @GET(ENTITY) void get(Callback<Response> callback);
+    @GET(ENTITY) void get(ResponseCallback callback);
     @GET(ENTITY) Response get();
 
-    @GET(ENTITY) void getWithParam(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY) void getWithParam(@Named("id") String id, ResponseCallback callback);
     @GET(ENTITY) Response getWithParam(@Named("id") String id);
 
     @GET(ENTITY) @QueryParam(name="filter", value="merchant")
-    void getWithFixedParam(@Named("id") String id, Callback<Response> callback);
+    void getWithFixedParam(@Named("id") String id, ResponseCallback callback);
     @GET(ENTITY) @QueryParam(name="filter", value="merchant")
     Response getWithFixedParam(@Named("id") String id);
 
@@ -657,7 +637,7 @@ public class RestAdapterTest {
       @QueryParam(name="filter", value="merchant"),
       @QueryParam(name="name2", value="value2")
     })
-    void getWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
+    void getWithMultipleFixedParams(@Named("id") String id, ResponseCallback callback);
     @GET(ENTITY)
     @QueryParams({
         @QueryParam(name="filter", value="merchant"),
@@ -665,29 +645,29 @@ public class RestAdapterTest {
     })
     Response getWithMultipleFixedParams(@Named("id") String id);
 
-    @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id, ResponseCallback callback);
     @GET(ENTITY_PATH_PARAM) Response getWithPathParam(@Named("id") String id);
   }
 
   private interface PostService {
-    @POST(ENTITY) void post(Callback<Response> callback);
+    @POST(ENTITY) void post(ResponseCallback callback);
     @POST(ENTITY) Response post();
 
-    @POST(ENTITY) void postWithParam(@Named("id") String id, Callback<Response> callback);
+    @POST(ENTITY) void postWithParam(@Named("id") String id, ResponseCallback callback);
     @POST(ENTITY) Response postWithParam(@Named("id") String id);
 
-    @POST(ENTITY_PATH_PARAM) void postWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @POST(ENTITY_PATH_PARAM) void postWithPathParam(@Named("id") String id, ResponseCallback callback);
     @POST(ENTITY_PATH_PARAM) Response postWithPathParam(@Named("id") String id);
   }
 
   private interface PutService {
-    @PUT(ENTITY) void put(Callback<Response> callback);
+    @PUT(ENTITY) void put(ResponseCallback callback);
     @PUT(ENTITY) Response put();
 
-    @PUT(ENTITY) void putWithParam(@Named("id") String id, Callback<Response> callback);
+    @PUT(ENTITY) void putWithParam(@Named("id") String id, ResponseCallback callback);
     @PUT(ENTITY) Response putWithParam(@Named("id") String id);
 
-    @PUT(ENTITY_PATH_PARAM) void putWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @PUT(ENTITY_PATH_PARAM) void putWithPathParam(@Named("id") String id, ResponseCallback callback);
     @PUT(ENTITY_PATH_PARAM) Response putWithPathParam(@Named("id") String id);
   }
 
@@ -704,21 +684,33 @@ public class RestAdapterTest {
     }
   }
 
+  private static class ClientError extends Response {
+    public ClientError(String message) {
+      super(message);
+    }
+  }
+
+  private static class ServerError extends Response {
+    public ServerError(String message) {
+      super(message);
+    }
+  }
+
   @SuppressWarnings("UnusedDeclaration")
   private interface TypeTestService {
     // Asynchronous
     @GET(ENTITY) void a(ResponseCallback c);
     @GET(ENTITY) void b(@Named("id") String id, ResponseCallback c);
-    @GET(ENTITY) void c(Callback<Response> c);
-    @GET(ENTITY) void d(@Named("id") String id, Callback<Response> c);
-    @GET(ENTITY) void e(Callback<? extends Response> c);
-    @GET(ENTITY) void f(Callback<List<String>> c);
+    @GET(ENTITY) void c(Callback<Response, ClientError, ServerError> c);
+    @GET(ENTITY) void d(@Named("id") String id, Callback<Response, ClientError, ServerError> c);
+    @GET(ENTITY) void e(Callback<? extends Response, ? extends ClientError, ? extends ServerError> c);
+    @GET(ENTITY) void f(Callback<List<String>, List<String>, List<String>> c);
     @GET(ENTITY) void g(ExtendingCallback<Response> callback);
     @GET(ENTITY) void h(@Named("id") String id);
     // Synchronous
     @GET(ENTITY) Response x();
     @GET(ENTITY) List<String> y();
-    @GET(ENTITY) Response z(Callback<Response> callback);
+    @GET(ENTITY) Response z(ResponseCallback callback);
   }
 
   private static Method getTypeTestMethod(String name) {
@@ -731,9 +723,9 @@ public class RestAdapterTest {
     throw new IllegalArgumentException("Unknown method '" + name + "' on " + TypeTestService.class.getSimpleName());
   }
 
-  private interface ResponseCallback extends Callback<Response> {
+  private interface ResponseCallback extends Callback<Response, ClientError, ServerError> {
   }
 
-  private interface ExtendingCallback<T> extends Callback<T> {
+  private interface ExtendingCallback<T> extends Callback<T, T, ServerError> {
   }
 }
