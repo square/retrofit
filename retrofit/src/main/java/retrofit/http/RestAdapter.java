@@ -107,6 +107,9 @@ public class RestAdapter {
       if (methodWantsSynchronousInvocation(method)) {
         return invokeRequest(method, args, true);
       } else {
+        if (httpExecutor == null || callbackExecutor == null) {
+          throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
+        }
         httpExecutor.execute(new CallbackRunnable(obtainCallback(args), callbackExecutor) {
           @Override public Object obtainResponse() {
             return invokeRequest(method, args, false);
