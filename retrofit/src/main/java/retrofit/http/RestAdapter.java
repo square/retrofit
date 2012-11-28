@@ -391,18 +391,17 @@ public class RestAdapter {
     }
 
     private void ensureSaneDefaults() {
-      Platform platform = Platform.get();
       if (converter == null) {
-        converter = platform.defaultConverter();
+        converter = Platform.get().defaultConverter();
       }
       if (clientProvider == null) {
-        clientProvider = platform.defaultHttpClient();
+        clientProvider = Platform.get().defaultHttpClient();
       }
       if (httpExecutor == null) {
-        httpExecutor = platform.defaultHttpExecutor();
+        httpExecutor = Platform.get().defaultHttpExecutor();
       }
       if (callbackExecutor == null) {
-        callbackExecutor = platform.defaultCallbackExecutor();
+        callbackExecutor = Platform.get().defaultCallbackExecutor();
       }
     }
   }
