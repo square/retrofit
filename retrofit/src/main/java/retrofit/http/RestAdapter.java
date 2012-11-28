@@ -1,5 +1,20 @@
 package retrofit.http;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.inject.Provider;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -16,22 +31,6 @@ import retrofit.http.RestException.NetworkException;
 import retrofit.http.RestException.ServerHttpException;
 import retrofit.http.RestException.UnauthorizedHttpException;
 import retrofit.http.RestException.UnexpectedException;
-
-import javax.inject.Provider;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.util.logging.Level.WARNING;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
@@ -378,14 +377,31 @@ public class RestAdapter {
     }
 
     public RestAdapter build() {
-      if (server == null || clientProvider == null || converter == null) {
-        throw new IllegalArgumentException("Server, client, and converter are required.");
+      if (server == null) {
+        throw new IllegalArgumentException("Server may not be null.");
       }
+      ensureSaneDefaults();
       return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers, converter, profiler);
+    }
+
+    private void ensureSaneDefaults() {
+      Platform platform = Platform.get();
+      if (converter == null) {
+        converter = platform.defaultConverter();
+      }
+      if (clientProvider == null) {
+        clientProvider = platform.defaultHttpClient();
+      }
+      if (httpExecutor == null) {
+        httpExecutor = platform.defaultHttpExecutor();
+      }
+      if (callbackExecutor == null) {
+        callbackExecutor = platform.defaultCallbackExecutor();
+      }
     }
   }
 
-  private static class SynchronousExecutor implements Executor {
+  static class SynchronousExecutor implements Executor {
     @Override public void execute(Runnable runnable) {
       runnable.run();
     }
