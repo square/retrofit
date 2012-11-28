@@ -44,6 +44,7 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
   private static final int LOG_CHUNK_SIZE = 4000;
+  static final String THREAD_PREFIX = "Retrofit-";
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
@@ -140,6 +141,11 @@ public class RestAdapter {
             .setHeaders(headers)
             .build();
         url = request.getURI().toString();
+
+        if (!isSynchronousInvocation) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url);
+        }
 
         // Determine deserialization type by method return type or generic parameter to Callback argument.
         Type type = responseTypeCache.get(method);

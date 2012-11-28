@@ -14,6 +14,7 @@ import retrofit.android.MainThreadExecutor;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static retrofit.http.RestAdapter.SynchronousExecutor;
+import static retrofit.http.RestAdapter.THREAD_PREFIX;
 
 abstract class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -58,7 +59,7 @@ abstract class Platform {
               Thread.currentThread().setPriority(THREAD_PRIORITY_BACKGROUND);
               r.run();
             }
-          }, "Retrofit-" + threadCounter.getAndIncrement());
+          }, THREAD_PREFIX + threadCounter.getAndIncrement());
         }
       });
     }
@@ -89,7 +90,7 @@ abstract class Platform {
               Process.setThreadPriority(THREAD_PRIORITY_BACKGROUND);
               r.run();
             }
-          }, "Retrofit-" + threadCounter.getAndIncrement());
+          }, THREAD_PREFIX + threadCounter.getAndIncrement());
         }
       });
     }
