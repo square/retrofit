@@ -42,9 +42,10 @@ abstract class Platform {
   /** Provides sane defaults for operation on the JVM. */
   private static class Base extends Platform {
     @Override Provider<HttpClient> defaultHttpClient() {
+      final HttpClient client = new DefaultHttpClient();
       return new Provider<HttpClient>() {
         @Override public HttpClient get() {
-          return new DefaultHttpClient();
+          return client;
         }
       };
     }
@@ -73,9 +74,10 @@ abstract class Platform {
   private static class Android extends Platform {
     @Override Provider<HttpClient> defaultHttpClient() {
       // TODO use HttpUrlConnection on Android 2.3+
+      final HttpClient client = AndroidHttpClient.newInstance("Retrofit");
       return new Provider<HttpClient>() {
         @Override public HttpClient get() {
-          return AndroidHttpClient.newInstance("Retrofit");
+          return client;
         }
       };
     }
