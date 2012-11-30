@@ -1,0 +1,162 @@
+// Copyright 2012 Square, Inc.
+package retrofit.http;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import retrofit.http.client.Request;
+import retrofit.io.StringTypedBytes;
+import retrofit.io.TypedBytes;
+
+import static retrofit.http.RestAdapter.UTF_8;
+import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
+
+/**
+ * Builds HTTP requests from Java method invocations.  Handles "path parameters" in the
+ * {@code apiUrl} in the form of "path/to/url/{id}/action" where a parameter annotated with
+ * {@code @Named("id")} is inserted into the url.  Note that this replacement can be recursive if:
+ * <ol>
+ * <li>Multiple sets of brackets are nested ("path/to/{{key}a}.</li>
+ * <li>The order of {@link javax.inject.Named @Named} values go from innermost to outermost.</li>
+ * <li>The values replaced correspond to {@link javax.inject.Named @Named} parameters.</li>
+ * </ol>
+ */
+final class RequestBuilder {
+  private final Converter converter;
+
+  private RestMethodInfo methodInfo;
+  private Object[] args;
+  private String apiUrl;
+  private List<Header> headers;
+
+  RequestBuilder(Converter converter) {
+    this.converter = converter;
+  }
+
+  RequestBuilder setMethodInfo(RestMethodInfo methodDetails) {
+    this.methodInfo = methodDetails;
+    return this;
+  }
+
+  RequestBuilder setApiUrl(String apiUrl) {
+    this.apiUrl = apiUrl;
+    return this;
+  }
+
+  RequestBuilder setArgs(Object[] args) {
+    this.args = args;
+    return this;
+  }
+
+  RequestBuilder setHeaders(List<Header> headers) {
+    this.headers = headers;
+    return this;
+  }
+
+  /** List of all URL parameters. Return value will be mutated. */
+  private List<Parameter> createParamList() {
+    List<Parameter> params = new ArrayList<Parameter>();
+
+    // Add query parameter(s), if specified.
+    for (QueryParam annotation : methodInfo.pathQueryParams) {
+      params.add(new Parameter(annotation.name(), annotation.value(), String.class));
+    }
+
+    // Add arguments as parameters.
+    String[] pathNamedParams = methodInfo.namedParams;
+    int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
+    for (int i = 0; i < pathNamedParams.length; i++) {
+      Object arg = args[i];
+      if (arg == null) continue;
+      if (i != singleEntityArgumentIndex) {
+        params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
+      }
+    }
+
+    return params;
+  }
+
+  Request build() {
+    // Alter parameter list if path parameters are present.
+    Set<String> pathParams = new LinkedHashSet<String>(methodInfo.pathParams);
+    List<Parameter> paramList = createParamList();
+    String replacedPath = methodInfo.path;
+    for (String pathParam : pathParams) {
+      Parameter found = null;
+      for (Parameter param : paramList) {
+        if (param.getName().equals(pathParam)) {
+          found = param;
+          break;
+        }
+      }
+      if (found != null) {
+        String value;
+        try {
+          value = URLEncoder.encode(String.valueOf(found.getValue()), UTF_8);
+        } catch (UnsupportedEncodingException e) {
+          throw new AssertionError(e);
+        }
+        replacedPath = replacedPath.replace("{" + found.getName() + "}", value);
+        paramList.remove(found);
+      } else {
+        throw new IllegalArgumentException(
+            "URL param " + pathParam + " has no matching method @Named param.");
+      }
+    }
+
+    if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      // We're passing a JSON object as the entity: paramList should only contain path param values.
+      if (!paramList.isEmpty()) {
+        throw new IllegalStateException(
+            "Found @Named param on single-entity request that was not used for path substitution.");
+      }
+    }
+
+    StringBuilder url = new StringBuilder(apiUrl);
+    if (apiUrl.endsWith("/")) {
+      // We enforce relative paths to start with '/'. Prevent a double-slash.
+      url.deleteCharAt(url.length() - 1);
+    }
+    url.append(replacedPath);
+
+    TypedBytes body = null;
+    Map<String, TypedBytes> bodyParams = new LinkedHashMap<String, TypedBytes>();
+    if (!methodInfo.restMethod.hasBody()) {
+      for (int i = 0, count = paramList.size(); i < count; i++) {
+        url.append((i == 0) ? '?' : '&');
+        Parameter nonPathParam = paramList.get(i);
+        url.append(nonPathParam.getName()).append("=").append(nonPathParam.getValue());
+      }
+    } else if (!paramList.isEmpty()) {
+      if (methodInfo.isMultipart) {
+        for (Parameter parameter : paramList) {
+          Object value = parameter.getValue();
+          TypedBytes typedBytes;
+          if (value instanceof TypedBytes) {
+            typedBytes = (TypedBytes) value;
+          } else {
+            typedBytes = new StringTypedBytes(value.toString());
+          }
+          bodyParams.put(parameter.getName(), typedBytes);
+        }
+      } else {
+        body = converter.toBody(paramList);
+      }
+    } else if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      Object singleEntity = args[methodInfo.singleEntityArgumentIndex];
+      if (singleEntity instanceof TypedBytes) {
+        body = (TypedBytes) singleEntity;
+      } else {
+        body = converter.toBody(singleEntity);
+      }
+    }
+
+    return new Request(methodInfo.restMethod.value(), url.toString(), headers,
+        methodInfo.isMultipart, body, bodyParams);
+  }
+}

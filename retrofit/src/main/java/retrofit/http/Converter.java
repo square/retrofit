@@ -1,9 +1,8 @@
 // Copyright 2012 Square, Inc.
 package retrofit.http;
 
-import retrofit.io.TypedBytes;
-
 import java.lang.reflect.Type;
+import retrofit.io.TypedBytes;
 
 /**
  * Arbiter for converting objects to and from their representation in HTTP.
@@ -20,13 +19,13 @@ public interface Converter {
    * @throws ConversionException If conversion was unable to complete. This will trigger a call to
    * {@link Callback#failure(RetrofitError)} or throw a {@link retrofit.http.RetrofitError}.
    */
-  Object to(byte[] body, Type type) throws ConversionException;
+  Object fromBody(byte[] body, Type type) throws ConversionException;
 
   /**
-   * Convert and object to appropriate representation for HTTP transport.
+   * Convert and object to an appropriate representation for HTTP transport.
    *
    * @param object Object instance to convert.
    * @return Representation of the specified object as bytes.
    */
-  TypedBytes from(Object object);
+  TypedBytes toBody(Object object);
 }
