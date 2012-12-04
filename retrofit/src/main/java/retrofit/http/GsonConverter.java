@@ -8,6 +8,7 @@ import retrofit.io.TypedBytes;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
@@ -52,7 +53,11 @@ public class GsonConverter implements Converter {
     }
 
     @Override public int length() {
-      return json.length();
+      try {
+         return json.getBytes("UTF-8").length;
+      } catch (UnsupportedEncodingException e) {
+         return json.length();
+      }
     }
 
     @Override public void writeTo(OutputStream out) throws IOException {
