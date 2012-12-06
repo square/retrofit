@@ -3,14 +3,14 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import retrofit.io.MimeType;
-import retrofit.io.TypedBytes;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import retrofit.io.MimeType;
+import retrofit.io.TypedBytes;
 
 /**
  * A {@link Converter} which uses GSON for serialization and deserialization of entities.
@@ -18,6 +18,7 @@ import java.lang.reflect.Type;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
+  public static final String ENCODING = "UTF-8"; // TODO use actual encoding
   private final Gson gson;
 
   public GsonConverter(Gson gson) {
@@ -26,8 +27,7 @@ public class GsonConverter implements Converter {
 
   @Override public Object to(byte[] body, Type type) throws ConversionException {
     try {
-      // TODO use actual encoding
-      InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), "UTF-8");
+      InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), ENCODING);
       return gson.fromJson(isr, type);
     } catch (IOException e) {
       throw new ConversionException(e);
@@ -41,10 +41,14 @@ public class GsonConverter implements Converter {
   }
 
   private static class JsonTypedBytes implements TypedBytes {
-    private final String json;
+    private final byte[] jsonBytes;
 
     JsonTypedBytes(Gson gson, Object object) {
-      json = gson.toJson(object);
+      try {
+        jsonBytes = gson.toJson(object).getBytes(ENCODING);
+      } catch (UnsupportedEncodingException e) {
+        throw new IllegalArgumentException(ENCODING + " doesn't exist!?");
+      }
     }
 
     @Override public MimeType mimeType() {
@@ -52,11 +56,11 @@ public class GsonConverter implements Converter {
     }
 
     @Override public int length() {
-      return json.length();
+      return jsonBytes.length;
     }
 
     @Override public void writeTo(OutputStream out) throws IOException {
-      out.write(json.getBytes("UTF-8")); // TODO use actual encoding
+      out.write(jsonBytes);
     }
   }
 }
