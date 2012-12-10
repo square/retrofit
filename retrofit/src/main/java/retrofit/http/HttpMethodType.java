@@ -84,6 +84,9 @@ enum HttpMethodType {
   private static URI getParameterizedUri(HttpRequestBuilder builder) throws URISyntaxException {
     List<NameValuePair> queryParams = builder.getParamList(false);
     String queryString = URLEncodedUtils.format(queryParams, HTTP.UTF_8);
+    if (queryString != null && queryString.length() == 0) {
+      queryString = null;
+    }
     return URIUtils.createURI(builder.getScheme(), builder.getHost(), -1, builder.getRelativePath(), queryString, null);
   }
 
