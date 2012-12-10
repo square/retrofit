@@ -94,8 +94,9 @@ enum HttpMethodType {
     String mimeType = builder.getMimeType();
     if (mimeType != null) {
       // Only add a CONTENT_TYPE header if not yet set.
-      if (!message.containsHeader(HTTP.CONTENT_TYPE))
+      if (!message.containsHeader(HTTP.CONTENT_TYPE)) {
         message.addHeader(HTTP.CONTENT_TYPE, mimeType);
+      }
     }
     Headers headers = builder.getHeaders();
     if (headers != null) {
@@ -142,8 +143,9 @@ enum HttpMethodType {
           final TypedBytesEntity entity = new TypedBytesEntity(builder.getSingleEntity());
           request.setEntity(entity);
           // Only add a CONTENT_TYPE header if not yet set.
-          if (!request.containsHeader(HTTP.CONTENT_TYPE))
+          if (!request.containsHeader(HTTP.CONTENT_TYPE)) {
             request.addHeader(HTTP.CONTENT_TYPE, entity.getMimeType().mimeName());
+          }
         } else {
           List<NameValuePair> paramList = builder.getParamList(true);
           // TODO: Use specified encoding. (See CallbackResponseHandler et al)
