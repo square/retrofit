@@ -49,7 +49,8 @@ public class RestAdapterTest {
   private static final String ENTITY_PATH_PARAM = "entity/{id}";
   private static final String BASE_URL = "http://host/api/entity";
   private static final String PATH_URL_PREFIX = BASE_URL + "/";
-  private static final String GET_DELETE_SIMPLE_URL = BASE_URL + "?";
+  private static final String GET_DELETE_SIMPLE_URL = BASE_URL;
+  private static final String GET_DELETE_SIMPLE_URL_WITH_PARAMS = GET_DELETE_SIMPLE_URL + "?";
   private static final Gson GSON = new Gson();
   private static final Response RESPONSE = new Response("some text");
   private static final ServerError SERVER_ERROR = new ServerError("danger, danger!");
@@ -99,7 +100,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -108,7 +109,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteParamSync() throws IOException {
-    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -118,7 +119,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithFixedParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -127,7 +128,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithFixedParamSync() throws IOException {
-    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -137,7 +138,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithMultipleFixedParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&" + "id=" + ID);
+    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&" + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -146,7 +147,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithMultipleFixedParamSync() throws IOException {
-    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&" + "id=" + ID);
+    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&" + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -156,7 +157,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeletePathParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
+    expectAsyncLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -165,7 +166,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeletePathParamSync() throws IOException {
-    expectSyncLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID + "?");
+    expectSyncLifecycle(HttpDelete.class, PATH_URL_PREFIX + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -194,7 +195,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -203,7 +204,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetParamSync() throws IOException {
-    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "id=" + ID);
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -213,7 +214,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithFixedParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -222,7 +223,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithFixedParamSync() throws IOException {
-    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&id=" + ID);
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -232,7 +233,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithMultipleFixedParamsAsync() throws IOException {
-    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&id=" + ID);
+    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -241,7 +242,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithMultipleFixedParamsSync() throws IOException {
-    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL + "filter=merchant&name2=value2&id=" + ID);
+    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -251,7 +252,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetPathParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
+    expectAsyncLifecycle(HttpGet.class, PATH_URL_PREFIX + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -260,7 +261,7 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetPathParamSync() throws IOException {
-    expectSyncLifecycle(HttpGet.class, PATH_URL_PREFIX + ID + "?");
+    expectSyncLifecycle(HttpGet.class, PATH_URL_PREFIX + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
