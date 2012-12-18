@@ -44,7 +44,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testNormalGet() throws Exception {
-    Method method = MyService.class.getMethod("normalGet", String.class, Callback.class);
+    Method method = getTestMethod("normalGet");
     String expectedId = UUID.randomUUID().toString();
     Object[] args = new Object[] { expectedId, new MyCallback() };
     HttpUriRequest request = build(method, args);
@@ -58,8 +58,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testGetWithPathParam() throws Exception {
-    Method method =
-        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    Method method = getTestMethod("getWithPathParam");
     String expectedId = UUID.randomUUID().toString();
     String category = UUID.randomUUID().toString();
     Object[] args = new Object[] { expectedId, category, new MyCallback() };
@@ -74,8 +73,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testGetWithPathParamAndWhitespaceValue() throws Exception {
-    Method method =
-        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    Method method = getTestMethod("getWithPathParam");
     String expectedId = "I have spaces buddy";
     String category = UUID.randomUUID().toString();
     Object[] args = new Object[] { expectedId, category, new MyCallback() };
@@ -91,8 +89,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithPathParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("singleEntityPut", MyJsonObj.class, String.class, Callback.class);
+    Method method = getTestMethod("singleEntityPut");
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] { new MyJsonObj(bodyText), expectedId, new MyCallback() };
@@ -113,8 +110,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testNormalPutWithPathParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("normalPut", String.class, String.class, Callback.class);
+    Method method = getTestMethod("normalPut");
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] { expectedId, bodyText, new MyCallback() };
@@ -135,9 +131,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithTooManyParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("tooManyParams", MyJsonObj.class, String.class, String.class,
-            Callback.class);
+    Method method = getTestMethod("tooManyParams");
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] { new MyJsonObj(bodyText), expectedId, "EXTRA", new MyCallback() };
@@ -149,8 +143,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithNoPathParam() throws Exception {
-    Method method =
-        MyService.class.getMethod("singleEntityNoPathParam", MyJsonObj.class, Callback.class);
+    Method method = getTestMethod("singleEntityNoPathParam");
     String bodyText = UUID.randomUUID().toString();
     Object[] args = new Object[] { new MyJsonObj(bodyText), new MyCallback() };
     try {
@@ -161,7 +154,7 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testRegularWithNoPathParam() throws Exception {
-    Method method = MyService.class.getMethod("regularNoPathParam", String.class, Callback.class);
+    Method method = getTestMethod("regularNoPathParam");
     String otherParam = UUID.randomUUID().toString();
     Object[] args = new Object[] { otherParam, new MyCallback() };
     try {
@@ -172,7 +165,7 @@ public class HttpRequestBuilderTest {
   }
 
   @SuppressWarnings({ "UnusedDeclaration" }) // Methods are accessed by reflection.
-  private static interface MyService {
+  private interface MyService {
     @GET("foo/bar") void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
 
     @GET("foo/{id}/bar")
@@ -193,6 +186,16 @@ public class HttpRequestBuilderTest {
 
     @PUT("foo/bar/{id}")
     void regularNoPathParam(@Named("other") String other, Callback<SimpleResponse> callback);
+  }
+
+  private static Method getTestMethod(String name) {
+    Method[] methods = MyService.class.getDeclaredMethods();
+    for (Method method : methods) {
+      if (method.getName().equals(name)) {
+        return method;
+      }
+    }
+    throw new IllegalArgumentException("Unknown method '" + name + "' on MyService");
   }
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
