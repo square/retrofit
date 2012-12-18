@@ -18,7 +18,9 @@ import retrofit.io.TypedBytes;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
-  public static final String ENCODING = "UTF-8"; // TODO use actual encoding
+  private static final String ENCODING = "UTF-8"; // TODO use actual encoding
+  private static final MimeType JSON = new MimeType("application/json", "json");
+
   private final Gson gson;
 
   public GsonConverter(Gson gson) {
@@ -52,7 +54,7 @@ public class GsonConverter implements Converter {
     }
 
     @Override public MimeType mimeType() {
-      return MimeType.JSON;
+      return JSON;
     }
 
     @Override public int length() {
