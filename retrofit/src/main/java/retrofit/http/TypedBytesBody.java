@@ -34,14 +34,12 @@ public class TypedBytesBody extends AbstractContentBody {
   }
 
   @Override public void writeTo(OutputStream out) throws IOException {
-    /*
-     * Note: We probably want to differentiate I/O errors that occur
-     * while reading a file from network errors. Network operations can
-     * be retried. File operations will probably continue to fail.
-     *
-     * In the case of photo uploads, we at least check that the file
-     * exists before we even try to upload it.
-     */
+    // Note: We probably want to differentiate I/O errors that occur while reading a file from
+    // network errors. Network operations can be retried. File operations will probably continue to
+    // fail.
+    //
+    // In the case of photo uploads, we at least check that the file exists before we even try to
+    // upload it.
     typedBytes.writeTo(out);
   }
 }

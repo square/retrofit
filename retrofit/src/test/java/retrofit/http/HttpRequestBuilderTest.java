@@ -44,10 +44,9 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testNormalGet() throws Exception {
-    Method method =
-        MyService.class.getMethod("normalGet", String.class, Callback.class);
+    Method method = MyService.class.getMethod("normalGet", String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, new MyCallback()};
+    Object[] args = new Object[] { expectedId, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpGet.class);
@@ -63,7 +62,7 @@ public class HttpRequestBuilderTest {
         MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
     String category = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, category, new MyCallback()};
+    Object[] args = new Object[] { expectedId, category, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpGet.class);
@@ -79,7 +78,7 @@ public class HttpRequestBuilderTest {
         MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
     String expectedId = "I have spaces buddy";
     String category = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, category, new MyCallback()};
+    Object[] args = new Object[] { expectedId, category, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpGet.class);
@@ -87,7 +86,8 @@ public class HttpRequestBuilderTest {
     HttpGet put = (HttpGet) request;
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
-    assertThat(uri).isEqualTo(API_URL + "/foo/" + URLEncoder.encode(expectedId, "UTF-8") + "/bar?category=" + category);
+    assertThat(uri).isEqualTo(
+        API_URL + "/foo/" + URLEncoder.encode(expectedId, "UTF-8") + "/bar?category=" + category);
   }
 
   @Test public void testSingleEntityWithPathParams() throws Exception {
@@ -95,7 +95,7 @@ public class HttpRequestBuilderTest {
         MyService.class.getMethod("singleEntityPut", MyJsonObj.class, String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, new MyCallback()};
+    Object[] args = new Object[] { new MyJsonObj(bodyText), expectedId, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpPut.class);
@@ -117,7 +117,7 @@ public class HttpRequestBuilderTest {
         MyService.class.getMethod("normalPut", String.class, String.class, Callback.class);
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, bodyText, new MyCallback()};
+    Object[] args = new Object[] { expectedId, bodyText, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpPut.class);
@@ -140,7 +140,7 @@ public class HttpRequestBuilderTest {
             Callback.class);
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, "EXTRA", new MyCallback()};
+    Object[] args = new Object[] { new MyJsonObj(bodyText), expectedId, "EXTRA", new MyCallback() };
     try {
       build(method, args);
       fail("Didn't throw exception with too many params");
@@ -152,7 +152,7 @@ public class HttpRequestBuilderTest {
     Method method =
         MyService.class.getMethod("singleEntityNoPathParam", MyJsonObj.class, Callback.class);
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {new MyJsonObj(bodyText), new MyCallback()};
+    Object[] args = new Object[] { new MyJsonObj(bodyText), new MyCallback() };
     try {
       build(method, args);
       fail("Didn't throw exception with too few params");
@@ -163,7 +163,7 @@ public class HttpRequestBuilderTest {
   @Test public void testRegularWithNoPathParam() throws Exception {
     Method method = MyService.class.getMethod("regularNoPathParam", String.class, Callback.class);
     String otherParam = UUID.randomUUID().toString();
-    Object[] args = new Object[] {otherParam, new MyCallback()};
+    Object[] args = new Object[] { otherParam, new MyCallback() };
     try {
       build(method, args);
       fail("Didn't throw exception with too few params");
@@ -171,7 +171,7 @@ public class HttpRequestBuilderTest {
     }
   }
 
-  @SuppressWarnings({"UnusedDeclaration"}) // Methods are accessed by reflection.
+  @SuppressWarnings({ "UnusedDeclaration" }) // Methods are accessed by reflection.
   private static interface MyService {
     @GET("foo/bar") void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
 
@@ -197,14 +197,14 @@ public class HttpRequestBuilderTest {
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
     return new HttpRequestBuilder(new GsonConverter(GSON)) //
-        .setMethod(method, false)
-        .setArgs(args)
-        .setApiUrl(API_URL)
+        .setMethod(method, false) //
+        .setArgs(args) //
+        .setApiUrl(API_URL) //
         .build();
   }
 
   private static class MyJsonObj {
-    @SuppressWarnings({"UnusedDeclaration"}) // Accessed by json serialization.
+    @SuppressWarnings({ "UnusedDeclaration" }) // Accessed by json serialization.
     private String bodyText;
 
     public MyJsonObj(String bodyText) {
@@ -212,27 +212,14 @@ public class HttpRequestBuilderTest {
     }
   }
 
-  private static class SimpleResponse {
-
-  }
+  private static class SimpleResponse {}
 
   private class MyCallback implements Callback<SimpleResponse> {
-    @Override public void call(SimpleResponse simpleResponse) {
-    }
-
-    @Override public void sessionExpired(ServerError error) {
-    }
-
-    @Override public void networkError() {
-    }
-
-    @Override public void clientError(SimpleResponse response, int statusCode) {
-    }
-
-    @Override public void serverError(ServerError error, int statusCode) {
-    }
-
-    @Override public void unexpectedError(Throwable t) {
-    }
+    @Override public void call(SimpleResponse simpleResponse) {}
+    @Override public void sessionExpired(ServerError error) {}
+    @Override public void networkError() {}
+    @Override public void clientError(SimpleResponse response, int statusCode) {}
+    @Override public void serverError(ServerError error, int statusCode) {}
+    @Override public void unexpectedError(Throwable t) {}
   }
 }

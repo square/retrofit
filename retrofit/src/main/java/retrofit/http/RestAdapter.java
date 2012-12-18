@@ -68,27 +68,29 @@ public class RestAdapter {
   /**
    * Adapts a Java interface to a REST API.
    * <p/>
-   * The relative path for a given method is obtained from a {@link GET}, {@link POST}, {@link PUT}, or {@link DELETE}
-   * annotation on the method. Gets the names of URL parameters from {@link javax.inject.Named} annotations on the
-   * method parameters.
+   * The relative path for a given method is obtained from a {@link GET}, {@link POST}, {@link PUT},
+   * or {@link DELETE} annotation on the method. Gets the names of URL parameters from
+   * {@link javax.inject.Named Named} annotations on the method parameters.
    * <p/>
    * HTTP requests happen in one of two ways:
    * <ul>
-   *   <li>On the provided HTTP {@link Executor} with callbacks marshaled to the callback {@link Executor}. The last
-   *   method parameter should be of type {@link Callback}. The HTTP response will be converted to the callback's
-   *   parameter type using the specified {@link Converter}. If the callback parameter type uses a wildcard, the lower
-   *   bound will be used as the conversion type.</li>
-   *   <li>On the current thread returning the response or throwing a {@link RestException}. The HTTP response will be
-   *   converted to the method's return type using the specified {@link Converter}.</li>
+   * <li>On the provided HTTP {@link Executor} with callbacks marshaled to the callback
+   * {@link Executor}. The last method parameter should be of type {@link Callback}. The HTTP
+   * response will be converted to the callback's parameter type using the specified
+   * {@link Converter}. If the callback parameter type uses a wildcard, the lower bound will be used
+   * as the conversion type.</li>
+   * <li>On the current thread returning the response or throwing a {@link RestException}. The HTTP
+   * response will be converted to the method's return type using the specified
+   * {@link Converter}.</li>
    * </ul>
    * <p/>
    * For example:
    * <pre>
    *   public interface MyApi {
    *     &#64;POST("go") // Asynchronous execution.
-   *     public void go(@Named("a") String a, @Named("b") int b, Callback&lt;? super MyResult> callback);
+   *     void go(@Named("a") String a, @Named("b") int b, Callback&lt;? super MyResult> callback);
    *     &#64;POST("go") // Synchronous execution.
-   *     public MyResult go(@Named("a") String a, @Named("b") int b);
+   *     MyResult go(@Named("a") String a, @Named("b") int b);
    *   }
    * </pre>
    *
@@ -96,14 +98,15 @@ public class RestAdapter {
    */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> type) {
-    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, new RestHandler());
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
+        new RestHandler());
   }
 
   private class RestHandler implements InvocationHandler {
     private final Map<Method, Type> responseTypeCache = new HashMap<Method, Type>();
 
-    @SuppressWarnings("unchecked")
-    @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+    @SuppressWarnings("unchecked") @Override
+    public Object invoke(Object proxy, final Method method, final Object[] args) {
       if (methodWantsSynchronousInvocation(method)) {
         return invokeRequest(method, args, true);
       } else {
@@ -123,11 +126,11 @@ public class RestAdapter {
      * Execute an HTTP request.
      *
      * @return HTTP response object of specified {@code type}.
-     * @throws ClientHttpException if HTTP 4XX error occurred.
-     * @throws UnauthorizedHttpException if HTTP 401 error occurred.
-     * @throws ServerHttpException if HTTP 5XX error occurred.
-     * @throws NetworkException if the {@code request} URL was unreachable.
-     * @throws UnexpectedException if an unexpected exception was thrown while processing the request.
+     * @throws ClientHttpException If HTTP 4XX error occurred.
+     * @throws UnauthorizedHttpException If HTTP 401 error occurred.
+     * @throws ServerHttpException If HTTP 5XX error occurred.
+     * @throws NetworkException If the {@code request} URL was unreachable.
+     * @throws UnexpectedException If an exception was thrown while processing the request.
      */
     private Object invokeRequest(Method method, Object[] args, boolean isSynchronousInvocation) {
       long start = System.nanoTime();
@@ -147,7 +150,7 @@ public class RestAdapter {
           Thread.currentThread().setName(THREAD_PREFIX + url);
         }
 
-        // Determine deserialization type by method return type or generic parameter to Callback argument.
+        // Determine deserialization type by return type or generic parameter to Callback argument.
         Type type = responseTypeCache.get(method);
         if (type == null) {
           type = getResponseObjectType(method, isSynchronousInvocation);
@@ -187,10 +190,12 @@ public class RestAdapter {
             throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), serverError);
           } else if (statusCode >= 500) { // 5XX == server error
             ServerError serverError = (ServerError) converter.to(body, ServerError.class);
-            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), serverError);
+            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(),
+                serverError);
           } else { // 4XX == client error
             Object clientError = converter.to(body, type);
-            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(), clientError);
+            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(),
+                clientError);
           }
         } catch (ConversionException e) {
           LOGGER.log(WARNING, e.getMessage() + " from " + url, e);
@@ -198,8 +203,14 @@ public class RestAdapter {
         }
       } catch (HttpException e) {
         if (LOGGER.isLoggable(Level.FINE)) {
-          LOGGER.fine("Sever returned " + e.getStatus() + ", " + e.getMessage() + ". Body: " + e.getResponse()
-              + ". Url: " + e.getUrl());
+          LOGGER.fine("Sever returned "
+              + e.getStatus()
+              + ", "
+              + e.getMessage()
+              + ". Body: "
+              + e.getResponse()
+              + ". Url: "
+              + e.getUrl());
         }
         throw e; // Allow any rest-related exceptions to pass through.
       } catch (IOException e) {
@@ -227,7 +238,8 @@ public class RestAdapter {
     return (Callback<?>) args[args.length - 1];
   }
 
-  private static HttpProfiler.RequestInformation getRequestInfo(Server server, Method method, HttpUriRequest request) {
+  private static HttpProfiler.RequestInformation getRequestInfo(Server server, Method method,
+      HttpUriRequest request) {
     RequestLine requestLine = RequestLine.fromMethod(method);
     HttpMethodType httpMethod = requestLine.getHttpMethod();
     HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
@@ -243,25 +255,26 @@ public class RestAdapter {
       contentType = entityContentType != null ? entityContentType.getValue() : null;
     }
 
-    return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
-        contentLength, contentType);
+    return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(),
+        requestLine.getRelativePath(), contentLength, contentType);
   }
 
   /**
    * Determine whether or not execution for a method should be done synchronously.
    *
-   * @throws IllegalArgumentException if the supplied {@code method} has both a return type and {@link Callback}
-   *     argument or neither of the two.
+   * @throws IllegalArgumentException if the supplied {@code method} has both a return type and
+   * {@link Callback} argument or neither of the two.
    */
   static boolean methodWantsSynchronousInvocation(Method method) {
     boolean hasReturnType = method.getReturnType() != void.class;
 
     Class<?>[] parameterTypes = method.getParameterTypes();
-    boolean hasCallback = parameterTypes.length > 0
-        && Callback.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
+    boolean hasCallback = parameterTypes.length > 0 && Callback.class.isAssignableFrom(
+        parameterTypes[parameterTypes.length - 1]);
 
     if ((hasReturnType && hasCallback) || (!hasReturnType && !hasCallback)) {
-      throw new IllegalArgumentException("Method must have either a return type or Callback as last argument.");
+      throw new IllegalArgumentException(
+          "Method must have either a return type or Callback as last argument.");
     }
     return hasReturnType;
   }
@@ -296,8 +309,9 @@ public class RestAdapter {
         return types[0];
       }
     }
-    throw new IllegalArgumentException(
-        String.format("Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.", method));
+    throw new IllegalArgumentException(String.format(
+        "Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.",
+        method));
   }
 
   /**
@@ -305,13 +319,14 @@ public class RestAdapter {
    * <p/>
    * Calling the following methods is required before calling {@link #build()}:
    * <ul>
-   *   <li>{@link #setServer(Server)}</li>
-   *   <li>{@link #setClient(javax.inject.Provider)}</li>
-   *   <li>{@link #setConverter(Converter)}</li>
+   * <li>{@link #setServer(Server)}</li>
+   * <li>{@link #setClient(javax.inject.Provider)}</li>
+   * <li>{@link #setConverter(Converter)}</li>
    * </ul>
-   * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following is also required:
+   * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following
+   * is also required:
    * <ul>
-   *   <li>{@link #setExecutors(java.util.concurrent.Executor, java.util.concurrent.Executor)}</li>
+   * <li>{@link #setExecutors(java.util.concurrent.Executor, java.util.concurrent.Executor)}</li>
    * </ul>
    */
   public static class Builder {
@@ -353,8 +368,9 @@ public class RestAdapter {
      * Executors used for asynchronous HTTP client downloads and callbacks.
      *
      * @param httpExecutor Executor on which HTTP client calls will be made.
-     * @param callbackExecutor Executor on which any {@link Callback} methods will be invoked. If this argument is
-     *                         {@code null} then callback methods will be run on the same thread as the HTTP client.
+     * @param callbackExecutor Executor on which any {@link Callback} methods will be invoked. If
+     * this argument is {@code null} then callback methods will be run on the same thread as the
+     * HTTP client.
      */
     public Builder setExecutors(Executor httpExecutor, Executor callbackExecutor) {
       if (httpExecutor == null) throw new NullPointerException("httpExecutor");
@@ -387,7 +403,8 @@ public class RestAdapter {
         throw new IllegalArgumentException("Server may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers, converter, profiler);
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers,
+          converter, profiler);
     }
 
     private void ensureSaneDefaults() {

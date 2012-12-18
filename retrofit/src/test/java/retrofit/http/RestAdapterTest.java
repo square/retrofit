@@ -71,7 +71,7 @@ public class RestAdapterTest {
     mockCallback = createMock(ResponseCallback.class);
     mockResponse = createMock(HttpResponse.class);
 
-    restAdapter = new RestAdapter.Builder()
+    restAdapter = new RestAdapter.Builder() //
         .setServer("http://host/api/")
         .setClient(mockHttpClient)
         .setExecutors(mockHttpExecutor, mockCallbackExecutor)
@@ -119,7 +119,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithFixedParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
+    expectAsyncLifecycle(HttpDelete.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -128,7 +129,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithFixedParamSync() throws IOException {
-    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
+    expectSyncLifecycle(HttpDelete.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -138,7 +140,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithMultipleFixedParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&" + "id=" + ID);
+    expectAsyncLifecycle(HttpDelete.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&" + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -147,7 +150,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceDeleteWithMultipleFixedParamSync() throws IOException {
-    expectSyncLifecycle(HttpDelete.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&" + "id=" + ID);
+    expectSyncLifecycle(HttpDelete.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&" + "id=" + ID);
     replayAll();
 
     DeleteService service = restAdapter.create(DeleteService.class);
@@ -214,7 +218,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithFixedParamAsync() throws IOException {
-    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
+    expectAsyncLifecycle(HttpGet.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -223,7 +228,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithFixedParamSync() throws IOException {
-    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
+    expectSyncLifecycle(HttpGet.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -233,7 +239,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithMultipleFixedParamsAsync() throws IOException {
-    expectAsyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&id=" + ID);
+    expectAsyncLifecycle(HttpGet.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -242,7 +249,8 @@ public class RestAdapterTest {
   }
 
   @Test public void testServiceGetWithMultipleFixedParamsSync() throws IOException {
-    expectSyncLifecycle(HttpGet.class, GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&id=" + ID);
+    expectSyncLifecycle(HttpGet.class,
+        GET_DELETE_SIMPLE_URL_WITH_PARAMS + "filter=merchant&name2=value2&id=" + ID);
     replayAll();
 
     GetService service = restAdapter.create(GetService.class);
@@ -504,50 +512,49 @@ public class RestAdapterTest {
     RestAdapter.methodWantsSynchronousInvocation(getTypeTestMethod("z"));
   }
 
-  //
-  // Utility Methods:
-  //
   private void replayAll() {
-    replay(mockHttpExecutor, mockHeaders, mockHttpClient, mockCallbackExecutor, mockCallback, mockResponse);
+    replay(mockHttpExecutor, mockHeaders, mockHttpClient, mockCallbackExecutor, mockCallback,
+        mockResponse);
   }
 
   private void verifyAll() {
-    verify(mockHttpExecutor, mockHeaders, mockHttpClient, mockCallbackExecutor, mockCallback, mockResponse);
+    verify(mockHttpExecutor, mockHeaders, mockHttpClient, mockCallbackExecutor, mockCallback,
+        mockResponse);
   }
 
-  private <T extends HttpUriRequest> void expectAsyncLifecycle(Class<T> requestClass, String requestUrl)
-      throws IOException {
+  private <T extends HttpUriRequest> void expectAsyncLifecycle(Class<T> requestClass,
+      String requestUrl) throws IOException {
     expectAsynchronousInvocation();
     expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_OK);
     expectCallbacks();
   }
 
-  private <T extends HttpUriRequest> void expectSyncLifecycle(Class<T> requestClass, String requestUrl)
-      throws IOException {
+  private <T extends HttpUriRequest> void expectSyncLifecycle(Class<T> requestClass,
+      String requestUrl) throws IOException {
     expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_OK);
   }
 
-  private <T extends HttpUriRequest> void expectAsyncLifecycleClientError(Class<T> requestClass, String requestUrl)
-      throws IOException {
+  private <T extends HttpUriRequest> void expectAsyncLifecycleClientError(Class<T> requestClass,
+      String requestUrl) throws IOException {
     expectAsynchronousInvocation();
     expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_CONFLICT);
     expectClientErrorCallbacks(HttpStatus.SC_CONFLICT);
   }
 
-  private <T extends HttpUriRequest> void expectSyncLifecycleClientError(Class<T> requestClass, String requestUrl)
-      throws IOException {
+  private <T extends HttpUriRequest> void expectSyncLifecycleClientError(Class<T> requestClass,
+      String requestUrl) throws IOException {
     expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_CONFLICT);
   }
 
-  private <T extends HttpUriRequest> void expectAsyncLifecycleServerError(Class<T> requestClass, String requestUrl)
-      throws IOException {
+  private <T extends HttpUriRequest> void expectAsyncLifecycleServerError(Class<T> requestClass,
+      String requestUrl) throws IOException {
     expectAsynchronousInvocation();
     expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
     expectServerErrorCallbacks(HttpStatus.SC_NOT_IMPLEMENTED);
   }
 
-  private <T extends HttpUriRequest> void expectSyncLifecycleServerError(Class<T> requestClass, String requestUrl)
-      throws IOException {
+  private <T extends HttpUriRequest> void expectSyncLifecycleServerError(Class<T> requestClass,
+      String requestUrl) throws IOException {
     expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
   }
 
@@ -556,8 +563,8 @@ public class RestAdapterTest {
     expectExecution(mockCallbackExecutor);
   }
 
-  private <T extends HttpUriRequest> void expectHttpExecution(Class<T> requestClass, String requestUrl,
-      Object response, int status) throws IOException {
+  private <T extends HttpUriRequest> void expectHttpExecution(Class<T> requestClass,
+      String requestUrl, Object response, int status) throws IOException {
     expectSetOnWithRequest(requestClass, requestUrl);
     expectResponseCalls(GSON.toJson(response), status);
     expectHttpClientExecute();
@@ -582,13 +589,15 @@ public class RestAdapterTest {
     expect(mockHttpClient.execute(isA(HttpUriRequest.class))).andReturn(mockResponse);
   }
 
-  private void expectResponseCalls(String jsonToReturn, int statusCode) throws UnsupportedEncodingException {
+  private void expectResponseCalls(String jsonToReturn, int statusCode)
+      throws UnsupportedEncodingException {
     expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
-    expect(mockResponse.getStatusLine()).andReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, statusCode, ""));
+    expect(mockResponse.getStatusLine()).andReturn(
+        new BasicStatusLine(HttpVersion.HTTP_1_1, statusCode, ""));
   }
 
-  private <T extends HttpUriRequest> void expectSetOnWithRequest(final Class<T> expectedRequestClass,
-        final String expectedUri) {
+  private <T extends HttpUriRequest> void expectSetOnWithRequest(
+      final Class<T> expectedRequestClass, final String expectedUri) {
     final Capture<HttpMessage> capture = new Capture<HttpMessage>();
     mockHeaders.setOn(capture(capture));
     expectLastCall().andAnswer(new IAnswer<Object>() {
@@ -619,25 +628,27 @@ public class RestAdapterTest {
     @DELETE(ENTITY) void deleteWithParam(@Named("id") String id, Callback<Response> callback);
     @DELETE(ENTITY) Response deleteWithParam(@Named("id") String id);
 
-    @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
+    @DELETE(ENTITY) @QueryParam(name = "filter", value = "merchant")
     void deleteWithFixedParam(@Named("id") String id, Callback<Response> callback);
-    @DELETE(ENTITY) @QueryParam(name="filter", value="merchant")
+
+    @DELETE(ENTITY) @QueryParam(name = "filter", value = "merchant")
     Response deleteWithFixedParam(@Named("id") String id);
 
-    @DELETE(ENTITY)
+    @DELETE(ENTITY) //
     @QueryParams({
-      @QueryParam(name="filter", value="merchant"),
-      @QueryParam(name="name2", value="value2")
-    })
-    void deleteWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
-    @DELETE(ENTITY)
-    @QueryParams({
-        @QueryParam(name="filter", value="merchant"),
-        @QueryParam(name="name2", value="value2")
-    })
-    Response deleteWithMultipleFixedParams(@Named("id") String id);
+        @QueryParam(name = "filter", value = "merchant"),
+        @QueryParam(name = "name2", value = "value2")
+    }) void deleteWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
 
-    @DELETE(ENTITY_PATH_PARAM) void deleteWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @DELETE(ENTITY) //
+    @QueryParams({
+        @QueryParam(name = "filter", value = "merchant"),
+        @QueryParam(name = "name2", value = "value2")
+    }) Response deleteWithMultipleFixedParams(@Named("id") String id);
+
+    @DELETE(ENTITY_PATH_PARAM)
+    void deleteWithPathParam(@Named("id") String id, Callback<Response> callback);
+
     @DELETE(ENTITY_PATH_PARAM) Response deleteWithPathParam(@Named("id") String id);
   }
 
@@ -648,25 +659,27 @@ public class RestAdapterTest {
     @GET(ENTITY) void getWithParam(@Named("id") String id, Callback<Response> callback);
     @GET(ENTITY) Response getWithParam(@Named("id") String id);
 
-    @GET(ENTITY) @QueryParam(name="filter", value="merchant")
+    @GET(ENTITY) @QueryParam(name = "filter", value = "merchant")
     void getWithFixedParam(@Named("id") String id, Callback<Response> callback);
-    @GET(ENTITY) @QueryParam(name="filter", value="merchant")
+
+    @GET(ENTITY) @QueryParam(name = "filter", value = "merchant")
     Response getWithFixedParam(@Named("id") String id);
 
-    @GET(ENTITY)
+    @GET(ENTITY) //
     @QueryParams({
-      @QueryParam(name="filter", value="merchant"),
-      @QueryParam(name="name2", value="value2")
-    })
-    void getWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
-    @GET(ENTITY)
-    @QueryParams({
-        @QueryParam(name="filter", value="merchant"),
-        @QueryParam(name="name2", value="value2")
-    })
-    Response getWithMultipleFixedParams(@Named("id") String id);
+        @QueryParam(name = "filter", value = "merchant"),
+        @QueryParam(name = "name2", value = "value2")
+    }) void getWithMultipleFixedParams(@Named("id") String id, Callback<Response> callback);
 
-    @GET(ENTITY_PATH_PARAM) void getWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @GET(ENTITY) //
+    @QueryParams({
+        @QueryParam(name = "filter", value = "merchant"),
+        @QueryParam(name = "name2", value = "value2")
+    }) Response getWithMultipleFixedParams(@Named("id") String id);
+
+    @GET(ENTITY_PATH_PARAM)
+    void getWithPathParam(@Named("id") String id, Callback<Response> callback);
+
     @GET(ENTITY_PATH_PARAM) Response getWithPathParam(@Named("id") String id);
   }
 
@@ -677,7 +690,9 @@ public class RestAdapterTest {
     @POST(ENTITY) void postWithParam(@Named("id") String id, Callback<Response> callback);
     @POST(ENTITY) Response postWithParam(@Named("id") String id);
 
-    @POST(ENTITY_PATH_PARAM) void postWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @POST(ENTITY_PATH_PARAM)
+    void postWithPathParam(@Named("id") String id, Callback<Response> callback);
+
     @POST(ENTITY_PATH_PARAM) Response postWithPathParam(@Named("id") String id);
   }
 
@@ -688,18 +703,23 @@ public class RestAdapterTest {
     @PUT(ENTITY) void putWithParam(@Named("id") String id, Callback<Response> callback);
     @PUT(ENTITY) Response putWithParam(@Named("id") String id);
 
-    @PUT(ENTITY_PATH_PARAM) void putWithPathParam(@Named("id") String id, Callback<Response> callback);
+    @PUT(ENTITY_PATH_PARAM)
+    void putWithPathParam(@Named("id") String id, Callback<Response> callback);
+
     @PUT(ENTITY_PATH_PARAM) Response putWithPathParam(@Named("id") String id);
   }
 
   private static class Response {
     final String text;
+
     public Response(String text) {
       this.text = text;
     }
+
     @Override public int hashCode() {
       return 7;
     }
+
     @Override public boolean equals(Object obj) {
       return obj instanceof Response && text.equals(((Response) obj).text);
     }
@@ -716,6 +736,7 @@ public class RestAdapterTest {
     @GET(ENTITY) void f(Callback<List<String>> c);
     @GET(ENTITY) void g(ExtendingCallback<Response> callback);
     @GET(ENTITY) void h(@Named("id") String id);
+
     // Synchronous
     @GET(ENTITY) Response x();
     @GET(ENTITY) List<String> y();
@@ -729,7 +750,7 @@ public class RestAdapterTest {
         return method;
       }
     }
-    throw new IllegalArgumentException("Unknown method '" + name + "' on " + TypeTestService.class.getSimpleName());
+    throw new IllegalArgumentException("Unknown method '" + name + "' on TypeTestService");
   }
 
   private interface ResponseCallback extends Callback<Response> {
