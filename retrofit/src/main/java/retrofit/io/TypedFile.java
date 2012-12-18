@@ -61,7 +61,7 @@ public class TypedFile extends AbstractTypedBytes {
   }
 
   @Override public String toString() {
-    return file.getAbsolutePath() + " (" + mimeType() + ")";
+    return file.getAbsolutePath() + " (" + mimeType().mimeName() + ")";
   }
 
   @Override
