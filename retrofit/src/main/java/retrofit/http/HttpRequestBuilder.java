@@ -1,11 +1,6 @@
 package retrofit.http;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.message.BasicNameValuePair;
-import retrofit.io.TypedBytes;
-
-import javax.inject.Named;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -17,6 +12,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.inject.Named;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.message.BasicNameValuePair;
+import retrofit.io.MimeType;
+import retrofit.io.TypedBytes;
+import retrofit.io.TypedFile;
 
 /**
  * Builds HTTP requests from Java method invocations.  Handles "path parameters" in the
@@ -29,6 +31,8 @@ import java.util.regex.Pattern;
  * </ol>
  */
 final class HttpRequestBuilder {
+  private static final MimeType OCTET_STREAM = new MimeType("application/octet-stream");
+
   private final Converter converter;
 
   private Method javaMethod;
@@ -146,6 +150,9 @@ final class HttpRequestBuilder {
           if (arg instanceof TypedBytes) {
             // Let the object specify its own entity representation.
             singleEntity = (TypedBytes) arg;
+          } else if (arg instanceof File) {
+            // Wrap the File object in a format we can understand.
+            singleEntity = new TypedFile((File) arg, OCTET_STREAM);
           } else {
             // Just an object: serialize it with supplied converter
             singleEntity = converter.from(arg);
