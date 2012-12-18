@@ -1,11 +1,13 @@
 package retrofit.http;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpMessage;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -19,9 +21,11 @@ import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.protocol.HTTP;
 import retrofit.io.TypedBytes;
+import retrofit.io.TypedFile;
 
 /**
  * Describes the type of HTTP request to perform, GET, POST, etc.
@@ -128,6 +132,9 @@ enum HttpMethodType {
         if (TypedBytes.class.isAssignableFrom(type)) {
           TypedBytes typedBytes = (TypedBytes) arg;
           form.addPart(name, new TypedBytesBody(typedBytes, name));
+        } else if (File.class.isAssignableFrom(type)) {
+          File file = (File) arg;
+          form.addPart(name, new FileBody(file));
         } else {
           try {
             form.addPart(name, new StringBody(String.valueOf(arg)));
@@ -139,10 +146,15 @@ enum HttpMethodType {
       request.setEntity(form);
     } else {
       try {
-        if (builder.getSingleEntity() != null) {
-          final TypedBytesEntity entity = new TypedBytesEntity(builder.getSingleEntity());
+        TypedBytes singleEntity = builder.getSingleEntity();
+        if (singleEntity != null) {
+          final HttpEntity entity;
+          if (singleEntity instanceof TypedFile) {
+            entity = new TypedFileEntity((TypedFile) singleEntity);
+          } else {
+            entity = new TypedBytesEntity(singleEntity);
+          }
           request.setEntity(entity);
-          request.addHeader(HTTP.CONTENT_TYPE, entity.getMimeType().mimeName());
         } else {
           List<NameValuePair> paramList = builder.getParamList(true);
           // TODO: Use specified encoding. (See CallbackResponseHandler et al)
@@ -160,8 +172,8 @@ enum HttpMethodType {
     for (int i = 0; i < parameterTypes.length; i++) {
       Class<?> parameterType = parameterTypes[i];
       Annotation[] annotations = parameterAnnotations[i];
-      if (TypedBytes.class.isAssignableFrom(parameterType) && !hasSingleEntityAnnotation(
-          annotations)) {
+      if ((TypedBytes.class.isAssignableFrom(parameterType) || File.class.isAssignableFrom(
+          parameterType)) && !hasSingleEntityAnnotation(annotations)) {
         return true;
       }
     }

@@ -2,18 +2,30 @@
 package retrofit.http;
 
 import com.google.gson.Gson;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.junit.Test;
-
-import javax.inject.Named;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import javax.inject.Named;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.HttpMultipart;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.protocol.HTTP;
+import org.apache.james.mime4j.message.Body;
+import org.apache.james.mime4j.message.BodyPart;
+import org.fest.util.Files;
+import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Fail.fail;
@@ -164,6 +176,55 @@ public class HttpRequestBuilderTest {
     }
   }
 
+  @Test public void testFileEntity() throws Exception {
+    Method method = getTestMethod("fileEntity");
+    File tempFile = Files.newTemporaryFile();
+    Object[] args = { tempFile, new MyCallback() };
+
+    HttpUriRequest request = build(method, args);
+
+    assertThat(request).isInstanceOf(HttpPut.class);
+    HttpPut putRequest = (HttpPut) request;
+
+    assertThat(putRequest.getFirstHeader(HTTP.CONTENT_TYPE).getValue()) //
+        .isEqualTo("application/octet-stream");
+
+    HttpEntity entity = putRequest.getEntity();
+    assertThat(entity).isInstanceOf(TypedFileEntity.class);
+    TypedFileEntity fileEntity = (TypedFileEntity) entity;
+
+    Field field = FileEntity.class.getDeclaredField("file");
+    field.setAccessible(true);
+    assertThat(field.get(fileEntity)).isEqualTo(tempFile);
+  }
+
+  @Test public void testFileParam() throws Exception {
+    Method method = getTestMethod("fileParam");
+    File tempFile = Files.newTemporaryFile();
+    Object[] args = { tempFile, new MyCallback() };
+
+    HttpUriRequest request = build(method, args);
+
+    assertThat(request).isInstanceOf(HttpPut.class);
+    HttpPut putRequest = (HttpPut) request;
+
+    HttpEntity entity = putRequest.getEntity();
+    assertThat(entity).isInstanceOf(MultipartEntity.class);
+    MultipartEntity multipartEntity = (MultipartEntity) entity;
+
+    Field field = MultipartEntity.class.getDeclaredField("multipart");
+    field.setAccessible(true);
+    HttpMultipart multipart = (HttpMultipart) field.get(multipartEntity);
+
+    List<BodyPart> bodyParts = multipart.getBodyParts();
+    assertThat(bodyParts).hasSize(1);
+
+    FormBodyPart part = (FormBodyPart) bodyParts.get(0);
+    FileBody body = (FileBody) part.getBody();
+    assertThat(body.getFile()).isEqualTo(tempFile);
+    assertThat(body.getMimeType()).isEqualTo("application/octet-stream");
+  }
+
   @SuppressWarnings({ "UnusedDeclaration" }) // Methods are accessed by reflection.
   private interface MyService {
     @GET("foo/bar") void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
@@ -186,6 +247,12 @@ public class HttpRequestBuilderTest {
 
     @PUT("foo/bar/{id}")
     void regularNoPathParam(@Named("other") String other, Callback<SimpleResponse> callback);
+
+    @PUT("foo/bar")
+    void fileEntity(@SingleEntity File file, Callback<SimpleResponse> callback);
+
+    @PUT("foo/bar")
+    void fileParam(@Named("file") File file, Callback<SimpleResponse> callback);
   }
 
   private static Method getTestMethod(String name) {
