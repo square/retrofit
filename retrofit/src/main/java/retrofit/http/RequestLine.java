@@ -4,8 +4,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 /**
- * Contains the desired HttpMethodType and relative path specified by a service method. See also the
- * factory method {@link #fromMethod(Method)}.
+ * Contains the desired {@link HttpMethodType} and relative path specified by a service method. See
+ * also the factory method {@link #fromMethod(Method)}.
  *
  * @author Patrick Forhan (patrick@squareup.com)
  */
@@ -37,9 +37,9 @@ final class RequestLine {
   }
 
   /**
-   * Looks for exactly one annotation of type {@link DELETE}, {@link GET},
-   * {@link POST}, or {@link PUT} and extracts its path data.  Throws an
-   * {@link IllegalStateException} if none or multiple are found.
+   * Looks for exactly one annotation of type {@link DELETE}, {@link GET}, {@link POST}, or
+   * {@link PUT} and extracts its path data.  Throws an {@link IllegalStateException} if none or
+   * multiple are found.
    */
   static RequestLine fromMethod(Method method) {
     Annotation[] annotations = method.getAnnotations();
