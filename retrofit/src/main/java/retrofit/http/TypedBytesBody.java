@@ -6,21 +6,15 @@ import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.content.AbstractContentBody;
 import retrofit.io.TypedBytes;
 
-/** Adapts HTTP content body to {@link TypedBytes}. */
-class TypedBytesBody extends AbstractContentBody {
+/** Adapts ContentBody to TypedBytes. */
+public class TypedBytesBody extends AbstractContentBody {
   private final TypedBytes typedBytes;
   private final String name;
 
   public TypedBytesBody(TypedBytes typedBytes, String baseName) {
     super(typedBytes.mimeType().mimeName());
     this.typedBytes = typedBytes;
-
-    String name = baseName;
-    String ext = typedBytes.mimeType().extension();
-    if (ext != null) {
-      name += "." + ext;
-    }
-    this.name = name;
+    this.name = baseName + "." + typedBytes.mimeType().extension();
   }
 
   @Override public long getContentLength() {

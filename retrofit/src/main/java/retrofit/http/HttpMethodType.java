@@ -140,8 +140,9 @@ enum HttpMethodType {
     } else {
       try {
         if (builder.getSingleEntity() != null) {
-          TypedBytesEntity entity = new TypedBytesEntity(builder.getSingleEntity());
+          final TypedBytesEntity entity = new TypedBytesEntity(builder.getSingleEntity());
           request.setEntity(entity);
+          request.addHeader(HTTP.CONTENT_TYPE, entity.getMimeType().mimeName());
         } else {
           List<NameValuePair> paramList = builder.getParamList(true);
           // TODO: Use specified encoding. (See CallbackResponseHandler et al)

@@ -6,21 +6,31 @@ package retrofit.io;
  *
  * @author Bob Lee (bob@squareup.com)
  */
-public class MimeType {
+public enum MimeType {
+
+  JSON("application/json", "json"),
+  GIF("image/gif", "gif"),
+  PNG("image/png", "png"),
+  JPEG("image/jpeg", "jpg");
+
   private final String typeName;
   private final String extension;
 
-  public MimeType(String typeName, String extension) {
+  MimeType(String typeName, String extension) {
     this.typeName = typeName;
     this.extension = extension;
   }
 
-  /** Returns the standard type name. */
+  /**
+   * Returns the standard type name.
+   */
   public String mimeName() {
     return typeName;
   }
 
-  /** Returns the standard file extension. */
+  /**
+   * Returns the standard file extension.
+   */
   public String extension() {
     return extension;
   }

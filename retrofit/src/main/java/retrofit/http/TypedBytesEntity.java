@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import org.apache.http.entity.AbstractHttpEntity;
+import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
 /**
@@ -14,13 +15,12 @@ import retrofit.io.TypedBytes;
  *
  * @author Eric Denman (edenman@squareup.com)
  */
-class TypedBytesEntity extends AbstractHttpEntity {
+public class TypedBytesEntity extends AbstractHttpEntity {
 
-  private final TypedBytes typedBytes;
+  private TypedBytes typedBytes;
 
   public TypedBytesEntity(TypedBytes typedBytes) {
     this.typedBytes = typedBytes;
-    setContentType(typedBytes.mimeType().mimeName());
   }
 
   @Override public boolean isRepeatable() {
@@ -43,5 +43,9 @@ class TypedBytesEntity extends AbstractHttpEntity {
 
   @Override public boolean isStreaming() {
     return false;
+  }
+
+  public MimeType getMimeType() {
+    return typedBytes.mimeType();
   }
 }
