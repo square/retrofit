@@ -30,7 +30,7 @@ public class TypedFileTest {
   @Test public void testToString() {
     File file = new File("/path/to/file.png");
 
-    assertThat(new TypedFile(file, MimeType.PNG).toString())
+    assertThat(new TypedFile(file, MimeType.PNG).toString()) //
         .isEqualTo(file.getAbsolutePath() + " (PNG)");
   }
 
@@ -40,11 +40,10 @@ public class TypedFileTest {
       TypedFile typedFile = new TypedFile(tempFile, MimeType.PNG);
       assertThat(typedFile.length()).isZero();
 
-      writeToFile(tempFile, new byte[]{0, 1, 2, 3, 4});
+      writeToFile(tempFile, new byte[] { 0, 1, 2, 3, 4 });
 
       assertThat(tempFile.length()).isEqualTo(5);
       assertThat(typedFile.length()).isEqualTo(5);
-
     } finally {
       //noinspection ResultOfMethodCallIgnored
       tempFile.delete();

@@ -19,14 +19,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Builds HTTP requests from Java method invocations.  Handles "path parameters"
- * in the apiUrl in the form of "path/to/url/{id}/action" where a parameter
- * &#64;{@link Named}("id") is inserted into the url.  Note that this
- * replacement can be recursive if:
+ * Builds HTTP requests from Java method invocations.  Handles "path parameters" in the
+ * {@code apiUrl} in the form of "path/to/url/{id}/action" where a parameter annotated with
+ * {@code @Named("id")} is inserted into the url.  Note that this replacement can be recursive if:
  * <ol>
- * <li> multiple sets of brackets are nested ("path/to/{{key}a}
- * <li> the order of &#64;{@link Named} values go from innermost to outermost
- * <li> the values replaced correspond to &#64;{@link Named} parameters.
+ * <li>Multiple sets of brackets are nested ("path/to/{{key}a}.</li>
+ * <li>The order of {@link Named @Named} values go from innermost to outermost.</li>
+ * <li>The values replaced correspond to {@link Named @Named} parameters.</li>
  * </ol>
  */
 final class HttpRequestBuilder {
@@ -101,8 +100,8 @@ final class HttpRequestBuilder {
 
   /**
    * Converts all but the last method argument to a list of HTTP request parameters.  If
-   * includePathParams is true, path parameters (like id in "/entity/{id}" will be included in this
-   * list.
+   * {@code includePathParams} is {@code true}, path parameters (like 'id' in "/entity/{id}") will
+   * be included in this list.
    */
   List<NameValuePair> getParamList(boolean includePathParams) {
     if (includePathParams || nonPathParams == null) return createParamList();
@@ -226,8 +225,8 @@ final class HttpRequestBuilder {
   }
 
   /**
-   * Gets the set of unique path params used in the given uri.  If a param is used twice in the uri,
-   * it will only show up once in the set.
+   * Gets the set of unique path params used in the given uri.  If a param is used twice in the
+   * uri, it will only show up once in the set.
    *
    * @param path the path to search through.
    * @return set of path params.
@@ -242,7 +241,7 @@ final class HttpRequestBuilder {
     return patterns;
   }
 
-  /** Gets the parameter name from the @Named annotation. */
+  /** Gets the parameter name from the {@link Named} annotation. */
   static String getName(Annotation[] annotations, Method method, int parameterIndex) {
     return findAnnotation(annotations, Named.class, method, parameterIndex).value();
   }

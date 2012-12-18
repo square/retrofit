@@ -54,8 +54,8 @@ public abstract class RestException extends RuntimeException {
   }
 
   /**
-   * The server returned a client error. In most cases, this is a programming error, but it can also signify a user
-   * input error.
+   * The server returned a client error. In most cases, this is a programming error, but it can
+   * also signify a user input error.
    */
   public static class ClientHttpException extends HttpException {
     public ClientHttpException(String url, int status, String message, Object response) {
@@ -63,9 +63,7 @@ public abstract class RestException extends RuntimeException {
     }
   }
 
-  /**
-   * We reached the server, but it encountered an error (5xx) or its response was unparseable. Please try again later.
-   */
+  /** We reached the server, but it encountered an error (5xx) or its response was unparseable. */
   public static class ServerHttpException extends HttpException {
     public ServerHttpException(String url, int status, String message, Object response) {
       super(url, status, message, response);
@@ -91,9 +89,10 @@ public abstract class RestException extends RuntimeException {
   }
 
   /**
-   * An unexpected error occurred. Called if the framework throws an unexpected exception or if the server returns a 400
-   * (Bad Request) error. In either case, the client software likely contains a bug; otherwise, the error would have
-   * been caught sooner. The user should try updating their client.
+   * An unexpected error occurred. Called if the framework throws an unexpected exception or if the
+   * server returns a 400 (Bad Request) error. In either case, the client software likely contains
+   * a bug; otherwise, the error would have been caught sooner. The user should try updating their
+   * client.
    */
   public static class UnexpectedException extends RestException {
     public UnexpectedException(String url, Throwable t) {

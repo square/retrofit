@@ -11,7 +11,7 @@ import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
 /**
- * Container class for when you want to pass an entire TypedBytes as a http request entity.
+ * Container class for when you want to pass an entire {@link TypedBytes} as a http request entity.
  *
  * @author Eric Denman (edenman@squareup.com)
  */
