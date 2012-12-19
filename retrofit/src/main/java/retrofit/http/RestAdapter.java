@@ -22,6 +22,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import retrofit.http.HttpProfiler.RequestInformation;
 
@@ -35,6 +36,7 @@ public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
   private static final int LOG_CHUNK_SIZE = 4000;
   static final String THREAD_PREFIX = "Retrofit-";
+  static final String UTF_8 = "UTF-8";
 
   private final Server server;
   private final Provider<HttpClient> httpClientProvider;
@@ -175,7 +177,15 @@ public class RestAdapter {
           headers = new Header[realHeaders.length];
           for (int i = 0; i < realHeaders.length; i++) {
             org.apache.http.Header realHeader = realHeaders[i];
-            headers[i] = new Header(realHeader.getName(), realHeader.getValue());
+            String headerName = realHeader.getName();
+            String headerValue = realHeader.getValue();
+
+            if (HTTP.CONTENT_TYPE.equalsIgnoreCase(headerName) //
+                && !UTF_8.equalsIgnoreCase(Utils.parseCharset(headerValue))) {
+              throw new IOException("Only UTF-8 charset supported.");
+            }
+
+            headers[i] = new Header(headerName, headerValue);
           }
         }
 
@@ -200,7 +210,7 @@ public class RestAdapter {
   private static void logResponseBody(String url, byte[] body, int statusCode, long elapsedTime)
       throws UnsupportedEncodingException {
     LOGGER.fine("---- HTTP " + statusCode + " from " + url + " (" + elapsedTime + "ms)");
-    String bodyString = new String(body, "UTF-8");
+    String bodyString = new String(body, UTF_8);
     for (int i = 0; i < body.length; i += LOG_CHUNK_SIZE) {
       int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
       LOGGER.fine(bodyString.substring(i, end));
@@ -271,7 +281,7 @@ public class RestAdapter {
           String.format("Last parameter of %s must be a Class or ParameterizedType", method));
     }
     if (Callback.class.isAssignableFrom(callbackClass)) {
-      callbackType = Types.getGenericSupertype(callbackType, callbackClass, Callback.class);
+      callbackType = Utils.getGenericSupertype(callbackType, callbackClass, Callback.class);
       if (callbackType instanceof ParameterizedType) {
         Type[] types = ((ParameterizedType) callbackType).getActualTypeArguments();
         for (int i = 0; i < types.length; i++) {

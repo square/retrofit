@@ -12,13 +12,14 @@ import java.lang.reflect.Type;
 import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
+import static retrofit.http.RestAdapter.UTF_8;
+
 /**
  * A {@link Converter} which uses GSON for serialization and deserialization of entities.
  *
  * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
-  private static final String ENCODING = "UTF-8"; // TODO use actual encoding
   private static final MimeType JSON = new MimeType("application/json", "json");
 
   private final Gson gson;
@@ -29,7 +30,7 @@ public class GsonConverter implements Converter {
 
   @Override public Object to(byte[] body, Type type) throws ConversionException {
     try {
-      InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), ENCODING);
+      InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), UTF_8);
       return gson.fromJson(isr, type);
     } catch (IOException e) {
       throw new ConversionException(e);
@@ -47,9 +48,9 @@ public class GsonConverter implements Converter {
 
     JsonTypedBytes(Gson gson, Object object) {
       try {
-        jsonBytes = gson.toJson(object).getBytes(ENCODING);
+        jsonBytes = gson.toJson(object).getBytes(UTF_8);
       } catch (UnsupportedEncodingException e) {
-        throw new IllegalArgumentException(ENCODING + " doesn't exist!?");
+        throw new IllegalStateException(UTF_8 + " encoding does not exist.");
       }
     }
 
