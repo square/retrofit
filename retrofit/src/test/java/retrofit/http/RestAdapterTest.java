@@ -20,9 +20,6 @@ import org.easymock.IAnswer;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import retrofit.http.Callback.ServerError;
-import retrofit.http.RestException.ClientHttpException;
-import retrofit.http.RestException.ServerHttpException;
 
 import javax.inject.Named;
 import java.io.IOException;
@@ -34,7 +31,6 @@ import java.util.concurrent.Executor;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
@@ -53,7 +49,6 @@ public class RestAdapterTest {
   private static final String GET_DELETE_SIMPLE_URL_WITH_PARAMS = GET_DELETE_SIMPLE_URL + "?";
   private static final Gson GSON = new Gson();
   private static final Response RESPONSE = new Response("some text");
-  private static final ServerError SERVER_ERROR = new ServerError("danger, danger!");
 
   private RestAdapter restAdapter;
   private HttpClient mockHttpClient;
@@ -314,7 +309,7 @@ public class RestAdapterTest {
     try {
       service.post();
       fail("Expected client exception.");
-    } catch (ClientHttpException expected) {
+    } catch (RetrofitError expected) {
     }
     verifyAll();
   }
@@ -336,7 +331,7 @@ public class RestAdapterTest {
     try {
       service.post();
       fail("Expected server exception");
-    } catch (ServerHttpException expected) {
+    } catch (RetrofitError expected) {
     }
     verifyAll();
   }
@@ -538,7 +533,7 @@ public class RestAdapterTest {
       String requestUrl) throws IOException {
     expectAsynchronousInvocation();
     expectHttpExecution(requestClass, requestUrl, RESPONSE, HttpStatus.SC_CONFLICT);
-    expectClientErrorCallbacks(HttpStatus.SC_CONFLICT);
+    expectFailure();
   }
 
   private <T extends HttpUriRequest> void expectSyncLifecycleClientError(Class<T> requestClass,
@@ -549,13 +544,13 @@ public class RestAdapterTest {
   private <T extends HttpUriRequest> void expectAsyncLifecycleServerError(Class<T> requestClass,
       String requestUrl) throws IOException {
     expectAsynchronousInvocation();
-    expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
-    expectServerErrorCallbacks(HttpStatus.SC_NOT_IMPLEMENTED);
+    expectHttpExecution(requestClass, requestUrl, new Object(), HttpStatus.SC_NOT_IMPLEMENTED);
+    expectFailure();
   }
 
   private <T extends HttpUriRequest> void expectSyncLifecycleServerError(Class<T> requestClass,
       String requestUrl) throws IOException {
-    expectHttpExecution(requestClass, requestUrl, SERVER_ERROR, HttpStatus.SC_NOT_IMPLEMENTED);
+    expectHttpExecution(requestClass, requestUrl, new Object(), HttpStatus.SC_NOT_IMPLEMENTED);
   }
 
   private void expectAsynchronousInvocation() {
@@ -571,17 +566,12 @@ public class RestAdapterTest {
   }
 
   private void expectCallbacks() {
-    mockCallback.call(RESPONSE);
+    mockCallback.success(RESPONSE);
     expectLastCall().once();
   }
 
-  private void expectClientErrorCallbacks(int statusCode) {
-    mockCallback.clientError(RESPONSE, statusCode);
-    expectLastCall().once();
-  }
-
-  private void expectServerErrorCallbacks(int statusCode) {
-    mockCallback.serverError(eq(SERVER_ERROR), eq(statusCode));
+  private void expectFailure() {
+    mockCallback.failure(isA(RetrofitError.class));
     expectLastCall().once();
   }
 
@@ -594,6 +584,7 @@ public class RestAdapterTest {
     expect(mockResponse.getEntity()).andReturn(new StringEntity(jsonToReturn));
     expect(mockResponse.getStatusLine()).andReturn(
         new BasicStatusLine(HttpVersion.HTTP_1_1, statusCode, ""));
+    expect(mockResponse.getAllHeaders()).andReturn(null);
   }
 
   private <T extends HttpUriRequest> void expectSetOnWithRequest(

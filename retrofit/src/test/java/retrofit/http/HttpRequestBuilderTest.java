@@ -1,19 +1,18 @@
-// Copyright 2011 Square, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 import com.google.gson.Gson;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.junit.Test;
-
-import javax.inject.Named;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Set;
 import java.util.UUID;
+import javax.inject.Named;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Fail.fail;
@@ -218,11 +217,7 @@ public class HttpRequestBuilderTest {
   private static class SimpleResponse {}
 
   private class MyCallback implements Callback<SimpleResponse> {
-    @Override public void call(SimpleResponse simpleResponse) {}
-    @Override public void sessionExpired(ServerError error) {}
-    @Override public void networkError() {}
-    @Override public void clientError(SimpleResponse response, int statusCode) {}
-    @Override public void serverError(ServerError error, int statusCode) {}
-    @Override public void unexpectedError(Throwable t) {}
+    @Override public void success(SimpleResponse simpleResponse) {}
+    @Override public void failure(RetrofitError error) {}
   }
 }
