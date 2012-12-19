@@ -1,3 +1,4 @@
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Provider;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -23,17 +23,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.util.EntityUtils;
-import retrofit.http.Callback.ServerError;
 import retrofit.http.HttpProfiler.RequestInformation;
-import retrofit.http.RestException.ClientHttpException;
-import retrofit.http.RestException.HttpException;
-import retrofit.http.RestException.NetworkException;
-import retrofit.http.RestException.ServerHttpException;
-import retrofit.http.RestException.UnauthorizedHttpException;
-import retrofit.http.RestException.UnexpectedException;
-
-import static java.util.logging.Level.WARNING;
-import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
 /**
  * Converts Java method calls to Rest calls.
@@ -50,17 +40,18 @@ public class RestAdapter {
   private final Provider<HttpClient> httpClientProvider;
   private final Executor httpExecutor;
   private final Executor callbackExecutor;
-  private final Headers headers;
+  private final Headers requestHeaders;
   private final Converter converter;
   private final HttpProfiler profiler;
 
   private RestAdapter(Server server, Provider<HttpClient> httpClientProvider, Executor httpExecutor,
-      Executor callbackExecutor, Headers headers, Converter converter, HttpProfiler profiler) {
+      Executor callbackExecutor, Headers requestHeaders, Converter converter,
+      HttpProfiler profiler) {
     this.server = server;
     this.httpClientProvider = httpClientProvider;
     this.httpExecutor = httpExecutor;
     this.callbackExecutor = callbackExecutor;
-    this.headers = headers;
+    this.requestHeaders = requestHeaders;
     this.converter = converter;
     this.profiler = profiler;
   }
@@ -79,7 +70,7 @@ public class RestAdapter {
    * response will be converted to the callback's parameter type using the specified
    * {@link Converter}. If the callback parameter type uses a wildcard, the lower bound will be used
    * as the conversion type.</li>
-   * <li>On the current thread returning the response or throwing a {@link RestException}. The HTTP
+   * <li>On the current thread returning the response or throwing a {@link RetrofitError}. The HTTP
    * response will be converted to the method's return type using the specified
    * {@link Converter}.</li>
    * </ul>
@@ -126,11 +117,7 @@ public class RestAdapter {
      * Execute an HTTP request.
      *
      * @return HTTP response object of specified {@code type}.
-     * @throws ClientHttpException If HTTP 4XX error occurred.
-     * @throws UnauthorizedHttpException If HTTP 401 error occurred.
-     * @throws ServerHttpException If HTTP 5XX error occurred.
-     * @throws NetworkException If the {@code request} URL was unreachable.
-     * @throws UnexpectedException If an exception was thrown while processing the request.
+     * @throws RetrofitError Thrown if any error occurs during the HTTP request.
      */
     private Object invokeRequest(Method method, Object[] args, boolean isSynchronousInvocation) {
       long start = System.nanoTime();
@@ -141,7 +128,7 @@ public class RestAdapter {
             .setMethod(method, isSynchronousInvocation)
             .setArgs(args)
             .setApiUrl(url)
-            .setHeaders(headers)
+            .setHeaders(requestHeaders)
             .build();
         url = request.getURI().toString();
 
@@ -182,43 +169,30 @@ public class RestAdapter {
           logResponseBody(url, body, statusCode, elapsedTime);
         }
 
-        try {
-          if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
-            return converter.to(body, type);
-          } else if (statusCode == SC_UNAUTHORIZED) { // 401 == unauthorized user
-            ServerError serverError = (ServerError) converter.to(body, ServerError.class);
-            throw new UnauthorizedHttpException(url, statusLine.getReasonPhrase(), serverError);
-          } else if (statusCode >= 500) { // 5XX == server error
-            ServerError serverError = (ServerError) converter.to(body, ServerError.class);
-            throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(),
-                serverError);
-          } else { // 4XX == client error
-            Object clientError = converter.to(body, type);
-            throw new ClientHttpException(url, statusCode, statusLine.getReasonPhrase(),
-                clientError);
+        org.apache.http.Header[] realHeaders = response.getAllHeaders();
+        Header[] headers = null;
+        if (realHeaders != null) {
+          headers = new Header[realHeaders.length];
+          for (int i = 0; i < realHeaders.length; i++) {
+            org.apache.http.Header realHeader = realHeaders[i];
+            headers[i] = new Header(realHeader.getName(), realHeader.getValue());
           }
-        } catch (ConversionException e) {
-          LOGGER.log(WARNING, e.getMessage() + " from " + url, e);
-          throw new ServerHttpException(url, statusCode, statusLine.getReasonPhrase(), e);
         }
-      } catch (HttpException e) {
-        if (LOGGER.isLoggable(Level.FINE)) {
-          LOGGER.fine("Sever returned "
-              + e.getStatus()
-              + ", "
-              + e.getMessage()
-              + ". Body: "
-              + e.getResponse()
-              + ". Url: "
-              + e.getUrl());
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          try {
+            return converter.to(body, type);
+          } catch (ConversionException e) {
+            throw RetrofitError.conversionError(url, converter, statusCode, headers, body, type, e);
+          }
         }
-        throw e; // Allow any rest-related exceptions to pass through.
+        throw RetrofitError.httpError(url, converter, statusCode, headers, body, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
       } catch (IOException e) {
-        LOGGER.log(WARNING, e.getMessage() + " from " + url, e);
-        throw new NetworkException(url, e);
+        throw RetrofitError.networkError(url, e);
       } catch (Throwable t) {
-        LOGGER.log(WARNING, t.getMessage() + " from " + url, t);
-        throw new UnexpectedException(url, t);
+        throw RetrofitError.unexpectedError(url, t);
       }
     }
   }
@@ -251,7 +225,7 @@ public class RestAdapter {
       HttpEntity entity = entityReq.getEntity();
       contentLength = entity.getContentLength();
 
-      Header entityContentType = entity.getContentType();
+      org.apache.http.Header entityContentType = entity.getContentType();
       contentType = entityContentType != null ? entityContentType.getValue() : null;
     }
 
