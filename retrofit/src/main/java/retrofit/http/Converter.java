@@ -18,8 +18,7 @@ public interface Converter {
    * @param type Target object type.
    * @return Instance of {@code type} which will be cast by the caller.
    * @throws ConversionException If conversion was unable to complete. This will trigger a call to
-   * {@link Callback#serverError(retrofit.http.Callback.ServerError, int)} or throw a
-   * {@link retrofit.http.RestException.ServerHttpException}.
+   * {@link Callback#failure(RetrofitError)} or throw a {@link retrofit.http.RetrofitError}.
    */
   Object to(byte[] body, Type type) throws ConversionException;
 
