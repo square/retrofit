@@ -3,18 +3,24 @@ package retrofit.http;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.inject.Named;
 import javax.inject.Provider;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -25,6 +31,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import retrofit.http.HttpProfiler.RequestInformation;
+
+import static retrofit.http.Utils.SynchronousExecutor;
 
 /**
  * Converts Java method calls to Rest calls.
@@ -96,23 +104,36 @@ public class RestAdapter {
   }
 
   private class RestHandler implements InvocationHandler {
-    private final Map<Method, Type> responseTypeCache = new HashMap<Method, Type>();
+    final Map<Method, MethodDetails> methodDetailsCache =
+        new LinkedHashMap<Method, MethodDetails>();
 
-    @SuppressWarnings("unchecked") @Override
-    public Object invoke(Object proxy, final Method method, final Object[] args) {
-      if (methodWantsSynchronousInvocation(method)) {
-        return invokeRequest(method, args, true);
-      } else {
-        if (httpExecutor == null || callbackExecutor == null) {
-          throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
+    @SuppressWarnings("unchecked")
+    @Override public Object invoke(Object proxy, Method method, final Object[] args) {
+      // Load or create the details cache for the current method.
+      final MethodDetails methodDetails;
+      synchronized (methodDetailsCache) {
+        MethodDetails tempMethodDetails = methodDetailsCache.get(method);
+        if (tempMethodDetails == null) {
+          tempMethodDetails = new MethodDetails(method);
+          methodDetailsCache.put(method, tempMethodDetails);
         }
-        httpExecutor.execute(new CallbackRunnable(obtainCallback(args), callbackExecutor) {
-          @Override public Object obtainResponse() {
-            return invokeRequest(method, args, false);
-          }
-        });
-        return null; // Asynchronous methods should have return type of void.
+        methodDetails = tempMethodDetails;
       }
+
+      if (methodDetails.isSynchronous) {
+        return invokeRequest(methodDetails, args);
+      }
+
+      if (httpExecutor == null || callbackExecutor == null) {
+        throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
+      }
+      Callback<?> callback = (Callback<?>) args[args.length - 1];
+      httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor) {
+        @Override public Object obtainResponse() {
+          return invokeRequest(methodDetails, args);
+        }
+      });
+      return null; // Asynchronous methods should have return type of void.
     }
 
     /**
@@ -121,29 +142,25 @@ public class RestAdapter {
      * @return HTTP response object of specified {@code type}.
      * @throws RetrofitError Thrown if any error occurs during the HTTP request.
      */
-    private Object invokeRequest(Method method, Object[] args, boolean isSynchronousInvocation) {
+    private Object invokeRequest(MethodDetails methodDetails, Object[] args) {
       long start = System.nanoTime();
+
+      methodDetails.init(); // Ensure all relevant method information has been loaded.
+
       String url = server.apiUrl();
       try {
         // Build the request and headers.
         final HttpUriRequest request = new HttpRequestBuilder(converter) //
-            .setMethod(method, isSynchronousInvocation)
+            .setMethod(methodDetails)
             .setArgs(args)
             .setApiUrl(url)
             .setHeaders(requestHeaders)
             .build();
         url = request.getURI().toString();
 
-        if (!isSynchronousInvocation) {
+        if (!methodDetails.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
           Thread.currentThread().setName(THREAD_PREFIX + url);
-        }
-
-        // Determine deserialization type by return type or generic parameter to Callback argument.
-        Type type = responseTypeCache.get(method);
-        if (type == null) {
-          type = getResponseObjectType(method, isSynchronousInvocation);
-          responseTypeCache.put(method, type);
         }
 
         Object profilerObject = null;
@@ -158,7 +175,7 @@ public class RestAdapter {
 
         long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         if (profiler != null) {
-          RequestInformation requestInfo = getRequestInfo(server, method, request);
+          RequestInformation requestInfo = getRequestInfo(server, methodDetails, request);
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
@@ -189,6 +206,7 @@ public class RestAdapter {
           }
         }
 
+        Type type = methodDetails.type;
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           try {
             return converter.to(body, type);
@@ -207,6 +225,181 @@ public class RestAdapter {
     }
   }
 
+  /** Cached details about an interface method. */
+  static class MethodDetails {
+    private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]*)\\}");
+
+    final Method method;
+    final boolean isSynchronous;
+
+    private boolean loaded = false;
+
+    Type type;
+    HttpMethodType httpMethod;
+    String path;
+    Set<String> pathParams;
+    QueryParam[] pathQueryParams;
+    String[] pathNamedParams;
+    int singleEntityArgumentIndex = -1;
+
+    MethodDetails(Method method) {
+      this.method = method;
+      isSynchronous = parseResponseType();
+    }
+
+    synchronized void init() {
+      if (loaded) return;
+
+      parseMethodAnnotations();
+      parseParameterAnnotations();
+
+      loaded = true;
+    }
+
+    /** Loads {@link #httpMethod}, {@link #path}, and {@link #pathQueryParams}. */
+    private void parseMethodAnnotations() {
+      for (Annotation annotation : method.getAnnotations()) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+
+        // Look for an HttpMethod annotation describing the request type.
+        if (annotationType == GET.class
+            || annotationType == POST.class
+            || annotationType == PUT.class
+            || annotationType == DELETE.class) {
+          if (this.httpMethod != null) {
+            throw new IllegalStateException(
+                "Method annotated with multiple HTTP method annotations: " + method);
+          }
+          this.httpMethod = annotationType.getAnnotation(HttpMethod.class).value();
+          try {
+            path = (String) annotationType.getMethod("value").invoke(annotation);
+          } catch (Exception e) {
+            throw new IllegalStateException("Failed to extract URI path.", e);
+          }
+
+          pathParams = parsePathParameters(path);
+        } else if (annotationType == QueryParams.class) {
+          if (this.pathQueryParams != null) {
+            throw new IllegalStateException(
+                "QueryParam and QueryParams annotations are mutually exclusive.");
+          }
+          this.pathQueryParams = ((QueryParams) annotation).value();
+        } else if (annotationType == QueryParam.class) {
+          if (this.pathQueryParams != null) {
+            throw new IllegalStateException(
+                "QueryParam and QueryParams annotations are mutually exclusive.");
+          }
+          this.pathQueryParams = new QueryParam[] { (QueryParam) annotation };
+        }
+      }
+
+      if (httpMethod == null) {
+        throw new IllegalStateException(
+            "Method not annotated with GET, POST, PUT, or DELETE: " + method);
+      }
+      if (pathQueryParams == null) {
+        pathQueryParams = new QueryParam[0];
+      }
+    }
+
+    /** Loads {@link #type}. Returns true if the method is synchronous. */
+    private boolean parseResponseType() {
+      // Synchronous methods have a non-void return type.
+      Type returnType = method.getGenericReturnType();
+
+      // Asynchronous methods should have a Callback type as the last argument.
+      Type lastArgType = null;
+      Class<?> lastArgClass = null;
+      Type[] parameterTypes = method.getGenericParameterTypes();
+      if (parameterTypes.length > 0) {
+        Type typeToCheck = parameterTypes[parameterTypes.length - 1];
+        lastArgType = typeToCheck;
+        if (typeToCheck instanceof ParameterizedType) {
+          typeToCheck = ((ParameterizedType) typeToCheck).getRawType();
+        }
+        if (typeToCheck instanceof Class) {
+          lastArgClass = (Class<?>) typeToCheck;
+        }
+      }
+
+      boolean hasReturnType = returnType != void.class;
+      boolean hasCallback = lastArgClass != null && Callback.class.isAssignableFrom(lastArgClass);
+
+      // Check for invalid configurations.
+      if (hasReturnType && hasCallback) {
+        throw new IllegalArgumentException(
+            "Method may only have return type or Callback as last argument, not both.");
+      }
+      if (!hasReturnType && !hasCallback) {
+        throw new IllegalArgumentException(
+            "Method must have either a return type or Callback as last argument.");
+      }
+
+      if (hasReturnType) {
+        type = returnType;
+        return true;
+      }
+
+      lastArgType = Utils.getGenericSupertype(lastArgType, lastArgClass, Callback.class);
+      if (lastArgType instanceof ParameterizedType) {
+        Type[] types = ((ParameterizedType) lastArgType).getActualTypeArguments();
+        for (int i = 0; i < types.length; i++) {
+          Type type = types[i];
+          if (type instanceof WildcardType) {
+            types[i] = ((WildcardType) type).getUpperBounds()[0];
+          }
+        }
+        type = types[0];
+        return false;
+      }
+      throw new IllegalArgumentException(
+          String.format("Last parameter of %s must be of type Callback<X> or Callback<? super X>.",
+              method));
+    }
+
+    /** Loads {@link #pathNamedParams} and {@link #singleEntityArgumentIndex}. */
+    private void parseParameterAnnotations() {
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      int count = parameterAnnotations.length;
+      if (!isSynchronous) {
+        count -= 1; // Callback is last argument when not a synchronous method.
+      }
+
+      String[] namedParams = new String[count];
+      for (int i = 0; i < count; i++) {
+        for (Annotation parameterAnnotation : parameterAnnotations[i]) {
+          Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
+          if (annotationType == Named.class) {
+            namedParams[i] = ((Named) parameterAnnotation).value();
+          } else if (annotationType == SingleEntity.class) {
+            if (singleEntityArgumentIndex != -1) {
+              throw new IllegalStateException(
+                  "Method annotated with multiple SingleEntity method annotations: " + method);
+            }
+            singleEntityArgumentIndex = i;
+          } else {
+            throw new IllegalArgumentException(
+                "Method argument " + i + " not annotated with Named or SingleEntity: " + method);
+          }
+        }
+      }
+      pathNamedParams = namedParams;
+    }
+
+    /**
+     * Gets the set of unique path parameters used in the given URI. If a parameter is used twice in
+     * the URI, it will only show up once in the set.
+     */
+    static Set<String> parsePathParameters(String path) {
+      Matcher m = PATH_PARAMETERS.matcher(path);
+      Set<String> patterns = new LinkedHashSet<String>();
+      while (m.find()) {
+        patterns.add(m.group(1));
+      }
+      return patterns;
+    }
+  }
+
   private static void logResponseBody(String url, byte[] body, int statusCode, long elapsedTime)
       throws UnsupportedEncodingException {
     LOGGER.fine("---- HTTP " + statusCode + " from " + url + " (" + elapsedTime + "ms)");
@@ -218,14 +411,9 @@ public class RestAdapter {
     LOGGER.fine("---- END HTTP");
   }
 
-  private static Callback<?> obtainCallback(Object[] args) {
-    return (Callback<?>) args[args.length - 1];
-  }
-
-  private static HttpProfiler.RequestInformation getRequestInfo(Server server, Method method,
-      HttpUriRequest request) {
-    RequestLine requestLine = RequestLine.fromMethod(method);
-    HttpMethodType httpMethod = requestLine.getHttpMethod();
+  private static HttpProfiler.RequestInformation getRequestInfo(Server server,
+      MethodDetails methodDetails, HttpUriRequest request) {
+    HttpMethodType httpMethod = methodDetails.httpMethod;
     HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
 
     long contentLength = 0;
@@ -239,63 +427,8 @@ public class RestAdapter {
       contentType = entityContentType != null ? entityContentType.getValue() : null;
     }
 
-    return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(),
-        requestLine.getRelativePath(), contentLength, contentType);
-  }
-
-  /**
-   * Determine whether or not execution for a method should be done synchronously.
-   *
-   * @throws IllegalArgumentException if the supplied {@code method} has both a return type and
-   * {@link Callback} argument or neither of the two.
-   */
-  static boolean methodWantsSynchronousInvocation(Method method) {
-    boolean hasReturnType = method.getReturnType() != void.class;
-
-    Class<?>[] parameterTypes = method.getParameterTypes();
-    boolean hasCallback = parameterTypes.length > 0 && Callback.class.isAssignableFrom(
-        parameterTypes[parameterTypes.length - 1]);
-
-    if ((hasReturnType && hasCallback) || (!hasReturnType && !hasCallback)) {
-      throw new IllegalArgumentException(
-          "Method must have either a return type or Callback as last argument.");
-    }
-    return hasReturnType;
-  }
-
-  /** Get the callback parameter types. */
-  static Type getResponseObjectType(Method method, boolean isSynchronousInvocation) {
-    if (isSynchronousInvocation) {
-      return method.getGenericReturnType();
-    }
-
-    Type[] parameterTypes = method.getGenericParameterTypes();
-    Type callbackType = parameterTypes[parameterTypes.length - 1];
-    Class<?> callbackClass;
-    if (callbackType instanceof Class) {
-      callbackClass = (Class<?>) callbackType;
-    } else if (callbackType instanceof ParameterizedType) {
-      callbackClass = (Class<?>) ((ParameterizedType) callbackType).getRawType();
-    } else {
-      throw new ClassCastException(
-          String.format("Last parameter of %s must be a Class or ParameterizedType", method));
-    }
-    if (Callback.class.isAssignableFrom(callbackClass)) {
-      callbackType = Utils.getGenericSupertype(callbackType, callbackClass, Callback.class);
-      if (callbackType instanceof ParameterizedType) {
-        Type[] types = ((ParameterizedType) callbackType).getActualTypeArguments();
-        for (int i = 0; i < types.length; i++) {
-          Type type = types[i];
-          if (type instanceof WildcardType) {
-            types[i] = ((WildcardType) type).getUpperBounds()[0];
-          }
-        }
-        return types[0];
-      }
-    }
-    throw new IllegalArgumentException(String.format(
-        "Last parameter of %s must be of type Callback<X,Y,Z> or Callback<? super X,..,..>.",
-        method));
+    return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), methodDetails.path,
+        contentLength, contentType);
   }
 
   /**
@@ -404,12 +537,6 @@ public class RestAdapter {
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();
       }
-    }
-  }
-
-  static class SynchronousExecutor implements Executor {
-    @Override public void execute(Runnable runnable) {
-      runnable.run();
     }
   }
 }

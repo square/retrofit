@@ -13,7 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import retrofit.android.MainThreadExecutor;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static retrofit.http.RestAdapter.SynchronousExecutor;
+import static retrofit.http.Utils.SynchronousExecutor;
 import static retrofit.http.RestAdapter.THREAD_PREFIX;
 
 abstract class Platform {
