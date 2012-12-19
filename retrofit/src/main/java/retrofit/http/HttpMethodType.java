@@ -144,7 +144,6 @@ enum HttpMethodType {
           request.setEntity(entity);
         } else {
           List<NameValuePair> paramList = builder.getParamList(true);
-          // TODO: Use specified encoding. (See CallbackResponseHandler et al)
           request.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
         }
       } catch (UnsupportedEncodingException e) {
