@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.Set;
 import java.util.UUID;
 import javax.inject.Named;
 import org.apache.http.client.methods.HttpGet;
@@ -16,31 +15,12 @@ import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Fail.fail;
+import static retrofit.http.RestAdapter.MethodDetails;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest {
   private static final Gson GSON = new Gson();
   private static final String API_URL = "http://taqueria.com/lengua/taco";
-
-  @Test public void testRegex() throws Exception {
-    expectParams("");
-    expectParams("foo");
-    expectParams("foo/bar");
-    expectParams("foo/bar/{taco}", "taco");
-    expectParams("foo/bar/{t}", "t");
-    expectParams("foo/bar/{taco}/or/{burrito}", "taco", "burrito");
-    expectParams("foo/bar/{taco}/or/{taco}", "taco");
-    expectParams("foo/bar/{taco-shell}", "taco-shell");
-    expectParams("foo/bar/{taco_shell}", "taco_shell");
-  }
-
-  private void expectParams(String path, String... expected) {
-    Set<String> calculated = HttpRequestBuilder.getPathParameters(path);
-    assertThat(calculated.size()).isEqualTo(expected.length);
-    for (String val : expected) {
-      assertThat(calculated).contains(val);
-    }
-  }
 
   @Test public void testNormalGet() throws Exception {
     Method method = getTestMethod("normalGet");
@@ -198,8 +178,10 @@ public class HttpRequestBuilderTest {
   }
 
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
+    MethodDetails methodDetails = new MethodDetails(method);
+    methodDetails.init();
     return new HttpRequestBuilder(new GsonConverter(GSON)) //
-        .setMethod(method, false) //
+        .setMethod(methodDetails) //
         .setArgs(args) //
         .setApiUrl(API_URL) //
         .build();

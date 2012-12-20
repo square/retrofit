@@ -2,6 +2,7 @@
 package retrofit.http;
 
 import java.lang.reflect.Type;
+import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,5 +58,11 @@ final class Utils {
       return match.group(1).replaceAll("[\"\\\\]", "");
     }
     return UTF_8;
+  }
+
+  static class SynchronousExecutor implements Executor {
+    @Override public void execute(Runnable runnable) {
+      runnable.run();
+    }
   }
 }
