@@ -539,7 +539,6 @@ public class RestAdapterTest {
     method.init();
   }
 
-  @Ignore // TODO Issue #130
   @Test public void testNonEndpointMethodsSucceed() {
     TypeTestService service = restAdapter.create(TypeTestService.class);
     assertThat(service.equals(new Object())).isFalse();

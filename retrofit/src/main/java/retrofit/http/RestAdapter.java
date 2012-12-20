@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -100,15 +101,26 @@ public class RestAdapter {
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> type) {
     return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
-        new RestHandler());
+        new RestHandler(type));
   }
 
   private class RestHandler implements InvocationHandler {
-    final Map<Method, MethodDetails> methodDetailsCache =
+    private final Class<?> declaringType;
+    private final Map<Method, MethodDetails> methodDetailsCache =
         new LinkedHashMap<Method, MethodDetails>();
 
+    RestHandler(Class<?> declaringType) {
+      this.declaringType = declaringType;
+    }
+
     @SuppressWarnings("unchecked")
-    @Override public Object invoke(Object proxy, Method method, final Object[] args) {
+    @Override public Object invoke(Object proxy, Method method, final Object[] args)
+        throws InvocationTargetException, IllegalAccessException {
+      // If the method is not a direct member of the interface then defer to normal invocation.
+      if (method.getDeclaringClass() != declaringType) {
+        return method.invoke(this, args);
+      }
+
       // Load or create the details cache for the current method.
       final MethodDetails methodDetails;
       synchronized (methodDetailsCache) {
