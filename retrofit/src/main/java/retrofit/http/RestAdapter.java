@@ -168,7 +168,7 @@ public class RestAdapter {
           profilerObject = profiler.beforeCall();
         }
 
-        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
+        LOGGER.fine("Sending " + request.getMethod() + " to " + url);
         HttpResponse response = httpClientProvider.get().execute(request);
         StatusLine statusLine = response.getStatusLine();
         int statusCode = statusLine.getStatusCode();
