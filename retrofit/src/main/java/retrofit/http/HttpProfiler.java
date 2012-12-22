@@ -21,12 +21,13 @@ public interface HttpProfiler<T> {
    * Invoked after an HTTP method completes. This is called from the
    * RestAdapter's background thread.
    *
-   * @param requestInfo        information about the originating HTTP request.
-   * @param elapsedTime        time in milliseconds it took the HTTP request to complete.
-   * @param statusCode         response status code.
-   * @param beforeCallData     the data returned by the corresponding {@link #beforeCall()}.
+   * @param requestInfo information about the originating HTTP request.
+   * @param elapsedTime time in milliseconds it took the HTTP request to complete.
+   * @param statusCode response status code.
+   * @param beforeCallData the data returned by the corresponding {@link #beforeCall()}.
    */
-  void afterCall(RequestInformation requestInfo, long elapsedTime, int statusCode, T beforeCallData);
+  void afterCall(RequestInformation requestInfo, long elapsedTime, int statusCode,
+      T beforeCallData);
 
   /** The HTTP method. */
   public enum Method {
@@ -45,8 +46,8 @@ public interface HttpProfiler<T> {
     private final long contentLength;
     private final String contentType;
 
-    public RequestInformation(Method method, String baseUrl, String relativePath, long contentLength,
-        String contentType) {
+    public RequestInformation(Method method, String baseUrl, String relativePath,
+        long contentLength, String contentType) {
       this.method = method;
       this.baseUrl = baseUrl;
       this.relativePath = relativePath;

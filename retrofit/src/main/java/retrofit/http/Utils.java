@@ -1,15 +1,23 @@
-// Copyright 2008 Google, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 import java.lang.reflect.Type;
+import java.util.concurrent.Executor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/** Helper methods for dealing with generic types via reflection copied from Guice's {@code MoreTypes} class.. */
-class Types {
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static retrofit.http.RestAdapter.UTF_8;
+
+final class Utils {
+  private static final Pattern CHARSET = Pattern.compile("\\Wcharset=([^\\s;]+)", CASE_INSENSITIVE);
+
   /**
-   * Returns the generic supertype for {@code supertype}. For example, given a class {@code
-   * IntegerSet}, the result for when supertype is {@code Set.class} is {@code Set<Integer>} and the
-   * result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
+   * Returns the generic supertype for {@code supertype}. For example, given a class
+   * {@code IntegerSet}, the result for when supertype is {@code Set.class} is {@code Set<Integer>}
+   * and the result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
    */
+  // Copied from Guice's {@code MoreTypes} class. Copyright 2006 Google, Inc.
   static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
     if (toResolve == rawType) {
       return context;
@@ -42,5 +50,19 @@ class Types {
 
     // we can't resolve this further
     return toResolve;
+  }
+
+  static String parseCharset(String headerValue) {
+    Matcher match = CHARSET.matcher(headerValue);
+    if (match.find()) {
+      return match.group(1).replaceAll("[\"\\\\]", "");
+    }
+    return UTF_8;
+  }
+
+  static class SynchronousExecutor implements Executor {
+    @Override public void execute(Runnable runnable) {
+      runnable.run();
+    }
   }
 }

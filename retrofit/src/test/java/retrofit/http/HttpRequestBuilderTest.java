@@ -1,53 +1,31 @@
-// Copyright 2011 Square, Inc.
+// Copyright 2012 Square, Inc.
 package retrofit.http;
 
 import com.google.gson.Gson;
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Method;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.UUID;
+import javax.inject.Named;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Test;
 
-import javax.inject.Named;
-import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.Set;
-import java.util.UUID;
-
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Fail.fail;
+import static retrofit.http.RestAdapter.MethodDetails;
 
 /** @author Eric Denman (edenman@squareup.com) */
 public class HttpRequestBuilderTest {
   private static final Gson GSON = new Gson();
   private static final String API_URL = "http://taqueria.com/lengua/taco";
 
-  @Test public void testRegex() throws Exception {
-    expectParams("");
-    expectParams("foo");
-    expectParams("foo/bar");
-    expectParams("foo/bar/{taco}", "taco");
-    expectParams("foo/bar/{t}", "t");
-    expectParams("foo/bar/{taco}/or/{burrito}", "taco", "burrito");
-    expectParams("foo/bar/{taco}/or/{taco}", "taco");
-    expectParams("foo/bar/{taco-shell}", "taco-shell");
-    expectParams("foo/bar/{taco_shell}", "taco_shell");
-  }
-
-  private void expectParams(String path, String... expected) {
-    Set<String> calculated = HttpRequestBuilder.getPathParameters(path);
-    assertThat(calculated.size()).isEqualTo(expected.length);
-    for (String val : expected) {
-      assertThat(calculated).contains(val);
-    }
-  }
-
   @Test public void testNormalGet() throws Exception {
-    Method method =
-        MyService.class.getMethod("normalGet", String.class, Callback.class);
+    Method method = getTestMethod("normalGet");
     String expectedId = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, new MyCallback()};
+    Object[] args = new Object[] { expectedId, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpGet.class);
@@ -59,11 +37,10 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testGetWithPathParam() throws Exception {
-    Method method =
-        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    Method method = getTestMethod("getWithPathParam");
     String expectedId = UUID.randomUUID().toString();
     String category = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, category, new MyCallback()};
+    Object[] args = new Object[] { expectedId, category, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpGet.class);
@@ -75,11 +52,10 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testGetWithPathParamAndWhitespaceValue() throws Exception {
-    Method method =
-        MyService.class.getMethod("getWithPathParam", String.class, String.class, Callback.class);
+    Method method = getTestMethod("getWithPathParam");
     String expectedId = "I have spaces buddy";
     String category = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, category, new MyCallback()};
+    Object[] args = new Object[] { expectedId, category, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpGet.class);
@@ -87,15 +63,15 @@ public class HttpRequestBuilderTest {
     HttpGet put = (HttpGet) request;
     // Make sure the url param got translated.
     final String uri = put.getURI().toString();
-    assertThat(uri).isEqualTo(API_URL + "/foo/" + URLEncoder.encode(expectedId, "UTF-8") + "/bar?category=" + category);
+    assertThat(uri).isEqualTo(
+        API_URL + "/foo/" + URLEncoder.encode(expectedId, "UTF-8") + "/bar?category=" + category);
   }
 
   @Test public void testSingleEntityWithPathParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("singleEntityPut", MyJsonObj.class, String.class, Callback.class);
+    Method method = getTestMethod("singleEntityPut");
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, new MyCallback()};
+    Object[] args = new Object[] { new MyJsonObj(bodyText), expectedId, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpPut.class);
@@ -113,11 +89,10 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testNormalPutWithPathParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("normalPut", String.class, String.class, Callback.class);
+    Method method = getTestMethod("normalPut");
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {expectedId, bodyText, new MyCallback()};
+    Object[] args = new Object[] { expectedId, bodyText, new MyCallback() };
     HttpUriRequest request = build(method, args);
 
     assertThat(request).isInstanceOf(HttpPut.class);
@@ -135,12 +110,10 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithTooManyParams() throws Exception {
-    Method method =
-        MyService.class.getMethod("tooManyParams", MyJsonObj.class, String.class, String.class,
-            Callback.class);
+    Method method = getTestMethod("tooManyParams");
     String expectedId = UUID.randomUUID().toString();
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {new MyJsonObj(bodyText), expectedId, "EXTRA", new MyCallback()};
+    Object[] args = new Object[] { new MyJsonObj(bodyText), expectedId, "EXTRA", new MyCallback() };
     try {
       build(method, args);
       fail("Didn't throw exception with too many params");
@@ -149,10 +122,9 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testSingleEntityWithNoPathParam() throws Exception {
-    Method method =
-        MyService.class.getMethod("singleEntityNoPathParam", MyJsonObj.class, Callback.class);
+    Method method = getTestMethod("singleEntityNoPathParam");
     String bodyText = UUID.randomUUID().toString();
-    Object[] args = new Object[] {new MyJsonObj(bodyText), new MyCallback()};
+    Object[] args = new Object[] { new MyJsonObj(bodyText), new MyCallback() };
     try {
       build(method, args);
       fail("Didn't throw exception with too few params");
@@ -161,9 +133,9 @@ public class HttpRequestBuilderTest {
   }
 
   @Test public void testRegularWithNoPathParam() throws Exception {
-    Method method = MyService.class.getMethod("regularNoPathParam", String.class, Callback.class);
+    Method method = getTestMethod("regularNoPathParam");
     String otherParam = UUID.randomUUID().toString();
-    Object[] args = new Object[] {otherParam, new MyCallback()};
+    Object[] args = new Object[] { otherParam, new MyCallback() };
     try {
       build(method, args);
       fail("Didn't throw exception with too few params");
@@ -171,8 +143,8 @@ public class HttpRequestBuilderTest {
     }
   }
 
-  @SuppressWarnings({"UnusedDeclaration"}) // Methods are accessed by reflection.
-  private static interface MyService {
+  @SuppressWarnings({ "UnusedDeclaration" }) // Methods are accessed by reflection.
+  private interface MyService {
     @GET("foo/bar") void normalGet(@Named("id") String id, Callback<SimpleResponse> callback);
 
     @GET("foo/{id}/bar")
@@ -195,16 +167,28 @@ public class HttpRequestBuilderTest {
     void regularNoPathParam(@Named("other") String other, Callback<SimpleResponse> callback);
   }
 
+  private static Method getTestMethod(String name) {
+    Method[] methods = MyService.class.getDeclaredMethods();
+    for (Method method : methods) {
+      if (method.getName().equals(name)) {
+        return method;
+      }
+    }
+    throw new IllegalArgumentException("Unknown method '" + name + "' on MyService");
+  }
+
   private HttpUriRequest build(Method method, Object[] args) throws URISyntaxException {
+    MethodDetails methodDetails = new MethodDetails(method);
+    methodDetails.init();
     return new HttpRequestBuilder(new GsonConverter(GSON)) //
-        .setMethod(method, false)
-        .setArgs(args)
-        .setApiUrl(API_URL)
+        .setMethod(methodDetails) //
+        .setArgs(args) //
+        .setApiUrl(API_URL) //
         .build();
   }
 
   private static class MyJsonObj {
-    @SuppressWarnings({"UnusedDeclaration"}) // Accessed by json serialization.
+    @SuppressWarnings({ "UnusedDeclaration" }) // Accessed by json serialization.
     private String bodyText;
 
     public MyJsonObj(String bodyText) {
@@ -212,27 +196,10 @@ public class HttpRequestBuilderTest {
     }
   }
 
-  private static class SimpleResponse {
-
-  }
+  private static class SimpleResponse {}
 
   private class MyCallback implements Callback<SimpleResponse> {
-    @Override public void call(SimpleResponse simpleResponse) {
-    }
-
-    @Override public void sessionExpired(ServerError error) {
-    }
-
-    @Override public void networkError() {
-    }
-
-    @Override public void clientError(SimpleResponse response, int statusCode) {
-    }
-
-    @Override public void serverError(ServerError error, int statusCode) {
-    }
-
-    @Override public void unexpectedError(Throwable t) {
-    }
+    @Override public void success(SimpleResponse simpleResponse) {}
+    @Override public void failure(RetrofitError error) {}
   }
 }

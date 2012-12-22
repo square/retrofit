@@ -11,17 +11,19 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 /** @author Eric Burke (eric@squareup.com) */
 public class TypedFileTest {
+  private static final MimeType PNG = new MimeType("image/png", "png");
+
   @Test public void testNotEquals() {
-    TypedFile a = new TypedFile(new File("a.png"), MimeType.PNG);
-    TypedFile b = new TypedFile(new File("b.png"), MimeType.PNG);
+    TypedFile a = new TypedFile(new File("a.png"), PNG);
+    TypedFile b = new TypedFile(new File("b.png"), PNG);
 
     assertThat(a).isNotEqualTo(b);
     assertThat(a.hashCode()).isNotEqualTo(b.hashCode());
   }
 
   @Test public void testEquals() {
-    TypedFile a1 = new TypedFile(new File("a.png"), MimeType.PNG);
-    TypedFile a2 = new TypedFile(new File("a.png"), MimeType.PNG);
+    TypedFile a1 = new TypedFile(new File("a.png"), PNG);
+    TypedFile a2 = new TypedFile(new File("a.png"), PNG);
 
     assertThat(a1).isEqualTo(a2);
     assertThat(a1.hashCode()).isEqualTo(a2.hashCode());
@@ -30,21 +32,20 @@ public class TypedFileTest {
   @Test public void testToString() {
     File file = new File("/path/to/file.png");
 
-    assertThat(new TypedFile(file, MimeType.PNG).toString())
-        .isEqualTo(file.getAbsolutePath() + " (PNG)");
+    assertThat(new TypedFile(file, PNG).toString()) //
+        .isEqualTo(file.getAbsolutePath() + " (image/png)");
   }
 
   @Test public void testLength() throws IOException {
     File tempFile = File.createTempFile("foo", ".tmp");
     try {
-      TypedFile typedFile = new TypedFile(tempFile, MimeType.PNG);
+      TypedFile typedFile = new TypedFile(tempFile, PNG);
       assertThat(typedFile.length()).isZero();
 
-      writeToFile(tempFile, new byte[]{0, 1, 2, 3, 4});
+      writeToFile(tempFile, new byte[] { 0, 1, 2, 3, 4 });
 
       assertThat(tempFile.length()).isEqualTo(5);
       assertThat(typedFile.length()).isEqualTo(5);
-
     } finally {
       //noinspection ResultOfMethodCallIgnored
       tempFile.delete();

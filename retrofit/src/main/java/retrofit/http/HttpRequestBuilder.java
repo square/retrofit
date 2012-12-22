@@ -1,68 +1,62 @@
 package retrofit.http;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.message.BasicNameValuePair;
-import retrofit.io.TypedBytes;
-
-import javax.inject.Named;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import javax.inject.Named;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.message.BasicNameValuePair;
+import retrofit.io.TypedBytes;
+
+import static retrofit.http.RestAdapter.MethodDetails;
 
 /**
- * Builds HTTP requests from Java method invocations.  Handles "path parameters"
- * in the apiUrl in the form of "path/to/url/{id}/action" where a parameter
- * &#64;{@link Named}("id") is inserted into the url.  Note that this
- * replacement can be recursive if:
+ * Builds HTTP requests from Java method invocations.  Handles "path parameters" in the
+ * {@code apiUrl} in the form of "path/to/url/{id}/action" where a parameter annotated with
+ * {@code @Named("id")} is inserted into the url.  Note that this replacement can be recursive if:
  * <ol>
- * <li> multiple sets of brackets are nested ("path/to/{{key}a}
- * <li> the order of &#64;{@link Named} values go from innermost to outermost
- * <li> the values replaced correspond to &#64;{@link Named} parameters.
+ * <li>Multiple sets of brackets are nested ("path/to/{{key}a}.</li>
+ * <li>The order of {@link Named @Named} values go from innermost to outermost.</li>
+ * <li>The values replaced correspond to {@link Named @Named} parameters.</li>
  * </ol>
  */
 final class HttpRequestBuilder {
   private final Converter converter;
 
-  private Method javaMethod;
-  private boolean isSynchronous;
+  private MethodDetails methodDetails;
   private Object[] args;
   private String apiUrl;
   private String replacedRelativePath;
   private Headers headers;
   private List<NameValuePair> nonPathParams;
-  private RequestLine requestLine;
   private TypedBytes singleEntity;
 
   HttpRequestBuilder(Converter converter) {
     this.converter = converter;
   }
 
-  HttpRequestBuilder setMethod(Method method, boolean isSynchronous) {
-    this.javaMethod = method;
-    this.isSynchronous = isSynchronous;
-    requestLine = RequestLine.fromMethod(method);
+  HttpRequestBuilder setMethod(MethodDetails methodDetails) {
+    this.methodDetails = methodDetails;
     return this;
   }
 
   Method getMethod() {
-    return javaMethod;
+    return methodDetails.method;
   }
 
   boolean isSynchronous() {
-    return isSynchronous;
+    return methodDetails.isSynchronous;
   }
 
   String getRelativePath() {
-    return replacedRelativePath != null ? replacedRelativePath : requestLine.getRelativePath();
+    return replacedRelativePath != null ? replacedRelativePath : methodDetails.path;
   }
 
   HttpRequestBuilder setApiUrl(String apiUrl) {
@@ -70,7 +64,6 @@ final class HttpRequestBuilder {
     return this;
   }
 
-  /** The last argument is assumed to be the Callback and is ignored. */
   HttpRequestBuilder setArgs(Object[] args) {
     this.args = args;
     return this;
@@ -101,8 +94,8 @@ final class HttpRequestBuilder {
 
   /**
    * Converts all but the last method argument to a list of HTTP request parameters.  If
-   * includePathParams is true, path parameters (like id in "/entity/{id}" will be included in this
-   * list.
+   * {@code includePathParams} is {@code true}, path parameters (like 'id' in "/entity/{id}") will
+   * be included in this list.
    */
   List<NameValuePair> getParamList(boolean includePathParams) {
     if (includePathParams || nonPathParams == null) return createParamList();
@@ -111,46 +104,28 @@ final class HttpRequestBuilder {
 
   /** Converts all but the last method argument to a list of HTTP request parameters. */
   private List<NameValuePair> createParamList() {
-    Annotation[][] parameterAnnotations = javaMethod.getParameterAnnotations();
-    int count = parameterAnnotations.length;
-    if (!isSynchronous) {
-      count -= 1;
-    }
-
-    List<NameValuePair> params = new ArrayList<NameValuePair>(count);
+    List<NameValuePair> params = new ArrayList<NameValuePair>();
 
     // Add query parameter(s), if specified.
-    QueryParams queryParams = javaMethod.getAnnotation(QueryParams.class);
-    if (queryParams != null) {
-      QueryParam[] annotations = queryParams.value();
-      for (QueryParam annotation : annotations) {
-        params.add(addPair(annotation));
-      }
-    }
-
-    // Also check for a single specified query parameter.
-    QueryParam queryParam = javaMethod.getAnnotation(QueryParam.class);
-    if (queryParam != null) {
-      params.add(addPair(queryParam));
+    for (QueryParam annotation : methodDetails.pathQueryParams) {
+      params.add(new BasicNameValuePair(annotation.name(), annotation.value()));
     }
 
     // Add arguments as parameters.
-    for (int i = 0; i < count; i++) {
+    String[] pathNamedParams = methodDetails.pathNamedParams;
+    int singleEntityArgumentIndex = methodDetails.singleEntityArgumentIndex;
+    for (int i = 0; i < pathNamedParams.length; i++) {
       Object arg = args[i];
       if (arg == null) continue;
-      for (Annotation annotation : parameterAnnotations[i]) {
-        final Class<? extends Annotation> type = annotation.annotationType();
-        if (type == Named.class) {
-          String name = getName(parameterAnnotations[i], javaMethod, i);
-          params.add(new BasicNameValuePair(name, String.valueOf(arg)));
-        } else if (type == SingleEntity.class) {
-          if (arg instanceof TypedBytes) {
-            // Let the object specify its own entity representation.
-            singleEntity = (TypedBytes) arg;
-          } else {
-            // Just an object: serialize it with supplied converter
-            singleEntity = converter.from(arg);
-          }
+      if (i != singleEntityArgumentIndex) {
+        params.add(new BasicNameValuePair(pathNamedParams[i], String.valueOf(arg)));
+      } else {
+        if (arg instanceof TypedBytes) {
+          // Let the object specify its own entity representation.
+          singleEntity = (TypedBytes) arg;
+        } else {
+          // Just an object: serialize it with supplied converter.
+          singleEntity = converter.from(arg);
         }
       }
     }
@@ -171,16 +146,12 @@ final class HttpRequestBuilder {
     return singleEntity == null ? null : singleEntity.mimeType().mimeName();
   }
 
-  private BasicNameValuePair addPair(QueryParam queryParam) {
-    return new BasicNameValuePair(queryParam.name(), queryParam.value());
-  }
-
   HttpUriRequest build() throws URISyntaxException {
     // Alter parameter list if path parameters are present.
-    Set<String> pathParams = getPathParameters(requestLine.getRelativePath());
+    Set<String> pathParams = new LinkedHashSet<String>(methodDetails.pathParams);
     List<NameValuePair> paramList = createParamList();
     if (!pathParams.isEmpty()) {
-      String replacedPath = requestLine.getRelativePath();
+      String replacedPath = methodDetails.path;
 
       for (String pathParam : pathParams) {
         NameValuePair found = null;
@@ -217,7 +188,7 @@ final class HttpRequestBuilder {
       }
     }
 
-    return requestLine.getHttpMethod().createFrom(this);
+    return methodDetails.httpMethod.createFrom(this);
   }
 
   private String doReplace(String replacedPath, String paramName, String newVal) {
@@ -225,24 +196,7 @@ final class HttpRequestBuilder {
     return replacedPath;
   }
 
-  /**
-   * Gets the set of unique path params used in the given uri.  If a param is used twice in the uri,
-   * it will only show up once in the set.
-   *
-   * @param path the path to search through.
-   * @return set of path params.
-   */
-  static Set<String> getPathParameters(String path) {
-    Pattern p = Pattern.compile("\\{([a-z_-]*)\\}");
-    Matcher m = p.matcher(path);
-    Set<String> patterns = new HashSet<String>();
-    while (m.find()) {
-      patterns.add(m.group(1));
-    }
-    return patterns;
-  }
-
-  /** Gets the parameter name from the @Named annotation. */
+  /** Gets the parameter name from the {@link Named} annotation. */
   static String getName(Annotation[] annotations, Method method, int parameterIndex) {
     return findAnnotation(annotations, Named.class, method, parameterIndex).value();
   }

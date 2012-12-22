@@ -7,20 +7,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import org.apache.http.entity.AbstractHttpEntity;
-import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
 /**
- * Container class for when you want to pass an entire TypedBytes as a http request entity.
+ * Container class for when you want to pass an entire {@link TypedBytes} as a http request entity.
  *
  * @author Eric Denman (edenman@squareup.com)
  */
-public class TypedBytesEntity extends AbstractHttpEntity {
+class TypedBytesEntity extends AbstractHttpEntity {
 
-  private TypedBytes typedBytes;
+  private final TypedBytes typedBytes;
 
   public TypedBytesEntity(TypedBytes typedBytes) {
     this.typedBytes = typedBytes;
+    setContentType(typedBytes.mimeType().mimeName());
   }
 
   @Override public boolean isRepeatable() {
@@ -43,9 +43,5 @@ public class TypedBytesEntity extends AbstractHttpEntity {
 
   @Override public boolean isStreaming() {
     return false;
-  }
-
-  public MimeType getMimeType() {
-    return typedBytes.mimeType();
   }
 }

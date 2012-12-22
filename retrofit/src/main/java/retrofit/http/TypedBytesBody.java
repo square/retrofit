@@ -6,15 +6,21 @@ import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.content.AbstractContentBody;
 import retrofit.io.TypedBytes;
 
-/** Adapts ContentBody to TypedBytes. */
-public class TypedBytesBody extends AbstractContentBody {
+/** Adapts HTTP content body to {@link TypedBytes}. */
+class TypedBytesBody extends AbstractContentBody {
   private final TypedBytes typedBytes;
   private final String name;
 
   public TypedBytesBody(TypedBytes typedBytes, String baseName) {
     super(typedBytes.mimeType().mimeName());
     this.typedBytes = typedBytes;
-    this.name = baseName + "." + typedBytes.mimeType().extension();
+
+    String name = baseName;
+    String ext = typedBytes.mimeType().extension();
+    if (ext != null) {
+      name += "." + ext;
+    }
+    this.name = name;
   }
 
   @Override public long getContentLength() {
@@ -34,14 +40,12 @@ public class TypedBytesBody extends AbstractContentBody {
   }
 
   @Override public void writeTo(OutputStream out) throws IOException {
-    /*
-     * Note: We probably want to differentiate I/O errors that occur
-     * while reading a file from network errors. Network operations can
-     * be retried. File operations will probably continue to fail.
-     *
-     * In the case of photo uploads, we at least check that the file
-     * exists before we even try to upload it.
-     */
+    // Note: We probably want to differentiate I/O errors that occur while reading a file from
+    // network errors. Network operations can be retried. File operations will probably continue to
+    // fail.
+    //
+    // In the case of photo uploads, we at least check that the file exists before we even try to
+    // upload it.
     typedBytes.writeTo(out);
   }
 }
