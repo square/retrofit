@@ -100,6 +100,9 @@ public class RestAdapter {
    */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> type) {
+    if (!type.isInterface()) {
+      throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
+    }
     return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
         new RestHandler(type));
   }
