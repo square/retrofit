@@ -3,6 +3,7 @@ package retrofit.http;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.List;
 
 public class RetrofitError extends RuntimeException {
   static RetrofitError networkError(String url, IOException exception) {
@@ -10,14 +11,14 @@ public class RetrofitError extends RuntimeException {
   }
 
   static RetrofitError conversionError(String url, Converter converter, int statusCode,
-      Header[] headers, byte[] body, Type successType, ConversionException exception) {
+      List<Header> headers, byte[] body, Type successType, ConversionException exception) {
     return new RetrofitError(url, statusCode, headers, body, converter, successType, false,
         exception);
   }
 
-  static RetrofitError httpError(String url, Converter converter, int statuCode, Header[] headers,
-      byte[] body, Type successType) {
-    return new RetrofitError(url, statuCode, headers, body, converter, successType, false, null);
+  static RetrofitError httpError(String url, Converter converter, int statusCode,
+      List<Header> headers, byte[] body, Type successType) {
+    return new RetrofitError(url, statusCode, headers, body, converter, successType, false, null);
   }
 
   static RetrofitError unexpectedError(String url, Throwable exception) {
@@ -27,13 +28,13 @@ public class RetrofitError extends RuntimeException {
   private final String url;
   private final Converter converter;
   private final int statusCode;
-  private final Header[] headers;
+  private final List<Header> headers;
   private final byte[] body;
   private final Type successType;
   private final boolean networkError;
   private final Throwable exception;
 
-  private RetrofitError(String url, int statusCode, Header[] headers, byte[] body,
+  private RetrofitError(String url, int statusCode, List<Header> headers, byte[] body,
       Converter converter, Type successType, boolean networkError, Throwable exception) {
     this.url = url;
     this.converter = converter;
@@ -61,7 +62,7 @@ public class RetrofitError extends RuntimeException {
   }
 
   /** List of headers returning in the HTTP response, if any. */
-  public Header[] getHeaders() {
+  public List<Header> getHeaders() {
     return headers;
   }
 
@@ -79,7 +80,7 @@ public class RetrofitError extends RuntimeException {
       return null;
     }
     try {
-      return converter.to(body, successType);
+      return converter.fromBody(body, successType);
     } catch (ConversionException e) {
       throw new RuntimeException(e);
     }
@@ -91,7 +92,7 @@ public class RetrofitError extends RuntimeException {
       return null;
     }
     try {
-      return converter.to(body, type);
+      return converter.fromBody(body, type);
     } catch (ConversionException e) {
       throw new RuntimeException(e);
     }

@@ -8,7 +8,7 @@ import static retrofit.http.RestAdapter.UTF_8;
 import static retrofit.http.Utils.parseCharset;
 
 public class UtilsTest {
-  @Test public void testCharsetParsing() {
+  @Test public void charsetParsing() {
     assertThat(parseCharset("text/plain;charset=utf-8")).isEqualToIgnoringCase(UTF_8);
     assertThat(parseCharset("text/plain; charset=utf-8")).isEqualToIgnoringCase(UTF_8);
     assertThat(parseCharset("text/plain;  charset=utf-8")).isEqualToIgnoringCase(UTF_8);

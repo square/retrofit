@@ -12,8 +12,6 @@ import java.io.OutputStream;
  * @author Bob Lee (bob@squareup.com)
  */
 public class TypedFile extends AbstractTypedBytes {
-  private static final long serialVersionUID = 0;
-
   private final File file;
 
   /**

@@ -6,14 +6,10 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Make a PUT request to a REST path relative to base URL.
- *
- * @author Patrick Forhan (patrick@squareup.com)
- */
-@Target({ METHOD })
+/** Make a PUT request to a REST path relative to base URL. */
+@Target(METHOD)
 @Retention(RUNTIME)
-@HttpMethod(value = HttpMethodType.PUT)
+@RestMethod(value = "PUT", hasBody = true)
 public @interface PUT {
   String value();
 }

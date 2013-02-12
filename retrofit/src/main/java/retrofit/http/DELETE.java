@@ -6,14 +6,10 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Make a DELETE request to a REST path relative to base URL.
- *
- * @author Patrick Forhan (patrick@squareup.com)
- */
-@Target({ METHOD })
+/** Make a DELETE request to a REST path relative to base URL. */
+@Target(METHOD)
 @Retention(RUNTIME)
-@HttpMethod(value = HttpMethodType.DELETE)
+@RestMethod("DELETE")
 public @interface DELETE {
   String value();
 }
