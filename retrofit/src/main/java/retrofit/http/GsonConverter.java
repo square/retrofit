@@ -20,7 +20,7 @@ import static retrofit.http.RestAdapter.UTF_8;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
-  private static final MimeType JSON = new MimeType("application/json", "json");
+  static final MimeType JSON = new MimeType("application/json", "json");
 
   private final Gson gson;
 
@@ -28,7 +28,7 @@ public class GsonConverter implements Converter {
     this.gson = gson;
   }
 
-  @Override public Object to(byte[] body, Type type) throws ConversionException {
+  @Override public Object fromBody(byte[] body, Type type) throws ConversionException {
     try {
       InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), UTF_8);
       return gson.fromJson(isr, type);
@@ -39,19 +39,19 @@ public class GsonConverter implements Converter {
     }
   }
 
-  @Override public TypedBytes from(Object object) {
-    return new JsonTypedBytes(gson, object);
+  @Override public TypedBytes toBody(Object object) {
+    try {
+      return new JsonTypedBytes(gson.toJson(object).getBytes(UTF_8));
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError(e);
+    }
   }
 
-  private static class JsonTypedBytes implements TypedBytes {
-    private final byte[] jsonBytes;
+  static class JsonTypedBytes implements TypedBytes {
+    final byte[] jsonBytes;
 
-    JsonTypedBytes(Gson gson, Object object) {
-      try {
-        jsonBytes = gson.toJson(object).getBytes(UTF_8);
-      } catch (UnsupportedEncodingException e) {
-        throw new IllegalStateException(UTF_8 + " encoding does not exist.");
-      }
+    JsonTypedBytes(byte[] jsonBytes) {
+      this.jsonBytes = jsonBytes;
     }
 
     @Override public MimeType mimeType() {

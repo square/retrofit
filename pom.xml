@@ -56,7 +56,7 @@
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
     <fest.version>2.0M8</fest.version>
-    <easymock.version>3.1</easymock.version>
+    <mockito.version>1.9.5</mockito.version>
   </properties>
 
   <scm>
@@ -126,11 +126,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.easymock</groupId>
-        <artifactId>easymock</artifactId>
-        <version>${easymock.version}</version>
-      </dependency>
-      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
@@ -139,6 +134,11 @@
         <groupId>org.easytesting</groupId>
         <artifactId>fest-assert-core</artifactId>
         <version>${fest.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

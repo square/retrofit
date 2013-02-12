@@ -5,11 +5,10 @@ import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-/** @author Eric Burke (eric@squareup.com) */
 public class TypedByteArrayTest {
   private static final MimeType GIF = new MimeType("image/gif", "gif");
 
-  @Test public void testEquals() {
+  @Test public void objectEquals() {
     TypedByteArray a1 = new TypedByteArray(new byte[] { 10, 20 }, GIF);
     TypedByteArray a2 = new TypedByteArray(new byte[] { 10, 20 }, GIF);
     TypedByteArray b = new TypedByteArray(new byte[] { 8, 12 }, GIF);

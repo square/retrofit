@@ -11,8 +11,6 @@ import java.util.Arrays;
  * @author Bob Lee (bob@squareup.com)
  */
 public class TypedByteArray extends AbstractTypedBytes {
-  private static final long serialVersionUID = 0;
-
   private final byte[] bytes;
 
   /**

@@ -11,8 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Patrick Forhan (patrick@squareup.com)
  */
-@Target({ METHOD })
-@Retention(RUNTIME)
+@Target(METHOD) @Retention(RUNTIME)
 public @interface QueryParam {
   String name();
   String value();
