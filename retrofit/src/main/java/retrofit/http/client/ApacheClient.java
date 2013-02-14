@@ -124,18 +124,10 @@ public class ApacheClient implements Client {
   /** Adapts ContentBody to TypedBytes. */
   private static class TypedBytesBody extends AbstractContentBody {
     private final TypedBytes typedBytes;
-    private final String name;
 
     TypedBytesBody(TypedBytes typedBytes, String baseName) {
-      super(typedBytes.mimeType().mimeName());
+      super(typedBytes.mimeType());
       this.typedBytes = typedBytes;
-
-      String name = baseName;
-      String ext = typedBytes.mimeType().extension();
-      if (ext != null) {
-        name += "." + ext;
-      }
-      this.name = name;
     }
 
     @Override public long getContentLength() {
@@ -143,7 +135,7 @@ public class ApacheClient implements Client {
     }
 
     @Override public String getFilename() {
-      return name;
+      return null;
     }
 
     @Override public String getCharset() {
@@ -171,7 +163,7 @@ public class ApacheClient implements Client {
 
     TypedBytesEntity(TypedBytes typedBytes) {
       this.typedBytes = typedBytes;
-      setContentType(typedBytes.mimeType().mimeName());
+      setContentType(typedBytes.mimeType());
     }
 
     @Override public boolean isRepeatable() {

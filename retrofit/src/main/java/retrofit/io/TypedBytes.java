@@ -12,7 +12,7 @@ import java.io.OutputStream;
 public interface TypedBytes {
 
   /** Returns the mime type. */
-  MimeType mimeType();
+  String mimeType();
 
   /** Length in bytes. */
   int length();

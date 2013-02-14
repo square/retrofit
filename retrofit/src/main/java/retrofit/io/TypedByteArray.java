@@ -18,7 +18,7 @@ public class TypedByteArray extends AbstractTypedBytes {
    *
    * @throws NullPointerException if bytes or mimeType is null
    */
-  public TypedByteArray(byte[] bytes, MimeType mimeType) {
+  public TypedByteArray(byte[] bytes, String mimeType) {
     super(mimeType);
     if (bytes == null) throw new NullPointerException("bytes");
     this.bytes = bytes;

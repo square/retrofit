@@ -231,7 +231,7 @@ public class RestAdapter {
     TypedBytes body = request.getBody();
     if (body != null) {
       contentLength = body.length();
-      contentType = body.mimeType().mimeName();
+      contentType = body.mimeType();
     }
 
     return new Profiler.RequestInformation(methodDetails.restMethod.value(), server.apiUrl(),
