@@ -19,7 +19,7 @@ public class TypedFile extends AbstractTypedBytes {
    *
    * @throws NullPointerException if file or mimeType is null
    */
-  public TypedFile(File file, MimeType mimeType) {
+  public TypedFile(File file, String mimeType) {
     super(mimeType);
     if (file == null) throw new NullPointerException("file");
     this.file = file;
@@ -59,7 +59,7 @@ public class TypedFile extends AbstractTypedBytes {
   }
 
   @Override public String toString() {
-    return file.getAbsolutePath() + " (" + mimeType().mimeName() + ")";
+    return file.getAbsolutePath() + " (" + mimeType() + ")";
   }
 
   @Override

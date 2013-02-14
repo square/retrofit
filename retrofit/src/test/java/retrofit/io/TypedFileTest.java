@@ -1,16 +1,15 @@
 // Copyright 2010 Square, Inc.
 package retrofit.io;
 
-import org.junit.Test;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class TypedFileTest {
-  private static final MimeType PNG = new MimeType("image/png", "png");
+  private static final String PNG = "image/png";
 
   @Test public void objectEquals() {
     TypedFile a1 = new TypedFile(new File("a.png"), PNG);
