@@ -31,6 +31,8 @@ public class RestAdapterTest {
   private interface Example {
     @GET("/") Object something();
     @GET("/") void something(Callback<Object> callback);
+    @GET("/") Response direct();
+    @GET("/") void direct(Callback<Response> callback);
   }
 
   private Client mockClient;
@@ -104,9 +106,9 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected on malformed response body.");
     } catch (RetrofitError e) {
-      assertThat(e.getStatusCode()).isEqualTo(200);
+      assertThat(e.getResponse().getStatus()).isEqualTo(200);
       assertThat(e.getException()).isInstanceOf(ConversionException.class);
-      assertThat(e.getRawBody()).isEqualTo("{".getBytes("UTF-8"));
+      assertThat(e.getResponse().getBody()).isEqualTo("{".getBytes("UTF-8"));
     }
   }
 
@@ -118,7 +120,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected on non-2XX response code.");
     } catch (RetrofitError e) {
-      assertThat(e.getStatusCode()).isEqualTo(500);
+      assertThat(e.getResponse().getStatus()).isEqualTo(500);
     }
   }
 
@@ -144,5 +146,25 @@ public class RestAdapterTest {
     } catch (RetrofitError e) {
       assertThat(e.getException()).isSameAs(exception);
     }
+  }
+
+  @Test public void getResponseDirectly() throws Exception {
+    Response response = new Response(200, "OK", NO_HEADERS, null);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+    assertThat(example.direct()).isSameAs(response);
+  }
+
+  @Test public void getResponseDirectlyAsync() throws Exception {
+    Response response = new Response(200, "OK", NO_HEADERS, null);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+    Callback<Response> callback = mock(Callback.class);
+
+    example.direct(callback);
+
+    verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
+    verify(mockCallbackExecutor).execute(any(Runnable.class));
+    verify(callback).success(eq(response));
   }
 }

@@ -192,16 +192,19 @@ public class RestAdapter {
 
         Type type = methodDetails.type;
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          if (type.equals(Response.class)) {
+            return response;
+          }
           if (body == null) {
             return null;
           }
           try {
             return converter.fromBody(body, type);
           } catch (ConversionException e) {
-            throw RetrofitError.conversionError(url, converter, statusCode, headers, body, type, e);
+            throw RetrofitError.conversionError(url, response, converter, type, e);
           }
         }
-        throw RetrofitError.httpError(url, converter, statusCode, headers, body, type);
+        throw RetrofitError.httpError(url, response, converter, type);
       } catch (RetrofitError e) {
         throw e; // Pass through our own errors.
       } catch (IOException e) {

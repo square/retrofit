@@ -3,44 +3,39 @@ package retrofit.http;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.List;
+import retrofit.http.client.Response;
 
 public class RetrofitError extends RuntimeException {
   static RetrofitError networkError(String url, IOException exception) {
-    return new RetrofitError(url, 0, null, null, null, null, true, exception);
+    return new RetrofitError(url, null, null, null, true, exception);
   }
 
-  static RetrofitError conversionError(String url, Converter converter, int statusCode,
-      List<Header> headers, byte[] body, Type successType, ConversionException exception) {
-    return new RetrofitError(url, statusCode, headers, body, converter, successType, false,
-        exception);
+  static RetrofitError conversionError(String url, Response response, Converter converter,
+      Type successType, ConversionException exception) {
+    return new RetrofitError(url, response, converter, successType, false, exception);
   }
 
-  static RetrofitError httpError(String url, Converter converter, int statusCode,
-      List<Header> headers, byte[] body, Type successType) {
-    return new RetrofitError(url, statusCode, headers, body, converter, successType, false, null);
+  static RetrofitError httpError(String url, Response response, Converter converter,
+      Type successType) {
+    return new RetrofitError(url, response, converter, successType, false, null);
   }
 
   static RetrofitError unexpectedError(String url, Throwable exception) {
-    return new RetrofitError(url, 0, null, null, null, null, false, exception);
+    return new RetrofitError(url, null, null, null, false, exception);
   }
 
   private final String url;
+  private final Response response;
   private final Converter converter;
-  private final int statusCode;
-  private final List<Header> headers;
-  private final byte[] body;
   private final Type successType;
   private final boolean networkError;
   private final Throwable exception;
 
-  private RetrofitError(String url, int statusCode, List<Header> headers, byte[] body,
-      Converter converter, Type successType, boolean networkError, Throwable exception) {
+  private RetrofitError(String url, Response response, Converter converter, Type successType,
+      boolean networkError, Throwable exception) {
     this.url = url;
+    this.response = response;
     this.converter = converter;
-    this.statusCode = statusCode;
-    this.headers = headers;
-    this.body = body;
     this.successType = successType;
     this.networkError = networkError;
     this.exception = exception;
@@ -51,9 +46,9 @@ public class RetrofitError extends RuntimeException {
     return url;
   }
 
-  /** HTTP status code of the response or 0 if no response received. */
-  public int getStatusCode() {
-    return statusCode;
+  /** Response object containing status code, headers, body, etc. */
+  public Response getResponse() {
+    return response;
   }
 
   /** Whether or not this error was the result of a network error. */
@@ -61,21 +56,12 @@ public class RetrofitError extends RuntimeException {
     return networkError;
   }
 
-  /** List of headers returning in the HTTP response, if any. */
-  public List<Header> getHeaders() {
-    return headers;
-  }
-
-  /** Raw {@code byte[]} of the HTTP response body, if any. */
-  public byte[] getRawBody() {
-    return body;
-  }
-
   /**
    * HTTP response body converted to the type declared by either the interface method return type or
    * the generic type of the supplied {@link Callback} parameter.
    */
   public Object getBody() {
+    byte[] body = response.getBody();
     if (body == null) {
       return null;
     }
@@ -88,6 +74,7 @@ public class RetrofitError extends RuntimeException {
 
   /** HTTP response body converted to specified {@code type}. */
   public Object getBodyAs(Type type) {
+    byte[] body = response.getBody();
     if (body == null) {
       return null;
     }
