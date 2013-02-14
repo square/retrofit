@@ -9,7 +9,7 @@ public class StringTypedBytes extends AbstractTypedBytes {
   private final byte[] bytes;
 
   public StringTypedBytes(String string) {
-    super(new MimeType("text/plain; charset=UTF-8", "txt"));
+    super("text/plain; charset=UTF-8");
     try {
       bytes = string.getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {

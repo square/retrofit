@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
-import retrofit.io.MimeType;
 import retrofit.io.TypedBytes;
 
 import static retrofit.http.RestAdapter.UTF_8;
@@ -20,8 +19,6 @@ import static retrofit.http.RestAdapter.UTF_8;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
-  static final MimeType JSON = new MimeType("application/json", "json");
-
   private final Gson gson;
 
   public GsonConverter(Gson gson) {
@@ -54,8 +51,8 @@ public class GsonConverter implements Converter {
       this.jsonBytes = jsonBytes;
     }
 
-    @Override public MimeType mimeType() {
-      return JSON;
+    @Override public String mimeType() {
+      return "application/json; charset=UTF-8";
     }
 
     @Override public int length() {

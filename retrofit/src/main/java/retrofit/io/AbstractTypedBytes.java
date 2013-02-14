@@ -7,19 +7,19 @@ package retrofit.io;
  * @author Bob Lee (bob@squareup.com)
  */
 public abstract class AbstractTypedBytes implements TypedBytes {
-  private final MimeType mimeType;
+  private final String mimeType;
 
   /**
    * Stores the mime type.
    *
    * @throws NullPointerException if mimeType is null
    */
-  public AbstractTypedBytes(MimeType mimeType) {
+  public AbstractTypedBytes(String mimeType) {
     if (mimeType == null) throw new NullPointerException("mimeType");
     this.mimeType = mimeType;
   }
 
-  public MimeType mimeType() {
+  public String mimeType() {
     return mimeType;
   }
 
