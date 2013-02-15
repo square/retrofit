@@ -50,7 +50,7 @@ public class TypedFile extends AbstractTypedBytes {
    * @throws java.io.IOException if the move fails
    */
   public void moveTo(TypedFile destination) throws IOException {
-    if (mimeType() != destination.mimeType()) {
+    if (!mimeType().equals(destination.mimeType())) {
       throw new IOException("Type mismatch.");
     }
     if (!file.renameTo(destination.file())) {
@@ -62,8 +62,7 @@ public class TypedFile extends AbstractTypedBytes {
     return file.getAbsolutePath() + " (" + mimeType() + ")";
   }
 
-  @Override
-  public boolean equals(Object o) {
+  @Override public boolean equals(Object o) {
     if (this == o) return true;
     if (o instanceof TypedFile) {
       TypedFile rhs = (TypedFile) o;
@@ -72,8 +71,7 @@ public class TypedFile extends AbstractTypedBytes {
     return false;
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return file.hashCode();
   }
 
