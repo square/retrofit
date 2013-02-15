@@ -32,8 +32,7 @@ public class TypedByteArray extends AbstractTypedBytes {
     return bytes.length;
   }
 
-  @Override
-  public boolean equals(Object o) {
+  @Override public boolean equals(Object o) {
     if (this == o) return true;
 
     if (o instanceof TypedByteArray) {
@@ -43,8 +42,7 @@ public class TypedByteArray extends AbstractTypedBytes {
     return false;
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return Arrays.hashCode(bytes);
   }
 }
