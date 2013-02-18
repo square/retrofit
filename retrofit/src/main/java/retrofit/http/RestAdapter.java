@@ -8,7 +8,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,18 +41,17 @@ public class RestAdapter {
   private final Provider<Client> clientProvider;
   private final Executor httpExecutor;
   private final Executor callbackExecutor;
-  private final Provider<List<Header>> headersProvider;
+  private final Headers headers;
   private final Converter converter;
   private final Profiler profiler;
 
   private RestAdapter(Server server, Provider<Client> clientProvider, Executor httpExecutor,
-      Executor callbackExecutor, Provider<List<Header>> headersProvider, Converter converter,
-      Profiler profiler) {
+      Executor callbackExecutor, Headers headers, Converter converter, Profiler profiler) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
     this.callbackExecutor = callbackExecutor;
-    this.headersProvider = headersProvider;
+    this.headers = headers;
     this.converter = converter;
     this.profiler = profiler;
   }
@@ -151,7 +149,7 @@ public class RestAdapter {
         Request request = new RequestBuilder(converter) //
             .setApiUrl(server.apiUrl())
             .setArgs(args)
-            .setHeaders(headersProvider.get())
+            .setHeaders(headers.get())
             .setMethodInfo(methodDetails)
             .build();
         url = request.getUrl();
@@ -261,7 +259,7 @@ public class RestAdapter {
     private Provider<Client> clientProvider;
     private Executor httpExecutor;
     private Executor callbackExecutor;
-    private Provider<List<Header>> headersProvider;
+    private Headers headers;
     private Converter converter;
     private Profiler profiler;
 
@@ -307,17 +305,9 @@ public class RestAdapter {
       return this;
     }
 
-    public Builder setHeaders(final List<Header> headers) {
-      return setHeaders(new Provider<List<Header>>() {
-        @Override public List<Header> get() {
-          return headers;
-        }
-      });
-    }
-
-    public Builder setHeaders(Provider<List<Header>> headersProvider) {
-      if (headersProvider == null) throw new NullPointerException("headersProvider");
-      this.headersProvider = headersProvider;
+    public Builder setHeaders(Headers headers) {
+      if (headers == null) throw new NullPointerException("headers");
+      this.headers = headers;
       return this;
     }
 
@@ -339,7 +329,7 @@ public class RestAdapter {
       }
       ensureSaneDefaults();
       return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor,
-          headersProvider, converter, profiler);
+          headers, converter, profiler);
     }
 
     private void ensureSaneDefaults() {
@@ -355,12 +345,8 @@ public class RestAdapter {
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();
       }
-      if (headersProvider == null) {
-        headersProvider = new Provider<List<Header>>() {
-          @Override public List<Header> get() {
-            return Collections.emptyList();
-          }
-        };
+      if (headers == null) {
+        headers = Headers.NONE;
       }
     }
   }
