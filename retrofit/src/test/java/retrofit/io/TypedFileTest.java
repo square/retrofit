@@ -12,9 +12,9 @@ public class TypedFileTest {
   private static final String PNG = "image/png";
 
   @Test public void objectEquals() {
-    TypedFile a1 = new TypedFile(new File("a.png"), PNG);
-    TypedFile a2 = new TypedFile(new File("a.png"), PNG);
-    TypedFile b = new TypedFile(new File("b.png"), PNG);
+    TypedFile a1 = new TypedFile(PNG, new File("a.png"));
+    TypedFile a2 = new TypedFile(PNG, new File("a.png"));
+    TypedFile b = new TypedFile(PNG, new File("b.png"));
 
     assertThat(a1).isNotEqualTo(b);
     assertThat(a1.hashCode()).isNotEqualTo(b.hashCode());
@@ -25,14 +25,14 @@ public class TypedFileTest {
   @Test public void objectToString() {
     File file = new File("/path/to/file.png");
 
-    assertThat(new TypedFile(file, PNG).toString()) //
+    assertThat(new TypedFile(PNG, file).toString()) //
         .isEqualTo(file.getAbsolutePath() + " (image/png)");
   }
 
   @Test public void length() throws IOException {
     File tempFile = File.createTempFile("foo", ".tmp");
     try {
-      TypedFile typedFile = new TypedFile(tempFile, PNG);
+      TypedFile typedFile = new TypedFile(PNG, tempFile);
       assertThat(typedFile.length()).isZero();
 
       writeToFile(tempFile, new byte[] { 0, 1, 2, 3, 4 });

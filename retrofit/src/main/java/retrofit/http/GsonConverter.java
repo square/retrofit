@@ -3,13 +3,13 @@ package retrofit.http;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedInput;
+import retrofit.io.TypedOutput;
 
 import static retrofit.http.RestAdapter.UTF_8;
 
@@ -25,29 +25,37 @@ public class GsonConverter implements Converter {
     this.gson = gson;
   }
 
-  @Override public Object fromBody(byte[] body, Type type) throws ConversionException {
+  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+    InputStreamReader isr = null;
     try {
-      InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(body), UTF_8);
+      isr = new InputStreamReader(body.in(), UTF_8);
       return gson.fromJson(isr, type);
     } catch (IOException e) {
       throw new ConversionException(e);
     } catch (JsonParseException e) {
       throw new ConversionException(e);
+    } finally {
+      if (isr != null) {
+        try {
+          isr.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 
-  @Override public TypedBytes toBody(Object object) {
+  @Override public TypedOutput toBody(Object object) {
     try {
-      return new JsonTypedBytes(gson.toJson(object).getBytes(UTF_8));
+      return new JsonTypedOutput(gson.toJson(object).getBytes(UTF_8));
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }
   }
 
-  static class JsonTypedBytes implements TypedBytes {
-    final byte[] jsonBytes;
+  static class JsonTypedOutput implements TypedOutput {
+    private final byte[] jsonBytes;
 
-    JsonTypedBytes(byte[] jsonBytes) {
+    JsonTypedOutput(byte[] jsonBytes) {
       this.jsonBytes = jsonBytes;
     }
 
@@ -55,7 +63,7 @@ public class GsonConverter implements Converter {
       return "application/json; charset=UTF-8";
     }
 
-    @Override public int length() {
+    @Override public long length() {
       return jsonBytes.length;
     }
 

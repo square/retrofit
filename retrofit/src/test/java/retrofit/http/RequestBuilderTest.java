@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 import retrofit.http.client.Request;
-import retrofit.io.StringTypedBytes;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedString;
+import retrofit.io.TypedOutput;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -180,7 +180,7 @@ public class RequestBuilderTest {
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
         .addNamedParam("ping", "pong") //
-        .addNamedParam("kit", new StringTypedBytes("kat")) //
+        .addNamedParam("kit", new TypedString("kat")) //
         .setMultipart() //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
@@ -217,7 +217,7 @@ public class RequestBuilderTest {
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
   }
 
-  private static void assertTypedBytes(TypedBytes bytes, String expected) throws IOException {
+  private static void assertTypedBytes(TypedOutput bytes, String expected) throws IOException {
     assertThat(bytes).isNotNull();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     bytes.writeTo(baos);

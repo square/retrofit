@@ -4,6 +4,7 @@ package retrofit.io;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -11,7 +12,10 @@ import java.io.OutputStream;
  *
  * @author Bob Lee (bob@squareup.com)
  */
-public class TypedFile extends AbstractTypedBytes {
+public class TypedFile implements TypedInput, TypedOutput {
+  private static final int BUFFER_SIZE = 4096;
+
+  private final String mimeType;
   private final File file;
 
   /**
@@ -19,9 +23,14 @@ public class TypedFile extends AbstractTypedBytes {
    *
    * @throws NullPointerException if file or mimeType is null
    */
-  public TypedFile(File file, String mimeType) {
-    super(mimeType);
-    if (file == null) throw new NullPointerException("file");
+  public TypedFile(String mimeType, File file) {
+    if (mimeType == null) {
+      throw new NullPointerException("mimeType");
+    }
+    if (file == null) {
+      throw new NullPointerException("file");
+    }
+    this.mimeType = mimeType;
     this.file = file;
   }
 
@@ -30,8 +39,20 @@ public class TypedFile extends AbstractTypedBytes {
     return file;
   }
 
-  public void writeTo(OutputStream out) throws IOException {
-    byte[] buffer = new byte[4096];
+  @Override public String mimeType() {
+    return mimeType;
+  }
+
+  @Override public long length() {
+    return file.length();
+  }
+
+  @Override public InputStream in() throws IOException {
+    return new FileInputStream(file);
+  }
+
+  @Override public void writeTo(OutputStream out) throws IOException {
+    byte[] buffer = new byte[BUFFER_SIZE];
     FileInputStream in = new FileInputStream(file);
     try {
       int read;
@@ -73,9 +94,5 @@ public class TypedFile extends AbstractTypedBytes {
 
   @Override public int hashCode() {
     return file.hashCode();
-  }
-
-  @Override public int length() {
-    return (int) file.length();
   }
 }
