@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Named;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedOutput;
 
 /** Cached details about an interface method. */
 final class RestMethodInfo {
@@ -187,8 +187,8 @@ final class RestMethodInfo {
           String name = ((Named) parameterAnnotation).value();
           namedParams[i] = name;
           boolean isPathParam = pathParams.contains(name);
-          if (parameterType == TypedBytes.class && (isPathParam || !restMethod.hasBody())) {
-            throw new IllegalStateException("TypedBytes cannot be used as URL parameter.");
+          if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {
+            throw new IllegalStateException("TypedOutput cannot be used as URL parameter.");
           }
           if (!isPathParam && !isMultipart && restMethod.hasBody()) {
             throw new IllegalStateException(
@@ -220,7 +220,7 @@ final class RestMethodInfo {
     }
     if (!restMethod.hasBody() && (isMultipart || singleEntityArgumentIndex != NO_SINGLE_ENTITY)) {
       throw new IllegalStateException(
-          "Non-body HTTP method cannot contain @SingleEntity or @TypedBytes.");
+          "Non-body HTTP method cannot contain @SingleEntity or @TypedOutput.");
     }
     this.namedParams = namedParams;
   }

@@ -2,7 +2,6 @@
 package retrofit.http;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,7 +20,9 @@ import retrofit.http.Profiler.RequestInformation;
 import retrofit.http.client.Client;
 import retrofit.http.client.Request;
 import retrofit.http.client.Response;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedByteArray;
+import retrofit.io.TypedInput;
+import retrofit.io.TypedOutput;
 
 import static retrofit.http.Utils.SynchronousExecutor;
 
@@ -175,9 +176,10 @@ public class RestAdapter {
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        byte[] body = response.getBody();
+        TypedInput body = response.getBody();
         if (LOGGER.isLoggable(Level.FINE)) {
-          logResponseBody(url, body, statusCode, elapsedTime);
+          // Replace the response since the logger needs to consume the entire input stream.
+          body = logResponseBody(url, response.getStatus(), body, elapsedTime);
         }
 
         List<Header> headers = response.getHeaders();
@@ -213,15 +215,22 @@ public class RestAdapter {
     }
   }
 
-  private static void logResponseBody(String url, byte[] body, int statusCode, long elapsedTime)
-      throws UnsupportedEncodingException {
+  /** Log response data. Returns replacement {@link TypedInput}. */
+  private static TypedInput logResponseBody(String url, int statusCode, TypedInput body,
+      long elapsedTime) throws IOException {
     LOGGER.fine("---- HTTP " + statusCode + " from " + url + " (" + elapsedTime + "ms)");
-    String bodyString = new String(body, UTF_8);
-    for (int i = 0; i < body.length; i += LOG_CHUNK_SIZE) {
+
+    byte[] bodyBytes = Utils.streamToBytes(body.in());
+    String bodyString = new String(bodyBytes, UTF_8);
+    for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
       int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
       LOGGER.fine(bodyString.substring(i, end));
     }
+
     LOGGER.fine("---- END HTTP");
+
+    // Since we consumed the entire input stream, return a new, identical one from its bytes.
+    return new TypedByteArray(body.mimeType(), bodyBytes);
   }
 
   private static Profiler.RequestInformation getRequestInfo(Server server,
@@ -229,7 +238,7 @@ public class RestAdapter {
     long contentLength = 0;
     String contentType = null;
 
-    TypedBytes body = request.getBody();
+    TypedOutput body = request.getBody();
     if (body != null) {
       contentLength = body.length();
       contentType = body.mimeType();

@@ -57,6 +57,7 @@
     <junit.version>4.10</junit.version>
     <fest.version>2.0M8</fest.version>
     <mockito.version>1.9.5</mockito.version>
+    <guava.version>14.0-rc3</guava.version>
   </properties>
 
   <scm>
@@ -139,6 +140,11 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
