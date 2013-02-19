@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import retrofit.http.Header;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedOutput;
 
 /** Encapsulates all of the information necessary to make an HTTP request. */
 public final class Request {

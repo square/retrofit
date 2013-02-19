@@ -11,7 +11,7 @@ import java.util.Set;
 import javax.inject.Named;
 import org.junit.Ignore;
 import org.junit.Test;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedOutput;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

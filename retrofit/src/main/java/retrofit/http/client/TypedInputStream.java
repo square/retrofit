@@ -3,7 +3,7 @@ package retrofit.http.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import retrofit.io.TypedInput;
+import retrofit.http.mime.TypedInput;
 
 public class TypedInputStream implements TypedInput {
 

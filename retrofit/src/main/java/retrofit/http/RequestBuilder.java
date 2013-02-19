@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import retrofit.http.client.Request;
-import retrofit.io.TypedOutput;
-import retrofit.io.TypedString;
+import retrofit.http.mime.TypedOutput;
+import retrofit.http.mime.TypedString;
 
 import static retrofit.http.RestAdapter.UTF_8;
 import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;

@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 import retrofit.http.client.Request;
-import retrofit.io.TypedString;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedString;
+import retrofit.http.mime.TypedOutput;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;

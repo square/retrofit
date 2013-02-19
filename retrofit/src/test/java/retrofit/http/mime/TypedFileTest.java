@@ -1,5 +1,5 @@
 // Copyright 2010 Square, Inc.
-package retrofit.io;
+package retrofit.http.mime;
 
 import java.io.File;
 import java.io.FileOutputStream;
