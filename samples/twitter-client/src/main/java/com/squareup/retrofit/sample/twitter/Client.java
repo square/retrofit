@@ -2,8 +2,8 @@
 package com.squareup.retrofit.sample.twitter;
 
 import java.util.List;
-import javax.inject.Named;
 import retrofit.http.GET;
+import retrofit.http.Name;
 import retrofit.http.RestAdapter;
 
 public class Client {
@@ -15,7 +15,7 @@ public class Client {
 
   interface Twitter {
     @GET("/statuses/user_timeline.json")
-    List<Tweet> tweets(@Named("screen_name") String user);
+    List<Tweet> tweets(@Name("screen_name") String user);
   }
 
   public static void main(String... args) {

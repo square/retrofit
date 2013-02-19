@@ -8,7 +8,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Named;
 import org.junit.Ignore;
 import org.junit.Test;
 import retrofit.http.mime.TypedOutput;
@@ -69,7 +68,7 @@ public class RestMethodInfoTest {
 
   @Test public void concreteCallbackTypesWithParams() {
     class Example {
-      @GET("/foo") void a(@Named("id") String id, ResponseCallback cb) {
+      @GET("/foo") void a(@Name("id") String id, ResponseCallback cb) {
       }
     }
 
@@ -93,7 +92,7 @@ public class RestMethodInfoTest {
 
   @Test public void genericCallbackTypesWithParams() {
     class Example {
-      @GET("/foo") void a(@Named("id") String id, Callback<Response> c) {
+      @GET("/foo") void a(@Name("id") String id, Callback<Response> c) {
       }
     }
 
@@ -173,7 +172,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalArgumentException.class)
   public void missingCallbackTypes() {
     class Example {
-      @GET("/foo") void a(@Named("id") String id) {
+      @GET("/foo") void a(@Name("id") String id) {
       }
     }
 
@@ -440,7 +439,7 @@ public class RestMethodInfoTest {
 
   @Test public void singleParam() {
     class Example {
-      @GET("/") Response a(@Named("a") String a) {
+      @GET("/") Response a(@Name("a") String a) {
         return null;
       }
     }
@@ -456,7 +455,7 @@ public class RestMethodInfoTest {
 
   @Test public void multipleParams() {
     class Example {
-      @GET("/") Response a(@Named("a") String a, @Named("b") String b, @Named("c") String c) {
+      @GET("/") Response a(@Name("a") String a, @Name("b") String b, @Name("c") String c) {
         return null;
       }
     }
@@ -487,7 +486,7 @@ public class RestMethodInfoTest {
 
   @Test public void singleParamWithCallback() {
     class Example {
-      @GET("/") void a(@Named("a") String a, ResponseCallback cb) {
+      @GET("/") void a(@Name("a") String a, ResponseCallback cb) {
       }
     }
 
@@ -502,7 +501,7 @@ public class RestMethodInfoTest {
 
   @Test public void multipleParamsWithCallback() {
     class Example {
-      @GET("/") void a(@Named("a") String a, @Named("b") String b, ResponseCallback cb) {
+      @GET("/") void a(@Name("a") String a, @Name("b") String b, ResponseCallback cb) {
       }
     }
 
@@ -580,7 +579,7 @@ public class RestMethodInfoTest {
 
   @Test public void singleEntityWithNamed() {
     class Example {
-      @PUT("/{a}/{c}") Response a(@Named("a") int a, @SingleEntity int b, @Named("c") int c) {
+      @PUT("/{a}/{c}") Response a(@Name("a") int a, @SingleEntity int b, @Name("c") int c) {
         return null;
       }
     }
@@ -595,7 +594,7 @@ public class RestMethodInfoTest {
 
   @Test public void singleEntityWithNamedAndCallback() {
     class Example {
-      @PUT("/{a}") void a(@Named("a") int a, @SingleEntity int b, ResponseCallback cb) {
+      @PUT("/{a}") void a(@Name("a") int a, @SingleEntity int b, ResponseCallback cb) {
       }
     }
 
@@ -611,7 +610,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void nonPathParamAndSingleEntity() {
     class Example {
-      @PUT("/") Response a(@Named("a") int a, @SingleEntity int b) {
+      @PUT("/") Response a(@Name("a") int a, @SingleEntity int b) {
         return null;
       }
     }
@@ -624,7 +623,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void typedBytesUrlParam() {
     class Example {
-      @GET("/{a}") Response a(@Named("a") TypedOutput m) {
+      @GET("/{a}") Response a(@Name("a") TypedOutput m) {
         return null;
       }
     }
@@ -637,7 +636,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void pathParamNonPathParamAndTypedBytes() {
     class Example {
-      @PUT("/{a}") Response a(@Named("a") int a, @Named("b") int b, @SingleEntity int c) {
+      @PUT("/{a}") Response a(@Name("a") int a, @Name("b") int b, @SingleEntity int c) {
         return null;
       }
     }
@@ -676,7 +675,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void nonBodyHttpMethodWithTypedBytes() {
     class Example {
-      @GET("/") Response a(@Named("a") TypedOutput a) {
+      @GET("/") Response a(@Name("a") TypedOutput a) {
         return null;
       }
     }
@@ -689,7 +688,7 @@ public class RestMethodInfoTest {
   @Test public void simpleMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Named("a") TypedOutput a) {
+      Response a(@Name("a") TypedOutput a) {
         return null;
       }
     }
@@ -704,7 +703,7 @@ public class RestMethodInfoTest {
   @Test public void twoTypedBytesMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Named("a") TypedOutput a, @Named("b") TypedOutput b) {
+      Response a(@Name("a") TypedOutput a, @Name("b") TypedOutput b) {
         return null;
       }
     }
@@ -719,7 +718,7 @@ public class RestMethodInfoTest {
   @Test public void twoTypesMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Named("a") TypedOutput a, @Named("b") int b) {
+      Response a(@Name("a") TypedOutput a, @Name("b") int b) {
         return null;
       }
     }
@@ -734,7 +733,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void implicitMultipartForbidden() {
     class Example {
-      @POST("/") Response a(@Named("a") int a) {
+      @POST("/") Response a(@Name("a") int a) {
         return null;
       }
     }
