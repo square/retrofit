@@ -24,8 +24,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import retrofit.http.Header;
-import retrofit.io.TypedByteArray;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedByteArray;
+import retrofit.http.mime.TypedOutput;
 
 import static org.apache.http.entity.mime.HttpMultipartMode.BROWSER_COMPATIBLE;
 

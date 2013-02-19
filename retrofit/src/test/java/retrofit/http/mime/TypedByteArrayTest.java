@@ -1,5 +1,5 @@
 // Copyright 2010 Square, Inc.
-package retrofit.io;
+package retrofit.http.mime;
 
 import org.junit.Test;
 

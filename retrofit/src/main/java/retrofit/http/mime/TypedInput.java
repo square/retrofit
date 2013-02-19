@@ -1,5 +1,5 @@
 // Copyright 2013 Square, Inc.
-package retrofit.io;
+package retrofit.http.mime;
 
 import java.io.IOException;
 import java.io.InputStream;

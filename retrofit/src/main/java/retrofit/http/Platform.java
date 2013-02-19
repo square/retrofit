@@ -7,8 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Provider;
-import retrofit.android.AndroidApacheClient;
-import retrofit.android.MainThreadExecutor;
+import retrofit.http.android.AndroidApacheClient;
+import retrofit.http.android.MainThreadExecutor;
 import retrofit.http.client.ApacheClient;
 import retrofit.http.client.Client;
 

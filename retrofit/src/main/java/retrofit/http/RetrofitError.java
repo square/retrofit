@@ -4,7 +4,7 @@ package retrofit.http;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import retrofit.http.client.Response;
-import retrofit.io.TypedInput;
+import retrofit.http.mime.TypedInput;
 
 public class RetrofitError extends RuntimeException {
   static RetrofitError networkError(String url, IOException exception) {

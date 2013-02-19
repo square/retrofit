@@ -1,5 +1,5 @@
 // Copyright 2012 Square, Inc.
-package retrofit.android;
+package retrofit.http.android;
 
 import android.os.Handler;
 import android.os.Looper;

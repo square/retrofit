@@ -20,9 +20,9 @@ import retrofit.http.Profiler.RequestInformation;
 import retrofit.http.client.Client;
 import retrofit.http.client.Request;
 import retrofit.http.client.Response;
-import retrofit.io.TypedByteArray;
-import retrofit.io.TypedInput;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedByteArray;
+import retrofit.http.mime.TypedInput;
+import retrofit.http.mime.TypedOutput;
 
 import static retrofit.http.Utils.SynchronousExecutor;
 
