@@ -10,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.inject.Named;
 import retrofit.http.mime.TypedOutput;
 
 /** Cached details about an interface method. */
@@ -183,8 +182,8 @@ final class RestMethodInfo {
       }
       for (Annotation parameterAnnotation : parameterAnnotations) {
         Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-        if (annotationType == Named.class) {
-          String name = ((Named) parameterAnnotation).value();
+        if (annotationType == Name.class) {
+          String name = ((Name) parameterAnnotation).value();
           namedParams[i] = name;
           boolean isPathParam = pathParams.contains(name);
           if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {

@@ -1,6 +1,12 @@
 // Copyright 2011 Square, Inc.
 package retrofit.http;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * Use this annotation on a service method param when you want to directly control the request body
  * of a POST/PUT request (instead of sending in as request parameters or form-style request
@@ -10,7 +16,7 @@ package retrofit.http;
  *
  * @author Eric Denman (edenman@squareup.com)
  */
-@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
-@java.lang.annotation.Target(java.lang.annotation.ElementType.PARAMETER)
+@Retention(RUNTIME)
+@Target(PARAMETER)
 public @interface SingleEntity {
 }

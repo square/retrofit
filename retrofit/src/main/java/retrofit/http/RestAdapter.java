@@ -14,7 +14,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Provider;
 import org.apache.http.protocol.HTTP;
 import retrofit.http.Profiler.RequestInformation;
 import retrofit.http.client.Client;
@@ -39,14 +38,14 @@ public class RestAdapter {
   static final String UTF_8 = "UTF-8";
 
   private final Server server;
-  private final Provider<Client> clientProvider;
+  private final Client.Provider clientProvider;
   private final Executor httpExecutor;
   private final Executor callbackExecutor;
   private final Headers headers;
   private final Converter converter;
   private final Profiler profiler;
 
-  private RestAdapter(Server server, Provider<Client> clientProvider, Executor httpExecutor,
+  private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, Headers headers, Converter converter, Profiler profiler) {
     this.server = server;
     this.clientProvider = clientProvider;
@@ -61,7 +60,7 @@ public class RestAdapter {
    * Adapts a Java interface to a REST API.
    * <p/>
    * The relative path for a given method is obtained from an annotation on the method describing
-   * the request type. The names of URL parameters are retrieved from {@link javax.inject.Named}
+   * the request type. The names of URL parameters are retrieved from {@link Name}
    * annotations on the method parameters.
    * <p/>
    * HTTP requests happen in one of two ways:
@@ -254,7 +253,7 @@ public class RestAdapter {
    * Calling the following methods is required before calling {@link #build()}:
    * <ul>
    * <li>{@link #setServer(Server)}</li>
-   * <li>{@link #setClient(javax.inject.Provider)}</li>
+   * <li>{@link #setClient(Client.Provider)}</li>
    * <li>{@link #setConverter(Converter)}</li>
    * </ul>
    * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following
@@ -265,7 +264,7 @@ public class RestAdapter {
    */
   public static class Builder {
     private Server server;
-    private Provider<Client> clientProvider;
+    private Client.Provider clientProvider;
     private Executor httpExecutor;
     private Executor callbackExecutor;
     private Headers headers;
@@ -285,14 +284,14 @@ public class RestAdapter {
 
     public Builder setClient(final Client client) {
       if (client == null) throw new NullPointerException("client");
-      return setClient(new Provider<Client>() {
+      return setClient(new Client.Provider() {
         @Override public Client get() {
           return client;
         }
       });
     }
 
-    public Builder setClient(Provider<Client> clientProvider) {
+    public Builder setClient(Client.Provider clientProvider) {
       if (clientProvider == null) throw new NullPointerException("clientProvider");
       this.clientProvider = clientProvider;
       return this;

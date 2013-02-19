@@ -12,4 +12,13 @@ public interface Client {
    * into a {@link Response} instance.
    */
   Response execute(Request request) throws IOException;
+
+  /**
+   * Deferred means of obtaining a {@link Client}. For asynchronous requests this will always be
+   * called on a background thread.
+   */
+  interface Provider {
+    /** Obtain an HTTP client. Called once for each request. */
+    Client get();
+  }
 }
