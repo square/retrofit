@@ -6,7 +6,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.inject.Provider;
 import retrofit.http.android.AndroidApacheClient;
 import retrofit.http.android.MainThreadExecutor;
 import retrofit.http.client.ApacheClient;
@@ -35,15 +34,15 @@ abstract class Platform {
   Converter defaultConverter() {
     return new GsonConverter(new Gson());
   }
-  abstract Provider<Client> defaultClient();
+  abstract Client.Provider defaultClient();
   abstract Executor defaultHttpExecutor();
   abstract Executor defaultCallbackExecutor();
 
   /** Provides sane defaults for operation on the JVM. */
   private static class Base extends Platform {
-    @Override Provider<Client> defaultClient() {
+    @Override Client.Provider defaultClient() {
       final Client client = new ApacheClient();
-      return new Provider<Client>() {
+      return new Client.Provider() {
         @Override public Client get() {
           return client;
         }
@@ -72,9 +71,9 @@ abstract class Platform {
 
   /** Provides sane defaults for operation on Android. */
   private static class Android extends Platform {
-    @Override Provider<Client> defaultClient() {
+    @Override Client.Provider defaultClient() {
       final Client client = new AndroidApacheClient();
-      return new Provider<Client>() {
+      return new Client.Provider() {
         @Override public Client get() {
           return client;
         }
