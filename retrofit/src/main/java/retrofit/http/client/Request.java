@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import retrofit.http.Header;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedOutput;
 
 /** Encapsulates all of the information necessary to make an HTTP request. */
 public final class Request {
@@ -12,11 +12,11 @@ public final class Request {
   private final String url;
   private final List<Header> headers;
   private final boolean isMultipart;
-  private final TypedBytes body;
-  private Map<String, TypedBytes> bodyParameters;
+  private final TypedOutput body;
+  private Map<String, TypedOutput> bodyParameters;
 
   public Request(String method, String url, List<Header> headers, boolean isMultipart,
-      TypedBytes body, Map<String, TypedBytes> bodyParameters) {
+      TypedOutput body, Map<String, TypedOutput> bodyParameters) {
     if (method == null) {
       throw new NullPointerException("Method must not be null.");
     }
@@ -65,12 +65,12 @@ public final class Request {
    * Returns the request body for non-multipart requests, or {@code null} if the request has no
    * body.
    */
-  public TypedBytes getBody() {
+  public TypedOutput getBody() {
     return body;
   }
 
   /** Unmodifiable map of additional body parameters for multipart requests. */
-  public Map<String, TypedBytes> getBodyParameters() {
+  public Map<String, TypedOutput> getBodyParameters() {
     return bodyParameters;
   }
 }

@@ -5,15 +5,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import retrofit.http.Header;
+import retrofit.io.TypedInput;
 
 /** An HTTP response. */
 public final class Response {
   private final int status;
   private final String reason;
   private final List<Header> headers;
-  private final byte[] body;
+  private final TypedInput body;
 
-  public Response(int status, String reason, List<Header> headers, byte[] body) {
+  public Response(int status, String reason, List<Header> headers, TypedInput body) {
     if (status < 200) {
       throw new IllegalArgumentException("Invalid status code: " + status);
     }
@@ -46,7 +47,7 @@ public final class Response {
   }
 
   /** Response body. May be {@code null}. */
-  public byte[] getBody() {
+  public TypedInput getBody() {
     return body;
   }
 }

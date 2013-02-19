@@ -10,6 +10,7 @@ import org.junit.Test;
 import retrofit.http.client.Client;
 import retrofit.http.client.Request;
 import retrofit.http.client.Response;
+import retrofit.io.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
@@ -100,7 +101,7 @@ public class RestAdapterTest {
 
   @Test public void malformedResponseThrowsConversionException() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, "{".getBytes("UTF-8")));
+        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("{")));
 
     try {
       example.something();
@@ -108,7 +109,7 @@ public class RestAdapterTest {
     } catch (RetrofitError e) {
       assertThat(e.getResponse().getStatus()).isEqualTo(200);
       assertThat(e.getException()).isInstanceOf(ConversionException.class);
-      assertThat(e.getResponse().getBody()).isEqualTo("{".getBytes("UTF-8"));
+      assertThat(e.getResponse().getBody()).isEqualTo(new TypedString("{"));
     }
   }
 

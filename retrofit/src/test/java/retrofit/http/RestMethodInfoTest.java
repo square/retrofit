@@ -11,7 +11,7 @@ import java.util.Set;
 import javax.inject.Named;
 import org.junit.Ignore;
 import org.junit.Test;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedOutput;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -534,7 +534,7 @@ public class RestMethodInfoTest {
 
   @Test public void singleEntityTypedBytes() {
     class Example {
-      @PUT("/") Response a(@SingleEntity TypedBytes o) {
+      @PUT("/") Response a(@SingleEntity TypedOutput o) {
         return null;
       }
     }
@@ -624,7 +624,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void typedBytesUrlParam() {
     class Example {
-      @GET("/{a}") Response a(@Named("a") TypedBytes m) {
+      @GET("/{a}") Response a(@Named("a") TypedOutput m) {
         return null;
       }
     }
@@ -676,7 +676,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void nonBodyHttpMethodWithTypedBytes() {
     class Example {
-      @GET("/") Response a(@Named("a") TypedBytes a) {
+      @GET("/") Response a(@Named("a") TypedOutput a) {
         return null;
       }
     }
@@ -689,7 +689,7 @@ public class RestMethodInfoTest {
   @Test public void simpleMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Named("a") TypedBytes a) {
+      Response a(@Named("a") TypedOutput a) {
         return null;
       }
     }
@@ -704,7 +704,7 @@ public class RestMethodInfoTest {
   @Test public void twoTypedBytesMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Named("a") TypedBytes a, @Named("b") TypedBytes b) {
+      Response a(@Named("a") TypedOutput a, @Named("b") TypedOutput b) {
         return null;
       }
     }
@@ -719,7 +719,7 @@ public class RestMethodInfoTest {
   @Test public void twoTypesMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Named("a") TypedBytes a, @Named("b") int b) {
+      Response a(@Named("a") TypedOutput a, @Named("b") int b) {
         return null;
       }
     }

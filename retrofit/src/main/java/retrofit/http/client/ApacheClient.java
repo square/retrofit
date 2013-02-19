@@ -24,12 +24,15 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import retrofit.http.Header;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedByteArray;
+import retrofit.io.TypedOutput;
 
 import static org.apache.http.entity.mime.HttpMultipartMode.BROWSER_COMPATIBLE;
 
 /** A {@link Client} which uses an implementation of Apache's {@link HttpClient}. */
 public class ApacheClient implements Client {
+  private static final String HEADER_CONTENT_TYPE = "Content-Type";
+
   private final HttpClient client;
 
   /** Creates an instance backed by {@link DefaultHttpClient}. */
@@ -71,14 +74,21 @@ public class ApacheClient implements Client {
     String reason = statusLine.getReasonPhrase();
 
     List<Header> headers = new ArrayList<Header>();
+    String contentType = "application/octet-stream";
     for (org.apache.http.Header header : response.getAllHeaders()) {
-      headers.add(new Header(header.getName(), header.getValue()));
+      String name = header.getName();
+      String value = header.getValue();
+      if (name.equalsIgnoreCase(HEADER_CONTENT_TYPE)) {
+        contentType = value;
+      }
+      headers.add(new Header(name, value));
     }
 
-    byte[] body = null;
+    TypedByteArray body = null;
     HttpEntity entity = response.getEntity();
     if (entity != null) {
-      body = EntityUtils.toByteArray(entity);
+      byte[] bytes = EntityUtils.toByteArray(entity);
+      body = new TypedByteArray(contentType, bytes);
     }
 
     return new Response(status, reason, headers, body);
@@ -99,17 +109,16 @@ public class ApacheClient implements Client {
 
       // Add the content body, if any.
       if (!request.isMultipart()) {
-        TypedBytes body = request.getBody();
+        TypedOutput body = request.getBody();
         if (body != null) {
-          setEntity(new TypedBytesEntity(body));
+          setEntity(new TypedOutputEntity(body));
         }
       } else {
-        Map<String, TypedBytes> bodyParameters = request.getBodyParameters();
+        Map<String, TypedOutput> bodyParameters = request.getBodyParameters();
         if (bodyParameters != null && !bodyParameters.isEmpty()) {
           MultipartEntity entity = new MultipartEntity(BROWSER_COMPATIBLE);
-          for (Map.Entry<String, TypedBytes> entry : bodyParameters.entrySet()) {
-            String key = entry.getKey();
-            entity.addPart(key, new TypedBytesBody(entry.getValue(), key));
+          for (Map.Entry<String, TypedOutput> entry : bodyParameters.entrySet()) {
+            entity.addPart(entry.getKey(), new TypedOutputBody(entry.getValue()));
           }
           setEntity(entity);
         }
@@ -121,11 +130,11 @@ public class ApacheClient implements Client {
     }
   }
 
-  /** Adapts ContentBody to TypedBytes. */
-  private static class TypedBytesBody extends AbstractContentBody {
-    private final TypedBytes typedBytes;
+  /** Adapts {@link org.apache.http.entity.mime.content.ContentBody} to {@link TypedOutput}. */
+  private static class TypedOutputBody extends AbstractContentBody {
+    private final TypedOutput typedBytes;
 
-    TypedBytesBody(TypedBytes typedBytes, String baseName) {
+    TypedOutputBody(TypedOutput typedBytes) {
       super(typedBytes.mimeType());
       this.typedBytes = typedBytes;
     }
@@ -157,13 +166,13 @@ public class ApacheClient implements Client {
     }
   }
 
-  /** Container class for passing an entire {@link TypedBytes} as an HTTP request. */
-  static class TypedBytesEntity extends AbstractHttpEntity {
-    private final TypedBytes typedBytes;
+  /** Container class for passing an entire {@link TypedOutput} as an {@link HttpEntity}. */
+  static class TypedOutputEntity extends AbstractHttpEntity {
+    private final TypedOutput typedOutput;
 
-    TypedBytesEntity(TypedBytes typedBytes) {
-      this.typedBytes = typedBytes;
-      setContentType(typedBytes.mimeType());
+    TypedOutputEntity(TypedOutput typedOutput) {
+      this.typedOutput = typedOutput;
+      setContentType(typedOutput.mimeType());
     }
 
     @Override public boolean isRepeatable() {
@@ -171,17 +180,17 @@ public class ApacheClient implements Client {
     }
 
     @Override public long getContentLength() {
-      return typedBytes.length();
+      return typedOutput.length();
     }
 
     @Override public InputStream getContent() throws IOException {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-      typedBytes.writeTo(out);
+      typedOutput.writeTo(out);
       return new ByteArrayInputStream(out.toByteArray());
     }
 
     @Override public void writeTo(OutputStream out) throws IOException {
-      typedBytes.writeTo(out);
+      typedOutput.writeTo(out);
     }
 
     @Override public boolean isStreaming() {

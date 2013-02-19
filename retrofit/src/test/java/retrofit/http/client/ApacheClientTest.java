@@ -1,6 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit.http.client;
 
+import com.google.common.io.ByteStreams;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,11 +17,10 @@ import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
 import retrofit.http.Header;
-import retrofit.io.StringTypedBytes;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedOutput;
+import retrofit.io.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static retrofit.http.client.ApacheClient.TypedBytesEntity;
 
 public class ApacheClientTest {
   private static final String HOST = "http://example.com";
@@ -40,7 +40,7 @@ public class ApacheClientTest {
   }
 
   @Test public void post() throws Exception {
-    TypedBytes body = new StringTypedBytes("hi");
+    TypedString body = new TypedString("hi");
     Request request = new Request("POST", HOST + "/foo/bar/", null, false, body, null);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
@@ -52,14 +52,14 @@ public class ApacheClientTest {
     HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) apacheRequest;
     HttpEntity entity = entityRequest.getEntity();
     assertThat(entity).isNotNull();
-    assertBytes(Streams.readFully(entity.getContent()), "hi");
+    assertBytes(ByteStreams.toByteArray(entity.getContent()), "hi");
     assertThat(entity.getContentType().getValue()).isEqualTo("text/plain; charset=UTF-8");
   }
 
   @Test public void multipart() {
-    Map<String, TypedBytes> bodyParams = new LinkedHashMap<String, TypedBytes>();
-    bodyParams.put("foo", new StringTypedBytes("bar"));
-    bodyParams.put("ping", new StringTypedBytes("pong"));
+    Map<String, TypedOutput> bodyParams = new LinkedHashMap<String, TypedOutput>();
+    bodyParams.put("foo", new TypedString("bar"));
+    bodyParams.put("ping", new TypedString("pong"));
     Request request = new Request("POST", HOST + "/that/", null, true, null, bodyParams);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
@@ -93,16 +93,18 @@ public class ApacheClientTest {
   @Test public void response() throws Exception {
     StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK");
     HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
-    apacheResponse.setEntity(new TypedBytesEntity(new StringTypedBytes("hello")));
+    apacheResponse.setEntity(new ApacheClient.TypedOutputEntity(new TypedString("hello")));
+    apacheResponse.addHeader("Content-Type", "text/plain");
     apacheResponse.addHeader("foo", "bar");
     apacheResponse.addHeader("kit", "kat");
     Response response = ApacheClient.parseResponse(apacheResponse);
 
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
-    assertThat(response.getHeaders()).hasSize(2) //
-        .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
-    assertBytes(response.getBody(), "hello");
+    assertThat(response.getHeaders()).hasSize(3) //
+        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"),
+            new Header("Content-Type", "text/plain"));
+    assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
   }
 
   @Test public void emptyResponse() throws Exception {

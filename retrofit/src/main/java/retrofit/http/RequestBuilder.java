@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import retrofit.http.client.Request;
-import retrofit.io.StringTypedBytes;
-import retrofit.io.TypedBytes;
+import retrofit.io.TypedOutput;
+import retrofit.io.TypedString;
 
 import static retrofit.http.RestAdapter.UTF_8;
 import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
@@ -124,8 +124,8 @@ final class RequestBuilder {
     }
     url.append(replacedPath);
 
-    TypedBytes body = null;
-    Map<String, TypedBytes> bodyParams = new LinkedHashMap<String, TypedBytes>();
+    TypedOutput body = null;
+    Map<String, TypedOutput> bodyParams = new LinkedHashMap<String, TypedOutput>();
     if (!methodInfo.restMethod.hasBody()) {
       for (int i = 0, count = paramList.size(); i < count; i++) {
         url.append((i == 0) ? '?' : '&');
@@ -136,21 +136,21 @@ final class RequestBuilder {
       if (methodInfo.isMultipart) {
         for (Parameter parameter : paramList) {
           Object value = parameter.getValue();
-          TypedBytes typedBytes;
-          if (value instanceof TypedBytes) {
-            typedBytes = (TypedBytes) value;
+          TypedOutput typedOutput;
+          if (value instanceof TypedOutput) {
+            typedOutput = (TypedOutput) value;
           } else {
-            typedBytes = new StringTypedBytes(value.toString());
+            typedOutput = new TypedString(value.toString());
           }
-          bodyParams.put(parameter.getName(), typedBytes);
+          bodyParams.put(parameter.getName(), typedOutput);
         }
       } else {
         body = converter.toBody(paramList);
       }
     } else if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
       Object singleEntity = args[methodInfo.singleEntityArgumentIndex];
-      if (singleEntity instanceof TypedBytes) {
-        body = (TypedBytes) singleEntity;
+      if (singleEntity instanceof TypedOutput) {
+        body = (TypedOutput) singleEntity;
       } else {
         body = converter.toBody(singleEntity);
       }
