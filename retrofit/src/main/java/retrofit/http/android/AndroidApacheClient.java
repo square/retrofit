@@ -1,5 +1,5 @@
 // Copyright 2013 Square, Inc.
-package retrofit.android;
+package retrofit.http.android;
 
 import android.net.http.AndroidHttpClient;
 import retrofit.http.client.ApacheClient;

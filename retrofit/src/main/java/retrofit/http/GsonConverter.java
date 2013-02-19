@@ -8,8 +8,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
-import retrofit.io.TypedInput;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedInput;
+import retrofit.http.mime.TypedOutput;
 
 import static retrofit.http.RestAdapter.UTF_8;
 

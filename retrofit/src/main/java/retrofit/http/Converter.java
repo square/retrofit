@@ -2,8 +2,8 @@
 package retrofit.http;
 
 import java.lang.reflect.Type;
-import retrofit.io.TypedInput;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedInput;
+import retrofit.http.mime.TypedOutput;
 
 /**
  * Arbiter for converting objects to and from their representation in HTTP.

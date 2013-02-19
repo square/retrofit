@@ -10,7 +10,7 @@ import org.junit.Test;
 import retrofit.http.client.Client;
 import retrofit.http.client.Request;
 import retrofit.http.client.Response;
-import retrofit.io.TypedString;
+import retrofit.http.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;

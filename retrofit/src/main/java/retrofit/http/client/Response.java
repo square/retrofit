@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import retrofit.http.Header;
-import retrofit.io.TypedInput;
+import retrofit.http.mime.TypedInput;
 
 /** An HTTP response. */
 public final class Response {

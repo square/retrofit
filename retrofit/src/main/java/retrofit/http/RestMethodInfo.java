@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Named;
-import retrofit.io.TypedOutput;
+import retrofit.http.mime.TypedOutput;
 
 /** Cached details about an interface method. */
 final class RestMethodInfo {
