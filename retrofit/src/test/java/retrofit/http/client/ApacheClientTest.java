@@ -12,21 +12,23 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
 import retrofit.http.Header;
+import retrofit.http.TestingUtils;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static retrofit.http.TestingUtils.assertMultipart;
+import static retrofit.http.client.ApacheClient.TypedOutputEntity;
 
 public class ApacheClientTest {
   private static final String HOST = "http://example.com";
 
   @Test public void get() {
-    Request request = new Request("GET", HOST + "/foo/bar/?kit=kat", null, false, null, null);
+    Request request = new Request("GET", HOST + "/foo/bar/?kit=kat", null, null);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
     assertThat(apacheRequest.getMethod()).isEqualTo("GET");
@@ -41,7 +43,7 @@ public class ApacheClientTest {
 
   @Test public void post() throws Exception {
     TypedString body = new TypedString("hi");
-    Request request = new Request("POST", HOST + "/foo/bar/", null, false, body, null);
+    Request request = new Request("POST", HOST + "/foo/bar/", null, body);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
     assertThat(apacheRequest.getMethod()).isEqualTo("POST");
@@ -60,7 +62,8 @@ public class ApacheClientTest {
     Map<String, TypedOutput> bodyParams = new LinkedHashMap<String, TypedOutput>();
     bodyParams.put("foo", new TypedString("bar"));
     bodyParams.put("ping", new TypedString("pong"));
-    Request request = new Request("POST", HOST + "/that/", null, true, null, bodyParams);
+    TypedOutput body = TestingUtils.createMultipart(bodyParams);
+    Request request = new Request("POST", HOST + "/that/", null, body);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
     assertThat(apacheRequest.getMethod()).isEqualTo("POST");
@@ -69,8 +72,8 @@ public class ApacheClientTest {
 
     assertThat(apacheRequest).isInstanceOf(HttpEntityEnclosingRequest.class);
     HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) apacheRequest;
-    HttpEntity entity = entityRequest.getEntity();
-    assertThat(entity).isInstanceOf(MultipartEntity.class);
+    TypedOutputEntity entity = (TypedOutputEntity) entityRequest.getEntity();
+    assertMultipart(entity.typedOutput);
     // TODO test more?
   }
 
@@ -78,7 +81,7 @@ public class ApacheClientTest {
     List<Header> headers = new ArrayList<Header>();
     headers.add(new Header("kit", "kat"));
     headers.add(new Header("foo", "bar"));
-    Request request = new Request("GET", HOST + "/this/", headers, false, null, null);
+    Request request = new Request("GET", HOST + "/this/", headers, null);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
     assertThat(apacheRequest.getAllHeaders()).hasSize(2);
@@ -93,7 +96,7 @@ public class ApacheClientTest {
   @Test public void response() throws Exception {
     StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK");
     HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
-    apacheResponse.setEntity(new ApacheClient.TypedOutputEntity(new TypedString("hello")));
+    apacheResponse.setEntity(new TypedOutputEntity(new TypedString("hello")));
     apacheResponse.addHeader("Content-Type", "text/plain");
     apacheResponse.addHeader("foo", "bar");
     apacheResponse.addHeader("kit", "kat");

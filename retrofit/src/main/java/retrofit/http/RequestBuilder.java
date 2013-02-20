@@ -4,10 +4,8 @@ package retrofit.http;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import retrofit.http.client.Request;
 import retrofit.http.mime.TypedOutput;
@@ -125,7 +123,6 @@ final class RequestBuilder {
     url.append(replacedPath);
 
     TypedOutput body = null;
-    Map<String, TypedOutput> bodyParams = new LinkedHashMap<String, TypedOutput>();
     if (!methodInfo.restMethod.hasBody()) {
       for (int i = 0, count = paramList.size(); i < count; i++) {
         url.append((i == 0) ? '?' : '&');
@@ -134,6 +131,7 @@ final class RequestBuilder {
       }
     } else if (!paramList.isEmpty()) {
       if (methodInfo.isMultipart) {
+        MultipartTypedOutput multipartBody = new MultipartTypedOutput();
         for (Parameter parameter : paramList) {
           Object value = parameter.getValue();
           TypedOutput typedOutput;
@@ -142,8 +140,9 @@ final class RequestBuilder {
           } else {
             typedOutput = new TypedString(value.toString());
           }
-          bodyParams.put(parameter.getName(), typedOutput);
+          multipartBody.addPart(parameter.getName(), typedOutput);
         }
+        body = multipartBody;
       } else {
         body = converter.toBody(paramList);
       }
@@ -156,7 +155,6 @@ final class RequestBuilder {
       }
     }
 
-    return new Request(methodInfo.restMethod.value(), url.toString(), headers,
-        methodInfo.isMultipart, body, bodyParams);
+    return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
   }
 }
