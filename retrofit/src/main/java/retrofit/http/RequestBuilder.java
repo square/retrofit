@@ -19,11 +19,11 @@ import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
 /**
  * Builds HTTP requests from Java method invocations.  Handles "path parameters" in the
  * {@code apiUrl} in the form of "path/to/url/{id}/action" where a parameter annotated with
- * {@code @Named("id")} is inserted into the url.  Note that this replacement can be recursive if:
+ * {@code @Name("id")} is inserted into the url.  Note that this replacement can be recursive if:
  * <ol>
  * <li>Multiple sets of brackets are nested ("path/to/{{key}a}.</li>
- * <li>The order of {@link javax.inject.Named @Named} values go from innermost to outermost.</li>
- * <li>The values replaced correspond to {@link javax.inject.Named @Named} parameters.</li>
+ * <li>The order of {@link Name @Name} values go from innermost to outermost.</li>
+ * <li>The values replaced correspond to {@link Name @Name} parameters.</li>
  * </ol>
  */
 final class RequestBuilder {
@@ -105,7 +105,7 @@ final class RequestBuilder {
         paramList.remove(found);
       } else {
         throw new IllegalArgumentException(
-            "URL param " + pathParam + " has no matching method @Named param.");
+            "URL param " + pathParam + " has no matching method @Name param.");
       }
     }
 
@@ -113,7 +113,7 @@ final class RequestBuilder {
       // We're passing a JSON object as the entity: paramList should only contain path param values.
       if (!paramList.isEmpty()) {
         throw new IllegalStateException(
-            "Found @Named param on single-entity request that was not used for path substitution.");
+            "Found @Name param on single-entity request that was not used for path substitution.");
       }
     }
 

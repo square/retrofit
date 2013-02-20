@@ -79,9 +79,9 @@ public class RestAdapter {
    * <pre>
    *   public interface MyApi {
    *     &#64;POST("go") // Asynchronous execution.
-   *     void go(@Named("a") String a, @Named("b") int b, Callback&lt;? super MyResult> callback);
+   *     void go(@Name("a") String a, @Name("b") int b, Callback&lt;? super MyResult> callback);
    *     &#64;POST("go") // Synchronous execution.
-   *     MyResult go(@Named("a") String a, @Named("b") int b);
+   *     MyResult go(@Name("a") String a, @Name("b") int b);
    *   }
    * </pre>
    *
