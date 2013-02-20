@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 import retrofit.http.client.Request;
-import retrofit.http.mime.TypedString;
 import retrofit.http.mime.TypedOutput;
+import retrofit.http.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -46,6 +46,28 @@ public class RequestBuilderTest {
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
     assertThat(request.getBody()).isNull();
     assertThat(request.getBodyParameters()).isEmpty();
+  }
+
+  @Test public void pathParamFormatReplacement() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/{bar}/{ping}/") //
+        .addNamedParam("bar", "{ping}") //
+        .addNamedParam("ping", "pong") //
+        .build();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/{ping}/pong/");
+  }
+
+  @Test public void pathAndQueryEncoding() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/{bar}/") //
+        .addNamedParam("bar", "{ping}") //
+        .addNamedParam("baz", "{pong}") //
+        .build();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/{ping}/?baz=%7Bpong%7D");
   }
 
   @Test public void getWithQueryParam() throws Exception {
