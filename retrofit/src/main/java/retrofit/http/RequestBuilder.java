@@ -3,12 +3,9 @@ package retrofit.http;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import retrofit.http.client.Request;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
@@ -59,100 +56,104 @@ final class RequestBuilder {
   }
 
   /** List of all URL parameters. Return value will be mutated. */
-  private List<Parameter> createParamList() {
-    List<Parameter> params = new ArrayList<Parameter>();
+  private Map<String, Parameter> createParamList() {
+    Map<String, Parameter> params = new LinkedHashMap<String, Parameter>();
 
-    // Add arguments as parameters.
     String[] pathNamedParams = methodInfo.namedParams;
     int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
     for (int i = 0; i < pathNamedParams.length; i++) {
       Object arg = args[i];
-      if (arg == null) continue;
-      if (i != singleEntityArgumentIndex) {
-        params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
-      }
+      if (arg == null || i == singleEntityArgumentIndex) continue;
+      String name = pathNamedParams[i];
+      params.put(name, new Parameter(name, arg, arg.getClass()));
     }
 
     return params;
   }
 
   Request build() {
-    // Alter parameter list if path parameters are present.
-    Set<String> pathParams = new LinkedHashSet<String>(methodInfo.pathParams);
-    List<Parameter> paramList = createParamList();
-    String replacedPath = methodInfo.path;
-    for (String pathParam : pathParams) {
-      Parameter found = null;
-      for (Parameter param : paramList) {
-        if (param.getName().equals(pathParam)) {
-          found = param;
-          break;
-        }
-      }
-      if (found != null) {
-        String value;
-        try {
-          value = URLEncoder.encode(String.valueOf(found.getValue()), UTF_8);
-        } catch (UnsupportedEncodingException e) {
-          throw new AssertionError(e);
-        }
-        replacedPath = replacedPath.replace("{" + found.getName() + "}", value);
-        paramList.remove(found);
-      } else {
-        throw new IllegalArgumentException(
-            "URL param " + pathParam + " has no matching method @Name param.");
-      }
-    }
-
-    if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
-      // We're passing a JSON object as the entity: paramList should only contain path param values.
-      if (!paramList.isEmpty()) {
-        throw new IllegalStateException(
-            "Found @Name param on single-entity request that was not used for path substitution.");
-      }
-    }
-
     StringBuilder url = new StringBuilder(apiUrl);
     if (apiUrl.endsWith("/")) {
       // We enforce relative paths to start with '/'. Prevent a double-slash.
       url.deleteCharAt(url.length() - 1);
     }
-    url.append(replacedPath);
+
+    Map<String, Parameter> params = createParamList();
+    if (methodInfo.pathParams.isEmpty()) {
+      url.append(methodInfo.path);
+    } else {
+      String path = methodInfo.path;
+      int end = -1;
+      for (int start = path.indexOf("{"); start != -1; start = path.indexOf("{", end)) {
+        url.append(path.substring(end + 1, start));
+
+        end = path.indexOf("}", start);
+        if (end == -1) {
+          break; // No more keys.
+        }
+        String key = path.substring(start + 1, end);
+        Parameter param = params.remove(key);
+        if (param != null) {
+          Object value = param.getValue();
+          if (value != null) {
+            url.append(value.toString());
+          }
+        }
+      }
+      if (end < path.length()) {
+        url.append(path.substring(end + 1));
+      }
+    }
 
     // Add query parameter(s), if specified.
     for (QueryParam annotation : methodInfo.pathQueryParams) {
-      paramList.add(new Parameter(annotation.name(), annotation.value(), String.class));
+      String name = annotation.name();
+      params.put(name, new Parameter(name, annotation.value(), String.class));
     }
 
     TypedOutput body = null;
     Map<String, TypedOutput> bodyParams = new LinkedHashMap<String, TypedOutput>();
     if (!methodInfo.restMethod.hasBody()) {
-      for (int i = 0, count = paramList.size(); i < count; i++) {
-        url.append((i == 0) ? '?' : '&');
-        Parameter nonPathParam = paramList.get(i);
-        url.append(nonPathParam.getName()).append("=").append(nonPathParam.getValue());
-      }
-    } else if (!paramList.isEmpty()) {
-      if (methodInfo.isMultipart) {
-        for (Parameter parameter : paramList) {
-          Object value = parameter.getValue();
-          TypedOutput typedOutput;
-          if (value instanceof TypedOutput) {
-            typedOutput = (TypedOutput) value;
-          } else {
-            typedOutput = new TypedString(value.toString());
+      // HTTP method does not have a request body. Append remaining parameters, if any.
+      boolean first = true;
+      for (Parameter param : params.values()) {
+        url.append(first ? '?' : '&');
+        first = false;
+
+        Object value = param.getValue();
+        if (value != null) {
+          try {
+            url.append(param.getName())
+                .append("=")
+                .append(URLEncoder.encode(String.valueOf(value), UTF_8));
+          } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Unable to URL encode \"" + value + "\"", e);
           }
-          bodyParams.put(parameter.getName(), typedOutput);
         }
-      } else {
-        body = converter.toBody(paramList);
       }
     } else if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      // HTTP method has a request body and one parameter which represents it.
       Object singleEntity = args[methodInfo.singleEntityArgumentIndex];
       if (singleEntity instanceof TypedOutput) {
         body = (TypedOutput) singleEntity;
       } else {
         body = converter.toBody(singleEntity);
+      }
+    } else if (!params.isEmpty()) {
+      if (!methodInfo.isMultipart) {
+        throw new IllegalStateException("Non-multipart request body with remaining parameters.");
+      }
+
+      // HTTP method has a request body and remaining parameters.
+      for (Parameter parameter : params.values()) {
+        Object value = parameter.getValue();
+        TypedOutput typedOutput;
+        if (value instanceof TypedOutput) {
+          typedOutput = (TypedOutput) value;
+        } else {
+          typedOutput = new TypedString(value.toString());
+        }
+        bodyParams.put(parameter.getName(), typedOutput);
       }
     }
 
