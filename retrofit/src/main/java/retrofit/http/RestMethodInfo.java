@@ -103,6 +103,12 @@ final class RestMethodInfo {
     }
     if (pathQueryParams == null) {
       pathQueryParams = new QueryParam[0];
+    } else {
+      for (QueryParam pathQueryParam : pathQueryParams) {
+        if (pathParams.contains(pathQueryParam.name())) {
+          throw new IllegalStateException("Query parameters cannot be present in URL.");
+        }
+      }
     }
   }
 

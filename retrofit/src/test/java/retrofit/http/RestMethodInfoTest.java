@@ -421,6 +421,21 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.isMultipart).isFalse();
   }
 
+  @Test(expected = IllegalStateException.class)
+  public void noQueryParamsInUrl() {
+    class Example {
+      @GET("/foo/{bar}/")
+      @QueryParam(name = "bar", value = "baz")
+      Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
   @Test public void emptyParams() {
     class Example {
       @GET("/") Response a() {

@@ -62,11 +62,6 @@ final class RequestBuilder {
   private List<Parameter> createParamList() {
     List<Parameter> params = new ArrayList<Parameter>();
 
-    // Add query parameter(s), if specified.
-    for (QueryParam annotation : methodInfo.pathQueryParams) {
-      params.add(new Parameter(annotation.name(), annotation.value(), String.class));
-    }
-
     // Add arguments as parameters.
     String[] pathNamedParams = methodInfo.namedParams;
     int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
@@ -123,6 +118,11 @@ final class RequestBuilder {
       url.deleteCharAt(url.length() - 1);
     }
     url.append(replacedPath);
+
+    // Add query parameter(s), if specified.
+    for (QueryParam annotation : methodInfo.pathQueryParams) {
+      paramList.add(new Parameter(annotation.name(), annotation.value(), String.class));
+    }
 
     TypedOutput body = null;
     Map<String, TypedOutput> bodyParams = new LinkedHashMap<String, TypedOutput>();
