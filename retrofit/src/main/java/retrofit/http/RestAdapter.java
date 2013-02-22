@@ -153,11 +153,14 @@ public class RestAdapter {
             .setMethodInfo(methodDetails)
             .build();
         url = request.getUrl();
-        LOGGER.fine("Sending " + request.getMethod() + " to " + url);
 
         if (!methodDetails.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
           Thread.currentThread().setName(THREAD_PREFIX + url);
+        }
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+          logRequest(request);
         }
 
         Object profilerObject = null;
@@ -178,7 +181,7 @@ public class RestAdapter {
         TypedInput body = response.getBody();
         if (LOGGER.isLoggable(Level.FINE)) {
           // Replace the response since the logger needs to consume the entire input stream.
-          body = logResponseBody(url, response.getStatus(), body, elapsedTime);
+          body = logResponse(url, response.getStatus(), body, elapsedTime);
         }
 
         List<Header> headers = response.getHeaders();
@@ -214,10 +217,18 @@ public class RestAdapter {
     }
   }
 
+  private static void logRequest(Request request) {
+    LOGGER.fine("---> HTTP " + request.getMethod() + " " + request.getUrl());
+    for (Header header : request.getHeaders()) {
+      LOGGER.fine(header.getName() + ": " + header.getValue());
+    }
+    LOGGER.fine("---> END HTTP");
+  }
+
   /** Log response data. Returns replacement {@link TypedInput}. */
-  private static TypedInput logResponseBody(String url, int statusCode, TypedInput body,
+  private static TypedInput logResponse(String url, int statusCode, TypedInput body,
       long elapsedTime) throws IOException {
-    LOGGER.fine("---- HTTP " + statusCode + " from " + url + " (" + elapsedTime + "ms)");
+    LOGGER.fine("<--- HTTP " + statusCode + " " + url + " (" + elapsedTime + "ms)");
 
     byte[] bodyBytes = Utils.streamToBytes(body.in());
     String bodyString = new String(bodyBytes, UTF_8);
@@ -226,7 +237,7 @@ public class RestAdapter {
       LOGGER.fine(bodyString.substring(i, end));
     }
 
-    LOGGER.fine("---- END HTTP");
+    LOGGER.fine("<--- END HTTP");
 
     // Since we consumed the entire input stream, return a new, identical one from its bytes.
     return new TypedByteArray(body.mimeType(), bodyBytes);
