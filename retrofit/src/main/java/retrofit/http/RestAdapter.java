@@ -144,10 +144,10 @@ public class RestAdapter {
     private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
       methodDetails.init(); // Ensure all relevant method information has been loaded.
 
-      String url = server.apiUrl();
+      String url = server.getUrl();
       try {
         Request request = new RequestBuilder(converter) //
-            .setApiUrl(server.apiUrl())
+            .setApiUrl(server.getUrl())
             .setArgs(args)
             .setHeaders(headers.get())
             .setMethodInfo(methodDetails)
@@ -243,7 +243,7 @@ public class RestAdapter {
       contentType = body.mimeType();
     }
 
-    return new Profiler.RequestInformation(methodDetails.restMethod.value(), server.apiUrl(),
+    return new Profiler.RequestInformation(methodDetails.restMethod.value(), server.getUrl(),
         methodDetails.path, contentLength, contentType);
   }
 
