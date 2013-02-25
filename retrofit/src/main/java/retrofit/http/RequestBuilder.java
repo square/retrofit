@@ -88,12 +88,7 @@ final class RequestBuilder {
         }
       }
       if (found != null) {
-        String value;
-        try {
-          value = URLEncoder.encode(String.valueOf(found.getValue()), UTF_8);
-        } catch (UnsupportedEncodingException e) {
-          throw new AssertionError(e);
-        }
+        String value = getUrlEncodedValue(found);
         replacedPath = replacedPath.replace("{" + found.getName() + "}", value);
         paramList.remove(found);
       } else {
@@ -127,7 +122,8 @@ final class RequestBuilder {
       for (int i = 0, count = paramList.size(); i < count; i++) {
         url.append((i == 0) ? '?' : '&');
         Parameter nonPathParam = paramList.get(i);
-        url.append(nonPathParam.getName()).append("=").append(nonPathParam.getValue());
+        String value = getUrlEncodedValue(nonPathParam);
+        url.append(nonPathParam.getName()).append("=").append(value);
       }
     } else if (!paramList.isEmpty()) {
       if (methodInfo.isMultipart) {
@@ -156,5 +152,13 @@ final class RequestBuilder {
     }
 
     return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
+  }
+
+  private static String getUrlEncodedValue(Parameter found) {
+    try {
+      return URLEncoder.encode(String.valueOf(found.getValue()), UTF_8);
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError(e);
+    }
   }
 }
