@@ -76,6 +76,48 @@ public class RequestBuilderTest {
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
     assertThat(request.getBody()).isNull();
   }
+  
+  @Test public void getWithPathAndQueryQuestionMarkParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong?") //
+        .addNamedParam("kit", "kat?") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat%3F");
+    assertThat(request.getBody()).isNull();
+  }
+  
+  @Test public void getWithPathAndQueryAmpersandParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong&") //
+        .addNamedParam("kit", "kat&") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%26/?kit=kat%26");
+    assertThat(request.getBody()).isNull();
+  }
+  
+  @Test public void getWithPathAndQueryHashParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong#") //
+        .addNamedParam("kit", "kat#") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
+    assertThat(request.getBody()).isNull();
+  }
 
   @Test public void getWithPathAndQueryParamAsync() throws Exception {
     Request request = new Helper() //
