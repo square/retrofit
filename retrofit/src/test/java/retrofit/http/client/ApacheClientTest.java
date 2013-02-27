@@ -21,6 +21,7 @@ import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static retrofit.http.TestingUtils.assertBytes;
 import static retrofit.http.TestingUtils.assertMultipart;
 import static retrofit.http.client.ApacheClient.TypedOutputEntity;
 
@@ -122,9 +123,5 @@ public class ApacheClientTest {
     assertThat(response.getHeaders()).hasSize(2) //
         .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
     assertThat(response.getBody()).isNull();
-  }
-
-  private static void assertBytes(byte[] bytes, String expected) throws Exception {
-    assertThat(new String(bytes, "UTF-8")).isEqualTo(expected);
   }
 }

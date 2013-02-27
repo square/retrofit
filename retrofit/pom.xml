@@ -22,16 +22,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpmime</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android</artifactId>
-      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
 
     <dependency>

@@ -42,4 +42,8 @@ public class TestingUtils {
   public static void assertMultipart(TypedOutput typedOutput) {
     assertThat(typedOutput).isInstanceOf(MultipartTypedOutput.class);
   }
+
+  public static void assertBytes(byte[] bytes, String expected) throws Exception {
+    assertThat(new String(bytes, "UTF-8")).isEqualTo(expected);
+  }
 }

@@ -1,5 +1,6 @@
 package retrofit.http;
 
+import android.os.Build;
 import android.os.Process;
 import com.google.gson.Gson;
 import java.util.concurrent.Executor;
@@ -8,10 +9,11 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import retrofit.http.android.AndroidApacheClient;
 import retrofit.http.android.MainThreadExecutor;
-import retrofit.http.client.ApacheClient;
 import retrofit.http.client.Client;
+import retrofit.http.client.UrlConnectionClient;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static java.lang.Thread.MIN_PRIORITY;
 import static retrofit.http.RestAdapter.THREAD_PREFIX;
 import static retrofit.http.Utils.SynchronousExecutor;
 
@@ -41,7 +43,7 @@ abstract class Platform {
   /** Provides sane defaults for operation on the JVM. */
   private static class Base extends Platform {
     @Override Client.Provider defaultClient() {
-      final Client client = new ApacheClient();
+      final Client client = new UrlConnectionClient();
       return new Client.Provider() {
         @Override public Client get() {
           return client;
@@ -56,7 +58,7 @@ abstract class Platform {
         @Override public Thread newThread(final Runnable r) {
           return new Thread(new Runnable() {
             @Override public void run() {
-              Thread.currentThread().setPriority(THREAD_PRIORITY_BACKGROUND);
+              Thread.currentThread().setPriority(MIN_PRIORITY);
               r.run();
             }
           }, THREAD_PREFIX + threadCounter.getAndIncrement());
@@ -72,7 +74,12 @@ abstract class Platform {
   /** Provides sane defaults for operation on Android. */
   private static class Android extends Platform {
     @Override Client.Provider defaultClient() {
-      final Client client = new AndroidApacheClient();
+      final Client client;
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+        client = new AndroidApacheClient();
+      } else {
+        client = new UrlConnectionClient();
+      }
       return new Client.Provider() {
         @Override public Client get() {
           return client;
