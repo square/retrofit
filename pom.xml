@@ -44,21 +44,21 @@
     <project.reporting.sourceEncoding>UTF-8</project.reporting.sourceEncoding>
 
     <!-- Compilation -->
-    <android-maven.version>3.4.0</android-maven.version>
+    <android-maven.version>3.5.1</android-maven.version>
     <java.version>1.6</java.version>
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
-    <gson.version>2.2.3-SNAPSHOT</gson.version>
-    <httpcomponents.version>4.0.1</httpcomponents.version>
+    <gson.version>2.2.2</gson.version>
+    <httpmime.version>4.2.3</httpmime.version>
     <javax.inject.version>1</javax.inject.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
-    <fest.version>2.0M8</fest.version>
+    <fest.version>2.0M10</fest.version>
     <mockito.version>1.9.5</mockito.version>
-    <guava.version>14.0-rc3</guava.version>
+    <guava.version>14.0</guava.version>
   </properties>
 
   <scm>
@@ -114,12 +114,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
-        <version>${httpcomponents.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>${httpcomponents.version}</version>
+        <version>${httpmime.version}</version>
       </dependency>
 
       <dependency>
