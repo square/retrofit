@@ -58,11 +58,11 @@ public class RestAdapter {
 
   /**
    * Adapts a Java interface to a REST API.
-   * <p/>
+   * <p>
    * The relative path for a given method is obtained from an annotation on the method describing
    * the request type. The names of URL parameters are retrieved from {@link Name}
    * annotations on the method parameters.
-   * <p/>
+   * <p>
    * HTTP requests happen in one of two ways:
    * <ul>
    * <li>On the provided HTTP {@link Executor} with callbacks marshaled to the callback
@@ -74,7 +74,7 @@ public class RestAdapter {
    * response will be converted to the method's return type using the specified
    * {@link Converter}.</li>
    * </ul>
-   * <p/>
+   * <p>
    * For example:
    * <pre>
    *   public interface MyApi {
@@ -260,13 +260,14 @@ public class RestAdapter {
 
   /**
    * Build a new {@link RestAdapter}.
-   * <p/>
+   * <p>
    * Calling the following methods is required before calling {@link #build()}:
    * <ul>
    * <li>{@link #setServer(Server)}</li>
    * <li>{@link #setClient(Client.Provider)}</li>
    * <li>{@link #setConverter(Converter)}</li>
    * </ul>
+   * <p>
    * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following
    * is also required:
    * <ul>

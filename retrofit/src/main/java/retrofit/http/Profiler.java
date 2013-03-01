@@ -11,7 +11,7 @@ public interface Profiler<T> {
   /**
    * Invoked before an HTTP method call. The object returned by this method will be
    * passed to {@link #afterCall} when the call returns.
-   *
+   * <p>
    * This method gives implementors the opportunity to include information that may
    * change during the server call in {@code afterCall} logic.
    */
