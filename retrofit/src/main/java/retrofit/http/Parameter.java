@@ -5,7 +5,7 @@ import java.lang.reflect.Type;
 
 /**
  * Represents a named parameter and its value.
- * <p/>
+ * <p>
  * This is used in one of three places in a request:
  * <ul>
  * <li>Named replacement in the relative URL path.
