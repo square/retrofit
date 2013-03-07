@@ -14,7 +14,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.http.protocol.HTTP;
 import retrofit.http.Profiler.RequestInformation;
 import retrofit.http.client.Client;
 import retrofit.http.client.Request;
@@ -186,7 +185,7 @@ public class RestAdapter {
 
         List<Header> headers = response.getHeaders();
         for (Header header : headers) {
-          if (HTTP.CONTENT_TYPE.equalsIgnoreCase(header.getName()) //
+          if ("Content-Type".equalsIgnoreCase(header.getName()) //
               && !UTF_8.equalsIgnoreCase(Utils.parseCharset(header.getValue()))) {
             throw new IOException("Only UTF-8 charset supported.");
           }
