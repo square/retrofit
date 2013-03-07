@@ -8,7 +8,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +33,6 @@ public class RestAdapter {
   private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
   private static final int LOG_CHUNK_SIZE = 4000;
   static final String THREAD_PREFIX = "Retrofit-";
-  static final String UTF_8 = "UTF-8";
 
   private final Server server;
   private final Client.Provider clientProvider;
@@ -183,14 +181,6 @@ public class RestAdapter {
           body = logResponse(url, response.getStatus(), body, elapsedTime);
         }
 
-        List<Header> headers = response.getHeaders();
-        for (Header header : headers) {
-          if ("Content-Type".equalsIgnoreCase(header.getName()) //
-              && !UTF_8.equalsIgnoreCase(Utils.parseCharset(header.getValue()))) {
-            throw new IOException("Only UTF-8 charset supported.");
-          }
-        }
-
         Type type = methodDetails.type;
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           if (type.equals(Response.class)) {
@@ -230,7 +220,8 @@ public class RestAdapter {
     LOGGER.fine("<--- HTTP " + statusCode + " " + url + " (" + elapsedTime + "ms)");
 
     byte[] bodyBytes = Utils.streamToBytes(body.in());
-    String bodyString = new String(bodyBytes, UTF_8);
+    String bodyCharset = Utils.parseCharset(body.mimeType());
+    String bodyString = new String(bodyBytes, bodyCharset);
     for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
       int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
       LOGGER.fine(bodyString.substring(i, end));

@@ -11,8 +11,6 @@ import java.lang.reflect.Type;
 import retrofit.http.mime.TypedInput;
 import retrofit.http.mime.TypedOutput;
 
-import static retrofit.http.RestAdapter.UTF_8;
-
 /**
  * A {@link Converter} which uses GSON for serialization and deserialization of entities.
  *
@@ -26,9 +24,10 @@ public class GsonConverter implements Converter {
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+    String charset = Utils.parseCharset(body.mimeType());
     InputStreamReader isr = null;
     try {
-      isr = new InputStreamReader(body.in(), UTF_8);
+      isr = new InputStreamReader(body.in(), charset);
       return gson.fromJson(isr, type);
     } catch (IOException e) {
       throw new ConversionException(e);
@@ -46,7 +45,7 @@ public class GsonConverter implements Converter {
 
   @Override public TypedOutput toBody(Object object) {
     try {
-      return new JsonTypedOutput(gson.toJson(object).getBytes(UTF_8));
+      return new JsonTypedOutput(gson.toJson(object).getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }
