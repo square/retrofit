@@ -11,7 +11,6 @@ import retrofit.http.client.Request;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
 
-import static retrofit.http.RestAdapter.UTF_8;
 import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
 
 /**
@@ -156,7 +155,7 @@ final class RequestBuilder {
 
   private static String getUrlEncodedValue(Parameter found) {
     try {
-      return URLEncoder.encode(String.valueOf(found.getValue()), UTF_8);
+      return URLEncoder.encode(String.valueOf(found.getValue()), "UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }
