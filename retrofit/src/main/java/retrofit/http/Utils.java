@@ -88,7 +88,7 @@ public final class Utils {
     }
   }
 
-  public Utils() {
+  private Utils() {
     // No instances.
   }
 }
