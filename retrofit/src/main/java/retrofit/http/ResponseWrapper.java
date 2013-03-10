@@ -10,8 +10,8 @@ import retrofit.http.client.Response;
  */
 final class ResponseWrapper {
 
-  Response response;
-  Object responseBody;
+  final Response response;
+  final Object responseBody;
 
   public ResponseWrapper(Response response, Object responseBody) {
     this.response = response;
