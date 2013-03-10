@@ -8,21 +8,13 @@ import retrofit.http.client.Response;
  *
  * @author JJ Ford (jj.n.ford@gmail.com)
  */
-public class ResponseWrapper {
+final class ResponseWrapper {
 
-  private Response response;
-  private Object responseObj;
+  Response response;
+  Object responseBody;
 
-  public ResponseWrapper(Response response, Object responseObj) {
+  public ResponseWrapper(Response response, Object responseBody) {
     this.response = response;
-    this.responseObj = responseObj;
-  }
-
-  public Response getResponse() {
-    return this.response;
-  }
-
-  public Object getResponseObj() {
-    return this.responseObj;
+    this.responseBody = responseBody;
   }
 }

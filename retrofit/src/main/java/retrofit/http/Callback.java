@@ -13,7 +13,7 @@ import retrofit.http.client.Response;
 public interface Callback<T> {
 
   /** Successful HTTP response. */
-  void success(Response response, T t);
+  void success(T t, Response response);
 
   /**
    * Unsuccessful HTTP response due to network failure, non-2XX status code, or unexpected

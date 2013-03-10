@@ -24,7 +24,7 @@ abstract class CallbackRunnable<T> implements Runnable {
       final ResponseWrapper wrapper = obtainResponse();
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          callback.success(wrapper.getResponse(), (T) wrapper.getResponseObj());
+          callback.success((T) wrapper.responseBody, wrapper.response);
         }
       });
     } catch (final RetrofitError e) {

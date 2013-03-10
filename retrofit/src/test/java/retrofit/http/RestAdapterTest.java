@@ -98,7 +98,7 @@ public class RestAdapterTest {
 
     verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
-    verify(callback).success(same(response), anyString());
+    verify(callback).success(anyString(), same(response));
   }
 
   @Test public void malformedResponseThrowsConversionException() throws Exception {
@@ -168,6 +168,6 @@ public class RestAdapterTest {
 
     verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
-    verify(callback).success(same(response), eq(response));
+    verify(callback).success(eq(response), same(response));
   }
 }

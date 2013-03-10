@@ -34,7 +34,7 @@ public class CallbackRunnableTest {
     callbackRunnable.run();
 
     verify(executor).execute(any(Runnable.class));
-    verify(callback).success(same(wrapper.getResponse()), same(wrapper.getResponseObj()));
+    verify(callback).success(same(wrapper.responseBody), same(wrapper.response));
   }
 
   @Test public void errorPassedToFailure() {
