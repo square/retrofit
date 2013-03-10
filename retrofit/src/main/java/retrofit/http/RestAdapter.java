@@ -125,8 +125,8 @@ public class RestAdapter {
       }
       Callback<?> callback = (Callback<?>) args[args.length - 1];
       httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor) {
-        @Override public Object obtainResponse() {
-          return invokeRequest(methodDetails, args);
+        @Override public ResponseWrapper obtainResponse() {
+          return (ResponseWrapper) invokeRequest(methodDetails, args);
         }
       });
       return null; // Asynchronous methods should have return type of void.
@@ -184,13 +184,20 @@ public class RestAdapter {
         Type type = methodDetails.type;
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           if (type.equals(Response.class)) {
-            return response;
+            if (methodDetails.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
           }
           if (body == null) {
             return null;
           }
           try {
-            return converter.fromBody(body, type);
+            Object convert = converter.fromBody(body, type);
+            if (methodDetails.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
           } catch (ConversionException e) {
             throw RetrofitError.conversionError(url, response, converter, type, e);
           }
