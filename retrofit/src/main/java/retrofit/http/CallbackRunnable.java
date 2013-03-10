@@ -21,10 +21,10 @@ abstract class CallbackRunnable<T> implements Runnable {
   @SuppressWarnings("unchecked")
   @Override public final void run() {
     try {
-      final Object response = obtainResponse();
+      final ResponseWrapper wrapper = obtainResponse();
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          callback.success((T) response);
+          callback.success(wrapper.getResponse(), (T) wrapper.getResponseObj());
         }
       });
     } catch (final RetrofitError e) {
@@ -36,5 +36,5 @@ abstract class CallbackRunnable<T> implements Runnable {
     }
   }
 
-  public abstract Object obtainResponse();
+  public abstract ResponseWrapper obtainResponse();
 }

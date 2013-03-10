@@ -16,6 +16,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
@@ -88,15 +89,16 @@ public class RestAdapterTest {
   }
 
   @Test public void asynchronousUsesExecutors() throws Exception {
+    Response response = new Response(200, "OK", NO_HEADERS, new TypedString("{}"));
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, null));
+        .thenReturn(response);
     Callback<Object> callback = mock(Callback.class);
 
     example.something(callback);
 
     verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
-    verify(callback).success(eq(null));
+    verify(callback).success(same(response), anyString());
   }
 
   @Test public void malformedResponseThrowsConversionException() throws Exception {
@@ -166,6 +168,6 @@ public class RestAdapterTest {
 
     verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
-    verify(callback).success(eq(response));
+    verify(callback).success(same(response), eq(response));
   }
 }

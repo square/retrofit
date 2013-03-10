@@ -21,20 +21,20 @@ public class CallbackRunnableTest {
   @Before public void setUp() {
     callback = mock(Callback.class);
     callbackRunnable = spy(new CallbackRunnable<Object>(callback, executor) {
-      @Override public Object obtainResponse() {
+      @Override public ResponseWrapper obtainResponse() {
         return null; // Must be mocked.
       }
     });
   }
 
   @Test public void responsePassedToSuccess() {
-    Object response = new Object();
-    when(callbackRunnable.obtainResponse()).thenReturn(response);
+    ResponseWrapper wrapper = new ResponseWrapper(null, new Object());
+    when(callbackRunnable.obtainResponse()).thenReturn(wrapper);
 
     callbackRunnable.run();
 
     verify(executor).execute(any(Runnable.class));
-    verify(callback).success(same(response));
+    verify(callback).success(same(wrapper.getResponse()), same(wrapper.getResponseObj()));
   }
 
   @Test public void errorPassedToFailure() {
