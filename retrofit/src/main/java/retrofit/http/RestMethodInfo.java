@@ -150,7 +150,7 @@ final class RestMethodInfo {
       return true;
     }
 
-    lastArgType = Utils.getGenericSupertype(lastArgType, lastArgClass, Callback.class);
+    lastArgType = Types.getSupertype(lastArgType, Types.getRawType(lastArgType), Callback.class);
     if (lastArgType instanceof ParameterizedType) {
       Type[] types = ((ParameterizedType) lastArgType).getActualTypeArguments();
       for (int i = 0; i < types.length; i++) {
