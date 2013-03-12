@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import org.junit.Ignore;
 import org.junit.Test;
 import retrofit.http.mime.TypedOutput;
 
@@ -128,17 +128,21 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.type).isEqualTo(expected);
   }
 
-  @Ignore // TODO support this case!
-  @Test public void extendingGenericCallback() {
+  // RestMethodInfo reconstructs this type from MultimapCallback<String, Set<Long>>. It contains
+  // a little of everything: a parameterized type, a generic array, and a wildcard.
+  private static Map<? extends String, Set<Long>[]> extendingGenericCallbackType;
+
+  @Test public void extendingGenericCallback() throws Exception {
     class Example {
-      @GET("/foo") void a(ExtendingCallback<Response> callback) {
+      @GET("/foo") void a(MultimapCallback<String, Set<Long>> callback) {
       }
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.type).isEqualTo(
+        RestMethodInfoTest.class.getDeclaredField("extendingGenericCallbackType").getGenericType());
   }
 
   @Test public void synchronousResponse() {
@@ -777,6 +781,6 @@ public class RestMethodInfoTest {
   private static interface ResponseCallback extends Callback<Response> {
   }
 
-  private static interface ExtendingCallback<T> extends Callback<T> {
+  private static interface MultimapCallback<K, V> extends Callback<Map<? extends K, V[]>> {
   }
 }
