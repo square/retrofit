@@ -33,9 +33,11 @@ import java.util.NoSuchElementException;
  * @author Jesse Wilson
  */
 final class Types {
-  static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
+  private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
-  private Types() {}
+  private Types() {
+    // No instances.
+  }
 
   public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
@@ -52,7 +54,7 @@ final class Types {
       return (Class<?>) rawType;
 
     } else if (type instanceof GenericArrayType) {
-      Type componentType = ((GenericArrayType)type).getGenericComponentType();
+      Type componentType = ((GenericArrayType) type).getGenericComponentType();
       return Array.newInstance(getRawType(componentType), 0).getClass();
 
     } else if (type instanceof TypeVariable) {
