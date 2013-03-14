@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
@@ -31,6 +32,10 @@ public class RestMethodInfoTest {
     expectParams("foo/bar/{taco}/or/{taco}", "taco");
     expectParams("foo/bar/{taco-shell}", "taco-shell");
     expectParams("foo/bar/{taco_shell}", "taco_shell");
+    expectParams("foo/bar/{camelCase}", "camelcase");
+    expectParams("foo/bar/{UPPERCASE}", "uppercase");
+    expectParams("foo/bar/{mixedCase}/or/{MIXEDCASE}", "mixedcase");
+    expectParams("foo/bar/{mixedCase}/or/{MIXEDCASE}", "mixedcase");
   }
 
   private static void expectParams(String path, String... expected) {
@@ -376,6 +381,25 @@ public class RestMethodInfoTest {
     assertThat(param2.name()).isEqualTo("c");
     assertThat(param2.value()).isEqualTo("d");
   }
+
+  @Test public void queryParamCaseSensitivity() {
+      class Example {
+        @GET("/foo")
+        @QueryParam(name = "A", value = "B")
+        Response a() {
+          return null;
+        }
+      }
+
+      Method method = TestingUtils.getMethod(Example.class, "a");
+      RestMethodInfo methodInfo = new RestMethodInfo(method);
+      methodInfo.init();
+
+      assertThat(methodInfo.pathQueryParams).hasSize(1);
+      QueryParam param = methodInfo.pathQueryParams[0];
+      assertThat(param.name()).isEqualTo("A");
+      assertThat(param.value()).isEqualTo("B");
+    }
 
   @Test(expected = IllegalStateException.class)
   public void bothQueryParamAnnotations() {

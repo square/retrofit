@@ -7,6 +7,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -105,7 +106,7 @@ final class RestMethodInfo {
       pathQueryParams = new QueryParam[0];
     } else {
       for (QueryParam pathQueryParam : pathQueryParams) {
-        if (pathParams.contains(pathQueryParam.name())) {
+        if (pathParams.contains(pathQueryParam.name().toLowerCase(Locale.ENGLISH))) {
           throw new IllegalStateException("Query parameters cannot be present in URL.");
         }
       }
@@ -189,7 +190,7 @@ final class RestMethodInfo {
       for (Annotation parameterAnnotation : parameterAnnotations) {
         Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
         if (annotationType == Name.class) {
-          String name = ((Name) parameterAnnotation).value();
+          String name = ((Name) parameterAnnotation).value().toLowerCase(Locale.ENGLISH);
           namedParams[i] = name;
           boolean isPathParam = pathParams.contains(name);
           if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {
@@ -238,7 +239,7 @@ final class RestMethodInfo {
     Matcher m = PATH_PARAMETERS.matcher(path);
     Set<String> patterns = new LinkedHashSet<String>();
     while (m.find()) {
-      patterns.add(m.group(1));
+      patterns.add(m.group(1).toLowerCase(Locale.ENGLISH));
     }
     return patterns;
   }
