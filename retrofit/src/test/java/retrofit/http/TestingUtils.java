@@ -10,7 +10,7 @@ import retrofit.http.mime.TypedOutput;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public class TestingUtils {
+public abstract class TestingUtils {
   public static Method getMethod(Class c, String name) {
     for (Method method : c.getDeclaredMethods()) {
       if (method.getName().equals(name)) {
