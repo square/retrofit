@@ -58,10 +58,10 @@ public class UrlConnectionClient implements Client {
     String mimeType = connection.getContentType();
     int length = connection.getContentLength();
     InputStream stream;
-    if (status == 200) {
-      stream = connection.getInputStream();
-    } else {
+    if (status >= 400) {
       stream = connection.getErrorStream();
+    } else {
+      stream = connection.getInputStream();
     }
     TypedInput responseBody = new TypedInputStream(mimeType, length, stream);
     return new Response(status, reason, headers, responseBody);
