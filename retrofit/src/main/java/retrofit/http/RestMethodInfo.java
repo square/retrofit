@@ -15,7 +15,7 @@ import retrofit.http.mime.TypedOutput;
 /** Cached details about an interface method. */
 final class RestMethodInfo {
   static final int NO_SINGLE_ENTITY = -1;
-  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]+)\\}");
+  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-zA-Z_-]+)\\}");
 
   final Method method;
   final boolean isSynchronous;
