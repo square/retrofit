@@ -190,9 +190,9 @@ final class RestMethodInfo {
       for (Annotation parameterAnnotation : parameterAnnotations) {
         Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
         if (annotationType == Name.class) {
-          String name = ((Name) parameterAnnotation).value().toLowerCase(Locale.ENGLISH);
+          String name = ((Name) parameterAnnotation).value();
           namedParams[i] = name;
-          boolean isPathParam = pathParams.contains(name);
+          boolean isPathParam = pathParams.contains(name.toLowerCase(Locale.ENGLISH));
           if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {
             throw new IllegalStateException("TypedOutput cannot be used as URL parameter.");
           }
@@ -218,7 +218,7 @@ final class RestMethodInfo {
     // Check for single entity + non-path parameters.
     if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
       for (String namedParam : namedParams) {
-        if (namedParam != null && !pathParams.contains(namedParam)) {
+        if (namedParam != null && !pathParams.contains(namedParam.toLowerCase(Locale.ENGLISH))) {
           throw new IllegalStateException(
               "Single entity and non-path parameters cannot both be present.");
         }
