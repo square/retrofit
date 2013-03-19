@@ -110,7 +110,7 @@ public class RestAdapterTest {
       fail("RetrofitError expected on malformed response body.");
     } catch (RetrofitError e) {
       assertThat(e.getResponse().getStatus()).isEqualTo(200);
-      assertThat(e.getException()).isInstanceOf(ConversionException.class);
+      assertThat(e.getCause()).isInstanceOf(ConversionException.class);
       assertThat(e.getResponse().getBody()).isEqualTo(new TypedString("{"));
     }
   }
@@ -135,7 +135,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected when client throws exception.");
     } catch (RetrofitError e) {
-      assertThat(e.getException()).isSameAs(exception);
+      assertThat(e.getCause()).isSameAs(exception);
     }
   }
 
@@ -147,7 +147,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected when unexpected exception thrown.");
     } catch (RetrofitError e) {
-      assertThat(e.getException()).isSameAs(exception);
+      assertThat(e.getCause()).isSameAs(exception);
     }
   }
 
