@@ -30,16 +30,15 @@ public class RetrofitError extends RuntimeException {
   private final Converter converter;
   private final Type successType;
   private final boolean networkError;
-  private final Throwable exception;
 
   private RetrofitError(String url, Response response, Converter converter, Type successType,
       boolean networkError, Throwable exception) {
+    super(exception);
     this.url = url;
     this.response = response;
     this.converter = converter;
     this.successType = successType;
     this.networkError = networkError;
-    this.exception = exception;
   }
 
   /** The request URL which produced the error. */
@@ -84,10 +83,5 @@ public class RetrofitError extends RuntimeException {
     } catch (ConversionException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  /** The exception which caused this error, if any. */
-  public Throwable getException() {
-    return exception;
   }
 }
