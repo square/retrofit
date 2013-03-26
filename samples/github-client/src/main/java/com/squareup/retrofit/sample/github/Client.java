@@ -1,5 +1,5 @@
 // Copyright 2012 Square, Inc.
-package com.squareup.retrofit.sample.twitter;
+package com.squareup.retrofit.sample.github;
 
 import java.util.List;
 import retrofit.http.GET;

@@ -17,6 +17,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>twitter-client</module>
+    <module>github-client</module>
   </modules>
 </project>
