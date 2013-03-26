@@ -12,8 +12,8 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>sample-twitter-client</artifactId>
-  <name>Sample: Twitter Client</name>
+  <artifactId>sample-github-client</artifactId>
+  <name>Sample: GitHub Client</name>
 
   <dependencies>
     <dependency>
