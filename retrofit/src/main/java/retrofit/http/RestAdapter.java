@@ -190,7 +190,7 @@ public class RestAdapter {
             return new ResponseWrapper(response, response);
           }
           if (body == null) {
-            return null;
+            return new ResponseWrapper(response, null);
           }
           try {
             Object convert = converter.fromBody(body, type);
