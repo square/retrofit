@@ -7,6 +7,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,7 +16,7 @@ import retrofit.http.mime.TypedOutput;
 /** Cached details about an interface method. */
 final class RestMethodInfo {
   static final int NO_SINGLE_ENTITY = -1;
-  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]+)\\}");
+  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-zA-Z_-]+)\\}");
 
   final Method method;
   final boolean isSynchronous;
@@ -105,7 +106,7 @@ final class RestMethodInfo {
       pathQueryParams = new QueryParam[0];
     } else {
       for (QueryParam pathQueryParam : pathQueryParams) {
-        if (pathParams.contains(pathQueryParam.name())) {
+        if (pathParams.contains(pathQueryParam.name().toLowerCase(Locale.ENGLISH))) {
           throw new IllegalStateException("Query parameters cannot be present in URL.");
         }
       }
@@ -191,7 +192,7 @@ final class RestMethodInfo {
         if (annotationType == Name.class) {
           String name = ((Name) parameterAnnotation).value();
           namedParams[i] = name;
-          boolean isPathParam = pathParams.contains(name);
+          boolean isPathParam = pathParams.contains(name.toLowerCase(Locale.ENGLISH));
           if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {
             throw new IllegalStateException("TypedOutput cannot be used as URL parameter.");
           }
@@ -217,7 +218,7 @@ final class RestMethodInfo {
     // Check for single entity + non-path parameters.
     if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
       for (String namedParam : namedParams) {
-        if (namedParam != null && !pathParams.contains(namedParam)) {
+        if (namedParam != null && !pathParams.contains(namedParam.toLowerCase(Locale.ENGLISH))) {
           throw new IllegalStateException(
               "Single entity and non-path parameters cannot both be present.");
         }
@@ -238,7 +239,7 @@ final class RestMethodInfo {
     Matcher m = PATH_PARAMETERS.matcher(path);
     Set<String> patterns = new LinkedHashSet<String>();
     while (m.find()) {
-      patterns.add(m.group(1));
+      patterns.add(m.group(1).toLowerCase(Locale.ENGLISH));
     }
     return patterns;
   }

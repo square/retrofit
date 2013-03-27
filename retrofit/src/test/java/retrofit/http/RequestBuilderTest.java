@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.apache.http.entity.mime.FormBodyPart;
 import org.apache.http.entity.mime.HttpMultipart;
@@ -47,6 +48,20 @@ public class RequestBuilderTest {
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
     assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithPathParamUsingUppercase() throws Exception {
+      Request request = new Helper() //
+      .setMethod("GET") //
+      .setUrl("http://example.com") //
+      .setPath("/foo/bar/{PING}/{pong}/") //
+      .addNamedParam("PING", "PONG") //
+      .addNamedParam("pong", "ping") //
+      .build();
+      assertThat(request.getMethod()).isEqualTo("GET");
+      assertThat(request.getHeaders()).isEmpty();
+      assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/PONG/ping/");
+      assertThat(request.getBody()).isNull();
   }
 
   @Test public void getWithQueryParam() throws Exception {

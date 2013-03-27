@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import retrofit.http.client.Request;
 import retrofit.http.mime.TypedOutput;
@@ -81,7 +82,7 @@ final class RequestBuilder {
     for (String pathParam : pathParams) {
       Parameter found = null;
       for (Parameter param : paramList) {
-        if (param.getName().equals(pathParam)) {
+        if (param.getName().toLowerCase(Locale.ENGLISH).equals(pathParam)) {
           found = param;
           break;
         }
