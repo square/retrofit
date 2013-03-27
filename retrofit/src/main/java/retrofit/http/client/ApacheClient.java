@@ -42,10 +42,25 @@ public class ApacheClient implements Client {
     prepareRequest(apacheRequest);
 
     // Obtain and prepare the Apache response object.
-    HttpResponse apacheResponse = client.execute(apacheRequest);
+    HttpResponse apacheResponse = execute(apacheRequest);
     prepareResponse(apacheResponse);
 
     return parseResponse(apacheResponse);
+  }
+
+  /**
+  * A clean entry point for subclasses to customize how the request is executed.
+  * @param apacheRequest The HttpRequest object to send.
+  * @return The HttpResponse object.
+  * @throws IOException thrown if there is an I/O issue.
+  */
+  protected HttpResponse execute(HttpUriRequest apacheRequest) throws IOException {
+    return client.execute(apacheRequest);
+  }
+
+  /** Provides access to the HttpClient for subclasses. */
+  public HttpClient getClient() {
+    return client;
   }
 
   /** Callback for additional preparation of the request before execution. */
