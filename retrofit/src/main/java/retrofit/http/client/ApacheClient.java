@@ -37,38 +37,14 @@ public class ApacheClient implements Client {
   }
 
   @Override public Response execute(Request request) throws IOException {
-    // Create and prepare the Apache request object.
     HttpUriRequest apacheRequest = createRequest(request);
-    prepareRequest(apacheRequest);
-
-    // Obtain and prepare the Apache response object.
-    HttpResponse apacheResponse = execute(apacheRequest);
-    prepareResponse(apacheResponse);
-
+    HttpResponse apacheResponse = execute(client, apacheRequest);
     return parseResponse(apacheResponse);
   }
 
-  /**
-  * A clean entry point for subclasses to customize how the request is executed.
-  * @param apacheRequest The HttpRequest object to send.
-  * @return The HttpResponse object.
-  * @throws IOException thrown if there is an I/O issue.
-  */
-  protected HttpResponse execute(HttpUriRequest apacheRequest) throws IOException {
-    return client.execute(apacheRequest);
-  }
-
-  /** Provides access to the HttpClient for subclasses. */
-  public HttpClient getClient() {
-    return client;
-  }
-
-  /** Callback for additional preparation of the request before execution. */
-  protected void prepareRequest(HttpUriRequest request) {
-  }
-
-  /** Callback for additional preparation of the response before parsing. */
-  protected void prepareResponse(HttpResponse response) {
+  /** Execute the specified {@code request} using the provided {@code client}. */
+  protected HttpResponse execute(HttpClient client, HttpUriRequest request) throws IOException {
+    return client.execute(request);
   }
 
   static HttpUriRequest createRequest(Request request) {
