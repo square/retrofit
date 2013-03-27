@@ -104,6 +104,24 @@ public class UrlConnectionClientTest {
     assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
   }
 
+  @Test public void createdResponse() throws Exception {
+    DummyHttpUrlConnection connection = new DummyHttpUrlConnection(HOST);
+    connection.setResponseCode(201);
+    connection.setResponseMessage("OK");
+    connection.addResponseHeader("Content-Type", "text/plain");
+    connection.addResponseHeader("foo", "bar");
+    connection.addResponseHeader("kit", "kat");
+    connection.setInputStream(new ByteArrayInputStream("hello".getBytes("UTF-8")));
+    Response response = client.readResponse(connection);
+
+    assertThat(response.getStatus()).isEqualTo(201);
+    assertThat(response.getReason()).isEqualTo("OK");
+    assertThat(response.getHeaders()).hasSize(3) //
+        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"),
+            new Header("Content-Type", "text/plain"));
+    assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
+  }
+
   @Test public void errorResponse() throws Exception {
     DummyHttpUrlConnection connection = new DummyHttpUrlConnection(HOST);
     connection.setResponseCode(401);
