@@ -37,23 +37,14 @@ public class ApacheClient implements Client {
   }
 
   @Override public Response execute(Request request) throws IOException {
-    // Create and prepare the Apache request object.
     HttpUriRequest apacheRequest = createRequest(request);
-    prepareRequest(apacheRequest);
-
-    // Obtain and prepare the Apache response object.
-    HttpResponse apacheResponse = client.execute(apacheRequest);
-    prepareResponse(apacheResponse);
-
+    HttpResponse apacheResponse = execute(client, apacheRequest);
     return parseResponse(apacheResponse);
   }
 
-  /** Callback for additional preparation of the request before execution. */
-  protected void prepareRequest(HttpUriRequest request) {
-  }
-
-  /** Callback for additional preparation of the response before parsing. */
-  protected void prepareResponse(HttpResponse response) {
+  /** Execute the specified {@code request} using the provided {@code client}. */
+  protected HttpResponse execute(HttpClient client, HttpUriRequest request) throws IOException {
+    return client.execute(request);
   }
 
   static HttpUriRequest createRequest(Request request) {
