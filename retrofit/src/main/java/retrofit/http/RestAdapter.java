@@ -1,6 +1,7 @@
 // Copyright 2012 Square, Inc.
 package retrofit.http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -11,8 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import retrofit.http.Profiler.RequestInformation;
 import retrofit.http.client.Client;
 import retrofit.http.client.Request;
@@ -30,9 +29,14 @@ import static retrofit.http.Utils.SynchronousExecutor;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
-  private static final Logger LOGGER = Logger.getLogger(RestAdapter.class.getName());
   private static final int LOG_CHUNK_SIZE = 4000;
   static final String THREAD_PREFIX = "Retrofit-";
+
+  /** Simple logging abstraction for debug messages. */
+  public interface Log {
+    /** Log a debug message to the appropriate console. */
+    void log(String message);
+  }
 
   private final Server server;
   private final Client.Provider clientProvider;
@@ -41,9 +45,12 @@ public class RestAdapter {
   private final Headers headers;
   private final Converter converter;
   private final Profiler profiler;
+  private final Log log;
+  private volatile boolean debug;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
-      Executor callbackExecutor, Headers headers, Converter converter, Profiler profiler) {
+      Executor callbackExecutor, Headers headers, Converter converter, Profiler profiler, Log log,
+      boolean debug) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
@@ -51,6 +58,13 @@ public class RestAdapter {
     this.headers = headers;
     this.converter = converter;
     this.profiler = profiler;
+    this.log = log;
+    this.debug = debug;
+  }
+
+  /** Toggle debug logging on and off. */
+  public void setDebug(boolean debug) {
+    this.debug = debug;
   }
 
   /**
@@ -141,10 +155,11 @@ public class RestAdapter {
     private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
       methodDetails.init(); // Ensure all relevant method information has been loaded.
 
-      String url = server.getUrl();
+      String serverUrl = server.getUrl();
+      String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
       try {
         Request request = new RequestBuilder(converter) //
-            .setApiUrl(server.getUrl())
+            .setApiUrl(serverUrl)
             .setArgs(args)
             .setHeaders(headers.get())
             .setMethodInfo(methodDetails)
@@ -153,11 +168,11 @@ public class RestAdapter {
 
         if (!methodDetails.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
-          Thread.currentThread().setName(THREAD_PREFIX + url);
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
-        if (LOGGER.isLoggable(Level.FINE)) {
-          logRequest(request);
+        if (debug) {
+          request = logAndReplaceRequest(request);
         }
 
         Object profilerObject = null;
@@ -171,14 +186,12 @@ public class RestAdapter {
 
         int statusCode = response.getStatus();
         if (profiler != null) {
-          RequestInformation requestInfo = getRequestInfo(server, methodDetails, request);
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodDetails, request);
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        TypedInput body = response.getBody();
-        if (LOGGER.isLoggable(Level.FINE)) {
-          // Replace the response since the logger needs to consume the entire input stream.
-          body = logResponse(url, response.getStatus(), body, elapsedTime);
+        if (debug) {
+          response = logAndReplaceResponse(url, response, elapsedTime);
         }
 
         Type type = methodDetails.type;
@@ -189,6 +202,7 @@ public class RestAdapter {
             }
             return new ResponseWrapper(response, response);
           }
+          TypedInput body = response.getBody();
           if (body == null) {
             return new ResponseWrapper(response, null);
           }
@@ -213,34 +227,77 @@ public class RestAdapter {
     }
   }
 
-  private static void logRequest(Request request) {
-    LOGGER.fine("---> HTTP " + request.getMethod() + " " + request.getUrl());
+  /** Log request headers and body. Consumes request body and returns identical replacement. */
+  private Request logAndReplaceRequest(Request request) throws IOException {
+    log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
+
     for (Header header : request.getHeaders()) {
-      LOGGER.fine(header.getName() + ": " + header.getValue());
-    }
-    LOGGER.fine("---> END HTTP");
-  }
-
-  /** Log response data. Returns replacement {@link TypedInput}. */
-  private static TypedInput logResponse(String url, int statusCode, TypedInput body,
-      long elapsedTime) throws IOException {
-    LOGGER.fine("<--- HTTP " + statusCode + " " + url + " (" + elapsedTime + "ms)");
-
-    byte[] bodyBytes = Utils.streamToBytes(body.in());
-    String bodyCharset = Utils.parseCharset(body.mimeType());
-    String bodyString = new String(bodyBytes, bodyCharset);
-    for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
-      int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
-      LOGGER.fine(bodyString.substring(i, end));
+      log.log(header.getName() + ": " + header.getValue());
     }
 
-    LOGGER.fine("<--- END HTTP");
+    TypedOutput body = request.getBody();
+    int bodySize = 0;
+    if (body != null) {
+      if (!request.getHeaders().isEmpty()) {
+        log.log("");
+      }
 
-    // Since we consumed the entire input stream, return a new, identical one from its bytes.
-    return new TypedByteArray(body.mimeType(), bodyBytes);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      body.writeTo(baos);
+      byte[] bodyBytes = baos.toByteArray();
+      bodySize = bodyBytes.length;
+      String bodyMime = body.mimeType();
+      String bodyString = new String(bodyBytes, Utils.parseCharset(bodyMime));
+      for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
+        int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
+        log.log(bodyString.substring(i, end));
+      }
+
+      body = new TypedByteArray(bodyMime, bodyBytes);
+    }
+
+    log.log(String.format("---> END HTTP (%s-byte body)", bodySize));
+
+    // Since we consumed the original request, return a new, identical one from its bytes.
+    return new Request(request.getMethod(), request.getUrl(), request.getHeaders(), body);
   }
 
-  private static Profiler.RequestInformation getRequestInfo(Server server,
+  /** Log response headers and body. Consumes response body and returns identical replacement. */
+  private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
+      throws IOException {
+    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+
+    for (Header header : response.getHeaders()) {
+      log.log(header.getName() + ": " + header.getValue());
+    }
+
+    TypedInput body = response.getBody();
+    int bodySize = 0;
+    if (body != null) {
+      if (!response.getHeaders().isEmpty()) {
+        log.log("");
+      }
+
+      byte[] bodyBytes = Utils.streamToBytes(body.in());
+      bodySize = bodyBytes.length;
+      String bodyMime = body.mimeType();
+      String bodyCharset = Utils.parseCharset(bodyMime);
+      String bodyString = new String(bodyBytes, bodyCharset);
+      for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
+        int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
+        log.log(bodyString.substring(i, end));
+      }
+
+      body = new TypedByteArray(bodyMime, bodyBytes);
+    }
+
+    log.log(String.format("---> END HTTP (%s-byte body)", bodySize));
+
+    // Since we consumed the original response, return a new, identical one from its bytes.
+    return new Response(response.getStatus(), response.getReason(), response.getHeaders(), body);
+  }
+
+  private static Profiler.RequestInformation getRequestInfo(String serverUrl,
       RestMethodInfo methodDetails, Request request) {
     long contentLength = 0;
     String contentType = null;
@@ -251,7 +308,7 @@ public class RestAdapter {
       contentType = body.mimeType();
     }
 
-    return new Profiler.RequestInformation(methodDetails.restMethod.value(), server.getUrl(),
+    return new Profiler.RequestInformation(methodDetails.restMethod.value(), serverUrl,
         methodDetails.path, contentLength, contentType);
   }
 
@@ -279,6 +336,8 @@ public class RestAdapter {
     private Headers headers;
     private Converter converter;
     private Profiler profiler;
+    private Log log;
+    private boolean debug;
 
     public Builder setServer(String endpoint) {
       if (endpoint == null) throw new NullPointerException("endpoint");
@@ -340,13 +399,24 @@ public class RestAdapter {
       return this;
     }
 
+    public Builder setLog(Log log) {
+      if (log == null) throw new NullPointerException("log");
+      this.log = log;
+      return this;
+    }
+
+    public Builder setDebug(boolean debug) {
+      this.debug = debug;
+      return this;
+    }
+
     public RestAdapter build() {
       if (server == null) {
         throw new IllegalArgumentException("Server may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor,
-          headers, converter, profiler);
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers,
+          converter, profiler, log, debug);
     }
 
     private void ensureSaneDefaults() {
@@ -361,6 +431,9 @@ public class RestAdapter {
       }
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();
+      }
+      if (log == null) {
+        log = Platform.get().defaultLog();
       }
       if (headers == null) {
         headers = Headers.NONE;
