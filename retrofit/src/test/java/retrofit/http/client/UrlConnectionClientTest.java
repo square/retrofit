@@ -66,9 +66,8 @@ public class UrlConnectionClientTest {
 
     assertThat(connection.getRequestMethod()).isEqualTo("POST");
     assertThat(connection.getURL().toString()).isEqualTo(HOST + "/that/");
-    assertThat(connection.getRequestProperties()).hasSize(2);
+    assertThat(connection.getRequestProperties()).hasSize(1);
     assertThat(connection.getRequestProperty("Content-Type")).startsWith("multipart/form-data;");
-    assertThat(connection.getRequestProperty("Content-Length")).isNotNull();
     assertThat(connection.getOutputStream().toByteArray().length).isGreaterThan(0);
   }
 
