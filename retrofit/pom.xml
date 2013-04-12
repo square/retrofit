@@ -21,10 +21,6 @@
       <artifactId>gson</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android</artifactId>
       <optional>true</optional>
