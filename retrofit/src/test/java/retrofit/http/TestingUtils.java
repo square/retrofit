@@ -1,11 +1,8 @@
 // Copyright 2013 Square, Inc.
 package retrofit.http;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
-import org.apache.http.entity.mime.HttpMultipart;
-import org.apache.http.entity.mime.MultipartEntity;
 import retrofit.http.mime.TypedOutput;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -26,17 +23,6 @@ public abstract class TestingUtils {
       typedOutput.addPart(part.getKey(), part.getValue());
     }
     return typedOutput;
-  }
-
-  public static HttpMultipart extractEntity(TypedOutput output)
-      throws NoSuchFieldException, IllegalAccessException {
-    if (!(output instanceof MultipartTypedOutput)) {
-      throw new IllegalArgumentException("TypedOutput was not a MultipartTypedOutput.");
-    }
-    MultipartEntity entity = ((MultipartTypedOutput) output).cheat;
-    Field httpMultipartField = MultipartEntity.class.getDeclaredField("multipart");
-    httpMultipartField.setAccessible(true);
-    return (HttpMultipart) httpMultipartField.get(entity);
   }
 
   public static void assertMultipart(TypedOutput typedOutput) {
