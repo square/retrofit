@@ -70,7 +70,7 @@ final class MultipartTypedOutput implements TypedOutput {
     headers.append("Content-Disposition: form-data; name=\"");
     headers.append(name);
     if (value instanceof TypedFile) {
-      headers.append("; filename=\"");
+      headers.append("\"; filename=\"");
       headers.append(((TypedFile) value).file().getName());
     }
     headers.append("\"\r\nContent-Type: ");
