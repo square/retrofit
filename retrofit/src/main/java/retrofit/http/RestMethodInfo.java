@@ -14,6 +14,7 @@ import retrofit.http.mime.TypedOutput;
 
 /** Cached details about an interface method. */
 final class RestMethodInfo {
+  static final int NO_BASE_URL = -1;
   static final int NO_SINGLE_ENTITY = -1;
   private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]+)\\}");
 
@@ -29,6 +30,7 @@ final class RestMethodInfo {
   QueryParam[] pathQueryParams;
   String[] namedParams;
   int singleEntityArgumentIndex = NO_SINGLE_ENTITY;
+  int baseUrlArgumentIndex = NO_BASE_URL;
   boolean isMultipart = false;
 
   RestMethodInfo(Method method) {
@@ -168,8 +170,9 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #namedParams}, {@link #singleEntityArgumentIndex}. Must be called after
-   * {@link #parseMethodAnnotations()}}.
+   * Loads {@link #namedParams}, {@link #singleEntityArgumentIndex},
+   * {@link #baseUrlArgumentIndex}.
+   * Must be called after {@link #parseMethodAnnotations()}}.
    */
   private void parseParameters() {
     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -199,6 +202,15 @@ final class RestMethodInfo {
             throw new IllegalStateException(
                 "Non-path params can only be used in multipart request.");
           }
+        } else if (annotationType == BaseUrl.class) {
+            if (baseUrlArgumentIndex != NO_BASE_URL) {
+                throw new IllegalStateException(
+                        "Method annotated with multiple BaseEntity method annotations: " + method);
+            }
+            if (parameterType != String.class) {
+                throw new IllegalStateException("BaseUrl should be of the Type String.");
+            }
+            baseUrlArgumentIndex = i;
         } else if (annotationType == SingleEntity.class) {
           if (isMultipart) {
             throw new IllegalStateException("SingleEntity cannot be used with multipart request.");

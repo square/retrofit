@@ -155,7 +155,8 @@ public class RestAdapter {
     private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
       methodDetails.init(); // Ensure all relevant method information has been loaded.
 
-      String serverUrl = server.getUrl();
+      String serverUrl = methodDetails.baseUrlArgumentIndex == RestMethodInfo.NO_BASE_URL
+              ? server.getUrl() : (String) args[methodDetails.baseUrlArgumentIndex];
       String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
       try {
         Request request = new RequestBuilder(converter) //

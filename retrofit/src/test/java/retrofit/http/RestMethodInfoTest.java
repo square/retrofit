@@ -15,6 +15,7 @@ import retrofit.http.mime.TypedOutput;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static retrofit.http.RestMethodInfo.NO_BASE_URL;
 import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
 
 public class RestMethodInfoTest {
@@ -768,6 +769,37 @@ public class RestMethodInfoTest {
       @Multipart @GET("/") Response a() {
         return null;
       }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test public void singleBaseURl() {
+    class Example {
+        @GET("/") Response a(@BaseUrl String a) {
+            return null;
+        }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.namedParams).hasSize(1);
+    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
+    assertThat(methodInfo.baseUrlArgumentIndex).isNotEqualTo(NO_BASE_URL);
+    assertThat(methodInfo.baseUrlArgumentIndex).isEqualTo(0);
+    assertThat(methodInfo.isMultipart).isFalse();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void singleBaseURlNonString() {
+    class Example {
+        @GET("/") Response a(@BaseUrl int a) {
+            return null;
+        }
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
