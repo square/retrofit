@@ -62,10 +62,11 @@ final class RequestBuilder {
     // Add arguments as parameters.
     String[] pathNamedParams = methodInfo.namedParams;
     int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
+    int baseUrlArgumentIndex = methodInfo.baseUrlArgumentIndex;
     for (int i = 0; i < pathNamedParams.length; i++) {
       Object arg = args[i];
       if (arg == null) continue;
-      if (i != singleEntityArgumentIndex) {
+      if ((i != singleEntityArgumentIndex && (i != baseUrlArgumentIndex))) {
         params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
       }
     }
