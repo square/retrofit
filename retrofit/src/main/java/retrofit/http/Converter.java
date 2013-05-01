@@ -17,8 +17,10 @@ public interface Converter {
    * @param body HTTP response body.
    * @param type Target object type.
    * @return Instance of {@code type} which will be cast by the caller.
-   * @throws ConversionException If conversion was unable to complete. This will trigger a call to
-   * {@link Callback#failure(RetrofitError)} or throw a {@link retrofit.http.RetrofitError}.
+   * @throws ConversionException if conversion was unable to complete. This will trigger a call to
+   * {@link Callback#failure(RetrofitError)} or throw a {@link retrofit.http.RetrofitError}. The
+   * exception message should report all necessary information about its cause as the response body
+   * will be set to {@code null}.
    */
   Object fromBody(TypedInput body, Type type) throws ConversionException;
 

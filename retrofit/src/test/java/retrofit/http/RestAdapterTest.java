@@ -111,7 +111,7 @@ public class RestAdapterTest {
     } catch (RetrofitError e) {
       assertThat(e.getResponse().getStatus()).isEqualTo(200);
       assertThat(e.getCause()).isInstanceOf(ConversionException.class);
-      assertThat(e.getResponse().getBody()).isEqualTo(new TypedString("{"));
+      assertThat(e.getResponse().getBody()).isNull();
     }
   }
 
