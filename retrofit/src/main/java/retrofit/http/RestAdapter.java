@@ -195,13 +195,19 @@ public class RestAdapter {
         }
 
         Type type = methodDetails.type;
+
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
           if (type.equals(Response.class)) {
+            // Read the entire stream and replace with one backed by a byte[]
+            response = Utils.readBodyToBytesIfNecessary(response);
+
             if (methodDetails.isSynchronous) {
               return response;
             }
             return new ResponseWrapper(response, response);
           }
+
           TypedInput body = response.getBody();
           if (body == null) {
             return new ResponseWrapper(response, null);
@@ -213,9 +219,14 @@ public class RestAdapter {
             }
             return new ResponseWrapper(response, convert);
           } catch (ConversionException e) {
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
             throw RetrofitError.conversionError(url, response, converter, type, e);
           }
         }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
         throw RetrofitError.httpError(url, response, converter, type);
       } catch (RetrofitError e) {
         throw e; // Pass through our own errors.
@@ -248,8 +259,8 @@ public class RestAdapter {
       bodySize = bodyBytes.length;
       String bodyMime = body.mimeType();
       String bodyString = new String(bodyBytes, Utils.parseCharset(bodyMime));
-      for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
-        int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
+      for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
+        int end = Math.min(len, i + LOG_CHUNK_SIZE);
         log.log(bodyString.substring(i, end));
       }
 
@@ -278,23 +289,26 @@ public class RestAdapter {
         log.log("");
       }
 
-      byte[] bodyBytes = Utils.streamToBytes(body.in());
+      if (!(body instanceof TypedByteArray)) {
+        // Read the entire response body to we can log it and replace the original response
+        response = Utils.readBodyToBytesIfNecessary(response);
+        body = response.getBody();
+      }
+
+      byte[] bodyBytes = ((TypedByteArray) body).getBytes();
       bodySize = bodyBytes.length;
       String bodyMime = body.mimeType();
       String bodyCharset = Utils.parseCharset(bodyMime);
       String bodyString = new String(bodyBytes, bodyCharset);
-      for (int i = 0; i < bodyString.length(); i += LOG_CHUNK_SIZE) {
-        int end = Math.min(bodyString.length(), i + LOG_CHUNK_SIZE);
+      for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
+        int end = Math.min(len, i + LOG_CHUNK_SIZE);
         log.log(bodyString.substring(i, end));
       }
-
-      body = new TypedByteArray(bodyMime, bodyBytes);
     }
 
-    log.log(String.format("---> END HTTP (%s-byte body)", bodySize));
+    log.log(String.format("<--- END HTTP (%s-byte body)", bodySize));
 
-    // Since we consumed the original response, return a new, identical one from its bytes.
-    return new Response(response.getStatus(), response.getReason(), response.getHeaders(), body);
+    return response;
   }
 
   private static Profiler.RequestInformation getRequestInfo(String serverUrl,
