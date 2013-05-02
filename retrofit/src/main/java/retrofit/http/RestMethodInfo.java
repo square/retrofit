@@ -68,8 +68,8 @@ final class RestMethodInfo {
         } catch (Exception e) {
           throw new RuntimeException("Failed to extract URI path.", e);
         }
-        if (!path.startsWith("/")) {
-          throw new IllegalArgumentException("URL path must be prefixed with '/'.");
+        if (!path.startsWith("/") && !"".equals(path)) {
+          throw new IllegalArgumentException("URL path must be prefixed with '/' or be null.");
         }
         pathParams = parsePathParameters(path);
         restMethod = methodInfo;
