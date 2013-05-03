@@ -12,5 +12,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @RestMethod("HEAD")
 public @interface HEAD {
-  String value();
+  String value() default "";
 }
