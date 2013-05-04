@@ -58,6 +58,10 @@ public class GsonConverter implements Converter {
       this.jsonBytes = jsonBytes;
     }
 
+    @Override public String fileName() {
+      return null;
+    }
+
     @Override public String mimeType() {
       return "application/json; charset=UTF-8";
     }
