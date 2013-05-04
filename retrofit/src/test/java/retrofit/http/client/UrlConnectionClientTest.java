@@ -64,11 +64,14 @@ public class UrlConnectionClientTest {
     DummyHttpUrlConnection connection = (DummyHttpUrlConnection) client.openConnection(request);
     client.prepareRequest(connection, request);
 
+    byte[] output = connection.getOutputStream().toByteArray();
+
     assertThat(connection.getRequestMethod()).isEqualTo("POST");
     assertThat(connection.getURL().toString()).isEqualTo(HOST + "/that/");
-    assertThat(connection.getRequestProperties()).hasSize(1);
+    assertThat(connection.getRequestProperties()).hasSize(2);
     assertThat(connection.getRequestProperty("Content-Type")).startsWith("multipart/form-data;");
-    assertThat(connection.getOutputStream().toByteArray().length).isGreaterThan(0);
+    assertThat(connection.getRequestProperty("Content-Length")).isEqualTo(String.valueOf(output.length));
+    assertThat(output.length).isGreaterThan(0);
   }
 
   @Test public void headers() throws Exception {

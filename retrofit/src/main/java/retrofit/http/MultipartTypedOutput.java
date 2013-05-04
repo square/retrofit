@@ -1,20 +1,24 @@
 // Copyright 2013 Square, Inc.
 package retrofit.http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-import retrofit.http.mime.TypedFile;
 import retrofit.http.mime.TypedOutput;
 
 final class MultipartTypedOutput implements TypedOutput {
-  final Map<String, TypedOutput> parts = new LinkedHashMap<String, TypedOutput>();
+  final List<byte[]> parts = new ArrayList<byte[]>();
+  private final byte[] footer;
   private final String boundary;
+  private long length;
 
   MultipartTypedOutput() {
     boundary = UUID.randomUUID().toString();
+    footer = buildBoundary(boundary, false, true);
+    length = footer.length;
   }
 
   void addPart(String name, TypedOutput body) {
@@ -24,7 +28,14 @@ final class MultipartTypedOutput implements TypedOutput {
     if (body == null) {
       throw new NullPointerException("Part body must not be null.");
     }
-    parts.put(name, body);
+
+    byte[] part = buildPart(name, body, parts.isEmpty());
+    parts.add(part);
+    length += part.length;
+  }
+
+  @Override public String fileName() {
+    return null;
   }
 
   @Override public String mimeType() {
@@ -32,52 +43,70 @@ final class MultipartTypedOutput implements TypedOutput {
   }
 
   @Override public long length() {
-    return -1;
+    return length;
   }
 
   @Override public void writeTo(OutputStream out) throws IOException {
-    boolean first = true;
-    for (Map.Entry<String, TypedOutput> part : parts.entrySet()) {
-      writeBoundary(out, boundary, first, false);
-      writePart(out, part);
-      first = false;
+    for (byte[] part : parts) {
+      out.write(part);
     }
-    writeBoundary(out, boundary, false, true);
+    out.write(footer);
   }
 
-  private static void writeBoundary(OutputStream out, String boundary, boolean first, boolean last)
-      throws IOException {
-    StringBuilder sb = new StringBuilder();
-    if (!first) {
-      sb.append("\r\n");
+  private byte[] buildPart(String name, TypedOutput body, boolean first) {
+    ByteArrayOutputStream out = null;
+    try {
+      out = new ByteArrayOutputStream();
+      out.write(buildBoundary(boundary, first, false));
+      out.write(buildHeader(name, body));
+      body.writeTo(out);
+      return out.toByteArray();
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart request.", ex);
+    } finally {
+      if (out != null) {
+        try {
+          out.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
-    sb.append("--");
-    sb.append(boundary);
-    if (last) {
+  }
+
+  private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
+    try {
+      StringBuilder sb = new StringBuilder();
+      if (!first) {
+        sb.append("\r\n");
+      }
       sb.append("--");
-    } else {
-      sb.append("\r\n");
+      sb.append(boundary);
+      if (last) {
+        sb.append("--");
+      } else {
+        sb.append("\r\n");
+      }
+      return sb.toString().getBytes("UTF-8");
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart boundary", ex);
     }
-    out.write(sb.toString().getBytes("UTF-8"));
   }
 
-  private static void writePart(OutputStream out, Map.Entry<String, TypedOutput> part)
-      throws IOException {
-    String name = part.getKey();
-    TypedOutput value = part.getValue();
-
-    StringBuilder headers = new StringBuilder();
-    headers.append("Content-Disposition: form-data; name=\"");
-    headers.append(name);
-    if (value instanceof TypedFile) {
-      headers.append("\"; filename=\"");
-      headers.append(((TypedFile) value).file().getName());
+  private byte[] buildHeader(String name, TypedOutput value) {
+    try {
+      StringBuilder headers = new StringBuilder();
+      headers.append("Content-Disposition: form-data; name=\"");
+      headers.append(name);
+      if (value.fileName() != null) {
+        headers.append("\"; filename=\"");
+        headers.append(value.fileName());
+      }
+      headers.append("\"\r\nContent-Type: ");
+      headers.append(value.mimeType());
+      headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+      return headers.toString().getBytes("UTF-8");
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart header", ex);
     }
-    headers.append("\"\r\nContent-Type: ");
-    headers.append(value.mimeType());
-    headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
-    out.write(headers.toString().getBytes("UTF-8"));
-
-    value.writeTo(out);
   }
 }

@@ -47,6 +47,10 @@ public class TypedFile implements TypedInput, TypedOutput {
     return file.length();
   }
 
+  @Override public String fileName() {
+    return file.getName();
+  }
+
   @Override public InputStream in() throws IOException {
     return new FileInputStream(file);
   }

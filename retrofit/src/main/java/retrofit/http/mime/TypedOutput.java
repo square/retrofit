@@ -10,6 +10,10 @@ import java.io.OutputStream;
  * @author Bob Lee (bob@squareup.com)
  */
 public interface TypedOutput {
+  /** Original filename.
+   *
+   * Used only for multipart requests, may be null. */
+  String fileName();
 
   /** Returns the mime type. */
   String mimeType();
