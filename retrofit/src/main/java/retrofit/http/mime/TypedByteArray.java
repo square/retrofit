@@ -36,6 +36,10 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     return bytes;
   }
 
+  @Override public String fileName() {
+    return null;
+  }
+
   @Override public String mimeType() {
     return mimeType;
   }

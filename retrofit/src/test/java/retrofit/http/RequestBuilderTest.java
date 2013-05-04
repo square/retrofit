@@ -224,15 +224,13 @@ public class RequestBuilderTest {
     MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
     assertThat(body.parts).hasSize(2);
 
-    Iterator<Map.Entry<String, TypedOutput>> iterator = body.parts.entrySet().iterator();
+    Iterator<byte[]> iterator = body.parts.iterator();
 
-    Map.Entry<String, TypedOutput> one = iterator.next();
-    assertThat(one.getKey()).isEqualTo("ping");
-    assertTypedBytes(one.getValue(), "pong");
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("ping").contains("pong");
 
-    Map.Entry<String, TypedOutput> two = iterator.next();
-    assertThat(two.getKey()).isEqualTo("kit");
-    assertTypedBytes(two.getValue(), "kat");
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("kit").contains("kat");
   }
 
   @Test public void simpleHeaders() throws Exception {
