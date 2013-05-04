@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 import retrofit.http.android.AndroidApacheClient;
 import retrofit.http.android.MainThreadExecutor;
 import retrofit.http.client.Client;
@@ -15,7 +14,7 @@ import retrofit.http.client.UrlConnectionClient;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static java.lang.Thread.MIN_PRIORITY;
-import static retrofit.http.RestAdapter.THREAD_PREFIX;
+import static retrofit.http.RestAdapter.IDLE_THREAD_NAME;
 import static retrofit.http.Utils.SynchronousExecutor;
 
 abstract class Platform {
@@ -55,15 +54,13 @@ abstract class Platform {
 
     @Override Executor defaultHttpExecutor() {
       return Executors.newCachedThreadPool(new ThreadFactory() {
-        private final AtomicInteger threadCounter = new AtomicInteger();
-
         @Override public Thread newThread(final Runnable r) {
           return new Thread(new Runnable() {
             @Override public void run() {
               Thread.currentThread().setPriority(MIN_PRIORITY);
               r.run();
             }
-          }, THREAD_PREFIX + threadCounter.getAndIncrement());
+          }, IDLE_THREAD_NAME);
         }
       });
     }
@@ -99,15 +96,13 @@ abstract class Platform {
 
     @Override Executor defaultHttpExecutor() {
       return Executors.newCachedThreadPool(new ThreadFactory() {
-        private final AtomicInteger threadCounter = new AtomicInteger();
-
         @Override public Thread newThread(final Runnable r) {
           return new Thread(new Runnable() {
             @Override public void run() {
               Process.setThreadPriority(THREAD_PRIORITY_BACKGROUND);
               r.run();
             }
-          }, THREAD_PREFIX + threadCounter.getAndIncrement());
+          }, IDLE_THREAD_NAME);
         }
       });
     }
