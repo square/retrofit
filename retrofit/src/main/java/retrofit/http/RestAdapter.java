@@ -31,6 +31,7 @@ import static retrofit.http.Utils.SynchronousExecutor;
 public class RestAdapter {
   private static final int LOG_CHUNK_SIZE = 4000;
   static final String THREAD_PREFIX = "Retrofit-";
+  static final String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
 
   /** Simple logging abstraction for debug messages. */
   public interface Log {
@@ -234,6 +235,10 @@ public class RestAdapter {
         throw RetrofitError.networkError(url, e);
       } catch (Throwable t) {
         throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodDetails.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
       }
     }
   }
