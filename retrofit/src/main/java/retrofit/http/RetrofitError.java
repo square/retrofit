@@ -7,21 +7,21 @@ import retrofit.http.client.Response;
 import retrofit.http.mime.TypedInput;
 
 public class RetrofitError extends RuntimeException {
-  static RetrofitError networkError(String url, IOException exception) {
+  public static RetrofitError networkError(String url, IOException exception) {
     return new RetrofitError(url, null, null, null, true, exception);
   }
 
-  static RetrofitError conversionError(String url, Response response, Converter converter,
+  public static RetrofitError conversionError(String url, Response response, Converter converter,
       Type successType, ConversionException exception) {
     return new RetrofitError(url, response, converter, successType, false, exception);
   }
 
-  static RetrofitError httpError(String url, Response response, Converter converter,
+  public static RetrofitError httpError(String url, Response response, Converter converter,
       Type successType) {
     return new RetrofitError(url, response, converter, successType, false, null);
   }
 
-  static RetrofitError unexpectedError(String url, Throwable exception) {
+  public static RetrofitError unexpectedError(String url, Throwable exception) {
     return new RetrofitError(url, null, null, null, false, exception);
   }
 
