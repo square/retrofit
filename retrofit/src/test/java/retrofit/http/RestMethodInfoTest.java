@@ -31,6 +31,8 @@ public class RestMethodInfoTest {
     expectParams("foo/bar/{taco}/or/{taco}", "taco");
     expectParams("foo/bar/{taco-shell}", "taco-shell");
     expectParams("foo/bar/{taco_shell}", "taco_shell");
+    expectParams("foo/bar/{sha256}", "sha256");
+    expectParams("foo/bar/{1}"); // Invalid parameter, name cannot start with digit.
   }
 
   private static void expectParams(String path, String... expected) {
