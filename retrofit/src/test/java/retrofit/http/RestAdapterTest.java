@@ -28,7 +28,7 @@ import static retrofit.http.Profiler.RequestInformation;
 import static retrofit.http.Utils.SynchronousExecutor;
 
 public class RestAdapterTest {
-  private static List<Header> NO_HEADERS = Collections.emptyList();
+  private static List<HeaderPair> NO_HEADERS = Collections.emptyList();
 
   private interface Example {
     @GET("/") Object something();

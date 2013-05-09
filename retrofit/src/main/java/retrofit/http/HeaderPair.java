@@ -2,11 +2,11 @@
 package retrofit.http;
 
 /** Represents an HTTP header name/value pair. */
-public final class Header {
+public final class HeaderPair {
   private final String name;
   private final String value;
 
-  public Header(String name, String value) {
+  public HeaderPair(String name, String value) {
     this.name = name;
     this.value = value;
   }
@@ -23,7 +23,7 @@ public final class Header {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    Header header = (Header) o;
+    HeaderPair header = (HeaderPair) o;
 
     if (name != null ? !name.equals(header.name) : header.name != null) return false;
     if (value != null ? !value.equals(header.value) : header.value != null) return false;

@@ -15,7 +15,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
-import retrofit.http.Header;
+import retrofit.http.HeaderPair;
 import retrofit.http.TestingUtils;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
@@ -79,9 +79,9 @@ public class ApacheClientTest {
   }
 
   @Test public void headers() {
-    List<Header> headers = new ArrayList<Header>();
-    headers.add(new Header("kit", "kat"));
-    headers.add(new Header("foo", "bar"));
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
+    headers.add(new HeaderPair("kit", "kat"));
+    headers.add(new HeaderPair("foo", "bar"));
     Request request = new Request("GET", HOST + "/this/", headers, null);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
@@ -106,8 +106,8 @@ public class ApacheClientTest {
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(3) //
-        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"),
-            new Header("Content-Type", "text/plain"));
+        .containsOnly(new HeaderPair("foo", "bar"), new HeaderPair("kit", "kat"),
+            new HeaderPair("Content-Type", "text/plain"));
     assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
   }
 
@@ -121,7 +121,7 @@ public class ApacheClientTest {
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(2) //
-        .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
+        .containsExactly(new HeaderPair("foo", "bar"), new HeaderPair("kit", "kat"));
     assertThat(response.getBody()).isNull();
   }
 }

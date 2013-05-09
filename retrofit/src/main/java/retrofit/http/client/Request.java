@@ -3,17 +3,17 @@ package retrofit.http.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import retrofit.http.Header;
+import retrofit.http.HeaderPair;
 import retrofit.http.mime.TypedOutput;
 
 /** Encapsulates all of the information necessary to make an HTTP request. */
 public final class Request {
   private final String method;
   private final String url;
-  private final List<Header> headers;
+  private final List<HeaderPair> headers;
   private final TypedOutput body;
 
-  public Request(String method, String url, List<Header> headers, TypedOutput body) {
+  public Request(String method, String url, List<HeaderPair> headers, TypedOutput body) {
     if (method == null) {
       throw new NullPointerException("Method must not be null.");
     }
@@ -26,7 +26,7 @@ public final class Request {
     if (headers == null) {
       this.headers = Collections.emptyList();
     } else {
-      this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
+      this.headers = Collections.unmodifiableList(new ArrayList<HeaderPair>(headers));
     }
 
     this.body = body;
@@ -43,7 +43,7 @@ public final class Request {
   }
 
   /** Returns an unmodifiable list of headers.empty, never {@code null}. */
-  public List<Header> getHeaders() {
+  public List<HeaderPair> getHeaders() {
     return headers;
   }
 

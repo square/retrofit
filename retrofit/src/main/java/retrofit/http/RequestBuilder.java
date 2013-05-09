@@ -29,7 +29,7 @@ final class RequestBuilder {
   private RestMethodInfo methodInfo;
   private Object[] args;
   private String apiUrl;
-  private List<Header> headers;
+  private List<HeaderPair> headers;
 
   RequestBuilder(Converter converter) {
     this.converter = converter;
@@ -50,7 +50,7 @@ final class RequestBuilder {
     return this;
   }
 
-  RequestBuilder setHeaders(List<Header> headers) {
+  RequestBuilder setHeaders(List<HeaderPair> headers) {
     this.headers = headers;
     return this;
   }

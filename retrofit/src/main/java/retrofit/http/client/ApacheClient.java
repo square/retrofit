@@ -19,7 +19,7 @@ import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
-import retrofit.http.Header;
+import retrofit.http.HeaderPair;
 import retrofit.http.mime.TypedByteArray;
 import retrofit.http.mime.TypedOutput;
 
@@ -56,7 +56,7 @@ public class ApacheClient implements Client {
     int status = statusLine.getStatusCode();
     String reason = statusLine.getReasonPhrase();
 
-    List<Header> headers = new ArrayList<Header>();
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
     String contentType = "application/octet-stream";
     for (org.apache.http.Header header : response.getAllHeaders()) {
       String name = header.getName();
@@ -64,7 +64,7 @@ public class ApacheClient implements Client {
       if ("Content-Type".equalsIgnoreCase(name)) {
         contentType = value;
       }
-      headers.add(new Header(name, value));
+      headers.add(new HeaderPair(name, value));
     }
 
     TypedByteArray body = null;
@@ -86,7 +86,7 @@ public class ApacheClient implements Client {
       setURI(URI.create(request.getUrl()));
 
       // Add all headers.
-      for (Header header : request.getHeaders()) {
+      for (HeaderPair header : request.getHeaders()) {
         addHeader(new BasicHeader(header.getName(), header.getValue()));
       }
 

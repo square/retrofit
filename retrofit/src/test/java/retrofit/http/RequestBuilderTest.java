@@ -243,7 +243,7 @@ public class RequestBuilderTest {
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
-        .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
+        .containsExactly(new HeaderPair("ping", "pong"), new HeaderPair("kit", "kat"));
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.getBody()).isNull();
   }
@@ -276,7 +276,7 @@ public class RequestBuilderTest {
     private final List<QueryParam> queryParams = new ArrayList<QueryParam>();
     private final List<String> namedParams = new ArrayList<String>();
     private final List<Object> args = new ArrayList<Object>();
-    private final List<Header> headers = new ArrayList<Header>();
+    private final List<HeaderPair> headers = new ArrayList<HeaderPair>();
     private int singleEntityArgumentIndex = NO_SINGLE_ENTITY;
     private String url;
 
@@ -330,7 +330,7 @@ public class RequestBuilderTest {
     }
 
     Helper addHeader(String name, String value) {
-      headers.add(new Header(name, value));
+      headers.add(new HeaderPair(name, value));
       return this;
     }
 
