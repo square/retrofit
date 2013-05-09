@@ -6,7 +6,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +29,8 @@ final class RestMethodInfo {
   String path;
   Set<String> pathParams;
   QueryParam[] pathQueryParams;
+  List<HeaderPair> headers;
+  String[] headerParams;
   String[] namedParams;
   int singleEntityArgumentIndex = NO_SINGLE_ENTITY;
   boolean isMultipart = false;
@@ -46,8 +50,8 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #restMethod}, {@link #path}, {@link #pathParams}, {@link #pathQueryParams}, and
-   * {@link #isMultipart}.
+   * Loads {@link #restMethod}, {@link #path}, {@link #pathParams}, {@link #pathQueryParams},
+   * {@link headers}, and {@link #isMultipart}.
    */
   private void parseMethodAnnotations() {
     for (Annotation methodAnnotation : method.getAnnotations()) {
@@ -73,6 +77,12 @@ final class RestMethodInfo {
         }
         pathParams = parsePathParameters(path);
         restMethod = methodInfo;
+      } else if (annotationType == Headers.class) {
+        String[] headersToParse = ((Headers) methodAnnotation).value();
+        if (headersToParse.length == 0) {
+          throw new IllegalStateException("Headers annotation was empty.");
+        }
+        headers = parseHeaders(headersToParse);
       } else if (annotationType == QueryParams.class) {
         if (pathQueryParams != null) {
           throw new IllegalStateException(
@@ -110,6 +120,17 @@ final class RestMethodInfo {
         }
       }
     }
+  }
+
+  private List<HeaderPair> parseHeaders(String[] headersToParse) {
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
+    for (String headerToParse: headersToParse) {
+      int colon = headerToParse.indexOf(':');
+      headers.add(new HeaderPair(headerToParse.substring(0, colon),
+                                 headerToParse.substring(colon + 2)));
+
+    }
+    return headers;
   }
 
   /** Loads {@link #type}. Returns true if the method is synchronous. */
@@ -168,8 +189,8 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #namedParams}, {@link #singleEntityArgumentIndex}. Must be called after
-   * {@link #parseMethodAnnotations()}}.
+   * Loads {@link #namedParams}, {@link headerParams}, {@link #singleEntityArgumentIndex},
+   * Must be called after {@link #parseMethodAnnotations()}}.
    */
   private void parseParameters() {
     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -180,6 +201,7 @@ final class RestMethodInfo {
     }
 
     String[] namedParams = new String[count];
+    String[] headerParams = new String[count];
     for (int i = 0; i < count; i++) {
       Class<?> parameterType = parameterTypes[i];
       Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
@@ -198,6 +220,13 @@ final class RestMethodInfo {
           if (!isPathParam && !isMultipart && restMethod.hasBody()) {
             throw new IllegalStateException(
                 "Non-path params can only be used in multipart request.");
+          }
+        } else if (annotationType == Header.class) {
+          String header = ((Header) parameterAnnotation).value();
+          headerParams[i] = header;
+          if (parameterType != String.class) {
+            throw new IllegalStateException(
+                "Expected @Header parameter type to be String: " + header);
           }
         } else if (annotationType == SingleEntity.class) {
           if (isMultipart) {
@@ -228,6 +257,7 @@ final class RestMethodInfo {
           "Non-body HTTP method cannot contain @SingleEntity or @TypedOutput.");
     }
     this.namedParams = namedParams;
+    this.headerParams = headerParams;
   }
 
   /**

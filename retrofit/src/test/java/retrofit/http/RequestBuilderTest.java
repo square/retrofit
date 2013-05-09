@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 import retrofit.http.client.Request;
@@ -248,6 +247,66 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void methodHeader() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addMethodHeader("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new HeaderPair("ping", "pong"), new HeaderPair("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void headerParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new HeaderPair("ping", "pong"), new HeaderPair("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void nullHeaderParamRemovesHeader() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("ping", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void nullHeaderParamRemovesMethodHeader() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addMethodHeader("kit", "kat") //
+        .addHeaderParam("kit", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new HeaderPair("ping", "pong"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void noDuplicateSlashes() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -274,9 +333,11 @@ public class RequestBuilderTest {
     private String path;
     private Set<String> pathParams;
     private final List<QueryParam> queryParams = new ArrayList<QueryParam>();
+    private final List<String> headerParams = new ArrayList<String>();
     private final List<String> namedParams = new ArrayList<String>();
     private final List<Object> args = new ArrayList<Object>();
     private final List<HeaderPair> headers = new ArrayList<HeaderPair>();
+    private final List<HeaderPair> methodHeaders = new ArrayList<HeaderPair>();
     private int singleEntityArgumentIndex = NO_SINGLE_ENTITY;
     private String url;
 
@@ -318,6 +379,15 @@ public class RequestBuilderTest {
       return this;
     }
 
+    Helper addHeaderParam(String name, Object value) {
+      if (name == null) {
+        throw new IllegalArgumentException("Name can not be null.");
+      }
+      headerParams.add(name);
+      args.add(value);
+      return this;
+    }
+
     Helper addSingleEntityParam(Object value) {
       if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
         throw new IllegalStateException("Single entity param already added.");
@@ -331,6 +401,11 @@ public class RequestBuilderTest {
 
     Helper addHeader(String name, String value) {
       headers.add(new HeaderPair(name, value));
+      return this;
+    }
+
+    Helper addMethodHeader(String name, String value) {
+      methodHeaders.add(new HeaderPair(name, value));
       return this;
     }
 
@@ -370,6 +445,8 @@ public class RequestBuilderTest {
       methodInfo.path = path;
       methodInfo.pathParams = pathParams;
       methodInfo.pathQueryParams = queryParams.toArray(new QueryParam[queryParams.size()]);
+      methodInfo.headers = methodHeaders;
+      methodInfo.headerParams = headerParams.toArray(new String[headerParams.size()]);
       methodInfo.namedParams = namedParams.toArray(new String[namedParams.size()]);
       methodInfo.singleEntityArgumentIndex = singleEntityArgumentIndex;
       methodInfo.isMultipart = isMultipart;

@@ -4,6 +4,7 @@ package retrofit.http;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,7 @@ final class RequestBuilder {
     int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
     for (int i = 0; i < pathNamedParams.length; i++) {
       Object arg = args[i];
-      if (arg == null) continue;
+      if (arg == null || pathNamedParams[i] == null) continue;
       if (i != singleEntityArgumentIndex) {
         params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
       }
@@ -150,6 +151,30 @@ final class RequestBuilder {
       }
     }
 
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
+    if (this.headers != null) {
+      headers.addAll(this.headers);
+    }
+    if (methodInfo.headers != null) {
+      headers.addAll(methodInfo.headers);
+    }
+    List<String> headersToRemove = new ArrayList<String>();
+    if (methodInfo.headerParams != null) {
+      for (int i = 0; i < methodInfo.headerParams.length; i++) {
+        String name = methodInfo.headerParams[i];
+        if (name == null) continue;
+        Object arg = args[i];
+        if (arg != null) {
+          headers.add(new HeaderPair(name, arg.toString()));
+        } else {
+          headersToRemove.add(name);
+        }
+      }
+    }
+    for (Iterator<HeaderPair> header = headers.iterator(); header.hasNext();) {
+      if (headersToRemove.contains(header.next().getName()))
+        header.remove();
+    }
     return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
   }
 

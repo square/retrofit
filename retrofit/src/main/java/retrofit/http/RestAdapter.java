@@ -50,8 +50,8 @@ public class RestAdapter {
   private volatile boolean debug;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
-      Executor callbackExecutor, HeaderPairs headers, Converter converter, Profiler profiler, Log log,
-      boolean debug) {
+      Executor callbackExecutor, HeaderPairs headers, Converter converter, Profiler profiler,
+      Log log, boolean debug) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;

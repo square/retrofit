@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -766,6 +767,68 @@ public class RestMethodInfoTest {
   public void multipartFailsOnNonBodyMethod() {
     class Example {
       @Multipart @GET("/") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void headersFailWhenEmptyOnMethod() {
+    class Example {
+      @GET("/") @Headers({}) Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test public void twoMethodHeaders() {
+
+    class Example {
+      @GET("/") @Headers({
+        "X-Foo: Bar",
+        "X-Ping: Pong"
+      }) Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.headers).isEqualTo(
+        Arrays.asList(new HeaderPair("X-Foo", "Bar"), new HeaderPair("X-Ping", "Pong")));
+  }
+
+  @Test public void twoHeaderParams() {
+    class Example {
+      @GET("/")
+      Response a(@Header("a") String a, @Header("b") String b) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(Arrays.asList(methodInfo.headerParams))
+      .isEqualTo(Arrays.asList("a", "b"));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void headerParamMustBeString() {
+    class Example {
+      @GET("/")
+      Response a(@Header("a") TypedOutput a, @Header("b") int b) {
         return null;
       }
     }

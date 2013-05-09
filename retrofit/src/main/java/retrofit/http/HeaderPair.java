@@ -1,4 +1,4 @@
-// Copyright 2012 Square, Inc.
+// Copyright 2013 Square, Inc.
 package retrofit.http;
 
 /** Represents an HTTP header name/value pair. */
