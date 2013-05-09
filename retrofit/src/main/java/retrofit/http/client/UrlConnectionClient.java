@@ -8,7 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import retrofit.http.Header;
+import retrofit.http.HeaderPair;
 import retrofit.http.mime.TypedInput;
 import retrofit.http.mime.TypedOutput;
 
@@ -28,7 +28,7 @@ public class UrlConnectionClient implements Client {
     connection.setRequestMethod(request.getMethod());
     connection.setDoInput(true);
 
-    for (Header header : request.getHeaders()) {
+    for (HeaderPair header : request.getHeaders()) {
       connection.addRequestProperty(header.getName(), header.getValue());
     }
 
@@ -48,11 +48,11 @@ public class UrlConnectionClient implements Client {
     int status = connection.getResponseCode();
     String reason = connection.getResponseMessage();
 
-    List<Header> headers = new ArrayList<Header>();
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
     for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
       String name = field.getKey();
       for (String value : field.getValue()) {
-        headers.add(new Header(name, value));
+        headers.add(new HeaderPair(name, value));
       }
     }
 

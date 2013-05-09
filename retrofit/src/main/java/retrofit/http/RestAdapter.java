@@ -43,15 +43,15 @@ public class RestAdapter {
   private final Client.Provider clientProvider;
   private final Executor httpExecutor;
   private final Executor callbackExecutor;
-  private final Headers headers;
+  private final HeaderPairs headers;
   private final Converter converter;
   private final Profiler profiler;
   private final Log log;
   private volatile boolean debug;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
-      Executor callbackExecutor, Headers headers, Converter converter, Profiler profiler, Log log,
-      boolean debug) {
+      Executor callbackExecutor, HeaderPairs headers, Converter converter, Profiler profiler,
+      Log log, boolean debug) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
@@ -247,7 +247,7 @@ public class RestAdapter {
   private Request logAndReplaceRequest(Request request) throws IOException {
     log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
 
-    for (Header header : request.getHeaders()) {
+    for (HeaderPair header : request.getHeaders()) {
       log.log(header.getName() + ": " + header.getValue());
     }
 
@@ -283,7 +283,7 @@ public class RestAdapter {
       throws IOException {
     log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
 
-    for (Header header : response.getHeaders()) {
+    for (HeaderPair header : response.getHeaders()) {
       log.log(header.getName() + ": " + header.getValue());
     }
 
@@ -352,7 +352,7 @@ public class RestAdapter {
     private Client.Provider clientProvider;
     private Executor httpExecutor;
     private Executor callbackExecutor;
-    private Headers headers;
+    private HeaderPairs headers;
     private Converter converter;
     private Profiler profiler;
     private Log log;
@@ -400,7 +400,7 @@ public class RestAdapter {
       return this;
     }
 
-    public Builder setHeaders(Headers headers) {
+    public Builder setHeaders(HeaderPairs headers) {
       if (headers == null) throw new NullPointerException("headers");
       this.headers = headers;
       return this;
@@ -455,7 +455,7 @@ public class RestAdapter {
         log = Platform.get().defaultLog();
       }
       if (headers == null) {
-        headers = Headers.NONE;
+        headers = HeaderPairs.NONE;
       }
     }
   }

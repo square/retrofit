@@ -4,17 +4,17 @@ package retrofit.http.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import retrofit.http.Header;
+import retrofit.http.HeaderPair;
 import retrofit.http.mime.TypedInput;
 
 /** An HTTP response. */
 public final class Response {
   private final int status;
   private final String reason;
-  private final List<Header> headers;
+  private final List<HeaderPair> headers;
   private final TypedInput body;
 
-  public Response(int status, String reason, List<Header> headers, TypedInput body) {
+  public Response(int status, String reason, List<HeaderPair> headers, TypedInput body) {
     if (status < 200) {
       throw new IllegalArgumentException("Invalid status code: " + status);
     }
@@ -27,7 +27,7 @@ public final class Response {
 
     this.status = status;
     this.reason = reason;
-    this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
+    this.headers = Collections.unmodifiableList(new ArrayList<HeaderPair>(headers));
     this.body = body;
   }
 
@@ -42,7 +42,7 @@ public final class Response {
   }
 
   /** An unmodifiable collection of headers. */
-  public List<Header> getHeaders() {
+  public List<HeaderPair> getHeaders() {
     return headers;
   }
 

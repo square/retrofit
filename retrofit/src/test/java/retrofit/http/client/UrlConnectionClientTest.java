@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
-import retrofit.http.Header;
+import retrofit.http.HeaderPair;
 import retrofit.http.TestingUtils;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
@@ -75,9 +75,9 @@ public class UrlConnectionClientTest {
   }
 
   @Test public void headers() throws Exception {
-    List<Header> headers = new ArrayList<Header>();
-    headers.add(new Header("kit", "kat"));
-    headers.add(new Header("foo", "bar"));
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
+    headers.add(new HeaderPair("kit", "kat"));
+    headers.add(new HeaderPair("foo", "bar"));
     Request request = new Request("GET", HOST + "/this/", headers, null);
 
     HttpURLConnection connection = client.openConnection(request);
@@ -101,8 +101,8 @@ public class UrlConnectionClientTest {
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(3) //
-        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"),
-            new Header("Content-Type", "text/plain"));
+        .containsOnly(new HeaderPair("foo", "bar"), new HeaderPair("kit", "kat"),
+            new HeaderPair("Content-Type", "text/plain"));
     assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
   }
 
@@ -119,8 +119,8 @@ public class UrlConnectionClientTest {
     assertThat(response.getStatus()).isEqualTo(201);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(3) //
-        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"),
-            new Header("Content-Type", "text/plain"));
+        .containsOnly(new HeaderPair("foo", "bar"), new HeaderPair("kit", "kat"),
+            new HeaderPair("Content-Type", "text/plain"));
     assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
   }
 
@@ -147,6 +147,6 @@ public class UrlConnectionClientTest {
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(2) //
-        .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
+        .containsExactly(new HeaderPair("foo", "bar"), new HeaderPair("kit", "kat"));
   }
 }
