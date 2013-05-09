@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadFactory;
 import retrofit.http.android.AndroidApacheClient;
 import retrofit.http.android.MainThreadExecutor;
 import retrofit.http.client.Client;
+import retrofit.http.client.OkClient;
 import retrofit.http.client.UrlConnectionClient;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -36,6 +37,7 @@ abstract class Platform {
   Converter defaultConverter() {
     return new GsonConverter(new Gson());
   }
+
   abstract Client.Provider defaultClient();
   abstract Executor defaultHttpExecutor();
   abstract Executor defaultCallbackExecutor();
@@ -44,7 +46,12 @@ abstract class Platform {
   /** Provides sane defaults for operation on the JVM. */
   private static class Base extends Platform {
     @Override Client.Provider defaultClient() {
-      final Client client = new UrlConnectionClient();
+      final Client client;
+      if (hasOkHttpOnClasspath()) {
+        client = OkClientInstantiator.instantiate();
+      } else {
+        client = new UrlConnectionClient();
+      }
       return new Client.Provider() {
         @Override public Client get() {
           return client;
@@ -82,7 +89,9 @@ abstract class Platform {
   private static class Android extends Platform {
     @Override Client.Provider defaultClient() {
       final Client client;
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+      if (hasOkHttpOnClasspath()) {
+        client = OkClientInstantiator.instantiate();
+      } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
         client = new AndroidApacheClient();
       } else {
         client = new UrlConnectionClient();
@@ -117,6 +126,26 @@ abstract class Platform {
           Log.d("Retrofit", message);
         }
       };
+    }
+  }
+
+  /** Determine whether or not OkHttp is present on the runtime classpath. */
+  private static boolean hasOkHttpOnClasspath() {
+    try {
+      Class.forName("com.squareup.okhttp.OkHttpClient");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Indirection for OkHttp class to prevent VerifyErrors on Android 2.0 and earlier when the
+   * dependency is not present..
+   */
+  private static class OkClientInstantiator {
+    static Client instantiate() {
+      return new OkClient();
     }
   }
 }
