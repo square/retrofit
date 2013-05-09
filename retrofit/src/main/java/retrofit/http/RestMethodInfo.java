@@ -15,7 +15,10 @@ import retrofit.http.mime.TypedOutput;
 /** Cached details about an interface method. */
 final class RestMethodInfo {
   static final int NO_SINGLE_ENTITY = -1;
-  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]+)\\}");
+
+  // Matches strings containing lowercase characters, digits, underscores, or hyphens that start
+  // with a lowercase character in between '{' and '}'.
+  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)\\}");
 
   final Method method;
   final boolean isSynchronous;
