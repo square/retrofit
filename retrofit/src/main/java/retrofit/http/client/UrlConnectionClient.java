@@ -12,6 +12,7 @@ import retrofit.http.Header;
 import retrofit.http.mime.TypedInput;
 import retrofit.http.mime.TypedOutput;
 
+/** Retrofit client that uses {@link HttpURLConnection} for communication. */
 public class UrlConnectionClient implements Client {
   @Override public Response execute(Request request) throws IOException {
     HttpURLConnection connection = openConnection(request);
