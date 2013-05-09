@@ -291,6 +291,21 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  //RFC 2616: Field names are case-insensitive
+  @Test public void nullHeaderParamRemovesHeaderCaseInsensitive() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("Ping", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void nullHeaderParamRemovesMethodHeader() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //

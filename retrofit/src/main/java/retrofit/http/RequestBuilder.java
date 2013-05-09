@@ -158,7 +158,8 @@ final class RequestBuilder {
     if (methodInfo.headers != null) {
       headers.addAll(methodInfo.headers);
     }
-    List<String> headersToRemove = new ArrayList<String>();
+    // RFC 2616: Field names are case-insensitive
+    List<String> lcHeadersToRemove = new ArrayList<String>();
     if (methodInfo.headerParams != null) {
       for (int i = 0; i < methodInfo.headerParams.length; i++) {
         String name = methodInfo.headerParams[i];
@@ -167,12 +168,13 @@ final class RequestBuilder {
         if (arg != null) {
           headers.add(new HeaderPair(name, arg.toString()));
         } else {
-          headersToRemove.add(name);
+          lcHeadersToRemove.add(name.toLowerCase());
         }
       }
     }
     for (Iterator<HeaderPair> header = headers.iterator(); header.hasNext();) {
-      if (headersToRemove.contains(header.next().getName()))
+      // RFC 2616: Field names are case-insensitive
+      if (lcHeadersToRemove.contains(header.next().getName().toLowerCase()))
         header.remove();
     }
     return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
