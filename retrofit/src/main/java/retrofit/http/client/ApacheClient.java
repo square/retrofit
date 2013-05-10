@@ -19,7 +19,6 @@ import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
-import retrofit.http.Header;
 import retrofit.http.mime.TypedByteArray;
 import retrofit.http.mime.TypedOutput;
 

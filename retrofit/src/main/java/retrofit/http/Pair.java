@@ -7,7 +7,17 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Retention(RUNTIME) @Target(PARAMETER)
-public @interface Name {
+/**
+ * Named pair for a form-encoded request.
+ *
+ * <pre>
+ * @FormEncoded
+ * @POST("/")
+ * void example(@Pair("name") String name, @Pair("occupation") String occupation, ..);
+ * }
+ * </pre>
+ */
+@Target(PARAMETER) @Retention(RUNTIME)
+public @interface Pair {
   String value();
 }

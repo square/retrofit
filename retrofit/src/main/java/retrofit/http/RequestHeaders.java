@@ -3,9 +3,10 @@ package retrofit.http;
 
 import java.util.Collections;
 import java.util.List;
+import retrofit.http.client.Header;
 
 /** Manages headers for each request. */
-public interface Headers {
+public interface RequestHeaders {
   /**
    * Get a list of headers for a request. This method will be called once for each request allowing
    * you to change the list as the state of your application changes.
@@ -13,7 +14,7 @@ public interface Headers {
   List<Header> get();
 
   /** Empty header list. */
-  Headers NONE = new Headers() {
+  RequestHeaders NONE = new RequestHeaders() {
     @Override public List<Header> get() {
       return Collections.emptyList();
     }

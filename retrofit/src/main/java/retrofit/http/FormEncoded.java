@@ -1,3 +1,4 @@
+// Copyright 2013 Square, Inc.
 package retrofit.http;
 
 import java.lang.annotation.Retention;
@@ -7,11 +8,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies a query parameter.
- *
- * @author Patrick Forhan (patrick@squareup.com)
+ * Denotes that the request body is form-encoded. Parts should be declared as parameters and
+ * annotated with {@link Pair @Pair}.
  */
 @Target(METHOD) @Retention(RUNTIME)
-public @interface QueryParams {
-  QueryParam[] value();
+public @interface FormEncoded {
 }

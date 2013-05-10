@@ -3,7 +3,6 @@ package retrofit.http.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import retrofit.http.Header;
 import retrofit.http.mime.TypedOutput;
 
 /** Encapsulates all of the information necessary to make an HTTP request. */

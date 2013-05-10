@@ -18,7 +18,7 @@ public interface TypedOutput {
   /** Returns the mime type. */
   String mimeType();
 
-  /** Length in bytes. */
+  /** Length in bytes or -1 if unknown. */
   long length();
 
   /** Writes these bytes to the given output stream. */

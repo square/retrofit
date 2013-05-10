@@ -1,5 +1,5 @@
 // Copyright 2012 Square, Inc.
-package retrofit.http;
+package retrofit.http.client;
 
 /** Represents an HTTP header name/value pair. */
 public final class Header {
