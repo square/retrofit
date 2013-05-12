@@ -243,6 +243,81 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void methodHeader() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void headerParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void nullHeaderParamRemovesHeader() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("ping", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  //RFC 2616: Field names are case-insensitive
+  @Test public void nullHeaderParamRemovesHeaderCaseInsensitive() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("Ping", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void nullHeaderParamRemovesMethodHeader() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addHeaderParam("kit", "kat") //
+        .addHeaderParam("kit", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("ping", "pong"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void noDuplicateSlashes() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -272,6 +347,7 @@ public class RequestBuilderTest {
     private final List<String> queryParams = new ArrayList<String>();
     private final List<String> pairParams = new ArrayList<String>();
     private final List<String> partParams = new ArrayList<String>();
+    private final List<String> headerParams = new ArrayList<String>();
     private final List<Object> args = new ArrayList<Object>();
     private final List<Header> headers = new ArrayList<Header>();
     private int bodyIndex = NO_BODY;
@@ -303,38 +379,45 @@ public class RequestBuilderTest {
       return this;
     }
 
-    private void addParam(String path, String query, String pair, String part, Object value) {
+    private void addParam(String path, String query, String pair, String part, String header,
+        Object value) {
       pathParams.add(path);
       queryParams.add(query);
       pairParams.add(pair);
       partParams.add(part);
+      headerParams.add(header);
       args.add(value);
     }
 
     Helper addPathParam(String name, Object value) {
-      addParam(name, null, null, null, value);
+      addParam(name, null, null, null, null, value);
       return this;
     }
 
     Helper addQueryParam(String name, String value) {
-      addParam(null, name, null, null, value);
+      addParam(null, name, null, null, null, value);
       hasQueryParams = true;
       return this;
     }
 
     Helper addPair(String name, String value) {
-      addParam(null, null, name, null, value);
+      addParam(null, null, name, null, null, value);
       return this;
     }
 
     Helper addPart(String name, Object value) {
-      addParam(null, null, null, name, value);
+      addParam(null, null, null, name, null, value);
       return this;
     }
 
     Helper setBody(Object value) {
-      addParam(null, null, null, null, value);
+      addParam(null, null, null, null, null, value);
       bodyIndex = args.size() - 1;
+      return this;
+    }
+
+    Helper addHeaderParam(String name, Object value) {
+      addParam(null, null, null, null, name, value);
       return this;
     }
 
@@ -375,6 +458,7 @@ public class RequestBuilderTest {
       methodInfo.requestQueryName = queryParams.toArray(new String[queryParams.size()]);
       methodInfo.requestFormPair = pairParams.toArray(new String[pairParams.size()]);
       methodInfo.requestMultipartPart = partParams.toArray(new String[partParams.size()]);
+      methodInfo.requestParamHeader = headerParams.toArray(new String[headerParams.size()]);
       methodInfo.bodyIndex = bodyIndex;
       methodInfo.loaded = true;
 

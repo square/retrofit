@@ -43,6 +43,7 @@ final class RestMethodInfo {
   String requestUrl;
   Set<String> requestUrlParamNames;
   String requestQuery;
+  List<retrofit.http.client.Header> headers;
 
   // Parameter-level details
   String[] requestUrlParam;
@@ -50,6 +51,7 @@ final class RestMethodInfo {
   boolean hasQueryParams = false;
   String[] requestFormPair;
   String[] requestMultipartPart;
+  String[] requestParamHeader;
   int bodyIndex = NO_BODY;
 
   RestMethodInfo(Method method) {
@@ -102,6 +104,12 @@ final class RestMethodInfo {
         parsePath(path);
         requestMethod = methodInfo.value();
         requestHasBody = methodInfo.hasBody();
+      } else if (annotationType == Headers.class) {
+        String[] headersToParse = ((Headers) methodAnnotation).value();
+        if (headersToParse.length == 0) {
+          throw new IllegalStateException("Headers annotation was empty.");
+        }
+        headers = parseHeaders(headersToParse);
       } else if (annotationType == Multipart.class) {
         requestType = RequestType.MULTIPART;
       } else if (annotationType == FormEncoded.class) {
@@ -173,6 +181,16 @@ final class RestMethodInfo {
     requestQuery = query;
   }
 
+  private List<retrofit.http.client.Header> parseHeaders(String[] headersToParse) {
+    List<retrofit.http.client.Header> headers = new ArrayList<retrofit.http.client.Header>();
+    for (String headerToParse: headersToParse) {
+      int colon = headerToParse.indexOf(':');
+      headers.add(new retrofit.http.client.Header(headerToParse.substring(0, colon),
+          headerToParse.substring(colon + 2)));
+    }
+    return headers;
+  }
+
   /** Loads {@link #responseObjectType}. Returns {@code true} if method is synchronous. */
   private boolean parseResponseType() {
     // Synchronous methods have a non-void return type.
@@ -233,8 +251,9 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #requestUrlParam}, {@link #requestQueryName}, {@link #requestFormPair}, and
-   * {@link #requestMultipartPart}. Must be called after {@link #parseMethodAnnotations()}.
+   * Loads {@link #requestUrlParam}, {@link #requestQueryName}, {@link #requestFormPair},
+   * {@link #requestMultipartPart}, and {@link #requestParamHeader}. Must be called after
+   * {@link #parseMethodAnnotations()}.
    */
   private void parseParameters() {
     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -249,13 +268,14 @@ final class RestMethodInfo {
     String[] queryName = new String[count];
     String[] formValue = new String[count];
     String[] multipartPart = new String[count];
+    String[] paramHeader = new String[count];
     boolean gotPair = false;
     boolean gotPart = false;
 
     for (int i = 0; i < count; i++) {
       boolean hasRetrofitAnnotation = false;
 
-      Class<?> paramaterType = parameterTypes[i];
+      Class<?> parameterType = parameterTypes[i];
       Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
       if (parameterAnnotations != null) {
         for (Annotation parameterAnnotation : parameterAnnotations) {
@@ -280,6 +300,16 @@ final class RestMethodInfo {
             // TODO verify query name not already used in URL?
 
             queryName[i] = name;
+          } else if (annotationType == Header.class) {
+            String name = ((Header) parameterAnnotation).value();
+            if (parameterType != String.class) {
+              throw new IllegalStateException("@Header parameter type must be String: " + name);
+            }
+
+            // TODO verify name not already used?
+
+            hasRetrofitAnnotation = true;
+            paramHeader[i] = name;
           } else if (annotationType == Pair.class) {
             if (requestType != RequestType.FORM_ENCODED) {
               throw new IllegalStateException(
@@ -342,6 +372,7 @@ final class RestMethodInfo {
     requestQueryName = queryName;
     requestFormPair = formValue;
     requestMultipartPart = multipartPart;
+    requestParamHeader = paramHeader;
   }
 
   /**
