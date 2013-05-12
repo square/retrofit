@@ -26,7 +26,7 @@ import static retrofit.http.Utils.SynchronousExecutor;
 /**
  * Adapts a Java interface to a REST API.
  * <p>
- * API endpoints are defined as methods on an interface with annotation providing metadata about
+ * API endpoints are defined as methods on an interface with annotations providing metadata about
  * the form in which the HTTP call should be made.
  * <p>
  * The relative path for a given method is obtained from an annotation on the method describing
@@ -34,8 +34,9 @@ import static retrofit.http.Utils.SynchronousExecutor;
  * and {@link DELETE}. You can define your own HTTP method by creating an annotation that takes a
  * {code String} value and itself is annotated with {@link RestMethod @RestMethod}.
  * <p>
- * Method parameters can be used to replace parts of the URL by annotating them with {@link Path}.
- * Replacement sections are denoted by an identifier surrounded by curly braces (e.g., "{foo}").
+ * Method parameters can be used to replace parts of the URL by annotating them with
+ * {@link Path @Path}. Replacement sections are denoted by an identifier surrounded by curly braces
+ * (e.g., "{foo}"). To add items to the query string of a URL use {@link Query @Query}.
  * <p>
  * HTTP requests happen in one of two ways:
  * <ul>
@@ -48,19 +49,23 @@ import static retrofit.http.Utils.SynchronousExecutor;
  * response will be converted to the method's return type using the specified {@link Converter}.
  * </ul>
  * <p>
- * An parameter which will represents the body of the request using the {@link Body} annotation.
- * The object will be converted to request representation by a call to
- * {@link Converter#toBody(Object) toBody} on the supplied {@link Converter} for this instance. The
- * body can also be a {@link TypedOutput} where it will be used directly.
+ * The body of a request is denoted by the {@link Body @Body} annotation. The object will be
+ * converted to request representation by a call to {@link Converter#toBody(Object) toBody} on the
+ * supplied {@link Converter} for this instance. The body can also be a {@link TypedOutput} where
+ * it will be used directly.
  * <p>
  * Alternative request body formats are supported by method annotations and corresponding parameter
  * annotations:
  * <ul>
- * <li>{@link FormEncoded @FormEncoded} - Form-encoded data with pairs specified by the
- * {@link Pair @Pair} parameter annotation.
+ * <li>{@link FormUrlEncoded @FormUrlEncoded} - Form-encoded data with pairs specified by the
+ * {@link Field @Field} parameter annotation.
  * <li>{@link Multipart @Multipart} - RFC 2387-compliant multi-part data with parts specified by
  * the {@link Part @Part} parameter annotation.
  * </ul>
+ * <p>
+ * Additional static headers can be added for an endpoint using the {@link Headers @Headers} method
+ * annotation. For per-request control over a header annotate a parameter with
+ * {@link Header @Header}.
  * <p>
  * For example:
  * <pre>

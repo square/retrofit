@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 
-public final class FormEncodedTypedOutput implements TypedOutput {
+public final class FormUrlEncodedTypedOutput implements TypedOutput {
   final ByteArrayOutputStream content = new ByteArrayOutputStream();
 
   public void addPair(String name, String value) {

@@ -11,13 +11,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Named pair for a form-encoded request.
  *
  * <pre>
- * @FormEncoded
- * @POST("/")
- * void example(@Pair("name") String name, @Pair("occupation") String occupation, ..);
+ * &#64;FormUrlEncoded
+ * &#64;POST("/")
+ * void example(@Field("name") String name, @Field("occupation") String occupation, ..);
  * }
  * </pre>
  */
 @Target(PARAMETER) @Retention(RUNTIME)
-public @interface Pair {
+public @interface Field {
   String value();
 }

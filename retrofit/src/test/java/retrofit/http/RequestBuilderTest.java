@@ -273,51 +273,6 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void nullHeaderParamRemovesHeader() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
-        .addHeaderParam("ping", null) //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.getBody()).isNull();
-  }
-
-  //RFC 2616: Field names are case-insensitive
-  @Test public void nullHeaderParamRemovesHeaderCaseInsensitive() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
-        .addHeaderParam("Ping", null) //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.getBody()).isNull();
-  }
-
-  @Test public void nullHeaderParamRemovesMethodHeader() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
-        .addHeaderParam("kit", "kat") //
-        .addHeaderParam("kit", null) //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()) //
-        .containsExactly(new Header("ping", "pong"));
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.getBody()).isNull();
-  }
-
   @Test public void noDuplicateSlashes() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -432,7 +387,7 @@ public class RequestBuilderTest {
     }
 
     Helper setFormEncoded() {
-      requestType = RequestType.FORM_ENCODED;
+      requestType = RequestType.FORM_URL_ENCODED;
       return this;
     }
 

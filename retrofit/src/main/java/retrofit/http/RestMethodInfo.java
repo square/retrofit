@@ -19,15 +19,15 @@ final class RestMethodInfo {
 
   // Matches strings containing lowercase characters, digits, underscores, or hyphens that start
   // with a lowercase character in between '{' and '}'.
-  private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)}");
+  private static final Pattern URL_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)}");
 
   enum RequestType {
     /** No content-specific logic required. */
     SIMPLE,
     /** Multi-part request body. */
     MULTIPART,
-    /** Form-encoded request body. */
-    FORM_ENCODED
+    /** Form URL-encoded request body. */
+    FORM_URL_ENCODED
   }
 
   final Method method;
@@ -111,9 +111,17 @@ final class RestMethodInfo {
         }
         headers = parseHeaders(headersToParse);
       } else if (annotationType == Multipart.class) {
+        if (requestType != RequestType.SIMPLE) {
+          throw new IllegalStateException(
+              "Only one encoding annotation per method is allowed: " + method.getName());
+        }
         requestType = RequestType.MULTIPART;
-      } else if (annotationType == FormEncoded.class) {
-        requestType = RequestType.FORM_ENCODED;
+      } else if (annotationType == FormUrlEncoded.class) {
+        if (requestType != RequestType.SIMPLE) {
+          throw new IllegalStateException(
+              "Only one encoding annotation per method is allowed: " + method.getName());
+        }
+        requestType = RequestType.FORM_URL_ENCODED;
       }
     }
 
@@ -128,7 +136,7 @@ final class RestMethodInfo {
                 + method.getName()
                 + ")");
       }
-      if (requestType == RequestType.FORM_ENCODED) {
+      if (requestType == RequestType.FORM_URL_ENCODED) {
         throw new IllegalStateException(
             "Multipart can only be specific on HTTP methods with request body (e.g., POST). ("
                 + method.getName()
@@ -159,18 +167,13 @@ final class RestMethodInfo {
       hasQueryParams = true;
 
       // Ensure the query string does not have any named parameters.
-      Matcher queryMatcher = PATH_PARAMETERS.matcher(query);
-      if (queryMatcher.find()) {
-        List<String> matches = new ArrayList<String>();
-        do {
-          matches.add("{" + queryMatcher.group(1) + "}");
-        } while (queryMatcher.find());
+      Matcher queryParamMatcher = URL_PARAMETERS.matcher(query);
+      if (queryParamMatcher.find()) {
         throw new IllegalStateException("URL query string \""
             + query
             + "\" on method "
             + method.getName()
-            + " may not have replace block. Found: "
-            + matches);
+            + " may not have replace block.");
       }
     }
 
@@ -181,14 +184,17 @@ final class RestMethodInfo {
     requestQuery = query;
   }
 
-  private List<retrofit.http.client.Header> parseHeaders(String[] headersToParse) {
-    List<retrofit.http.client.Header> headers = new ArrayList<retrofit.http.client.Header>();
-    for (String headerToParse: headersToParse) {
-      int colon = headerToParse.indexOf(':');
-      headers.add(new retrofit.http.client.Header(headerToParse.substring(0, colon),
-          headerToParse.substring(colon + 2)));
+  private List<retrofit.http.client.Header> parseHeaders(String[] headers) {
+    List<retrofit.http.client.Header> headerList = new ArrayList<retrofit.http.client.Header>();
+    for (String header : headers) {
+      int colon = header.indexOf(':');
+      if (colon == -1 || colon == 0 || colon == headers.length - 1) {
+        throw new IllegalStateException("Header must be in the form 'Name: Value': " + header);
+      }
+      headerList.add(new retrofit.http.client.Header(header.substring(0, colon),
+          header.substring(colon + 1).trim()));
     }
-    return headers;
+    return headerList;
   }
 
   /** Loads {@link #responseObjectType}. Returns {@code true} if method is synchronous. */
@@ -269,7 +275,7 @@ final class RestMethodInfo {
     String[] formValue = new String[count];
     String[] multipartPart = new String[count];
     String[] paramHeader = new String[count];
-    boolean gotPair = false;
+    boolean gotField = false;
     boolean gotPart = false;
 
     for (int i = 0; i < count; i++) {
@@ -297,8 +303,6 @@ final class RestMethodInfo {
             hasQueryParams = true;
             String name = ((Query) parameterAnnotation).value();
 
-            // TODO verify query name not already used in URL?
-
             queryName[i] = name;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
@@ -306,22 +310,18 @@ final class RestMethodInfo {
               throw new IllegalStateException("@Header parameter type must be String: " + name);
             }
 
-            // TODO verify name not already used?
-
             hasRetrofitAnnotation = true;
             paramHeader[i] = name;
-          } else if (annotationType == Pair.class) {
-            if (requestType != RequestType.FORM_ENCODED) {
+          } else if (annotationType == Field.class) {
+            if (requestType != RequestType.FORM_URL_ENCODED) {
               throw new IllegalStateException(
-                  "@Pair parameters can only be used with form encoding.");
+                  "@Field parameters can only be used with form encoding.");
             }
 
-            gotPair = true;
+            String name = ((Field) parameterAnnotation).value();
+
+            gotField = true;
             hasRetrofitAnnotation = true;
-            String name = ((Pair) parameterAnnotation).value();
-
-            // TODO verify name not already used?
-
             formValue[i] = name;
           } else if (annotationType == Part.class) {
             if (requestType != RequestType.MULTIPART) {
@@ -329,12 +329,10 @@ final class RestMethodInfo {
                   "@Part parameters can only be used with multipart encoding.");
             }
 
-            gotPart = true;
-            hasRetrofitAnnotation = true;
             String name = ((Part) parameterAnnotation).value();
 
-            // TODO verify name not already used?
-
+            gotPart = true;
+            hasRetrofitAnnotation = true;
             multipartPart[i] = name;
           } else if (annotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
@@ -361,8 +359,8 @@ final class RestMethodInfo {
     if (requestType == RequestType.SIMPLE && !requestHasBody && bodyIndex != NO_BODY) {
       throw new IllegalStateException("Non-body HTTP method cannot contain @Body or @TypedOutput.");
     }
-    if (requestType == RequestType.FORM_ENCODED && !gotPair) {
-      throw new IllegalStateException("Form-encoded method must contain at least one @Pair.");
+    if (requestType == RequestType.FORM_URL_ENCODED && !gotField) {
+      throw new IllegalStateException("Form-encoded method must contain at least one @Field.");
     }
     if (requestType == RequestType.MULTIPART && !gotPart) {
       throw new IllegalStateException("Multipart method must contain at least one @Part.");
@@ -380,7 +378,7 @@ final class RestMethodInfo {
    * in the URI, it will only show up once in the set.
    */
   static Set<String> parsePathParameters(String path) {
-    Matcher m = PATH_PARAMETERS.matcher(path);
+    Matcher m = URL_PARAMETERS.matcher(path);
     Set<String> patterns = new LinkedHashSet<String>();
     while (m.find()) {
       patterns.add(m.group(1));

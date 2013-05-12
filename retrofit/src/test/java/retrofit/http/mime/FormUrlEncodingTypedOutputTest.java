@@ -6,9 +6,9 @@ import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public class FormEncodingTypedOutputTest {
+public class FormUrlEncodingTypedOutputTest {
   @Test public void urlEncoding() throws Exception {
-    FormEncodedTypedOutput fe = new FormEncodedTypedOutput();
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
     fe.addPair("a&b", "c=d");
     fe.addPair("space, the", "final frontier");
 
@@ -18,8 +18,18 @@ public class FormEncodingTypedOutputTest {
     assertThat(actual).isEqualTo("a%26b=c%3Dd&space%2C+the=final+frontier");
   }
 
+  @Test public void utf8encoding() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addPair("ooɟ", "ɹɐq");
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("oo%C9%9F=%C9%B9%C9%90q");
+  }
+
   @Test public void encodedPairs() throws Exception {
-    FormEncodedTypedOutput fe = new FormEncodedTypedOutput();
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
     fe.addPair("sim", "ple");
 
     ByteArrayOutputStream out1 = new ByteArrayOutputStream();

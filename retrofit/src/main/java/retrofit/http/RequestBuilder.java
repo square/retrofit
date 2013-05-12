@@ -4,10 +4,10 @@ package retrofit.http;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import retrofit.http.client.Header;
 import retrofit.http.client.Request;
-import retrofit.http.mime.FormEncodedTypedOutput;
+import retrofit.http.mime.FormUrlEncodedTypedOutput;
 import retrofit.http.mime.MultipartTypedOutput;
 import retrofit.http.mime.TypedOutput;
 
@@ -60,7 +60,7 @@ final class RequestBuilder {
 
     StringBuilder url = new StringBuilder(apiUrl);
     if (apiUrl.endsWith("/")) {
-      // We enforce relative paths to start with '/'. Prevent a double-slash.
+      // We require relative paths to start with '/'. Prevent a double-slash.
       url.deleteCharAt(url.length() - 1);
     }
 
@@ -90,27 +90,21 @@ final class RequestBuilder {
     if (this.headers != null) {
       headers.addAll(this.headers);
     }
-    if (methodInfo.headers != null) {
-      headers.addAll(methodInfo.headers);
+    List<Header> methodHeaders = methodInfo.headers;
+    if (methodHeaders != null) {
+      headers.addAll(methodHeaders);
     }
-    // RFC 2616: Field names are case-insensitive
-    List<String> lcHeadersToRemove = new ArrayList<String>();
-    if (methodInfo.requestParamHeader != null) {
-      for (int i = 0; i < methodInfo.requestParamHeader.length; i++) {
-        String name = methodInfo.requestParamHeader[i];
+    // RFC 2616: Header names are case-insensitive.
+    String[] requestParamHeader = methodInfo.requestParamHeader;
+    if (requestParamHeader != null) {
+      for (int i = 0; i < requestParamHeader.length; i++) {
+        String name = requestParamHeader[i];
         if (name == null) continue;
         Object arg = args[i];
         if (arg != null) {
-          headers.add(new retrofit.http.client.Header(name, arg.toString()));
-        } else {
-          lcHeadersToRemove.add(name.toLowerCase());
+          headers.add(new retrofit.http.client.Header(name, String.valueOf(arg)));
         }
       }
-    }
-    for (Iterator<retrofit.http.client.Header> header = headers.iterator(); header.hasNext();) {
-      // RFC 2616: Field names are case-insensitive
-      if (lcHeadersToRemove.contains(header.next().getName().toLowerCase()))
-        header.remove();
     }
 
     return new Request(methodInfo.requestMethod, url.toString(), headers, buildBody());
@@ -146,8 +140,8 @@ final class RequestBuilder {
         }
       }
 
-      case FORM_ENCODED: {
-        FormEncodedTypedOutput body = new FormEncodedTypedOutput();
+      case FORM_URL_ENCODED: {
+        FormUrlEncodedTypedOutput body = new FormUrlEncodedTypedOutput();
         String[] requestFormPair = methodInfo.requestFormPair;
         for (int i = 0; i < requestFormPair.length; i++) {
           String name = requestFormPair[i];

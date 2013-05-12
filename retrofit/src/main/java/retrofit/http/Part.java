@@ -19,11 +19,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ul>
  * <p>
  * <pre>
- * @Multipart
- * @POST("/")
- * void example(@Part("description") TypedString description,
- *              @Part("image") TypedFile image,
- *              ..
+ * &#64;Multipart
+ * &#64;POST("/")
+ * void example(&#64;Part("description") TypedString description,
+ *              &#64;Part("image") TypedFile image,
+ *              ...
  * );
  * </pre>
  */

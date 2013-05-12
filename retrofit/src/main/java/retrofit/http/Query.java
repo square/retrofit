@@ -12,7 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link String#valueOf(Object)}.
  * <p>
  * <pre>
- * @GET("/list")
+ * &#64;GET("/list")
  * void example(@Query("page") int page, ..);
  * </pre>
  */

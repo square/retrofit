@@ -41,7 +41,7 @@ public final class Request {
     return url;
   }
 
-  /** Returns an unmodifiable list of headers.empty, never {@code null}. */
+  /** Returns an unmodifiable list of headers, never {@code null}. */
   public List<Header> getHeaders() {
     return headers;
   }

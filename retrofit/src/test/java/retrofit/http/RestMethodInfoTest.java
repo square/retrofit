@@ -613,7 +613,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void implicitFormEncodingForbidden() {
     class Example {
-      @POST("/") Response a(@Pair("a") int a) {
+      @POST("/") Response a(@Field("a") int a) {
         return null;
       }
     }
@@ -626,7 +626,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void formEncodingFailsOnNonBodyMethod() {
     class Example {
-      @FormEncoded @GET("/") Response a() {
+      @FormUrlEncoded @GET("/") Response a() {
         return null;
       }
     }
@@ -639,7 +639,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void formEncodingFailsWithNoParts() {
     class Example {
-      @FormEncoded @POST("/") Response a() {
+      @FormUrlEncoded @POST("/") Response a() {
         return null;
       }
     }
@@ -703,6 +703,22 @@ public class RestMethodInfoTest {
     class Example {
       @GET("/")
       Response a(@Header("a") TypedOutput a, @Header("b") int b) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void onlyOneEncodingIsAllowed() {
+    class Example {
+      @Multipart
+      @FormUrlEncoded
+      @POST("/")
+      Response a() {
         return null;
       }
     }
