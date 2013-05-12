@@ -4,160 +4,173 @@ package retrofit.http;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import retrofit.http.client.Header;
 import retrofit.http.client.Request;
+import retrofit.http.mime.FormUrlEncodedTypedOutput;
+import retrofit.http.mime.MultipartTypedOutput;
 import retrofit.http.mime.TypedOutput;
-import retrofit.http.mime.TypedString;
 
-import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
+import static retrofit.http.RestMethodInfo.NO_BODY;
 
-/**
- * Builds HTTP requests from Java method invocations.  Handles "path parameters" in the
- * {@code apiUrl} in the form of "path/to/url/{id}/action" where a parameter annotated with
- * {@code @Name("id")} is inserted into the url.  Note that this replacement can be recursive if:
- * <ol>
- * <li>Multiple sets of brackets are nested ("path/to/{{key}a}.</li>
- * <li>The order of {@link Name @Name} values go from innermost to outermost.</li>
- * <li>The values replaced correspond to {@link Name @Name} parameters.</li>
- * </ol>
- */
+/** Builds HTTP requests from Java method invocations. */
 final class RequestBuilder {
   private final Converter converter;
 
   private RestMethodInfo methodInfo;
   private Object[] args;
   private String apiUrl;
-  private List<Header> headers;
+  private List<retrofit.http.client.Header> headers;
 
   RequestBuilder(Converter converter) {
     this.converter = converter;
   }
 
-  RequestBuilder setMethodInfo(RestMethodInfo methodDetails) {
+  /** Supply cached method metadata info. */
+  RequestBuilder methodInfo(RestMethodInfo methodDetails) {
     this.methodInfo = methodDetails;
     return this;
   }
 
-  RequestBuilder setApiUrl(String apiUrl) {
+  /** Base API url. */
+  RequestBuilder apiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
     return this;
   }
 
-  RequestBuilder setArgs(Object[] args) {
+  /** Arguments from method invocation. */
+  RequestBuilder args(Object[] args) {
     this.args = args;
     return this;
   }
 
-  RequestBuilder setHeaders(List<Header> headers) {
+  /** A list of custom headers. */
+  RequestBuilder headers(List<retrofit.http.client.Header> headers) {
     this.headers = headers;
     return this;
   }
 
-  /** List of all URL parameters. Return value will be mutated. */
-  private List<Parameter> createParamList() {
-    List<Parameter> params = new ArrayList<Parameter>();
-
-    // Add arguments as parameters.
-    String[] pathNamedParams = methodInfo.namedParams;
-    int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
-    for (int i = 0; i < pathNamedParams.length; i++) {
-      Object arg = args[i];
-      if (arg == null) continue;
-      if (i != singleEntityArgumentIndex) {
-        params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
-      }
-    }
-
-    return params;
-  }
-
-  Request build() {
-    // Alter parameter list if path parameters are present.
-    Set<String> pathParams = new LinkedHashSet<String>(methodInfo.pathParams);
-    List<Parameter> paramList = createParamList();
-    String replacedPath = methodInfo.path;
-    for (String pathParam : pathParams) {
-      Parameter found = null;
-      for (Parameter param : paramList) {
-        if (param.getName().equals(pathParam)) {
-          found = param;
-          break;
-        }
-      }
-      if (found != null) {
-        String value = getUrlEncodedValue(found);
-        replacedPath = replacedPath.replace("{" + found.getName() + "}", value);
-        paramList.remove(found);
-      } else {
-        throw new IllegalArgumentException(
-            "URL param " + pathParam + " has no matching method @Name param.");
-      }
-    }
-
-    if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
-      // We're passing a JSON object as the entity: paramList should only contain path param values.
-      if (!paramList.isEmpty()) {
-        throw new IllegalStateException(
-            "Found @Name param on single-entity request that was not used for path substitution.");
-      }
-    }
+  /**
+   * Construct a {@link Request} from the supplied information. You <strong>must</strong> call
+   * {@link #methodInfo}, {@link #apiUrl}, {@link #args}, and {@link #headers} before invoking this
+   * method.
+   */
+  Request build() throws UnsupportedEncodingException {
+    String apiUrl = this.apiUrl;
 
     StringBuilder url = new StringBuilder(apiUrl);
     if (apiUrl.endsWith("/")) {
-      // We enforce relative paths to start with '/'. Prevent a double-slash.
+      // We require relative paths to start with '/'. Prevent a double-slash.
       url.deleteCharAt(url.length() - 1);
     }
-    url.append(replacedPath);
 
-    // Add query parameter(s), if specified.
-    for (QueryParam annotation : methodInfo.pathQueryParams) {
-      paramList.add(new Parameter(annotation.name(), annotation.value(), String.class));
-    }
+    // Append the method relative URL.
+    url.append(buildRelativeUrl());
 
-    TypedOutput body = null;
-    if (!methodInfo.restMethod.hasBody()) {
-      for (int i = 0, count = paramList.size(); i < count; i++) {
-        url.append((i == 0) ? '?' : '&');
-        Parameter nonPathParam = paramList.get(i);
-        String value = getUrlEncodedValue(nonPathParam);
-        url.append(nonPathParam.getName()).append("=").append(value);
+    // Append query parameters, if needed.
+    if (methodInfo.hasQueryParams) {
+      boolean first = true;
+      String requestQuery = methodInfo.requestQuery;
+      if (requestQuery != null) {
+        url.append(requestQuery);
+        first = false;
       }
-    } else if (!paramList.isEmpty()) {
-      if (methodInfo.isMultipart) {
-        MultipartTypedOutput multipartBody = new MultipartTypedOutput();
-        for (Parameter parameter : paramList) {
-          Object value = parameter.getValue();
-          TypedOutput typedOutput;
-          if (value instanceof TypedOutput) {
-            typedOutput = (TypedOutput) value;
-          } else {
-            typedOutput = new TypedString(value.toString());
-          }
-          multipartBody.addPart(parameter.getName(), typedOutput);
+      String[] requestQueryName = methodInfo.requestQueryName;
+      for (int i = 0; i < requestQueryName.length; i++) {
+        String query = requestQueryName[i];
+        if (query != null) {
+          String value = URLEncoder.encode(String.valueOf(args[i]), "UTF-8");
+          url.append(first ? '?' : '&').append(query).append('=').append(value);
+          first = false;
         }
-        body = multipartBody;
-      } else {
-        body = converter.toBody(paramList);
-      }
-    } else if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
-      Object singleEntity = args[methodInfo.singleEntityArgumentIndex];
-      if (singleEntity instanceof TypedOutput) {
-        body = (TypedOutput) singleEntity;
-      } else {
-        body = converter.toBody(singleEntity);
       }
     }
 
-    return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
+    List<retrofit.http.client.Header> headers = new ArrayList<retrofit.http.client.Header>();
+    if (this.headers != null) {
+      headers.addAll(this.headers);
+    }
+    List<Header> methodHeaders = methodInfo.headers;
+    if (methodHeaders != null) {
+      headers.addAll(methodHeaders);
+    }
+    // RFC 2616: Header names are case-insensitive.
+    String[] requestParamHeader = methodInfo.requestParamHeader;
+    if (requestParamHeader != null) {
+      for (int i = 0; i < requestParamHeader.length; i++) {
+        String name = requestParamHeader[i];
+        if (name == null) continue;
+        Object arg = args[i];
+        if (arg != null) {
+          headers.add(new retrofit.http.client.Header(name, String.valueOf(arg)));
+        }
+      }
+    }
+
+    return new Request(methodInfo.requestMethod, url.toString(), headers, buildBody());
   }
 
-  private static String getUrlEncodedValue(Parameter found) {
-    try {
-      return URLEncoder.encode(String.valueOf(found.getValue()), "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new AssertionError(e);
+  /** Create the final relative URL by performing parameter replacement. */
+  private String buildRelativeUrl() throws UnsupportedEncodingException {
+    String replacedPath = methodInfo.requestUrl;
+    String[] requestUrlParam = methodInfo.requestUrlParam;
+    for (int i = 0; i < requestUrlParam.length; i++) {
+      String param = requestUrlParam[i];
+      if (param != null) {
+        String value = URLEncoder.encode(String.valueOf(args[i]), "UTF-8");
+        replacedPath = replacedPath.replace("{" + param + "}", value);
+      }
+    }
+    return replacedPath;
+  }
+
+  /** Create the request body using the method info and invocation arguments. */
+  private TypedOutput buildBody() {
+    switch (methodInfo.requestType) {
+      case SIMPLE: {
+        int bodyIndex = methodInfo.bodyIndex;
+        if (bodyIndex == NO_BODY) {
+          return null;
+        }
+        Object body = args[bodyIndex];
+        if (body instanceof TypedOutput) {
+          return (TypedOutput) body;
+        } else {
+          return converter.toBody(body);
+        }
+      }
+
+      case FORM_URL_ENCODED: {
+        FormUrlEncodedTypedOutput body = new FormUrlEncodedTypedOutput();
+        String[] requestFormPair = methodInfo.requestFormPair;
+        for (int i = 0; i < requestFormPair.length; i++) {
+          String name = requestFormPair[i];
+          if (name != null) {
+            body.addPair(name, String.valueOf(args[i]));
+          }
+        }
+        return body;
+      }
+
+      case MULTIPART: {
+        MultipartTypedOutput body = new MultipartTypedOutput();
+        String[] requestMultipartPart = methodInfo.requestMultipartPart;
+        for (int i = 0; i < requestMultipartPart.length; i++) {
+          String name = requestMultipartPart[i];
+          if (name != null) {
+            Object value = args[i];
+            if (value instanceof TypedOutput) {
+              body.addPart(name, (TypedOutput) value);
+            } else {
+              body.addPart(name, converter.toBody(value));
+            }
+          }
+        }
+        return body;
+      }
+
+      default:
+        throw new IllegalArgumentException("Unknown request type " + methodInfo.requestType);
     }
   }
 }

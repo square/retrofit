@@ -16,7 +16,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Eric Denman (edenman@squareup.com)
  */
-@Retention(RUNTIME)
-@Target(PARAMETER)
-public @interface SingleEntity {
+@Target(PARAMETER) @Retention(RUNTIME)
+public @interface Body {
 }

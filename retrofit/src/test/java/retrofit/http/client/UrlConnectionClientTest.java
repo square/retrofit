@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
-import retrofit.http.Header;
 import retrofit.http.TestingUtils;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;

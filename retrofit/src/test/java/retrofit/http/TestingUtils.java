@@ -3,6 +3,7 @@ package retrofit.http;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import retrofit.http.mime.MultipartTypedOutput;
 import retrofit.http.mime.TypedOutput;
 
 import static org.fest.assertions.api.Assertions.assertThat;

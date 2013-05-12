@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import retrofit.http.Header;
 import retrofit.http.mime.TypedInput;
 import retrofit.http.mime.TypedOutput;
 

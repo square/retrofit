@@ -1,21 +1,34 @@
 // Copyright 2013 Square, Inc.
 package retrofit.http;
 
-import java.util.Collections;
-import java.util.List;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-/** Manages headers for each request. */
-public interface Headers {
-  /**
-   * Get a list of headers for a request. This method will be called once for each request allowing
-   * you to change the list as the state of your application changes.
-   */
-  List<Header> get();
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-  /** Empty header list. */
-  Headers NONE = new Headers() {
-    @Override public List<Header> get() {
-      return Collections.emptyList();
-    }
-  };
+/**
+ * Adds headers literally supplied in the {@code value}.
+ * <p>
+ * <pre>
+ * &#64;Headers("Cache-Control: max-age=640000")
+ * &#64;GET("/")
+ * ...
+ *
+ * &#64;Headers({
+ *   "X-Foo: Bar",
+ *   "X-Ping: Pong"
+ * })
+ * &#64;GET("/")
+ * ...
+ * </pre>
+ * <p>
+ * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
+ * be included in the request.
+ *
+ * @author Adrian Cole (adrianc@netflix.com)
+ */
+@Target(METHOD) @Retention(RUNTIME)
+public @interface Headers {
+  String[] value();
 }

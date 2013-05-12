@@ -3,7 +3,7 @@ package com.squareup.retrofit.sample.github;
 
 import java.util.List;
 import retrofit.http.GET;
-import retrofit.http.Name;
+import retrofit.http.Path;
 import retrofit.http.RestAdapter;
 
 public class Client {
@@ -17,8 +17,8 @@ public class Client {
   interface GitHub {
     @GET("/repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(
-        @Name("owner") String owner,
-        @Name("repo") String repo
+        @Path("owner") String owner,
+        @Path("repo") String repo
     );
   }
 

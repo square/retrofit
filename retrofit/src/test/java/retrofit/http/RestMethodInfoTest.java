@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +16,9 @@ import retrofit.http.mime.TypedOutput;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.fest.assertions.api.Assertions.assertThat;
-import static retrofit.http.RestMethodInfo.NO_SINGLE_ENTITY;
+import static retrofit.http.RestMethodInfo.NO_BODY;
+import static retrofit.http.RestMethodInfo.RequestType.MULTIPART;
+import static retrofit.http.RestMethodInfo.RequestType.SIMPLE;
 
 public class RestMethodInfoTest {
   @Test public void pathParameterParsing() throws Exception {
@@ -65,19 +68,19 @@ public class RestMethodInfoTest {
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
   @Test public void concreteCallbackTypesWithParams() {
     class Example {
-      @GET("/foo") void a(@Name("id") String id, ResponseCallback cb) {
+      @GET("/foo") void a(@Path("id") String id, ResponseCallback cb) {
       }
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
   @Test public void genericCallbackTypes() {
@@ -89,19 +92,19 @@ public class RestMethodInfoTest {
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
   @Test public void genericCallbackTypesWithParams() {
     class Example {
-      @GET("/foo") void a(@Name("id") String id, Callback<Response> c) {
+      @GET("/foo") void a(@Path("id") String id, Callback<Response> c) {
       }
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
   @Test public void wildcardGenericCallbackTypes() {
@@ -113,7 +116,7 @@ public class RestMethodInfoTest {
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
   @Test public void genericCallbackWithGenericType() {
@@ -127,7 +130,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.isSynchronous).isFalse();
 
     Type expected = new TypeToken<List<String>>() {}.getType();
-    assertThat(methodInfo.type).isEqualTo(expected);
+    assertThat(methodInfo.responseObjectType).isEqualTo(expected);
   }
 
   // RestMethodInfo reconstructs this type from MultimapCallback<String, Set<Long>>. It contains
@@ -143,7 +146,7 @@ public class RestMethodInfoTest {
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.type).isEqualTo(
+    assertThat(methodInfo.responseObjectType).isEqualTo(
         RestMethodInfoTest.class.getDeclaredField("extendingGenericCallbackType").getGenericType());
   }
 
@@ -157,7 +160,7 @@ public class RestMethodInfoTest {
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isTrue();
-    assertThat(methodInfo.type).isEqualTo(Response.class);
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
   @Test public void synchronousGenericResponse() {
@@ -172,13 +175,13 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.isSynchronous).isTrue();
 
     Type expected = new TypeToken<List<String>>() {}.getType();
-    assertThat(methodInfo.type).isEqualTo(expected);
+    assertThat(methodInfo.responseObjectType).isEqualTo(expected);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void missingCallbackTypes() {
     class Example {
-      @GET("/foo") void a(@Name("id") String id) {
+      @GET("/foo") void a(@Path("id") String id) {
       }
     }
 
@@ -222,9 +225,9 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("DELETE");
-    assertThat(methodInfo.restMethod.hasBody()).isFalse();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("DELETE");
+    assertThat(methodInfo.requestHasBody).isFalse();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @Test public void getMethod() {
@@ -238,9 +241,9 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("GET");
-    assertThat(methodInfo.restMethod.hasBody()).isFalse();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("GET");
+    assertThat(methodInfo.requestHasBody).isFalse();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @Test public void headMethod() {
@@ -254,9 +257,9 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("HEAD");
-    assertThat(methodInfo.restMethod.hasBody()).isFalse();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("HEAD");
+    assertThat(methodInfo.requestHasBody).isFalse();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @Test public void postMethod() {
@@ -270,9 +273,9 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("POST");
-    assertThat(methodInfo.restMethod.hasBody()).isTrue();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("POST");
+    assertThat(methodInfo.requestHasBody).isTrue();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @Test public void putMethod() {
@@ -286,9 +289,9 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("PUT");
-    assertThat(methodInfo.restMethod.hasBody()).isTrue();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("PUT");
+    assertThat(methodInfo.requestHasBody).isTrue();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @RestMethod("CUSTOM1")
@@ -308,9 +311,9 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("CUSTOM1");
-    assertThat(methodInfo.restMethod.hasBody()).isFalse();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("CUSTOM1");
+    assertThat(methodInfo.requestHasBody).isFalse();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @RestMethod(value = "CUSTOM2", hasBody = true)
@@ -330,15 +333,14 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.restMethod.value()).isEqualTo("CUSTOM2");
-    assertThat(methodInfo.restMethod.hasBody()).isTrue();
-    assertThat(methodInfo.path).isEqualTo("/foo");
+    assertThat(methodInfo.requestMethod).isEqualTo("CUSTOM2");
+    assertThat(methodInfo.requestHasBody).isTrue();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
   @Test public void singleQueryParam() {
     class Example {
-      @GET("/foo")
-      @QueryParam(name = "a", value = "b")
+      @GET("/foo?a=b")
       Response a() {
         return null;
       }
@@ -348,98 +350,8 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.pathQueryParams).hasSize(1);
-    QueryParam param = methodInfo.pathQueryParams[0];
-    assertThat(param.name()).isEqualTo("a");
-    assertThat(param.value()).isEqualTo("b");
-  }
-
-  @Test public void multipleQueryParam() {
-    class Example {
-      @GET("/foo")
-      @QueryParams({
-          @QueryParam(name = "a", value = "b"),
-          @QueryParam(name = "c", value = "d")
-      })
-      Response a() {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.pathQueryParams).hasSize(2);
-    QueryParam param1 = methodInfo.pathQueryParams[0];
-    assertThat(param1.name()).isEqualTo("a");
-    assertThat(param1.value()).isEqualTo("b");
-    QueryParam param2 = methodInfo.pathQueryParams[1];
-    assertThat(param2.name()).isEqualTo("c");
-    assertThat(param2.value()).isEqualTo("d");
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void bothQueryParamAnnotations() {
-    class Example {
-      @GET("/foo")
-      @QueryParam(name = "a", value = "b")
-      @QueryParams({
-          @QueryParam(name = "a", value = "b"),
-          @QueryParam(name = "c", value = "d")
-      })
-      Response a() {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void emptyQueryParams() {
-    class Example {
-      @GET("/foo")
-      @QueryParams({})
-      Response a() {
-        return null;
-      }
-    }
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-  }
-
-  @Test public void noQueryParamsNonNull() {
-    class Example {
-      @GET("/") Response a() {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.pathQueryParams).isEmpty();
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void noQueryParamsInUrl() {
-    class Example {
-      @GET("/foo/{bar}/")
-      @QueryParam(name = "bar", value = "baz")
-      Response a() {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
+    assertThat(methodInfo.requestQuery).isEqualTo("a=b");
   }
 
   @Test public void emptyParams() {
@@ -453,14 +365,17 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.namedParams).isEmpty();
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
-    assertThat(methodInfo.isMultipart).isFalse();
+    assertThat(methodInfo.requestUrlParam).isEmpty();
+    assertThat(methodInfo.requestQueryName).isEmpty();
+    assertThat(methodInfo.requestFormPair).isEmpty();
+    assertThat(methodInfo.requestMultipartPart).isEmpty();
+    assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
   @Test public void singleParam() {
     class Example {
-      @GET("/") Response a(@Name("a") String a) {
+      @GET("/") Response a(@Query("a") String a) {
         return null;
       }
     }
@@ -469,14 +384,14 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.namedParams).hasSize(1).containsSequence("a");
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
-    assertThat(methodInfo.isMultipart).isFalse();
+    assertThat(methodInfo.requestQueryName).hasSize(1).containsSequence("a");
+    assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
   @Test public void multipleParams() {
     class Example {
-      @GET("/") Response a(@Name("a") String a, @Name("b") String b, @Name("c") String c) {
+      @GET("/") Response a(@Query("a") String a, @Query("b") String b, @Query("c") String c) {
         return null;
       }
     }
@@ -485,59 +400,14 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.namedParams).hasSize(3).containsSequence("a", "b", "c");
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
-    assertThat(methodInfo.isMultipart).isFalse();
+    assertThat(methodInfo.requestQueryName).hasSize(3).containsSequence("a", "b", "c");
+    assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
-  @Test public void emptyParamsWithCallback() {
+  @Test public void bodyObject() {
     class Example {
-      @GET("/") void a(ResponseCallback cb) {
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.namedParams).isEmpty();
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test public void singleParamWithCallback() {
-    class Example {
-      @GET("/") void a(@Name("a") String a, ResponseCallback cb) {
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.namedParams).hasSize(1).containsSequence("a");
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test public void multipleParamsWithCallback() {
-    class Example {
-      @GET("/") void a(@Name("a") String a, @Name("b") String b, ResponseCallback cb) {
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.namedParams).hasSize(2).containsSequence("a", "b");
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(NO_SINGLE_ENTITY);
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test public void singleEntity() {
-    class Example {
-      @PUT("/") Response a(@SingleEntity Object o) {
+      @PUT("/") Response a(@Body Object o) {
         return null;
       }
     }
@@ -546,15 +416,17 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.namedParams).hasSize(1);
-    assertThat(methodInfo.namedParams[0]).isNull();
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(0);
-    assertThat(methodInfo.isMultipart).isFalse();
+    assertThat(methodInfo.requestUrlParam).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestQueryName).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestFormPair).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestMultipartPart).containsOnly(new String[] { null });
+    assertThat(methodInfo.bodyIndex).isEqualTo(0);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
-  @Test public void singleEntityTypedBytes() {
+  @Test public void bodyTypedBytes() {
     class Example {
-      @PUT("/") Response a(@SingleEntity TypedOutput o) {
+      @PUT("/") Response a(@Body TypedOutput o) {
         return null;
       }
     }
@@ -563,32 +435,18 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.namedParams).hasSize(1);
-    assertThat(methodInfo.namedParams[0]).isNull();
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(0);
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test public void singleEntityWithCallback() {
-    class Example {
-      @PUT("/") void a(@SingleEntity Object o, ResponseCallback cb) {
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.namedParams).hasSize(1);
-    assertThat(methodInfo.namedParams[0]).isNull();
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(0);
-    assertThat(methodInfo.isMultipart).isFalse();
+    assertThat(methodInfo.requestUrlParam).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestQueryName).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestFormPair).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestMultipartPart).containsOnly(new String[] { null });
+    assertThat(methodInfo.bodyIndex).isEqualTo(0);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
   @Test(expected = IllegalStateException.class)
-  public void twoSingleEntities() {
+  public void twoBodies() {
     class Example {
-      @PUT("/") Response a(@SingleEntity int o1, @SingleEntity int o2) {
+      @PUT("/") Response a(@Body int o1, @Body int o2) {
         return null;
       }
     }
@@ -598,9 +456,9 @@ public class RestMethodInfoTest {
     methodInfo.init();
   }
 
-  @Test public void singleEntityWithNamed() {
+  @Test public void bodyWithOtherParams() {
     class Example {
-      @PUT("/{a}/{c}") Response a(@Name("a") int a, @SingleEntity int b, @Name("c") int c) {
+      @PUT("/{a}/{c}") Response a(@Path("a") int a, @Body int b, @Path("c") int c) {
         return null;
       }
     }
@@ -608,56 +466,18 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.namedParams).hasSize(3).containsSequence("a", null, "c");
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(1);
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test public void singleEntityWithNamedAndCallback() {
-    class Example {
-      @PUT("/{a}") void a(@Name("a") int a, @SingleEntity int b, ResponseCallback cb) {
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.namedParams).hasSize(2).containsSequence("a", null);
-    assertThat(methodInfo.singleEntityArgumentIndex).isEqualTo(1);
-    assertThat(methodInfo.isMultipart).isFalse();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void nonPathParamAndSingleEntity() {
-    class Example {
-      @PUT("/") Response a(@Name("a") int a, @SingleEntity int b) {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void typedBytesUrlParam() {
-    class Example {
-      @GET("/{a}") Response a(@Name("a") TypedOutput m) {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    assertThat(methodInfo.requestUrlParam).containsExactly("a", null, "c");
+    assertThat(methodInfo.requestQueryName).containsExactly(null, null, null);
+    assertThat(methodInfo.requestFormPair).containsExactly(null, null, null);
+    assertThat(methodInfo.requestMultipartPart).containsExactly(null, null, null);
+    assertThat(methodInfo.bodyIndex).isEqualTo(1);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
   @Test(expected = IllegalStateException.class)
   public void pathParamNonPathParamAndTypedBytes() {
     class Example {
-      @PUT("/{a}") Response a(@Name("a") int a, @Name("b") int b, @SingleEntity int c) {
+      @PUT("/{a}") Response a(@Path("a") int a, @Path("b") int b, @Body int c) {
         return null;
       }
     }
@@ -683,7 +503,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void nonBodyHttpMethodWithSingleEntity() {
     class Example {
-      @GET("/") Response a(@SingleEntity Object o) {
+      @GET("/") Response a(@Body Object o) {
         return null;
       }
     }
@@ -696,7 +516,7 @@ public class RestMethodInfoTest {
   @Test(expected = IllegalStateException.class)
   public void nonBodyHttpMethodWithTypedBytes() {
     class Example {
-      @GET("/") Response a(@Name("a") TypedOutput a) {
+      @GET("/") Response a(@Path("a") TypedOutput a) {
         return null;
       }
     }
@@ -709,7 +529,7 @@ public class RestMethodInfoTest {
   @Test public void simpleMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Name("a") TypedOutput a) {
+      Response a(@Part("a") TypedOutput a) {
         return null;
       }
     }
@@ -718,13 +538,13 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.isMultipart).isTrue();
+    assertThat(methodInfo.requestType).isEqualTo(MULTIPART);
   }
 
   @Test public void twoTypedBytesMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Name("a") TypedOutput a, @Name("b") TypedOutput b) {
+      Response a(@Part("a") TypedOutput a, @Part("b") TypedOutput b) {
         return null;
       }
     }
@@ -733,13 +553,13 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.isMultipart).isTrue();
+    assertThat(methodInfo.requestType).isEqualTo(MULTIPART);
   }
 
   @Test public void twoTypesMultipart() {
     class Example {
       @Multipart @PUT("/")
-      Response a(@Name("a") TypedOutput a, @Name("b") int b) {
+      Response a(@Part("a") TypedOutput a, @Part("b") int b) {
         return null;
       }
     }
@@ -748,13 +568,13 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.isMultipart).isTrue();
+    assertThat(methodInfo.requestType).isEqualTo(MULTIPART);
   }
 
   @Test(expected = IllegalStateException.class)
   public void implicitMultipartForbidden() {
     class Example {
-      @POST("/") Response a(@Name("a") int a) {
+      @POST("/") Response a(@Part("a") int a) {
         return null;
       }
     }
@@ -768,6 +588,137 @@ public class RestMethodInfoTest {
   public void multipartFailsOnNonBodyMethod() {
     class Example {
       @Multipart @GET("/") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void multipartFailsWithNoParts() {
+    class Example {
+      @Multipart @POST("/") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void implicitFormEncodingForbidden() {
+    class Example {
+      @POST("/") Response a(@Field("a") int a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void formEncodingFailsOnNonBodyMethod() {
+    class Example {
+      @FormUrlEncoded @GET("/") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void formEncodingFailsWithNoParts() {
+    class Example {
+      @FormUrlEncoded @POST("/") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void headersFailWhenEmptyOnMethod() {
+    class Example {
+      @GET("/") @Headers({}) Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test public void twoMethodHeaders() {
+
+    class Example {
+      @GET("/") @Headers({
+        "X-Foo: Bar",
+        "X-Ping: Pong"
+      }) Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.headers).isEqualTo(
+        Arrays.asList(new retrofit.http.client.Header("X-Foo", "Bar"),
+            new retrofit.http.client.Header("X-Ping", "Pong")));
+  }
+
+  @Test public void twoHeaderParams() {
+    class Example {
+      @GET("/")
+      Response a(@Header("a") String a, @Header("b") String b) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(Arrays.asList(methodInfo.requestParamHeader))
+      .isEqualTo(Arrays.asList("a", "b"));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void headerParamMustBeString() {
+    class Example {
+      @GET("/")
+      Response a(@Header("a") TypedOutput a, @Header("b") int b) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void onlyOneEncodingIsAllowed() {
+    class Example {
+      @Multipart
+      @FormUrlEncoded
+      @POST("/")
+      Response a() {
         return null;
       }
     }

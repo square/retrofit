@@ -1,5 +1,5 @@
 // Copyright 2013 Square, Inc.
-package retrofit.http;
+package retrofit.http.mime;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,21 +7,24 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import retrofit.http.mime.TypedOutput;
 
-final class MultipartTypedOutput implements TypedOutput {
+public final class MultipartTypedOutput implements TypedOutput {
   final List<byte[]> parts = new ArrayList<byte[]>();
   private final byte[] footer;
   private final String boundary;
   private long length;
 
-  MultipartTypedOutput() {
-    boundary = UUID.randomUUID().toString();
+  public MultipartTypedOutput() {
+    this(UUID.randomUUID().toString());
+  }
+
+  MultipartTypedOutput(String boundary) {
+    this.boundary = boundary;
     footer = buildBoundary(boundary, false, true);
     length = footer.length;
   }
 
-  void addPart(String name, TypedOutput body) {
+  public void addPart(String name, TypedOutput body) {
     if (name == null) {
       throw new NullPointerException("Part name must not be null.");
     }
@@ -103,6 +106,9 @@ final class MultipartTypedOutput implements TypedOutput {
       }
       headers.append("\"\r\nContent-Type: ");
       headers.append(value.mimeType());
+      if (value.length() != -1) {
+        headers.append("\r\nContent-Length: ").append(value.length());
+      }
       headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
       return headers.toString().getBytes("UTF-8");
     } catch (IOException ex) {
