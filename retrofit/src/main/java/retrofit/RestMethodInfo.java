@@ -43,7 +43,7 @@ final class RestMethodInfo {
 
   // Matches strings containing lowercase characters, digits, underscores, or hyphens that start
   // with a lowercase character in between '{' and '}'.
-  private static final Pattern URL_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)}");
+  private static final Pattern URL_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)\\}");
 
   enum RequestType {
     /** No content-specific logic required. */
