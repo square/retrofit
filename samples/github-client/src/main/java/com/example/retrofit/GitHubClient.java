@@ -23,7 +23,7 @@ import retrofit.RestAdapter;
 public class GitHubClient {
   private static final String API_URL = "https://api.github.com";
 
-  class Contributor {
+  static class Contributor {
     String login;
     int contributions;
   }
