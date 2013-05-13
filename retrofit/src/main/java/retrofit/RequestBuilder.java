@@ -155,9 +155,9 @@ final class RequestBuilder {
 
       case FORM_URL_ENCODED: {
         FormUrlEncodedTypedOutput body = new FormUrlEncodedTypedOutput();
-        String[] requestFormPair = methodInfo.requestFormPair;
-        for (int i = 0; i < requestFormPair.length; i++) {
-          String name = requestFormPair[i];
+        String[] requestFormFields = methodInfo.requestFormFields;
+        for (int i = 0; i < requestFormFields.length; i++) {
+          String name = requestFormFields[i];
           if (name != null) {
             body.addField(name, String.valueOf(args[i]));
           }

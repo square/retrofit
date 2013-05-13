@@ -382,7 +382,7 @@ public class RestMethodInfoTest {
 
     assertThat(methodInfo.requestUrlParam).isEmpty();
     assertThat(methodInfo.requestQueryName).isEmpty();
-    assertThat(methodInfo.requestFormPair).isEmpty();
+    assertThat(methodInfo.requestFormFields).isEmpty();
     assertThat(methodInfo.requestMultipartPart).isEmpty();
     assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
@@ -433,7 +433,7 @@ public class RestMethodInfoTest {
 
     assertThat(methodInfo.requestUrlParam).containsOnly(new String[] { null });
     assertThat(methodInfo.requestQueryName).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestFormPair).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestFormFields).containsOnly(new String[] { null });
     assertThat(methodInfo.requestMultipartPart).containsOnly(new String[] { null });
     assertThat(methodInfo.bodyIndex).isEqualTo(0);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
@@ -452,7 +452,7 @@ public class RestMethodInfoTest {
 
     assertThat(methodInfo.requestUrlParam).containsOnly(new String[] { null });
     assertThat(methodInfo.requestQueryName).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestFormPair).containsOnly(new String[] { null });
+    assertThat(methodInfo.requestFormFields).containsOnly(new String[] { null });
     assertThat(methodInfo.requestMultipartPart).containsOnly(new String[] { null });
     assertThat(methodInfo.bodyIndex).isEqualTo(0);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
@@ -483,7 +483,7 @@ public class RestMethodInfoTest {
 
     assertThat(methodInfo.requestUrlParam).containsExactly("a", null, "c");
     assertThat(methodInfo.requestQueryName).containsExactly(null, null, null);
-    assertThat(methodInfo.requestFormPair).containsExactly(null, null, null);
+    assertThat(methodInfo.requestFormFields).containsExactly(null, null, null);
     assertThat(methodInfo.requestMultipartPart).containsExactly(null, null, null);
     assertThat(methodInfo.bodyIndex).isEqualTo(1);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);

@@ -12,8 +12,6 @@ import java.util.List;
 import org.junit.Test;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
-import retrofit.RequestBuilder;
-import retrofit.RestMethodInfo;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.mime.MimeHelper;
@@ -226,8 +224,8 @@ public class RequestBuilderTest {
         .setUrl("http://example.com") //
         .setPath("/foo") //
         .setFormEncoded() //
-        .addPair("foo", "bar") //
-        .addPair("ping", "pong") //
+        .addField("foo", "bar") //
+        .addField("ping", "pong") //
         .build();
     assertTypedBytes(request.getBody(), "foo=bar&ping=pong");
   }
@@ -304,7 +302,7 @@ public class RequestBuilderTest {
     private String query;
     private final List<String> pathParams = new ArrayList<String>();
     private final List<String> queryParams = new ArrayList<String>();
-    private final List<String> pairParams = new ArrayList<String>();
+    private final List<String> fieldParams = new ArrayList<String>();
     private final List<String> partParams = new ArrayList<String>();
     private final List<String> headerParams = new ArrayList<String>();
     private final List<Object> args = new ArrayList<Object>();
@@ -338,11 +336,11 @@ public class RequestBuilderTest {
       return this;
     }
 
-    private void addParam(String path, String query, String pair, String part, String header,
+    private void addParam(String path, String query, String field, String part, String header,
         Object value) {
       pathParams.add(path);
       queryParams.add(query);
-      pairParams.add(pair);
+      fieldParams.add(field);
       partParams.add(part);
       headerParams.add(header);
       args.add(value);
@@ -359,7 +357,7 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addPair(String name, String value) {
+    Helper addField(String name, String value) {
       addParam(null, null, name, null, null, value);
       return this;
     }
@@ -415,7 +413,7 @@ public class RequestBuilderTest {
       methodInfo.hasQueryParams = hasQueryParams;
       methodInfo.requestUrlParam = pathParams.toArray(new String[pathParams.size()]);
       methodInfo.requestQueryName = queryParams.toArray(new String[queryParams.size()]);
-      methodInfo.requestFormPair = pairParams.toArray(new String[pairParams.size()]);
+      methodInfo.requestFormFields = fieldParams.toArray(new String[fieldParams.size()]);
       methodInfo.requestMultipartPart = partParams.toArray(new String[partParams.size()]);
       methodInfo.requestParamHeader = headerParams.toArray(new String[headerParams.size()]);
       methodInfo.bodyIndex = bodyIndex;

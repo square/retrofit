@@ -73,7 +73,7 @@ final class RestMethodInfo {
   String[] requestUrlParam;
   String[] requestQueryName;
   boolean hasQueryParams = false;
-  String[] requestFormPair;
+  String[] requestFormFields;
   String[] requestMultipartPart;
   String[] requestParamHeader;
   int bodyIndex = NO_BODY;
@@ -281,7 +281,7 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #requestUrlParam}, {@link #requestQueryName}, {@link #requestFormPair},
+   * Loads {@link #requestUrlParam}, {@link #requestQueryName}, {@link #requestFormFields},
    * {@link #requestMultipartPart}, and {@link #requestParamHeader}. Must be called after
    * {@link #parseMethodAnnotations()}.
    */
@@ -392,7 +392,7 @@ final class RestMethodInfo {
 
     requestUrlParam = urlParam;
     requestQueryName = queryName;
-    requestFormPair = formValue;
+    requestFormFields = formValue;
     requestMultipartPart = multipartPart;
     requestParamHeader = paramHeader;
   }

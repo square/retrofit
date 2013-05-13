@@ -77,8 +77,8 @@ import retrofit.mime.TypedOutput;
  * Alternative request body formats are supported by method annotations and corresponding parameter
  * annotations:
  * <ul>
- * <li>{@link retrofit.http.FormUrlEncoded @FormUrlEncoded} - Form-encoded data with pairs
- * specified by the {@link retrofit.http.Field @Field} parameter annotation.
+ * <li>{@link retrofit.http.FormUrlEncoded @FormUrlEncoded} - Form-encoded data with key-value
+ * pairs specified by the {@link retrofit.http.Field @Field} parameter annotation.
  * <li>{@link retrofit.http.Multipart @Multipart} - RFC 2387-compliant multi-part data with parts
  * specified by the {@link retrofit.http.Part @Part} parameter annotation.
  * </ul>
