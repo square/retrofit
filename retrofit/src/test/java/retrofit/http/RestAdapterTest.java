@@ -8,6 +8,7 @@ import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
 import retrofit.http.client.Client;
+import retrofit.http.client.Header;
 import retrofit.http.client.Request;
 import retrofit.http.client.Response;
 import retrofit.http.mime.TypedString;

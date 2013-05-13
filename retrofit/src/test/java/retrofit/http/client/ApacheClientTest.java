@@ -15,7 +15,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
-import retrofit.http.Header;
 import retrofit.http.TestingUtils;
 import retrofit.http.mime.TypedOutput;
 import retrofit.http.mime.TypedString;
