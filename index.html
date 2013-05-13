@@ -99,7 +99,7 @@ User updateUser(@Part("photo") TypedFile photo, @Part("description") TypedString
             <p>Methods can be declared for either synchronous or asynchronous execution.</p>
             <p>A method with a return type will be executed sychronously.</p>
             <pre class="prettyprint">@GET("/user/{id}/photo")
-Photo listUsers();</pre>
+Photo listUsers(@Path("id") int id);</pre>
             <p>Asynchronous execution requires the last parameter of the method be a <code>Callback</code>.</p>
             <pre class="prettyprint">@GET("/user/{id}/photo")
 void listUsers(@Path("id") int id, Callback&lt;Photo> cb);</pre>
