@@ -23,7 +23,7 @@ import java.net.URLEncoder;
 public final class FormUrlEncodedTypedOutput implements TypedOutput {
   final ByteArrayOutputStream content = new ByteArrayOutputStream();
 
-  public void addPair(String name, String value) {
+  public void addField(String name, String value) {
     if (name == null) {
       throw new NullPointerException("name");
     }

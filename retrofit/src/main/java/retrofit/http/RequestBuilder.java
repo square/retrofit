@@ -160,7 +160,7 @@ final class RequestBuilder {
         for (int i = 0; i < requestFormPair.length; i++) {
           String name = requestFormPair[i];
           if (name != null) {
-            body.addPair(name, String.valueOf(args[i]));
+            body.addField(name, String.valueOf(args[i]));
           }
         }
         return body;
