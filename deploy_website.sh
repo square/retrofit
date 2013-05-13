@@ -32,8 +32,6 @@ mkdir javadoc
 unzip javadoc.zip -d javadoc
 rm javadoc.zip
 
-exit 0
-
 # Stage all files in git and create a commit
 git add .
 git add -u
