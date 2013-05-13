@@ -26,10 +26,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * The parameter type on which this annotation exists will be processed in one of two ways:
  * <ul>
- * <li>If the type implements {@link retrofit.http.mime.TypedOutput TypedOutput} the headers and
+ * <li>If the type implements {@link retrofit.mime.TypedOutput TypedOutput} the headers and
  * body will be used directly.</li>
  * <li>Other object types will be converted to an appropriate representation by calling {@link
- * Converter#toBody(Object)}.</li>
+ * retrofit.converter.Converter#toBody(Object)}.</li>
  * </ul>
  * <p>
  * <pre>
