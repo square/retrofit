@@ -1,53 +1,142 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.Callback;
-import retrofit.CallbackRunnable;
-import retrofit.ResponseWrapper;
-import retrofit.RetrofitError;
+import retrofit.client.Header;
+import retrofit.client.Response;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
+import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static retrofit.Utils.SynchronousExecutor;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 public class CallbackRunnableTest {
-  private Executor executor = spy(new SynchronousExecutor());
-  private CallbackRunnable<Object> callbackRunnable;
-  private Callback<Object> callback;
+  private Response response;
+  private Object responseBody;
 
   @Before public void setUp() {
-    callback = mock(Callback.class);
-    callbackRunnable = spy(new CallbackRunnable<Object>(callback, executor) {
-      @Override public ResponseWrapper obtainResponse() {
-        return null; // Must be mocked.
-      }
-    });
+    response = new Response(200, "OK", new ArrayList<Header>(), null);
+    responseBody = new Object();
   }
 
   @Test public void responsePassedToSuccess() {
-    ResponseWrapper wrapper = new ResponseWrapper(null, new Object());
-    when(callbackRunnable.obtainResponse()).thenReturn(wrapper);
+    Callback<Object> callback = mock(Callback.class);
+    CallbackRunnable<Object> runnable =
+        new CallbackRunnable<Object>(callback, new Utils.SynchronousExecutor()) {
+          @Override ResponseWrapper obtainResponse() {
+            return new ResponseWrapper(response, responseBody);
+          }
+        };
 
-    callbackRunnable.run();
+    runnable.run();
 
-    verify(executor).execute(any(Runnable.class));
-    verify(callback).success(same(wrapper.responseBody), same(wrapper.response));
+    verify(callback).success(responseBody, response);
   }
 
   @Test public void errorPassedToFailure() {
-    RetrofitError exception = RetrofitError.unexpectedError("", null);
-    when(callbackRunnable.obtainResponse()).thenThrow(exception);
+    final RetrofitError exception = RetrofitError.unexpectedError("", null);
+    Callback<Object> callback = mock(Callback.class);
+    CallbackRunnable<Object> runnable =
+        new CallbackRunnable<Object>(callback, new Utils.SynchronousExecutor()) {
+          @Override ResponseWrapper obtainResponse() {
+            throw exception;
+          }
+        };
 
-    callbackRunnable.run();
+    runnable.run();
 
-    verify(executor).execute(any(Runnable.class));
-    verify(callback).failure(same(exception));
+    verify(callback).failure(exception);
+  }
+
+  @Test public void recognizesCancelableCallback() throws Exception {
+    CancelableCallback<Object> callback = mock(CancelableCallback.class);
+    CallbackRunnable<Object> runnable = new CallbackRunnable<Object>(callback, null) {
+      @Override ResponseWrapper obtainResponse() {
+        return null;
+      }
+    };
+
+    verify(callback).setRunnable(runnable);
+  }
+
+  @Test public void cancelDoesNotRun() throws Exception {
+    CancelableCallback<Object> callback = new CancelableCallback<Object>() {
+      @Override public void success(Object o, Response response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(RetrofitError error) {
+        throw new AssertionError();
+      }
+    };
+    Executor executor = mock(Executor.class);
+    CallbackRunnable<Object> runnable = new CallbackRunnable<Object>(callback, executor) {
+      @Override ResponseWrapper obtainResponse() {
+        throw new AssertionError();
+      }
+    };
+
+    callback.cancel();
+    runnable.run();
+
+    // No explicit assertion. We are verifying that obtainResponse does not get called on the above
+    // runnable and that success or failure does not get called on the callback. If this happened
+    // an exception would be thrown.
+  }
+
+  @Test public void cancelDuringRequestDoesNotContinue() throws Exception {
+    final CancelableCallback<Object> callback = new CancelableCallback<Object>() {
+      @Override public void success(Object o, Response response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(RetrofitError error) {
+        throw new AssertionError();
+      }
+    };
+    Executor executor = mock(Executor.class);
+    CallbackRunnable<Object> runnable = new CallbackRunnable<Object>(callback, executor) {
+      @Override ResponseWrapper obtainResponse() {
+        callback.cancel();
+        return null;
+      }
+    };
+
+    runnable.run();
+
+    verifyZeroInteractions(executor);
+
+    // We are also verifying that success or failure does not get called on the above callback. If
+    // this happened an exception would be thrown.
+  }
+
+  @Test public void cancelAfterResponseDoesNotInvokeCallback() throws Exception {
+    final CancelableCallback<Object> callback = new CancelableCallback<Object>() {
+      @Override public void success(Object o, Response response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(RetrofitError error) {
+        throw new AssertionError();
+      }
+    };
+    TestExecutor executor = new TestExecutor();
+    CallbackRunnable<Object> runnable = new CallbackRunnable<Object>(callback, executor) {
+      @Override ResponseWrapper obtainResponse() {
+        return new ResponseWrapper(response, responseBody);
+      }
+    };
+
+    runnable.run();
+    assertThat(executor.runnables).hasSize(1);
+
+    callback.cancel();
+    executor.runNextRunnable();
+
+    // No explicit assertion. We are verifying that success or failure does not get called on the
+    // above callback. If this happened an exception would be thrown.
   }
 }
