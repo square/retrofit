@@ -85,7 +85,7 @@ final class RequestBuilder {
       boolean first = true;
       String requestQuery = methodInfo.requestQuery;
       if (requestQuery != null) {
-        url.append(requestQuery);
+        url.append('?').append(requestQuery);
         first = false;
       }
       String[] requestQueryName = methodInfo.requestQueryName;
