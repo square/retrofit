@@ -67,12 +67,25 @@ public class RequestBuilderTest {
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .setQuery("?hi=mom") //
+        .setQuery("hi=mom") //
         .addQueryParam("ping", "pong") //
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?hi=mom&ping=pong");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQuery() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setQuery("hi=mom") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?hi=mom");
     assertThat(request.getBody()).isNull();
   }
 
