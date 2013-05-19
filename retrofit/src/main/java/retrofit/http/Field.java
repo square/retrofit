@@ -30,6 +30,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * void example(@Field("name") String name, @Field("occupation") String occupation, ..);
  * }
  * </pre>
+ * <p>
+ * Field parameters may be {@code null} which will omit them from the request body.
  */
 @Target(PARAMETER) @Retention(RUNTIME)
 public @interface Field {

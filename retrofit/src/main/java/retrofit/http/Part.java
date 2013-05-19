@@ -40,6 +40,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *              ...
  * );
  * </pre>
+ * <p>
+ * Part parameters may not be {@code null}.
  */
 @Target(PARAMETER) @Retention(RUNTIME)
 public @interface Part {
