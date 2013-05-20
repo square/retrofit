@@ -92,9 +92,12 @@ final class RequestBuilder {
       for (int i = 0; i < requestQueryName.length; i++) {
         String query = requestQueryName[i];
         if (query != null) {
-          String value = URLEncoder.encode(String.valueOf(args[i]), "UTF-8");
-          url.append(first ? '?' : '&').append(query).append('=').append(value);
-          first = false;
+          Object arg = args[i];
+          if (arg != null) { // Null values are skipped.
+            String value = URLEncoder.encode(String.valueOf(arg), "UTF-8");
+            url.append(first ? '?' : '&').append(query).append('=').append(value);
+            first = false;
+          }
         }
       }
     }
@@ -130,7 +133,11 @@ final class RequestBuilder {
     for (int i = 0; i < requestUrlParam.length; i++) {
       String param = requestUrlParam[i];
       if (param != null) {
-        String value = URLEncoder.encode(String.valueOf(args[i]), "UTF-8");
+        Object arg = args[i];
+        if (arg == null) {
+          throw new IllegalArgumentException("Path parameters must not be null: " + param + ".");
+        }
+        String value = URLEncoder.encode(String.valueOf(arg), "UTF-8");
         replacedPath = replacedPath.replace("{" + param + "}", value);
       }
     }
@@ -146,6 +153,9 @@ final class RequestBuilder {
           return null;
         }
         Object body = args[bodyIndex];
+        if (body == null) {
+          throw new IllegalArgumentException("Body must not be null.");
+        }
         if (body instanceof TypedOutput) {
           return (TypedOutput) body;
         } else {
@@ -159,7 +169,10 @@ final class RequestBuilder {
         for (int i = 0; i < requestFormFields.length; i++) {
           String name = requestFormFields[i];
           if (name != null) {
-            body.addField(name, String.valueOf(args[i]));
+            Object value = args[i];
+            if (value != null) { // Null values are skipped.
+              body.addField(name, String.valueOf(value));
+            }
           }
         }
         return body;
@@ -172,6 +185,9 @@ final class RequestBuilder {
           String name = requestMultipartPart[i];
           if (name != null) {
             Object value = args[i];
+            if (value == null) {
+              throw new IllegalArgumentException("Multipart part must not be null: " + name + ".");
+            }
             if (value instanceof TypedOutput) {
               body.addPart(name, (TypedOutput) value);
             } else {
