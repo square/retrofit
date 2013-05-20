@@ -24,31 +24,57 @@ import java.util.concurrent.Executor;
  * {@link Callback}.
  */
 abstract class CallbackRunnable<T> implements Runnable {
-  private final Callback<T> callback;
+  private Callback<T> callback;
   private final Executor callbackExecutor;
 
   CallbackRunnable(Callback<T> callback, Executor callbackExecutor) {
     this.callback = callback;
     this.callbackExecutor = callbackExecutor;
+
+    if (callback instanceof CancelableCallback) {
+      CancelableCallback<T> cancelableCallback = (CancelableCallback<T>) callback;
+      cancelableCallback.setRunnable(this);
+    }
+  }
+
+  void cancel() {
+    callback = null;
   }
 
   @SuppressWarnings("unchecked")
   @Override public final void run() {
+    // Make sure we haven't been cancelled.
+    if (callback == null) {
+      return;
+    }
+
     try {
       final ResponseWrapper wrapper = obtainResponse();
+
+      // Check again if we are cancelled since obtaining the response may have taken a while.
+      if (callback == null) {
+        return;
+      }
+
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          callback.success((T) wrapper.responseBody, wrapper.response);
+          // One last cancellation check that might have happened while crossing threads.
+          if (callback != null) {
+            callback.success((T) wrapper.responseBody, wrapper.response);
+          }
         }
       });
     } catch (final RetrofitError e) {
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          callback.failure(e);
+          // One last cancellation check that might have happened while crossing threads.
+          if (callback != null) {
+            callback.failure(e);
+          }
         }
       });
     }
   }
 
-  public abstract ResponseWrapper obtainResponse();
+  abstract ResponseWrapper obtainResponse();
 }
