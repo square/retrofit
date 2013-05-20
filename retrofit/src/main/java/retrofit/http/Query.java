@@ -29,6 +29,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;GET("/list")
  * void example(@Query("page") int page, ..);
  * </pre>
+ * <p>
+ * Query parameters may be {@code null} which will omit them from the URL.
  */
 @Target(PARAMETER) @Retention(RUNTIME)
 public @interface Query {

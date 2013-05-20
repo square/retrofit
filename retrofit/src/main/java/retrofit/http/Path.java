@@ -29,6 +29,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;GET("/image/{id}")
  * void example(@Path("id") int id, ..);
  * </pre>
+ * <p>
+ * Path parameters may not be {@code null}.
  */
 @Retention(RUNTIME) @Target(PARAMETER)
 public @interface Path {

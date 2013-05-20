@@ -20,6 +20,7 @@ import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.fail;
 import static retrofit.RestMethodInfo.NO_BODY;
 import static retrofit.RestMethodInfo.RequestType;
 
@@ -49,6 +50,20 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void pathParamRequired() throws Exception {
+    try {
+      new Helper() //
+          .setMethod("GET") //
+          .setUrl("http://example.com") //
+          .setPath("/foo/bar/{ping}/") //
+          .addPathParam("ping", null) //
+          .build();
+      fail("Null path parameters not allowed.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).isEqualTo("Path parameters must not be null: ping.");
+    }
+  }
+
   @Test public void getWithQueryParam() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -60,6 +75,26 @@ public class RequestBuilderTest {
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong");
     assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void queryParamOptional() throws Exception {
+      Request request1 = new Helper() //
+          .setMethod("GET") //
+          .setUrl("http://example.com") //
+          .setPath("/foo/bar/") //
+          .addQueryParam("ping", null) //
+          .build();
+    assertThat(request1.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    Request request2 = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("foo", "bar") //
+        .addQueryParam("ping", null) //
+        .addQueryParam("kit", "kat") //
+        .build();
+    assertThat(request2.getUrl()).isEqualTo("http://example.com/foo/bar/?foo=bar&kit=kat");
   }
 
   @Test public void getWithQueryUrlAndParam() throws Exception {
@@ -173,7 +208,7 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void singleEntity() throws Exception {
+  @Test public void body() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
         .setHasBody() //
@@ -187,7 +222,22 @@ public class RequestBuilderTest {
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
 
-  @Test public void singleEntityWithPathParams() throws Exception {
+  @Test public void bodyRequired() throws Exception {
+    try {
+      new Helper() //
+          .setMethod("POST") //
+          .setHasBody() //
+          .setUrl("http://example.com") //
+          .setPath("/foo/bar/") //
+          .setBody(null) //
+          .build();
+      fail("Null body not allowed.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).isEqualTo("Body must not be null.");
+    }
+  }
+
+  @Test public void bodyWithPathParams() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
         .setHasBody() //
@@ -230,6 +280,22 @@ public class RequestBuilderTest {
     assertThat(two).contains("kit").contains("kat");
   }
 
+  @Test public void multipartPartOptional() throws Exception {
+    try {
+      new Helper() //
+          .setMethod("POST") //
+          .setHasBody() //
+          .setUrl("http://example.com") //
+          .setPath("/foo/bar/") //
+          .setMultipart() //
+          .addPart("ping", null) //
+          .build();
+      fail("Null multipart part is not allowed.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).isEqualTo("Multipart part must not be null: ping.");
+    }
+  }
+
   @Test public void simpleFormEncoded() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
@@ -241,6 +307,20 @@ public class RequestBuilderTest {
         .addField("ping", "pong") //
         .build();
     assertTypedBytes(request.getBody(), "foo=bar&ping=pong");
+  }
+
+  @Test public void formEncodedFieldOptional() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo") //
+        .setFormEncoded() //
+        .addField("foo", "bar") //
+        .addField("ping", null) //
+        .addField("kit", "kat")
+        .build();
+    assertTypedBytes(request.getBody(), "foo=bar&kit=kat");
   }
 
   @Test public void simpleHeaders() throws Exception {
