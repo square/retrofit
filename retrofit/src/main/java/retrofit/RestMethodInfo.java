@@ -41,9 +41,10 @@ import retrofit.http.RestMethod;
 final class RestMethodInfo {
   static final int NO_BODY = -1;
 
-  // Matches strings containing lowercase characters, digits, underscores, or hyphens that start
-  // with a lowercase character in between '{' and '}'.
-  private static final Pattern URL_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)\\}");
+  // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
+  private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
+  private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
+  private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
   enum RequestType {
     /** No content-specific logic required. */
@@ -191,7 +192,7 @@ final class RestMethodInfo {
       hasQueryParams = true;
 
       // Ensure the query string does not have any named parameters.
-      Matcher queryParamMatcher = URL_PARAMETERS.matcher(query);
+      Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(query);
       if (queryParamMatcher.find()) {
         throw new IllegalStateException("URL query string \""
             + query
@@ -315,10 +316,16 @@ final class RestMethodInfo {
             hasRetrofitAnnotation = true;
             String name = ((Path) parameterAnnotation).value();
 
+            if (!PARAM_NAME_REGEX.matcher(name).matches()) {
+              throw new IllegalStateException("Path parameter name is not valid: "
+                  + name
+                  + ". Must match "
+                  + PARAM_URL_REGEX.pattern());
+            }
             // Verify URL replacement name is actually present in the URL path.
             if (!requestUrlParamNames.contains(name)) {
               throw new IllegalStateException(
-                  "Method path \"" + requestUrl + "\" does not contain {" + name + "}.");
+                  "Method URL \"" + requestUrl + "\" does not contain {" + name + "}.");
             }
 
             urlParam[i] = name;
@@ -402,7 +409,7 @@ final class RestMethodInfo {
    * in the URI, it will only show up once in the set.
    */
   static Set<String> parsePathParameters(String path) {
-    Matcher m = URL_PARAMETERS.matcher(path);
+    Matcher m = PARAM_URL_REGEX.matcher(path);
     Set<String> patterns = new LinkedHashSet<String>();
     while (m.find()) {
       patterns.add(m.group(1));
