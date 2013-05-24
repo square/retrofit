@@ -18,7 +18,6 @@ package retrofit;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -121,12 +120,13 @@ public class RestAdapter {
   private final RequestHeaders requestHeaders;
   private final Converter converter;
   private final Profiler profiler;
+  private final ErrorHandler errorHandler;
   private final Log log;
   private volatile boolean debug;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, RequestHeaders requestHeaders, Converter converter,
-      Profiler profiler, Log log, boolean debug) {
+      Profiler profiler, ErrorHandler errorHandler, Log log, boolean debug) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
@@ -134,6 +134,7 @@ public class RestAdapter {
     this.requestHeaders = requestHeaders;
     this.converter = converter;
     this.profiler = profiler;
+    this.errorHandler = errorHandler;
     this.log = log;
     this.debug = debug;
   }
@@ -159,7 +160,7 @@ public class RestAdapter {
 
     @SuppressWarnings("unchecked") //
     @Override public Object invoke(Object proxy, Method method, final Object[] args)
-        throws InvocationTargetException, IllegalAccessException {
+        throws Throwable {
       // If the method is a method from Object then defer to normal invocation.
       if (method.getDeclaringClass() == Object.class) {
         return method.invoke(this, args);
@@ -177,7 +178,11 @@ public class RestAdapter {
       }
 
       if (methodDetails.isSynchronous) {
-        return invokeRequest(methodDetails, args);
+        try {
+          return invokeRequest(methodDetails, args);
+        } catch (RetrofitError error) {
+          throw errorHandler.handleError(error);
+        }
       }
 
       if (httpExecutor == null || callbackExecutor == null) {
@@ -401,6 +406,7 @@ public class RestAdapter {
     private RequestHeaders requestHeaders;
     private Converter converter;
     private Profiler profiler;
+    private ErrorHandler errorHandler;
     private Log log;
     private boolean debug;
 
@@ -471,6 +477,12 @@ public class RestAdapter {
       return this;
     }
 
+    public Builder setErrorHandler(ErrorHandler errorHandler) {
+      if (errorHandler == null) throw new NullPointerException("error handler cannot be null");
+      this.errorHandler = errorHandler;
+      return this;
+    }
+
     /** Configure debug logging mechanism. */
     public Builder setLog(Log log) {
       if (log == null) throw new NullPointerException("log");
@@ -491,7 +503,7 @@ public class RestAdapter {
       }
       ensureSaneDefaults();
       return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, requestHeaders,
-          converter, profiler, log, debug);
+          converter, profiler, errorHandler, log, debug);
     }
 
     private void ensureSaneDefaults() {
@@ -506,6 +518,9 @@ public class RestAdapter {
       }
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();
+      }
+      if (errorHandler == null) {
+        errorHandler = ErrorHandler.DEFAULT;
       }
       if (log == null) {
         log = Platform.get().defaultLog();
