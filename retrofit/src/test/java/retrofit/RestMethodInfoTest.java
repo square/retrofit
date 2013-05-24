@@ -31,6 +31,7 @@ import retrofit.mime.TypedOutput;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 import static retrofit.RestMethodInfo.NO_BODY;
 import static retrofit.RestMethodInfo.RequestType.MULTIPART;
 import static retrofit.RestMethodInfo.RequestType.SIMPLE;
@@ -39,18 +40,20 @@ public class RestMethodInfoTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
-    expectParams("foo/bar");
-    expectParams("foo/bar/{}");
-    expectParams("foo/bar/{taco}", "taco");
-    expectParams("foo/bar/{t}", "t");
-    expectParams("foo/bar/{!!!}/"); // Invalid parameter.
-    expectParams("foo/bar/{}/{taco}", "taco");
-    expectParams("foo/bar/{taco}/or/{burrito}", "taco", "burrito");
-    expectParams("foo/bar/{taco}/or/{taco}", "taco");
-    expectParams("foo/bar/{taco-shell}", "taco-shell");
-    expectParams("foo/bar/{taco_shell}", "taco_shell");
-    expectParams("foo/bar/{sha256}", "sha256");
-    expectParams("foo/bar/{1}"); // Invalid parameter, name cannot start with digit.
+    expectParams("/foo/bar");
+    expectParams("/foo/bar/{}");
+    expectParams("/foo/bar/{taco}", "taco");
+    expectParams("/foo/bar/{t}", "t");
+    expectParams("/foo/bar/{!!!}/"); // Invalid parameter.
+    expectParams("/foo/bar/{}/{taco}", "taco");
+    expectParams("/foo/bar/{taco}/or/{burrito}", "taco", "burrito");
+    expectParams("/foo/bar/{taco}/or/{taco}", "taco");
+    expectParams("/foo/bar/{taco-shell}", "taco-shell");
+    expectParams("/foo/bar/{taco_shell}", "taco_shell");
+    expectParams("/foo/bar/{sha256}", "sha256");
+    expectParams("/foo/bar/{TACO}", "TACO");
+    expectParams("/foo/bar/{taco}/{tAco}/{taCo}", "taco", "tAco", "taCo");
+    expectParams("/foo/bar/{1}"); // Invalid parameter, name cannot start with digit.
   }
 
   private static void expectParams(String path, String... expected) {
@@ -741,6 +744,23 @@ public class RestMethodInfoTest {
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
+  }
+
+  @Test public void invalidPathParam() throws Exception {
+    class Example {
+      @GET("/") Response a(@Path("hey!") String thing) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e.getMessage()).startsWith("Path parameter name is not valid: hey!.");
+    }
   }
 
   private static class Response {
