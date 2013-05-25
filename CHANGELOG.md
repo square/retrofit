@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 1.1.0 *(In Development)*
+--------------------------------
+
+ * Introduce `RequestInterceptor` to replace `RequestHeaders`. An interceptor provided to the
+   `RestAdapter.Builder` will be called for every request and allow setting both headers and
+   additional path parameter replacements.
+
+
 Version 1.0.2 *(2013-05-23)*
 ----------------------------
 

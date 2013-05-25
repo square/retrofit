@@ -117,7 +117,7 @@ public class RestAdapter {
   private final Client.Provider clientProvider;
   private final Executor httpExecutor;
   private final Executor callbackExecutor;
-  private final RequestHeaders requestHeaders;
+  private final RequestInterceptor requestInterceptor;
   private final Converter converter;
   private final Profiler profiler;
   private final ErrorHandler errorHandler;
@@ -125,13 +125,13 @@ public class RestAdapter {
   private volatile boolean debug;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
-      Executor callbackExecutor, RequestHeaders requestHeaders, Converter converter,
+      Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
       Profiler profiler, ErrorHandler errorHandler, Log log, boolean debug) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
     this.callbackExecutor = callbackExecutor;
-    this.requestHeaders = requestHeaders;
+    this.requestInterceptor = requestInterceptor;
     this.converter = converter;
     this.profiler = profiler;
     this.errorHandler = errorHandler;
@@ -214,12 +214,13 @@ public class RestAdapter {
       String serverUrl = server.getUrl();
       String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
       try {
-        Request request = new RequestBuilder(converter) //
-            .apiUrl(serverUrl) //
-            .args(args) //
-            .headers(requestHeaders.get()) //
-            .methodInfo(methodDetails) //
-            .build();
+        RequestBuilder requestBuilder = new RequestBuilder(converter, methodDetails);
+        requestBuilder.setApiUrl(serverUrl);
+        requestBuilder.setArguments(args);
+
+        requestInterceptor.intercept(requestBuilder);
+
+        Request request = requestBuilder.build();
         url = request.getUrl();
 
         if (!methodDetails.isSynchronous) {
@@ -408,7 +409,7 @@ public class RestAdapter {
     private Client.Provider clientProvider;
     private Executor httpExecutor;
     private Executor callbackExecutor;
-    private RequestHeaders requestHeaders;
+    private RequestInterceptor requestInterceptor;
     private Converter converter;
     private Profiler profiler;
     private ErrorHandler errorHandler;
@@ -473,12 +474,12 @@ public class RestAdapter {
       return this;
     }
 
-    /**  */
-    public Builder setRequestHeaders(RequestHeaders requestHeaders) {
-      if (requestHeaders == null) {
-        throw new NullPointerException("Request headers may not be null.");
+    /** A request interceptor for adding data to every request. */
+    public Builder setRequestInterceptor(RequestInterceptor requestInterceptor) {
+      if (requestInterceptor == null) {
+        throw new NullPointerException("Request interceptor may not be null.");
       }
-      this.requestHeaders = requestHeaders;
+      this.requestInterceptor = requestInterceptor;
       return this;
     }
 
@@ -533,8 +534,8 @@ public class RestAdapter {
         throw new IllegalArgumentException("Server may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, requestHeaders,
-          converter, profiler, errorHandler, log, debug);
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor,
+          requestInterceptor, converter, profiler, errorHandler, log, debug);
     }
 
     private void ensureSaneDefaults() {
@@ -556,8 +557,8 @@ public class RestAdapter {
       if (log == null) {
         log = Platform.get().defaultLog();
       }
-      if (requestHeaders == null) {
-        requestHeaders = RequestHeaders.NONE;
+      if (requestInterceptor == null) {
+        requestInterceptor = RequestInterceptor.NONE;
       }
     }
   }
