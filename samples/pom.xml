@@ -16,5 +16,6 @@
 
   <modules>
     <module>github-client</module>
+    <module>route53-client</module>
   </modules>
 </project>
