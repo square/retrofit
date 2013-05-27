@@ -181,7 +181,12 @@ public class RestAdapter {
         try {
           return invokeRequest(methodDetails, args);
         } catch (RetrofitError error) {
-          throw errorHandler.handleError(error);
+          Throwable newError = errorHandler.handleError(error);
+          if (newError == null) {
+            throw new IllegalStateException("Error handler returned null for wrapped exception.",
+                error);
+          }
+          throw newError;
         }
       }
 
