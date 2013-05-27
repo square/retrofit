@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -98,6 +99,21 @@ import retrofit.mime.TypedOutput;
  * <p>
  * Calling {@link #create(Class)} with {@code MyApi.class} will validate and create a new
  * implementation of the API.
+ * <p>
+ * When an api marks {@link java.net.URI URI} as the return type of a method, the {@code Location}
+ * header will be returned when there is no {@link retrofit.client.Response#getBody()} body} in
+ * the response.  This addresses the {@code HTTP 201 Created} use-case typical on {@code POST}
+ * requests, where the {@code Location} header is the id of the new resource.  Accordingly, when
+ * {@link java.net.URI URI} is a parameter, it substitutes {@link retrofit.Server#getUrl() URL}.
+ * For example:
+ * <pre>
+ * public interface MyApi {
+ *   &#64;POST("/category/{cat}")
+ *   URI create(@Path("cat") String a);
+ *   &#64;GET
+ *   Catalog get(URI cat);
+ * }
+ * </pre>
  *
  * @author Bob Lee (bob@squareup.com)
  * @author Jake Wharton (jw@squareup.com)
@@ -211,7 +227,15 @@ public class RestAdapter {
     private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
       methodDetails.init(); // Ensure all relevant method information has been loaded.
 
-      String serverUrl = server.getUrl();
+      String serverUrl;
+      if (methodDetails.serverUrlIndex != null) {
+        Object overrideUrl = args[methodDetails.serverUrlIndex];
+        if (overrideUrl == null)
+          throw new NullPointerException("Null URI");
+        serverUrl = overrideUrl.toString();
+      } else {
+        serverUrl = server.getUrl();
+      }
       String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
       try {
         Request request = new RequestBuilder(converter) //
@@ -267,6 +291,12 @@ public class RestAdapter {
 
           TypedInput body = response.getBody();
           if (body == null) {
+            if (type == URI.class) {
+              for (Header header : response.getHeaders()) {
+                if ("Location".equalsIgnoreCase(header.getName()))
+                  return URI.create(header.getValue());
+              }
+            }
             return new ResponseWrapper(response, null);
           }
           try {

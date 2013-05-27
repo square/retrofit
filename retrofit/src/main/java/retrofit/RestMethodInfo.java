@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -65,6 +66,7 @@ final class RestMethodInfo {
   RequestType requestType = RequestType.SIMPLE;
   String requestMethod;
   boolean requestHasBody;
+  Integer serverUrlIndex;
   String requestUrl;
   Set<String> requestUrlParamNames;
   String requestQuery;
@@ -381,7 +383,9 @@ final class RestMethodInfo {
         }
       }
 
-      if (!hasRetrofitAnnotation) {
+      if (parameterType == URI.class) {
+        serverUrlIndex = i;
+      } else if (!hasRetrofitAnnotation) {
         throw new IllegalStateException(
             "No annotations found on parameter " + (i + 1) + " of " + method.getName());
       }
