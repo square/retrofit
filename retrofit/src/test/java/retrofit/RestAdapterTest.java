@@ -2,6 +2,7 @@
 package retrofit;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -13,6 +14,7 @@ import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
+import retrofit.http.POST;
 import retrofit.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -152,6 +154,75 @@ public class RestAdapterTest {
     } catch (RetrofitError e) {
       assertThat(e.getCause()).isSameAs(exception);
     }
+  }
+
+  private interface Rest {
+    @POST("/") URI create();
+    // TODO: it will probably break things to force trailing slash
+    @GET("/") Object get(URI id);
+    // TODO: should be possible to specify void return type
+    @POST("/kick") Void kick(URI id);
+  }
+
+  @Test public void locationHeaderWhenNoBody() throws Exception {
+    Header location = new Header("location", "http://example.com/resource/1");
+    Response response = //
+        new Response(201, "Created", Collections.singletonList(location), null);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+
+    Rest rest = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setServer("http://example.com")
+        .setProfiler(mockProfiler)
+        .build()
+        .create(Rest.class);
+
+    assertThat(rest.create()).isEqualTo(URI.create(location.getValue()));
+  }
+
+  @Test public void overrideServerURL() throws Exception {
+    final URI override = URI.create("http://example.com/resource/1");
+
+    mockClient = new Client(){
+      public Response execute(Request request) throws IOException {
+        //TODO: it will probably break things to force trailing slash
+        assertThat(request.getUrl()).isEqualTo(override.toString() + "/");
+        return new Response(200, "OK", NO_HEADERS, new TypedString("{}"));
+      }
+    };
+
+    Rest rest = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setServer("http://example.com")
+        .setProfiler(mockProfiler)
+        .build()
+        .create(Rest.class);
+
+    rest.get(override);
+  }
+
+  @Test public void overrideServerURLWithPath() throws Exception {
+    final URI override = URI.create("http://example.com/resource/1");
+
+    mockClient = new Client(){
+      public Response execute(Request request) throws IOException {
+        assertThat(request.getUrl()).isEqualTo(override.toString() + "/kick");
+        return new Response(200, "OK", NO_HEADERS, new TypedString("{}"));
+      }
+    };
+
+    Rest rest = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setServer("http://example.com")
+        .setProfiler(mockProfiler)
+        .build()
+        .create(Rest.class);
+
+    rest.kick(override);
   }
 
   @Test public void getResponseDirectly() throws Exception {
