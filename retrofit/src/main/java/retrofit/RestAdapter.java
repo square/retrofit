@@ -417,20 +417,26 @@ public class RestAdapter {
 
     /** API server base URL. */
     public Builder setServer(String endpoint) {
-      if (endpoint == null) throw new NullPointerException("endpoint");
+      if (endpoint == null || endpoint.trim().length() == 0) {
+        throw new NullPointerException("Server may not be blank.");
+      }
       return setServer(new Server(endpoint));
     }
 
     /** API server. */
     public Builder setServer(Server server) {
-      if (server == null) throw new NullPointerException("server");
+      if (server == null) {
+        throw new NullPointerException("Server may not be null.");
+      }
       this.server = server;
       return this;
     }
 
     /** The HTTP client used for requests. */
     public Builder setClient(final Client client) {
-      if (client == null) throw new NullPointerException("client");
+      if (client == null) {
+        throw new NullPointerException("Client may not be null.");
+      }
       return setClient(new Client.Provider() {
         @Override public Client get() {
           return client;
@@ -440,7 +446,9 @@ public class RestAdapter {
 
     /** The HTTP client used for requests. */
     public Builder setClient(Client.Provider clientProvider) {
-      if (clientProvider == null) throw new NullPointerException("clientProvider");
+      if (clientProvider == null) {
+        throw new NullPointerException("Client provider may not be null.");
+      }
       this.clientProvider = clientProvider;
       return this;
     }
@@ -454,8 +462,12 @@ public class RestAdapter {
      * HTTP client.
      */
     public Builder setExecutors(Executor httpExecutor, Executor callbackExecutor) {
-      if (httpExecutor == null) throw new NullPointerException("httpExecutor");
-      if (callbackExecutor == null) callbackExecutor = new Utils.SynchronousExecutor();
+      if (httpExecutor == null) {
+        throw new NullPointerException("HTTP executor may not be null.");
+      }
+      if (callbackExecutor == null) {
+        callbackExecutor = new Utils.SynchronousExecutor();
+      }
       this.httpExecutor = httpExecutor;
       this.callbackExecutor = callbackExecutor;
       return this;
@@ -463,34 +475,48 @@ public class RestAdapter {
 
     /**  */
     public Builder setRequestHeaders(RequestHeaders requestHeaders) {
-      if (requestHeaders == null) throw new NullPointerException("requestHeaders");
+      if (requestHeaders == null) {
+        throw new NullPointerException("Request headers may not be null.");
+      }
       this.requestHeaders = requestHeaders;
       return this;
     }
 
     /** The converter used for serialization and deserialization of objects. */
     public Builder setConverter(Converter converter) {
-      if (converter == null) throw new NullPointerException("converter");
+      if (converter == null) {
+        throw new NullPointerException("Converter may not.");
+      }
       this.converter = converter;
       return this;
     }
 
     /** Set the profiler used to measure requests. */
     public Builder setProfiler(Profiler profiler) {
-      if (profiler == null) throw new NullPointerException("profiler");
+      if (profiler == null) {
+        throw new NullPointerException("Profiler may not be null.");
+      }
       this.profiler = profiler;
       return this;
     }
 
+    /**
+     * The error handler allows you to customize the type of exception thrown for errors on
+     * synchronous requests.
+     */
     public Builder setErrorHandler(ErrorHandler errorHandler) {
-      if (errorHandler == null) throw new NullPointerException("error handler cannot be null");
+      if (errorHandler == null) {
+        throw new NullPointerException("Error handler may not be null.");
+      }
       this.errorHandler = errorHandler;
       return this;
     }
 
     /** Configure debug logging mechanism. */
     public Builder setLog(Log log) {
-      if (log == null) throw new NullPointerException("log");
+      if (log == null) {
+        throw new NullPointerException("Log may not be null.");
+      }
       this.log = log;
       return this;
     }
