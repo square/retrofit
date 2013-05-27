@@ -33,6 +33,9 @@ public class OkClient extends UrlConnectionClient {
   }
 
   @Override protected HttpURLConnection openConnection(Request request) throws IOException {
-    return client.open(new URL(request.getUrl()));
+    HttpURLConnection connection = client.open(new URL(request.getUrl()));
+    connection.setConnectTimeout(Defaults.CONNECT_TIMEOUT);
+    connection.setReadTimeout(Defaults.READ_TIMEOUT);
+    return connection;
   }
 }

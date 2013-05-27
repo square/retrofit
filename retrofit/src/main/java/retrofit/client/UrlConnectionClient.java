@@ -34,7 +34,11 @@ public class UrlConnectionClient implements Client {
   }
 
   protected HttpURLConnection openConnection(Request request) throws IOException {
-    return (HttpURLConnection) new URL(request.getUrl()).openConnection();
+    HttpURLConnection connection =
+        (HttpURLConnection) new URL(request.getUrl()).openConnection();
+    connection.setConnectTimeout(Defaults.CONNECT_TIMEOUT);
+    connection.setReadTimeout(Defaults.READ_TIMEOUT);
+    return connection;
   }
 
   void prepareRequest(HttpURLConnection connection, Request request) throws IOException {
