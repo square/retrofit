@@ -485,7 +485,7 @@ public class RestAdapter {
     /** The converter used for serialization and deserialization of objects. */
     public Builder setConverter(Converter converter) {
       if (converter == null) {
-        throw new NullPointerException("Converter may not.");
+        throw new NullPointerException("Converter may not be null.");
       }
       this.converter = converter;
       return this;
