@@ -15,6 +15,7 @@
  */
 package retrofit.client;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,12 +23,13 @@ import retrofit.mime.TypedInput;
 
 /** An HTTP response. */
 public final class Response {
+  private final String url;
   private final int status;
   private final String reason;
   private final List<Header> headers;
   private final TypedInput body;
 
-  public Response(int status, String reason, List<Header> headers, TypedInput body) {
+  public Response(String url, int status, String reason, List<Header> headers, TypedInput body) {
     if (status < 200) {
       throw new IllegalArgumentException("Invalid status code: " + status);
     }
@@ -38,10 +40,16 @@ public final class Response {
       throw new IllegalArgumentException("headers == null");
     }
 
+    this.url = url;
     this.status = status;
     this.reason = reason;
     this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
     this.body = body;
+  }
+
+  /** The url of the response, includes redirects when applicable/possible. */
+  public String getUrl() {
+      return url;
   }
 
   /** Status line code. */

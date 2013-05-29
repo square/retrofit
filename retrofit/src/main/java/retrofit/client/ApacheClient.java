@@ -25,13 +25,16 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.DefaultRedirectHandler;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedOutput;
@@ -39,10 +42,14 @@ import retrofit.mime.TypedOutput;
 /** A {@link Client} which uses an implementation of Apache's {@link HttpClient}. */
 public class ApacheClient implements Client {
   private final HttpClient client;
+  private RedirectHandler redirectHandler = null;
 
   /** Creates an instance backed by {@link DefaultHttpClient}. */
   public ApacheClient() {
     this(new DefaultHttpClient());
+    DefaultHttpClient client = (DefaultHttpClient)this.client;
+    this.redirectHandler = new RedirectHandler();
+    client.setRedirectHandler(this.redirectHandler);
   }
 
   public ApacheClient(HttpClient client) {
@@ -52,7 +59,14 @@ public class ApacheClient implements Client {
   @Override public Response execute(Request request) throws IOException {
     HttpUriRequest apacheRequest = createRequest(request);
     HttpResponse apacheResponse = execute(client, apacheRequest);
-    return parseResponse(apacheResponse);
+
+    String url = request.getUrl();
+    if (this.redirectHandler != null && this.redirectHandler.finalUri != null) {
+      // if we have a redirect handler, and it has been redirected, use it's url
+      url = this.redirectHandler.finalUri.toString();
+    }
+
+    return parseResponse(url, apacheResponse);
   }
 
   /** Execute the specified {@code request} using the provided {@code client}. */
@@ -64,7 +78,7 @@ public class ApacheClient implements Client {
     return new GenericHttpRequest(request);
   }
 
-  static Response parseResponse(HttpResponse response) throws IOException {
+  static Response parseResponse(String url, HttpResponse response) throws IOException {
     StatusLine statusLine = response.getStatusLine();
     int status = statusLine.getStatusCode();
     String reason = statusLine.getReasonPhrase();
@@ -87,7 +101,7 @@ public class ApacheClient implements Client {
       body = new TypedByteArray(contentType, bytes);
     }
 
-    return new Response(status, reason, headers, body);
+    return new Response(url, status, reason, headers, body);
   }
 
   private static class GenericHttpRequest extends HttpEntityEnclosingRequestBase {
@@ -145,5 +159,15 @@ public class ApacheClient implements Client {
     @Override public boolean isStreaming() {
       return false;
     }
+  }
+
+  static class RedirectHandler extends DefaultRedirectHandler {
+      private URI finalUri;
+
+      @Override
+      public URI getLocationURI(HttpResponse response, HttpContext context) throws ProtocolException {
+          this.finalUri = super.getLocationURI(response, context);
+          return this.finalUri;
+      }
   }
 }
