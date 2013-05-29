@@ -10,7 +10,8 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>samples</artifactId>
+  <groupId>com.squareup.retrofit.samples</groupId>
+  <artifactId>parent</artifactId>
   <name>Samples</name>
   <packaging>pom</packaging>
 

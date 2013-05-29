@@ -4,13 +4,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.squareup.retrofit</groupId>
-    <artifactId>samples</artifactId>
+    <groupId>com.squareup.retrofit.samples</groupId>
+    <artifactId>parent</artifactId>
     <version>1.0.3-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>sample-github-client</artifactId>
+  <artifactId>github-client</artifactId>
   <name>Sample: GitHub Client</name>
 
   <dependencies>

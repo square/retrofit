@@ -34,7 +34,7 @@
 
   <modules>
     <module>retrofit</module>
-    <module>samples</module>
+    <module>retrofit-samples</module>
   </modules>
 
   <properties>
