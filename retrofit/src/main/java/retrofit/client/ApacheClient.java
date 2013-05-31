@@ -47,7 +47,7 @@ public class ApacheClient implements Client {
   /** Creates an instance backed by {@link DefaultHttpClient}. */
   public ApacheClient() {
     this(new DefaultHttpClient());
-    DefaultHttpClient client = (DefaultHttpClient)this.client;
+    DefaultHttpClient client = (DefaultHttpClient) this.client;
     this.redirectHandler = new RedirectHandler();
     client.setRedirectHandler(this.redirectHandler);
   }
@@ -165,7 +165,8 @@ public class ApacheClient implements Client {
       private URI finalUri;
 
       @Override
-      public URI getLocationURI(HttpResponse response, HttpContext context) throws ProtocolException {
+      public URI getLocationURI(HttpResponse response, HttpContext context)
+              throws ProtocolException {
           this.finalUri = super.getLocationURI(response, context);
           return this.finalUri;
       }
