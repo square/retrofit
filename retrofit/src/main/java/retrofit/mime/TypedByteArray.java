@@ -31,13 +31,13 @@ public class TypedByteArray implements TypedInput, TypedOutput {
   private final byte[] bytes;
 
   /**
-   * Constructs a new typed byte array.
+   * Constructs a new typed byte array.  Sets mimeType to {@code application/unknown} if absent.
    *
-   * @throws NullPointerException if bytes or mimeType is null
+   * @throws NullPointerException if bytes are null
    */
   public TypedByteArray(String mimeType, byte[] bytes) {
     if (mimeType == null) {
-      throw new NullPointerException("mimeType");
+      mimeType = "application/unknown";
     }
     if (bytes == null) {
       throw new NullPointerException("bytes");

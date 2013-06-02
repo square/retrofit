@@ -39,7 +39,10 @@ public class GsonConverter implements Converter {
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
-    String charset = MimeUtil.parseCharset(body.mimeType());
+    String charset = "UTF-8";
+    if (body.mimeType() != null) {
+      charset = MimeUtil.parseCharset(body.mimeType());
+    }
     InputStreamReader isr = null;
     try {
       isr = new InputStreamReader(body.in(), charset);
