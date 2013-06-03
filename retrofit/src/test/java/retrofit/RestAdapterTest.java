@@ -31,7 +31,6 @@ import static retrofit.Profiler.RequestInformation;
 import static retrofit.Utils.SynchronousExecutor;
 
 public class RestAdapterTest {
-  private static String NO_URL = "/";
   private static List<Header> NO_HEADERS = Collections.emptyList();
 
   private interface Example {
@@ -73,7 +72,7 @@ public class RestAdapterTest {
     Object data = new Object();
     when(mockProfiler.beforeCall()).thenReturn(data);
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(NO_URL, 200, "OK", NO_HEADERS, null));
+        .thenReturn(new Response("/", 200, "OK", NO_HEADERS, null));
 
     example.something();
 
@@ -84,7 +83,7 @@ public class RestAdapterTest {
 
   @Test public void synchronousDoesNotUseExecutors() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(NO_URL, 200, "OK", NO_HEADERS, null));
+        .thenReturn(new Response("/", 200, "OK", NO_HEADERS, null));
 
     example.something();
 
@@ -93,7 +92,7 @@ public class RestAdapterTest {
   }
 
   @Test public void asynchronousUsesExecutors() throws Exception {
-    Response response = new Response(NO_URL, 200, "OK", NO_HEADERS, new TypedString("{}"));
+    Response response = new Response("/", 200, "OK", NO_HEADERS, new TypedString("{}"));
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     Callback<Object> callback = mock(Callback.class);
@@ -107,7 +106,7 @@ public class RestAdapterTest {
 
   @Test public void malformedResponseThrowsConversionException() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(NO_URL, 200, "OK", NO_HEADERS, new TypedString("{")));
+        .thenReturn(new Response("/", 200, "OK", NO_HEADERS, new TypedString("{")));
 
     try {
       example.something();
@@ -121,7 +120,7 @@ public class RestAdapterTest {
 
   @Test public void errorResponseThrowsHttpError() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(NO_URL, 500, "Internal Server Error", NO_HEADERS, null));
+        .thenReturn(new Response("/", 500, "Internal Server Error", NO_HEADERS, null));
 
     try {
       example.something();
@@ -156,14 +155,14 @@ public class RestAdapterTest {
   }
 
   @Test public void getResponseDirectly() throws Exception {
-    Response response = new Response(NO_URL, 200, "OK", NO_HEADERS, null);
+    Response response = new Response("/", 200, "OK", NO_HEADERS, null);
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     assertThat(example.direct()).isSameAs(response);
   }
 
   @Test public void getResponseDirectlyAsync() throws Exception {
-    Response response = new Response(NO_URL, 200, "OK", NO_HEADERS, null);
+    Response response = new Response("/", 200, "OK", NO_HEADERS, null);
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     Callback<Response> callback = mock(Callback.class);

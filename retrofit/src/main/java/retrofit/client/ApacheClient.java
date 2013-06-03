@@ -42,18 +42,19 @@ import retrofit.mime.TypedOutput;
 /** A {@link Client} which uses an implementation of Apache's {@link HttpClient}. */
 public class ApacheClient implements Client {
   private final HttpClient client;
-  private RedirectHandler redirectHandler = null;
+  private final RedirectHandler redirectHandler;
 
   /** Creates an instance backed by {@link DefaultHttpClient}. */
   public ApacheClient() {
-    this(new DefaultHttpClient());
-    DefaultHttpClient client = (DefaultHttpClient) this.client;
-    this.redirectHandler = new RedirectHandler();
-    client.setRedirectHandler(this.redirectHandler);
+    DefaultHttpClient client = new DefaultHttpClient();
+    redirectHandler = new RedirectHandler();
+    client.setRedirectHandler(redirectHandler);
+    this.client = client;
   }
 
   public ApacheClient(HttpClient client) {
     this.client = client;
+    redirectHandler = null;
   }
 
   @Override public Response execute(Request request) throws IOException {
@@ -61,9 +62,9 @@ public class ApacheClient implements Client {
     HttpResponse apacheResponse = execute(client, apacheRequest);
 
     String url = request.getUrl();
-    if (this.redirectHandler != null && this.redirectHandler.finalUri != null) {
-      // if we have a redirect handler, and it has been redirected, use it's url
-      url = this.redirectHandler.finalUri.toString();
+    if (redirectHandler != null && redirectHandler.finalUri != null) {
+      // If we have a redirect handler, and it has been redirected, use it's url.
+      url = redirectHandler.finalUri.toString();
     }
 
     return parseResponse(url, apacheResponse);
@@ -162,13 +163,13 @@ public class ApacheClient implements Client {
   }
 
   static class RedirectHandler extends DefaultRedirectHandler {
-      private URI finalUri;
+    private URI finalUri;
 
-      @Override
-      public URI getLocationURI(HttpResponse response, HttpContext context)
-              throws ProtocolException {
-          this.finalUri = super.getLocationURI(response, context);
-          return this.finalUri;
-      }
+    @Override
+    public URI getLocationURI(HttpResponse response, HttpContext context)
+        throws ProtocolException {
+      finalUri = super.getLocationURI(response, context);
+      return finalUri;
+    }
   }
 }

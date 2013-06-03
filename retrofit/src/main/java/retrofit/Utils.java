@@ -64,7 +64,7 @@ final class Utils {
 
   static Response replaceResponseBody(Response response, TypedInput body) {
     return new Response(response.getUrl(), response.getStatus(), response.getReason(),
-            response.getHeaders(), body);
+        response.getHeaders(), body);
   }
 
   static class SynchronousExecutor implements Executor {

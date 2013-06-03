@@ -48,7 +48,7 @@ public final class Response {
 
   /** The url of the response, includes redirects when applicable/possible. */
   public String getUrl() {
-      return url;
+    return url;
   }
 
   /** Status line code. */
