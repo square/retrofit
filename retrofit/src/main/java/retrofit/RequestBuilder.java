@@ -26,48 +26,169 @@ import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 
-/** Builds HTTP requests from Java method invocations. */
-final class RequestBuilder {
+final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
+  private final List<Header> headers;
+  private final StringBuilder queryParams;
+  private final String[] paramNames;
+  private final RestMethodInfo.ParamUsage[] paramUsages;
+  private final String requestMethod;
+  private final boolean isSynchronous;
 
-  private RestMethodInfo methodInfo;
-  private Object[] args;
+  private final FormUrlEncodedTypedOutput formBody;
+  private final MultipartTypedOutput multipartBody;
+  private TypedOutput body;
+
+  private String relativeUrl;
   private String apiUrl;
-  private List<retrofit.client.Header> headers;
 
-  RequestBuilder(Converter converter) {
+  RequestBuilder(Converter converter, RestMethodInfo methodInfo) {
     this.converter = converter;
+
+    paramNames = methodInfo.requestParamNames;
+    paramUsages = methodInfo.requestParamUsage;
+    requestMethod = methodInfo.requestMethod;
+    isSynchronous = methodInfo.isSynchronous;
+
+    headers = new ArrayList<Header>();
+    queryParams = new StringBuilder();
+
+    relativeUrl = methodInfo.requestUrl;
+
+    String requestQuery = methodInfo.requestQuery;
+    if (requestQuery != null) {
+      queryParams.append('?').append(requestQuery);
+    }
+
+    switch (methodInfo.requestType) {
+      case FORM_URL_ENCODED:
+        formBody = new FormUrlEncodedTypedOutput();
+        multipartBody = null;
+        body = formBody;
+        break;
+      case MULTIPART:
+        formBody = null;
+        multipartBody = new MultipartTypedOutput();
+        body = multipartBody;
+        break;
+      case SIMPLE:
+        formBody = null;
+        multipartBody = null;
+        // If present, 'body' will be set in 'setArguments' call.
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
+    }
   }
 
-  /** Supply cached method metadata info. */
-  RequestBuilder methodInfo(RestMethodInfo methodDetails) {
-    this.methodInfo = methodDetails;
-    return this;
-  }
-
-  /** Base API url. */
-  RequestBuilder apiUrl(String apiUrl) {
+  void setApiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
-    return this;
   }
 
-  /** Arguments from method invocation. */
-  RequestBuilder args(Object[] args) {
-    this.args = args;
-    return this;
+  @Override public void addHeader(String name, String value) {
+    if (name == null) {
+      throw new IllegalArgumentException("Header name must not be null.");
+    }
+    headers.add(new Header(name, value));
   }
 
-  /** A list of custom headers. */
-  RequestBuilder headers(List<retrofit.client.Header> headers) {
-    this.headers = headers;
-    return this;
+  @Override public void addPathParam(String name, String value) {
+    if (name == null) {
+      throw new IllegalArgumentException("Path replacement name must not be null.");
+    }
+    if (value == null) {
+      throw new IllegalArgumentException(
+          "Path replacement \"" + name + "\" value must not be null.");
+    }
+    try {
+      String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
+      relativeUrl = relativeUrl.replace("{" + name + "}", encodedValue);
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(
+          "Unable to convert path parameter \"" + name + "\" value to UTF-8:" + value, e);
+    }
   }
 
-  /**
-   * Construct a {@link Request} from the supplied information. You <strong>must</strong> call
-   * {@link #methodInfo}, {@link #apiUrl}, {@link #args}, and {@link #headers} before invoking this
-   * method.
-   */
+  private void addQueryParam(String name, String value) {
+    if (name == null) {
+      throw new IllegalArgumentException("Query param name must not be null.");
+    }
+    if (value == null) {
+      throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
+    }
+    try {
+      value = URLEncoder.encode(String.valueOf(value), "UTF-8");
+      StringBuilder queryParams = this.queryParams;
+      queryParams.append(queryParams.length() > 0 ? '&' : '?');
+      queryParams.append(name).append('=').append(value);
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(
+          "Unable to convert query parameter \"" + name + "\" value to UTF-8: " + value, e);
+    }
+  }
+
+  void setArguments(Object[] args) {
+    if (args == null) {
+      return;
+    }
+    int count = args.length;
+    if (!isSynchronous) {
+      count -= 1;
+    }
+    for (int i = 0; i < count; i++) {
+      String name = paramNames[i];
+      Object value = args[i];
+      RestMethodInfo.ParamUsage paramUsage = paramUsages[i];
+      switch (paramUsage) {
+        case PATH:
+          if (value == null) {
+            throw new IllegalArgumentException(
+                "Path parameter \"" + name + "\" value must not be null.");
+          }
+          addPathParam(name, value.toString());
+          break;
+        case QUERY:
+          if (value != null) { // Skip null values.
+            addQueryParam(name, value.toString());
+          }
+          break;
+        case HEADER:
+          if (value != null) { // Skip null values.
+            addHeader(name, value.toString());
+          }
+          break;
+        case FIELD:
+          if (value != null) { // Skip null values.
+            formBody.addField(name, value.toString());
+          }
+          break;
+        case PART:
+          if (value == null) {
+            throw new IllegalArgumentException(
+                "Multipart part \"" + name + "\" value must not be null.");
+          }
+          if (value instanceof TypedOutput) {
+            multipartBody.addPart(name, (TypedOutput) value);
+          } else {
+            multipartBody.addPart(name, converter.toBody(value));
+          }
+          break;
+        case BODY:
+          if (value == null) {
+            throw new IllegalArgumentException("Body parameter value must not be null.");
+          }
+          if (value instanceof TypedOutput) {
+            body = (TypedOutput) value;
+          } else {
+            body = converter.toBody(value);
+          }
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown parameter usage: " + paramUsage);
+      }
+    }
+  }
+
   Request build() throws UnsupportedEncodingException {
     String apiUrl = this.apiUrl;
 
@@ -77,129 +198,13 @@ final class RequestBuilder {
       url.deleteCharAt(url.length() - 1);
     }
 
-    // Append the method relative URL.
-    url.append(buildRelativeUrl());
+    url.append(relativeUrl);
 
-    // Append query parameters, if needed.
-    if (methodInfo.hasQueryParams) {
-      boolean first = true;
-      String requestQuery = methodInfo.requestQuery;
-      if (requestQuery != null) {
-        url.append('?').append(requestQuery);
-        first = false;
-      }
-      String[] requestQueryName = methodInfo.requestQueryName;
-      for (int i = 0; i < requestQueryName.length; i++) {
-        String query = requestQueryName[i];
-        if (query != null) {
-          Object arg = args[i];
-          if (arg != null) { // Null values are skipped.
-            String value = URLEncoder.encode(String.valueOf(arg), "UTF-8");
-            url.append(first ? '?' : '&').append(query).append('=').append(value);
-            first = false;
-          }
-        }
-      }
+    StringBuilder queryParams = this.queryParams;
+    if (queryParams.length() > 0) {
+      url.append(queryParams);
     }
 
-    List<retrofit.client.Header> headers = new ArrayList<retrofit.client.Header>();
-    if (this.headers != null) {
-      headers.addAll(this.headers);
-    }
-    List<Header> methodHeaders = methodInfo.headers;
-    if (methodHeaders != null) {
-      headers.addAll(methodHeaders);
-    }
-    // RFC 2616: Header names are case-insensitive.
-    String[] requestParamHeader = methodInfo.requestParamHeader;
-    if (requestParamHeader != null) {
-      for (int i = 0; i < requestParamHeader.length; i++) {
-        String name = requestParamHeader[i];
-        if (name == null) continue;
-        Object arg = args[i];
-        if (arg != null) {
-          headers.add(new retrofit.client.Header(name, String.valueOf(arg)));
-        }
-      }
-    }
-
-    return new Request(methodInfo.requestMethod, url.toString(), headers, buildBody());
-  }
-
-  /** Create the final relative URL by performing parameter replacement. */
-  private String buildRelativeUrl() throws UnsupportedEncodingException {
-    String replacedPath = methodInfo.requestUrl;
-    String[] requestUrlParam = methodInfo.requestUrlParam;
-    for (int i = 0; i < requestUrlParam.length; i++) {
-      String param = requestUrlParam[i];
-      if (param != null) {
-        Object arg = args[i];
-        if (arg == null) {
-          throw new IllegalArgumentException("Path parameters must not be null: " + param + ".");
-        }
-        String value = URLEncoder.encode(String.valueOf(arg), "UTF-8");
-        replacedPath = replacedPath.replace("{" + param + "}", value);
-      }
-    }
-    return replacedPath;
-  }
-
-  /** Create the request body using the method info and invocation arguments. */
-  private TypedOutput buildBody() {
-    switch (methodInfo.requestType) {
-      case SIMPLE: {
-        int bodyIndex = methodInfo.bodyIndex;
-        if (bodyIndex == RestMethodInfo.NO_BODY) {
-          return null;
-        }
-        Object body = args[bodyIndex];
-        if (body == null) {
-          throw new IllegalArgumentException("Body must not be null.");
-        }
-        if (body instanceof TypedOutput) {
-          return (TypedOutput) body;
-        } else {
-          return converter.toBody(body);
-        }
-      }
-
-      case FORM_URL_ENCODED: {
-        FormUrlEncodedTypedOutput body = new FormUrlEncodedTypedOutput();
-        String[] requestFormFields = methodInfo.requestFormFields;
-        for (int i = 0; i < requestFormFields.length; i++) {
-          String name = requestFormFields[i];
-          if (name != null) {
-            Object value = args[i];
-            if (value != null) { // Null values are skipped.
-              body.addField(name, String.valueOf(value));
-            }
-          }
-        }
-        return body;
-      }
-
-      case MULTIPART: {
-        MultipartTypedOutput body = new MultipartTypedOutput();
-        String[] requestMultipartPart = methodInfo.requestMultipartPart;
-        for (int i = 0; i < requestMultipartPart.length; i++) {
-          String name = requestMultipartPart[i];
-          if (name != null) {
-            Object value = args[i];
-            if (value == null) {
-              throw new IllegalArgumentException("Multipart part must not be null: " + name + ".");
-            }
-            if (value instanceof TypedOutput) {
-              body.addPart(name, (TypedOutput) value);
-            } else {
-              body.addPart(name, converter.toBody(value));
-            }
-          }
-        }
-        return body;
-      }
-
-      default:
-        throw new IllegalArgumentException("Unknown request type " + methodInfo.requestType);
-    }
+    return new Request(requestMethod, url.toString(), headers, body);
   }
 }

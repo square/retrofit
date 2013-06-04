@@ -32,7 +32,10 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
-import static retrofit.RestMethodInfo.NO_BODY;
+import static retrofit.RestMethodInfo.ParamUsage.BODY;
+import static retrofit.RestMethodInfo.ParamUsage.HEADER;
+import static retrofit.RestMethodInfo.ParamUsage.PATH;
+import static retrofit.RestMethodInfo.ParamUsage.QUERY;
 import static retrofit.RestMethodInfo.RequestType.MULTIPART;
 import static retrofit.RestMethodInfo.RequestType.SIMPLE;
 
@@ -356,7 +359,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
 
-  @Test public void singleQueryParam() {
+  @Test public void singlePathQueryParam() {
     class Example {
       @GET("/foo?a=b")
       Response a() {
@@ -383,15 +386,12 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.requestUrlParam).isEmpty();
-    assertThat(methodInfo.requestQueryName).isEmpty();
-    assertThat(methodInfo.requestFormFields).isEmpty();
-    assertThat(methodInfo.requestMultipartPart).isEmpty();
-    assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
+    assertThat(methodInfo.requestParamNames).isEmpty();
+    assertThat(methodInfo.requestParamUsage).isEmpty();
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
-  @Test public void singleParam() {
+  @Test public void singleQueryParam() {
     class Example {
       @GET("/") Response a(@Query("a") String a) {
         return null;
@@ -402,12 +402,12 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.requestQueryName).hasSize(1).containsSequence("a");
-    assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
+    assertThat(methodInfo.requestParamNames).hasSize(1).containsExactly("a");
+    assertThat(methodInfo.requestParamUsage).hasSize(1).containsExactly(QUERY);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
-  @Test public void multipleParams() {
+  @Test public void multipleQueryParams() {
     class Example {
       @GET("/") Response a(@Query("a") String a, @Query("b") String b, @Query("c") String c) {
         return null;
@@ -418,8 +418,8 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.requestQueryName).hasSize(3).containsSequence("a", "b", "c");
-    assertThat(methodInfo.bodyIndex).isEqualTo(NO_BODY);
+    assertThat(methodInfo.requestParamNames).hasSize(3).containsExactly("a", "b", "c");
+    assertThat(methodInfo.requestParamUsage).hasSize(3).containsExactly(QUERY, QUERY, QUERY);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
@@ -434,11 +434,8 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.requestUrlParam).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestQueryName).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestFormFields).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestMultipartPart).containsOnly(new String[] { null });
-    assertThat(methodInfo.bodyIndex).isEqualTo(0);
+    assertThat(methodInfo.requestParamNames).hasSize(1).containsExactly(new String[] { null });
+    assertThat(methodInfo.requestParamUsage).hasSize(1).containsExactly(BODY);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
@@ -453,11 +450,8 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.requestUrlParam).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestQueryName).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestFormFields).containsOnly(new String[] { null });
-    assertThat(methodInfo.requestMultipartPart).containsOnly(new String[] { null });
-    assertThat(methodInfo.bodyIndex).isEqualTo(0);
+    assertThat(methodInfo.requestParamNames).hasSize(1).containsExactly(new String[] { null });
+    assertThat(methodInfo.requestParamUsage).hasSize(1).containsExactly(BODY);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
@@ -484,11 +478,8 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.requestUrlParam).containsExactly("a", null, "c");
-    assertThat(methodInfo.requestQueryName).containsExactly(null, null, null);
-    assertThat(methodInfo.requestFormFields).containsExactly(null, null, null);
-    assertThat(methodInfo.requestMultipartPart).containsExactly(null, null, null);
-    assertThat(methodInfo.bodyIndex).isEqualTo(1);
+    assertThat(methodInfo.requestParamNames).containsExactly("a", null, "c");
+    assertThat(methodInfo.requestParamUsage).containsExactly(PATH, BODY, PATH);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
@@ -712,8 +703,8 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(Arrays.asList(methodInfo.requestParamHeader))
-      .isEqualTo(Arrays.asList("a", "b"));
+    assertThat(methodInfo.requestParamNames).containsExactly("a", "b");
+    assertThat(methodInfo.requestParamUsage).containsExactly(HEADER, HEADER);
   }
 
   @Test(expected = IllegalStateException.class)
