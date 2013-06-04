@@ -78,7 +78,7 @@ public class UrlConnectionClient implements Client {
       stream = connection.getInputStream();
     }
     TypedInput responseBody = new TypedInputStream(mimeType, length, stream);
-    return new Response(status, reason, headers, responseBody);
+    return new Response(connection.getURL().toString(), status, reason, headers, responseBody);
   }
 
   private static class TypedInputStream implements TypedInput {

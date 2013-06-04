@@ -25,13 +25,16 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.RedirectHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedOutput;
@@ -39,6 +42,7 @@ import retrofit.mime.TypedOutput;
 /** A {@link Client} which uses an implementation of Apache's {@link HttpClient}. */
 public class ApacheClient implements Client {
   private final HttpClient client;
+  private final ProxyRedirectHandler redirectHandler;
 
   /** Creates an instance backed by {@link DefaultHttpClient}. */
   public ApacheClient() {
@@ -47,12 +51,30 @@ public class ApacheClient implements Client {
 
   public ApacheClient(HttpClient client) {
     this.client = client;
+    ProxyRedirectHandler proxyRedirectHandler = null;
+    // If the client isn't a DefaultHttpClient we won't be able to track redirect urls. We will
+    // fall back to Response.url = Request.url. That's probably ok since AndroidApacheClient
+    // doesn't follow redirects in the first place. This will also be the case if someone sets
+    // a RedirectHandler on client after they create an ApacheClient with it.
+    if (client instanceof DefaultHttpClient) {
+      DefaultHttpClient defaultHttpClient = (DefaultHttpClient) client;
+      proxyRedirectHandler = new ProxyRedirectHandler(defaultHttpClient.getRedirectHandler());
+      defaultHttpClient.setRedirectHandler(proxyRedirectHandler);
+    }
+    redirectHandler = proxyRedirectHandler;
   }
 
   @Override public Response execute(Request request) throws IOException {
     HttpUriRequest apacheRequest = createRequest(request);
     HttpResponse apacheResponse = execute(client, apacheRequest);
-    return parseResponse(apacheResponse);
+
+    String url = request.getUrl();
+    if (redirectHandler != null && redirectHandler.finalUri != null) {
+      // If we have a redirect handler, and it has been redirected, use it's url.
+      url = redirectHandler.finalUri.toString();
+    }
+
+    return parseResponse(url, apacheResponse);
   }
 
   /** Execute the specified {@code request} using the provided {@code client}. */
@@ -64,7 +86,7 @@ public class ApacheClient implements Client {
     return new GenericHttpRequest(request);
   }
 
-  static Response parseResponse(HttpResponse response) throws IOException {
+  static Response parseResponse(String url, HttpResponse response) throws IOException {
     StatusLine statusLine = response.getStatusLine();
     int status = statusLine.getStatusCode();
     String reason = statusLine.getReasonPhrase();
@@ -87,7 +109,7 @@ public class ApacheClient implements Client {
       body = new TypedByteArray(contentType, bytes);
     }
 
-    return new Response(status, reason, headers, body);
+    return new Response(url, status, reason, headers, body);
   }
 
   private static class GenericHttpRequest extends HttpEntityEnclosingRequestBase {
@@ -144,6 +166,27 @@ public class ApacheClient implements Client {
 
     @Override public boolean isStreaming() {
       return false;
+    }
+  }
+
+  static class ProxyRedirectHandler implements RedirectHandler {
+    private final RedirectHandler proxiedHandler;
+    private URI finalUri;
+
+    public ProxyRedirectHandler(RedirectHandler redirectHandler) {
+      this.proxiedHandler = redirectHandler;
+    }
+
+    @Override
+    public boolean isRedirectRequested(HttpResponse httpResponse, HttpContext httpContext) {
+      return proxiedHandler.isRedirectRequested(httpResponse, httpContext);
+    }
+
+    @Override
+    public URI getLocationURI(HttpResponse response, HttpContext context)
+        throws ProtocolException {
+      finalUri = proxiedHandler.getLocationURI(response, context);
+      return finalUri;
     }
   }
 }

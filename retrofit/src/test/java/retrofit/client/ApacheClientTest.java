@@ -100,7 +100,7 @@ public class ApacheClientTest {
     apacheResponse.addHeader("Content-Type", "text/plain");
     apacheResponse.addHeader("foo", "bar");
     apacheResponse.addHeader("kit", "kat");
-    Response response = ApacheClient.parseResponse(apacheResponse);
+    Response response = ApacheClient.parseResponse("/", apacheResponse);
 
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
@@ -115,7 +115,7 @@ public class ApacheClientTest {
     HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
     apacheResponse.addHeader("foo", "bar");
     apacheResponse.addHeader("kit", "kat");
-    Response response = ApacheClient.parseResponse(apacheResponse);
+    Response response = ApacheClient.parseResponse("/", apacheResponse);
 
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
