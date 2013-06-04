@@ -28,11 +28,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.RedirectHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.DefaultRedirectHandler;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -42,19 +42,26 @@ import retrofit.mime.TypedOutput;
 /** A {@link Client} which uses an implementation of Apache's {@link HttpClient}. */
 public class ApacheClient implements Client {
   private final HttpClient client;
-  private final RedirectHandler redirectHandler;
+  private final ProxyRedirectHandler redirectHandler;
 
   /** Creates an instance backed by {@link DefaultHttpClient}. */
   public ApacheClient() {
-    DefaultHttpClient client = new DefaultHttpClient();
-    redirectHandler = new RedirectHandler();
-    client.setRedirectHandler(redirectHandler);
-    this.client = client;
+    this(new DefaultHttpClient());
   }
 
   public ApacheClient(HttpClient client) {
     this.client = client;
-    redirectHandler = null;
+    ProxyRedirectHandler proxyRedirectHandler = null;
+    // If the client isn't a DefaultHttpClient we won't be able to track redirect urls. We will
+    // fall back to Response.url = Request.url. That's probably ok since AndroidApacheClient
+    // doesn't follow redirects in the first place. This will also be the case if someone sets
+    // a RedirectHandler on client after they create an ApacheClient with it.
+    if (client instanceof DefaultHttpClient) {
+      DefaultHttpClient defaultHttpClient = (DefaultHttpClient) client;
+      proxyRedirectHandler = new ProxyRedirectHandler(defaultHttpClient.getRedirectHandler());
+      defaultHttpClient.setRedirectHandler(proxyRedirectHandler);
+    }
+    redirectHandler = proxyRedirectHandler;
   }
 
   @Override public Response execute(Request request) throws IOException {
@@ -162,13 +169,23 @@ public class ApacheClient implements Client {
     }
   }
 
-  static class RedirectHandler extends DefaultRedirectHandler {
+  static class ProxyRedirectHandler implements RedirectHandler {
+    private final RedirectHandler proxiedHandler;
     private URI finalUri;
+
+    public ProxyRedirectHandler(RedirectHandler redirectHandler) {
+      this.proxiedHandler = redirectHandler;
+    }
+
+    @Override
+    public boolean isRedirectRequested(HttpResponse httpResponse, HttpContext httpContext) {
+      return proxiedHandler.isRedirectRequested(httpResponse, httpContext);
+    }
 
     @Override
     public URI getLocationURI(HttpResponse response, HttpContext context)
         throws ProtocolException {
-      finalUri = super.getLocationURI(response, context);
+      finalUri = proxiedHandler.getLocationURI(response, context);
       return finalUri;
     }
   }
