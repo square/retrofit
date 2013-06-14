@@ -21,10 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Executor;
 import retrofit.client.Response;
+import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 
-final class Utils {
+public final class Utils {
   private static final int BUFFER_SIZE = 0x1000;
 
   /**
@@ -70,6 +71,32 @@ final class Utils {
     @Override public void execute(Runnable runnable) {
       runnable.run();
     }
+  }
+
+  /**
+   * Turn a {@link Response}'s body into a {@link String}.
+   * This removes the need to repeatedly get, cast, and convert its {@link byte[]} to
+   * a {@link String}.
+   * <p>
+   * Similar to {@link RestAdapter}'s logAndReplaceRequest, but without body size information.
+   */
+  public static String getBodyString(Response response) throws IOException {
+      TypedInput body = response.getBody();
+      if (body != null) {
+
+        if (!(body instanceof TypedByteArray)) {
+          // Read the entire response body to we can log it and replace the original response
+          response = Utils.readBodyToBytesIfNecessary(response);
+          body = response.getBody();
+        }
+
+        byte[] bodyBytes = ((TypedByteArray) body).getBytes();
+        String bodyMime = body.mimeType();
+        String bodyCharset = MimeUtil.parseCharset(bodyMime);
+        return new String(bodyBytes, bodyCharset);
+      }
+
+      return null;
   }
 
   private Utils() {
