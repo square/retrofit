@@ -28,6 +28,11 @@
       <artifactId>okhttp</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.simpleframework</groupId>
+      <artifactId>simple-xml</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
