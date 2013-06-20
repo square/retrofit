@@ -1,12 +1,15 @@
 Change Log
 ==========
 
-Version 1.1.0 *(In Development)*
---------------------------------
+Version 1.1.0 *(2013-06-20)*
+----------------------------
 
  * Introduce `RequestInterceptor` to replace `RequestHeaders`. An interceptor provided to the
    `RestAdapter.Builder` will be called for every request and allow setting both headers and
    additional path parameter replacements.
+ * Add `ErrorHandler` for customizing the exceptions which are thrown when synchronous methods
+   return non-200 error codes.
+ * Properly parse responses which erroneously omit the "Content-Type" header.
 
 
 Version 1.0.2 *(2013-05-23)*
