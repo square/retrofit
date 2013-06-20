@@ -21,7 +21,13 @@ import retrofit.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
-import static retrofit.RestMethodInfo.NO_BODY;
+import static retrofit.RestMethodInfo.ParamUsage;
+import static retrofit.RestMethodInfo.ParamUsage.BODY;
+import static retrofit.RestMethodInfo.ParamUsage.FIELD;
+import static retrofit.RestMethodInfo.ParamUsage.HEADER;
+import static retrofit.RestMethodInfo.ParamUsage.PART;
+import static retrofit.RestMethodInfo.ParamUsage.PATH;
+import static retrofit.RestMethodInfo.ParamUsage.QUERY;
 import static retrofit.RestMethodInfo.RequestType;
 
 public class RequestBuilderTest {
@@ -60,7 +66,7 @@ public class RequestBuilderTest {
           .build();
       fail("Null path parameters not allowed.");
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Path parameters must not be null: ping.");
+      assertThat(e.getMessage()).isEqualTo("Path parameter \"ping\" value must not be null.");
     }
   }
 
@@ -78,12 +84,12 @@ public class RequestBuilderTest {
   }
 
   @Test public void queryParamOptional() throws Exception {
-      Request request1 = new Helper() //
-          .setMethod("GET") //
-          .setUrl("http://example.com") //
-          .setPath("/foo/bar/") //
-          .addQueryParam("ping", null) //
-          .build();
+    Request request1 = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("ping", null) //
+        .build();
     assertThat(request1.getUrl()).isEqualTo("http://example.com/foo/bar/");
 
     Request request2 = new Helper() //
@@ -233,7 +239,7 @@ public class RequestBuilderTest {
           .build();
       fail("Null body not allowed.");
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Body must not be null.");
+      assertThat(e.getMessage()).isEqualTo("Body parameter value must not be null.");
     }
   }
 
@@ -292,7 +298,7 @@ public class RequestBuilderTest {
           .build();
       fail("Null multipart part is not allowed.");
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Multipart part must not be null: ping.");
+      assertThat(e.getMessage()).isEqualTo("Multipart part \"ping\" value must not be null.");
     }
   }
 
@@ -318,7 +324,7 @@ public class RequestBuilderTest {
         .setFormEncoded() //
         .addField("foo", "bar") //
         .addField("ping", null) //
-        .addField("kit", "kat")
+        .addField("kit", "kat") //
         .build();
     assertTypedBytes(request.getBody(), "foo=bar&kit=kat");
   }
@@ -390,17 +396,12 @@ public class RequestBuilderTest {
     private RequestType requestType = RequestType.SIMPLE;
     private String method;
     private boolean hasBody = false;
-    private boolean hasQueryParams = false;
     private String path;
     private String query;
-    private final List<String> pathParams = new ArrayList<String>();
-    private final List<String> queryParams = new ArrayList<String>();
-    private final List<String> fieldParams = new ArrayList<String>();
-    private final List<String> partParams = new ArrayList<String>();
-    private final List<String> headerParams = new ArrayList<String>();
+    private final List<String> paramNames = new ArrayList<String>();
+    private final List<ParamUsage> paramUsages = new ArrayList<ParamUsage>();
     private final List<Object> args = new ArrayList<Object>();
     private final List<Header> headers = new ArrayList<Header>();
-    private int bodyIndex = NO_BODY;
     private String url;
 
     Helper setMethod(String method) {
@@ -425,49 +426,48 @@ public class RequestBuilderTest {
 
     Helper setQuery(String query) {
       this.query = query;
-      hasQueryParams = true;
       return this;
     }
 
-    private void addParam(String path, String query, String field, String part, String header,
-        Object value) {
-      pathParams.add(path);
-      queryParams.add(query);
-      fieldParams.add(field);
-      partParams.add(part);
-      headerParams.add(header);
-      args.add(value);
-    }
-
     Helper addPathParam(String name, Object value) {
-      addParam(name, null, null, null, null, value);
+      paramNames.add(name);
+      paramUsages.add(PATH);
+      args.add(value);
       return this;
     }
 
     Helper addQueryParam(String name, String value) {
-      addParam(null, name, null, null, null, value);
-      hasQueryParams = true;
+      paramNames.add(name);
+      paramUsages.add(QUERY);
+      args.add(value);
       return this;
     }
 
     Helper addField(String name, String value) {
-      addParam(null, null, name, null, null, value);
+      paramNames.add(name);
+      paramUsages.add(FIELD);
+      args.add(value);
       return this;
     }
 
     Helper addPart(String name, Object value) {
-      addParam(null, null, null, name, null, value);
+      paramNames.add(name);
+      paramUsages.add(PART);
+      args.add(value);
       return this;
     }
 
     Helper setBody(Object value) {
-      addParam(null, null, null, null, null, value);
-      bodyIndex = args.size() - 1;
+      paramNames.add(null);
+      paramUsages.add(BODY);
+      args.add(value);
       return this;
     }
 
     Helper addHeaderParam(String name, Object value) {
-      addParam(null, null, null, null, name, value);
+      paramNames.add(name);
+      paramUsages.add(HEADER);
+      args.add(value);
       return this;
     }
 
@@ -503,21 +503,20 @@ public class RequestBuilderTest {
       methodInfo.requestUrl = path;
       methodInfo.requestUrlParamNames = RestMethodInfo.parsePathParameters(path);
       methodInfo.requestQuery = query;
-      methodInfo.hasQueryParams = hasQueryParams;
-      methodInfo.requestUrlParam = pathParams.toArray(new String[pathParams.size()]);
-      methodInfo.requestQueryName = queryParams.toArray(new String[queryParams.size()]);
-      methodInfo.requestFormFields = fieldParams.toArray(new String[fieldParams.size()]);
-      methodInfo.requestMultipartPart = partParams.toArray(new String[partParams.size()]);
-      methodInfo.requestParamHeader = headerParams.toArray(new String[headerParams.size()]);
-      methodInfo.bodyIndex = bodyIndex;
+      methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
+      methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
       methodInfo.loaded = true;
 
-      return new RequestBuilder(GSON) //
-          .apiUrl(url)
-          .headers(headers)
-          .args(args.toArray(new Object[args.size()]))
-          .methodInfo(methodInfo)
-          .build();
+      RequestBuilder requestBuilder = new RequestBuilder(GSON, methodInfo);
+
+      for (Header header : headers) {
+        requestBuilder.addHeader(header.getName(), header.getValue());
+      }
+
+      requestBuilder.setApiUrl(url);
+      requestBuilder.setArguments(args.toArray(new Object[args.size()]));
+
+      return requestBuilder.build();
     }
 
     @SuppressWarnings("UnusedDeclaration") // Accessed via reflection.

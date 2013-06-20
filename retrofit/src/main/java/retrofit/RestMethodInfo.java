@@ -39,12 +39,14 @@ import retrofit.http.RestMethod;
 
 /** Request metadata about a service interface declaration. */
 final class RestMethodInfo {
-  static final int NO_BODY = -1;
-
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
+
+  enum ParamUsage {
+    PATH, QUERY, FIELD, PART, BODY, HEADER
+  }
 
   enum RequestType {
     /** No content-specific logic required. */
@@ -71,13 +73,8 @@ final class RestMethodInfo {
   List<retrofit.client.Header> headers;
 
   // Parameter-level details
-  String[] requestUrlParam;
-  String[] requestQueryName;
-  boolean hasQueryParams = false;
-  String[] requestFormFields;
-  String[] requestMultipartPart;
-  String[] requestParamHeader;
-  int bodyIndex = NO_BODY;
+  String[] requestParamNames;
+  ParamUsage[] requestParamUsage;
 
   RestMethodInfo(Method method) {
     this.method = method;
@@ -189,7 +186,6 @@ final class RestMethodInfo {
     if (question != -1 && question < path.length() - 1) {
       url = path.substring(0, question);
       query = path.substring(question + 1);
-      hasQueryParams = true;
 
       // Ensure the query string does not have any named parameters.
       Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(query);
@@ -282,8 +278,7 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #requestUrlParam}, {@link #requestQueryName}, {@link #requestFormFields},
-   * {@link #requestMultipartPart}, and {@link #requestParamHeader}. Must be called after
+   * Loads {@link #requestParamNames} and {@link #requestParamUsage}. Must be called after
    * {@link #parseMethodAnnotations()}.
    */
   private void parseParameters() {
@@ -295,17 +290,16 @@ final class RestMethodInfo {
       count -= 1; // Callback is last argument when not a synchronous method.
     }
 
-    String[] urlParam = new String[count];
-    String[] queryName = new String[count];
-    String[] formValue = new String[count];
-    String[] multipartPart = new String[count];
-    String[] paramHeader = new String[count];
+    String[] paramNames = new String[count];
+    requestParamNames = paramNames;
+    ParamUsage[] paramUsage = new ParamUsage[count];
+    requestParamUsage = paramUsage;
+
     boolean gotField = false;
     boolean gotPart = false;
+    boolean gotBody = false;
 
     for (int i = 0; i < count; i++) {
-      boolean hasRetrofitAnnotation = false;
-
       Class<?> parameterType = parameterTypes[i];
       Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
       if (parameterAnnotations != null) {
@@ -313,7 +307,6 @@ final class RestMethodInfo {
           Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
 
           if (annotationType == Path.class) {
-            hasRetrofitAnnotation = true;
             String name = ((Path) parameterAnnotation).value();
 
             if (!PARAM_NAME_REGEX.matcher(name).matches()) {
@@ -328,21 +321,21 @@ final class RestMethodInfo {
                   "Method URL \"" + requestUrl + "\" does not contain {" + name + "}.");
             }
 
-            urlParam[i] = name;
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.PATH;
           } else if (annotationType == Query.class) {
-            hasRetrofitAnnotation = true;
-            hasQueryParams = true;
             String name = ((Query) parameterAnnotation).value();
 
-            queryName[i] = name;
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.QUERY;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
             if (parameterType != String.class) {
               throw new IllegalStateException("@Header parameter type must be String: " + name);
             }
 
-            hasRetrofitAnnotation = true;
-            paramHeader[i] = name;
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.HEADER;
           } else if (annotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw new IllegalStateException(
@@ -352,8 +345,8 @@ final class RestMethodInfo {
             String name = ((Field) parameterAnnotation).value();
 
             gotField = true;
-            hasRetrofitAnnotation = true;
-            formValue[i] = name;
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.FIELD;
           } else if (annotationType == Part.class) {
             if (requestType != RequestType.MULTIPART) {
               throw new IllegalStateException(
@@ -363,31 +356,31 @@ final class RestMethodInfo {
             String name = ((Part) parameterAnnotation).value();
 
             gotPart = true;
-            hasRetrofitAnnotation = true;
-            multipartPart[i] = name;
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.PART;
           } else if (annotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
               throw new IllegalStateException(
                   "@Body parameters cannot be used with form or multi-part encoding.");
             }
-            if (bodyIndex != NO_BODY) {
+            if (gotBody) {
               throw new IllegalStateException(
                   "Method annotated with multiple Body method annotations: " + method);
             }
 
-            hasRetrofitAnnotation = true;
-            bodyIndex = i;
+            gotBody = true;
+            paramUsage[i] = ParamUsage.BODY;
           }
         }
       }
 
-      if (!hasRetrofitAnnotation) {
+      if (paramUsage[i] == null) {
         throw new IllegalStateException(
-            "No annotations found on parameter " + (i + 1) + " of " + method.getName());
+            "No Retrofit annotation found on parameter " + (i + 1) + " of " + method.getName());
       }
     }
 
-    if (requestType == RequestType.SIMPLE && !requestHasBody && bodyIndex != NO_BODY) {
+    if (requestType == RequestType.SIMPLE && !requestHasBody && gotBody) {
       throw new IllegalStateException("Non-body HTTP method cannot contain @Body or @TypedOutput.");
     }
     if (requestType == RequestType.FORM_URL_ENCODED && !gotField) {
@@ -396,12 +389,6 @@ final class RestMethodInfo {
     if (requestType == RequestType.MULTIPART && !gotPart) {
       throw new IllegalStateException("Multipart method must contain at least one @Part.");
     }
-
-    requestUrlParam = urlParam;
-    requestQueryName = queryName;
-    requestFormFields = formValue;
-    requestMultipartPart = multipartPart;
-    requestParamHeader = paramHeader;
   }
 
   /**
