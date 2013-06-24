@@ -32,17 +32,27 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedOutput;
 
 /** A {@link Client} which uses an implementation of Apache's {@link HttpClient}. */
 public class ApacheClient implements Client {
+  private static HttpClient createDefaultClient() {
+    HttpParams params = new BasicHttpParams();
+    HttpConnectionParams.setConnectionTimeout(params, Defaults.CONNECT_TIMEOUT);
+    HttpConnectionParams.setSoTimeout(params, Defaults.READ_TIMEOUT);
+    return new DefaultHttpClient(params);
+  }
+
   private final HttpClient client;
 
   /** Creates an instance backed by {@link DefaultHttpClient}. */
   public ApacheClient() {
-    this(new DefaultHttpClient());
+    this(createDefaultClient());
   }
 
   public ApacheClient(HttpClient client) {
