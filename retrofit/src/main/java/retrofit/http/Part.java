@@ -22,7 +22,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Denotes a single part of a mutli-part request.
+ * Denotes a single part of a multi-part request.
  * <p>
  * The parameter type on which this annotation exists will be processed in one of two ways:
  * <ul>
