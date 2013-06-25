@@ -315,6 +315,30 @@ public class RequestBuilderTest {
     assertThat(two).contains("kit").contains("kat");
   }
 
+  @Test public void multipartNullRemovesPart() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setMultipart() //
+        .addPart("ping", "pong") //
+        .addPart("fizz", null) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    List<byte[]> bodyParts = MimeHelper.getParts(body);
+    assertThat(bodyParts).hasSize(1);
+
+    Iterator<byte[]> iterator = bodyParts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("ping").contains("pong");
+  }
+
   @Test public void multipartPartOptional() throws Exception {
     try {
       new Helper() //
@@ -325,9 +349,9 @@ public class RequestBuilderTest {
           .setMultipart() //
           .addPart("ping", null) //
           .build();
-      fail("Null multipart part is not allowed.");
-    } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Multipart part \"ping\" value must not be null.");
+      fail("Empty multipart request is not allowed.");
+    } catch (IllegalStateException e) {
+      assertThat(e.getMessage()).isEqualTo("Multipart requests must contain at least one part.");
     }
   }
 
