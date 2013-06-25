@@ -309,10 +309,10 @@ public class RequestBuilderTest {
     Iterator<byte[]> iterator = bodyParts.iterator();
 
     String one = new String(iterator.next(), "UTF-8");
-    assertThat(one).contains("ping").contains("pong");
+    assertThat(one).contains("name=\"ping\"\r\n").endsWith("\r\npong");
 
     String two = new String(iterator.next(), "UTF-8");
-    assertThat(two).contains("kit").contains("kat");
+    assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
   }
 
   @Test public void multipartNullRemovesPart() throws Exception {
@@ -336,7 +336,7 @@ public class RequestBuilderTest {
     Iterator<byte[]> iterator = bodyParts.iterator();
 
     String one = new String(iterator.next(), "UTF-8");
-    assertThat(one).contains("ping").contains("pong");
+    assertThat(one).contains("name=\"ping\"").endsWith("\r\npong");
   }
 
   @Test public void multipartPartOptional() throws Exception {

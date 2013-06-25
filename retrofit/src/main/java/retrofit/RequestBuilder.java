@@ -25,6 +25,7 @@ import retrofit.converter.Converter;
 import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
+import retrofit.mime.TypedString;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
@@ -170,6 +171,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           if (value != null) { // Skip null values.
             if (value instanceof TypedOutput) {
               multipartBody.addPart(name, (TypedOutput) value);
+            } else if (value instanceof String) {
+              multipartBody.addPart(name, new TypedString((String) value));
             } else {
               multipartBody.addPart(name, converter.toBody(value));
             }
