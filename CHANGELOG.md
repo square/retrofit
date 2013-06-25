@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 1.1.1 *(2013-06-25)*
+----------------------------
+
+ * Fix: Ensure `@Headers`-defined headers are correctly added to requests.
+ * Fix: Supply reasonable connection and read timeouts for default clients.
+ * Fix: Allow passing `null` for a `@Part`-annotated argument to remove it from the multipart
+   request body.
+
+
 Version 1.1.0 *(2013-06-20)*
 ----------------------------
 
