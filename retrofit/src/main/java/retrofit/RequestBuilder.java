@@ -51,6 +51,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     isSynchronous = methodInfo.isSynchronous;
 
     headers = new ArrayList<Header>();
+    if (methodInfo.headers != null) {
+      headers.addAll(methodInfo.headers);
+    }
+
     queryParams = new StringBuilder();
 
     relativeUrl = methodInfo.requestUrl;

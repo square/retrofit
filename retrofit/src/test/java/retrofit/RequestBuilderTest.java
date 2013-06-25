@@ -8,12 +8,14 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
-import retrofit.converter.Converter;
-import retrofit.converter.GsonConverter;
 import retrofit.client.Header;
 import retrofit.client.Request;
+import retrofit.converter.Converter;
+import retrofit.converter.GsonConverter;
 import retrofit.mime.MimeHelper;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
@@ -53,6 +55,33 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithInterceptorPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addInterceptorPathParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithPathParamAndInterceptorPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/{kit}/") //
+        .addPathParam("ping", "pong") //
+        .addInterceptorPathParam("kit", "kat")
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertThat(request.getBody()).isNull();
   }
 
@@ -344,6 +373,52 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void simpleInterceptorHeaders() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addInterceptorHeader("ping", "pong") //
+        .addInterceptorHeader("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void headersAndInterceptorHeaders() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addInterceptorHeader("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void allThreeHeaderTypes() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addHeader("ping", "pong") //
+        .addInterceptorHeader("kit", "kat") //
+        .addHeaderParam("fizz", "buzz") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).containsExactly(new Header("ping", "pong"),
+        new Header("kit", "kat"), new Header("fizz", "buzz"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void methodHeader() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -402,6 +477,8 @@ public class RequestBuilderTest {
     private final List<ParamUsage> paramUsages = new ArrayList<ParamUsage>();
     private final List<Object> args = new ArrayList<Object>();
     private final List<Header> headers = new ArrayList<Header>();
+    private final List<Header> interceptorHeaders = new ArrayList<Header>();
+    private final Map<String, String> interceptorPathParams = new LinkedHashMap<String, String>();
     private String url;
 
     Helper setMethod(String method) {
@@ -476,6 +553,16 @@ public class RequestBuilderTest {
       return this;
     }
 
+    Helper addInterceptorHeader(String name, String value) {
+      interceptorHeaders.add(new Header(name, value));
+      return this;
+    }
+
+    Helper addInterceptorPathParam(String name, String value) {
+      interceptorPathParams.put(name, value);
+      return this;
+    }
+
     Helper setMultipart() {
       requestType = RequestType.MULTIPART;
       return this;
@@ -505,12 +592,17 @@ public class RequestBuilderTest {
       methodInfo.requestQuery = query;
       methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
       methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
+      methodInfo.headers = headers;
       methodInfo.loaded = true;
 
       RequestBuilder requestBuilder = new RequestBuilder(GSON, methodInfo);
 
-      for (Header header : headers) {
+      // Simulate request interceptor invocation.
+      for (Header header : interceptorHeaders) {
         requestBuilder.addHeader(header.getName(), header.getValue());
+      }
+      for (Map.Entry<String, String> entry : interceptorPathParams.entrySet()) {
+        requestBuilder.addPathParam(entry.getKey(), entry.getValue());
       }
 
       requestBuilder.setApiUrl(url);
