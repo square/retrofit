@@ -32,78 +32,72 @@ import retrofit.mime.TypedOutput;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
-	private final Gson gson;
-	private String encode;
+  private final Gson gson;
+  private String encode;
 
-	public GsonConverter(Gson gson) {
-		this(gson, "UTF-8");
-	}
+  public GsonConverter(Gson gson) {
+    this(gson, "UTF-8");
+  }
+  
+  public GsonConverter(Gson gson, String encode) {
+    this.gson = gson;
+    this.encode = encode;
+  }
 
-	public GsonConverter(Gson gson, String encode) {
-		this.gson = gson;
-		this.encode = encode;
-	}
+  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+    String charset = "UTF-8";
+    if (body.mimeType() != null) {
+      charset = MimeUtil.parseCharset(body.mimeType());
+    }
+    InputStreamReader isr = null;
+    try {
+      isr = new InputStreamReader(body.in(), charset);
+      return gson.fromJson(isr, type);
+    } catch (IOException e) {
+      throw new ConversionException(e);
+    } catch (JsonParseException e) {
+      throw new ConversionException(e);
+    } finally {
+      if (isr != null) {
+        try {
+          isr.close();
+        } catch (IOException ignored) {
+        }
+      }
+    }
+  }
 
-	@Override
-	public Object fromBody(TypedInput body, Type type) throws ConversionException {
-		String charset = "UTF-8";
-		if (body.mimeType() != null) {
-			charset = MimeUtil.parseCharset(body.mimeType());
-		}
-		InputStreamReader isr = null;
-		try {
-			isr = new InputStreamReader(body.in(), charset);
-			return gson.fromJson(isr, type);
-		} catch (IOException e) {
-			throw new ConversionException(e);
-		} catch (JsonParseException e) {
-			throw new ConversionException(e);
-		} finally {
-			if (isr != null) {
-				try {
-					isr.close();
-				} catch (IOException ignored) {
-				}
-			}
-		}
-	}
+  @Override public TypedOutput toBody(Object object) {
+    try {
+      return new JsonTypedOutput(gson.toJson(object).getBytes(encode), encode);
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError(e);
+    }
+  }
 
-	@Override
-	public TypedOutput toBody(Object object) {
-		try {
-			return new JsonTypedOutput(gson.toJson(object).getBytes(encode), encode);
-		} catch (UnsupportedEncodingException e) {
-			throw new AssertionError(e);
-		}
-	}
+  private static class JsonTypedOutput implements TypedOutput {
+    private final byte[] jsonBytes;
+    private final String encode;
 
-	private static class JsonTypedOutput implements TypedOutput {
-		private final byte[] jsonBytes;
-		private final String encode;
+    JsonTypedOutput(byte[] jsonBytes, String encode) {
+      this.jsonBytes = jsonBytes;
+      this.encode = encode;
+    }
 
-		JsonTypedOutput(byte[] jsonBytes, String encode) {
-			this.jsonBytes = jsonBytes;
-			this.encode = encode;
-		}
+    @Override public String fileName() {
+      return null;
+    }
 
-		@Override
-		public String fileName() {
-			return null;
-		}
+    @Override public String mimeType() {
+      return "application/json; charset=" + encode;
+    }
 
-		@Override
-		public String mimeType() {
-			return "application/json; charset=" + encode;
-		}
+    @Override public long length() {
+      return jsonBytes.length;
+    }
 
-		@Override
-		public long length() {
-			return jsonBytes.length;
-		}
-
-		@Override
-		public void writeTo(OutputStream out) throws IOException {
-			out.write(jsonBytes);
-		}
-	}
+    @Override public void writeTo(OutputStream out) throws IOException {
+      out.write(jsonBytes);
+    }
+  }
 }
