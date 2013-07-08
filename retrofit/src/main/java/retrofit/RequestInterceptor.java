@@ -10,8 +10,8 @@ public interface RequestInterceptor {
     void addHeader(String name, String value);
 
     /**
-     * Add a path parameter replacement. This works exactly like a {@link retrofit.http.Part
-     * &#64;Part}-annotated method argument.
+     * Add a path parameter replacement. This works exactly like a {@link retrofit.http.Path
+     * &#64;Path}-annotated method argument.
      */
     void addPathParam(String name, String value);
 
