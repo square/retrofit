@@ -14,6 +14,11 @@ public interface RequestInterceptor {
      * &#64;Part}-annotated method argument.
      */
     void addPathParam(String name, String value);
+
+    /**
+     * Add a query parameter replacement/addition.
+     */
+    void addQueryParam(String name, String value);
   }
 
   /** A {@link RequestInterceptor} which does no modification of requests. */

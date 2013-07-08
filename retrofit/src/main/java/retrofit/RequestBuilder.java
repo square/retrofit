@@ -114,7 +114,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  private void addQueryParam(String name, String value) {
+  @Override public void addQueryParam(String name, String value) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
