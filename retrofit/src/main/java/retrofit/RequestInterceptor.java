@@ -15,9 +15,7 @@ public interface RequestInterceptor {
      */
     void addPathParam(String name, String value);
 
-    /**
-     * Add a query parameter replacement/addition.
-     */
+    /** Add an additional query parameter. This will not replace any existing query parameters. */
     void addQueryParam(String name, String value);
   }
 
