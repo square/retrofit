@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 1.2.0 *(In Development)*
+--------------------------------
+
+ * Change `setDebug` to `setLogLevel` on `RestAdapter` and `RestAdapter.Builder` and provide
+   two levels of logging via `LogLevel`.
+ * Query parameters can now be added in a request interceptor.
+
+
 Version 1.1.1 *(2013-06-25)*
 ----------------------------
 
