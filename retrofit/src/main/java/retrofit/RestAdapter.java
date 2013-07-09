@@ -157,6 +157,11 @@ public class RestAdapter {
     this.logLevel = loglevel;
   }
 
+  /** The current logging level. */
+  public LogLevel getLogLevel() {
+    return logLevel;
+  }
+
   /** Create an implementation of the API defined by the specified {@code service} interface. */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> service) {
