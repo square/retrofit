@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.converter.ConversionException;
-import retrofit.http.GET;
 import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
+import retrofit.converter.ConversionException;
+import retrofit.http.GET;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedString;
 
@@ -32,10 +32,27 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static retrofit.Profiler.RequestInformation;
+import static retrofit.RestAdapter.LogLevel.BASIC;
+import static retrofit.RestAdapter.LogLevel.FULL;
 import static retrofit.Utils.SynchronousExecutor;
 
 public class RestAdapterTest {
-  private static List<Header> NO_HEADERS = Collections.emptyList();
+  private static final List<Header> NO_HEADERS = Collections.emptyList();
+
+  /** Not all servers play nice and add content-type headers to responses. */
+  private static final TypedInput NO_MIME_BODY = new TypedInput() {
+    @Override public String mimeType() {
+      return null;
+    }
+
+    @Override public long length() {
+      return 2;
+    }
+
+    @Override public InputStream in() throws IOException {
+      return new ByteArrayInputStream("{}".getBytes("UTF-8"));
+    }
+  };
 
   private interface Example {
     @GET("/") Object something();
@@ -85,7 +102,7 @@ public class RestAdapterTest {
     verify(mockProfiler).afterCall(any(RequestInformation.class), anyInt(), eq(200), same(data));
   }
 
-  @Test public void logSuccessfulRequestResponseOnDebugWhenResponseBodyPresent() throws Exception {
+  @Test public void logRequestResponseBasic() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
@@ -99,7 +116,34 @@ public class RestAdapterTest {
         .setServer("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
-        .setDebug(true)
+        .setLogLevel(BASIC)
+        .build()
+        .create(Example.class);
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("{}")));
+
+    example.something();
+    assertThat(logMessages).hasSize(2);
+    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+  }
+
+  @Test public void logSuccessfulRequestResponseFullWhenResponseBodyPresent() throws Exception {
+    final List<String> logMessages = new ArrayList<String>();
+    RestAdapter.Log log = new RestAdapter.Log() {
+      public void log(String message) {
+        logMessages.add(message);
+      }
+    };
+
+    Example example = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setServer("http://example.com")
+        .setProfiler(mockProfiler)
+        .setLog(log)
+        .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
@@ -115,7 +159,7 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
-  @Test public void logSuccessfulRequestResponseOnDebugWhenResponseBodyAbsent() throws Exception {
+  @Test public void logSuccessfulRequestResponseFullWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
@@ -129,7 +173,7 @@ public class RestAdapterTest {
         .setServer("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
-        .setDebug(true)
+        .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
@@ -144,30 +188,14 @@ public class RestAdapterTest {
     assertThat(logMessages.get(3)).isEqualTo("<--- END HTTP (0-byte body)");
   }
 
-  /** Not all servers play nice and add content-type headers to responses. */
-  TypedInput inputMissingMimeType = new TypedInput() {
-
-    @Override public String mimeType() {
-      return null;
-    }
-
-    @Override public long length() {
-      return 2;
-    }
-
-    @Override public InputStream in() throws IOException {
-      return new ByteArrayInputStream("{}".getBytes());
-    }
-  };
-
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, inputMissingMimeType));
+        .thenReturn(new Response(200, "OK", NO_HEADERS, NO_MIME_BODY));
 
     example.something();
   }
 
-  @Test public void logSuccessfulRequestResponseOnDebugWhenMimeTypeMissing() throws Exception {
+  @Test public void logSuccessfulRequestResponseFullWhenMimeTypeMissing() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
@@ -181,12 +209,12 @@ public class RestAdapterTest {
         .setServer("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
-        .setDebug(true)
+        .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, inputMissingMimeType));
+        .thenReturn(new Response(200, "OK", NO_HEADERS, NO_MIME_BODY));
 
     example.something();
     assertThat(logMessages).hasSize(5);
@@ -245,7 +273,7 @@ public class RestAdapterTest {
     }
   }
 
-  @Test public void logErrorRequestResponseOnDebugWhenMimeTypeMissing() throws Exception {
+  @Test public void logErrorRequestResponseFullWhenMimeTypeMissing() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
@@ -259,12 +287,12 @@ public class RestAdapterTest {
         .setServer("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
-        .setDebug(true)
+        .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
     Response responseMissingMimeType = //
-        new Response(403, "Forbidden", NO_HEADERS, inputMissingMimeType);
+        new Response(403, "Forbidden", NO_HEADERS, NO_MIME_BODY);
 
     when(mockClient.execute(any(Request.class))).thenReturn(responseMissingMimeType);
 
@@ -283,7 +311,7 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
-  @Test public void logErrorRequestResponseOnDebugWhenResponseBodyAbsent() throws Exception {
+  @Test public void logErrorRequestResponseFullWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
@@ -297,7 +325,7 @@ public class RestAdapterTest {
         .setServer("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
-        .setDebug(true)
+        .setLogLevel(FULL)
         .build()
         .create(Example.class);
 

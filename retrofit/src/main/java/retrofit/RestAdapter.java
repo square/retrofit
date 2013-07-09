@@ -113,6 +113,16 @@ public class RestAdapter {
     void log(String message);
   }
 
+  /** Controls the level of logging. */
+  public enum LogLevel {
+    /** No logging. */
+    NONE,
+    /** Log only the request method and URL and the response status code and execution time. */
+    BASIC,
+    /** Log the headers, body, and metadata for both requests and responses. */
+    FULL
+  }
+
   private final Server server;
   private final Client.Provider clientProvider;
   private final Executor httpExecutor;
@@ -122,11 +132,11 @@ public class RestAdapter {
   private final Profiler profiler;
   private final ErrorHandler errorHandler;
   private final Log log;
-  private volatile boolean debug;
+  private volatile LogLevel logLevel;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
-      Profiler profiler, ErrorHandler errorHandler, Log log, boolean debug) {
+      Profiler profiler, ErrorHandler errorHandler, Log log, LogLevel logLevel) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
@@ -136,12 +146,15 @@ public class RestAdapter {
     this.profiler = profiler;
     this.errorHandler = errorHandler;
     this.log = log;
-    this.debug = debug;
+    this.logLevel = logLevel;
   }
 
-  /** Toggle debug logging on or off. */
-  public void setDebug(boolean debug) {
-    this.debug = debug;
+  /** Change the level of logging. */
+  public void setLogLevel(LogLevel loglevel) {
+    if (logLevel == null) {
+      throw new NullPointerException("Log level may not be null.");
+    }
+    this.logLevel = loglevel;
   }
 
   /** Create an implementation of the API defined by the specified {@code service} interface. */
@@ -228,8 +241,10 @@ public class RestAdapter {
           Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
-        if (debug) {
+        if (logLevel == LogLevel.FULL) {
           request = logAndReplaceRequest(request);
+        } else if (logLevel == LogLevel.BASIC) {
+          logRequestLine(request);
         }
 
         Object profilerObject = null;
@@ -248,8 +263,10 @@ public class RestAdapter {
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        if (debug) {
+        if (logLevel == LogLevel.FULL) {
           response = logAndReplaceResponse(url, response, elapsedTime);
+        } else if (logLevel == LogLevel.BASIC) {
+          logResponseLine(url, response, elapsedTime);
         }
 
         Type type = methodDetails.responseObjectType;
@@ -300,9 +317,17 @@ public class RestAdapter {
     }
   }
 
+  private void logRequestLine(Request request) {
+    log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
+  }
+
+  private void logResponseLine(String url, Response response, long elapsedTime) {
+    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+  }
+
   /** Log request headers and body. Consumes request body and returns identical replacement. */
   private Request logAndReplaceRequest(Request request) throws IOException {
-    log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
+    logRequestLine(request);
 
     for (Header header : request.getHeaders()) {
       log.log(header.getName() + ": " + header.getValue());
@@ -338,7 +363,7 @@ public class RestAdapter {
   /** Log response headers and body. Consumes response body and returns identical replacement. */
   private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
       throws IOException {
-    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+    logResponseLine(url, response, elapsedTime);
 
     for (Header header : response.getHeaders()) {
       log.log(header.getName() + ": " + header.getValue());
@@ -414,7 +439,7 @@ public class RestAdapter {
     private Profiler profiler;
     private ErrorHandler errorHandler;
     private Log log;
-    private boolean debug;
+    private LogLevel logLevel = LogLevel.NONE;
 
     /** API server base URL. */
     public Builder setServer(String endpoint) {
@@ -522,9 +547,12 @@ public class RestAdapter {
       return this;
     }
 
-    /** Enable debug logging. */
-    public Builder setDebug(boolean debug) {
-      this.debug = debug;
+    /** Change the level of logging. */
+    public Builder setLogLevel(LogLevel logLevel) {
+      if (logLevel == null) {
+        throw new NullPointerException("Log level may not be null.");
+      }
+      this.logLevel = logLevel;
       return this;
     }
 
@@ -535,7 +563,7 @@ public class RestAdapter {
       }
       ensureSaneDefaults();
       return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor,
-          requestInterceptor, converter, profiler, errorHandler, log, debug);
+          requestInterceptor, converter, profiler, errorHandler, log, logLevel);
     }
 
     private void ensureSaneDefaults() {
