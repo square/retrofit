@@ -23,6 +23,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -36,6 +39,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
+
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedOutput;
 
@@ -91,9 +95,36 @@ public class ApacheClient implements Client {
     }
 
     TypedByteArray body = null;
-    HttpEntity entity = response.getEntity();
+    final HttpEntity entity = response.getEntity();
     if (entity != null) {
-      byte[] bytes = EntityUtils.toByteArray(entity);
+      boolean isGzipped = false;
+      if (entity.getContentEncoding() != null) {
+        HeaderElement[] codecs = entity.getContentEncoding().getElements();
+        for (HeaderElement codec : codecs) {
+          if ("gzip".equalsIgnoreCase(codec.getName())) {
+            isGzipped = true;
+            break;
+          }
+        }
+      }
+
+      byte[] bytes;
+      if (isGzipped) {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+          final GZIPInputStream gin = new GZIPInputStream(entity.getContent());
+          byte[] buffer = new byte[4096];
+          int bytesRead = 0;
+          while ((bytesRead = gin.read(buffer)) != -1) {
+            baos.write(buffer, 0, bytesRead);
+          }
+          bytes = baos.toByteArray();
+        } finally {
+          baos.close();
+        }
+      } else {
+        bytes = EntityUtils.toByteArray(entity);
+      }
       body = new TypedByteArray(contentType, bytes);
     }
 
