@@ -43,10 +43,12 @@ abstract class Platform {
   private static Platform findPlatform() {
     try {
       Class.forName("android.os.Build");
-      return new Android();
-    } catch (ClassNotFoundException e) {
-      return new Base();
+      if (Build.VERSION.SDK_INT != 0) {
+        return new Android();
+      }
+    } catch (ClassNotFoundException ignored) {
     }
+    return new Base();
   }
 
   abstract Converter defaultConverter();
