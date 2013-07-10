@@ -49,7 +49,11 @@
   List&lt;Repo> listRepos(@Path("user") String user);
 }</pre>
             <p>The <code>RestAdapter</code> class generates an implementation of the <code>GitHubService</code> interface.</p>
-            <pre class="prettyprint">GitHubService service = restAdapter.create(GitHubService.class);</pre>
+            <pre class="prettyprint">RestAdapter restAdapter = new RestAdapter.Builder()
+    .setServer("https://api.github.com")
+    .build();
+
+GitHubService service = restAdapter.create(GitHubService.class);</pre>
             <p>Each call on the generated <code>GitHubService</code> makes an HTTP request to the remote webserver.</p>
             <pre class="prettyprint">List&lt;Repo> repos = service.listRepos("octocat");</pre>
             <p>Use annotations to describe the HTTP request:</p>
