@@ -131,12 +131,14 @@ public class RestAdapter {
   private final Converter converter;
   private final Profiler profiler;
   private final ErrorHandler errorHandler;
+  private final Retryer.Factory retryerFactory;
   private final Log log;
   private volatile LogLevel logLevel;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
-      Profiler profiler, ErrorHandler errorHandler, Log log, LogLevel logLevel) {
+      Profiler profiler, ErrorHandler errorHandler, Retryer.Factory retryerFactory, Log log,
+      LogLevel logLevel) {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
@@ -145,6 +147,7 @@ public class RestAdapter {
     this.converter = converter;
     this.profiler = profiler;
     this.errorHandler = errorHandler;
+    this.retryerFactory = retryerFactory;
     this.log = log;
     this.logLevel = logLevel;
   }
@@ -194,17 +197,22 @@ public class RestAdapter {
         }
         methodDetails = tempMethodDetails;
       }
-
       if (methodDetails.isSynchronous) {
-        try {
-          return invokeRequest(methodDetails, args);
-        } catch (RetrofitError error) {
-          Throwable newError = errorHandler.handleError(error);
-          if (newError == null) {
-            throw new IllegalStateException("Error handler returned null for wrapped exception.",
-                error);
+        Retryer retryer = retryerFactory.create();
+        while (true) {
+          try {
+            return invokeRequest(methodDetails, args);
+          } catch (RetrofitError error) {
+            Throwable newError = errorHandler.handleError(error);
+            if (newError == null) {
+              throw new IllegalStateException("Error handler returned null for wrapped exception.",
+                  error);
+            } else if (newError instanceof RetryableError) {
+              retryer.continueOrPropagate(RetryableError.class.cast(newError));
+              continue;
+            }
+            throw newError;
           }
-          throw newError;
         }
       }
 
@@ -443,6 +451,7 @@ public class RestAdapter {
     private Converter converter;
     private Profiler profiler;
     private ErrorHandler errorHandler;
+    private Retryer.Factory retryerFactory;
     private Log log;
     private LogLevel logLevel = LogLevel.NONE;
 
@@ -543,6 +552,17 @@ public class RestAdapter {
       return this;
     }
 
+    /**
+     * This allows you to customize how to address retryable errors.
+     */
+    public Builder setRetryerFactory(Retryer.Factory retryerFactory) {
+      if (retryerFactory == null) {
+        throw new NullPointerException("Error handler may not be null.");
+      }
+      this.retryerFactory = retryerFactory;
+      return this;
+    }
+
     /** Configure debug logging mechanism. */
     public Builder setLog(Log log) {
       if (log == null) {
@@ -568,7 +588,7 @@ public class RestAdapter {
       }
       ensureSaneDefaults();
       return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor,
-          requestInterceptor, converter, profiler, errorHandler, log, logLevel);
+          requestInterceptor, converter, profiler, errorHandler, retryerFactory, log, logLevel);
     }
 
     private void ensureSaneDefaults() {
@@ -586,6 +606,9 @@ public class RestAdapter {
       }
       if (errorHandler == null) {
         errorHandler = ErrorHandler.DEFAULT;
+      }
+      if (retryerFactory == null) {
+        retryerFactory = Retryer.DEFAULT_FACTORY;
       }
       if (log == null) {
         log = Platform.get().defaultLog();
