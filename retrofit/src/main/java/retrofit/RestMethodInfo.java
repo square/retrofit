@@ -74,6 +74,7 @@ final class RestMethodInfo {
 
   // Parameter-level details
   String[] requestParamNames;
+  Boolean[] requestParamFlags;
   ParamUsage[] requestParamUsage;
 
   RestMethodInfo(Method method) {
@@ -292,6 +293,7 @@ final class RestMethodInfo {
 
     String[] paramNames = new String[count];
     requestParamNames = paramNames;
+    requestParamFlags = new Boolean[count];
     ParamUsage[] paramUsage = new ParamUsage[count];
     requestParamUsage = paramUsage;
 
@@ -308,6 +310,7 @@ final class RestMethodInfo {
 
           if (annotationType == Path.class) {
             String name = ((Path) parameterAnnotation).value();
+            Boolean disableUrlEncoding = ((Path) parameterAnnotation).disableUrlEncoding();
 
             if (!PARAM_NAME_REGEX.matcher(name).matches()) {
               throw new IllegalStateException("Path parameter name is not valid: "
@@ -322,11 +325,14 @@ final class RestMethodInfo {
             }
 
             paramNames[i] = name;
+            requestParamFlags[i] = disableUrlEncoding;
             paramUsage[i] = ParamUsage.PATH;
           } else if (annotationType == Query.class) {
             String name = ((Query) parameterAnnotation).value();
+            Boolean disableUrlEncoding = ((Query) parameterAnnotation).disableUrlEncoding();
 
             paramNames[i] = name;
+            requestParamFlags[i] = disableUrlEncoding;
             paramUsage[i] = ParamUsage.QUERY;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();

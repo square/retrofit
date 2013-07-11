@@ -28,6 +28,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * &#64;GET("/list")
  * void example(@Query("page") int page, ..);
+ * &#64;GET("/listAll")
+ * void example2(@Query(value = "specialParam", disableUrlEncoding = true) String alreadyEncoded);
  * </pre>
  * <p>
  * Query parameters may be {@code null} which will omit them from the URL.
@@ -35,4 +37,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER) @Retention(RUNTIME)
 public @interface Query {
   String value();
+  boolean disableUrlEncoding() default false;
 }

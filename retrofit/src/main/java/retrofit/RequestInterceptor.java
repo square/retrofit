@@ -13,10 +13,10 @@ public interface RequestInterceptor {
      * Add a path parameter replacement. This works exactly like a {@link retrofit.http.Path
      * &#64;Path}-annotated method argument.
      */
-    void addPathParam(String name, String value);
+    void addPathParam(String name, String value, Boolean disableUrlEncoding);
 
     /** Add an additional query parameter. This will not replace any existing query parameters. */
-    void addQueryParam(String name, String value);
+    void addQueryParam(String name, String value, Boolean disableUrlEncoding);
   }
 
   /** A {@link RequestInterceptor} which does no modification of requests. */

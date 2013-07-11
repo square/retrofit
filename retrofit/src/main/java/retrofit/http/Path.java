@@ -28,6 +28,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * &#64;GET("/image/{id}")
  * void example(@Path("id") int id, ..);
+ * &#64;GET("/{specialPath}")
+ * void example2(@Path(value = "specialPath", disableUrlEncoding = true) String alreadyEncoded);
  * </pre>
  * <p>
  * Path parameters may not be {@code null}.
@@ -35,4 +37,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME) @Target(PARAMETER)
 public @interface Path {
   String value();
+  boolean disableUrlEncoding() default false;
 }

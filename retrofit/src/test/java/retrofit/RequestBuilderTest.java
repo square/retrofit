@@ -554,6 +554,7 @@ public class RequestBuilderTest {
     private String path;
     private String query;
     private final List<String> paramNames = new ArrayList<String>();
+    private final List<Boolean> paramFlags = new ArrayList<Boolean>();
     private final List<ParamUsage> paramUsages = new ArrayList<ParamUsage>();
     private final List<Object> args = new ArrayList<Object>();
     private final List<Header> headers = new ArrayList<Header>();
@@ -589,6 +590,7 @@ public class RequestBuilderTest {
 
     Helper addPathParam(String name, Object value) {
       paramNames.add(name);
+      paramFlags.add(false);
       paramUsages.add(PATH);
       args.add(value);
       return this;
@@ -596,6 +598,7 @@ public class RequestBuilderTest {
 
     Helper addQueryParam(String name, String value) {
       paramNames.add(name);
+      paramFlags.add(false);
       paramUsages.add(QUERY);
       args.add(value);
       return this;
@@ -603,6 +606,7 @@ public class RequestBuilderTest {
 
     Helper addField(String name, String value) {
       paramNames.add(name);
+      paramFlags.add(false);
       paramUsages.add(FIELD);
       args.add(value);
       return this;
@@ -610,6 +614,7 @@ public class RequestBuilderTest {
 
     Helper addPart(String name, Object value) {
       paramNames.add(name);
+      paramFlags.add(false);
       paramUsages.add(PART);
       args.add(value);
       return this;
@@ -617,6 +622,7 @@ public class RequestBuilderTest {
 
     Helper setBody(Object value) {
       paramNames.add(null);
+      paramFlags.add(false);
       paramUsages.add(BODY);
       args.add(value);
       return this;
@@ -624,6 +630,7 @@ public class RequestBuilderTest {
 
     Helper addHeaderParam(String name, Object value) {
       paramNames.add(name);
+      paramFlags.add(false);
       paramUsages.add(HEADER);
       args.add(value);
       return this;
@@ -678,6 +685,7 @@ public class RequestBuilderTest {
       methodInfo.requestQuery = query;
       methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
       methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
+      methodInfo.requestParamFlags = paramFlags.toArray(new Boolean[paramFlags.size()]);
       methodInfo.headers = headers;
       methodInfo.loaded = true;
 
@@ -688,10 +696,12 @@ public class RequestBuilderTest {
         requestBuilder.addHeader(header.getName(), header.getValue());
       }
       for (Map.Entry<String, String> entry : interceptorPathParams.entrySet()) {
-        requestBuilder.addPathParam(entry.getKey(), entry.getValue());
+        boolean disableUrlEncoding = false;
+        requestBuilder.addPathParam(entry.getKey(), entry.getValue(), disableUrlEncoding);
       }
       for (Map.Entry<String, String> entry : interceptorQueryParams.entrySet()) {
-        requestBuilder.addQueryParam(entry.getKey(), entry.getValue());
+        boolean disableUrlEncoding = false;
+        requestBuilder.addQueryParam(entry.getKey(), entry.getValue(), disableUrlEncoding);
       }
 
       requestBuilder.setApiUrl(url);
