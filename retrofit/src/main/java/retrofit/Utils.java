@@ -20,9 +20,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Executor;
+import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
+import retrofit.mime.TypedOutput;
 
 final class Utils {
   private static final int BUFFER_SIZE = 0x1000;
@@ -43,6 +45,24 @@ final class Utils {
       }
     }
     return baos.toByteArray();
+  }
+
+  /**
+   * Conditionally replace a {@link Request} with an identical copy whose body is backed by a
+   * byte[] rather than an input stream.
+   */
+  static Request readBodyToBytesIfNecessary(Request request) throws IOException {
+    TypedOutput body = request.getBody();
+    if (body == null || body instanceof TypedByteArray) {
+      return request;
+    }
+
+    String bodyMime = body.mimeType();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    body.writeTo(baos);
+    body = new TypedByteArray(bodyMime, baos.toByteArray());
+
+    return new Request(request.getMethod(), request.getUrl(), request.getHeaders(), body);
   }
 
   /**
