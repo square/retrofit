@@ -32,7 +32,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final List<Header> headers;
   private final StringBuilder queryParams;
   private final String[] paramNames;
-  private final Boolean[] paramFlags;
   private final RestMethodInfo.ParamUsage[] paramUsages;
   private final String requestMethod;
   private final boolean isSynchronous;
@@ -48,7 +47,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     this.converter = converter;
 
     paramNames = methodInfo.requestParamNames;
-    paramFlags = methodInfo.requestParamFlags;
     paramUsages = methodInfo.requestParamUsage;
     requestMethod = methodInfo.requestMethod;
     isSynchronous = methodInfo.isSynchronous;
@@ -99,7 +97,17 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     headers.add(new Header(name, value));
   }
 
-  @Override public void addPathParam(String name, String value, Boolean disableUrlEncoding) {
+  @Override public void addPathParam(String name, String value) {
+    boolean disableUrlEncoding = false;
+    addPathParam(name, value, disableUrlEncoding);
+  }
+
+  @Override public void addEncodedPathParam(String name, String value) {
+    boolean disableUrlEncoding = true;
+    addPathParam(name, value, disableUrlEncoding);
+  }
+
+  void addPathParam(String name, String value, boolean disableUrlEncoding) {
     if (name == null) {
       throw new IllegalArgumentException("Path replacement name must not be null.");
     }
@@ -108,7 +116,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           "Path replacement \"" + name + "\" value must not be null.");
     }
     try {
-      if (disableUrlEncoding == null || !disableUrlEncoding) {
+      if (!disableUrlEncoding) {
         String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
         // URLEncoder encodes for use as a query parameter. Path encoding uses %20 to
         // encode spaces rather than +.  Query encoding difference specified in HTML spec.
@@ -124,7 +132,17 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  @Override public void addQueryParam(String name, String value, Boolean disableUrlEncoding) {
+  @Override public void addQueryParam(String name, String value) {
+    boolean disableUrlEncoding = false;
+    addQueryParam(name, value, disableUrlEncoding);
+  }
+
+  @Override public void addEncodedQueryParam(String name, String value) {
+    boolean disableUrlEncoding = true;
+    addQueryParam(name, value, disableUrlEncoding);
+  }
+
+  void addQueryParam(String name, String value, boolean disableUrlEncoding) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
@@ -132,7 +150,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
     }
     try {
-      if (disableUrlEncoding == null || !disableUrlEncoding) {
+      if (!disableUrlEncoding) {
         value = URLEncoder.encode(String.valueOf(value), "UTF-8");
       }
       StringBuilder queryParams = this.queryParams;
@@ -162,15 +180,23 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             throw new IllegalArgumentException(
                 "Path parameter \"" + name + "\" value must not be null.");
           }
-          {
-            Boolean disableUrlEncoding = paramFlags[i];
-            addPathParam(name, value.toString(), disableUrlEncoding);
+          addPathParam(name, value.toString());
+          break;
+        case ENCODED_PATH:
+          if (value == null) {
+            throw new IllegalArgumentException(
+                "Path parameter \"" + name + "\" value must not be null.");
           }
+          addEncodedPathParam(name, value.toString());
           break;
         case QUERY:
           if (value != null) { // Skip null values.
-            Boolean disableUrlEncoding = paramFlags[i];
-            addQueryParam(name, value.toString(), disableUrlEncoding);
+            addQueryParam(name, value.toString());
+          }
+          break;
+        case ENCODED_QUERY:
+          if (value != null) { // Skip null values.
+            addEncodedQueryParam(name, value.toString());
           }
           break;
         case HEADER:
