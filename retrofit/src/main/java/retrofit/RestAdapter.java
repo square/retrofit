@@ -15,7 +15,6 @@
  */
 package retrofit;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -119,6 +118,8 @@ public class RestAdapter {
     NONE,
     /** Log only the request method and URL and the response status code and execution time. */
     BASIC,
+    /** Log the basic information along with request and response headers. */
+    HEADERS,
     /** Log the headers, body, and metadata for both requests and responses. */
     FULL
   }
@@ -246,10 +247,9 @@ public class RestAdapter {
           Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
-        if (logLevel == LogLevel.FULL) {
+        if (logLevel.ordinal() > LogLevel.NONE.ordinal()) {
+          // Log the request data.
           request = logAndReplaceRequest(request);
-        } else if (logLevel == LogLevel.BASIC) {
-          logRequestLine(request);
         }
 
         Object profilerObject = null;
@@ -268,10 +268,9 @@ public class RestAdapter {
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        if (logLevel == LogLevel.FULL) {
+        if (logLevel.ordinal() > LogLevel.NONE.ordinal()) {
+          // Log the response data.
           response = logAndReplaceResponse(url, response, elapsedTime);
-        } else if (logLevel == LogLevel.BASIC) {
-          logResponseLine(url, response, elapsedTime);
         }
 
         Type type = methodDetails.responseObjectType;
@@ -322,83 +321,95 @@ public class RestAdapter {
     }
   }
 
-  private void logRequestLine(Request request) {
-    log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
-  }
-
-  private void logResponseLine(String url, Response response, long elapsedTime) {
-    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
-  }
-
   /** Log request headers and body. Consumes request body and returns identical replacement. */
   private Request logAndReplaceRequest(Request request) throws IOException {
-    logRequestLine(request);
+    log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
 
-    for (Header header : request.getHeaders()) {
-      log.log(header.getName() + ": " + header.getValue());
-    }
-
-    TypedOutput body = request.getBody();
-    int bodySize = 0;
-    if (body != null) {
-      if (!request.getHeaders().isEmpty()) {
-        log.log("");
+    if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
+      for (Header header : request.getHeaders()) {
+        log.log(header.getName() + ": " + header.getValue());
       }
 
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      body.writeTo(baos);
-      byte[] bodyBytes = baos.toByteArray();
-      bodySize = bodyBytes.length;
-      String bodyMime = body.mimeType();
-      String bodyString = new String(bodyBytes, MimeUtil.parseCharset(bodyMime));
-      for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
-        int end = Math.min(len, i + LOG_CHUNK_SIZE);
-        log.log(bodyString.substring(i, end));
+      long bodySize = 0;
+      TypedOutput body = request.getBody();
+      if (body != null) {
+        bodySize = body.length();
+        String bodyMime = body.mimeType();
+
+        if (bodyMime != null) {
+          log.log("Content-Type: " + bodyMime);
+        }
+        if (bodySize != -1) {
+          log.log("Content-Length: " + bodySize);
+        }
+
+        if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
+          if (!request.getHeaders().isEmpty()) {
+            log.log("");
+          }
+          if (!(body instanceof TypedByteArray)) {
+            // Read the entire response body to we can log it and replace the original response
+            request = Utils.readBodyToBytesIfNecessary(request);
+            body = request.getBody();
+          }
+
+          byte[] bodyBytes = ((TypedByteArray) body).getBytes();
+          bodySize = bodyBytes.length;
+          String bodyCharset = MimeUtil.parseCharset(bodyMime);
+          String bodyString = new String(bodyBytes, bodyCharset);
+          for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
+            int end = Math.min(len, i + LOG_CHUNK_SIZE);
+            log.log(bodyString.substring(i, end));
+          }
+        }
       }
 
-      body = new TypedByteArray(bodyMime, bodyBytes);
+      log.log(String.format("---> END HTTP (%s-byte body)", bodySize));
     }
 
-    log.log(String.format("---> END HTTP (%s-byte body)", bodySize));
-
-    // Since we consumed the original request, return a new, identical one from its bytes.
-    return new Request(request.getMethod(), request.getUrl(), request.getHeaders(), body);
+    return request;
   }
 
   /** Log response headers and body. Consumes response body and returns identical replacement. */
   private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
       throws IOException {
-    logResponseLine(url, response, elapsedTime);
+    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
 
-    for (Header header : response.getHeaders()) {
-      log.log(header.getName() + ": " + header.getValue());
+    if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
+      for (Header header : response.getHeaders()) {
+        log.log(header.getName() + ": " + header.getValue());
+      }
+
+      long bodySize = 0;
+      TypedInput body = response.getBody();
+      if (body != null) {
+        bodySize = body.length();
+
+        if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
+          if (!response.getHeaders().isEmpty()) {
+            log.log("");
+          }
+
+          if (!(body instanceof TypedByteArray)) {
+            // Read the entire response body to we can log it and replace the original response
+            response = Utils.readBodyToBytesIfNecessary(response);
+            body = response.getBody();
+          }
+
+          byte[] bodyBytes = ((TypedByteArray) body).getBytes();
+          bodySize = bodyBytes.length;
+          String bodyMime = body.mimeType();
+          String bodyCharset = MimeUtil.parseCharset(bodyMime);
+          String bodyString = new String(bodyBytes, bodyCharset);
+          for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
+            int end = Math.min(len, i + LOG_CHUNK_SIZE);
+            log.log(bodyString.substring(i, end));
+          }
+        }
+      }
+
+      log.log(String.format("<--- END HTTP (%s-byte body)", bodySize));
     }
-
-    TypedInput body = response.getBody();
-    int bodySize = 0;
-    if (body != null) {
-      if (!response.getHeaders().isEmpty()) {
-        log.log("");
-      }
-
-      if (!(body instanceof TypedByteArray)) {
-        // Read the entire response body to we can log it and replace the original response
-        response = Utils.readBodyToBytesIfNecessary(response);
-        body = response.getBody();
-      }
-
-      byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-      bodySize = bodyBytes.length;
-      String bodyMime = body.mimeType();
-      String bodyCharset = MimeUtil.parseCharset(bodyMime);
-      String bodyString = new String(bodyBytes, bodyCharset);
-      for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
-        int end = Math.min(len, i + LOG_CHUNK_SIZE);
-        log.log(bodyString.substring(i, end));
-      }
-    }
-
-    log.log(String.format("<--- END HTTP (%s-byte body)", bodySize));
 
     return response;
   }
