@@ -23,7 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter appended to the URL. Values are converted to strings using
- * {@link String#valueOf(Object)}.
+ * {@link String#valueOf(Object)}. Parameter Values are used literally without URL encoding. See
+ * {@link retrofit.http.Query @Query} for URL encoding equivalent.
  * <p>
  * <pre>
  * &#64;GET("/list")
