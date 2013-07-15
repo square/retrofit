@@ -187,7 +187,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case QUERY:
           if (value != null) { // Skip null values.
-            addQueryParam(name, value.toString());
+              // Each item should have its own key-value pair on URL
+              if (value instanceof Iterable) {
+                  Iterable<?> casted = (Iterable<?>) value;
+
+                  for (Object currObj : casted)
+                      if (currObj != null)
+                          addQueryParam(name, currObj.toString());
+              } else
+                  addQueryParam(name, value.toString());
           }
           break;
         case ENCODED_QUERY:
