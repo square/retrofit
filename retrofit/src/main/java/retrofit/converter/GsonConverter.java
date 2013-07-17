@@ -38,7 +38,7 @@ public class GsonConverter implements Converter {
   public GsonConverter(Gson gson) {
     this(gson, "UTF-8");
   }
-  
+
   public GsonConverter(Gson gson, String encode) {
     this.gson = gson;
     this.encode = encode;
@@ -77,11 +77,11 @@ public class GsonConverter implements Converter {
 
   private static class JsonTypedOutput implements TypedOutput {
     private final byte[] jsonBytes;
-    private final String encode;
+    private final String mimeType;
 
     JsonTypedOutput(byte[] jsonBytes, String encode) {
       this.jsonBytes = jsonBytes;
-      this.encode = encode;
+      this.mimeType = "application/json; charset=" + encode;
     }
 
     @Override public String fileName() {
@@ -89,7 +89,7 @@ public class GsonConverter implements Converter {
     }
 
     @Override public String mimeType() {
-      return "application/json; charset=" + encode;
+      return mimeType;
     }
 
     @Override public long length() {
