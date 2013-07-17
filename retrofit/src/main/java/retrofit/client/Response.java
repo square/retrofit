@@ -46,7 +46,7 @@ public final class Response {
     this.body = body;
   }
 
-  /** The url of the response, includes redirects when applicable/possible. */
+  /** The URL of the response, includes redirects when applicable/possible. */
   public String getUrl() {
     return url;
   }

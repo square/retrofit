@@ -32,6 +32,7 @@ import org.apache.http.client.RedirectHandler;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
@@ -44,7 +45,7 @@ public class ApacheClient implements Client {
   private final HttpClient client;
   private final ProxyRedirectHandler redirectHandler;
 
-  /** Creates an instance backed by {@link DefaultHttpClient}. */
+  /** Creates an instance backed by {@link AbstractHttpClient}. */
   public ApacheClient() {
     this(new DefaultHttpClient());
   }
@@ -52,12 +53,12 @@ public class ApacheClient implements Client {
   public ApacheClient(HttpClient client) {
     this.client = client;
     ProxyRedirectHandler proxyRedirectHandler = null;
-    // If the client isn't a DefaultHttpClient we won't be able to track redirect urls. We will
+    // If the client isn't a AbstractHttpClient we won't be able to track redirect URLs. We will
     // fall back to Response.url = Request.url. That's probably ok since AndroidApacheClient
     // doesn't follow redirects in the first place. This will also be the case if someone sets
     // a RedirectHandler on client after they create an ApacheClient with it.
-    if (client instanceof DefaultHttpClient) {
-      DefaultHttpClient defaultHttpClient = (DefaultHttpClient) client;
+    if (client instanceof AbstractHttpClient) {
+      AbstractHttpClient defaultHttpClient = (AbstractHttpClient) client;
       proxyRedirectHandler = new ProxyRedirectHandler(defaultHttpClient.getRedirectHandler());
       defaultHttpClient.setRedirectHandler(proxyRedirectHandler);
     }
@@ -70,7 +71,7 @@ public class ApacheClient implements Client {
 
     String url = request.getUrl();
     if (redirectHandler != null && redirectHandler.finalUri != null) {
-      // If we have a redirect handler, and it has been redirected, use it's url.
+      // If we have a redirect handler, and it has been redirected, use it's URL.
       url = redirectHandler.finalUri.toString();
     }
 
@@ -179,13 +180,15 @@ public class ApacheClient implements Client {
 
     @Override
     public boolean isRedirectRequested(HttpResponse httpResponse, HttpContext httpContext) {
-      return proxiedHandler.isRedirectRequested(httpResponse, httpContext);
+      return proxiedHandler != null
+          ? proxiedHandler.isRedirectRequested(httpResponse, httpContext) : false;
     }
 
     @Override
     public URI getLocationURI(HttpResponse response, HttpContext context)
         throws ProtocolException {
-      finalUri = proxiedHandler.getLocationURI(response, context);
+      finalUri = proxiedHandler != null
+          ? proxiedHandler.getLocationURI(response, context) : null;
       return finalUri;
     }
   }
