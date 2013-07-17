@@ -19,6 +19,10 @@
       <artifactId>gson</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android</artifactId>
       <optional>true</optional>
