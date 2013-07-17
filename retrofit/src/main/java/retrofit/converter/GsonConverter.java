@@ -19,7 +19,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import retrofit.mime.MimeUtil;
@@ -66,30 +65,6 @@ public class GsonConverter implements Converter {
       return new JsonTypedOutput(gson.toJson(object).getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
-    }
-  }
-
-  private static class JsonTypedOutput implements TypedOutput {
-    private final byte[] jsonBytes;
-
-    JsonTypedOutput(byte[] jsonBytes) {
-      this.jsonBytes = jsonBytes;
-    }
-
-    @Override public String fileName() {
-      return null;
-    }
-
-    @Override public String mimeType() {
-      return "application/json; charset=UTF-8";
-    }
-
-    @Override public long length() {
-      return jsonBytes.length;
-    }
-
-    @Override public void writeTo(OutputStream out) throws IOException {
-      out.write(jsonBytes);
     }
   }
 }
