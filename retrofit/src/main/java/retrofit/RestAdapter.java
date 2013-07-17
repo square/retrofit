@@ -16,6 +16,8 @@
 package retrofit;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -121,7 +123,11 @@ public class RestAdapter {
     /** Log the basic information along with request and response headers. */
     HEADERS,
     /** Log the headers, body, and metadata for both requests and responses. */
-    FULL
+    FULL;
+
+    public boolean log() {
+      return this != NONE;
+    }
   }
 
   private final Server server;
@@ -247,7 +253,7 @@ public class RestAdapter {
           Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
-        if (logLevel.ordinal() > LogLevel.NONE.ordinal()) {
+        if (logLevel.log()) {
           // Log the request data.
           request = logAndReplaceRequest(request);
         }
@@ -268,7 +274,7 @@ public class RestAdapter {
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        if (logLevel.ordinal() > LogLevel.NONE.ordinal()) {
+        if (logLevel.log()) {
           // Log the response data.
           response = logAndReplaceResponse(url, response, elapsedTime);
         }
@@ -310,8 +316,14 @@ public class RestAdapter {
       } catch (RetrofitError e) {
         throw e; // Pass through our own errors.
       } catch (IOException e) {
+        if (logLevel.log()) {
+          logException(e, url);
+        }
         throw RetrofitError.networkError(url, e);
       } catch (Throwable t) {
+        if (logLevel.log()) {
+          logException(t, url);
+        }
         throw RetrofitError.unexpectedError(url, t);
       } finally {
         if (!methodDetails.isSynchronous) {
@@ -412,6 +424,15 @@ public class RestAdapter {
     }
 
     return response;
+  }
+
+  /** Log an exception that occurred during the processing of a request or response. */
+  private void logException(Throwable t, String url) {
+    log.log(String.format("---- ERROR %s", url));
+    StringWriter sw = new StringWriter();
+    t.printStackTrace(new PrintWriter(sw));
+    log.log(sw.toString());
+    log.log("---- END ERROR");
   }
 
   private static Profiler.RequestInformation getRequestInfo(String serverUrl,
