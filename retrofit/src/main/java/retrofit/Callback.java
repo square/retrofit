@@ -20,6 +20,10 @@ import retrofit.client.Response;
 /**
  * Communicates responses to server or offline requests. Contains a callback method for each
  * possible outcome. One and only one method will be invoked in response to a given request.
+ * 
+ * Note: These methods are executed on the original thread instead of the one that performed
+ * the request. Execution of potentially slow code, should likely be performed in a separate 
+ * Thread.
  *
  * @param <T> expected response type
  * @author Bob Lee (bob@squareup.com)
