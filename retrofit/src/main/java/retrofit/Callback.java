@@ -21,12 +21,16 @@ import retrofit.client.Response;
  * Communicates responses to server or offline requests. Contains a callback method for each
  * possible outcome. One and only one method will be invoked in response to a given request.
  * 
- * Note: These methods are executed on the original thread instead of the one that performed
- * the request. Execution of potentially slow code, should likely be performed in a separate 
- * Thread.
+ * Note: On Android, these methods are executed through the callback executor, which performs
+ * callbacks on the main (UI) thread by default. This can be customized by 
+ * {@link retrofit.RestAdapter.Builder#setExecutors(java.util.concurrent.Executor,
+ * java.util.concurrent.Executor)}. Passing {@code null} for the second value will use a
+ * synchronous Executor to perform the callback on the same Threas as the HTTP request.
  *
  * @param <T> expected response type
  * @author Bob Lee (bob@squareup.com)
+ * @see retrofit.RestAdapter.Builder#setExecutors(java.util.concurrent.Executor,
+ * java.util.concurrent.Executor)
  */
 public interface Callback<T> {
 
