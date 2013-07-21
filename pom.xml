@@ -34,6 +34,7 @@
 
   <modules>
     <module>retrofit</module>
+    <module>retrofit-converters</module>
     <module>retrofit-samples</module>
   </modules>
 
@@ -48,8 +49,10 @@
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
     <gson.version>2.2.4</gson.version>
-    <javax.inject.version>1</javax.inject.version>
-    <okhttp.version>1.0.2</okhttp.version>
+    <okhttp.version>1.1.1</okhttp.version>
+
+    <!-- Converter Dependencies -->
+    <protobuf.version>2.5.0</protobuf.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
@@ -97,6 +100,12 @@
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
       </dependency>
 
       <dependency>
