@@ -53,6 +53,7 @@
 
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
+    <jackson.version>2.2.2</jackson.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
@@ -107,6 +108,12 @@
         <artifactId>protobuf-java</artifactId>
         <version>${protobuf.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+     </dependency>
+
 
       <dependency>
         <groupId>junit</groupId>

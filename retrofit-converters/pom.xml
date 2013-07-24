@@ -16,5 +16,6 @@
 
   <modules>
     <module>protobuf</module>
+    <module>jackson</module>
   </modules>
 </project>
