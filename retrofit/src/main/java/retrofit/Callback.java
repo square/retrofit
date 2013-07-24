@@ -18,11 +18,18 @@ package retrofit;
 import retrofit.client.Response;
 
 /**
- * Communicates responses to server or offline requests. Contains a callback method for each
- * possible outcome. One and only one method will be invoked in response to a given request.
+ * Communicates responses from a server or offline requests. One and only one method will be
+ * invoked in response to a given request.
+ * <p>
+ * Callback methods are executed using the {@link RestAdapter} callback executor. When none is
+ * specified, the following defaults are used:
+ * <ul>
+ * <li>Android: Callbacks are executed on the application's main (UI) thread.</li>
+ * <li>JVM: Callbacks are executed on the background thread which performed the request.</li>
+ * </ul>
  *
  * @param <T> expected response type
- * @author Bob Lee (bob@squareup.com)
+ * @see RestAdapter.Builder#setExecutors
  */
 public interface Callback<T> {
 
