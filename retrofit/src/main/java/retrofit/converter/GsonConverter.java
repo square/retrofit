@@ -33,9 +33,15 @@ import retrofit.mime.TypedOutput;
  */
 public class GsonConverter implements Converter {
   private final Gson gson;
+  private String encode;
 
   public GsonConverter(Gson gson) {
+    this(gson, "UTF-8");
+  }
+
+  public GsonConverter(Gson gson, String encode) {
     this.gson = gson;
+    this.encode = encode;
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
@@ -63,7 +69,7 @@ public class GsonConverter implements Converter {
 
   @Override public TypedOutput toBody(Object object) {
     try {
-      return new JsonTypedOutput(gson.toJson(object).getBytes("UTF-8"));
+      return new JsonTypedOutput(gson.toJson(object).getBytes(encode), encode);
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }
@@ -71,9 +77,11 @@ public class GsonConverter implements Converter {
 
   private static class JsonTypedOutput implements TypedOutput {
     private final byte[] jsonBytes;
+    private final String mimeType;
 
-    JsonTypedOutput(byte[] jsonBytes) {
+    JsonTypedOutput(byte[] jsonBytes, String encode) {
       this.jsonBytes = jsonBytes;
+      this.mimeType = "application/json; charset=" + encode;
     }
 
     @Override public String fileName() {
@@ -81,7 +89,7 @@ public class GsonConverter implements Converter {
     }
 
     @Override public String mimeType() {
-      return "application/json; charset=UTF-8";
+      return mimeType;
     }
 
     @Override public long length() {
