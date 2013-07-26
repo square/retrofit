@@ -282,6 +282,9 @@ public class RestAdapter {
         Type type = methodDetails.responseObjectType;
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          if (type.equals(Void.class)) {
+            return null;
+          }
           // Caller requested the raw Response object directly.
           if (type.equals(Response.class)) {
             // Read the entire stream and replace with one backed by a byte[]
