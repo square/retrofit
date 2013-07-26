@@ -17,6 +17,9 @@ public interface RequestInterceptor {
 
     /** Add an additional query parameter. This will not replace any existing query parameters. */
     void addQueryParam(String name, String value);
+
+    /** Add a multipart part */
+    void addMultipartParam(String name, Object value);
   }
 
   /** A {@link RequestInterceptor} which does no modification of requests. */
