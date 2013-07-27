@@ -451,10 +451,10 @@ public class RestAdapterTest {
       Response response = new Response(200, "OK", NO_HEADERS, mockInput);
       when(mockClient.execute(any(Request.class))) //
           .thenReturn(response);
-      
+
       // when
       example.directWithVoidResponse();
-      
+
       // then
       verify(mockInput, never()).in();
     }
