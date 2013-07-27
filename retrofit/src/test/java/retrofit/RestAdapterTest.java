@@ -444,7 +444,7 @@ public class RestAdapterTest {
         .thenReturn(response);
     assertThat(example.direct()).isSameAs(response);
   }
-  
+
   @Test public void getNoResponseShouldNotTouchResponse() throws Exception {
       // given
       TypedInput mockInput = mock(TypedInput.class);
