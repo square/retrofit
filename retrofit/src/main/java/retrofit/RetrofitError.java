@@ -15,107 +15,87 @@
  */
 package retrofit;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
-import retrofit.mime.TypedInput;
 
-public class RetrofitError extends RuntimeException {
-  public static RetrofitError networkError(String url, IOException exception) {
-    return new RetrofitError(url, null, null, null, true, exception);
+import java.io.IOException;
+import java.lang.reflect.Type;
+
+public abstract class RetrofitError extends RuntimeException {
+  public static RetrofitNetworkError networkError(String url, IOException exception) {
+    return new RetrofitNetworkError(url, exception);
   }
 
-  public static RetrofitError conversionError(String url, Response response, Converter converter,
-      Type successType, ConversionException exception) {
-    return new RetrofitError(url, response, converter, successType, false, exception);
+  public static RetrofitConversionError conversionError(String url, Response response,
+                                                        Converter converter, Type successType,
+                                                        ConversionException exception) {
+    return new RetrofitConversionError(url, response, converter, successType, exception);
   }
 
-  public static RetrofitError httpError(String url, Response response, Converter converter,
-      Type successType) {
-    return new RetrofitError(url, response, converter, successType, false, null);
+  public static RetrofitHttpError httpError(String url, Response response, Converter converter,
+                                            Type successType) {
+    return new RetrofitHttpError(url, response, converter, successType);
   }
 
-  public static RetrofitError unexpectedError(String url, Throwable exception) {
-    return new RetrofitError(url, null, null, null, false, exception);
+  public static UnexpectedRetrofitError unexpectedError(String url, Throwable exception) {
+    return new UnexpectedRetrofitError(url, exception);
   }
 
   private final String url;
-  private final Response response;
-  private final Converter converter;
-  private final Type successType;
-  private final boolean networkError;
 
-  private RetrofitError(String url, Response response, Converter converter, Type successType,
-      boolean networkError, Throwable exception) {
-    super(exception);
+  protected RetrofitError(String message, String url) {
+    super(message);
     this.url = url;
-    this.response = response;
-    this.converter = converter;
-    this.successType = successType;
-    this.networkError = networkError;
   }
 
-  /** The request URL which produced the error. */
+  protected RetrofitError(String url, Throwable exception) {
+    super(exception);
+    this.url = url;
+  }
+
+  protected RetrofitError(String message, String url, Throwable exception) {
+    super(message, exception);
+    this.url = url;
+  }
+
+  /**
+   * The request URL which produced the error.
+   */
   public String getUrl() {
     return url;
   }
 
-  /** Response object containing status code, headers, body, etc. */
-  public Response getResponse() {
-    return response;
-  }
+  /**
+   * Response object containing status code, headers, body, etc. if present, null otherwise.
+   *
+   * @deprecated Will be moved to {@link RetrofitResponseError}.
+   */
+  @Deprecated
+  public abstract Response getResponse();
 
-  /** Whether or not this error was the result of a network error. */
-  public boolean isNetworkError() {
-    return networkError;
-  }
+  /**
+   * Whether or not this error was the result of a network error.
+   *
+   * @deprecated Use the instanceof operator instead and test for a {@link RetrofitNetworkError}.
+   */
+  @Deprecated
+  public abstract boolean isNetworkError();
 
   /**
    * HTTP response body converted to the type declared by either the interface method return type or
-   * the generic type of the supplied {@link Callback} parameter.
+   * the generic type of the supplied {@link Callback} parameter. Null if no body is present.
+   *
+   * @deprecated Will be moved to {@link RetrofitResponseError}.
    */
-  public Object getBody() {
-    if (response == null) {
-      return null;
-    }
+  @Deprecated
+  public abstract Object getBody();
 
-    TypedInput body = response.getBody();
-    if (body == null) {
-      return null;
-    }
-
-    if (converter == null) {
-      throw new RuntimeException("Cannot convert body, supplied converter is null.");
-    }
-
-    try {
-      return converter.fromBody(body, successType);
-    } catch (ConversionException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /** HTTP response body converted to specified {@code type}. */
-  public Object getBodyAs(Type type) {
-    if (response == null) {
-      return null;
-    }
-
-    TypedInput body = response.getBody();
-    if (body == null) {
-      return null;
-    }
-
-    if (converter == null) {
-      throw new RuntimeException("Cannot convert body, supplied converter is null.");
-    }
-
-    try {
-      return converter.fromBody(body, type);
-    } catch (ConversionException e) {
-      throw new RuntimeException(e);
-    }
-  }
+  /**
+   * HTTP response body converted to specified {@code type}. Null if no body is present.
+   *
+   * @deprecated Will be moved to {@link RetrofitResponseError}.
+   */
+  @Deprecated
+  public abstract Object getBodyAs(Type type);
 }
