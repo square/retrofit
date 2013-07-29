@@ -55,6 +55,11 @@ public final class MultipartTypedOutput implements TypedOutput {
     return parts.size();
   }
 
+  public void resetParts() {
+      parts.clear();
+      length = 0;
+  }
+
   @Override public String fileName() {
     return null;
   }

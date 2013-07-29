@@ -20,6 +20,10 @@ public interface RequestInterceptor {
 
     /** Add a multipart part */
     void addMultipartParam(String name, Object value);
+
+    /** Clear out multipart params. Right now, it's a requirement to have at least one part param
+     * defined @ compile time. */
+    void clearMultipartParams();
   }
 
   /** A {@link RequestInterceptor} which does no modification of requests. */

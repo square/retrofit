@@ -148,6 +148,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
+  /** Clear out multipart params. Right now, it's a requirement to have at least one part param
+   * defined @ compile time. */
+  @Override public void clearMultipartParams() {
+    multipartBody.resetParts();
+  }
+
   void setArguments(Object[] args) {
     if (args == null) {
       return;
