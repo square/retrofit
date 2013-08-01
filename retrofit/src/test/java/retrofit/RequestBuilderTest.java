@@ -2,6 +2,9 @@
 package retrofit;
 
 import com.google.gson.Gson;
+
+import org.junit.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -11,7 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
+
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
@@ -371,6 +374,23 @@ public class RequestBuilderTest {
     assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
   }
 
+  @Test public void getWithInterceptorMultipartParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setMultipart() //
+        .addInterceptorMultipartParam("kung", "pow") //
+        .build();
+    List<byte[]> parts = MimeHelper.getParts(((MultipartTypedOutput)request.getBody()));
+    Iterator<byte[]> iterator = parts.iterator();
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(((MultipartTypedOutput)request.getBody()).getPartCount() == 1);
+    assertThat(one).contains("name=\"kung\"").endsWith("\r\npow");
+  }
+
   @Test public void multipartNullRemovesPart() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
@@ -560,6 +580,7 @@ public class RequestBuilderTest {
     private final List<Header> interceptorHeaders = new ArrayList<Header>();
     private final Map<String, String> interceptorPathParams = new LinkedHashMap<String, String>();
     private final Map<String, String> interceptorQueryParams = new LinkedHashMap<String, String>();
+    private final Map<String, Object> interceptorMultipartParams = new LinkedHashMap<String, Object>();
     private String url;
 
     Helper setMethod(String method) {
@@ -649,6 +670,11 @@ public class RequestBuilderTest {
       return this;
     }
 
+    Helper addInterceptorMultipartParam(String name, Object value) {
+      interceptorMultipartParams.put(name, value);
+      return this;
+    }
+
     Helper setMultipart() {
       requestType = RequestType.MULTIPART;
       return this;
@@ -692,6 +718,9 @@ public class RequestBuilderTest {
       }
       for (Map.Entry<String, String> entry : interceptorQueryParams.entrySet()) {
         requestBuilder.addQueryParam(entry.getKey(), entry.getValue());
+      }
+      for (Map.Entry<String, Object> entry : interceptorMultipartParams.entrySet()) {
+        requestBuilder.addMultipartParam(entry.getKey(), entry.getValue());
       }
 
       requestBuilder.setApiUrl(url);

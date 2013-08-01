@@ -132,6 +132,28 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
+  @Override public void addMultipartParam(String name, Object value) {
+    if (name == null) {
+      throw new IllegalArgumentException("Multipart param name must not be null.");
+    }
+    if (value == null) {
+      throw new IllegalArgumentException("Multipart param \"" + name + "\" value can't be null.");
+    }
+    if (value instanceof TypedOutput) {
+      multipartBody.addPart(name, (TypedOutput) value);
+    } else if (value instanceof String) {
+      multipartBody.addPart(name, new TypedString((String) value));
+    } else {
+      multipartBody.addPart(name, converter.toBody(value));
+    }
+  }
+
+  /** Clear out multipart params. Right now, it's a requirement to have at least one part param
+   * defined @ compile time. */
+  @Override public void clearMultipartParams() {
+    multipartBody.resetParts();
+  }
+
   void setArguments(Object[] args) {
     if (args == null) {
       return;
@@ -169,13 +191,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case PART:
           if (value != null) { // Skip null values.
-            if (value instanceof TypedOutput) {
-              multipartBody.addPart(name, (TypedOutput) value);
-            } else if (value instanceof String) {
-              multipartBody.addPart(name, new TypedString((String) value));
-            } else {
-              multipartBody.addPart(name, converter.toBody(value));
-            }
+            addMultipartParam(name, value);
           }
           break;
         case BODY:
