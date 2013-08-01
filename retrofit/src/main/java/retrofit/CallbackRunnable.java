@@ -33,7 +33,8 @@ abstract class CallbackRunnable<T> implements Runnable {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @SuppressWarnings("unchecked") @Override public final void run() {
+  @SuppressWarnings("unchecked")
+  @Override public final void run() {
     try {
       final ResponseWrapper wrapper = obtainResponse();
       callbackExecutor.execute(new Runnable() {
