@@ -10,7 +10,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>retrofit</artifactId>
+  <artifactId>retrofit-forked</artifactId>
   <name>Retrofit</name>
 
   <dependencies>
