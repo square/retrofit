@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package retrofit;
 
 import java.util.concurrent.Executor;
 
 /**
- * A {@link Runnable} executed on a background thread to invoke {@link #obtainResponse()} which
- * performs an HTTP request. The response of the request, whether it be an object or exception, is
- * then marshaled to the supplied {@link Executor} in the form of a method call on a
- * {@link Callback}.
+ * A {@link Runnable} executed on a background thread to invoke
+ * {@link #obtainResponse()} which performs an HTTP request. The response of the
+ * request, whether it be an object or exception, is then marshaled to the
+ * supplied {@link Executor} in the form of a method call on a {@link Callback}.
  */
 abstract class CallbackRunnable<T> implements Runnable {
   private final Callback<T> callback;
@@ -32,8 +33,7 @@ abstract class CallbackRunnable<T> implements Runnable {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @SuppressWarnings("unchecked")
-  @Override public final void run() {
+  @SuppressWarnings("unchecked") @Override public final void run() {
     try {
       final ResponseWrapper wrapper = obtainResponse();
       callbackExecutor.execute(new Runnable() {

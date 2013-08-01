@@ -68,6 +68,11 @@ import retrofit.mime.TypedOutput;
  * {@link retrofit.converter.Converter Converter}.
  * </ul>
  * <p>
+ * If your do not want the response to be converted you can use {@link VoidResponse} as a
+ * {@link Callback} type. Response body won't be copied from the {@link InputStream} and you
+ * will save the memory. You can use {@link VoidResponse}
+ * in both synchronous and asynchronous calls.
+ * <p>
  * The body of a request is denoted by the {@link retrofit.http.Body @Body} annotation. The object
  * will be converted to request representation by a call to
  * {@link retrofit.converter.Converter#toBody(Object) toBody} on the supplied
@@ -282,8 +287,12 @@ public class RestAdapter {
         Type type = methodDetails.responseObjectType;
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
-          if (type.equals(Void.class)) {
-            return null;
+          if (type.equals(VoidResponse.class)) {
+            if (methodDetails.isSynchronous) {
+              return null;
+            }
+
+            return new ResponseWrapper(response, null);
           }
           // Caller requested the raw Response object directly.
           if (type.equals(Response.class)) {

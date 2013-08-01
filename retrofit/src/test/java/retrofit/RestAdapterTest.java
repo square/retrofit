@@ -30,6 +30,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -72,7 +73,8 @@ public class RestAdapterTest {
     @GET("/") void something(Callback<Object> callback);
     @GET("/") Response direct();
     @GET("/") void direct(Callback<Response> callback);
-    @GET("/") Void directWithVoidResponse();
+    @GET("/") VoidResponse directWithVoidResponse();
+    @GET("/") void directWithVoidResponse(Callback<VoidResponse> callback);
   }
 
   private Client mockClient;
@@ -446,18 +448,36 @@ public class RestAdapterTest {
   }
 
   @Test public void getNoResponseShouldNotTouchResponse() throws Exception {
-      // given
-      TypedInput mockInput = mock(TypedInput.class);
-      Response response = new Response(200, "OK", NO_HEADERS, mockInput);
-      when(mockClient.execute(any(Request.class))) //
-          .thenReturn(response);
+    // given
+    TypedInput mockInput = mock(TypedInput.class);
+    Response response = new Response(200, "OK", NO_HEADERS, mockInput);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
 
-      // when
-      example.directWithVoidResponse();
+    // when
+    example.directWithVoidResponse();
 
-      // then
-      verify(mockInput, never()).in();
-    }
+    // then
+    verify(mockInput, never()).in();
+  }
+
+  @Test public void getNoResponseShouldNotTouchResponseAsync() throws Exception {
+    // given
+    Callback<VoidResponse> callback = mock(Callback.class);
+    TypedInput mockInput = mock(TypedInput.class);
+    Response response = new Response(200, "OK", NO_HEADERS, mockInput);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+
+    // when
+    example.directWithVoidResponse(callback);
+
+    // then
+    verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
+    verify(mockCallbackExecutor).execute(any(Runnable.class));
+    verify(callback).success(isNull(VoidResponse.class), same(response));
+    verify(mockInput, never()).in();
+  }
 
   @Test public void getResponseDirectlyAsync() throws Exception {
     Response response = new Response(200, "OK", NO_HEADERS, null);
