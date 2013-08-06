@@ -15,6 +15,7 @@
  */
 package retrofit.http;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -42,7 +43,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Adrian Cole (adrianc@netflix.com)
  */
-@Target(METHOD) @Retention(RUNTIME)
+@Documented
+@Target(METHOD)
+@Retention(RUNTIME)
 public @interface Headers {
   String[] value();
 }
