@@ -15,6 +15,7 @@
  */
 package retrofit.http;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -29,6 +30,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * type. Field names and values will be UTF-8 encoded before being URI-encoded in accordance to
  * <a href="http://tools.ietf.org/html/rfc3986">RFC-3986</a>.
  */
-@Target(METHOD) @Retention(RUNTIME)
+@Documented
+@Target(METHOD)
+@Retention(RUNTIME)
 public @interface FormUrlEncoded {
 }

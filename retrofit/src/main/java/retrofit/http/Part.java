@@ -15,6 +15,7 @@
  */
 package retrofit.http;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -45,7 +46,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Part parameters may not be {@code null}.
  */
-@Target(PARAMETER) @Retention(RUNTIME)
+@Documented
+@Target(PARAMETER)
+@Retention(RUNTIME)
 public @interface Part {
   String value();
 }
