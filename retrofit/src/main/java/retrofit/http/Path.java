@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Named replacement in the URL path. Values are converted to string using
- * {@link String#valueOf(Object)}.
+ * {@link String#valueOf(Object)}. Replaced values will be URL encoded.
  * <p>
  * <pre>
  * &#64;GET("/image/{id}")
