@@ -17,16 +17,31 @@ package retrofit.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import retrofit.RetrofitError;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
 /** Retrofit client that uses {@link HttpURLConnection} for communication. */
 public class UrlConnectionClient implements Client {
+  private final Field methodField;
+
+  public UrlConnectionClient() {
+    try {
+      this.methodField = HttpURLConnection.class.getDeclaredField("method");
+      this.methodField.setAccessible(true);
+    } catch (NoSuchFieldException e) {
+      throw RetrofitError.unexpectedError(null, e);
+    }
+  }
+
   @Override public Response execute(Request request) throws IOException {
     HttpURLConnection connection = openConnection(request);
     prepareRequest(connection, request);
@@ -42,7 +57,17 @@ public class UrlConnectionClient implements Client {
   }
 
   void prepareRequest(HttpURLConnection connection, Request request) throws IOException {
-    connection.setRequestMethod(request.getMethod());
+    // HttpURLConnection artificially restricts request method
+    try {
+      connection.setRequestMethod(request.getMethod());
+    } catch (ProtocolException e) {
+      try {
+        methodField.set(connection, request.getMethod());
+      } catch (IllegalAccessException e1) {
+        throw RetrofitError.unexpectedError(request.getUrl(), e1);
+      }
+    }
+
     connection.setDoInput(true);
 
     for (Header header : request.getHeaders()) {
