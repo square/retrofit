@@ -57,8 +57,6 @@ import retrofit.mime.TypedOutput;
  * {@link retrofit.http.Query @Query}. If the path or query element has already been URI encoded
  * use {@link retrofit.http.EncodedPath @EncodedPath} or {@link retrofit.http.EncodedQuery
  *
- * @author Bob Lee (bob@squareup.com)
- * @author Jake Wharton (jw@squareup.com)
  * @EncodedQuery} to prevent repeated encoding.
  * <p>
  * HTTP requests happen in one of two ways:
@@ -104,6 +102,9 @@ import retrofit.mime.TypedOutput;
  * <p>
  * Calling {@link #create(Class)} with {@code MyApi.class} will validate and create a new
  * implementation of the API.
+ *
+ * @author Bob Lee (bob@squareup.com)
+ * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
   private static final int LOG_CHUNK_SIZE = 4000;
