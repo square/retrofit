@@ -15,6 +15,7 @@
  */
 package retrofit.http;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -33,7 +34,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Field parameters may be {@code null} which will omit them from the request body.
  */
-@Target(PARAMETER) @Retention(RUNTIME)
+@Documented
+@Target(PARAMETER)
+@Retention(RUNTIME)
 public @interface Field {
   String value();
 }
