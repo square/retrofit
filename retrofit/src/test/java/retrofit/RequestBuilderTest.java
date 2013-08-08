@@ -25,6 +25,8 @@ import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
 import static retrofit.RestMethodInfo.ParamUsage;
 import static retrofit.RestMethodInfo.ParamUsage.BODY;
+import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
+import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
 import static retrofit.RestMethodInfo.ParamUsage.FIELD;
 import static retrofit.RestMethodInfo.ParamUsage.HEADER;
 import static retrofit.RestMethodInfo.ParamUsage.PART;
@@ -55,6 +57,19 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodedPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addEncodedPathParam("ping", "po%20ng") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
     assertThat(request.getBody()).isNull();
   }
 
@@ -165,6 +180,19 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodedQueryParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addEncodedQueryParam("ping", "p+o+n+g") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=p+o+n+g");
     assertThat(request.getBody()).isNull();
   }
 
@@ -594,9 +622,23 @@ public class RequestBuilderTest {
       return this;
     }
 
+    Helper addEncodedPathParam(String name, String value) {
+      paramNames.add(name);
+      paramUsages.add(ENCODED_PATH);
+      args.add(value);
+      return this;
+    }
+
     Helper addQueryParam(String name, String value) {
       paramNames.add(name);
       paramUsages.add(QUERY);
+      args.add(value);
+      return this;
+    }
+
+    Helper addEncodedQueryParam(String name, String value) {
+      paramNames.add(name);
+      paramUsages.add(ENCODED_QUERY);
       args.add(value);
       return this;
     }
