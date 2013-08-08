@@ -56,6 +56,9 @@ import retrofit.mime.TypedOutput;
  * by curly braces (e.g., "{foo}"). To add items to the query string of a URL use
  * {@link retrofit.http.Query @Query}. If the path or query element has already been URI encoded
  * use {@link retrofit.http.EncodedPath @EncodedPath} or {@link retrofit.http.EncodedQuery
+ *
+ * @author Bob Lee (bob@squareup.com)
+ * @author Jake Wharton (jw@squareup.com)
  * @EncodedQuery} to prevent repeated encoding.
  * <p>
  * HTTP requests happen in one of two ways:
@@ -101,9 +104,6 @@ import retrofit.mime.TypedOutput;
  * <p>
  * Calling {@link #create(Class)} with {@code MyApi.class} will validate and create a new
  * implementation of the API.
- *
- * @author Bob Lee (bob@squareup.com)
- * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
   private static final int LOG_CHUNK_SIZE = 4000;
@@ -176,6 +176,12 @@ public class RestAdapter {
   public <T> T create(Class<T> service) {
     if (!service.isInterface()) {
       throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
+    }
+    // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
+    // Android (http://b.android.com/58753) but it forces composition of API declarations which is
+    // the recommended pattern.
+    if (service.getSuperclass() != null) {
+      throw new IllegalArgumentException("Interface definitions must not extend other interfaces.");
     }
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new RestHandler());

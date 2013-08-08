@@ -72,6 +72,8 @@ public class RestAdapterTest {
     @GET("/") Response direct();
     @GET("/") void direct(Callback<Response> callback);
   }
+  private interface InvalidExample extends Example {
+  }
 
   private Client mockClient;
   private Executor mockRequestExecutor;
@@ -99,6 +101,14 @@ public class RestAdapterTest {
     assertThat(example.hashCode()).isNotZero();
     assertThat(example.equals(this)).isFalse();
     assertThat(example.toString()).isNotEmpty();
+  }
+
+  @Test public void interfaceWithExtendIsNotSupported() {
+    try {
+      new RestAdapter.Builder().setServer("http://foo/").build().create(InvalidExample.class);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Interface definitions must not extend other interfaces.");
+    }
   }
 
   @Test public void profilerObjectPassThrough() throws Exception {
