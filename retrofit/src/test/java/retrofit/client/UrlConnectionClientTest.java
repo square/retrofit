@@ -37,6 +37,22 @@ public class UrlConnectionClientTest {
     assertThat(connection.getHeaderFields()).isEmpty();
   }
 
+  @Test public void patch() throws Exception {
+    TypedString body = new TypedString("hi");
+    Request request = new Request("PATCH", HOST + "/foo/bar/", null, body);
+
+    DummyHttpUrlConnection connection = (DummyHttpUrlConnection) client.openConnection(request);
+    client.prepareRequest(connection, request);
+
+    assertThat(connection.getRequestMethod()).isEqualTo("PATCH");
+    assertThat(connection.getURL().toString()).isEqualTo(HOST + "/foo/bar/");
+    assertThat(connection.getRequestProperties()).hasSize(2);
+    assertThat(connection.getRequestProperty("Content-Type")) //
+        .isEqualTo("text/plain; charset=UTF-8");
+    assertThat(connection.getRequestProperty("Content-Length")).isEqualTo("2");
+    assertBytes(connection.getOutputStream().toByteArray(), "hi");
+  }
+
   @Test public void post() throws Exception {
     TypedString body = new TypedString("hi");
     Request request = new Request("POST", HOST + "/foo/bar/", null, body);

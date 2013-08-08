@@ -20,6 +20,7 @@ import retrofit.http.HEAD;
 import retrofit.http.Header;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
+import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Part;
@@ -311,6 +312,22 @@ public class RestMethodInfoTest {
     methodInfo.init();
 
     assertThat(methodInfo.requestMethod).isEqualTo("PUT");
+    assertThat(methodInfo.requestHasBody).isTrue();
+    assertThat(methodInfo.requestUrl).isEqualTo("/foo");
+  }
+
+  @Test public void patchMethod() {
+    class Example {
+      @PATCH("/foo") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.requestMethod).isEqualTo("PATCH");
     assertThat(methodInfo.requestHasBody).isTrue();
     assertThat(methodInfo.requestUrl).isEqualTo("/foo");
   }
