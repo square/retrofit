@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import retrofit.http.Body;
+import retrofit.http.EncodedPath;
+import retrofit.http.EncodedQuery;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.Header;
@@ -45,7 +47,7 @@ final class RestMethodInfo {
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
   enum ParamUsage {
-    PATH, QUERY, FIELD, PART, BODY, HEADER
+    PATH, ENCODED_PATH, QUERY, ENCODED_QUERY, FIELD, PART, BODY, HEADER
   }
 
   enum RequestType {
@@ -306,7 +308,7 @@ final class RestMethodInfo {
         for (Annotation parameterAnnotation : parameterAnnotations) {
           Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
 
-          if (annotationType == Path.class) {
+          if (annotationType == Path.class || annotationType == EncodedPath.class) {
             String name = ((Path) parameterAnnotation).value();
 
             if (!PARAM_NAME_REGEX.matcher(name).matches()) {
@@ -322,12 +324,21 @@ final class RestMethodInfo {
             }
 
             paramNames[i] = name;
-            paramUsage[i] = ParamUsage.PATH;
+            if (annotationType == EncodedPath.class) {
+              paramUsage[i] = ParamUsage.ENCODED_PATH;
+            } else {
+              paramUsage[i] = ParamUsage.PATH;
+            }
           } else if (annotationType == Query.class) {
             String name = ((Query) parameterAnnotation).value();
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.QUERY;
+          } else if (annotationType == EncodedQuery.class) {
+            String name = ((Query) parameterAnnotation).value();
+
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.ENCODED_QUERY;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
             if (parameterType != String.class) {

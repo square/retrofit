@@ -98,6 +98,14 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   @Override public void addPathParam(String name, String value) {
+    addPathParam(name, value, true);
+  }
+
+  @Override public void addEncodedPathParam(String name, String value) {
+    addPathParam(name, value, false);
+  }
+
+  void addPathParam(String name, String value, boolean urlEncodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Path replacement name must not be null.");
     }
@@ -106,8 +114,16 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           "Path replacement \"" + name + "\" value must not be null.");
     }
     try {
-      String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
-      relativeUrl = relativeUrl.replace("{" + name + "}", encodedValue);
+      if (urlEncodeValue) {
+        String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
+        // URLEncoder encodes for use as a query parameter. Path encoding uses %20 to
+        // encode spaces rather than +. Query encoding difference specified in HTML spec.
+        // Any remaining plus signs represent spaces as already URLEncoded.
+        encodedValue = encodedValue.replace("+", "%20");
+        relativeUrl = relativeUrl.replace("{" + name + "}", encodedValue);
+      } else {
+        relativeUrl = relativeUrl.replace("{" + name + "}", String.valueOf(value));
+      }
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(
           "Unable to convert path parameter \"" + name + "\" value to UTF-8:" + value, e);
@@ -115,6 +131,14 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   @Override public void addQueryParam(String name, String value) {
+    addQueryParam(name, value, true);
+  }
+
+  @Override public void addEncodedQueryParam(String name, String value) {
+    addQueryParam(name, value, false);
+  }
+
+  void addQueryParam(String name, String value, boolean urlEncodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
@@ -122,7 +146,9 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
     }
     try {
-      value = URLEncoder.encode(String.valueOf(value), "UTF-8");
+      if (urlEncodeValue) {
+        value = URLEncoder.encode(String.valueOf(value), "UTF-8");
+      }
       StringBuilder queryParams = this.queryParams;
       queryParams.append(queryParams.length() > 0 ? '&' : '?');
       queryParams.append(name).append('=').append(value);
@@ -152,9 +178,21 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           }
           addPathParam(name, value.toString());
           break;
+        case ENCODED_PATH:
+          if (value == null) {
+            throw new IllegalArgumentException(
+                "Path parameter \"" + name + "\" value must not be null.");
+          }
+          addEncodedPathParam(name, value.toString());
+          break;
         case QUERY:
           if (value != null) { // Skip null values.
             addQueryParam(name, value.toString());
+          }
+          break;
+        case ENCODED_QUERY:
+          if (value != null) { // Skip null values.
+            addEncodedQueryParam(name, value.toString());
           }
           break;
         case HEADER:

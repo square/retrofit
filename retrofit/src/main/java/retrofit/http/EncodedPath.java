@@ -22,17 +22,18 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Query parameter appended to the URL. Values are converted to strings using
- * {@link String#valueOf(Object)}. Parameter values will be URL encoded.
+ * Named replacement in the URL path. Values are converted to string using
+ * {@link String#valueOf(Object)}. Values are used literally without URL encoding. See
+ * {@link retrofit.http.Path @Path} for URL encoding equivalent.
  * <p>
  * <pre>
- * &#64;GET("/list")
- * void example(@Query("page") int page, ..);
+ * &#64;GET("/image/{id}")
+ * void example(@EncodedPath("id") int id, ..);
  * </pre>
  * <p>
- * Query parameters may be {@code null} which will omit them from the URL.
+ * Path parameters may not be {@code null}.
  */
-@Target(PARAMETER) @Retention(RUNTIME)
-public @interface Query {
+@Retention(RUNTIME) @Target(PARAMETER)
+public @interface EncodedPath {
   String value();
 }
