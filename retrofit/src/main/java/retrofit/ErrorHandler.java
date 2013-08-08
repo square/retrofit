@@ -34,6 +34,8 @@ public interface ErrorHandler {
    *     Response r = cause.getResponse();
    *     if (r != null && r.getStatus() == 401) {
    *       return new UnauthorizedException(cause);
+   *     } else if (r.getStatus() == 500) {
+   *       return new RetryableError(cause);
    *     }
    *     return cause;
    *   }
@@ -42,7 +44,8 @@ public interface ErrorHandler {
    *
    * @param cause the original {@link RetrofitError} exception
    * @return Throwable an exception which will be thrown from the client interface method. Must not
-   *         be {@code null}.
+   *         be {@code null}.  If the exception is retryable, throw an instance of
+   *         {@link RetryableError}.
    */
   Throwable handleError(RetrofitError cause);
 
