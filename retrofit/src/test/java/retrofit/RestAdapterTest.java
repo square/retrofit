@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
@@ -31,6 +33,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -422,8 +425,8 @@ public class RestAdapterTest {
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
   }
 
-  @Test public void clientExceptionThrowsNetworkError() throws Exception{
-    IOException exception = new IOException("I'm broken.");
+  @Test public void clientExceptionThrowsNetworkError() throws Exception {
+    IOException exception = new IOException("I'm broken!");
     when(mockClient.execute(any(Request.class))).thenThrow(exception);
 
     try {
@@ -431,6 +434,28 @@ public class RestAdapterTest {
       fail("RetrofitError expected when client throws exception.");
     } catch (RetrofitError e) {
       assertThat(e.getCause()).isSameAs(exception);
+    }
+  }
+
+  @Test public void bodyTypedInputExceptionThrowsNetworkError() throws Exception {
+    TypedInput body = spy(new TypedString("{}"));
+    InputStream bodyStream = mock(InputStream.class, new Answer() {
+      @Override public Object answer(InvocationOnMock invocation) throws Throwable {
+        throw new IOException("I'm broken!");
+      }
+    });
+    doReturn(bodyStream).when(body).in();
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response(200, "OK", NO_HEADERS, body));
+
+    try {
+      example.something();
+      fail("RetrofitError expected on malformed response body.");
+    } catch (RetrofitError e) {
+      assertThat(e.isNetworkError());
+      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e.getCause()).hasMessage("I'm broken!");
     }
   }
 
