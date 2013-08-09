@@ -306,13 +306,21 @@ public class RestAdapter {
           if (body == null) {
             return new ResponseWrapper(response, null);
           }
+
+          ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
           try {
-            Object convert = converter.fromBody(body, type);
+            Object convert = converter.fromBody(wrapped, type);
             if (methodDetails.isSynchronous) {
               return convert;
             }
             return new ResponseWrapper(response, convert);
           } catch (ConversionException e) {
+            // If the underlying input stream threw an exception, propagate that rather than
+            // indicating that it was a conversion exception.
+            if (wrapped.threwException()) {
+              throw wrapped.getThrownException();
+            }
+
             // The response body was partially read by the converter. Replace it with null.
             response = Utils.replaceResponseBody(response, null);
 
