@@ -80,7 +80,14 @@ public class UrlConnectionClient implements Client {
       connection.addRequestProperty("Content-Type", body.mimeType());
       long length = body.length();
       if (length != -1) {
+        if (length > Integer.MAX_VALUE) {
+          connection.setChunkedStreamingMode(0);
+        } else {
+          connection.setFixedLengthStreamingMode((int) length);
+        }
         connection.addRequestProperty("Content-Length", String.valueOf(length));
+      } else {
+        connection.setChunkedStreamingMode(0);
       }
       body.writeTo(connection.getOutputStream());
     }
