@@ -26,7 +26,7 @@ public class Server {
   public static final String DEFAULT_NAME = "default";
 
   private final String apiUrl;
-  private final String type;
+  private final String name;
 
   /** Create a server with the provided URL and default name. */
   public Server(String apiUrl) {
@@ -34,9 +34,9 @@ public class Server {
   }
 
   /** Create a server with the provided URL and name. */
-  public Server(String apiUrl, String type) {
+  public Server(String apiUrl, String name) {
     this.apiUrl = apiUrl;
-    this.type = type;
+    this.name = name;
   }
 
   /** The base API URL. */
@@ -46,6 +46,6 @@ public class Server {
 
   /** A name for differentiating between multiple API URLs. */
   public String getName() {
-    return type;
+    return name;
   }
 }
