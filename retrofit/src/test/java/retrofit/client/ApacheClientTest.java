@@ -2,10 +2,15 @@
 package retrofit.client;
 
 import com.google.common.io.ByteStreams;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
@@ -16,13 +21,15 @@ import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
 import retrofit.TestingUtils;
+import retrofit.client.ApacheClient.TypedOutputEntity;
+import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
 import static retrofit.TestingUtils.assertBytes;
 import static retrofit.TestingUtils.assertMultipart;
-import static retrofit.client.ApacheClient.TypedOutputEntity;
 
 public class ApacheClientTest {
   private static final String HOST = "http://example.com";
@@ -122,5 +129,46 @@ public class ApacheClientTest {
     assertThat(response.getHeaders()).hasSize(2) //
         .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
     assertThat(response.getBody()).isNull();
+  }
+
+  @Test
+  public void gzipResponse() throws Exception {
+    String text = "hello";
+    ByteArrayOutputStream bodyBytes = new ByteArrayOutputStream();
+    OutputStreamWriter body = new OutputStreamWriter(new GZIPOutputStream(
+        bodyBytes), Charset.forName("UTF-8"));
+    body.write(text);
+    body.close();
+
+    StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK");
+    HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
+    TypedOutputEntity entity = new TypedOutputEntity(new TypedByteArray(
+        "text/plain", bodyBytes.toByteArray()));
+    entity.setContentEncoding("gzip");
+    apacheResponse.setEntity(entity);
+    apacheResponse.setHeader("Content-Type", "text/plain");
+    Response response = ApacheClient.parseResponse(apacheResponse);
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getReason()).isEqualTo("OK");
+    assertThat(response.getBody().mimeType()).isEqualTo("text/plain");
+    assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
+  }
+
+  @Test(expected=IOException.class)
+  public void gzipResponseThrowsException() throws Exception {
+    StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK");
+    HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
+    TypedOutputEntity entity = new TypedOutputEntity(new TypedByteArray(
+        "text/plain", new byte[1]));
+    entity.setContentEncoding("gzip");
+    apacheResponse.setEntity(entity);
+    apacheResponse.setHeader("Content-Type", "text/plain");
+    Response response = ApacheClient.parseResponse(apacheResponse);
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getReason()).isEqualTo("OK");
+    assertThat(response.getBody().mimeType()).isEqualTo("text/plain");
+    failBecauseExceptionWasNotThrown(IOException.class);
   }
 }
