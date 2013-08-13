@@ -213,7 +213,7 @@ public class RestAdapter {
 
       if (methodDetails.isSynchronous) {
         try {
-          return invokeRequest(methodDetails, args);
+          return invokeRequest(requestInterceptor, methodDetails, args);
         } catch (RetrofitError error) {
           Throwable newError = errorHandler.handleError(error);
           if (newError == null) {
@@ -227,10 +227,14 @@ public class RestAdapter {
       if (httpExecutor == null || callbackExecutor == null) {
         throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
       }
+      // Apply the interceptor synchronously, recording the interception so we can replay it later.
+      // This way we still defer argument serialization to the background thread.
+      final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
+      requestInterceptor.intercept(interceptorTape);
       Callback<?> callback = (Callback<?>) args[args.length - 1];
       httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor) {
         @Override public ResponseWrapper obtainResponse() {
-          return (ResponseWrapper) invokeRequest(methodDetails, args);
+          return (ResponseWrapper) invokeRequest(interceptorTape, methodDetails, args);
         }
       });
       return null; // Asynchronous methods should have return type of void.
@@ -242,7 +246,8 @@ public class RestAdapter {
      * @return HTTP response object of specified {@code type} or {@code null}.
      * @throws RetrofitError if any error occurs during the HTTP request.
      */
-    private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
+    private Object invokeRequest(RequestInterceptor requestInterceptor,
+        RestMethodInfo methodDetails, Object[] args) {
       methodDetails.init(); // Ensure all relevant method information has been loaded.
 
       String serverUrl = server.getUrl();
