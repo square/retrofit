@@ -192,7 +192,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
               Iterable<?> casted = (Iterable<?>) value;
 
               for (Object currObj : casted) {
-                if (currObj != null) {
+                if (currObj != null) { // Skip inner null values as well
                   addQueryParam(name, currObj.toString());
                 }
               }

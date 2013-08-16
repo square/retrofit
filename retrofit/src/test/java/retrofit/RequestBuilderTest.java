@@ -629,7 +629,7 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addQueryParam(String name, String value) {
+    Helper addQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(QUERY);
       args.add(value);
