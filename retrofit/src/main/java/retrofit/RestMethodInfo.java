@@ -308,34 +308,25 @@ final class RestMethodInfo {
         for (Annotation parameterAnnotation : parameterAnnotations) {
           Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
 
-          if (annotationType == Path.class || annotationType == EncodedPath.class) {
+          if (annotationType == Path.class) {
             String name = ((Path) parameterAnnotation).value();
-
-            if (!PARAM_NAME_REGEX.matcher(name).matches()) {
-              throw new IllegalStateException("Path parameter name is not valid: "
-                  + name
-                  + ". Must match "
-                  + PARAM_URL_REGEX.pattern());
-            }
-            // Verify URL replacement name is actually present in the URL path.
-            if (!requestUrlParamNames.contains(name)) {
-              throw new IllegalStateException(
-                  "Method URL \"" + requestUrl + "\" does not contain {" + name + "}.");
-            }
+            validatePathName(name);
 
             paramNames[i] = name;
-            if (annotationType == EncodedPath.class) {
-              paramUsage[i] = ParamUsage.ENCODED_PATH;
-            } else {
-              paramUsage[i] = ParamUsage.PATH;
-            }
+            paramUsage[i] = ParamUsage.PATH;
+          } else if (annotationType == EncodedPath.class) {
+            String name = ((EncodedPath) parameterAnnotation).value();
+            validatePathName(name);
+
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.ENCODED_PATH;
           } else if (annotationType == Query.class) {
             String name = ((Query) parameterAnnotation).value();
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.QUERY;
           } else if (annotationType == EncodedQuery.class) {
-            String name = ((Query) parameterAnnotation).value();
+            String name = ((EncodedQuery) parameterAnnotation).value();
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.ENCODED_QUERY;
@@ -399,6 +390,20 @@ final class RestMethodInfo {
     }
     if (requestType == RequestType.MULTIPART && !gotPart) {
       throw new IllegalStateException("Multipart method must contain at least one @Part.");
+    }
+  }
+
+  private void validatePathName(String name) {
+    if (!PARAM_NAME_REGEX.matcher(name).matches()) {
+      throw new IllegalStateException("Path parameter name is not valid: "
+          + name
+          + ". Must match "
+          + PARAM_URL_REGEX.pattern());
+    }
+    // Verify URL replacement name is actually present in the URL path.
+    if (!requestUrlParamNames.contains(name)) {
+      throw new IllegalStateException(
+          "Method URL \"" + requestUrl + "\" does not contain {" + name + "}.");
     }
   }
 
