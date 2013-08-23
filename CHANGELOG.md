@@ -1,9 +1,16 @@
 Change Log
 ==========
 
-Version 1.2.0 *(In Development)*
---------------------------------
+Version 1.2.0 *(2013-08-23)*
+----------------------------
 
+ * New: Additional first-party converters for Jackson and Protocol Buffers! These are provided
+   as separate modules that you can include and pass to `RestAdapter.Builder`'s `setConverter`.
+ * New: `@EncodedPath` and `@EncodedQuery` annotations allow provided path and query params that
+   are already URL-encoded.
+ * New: `@PATCH` HTTP method annotation.
+ * Fix: Properly support custom HTTP method annotations in `UrlConnectionClient`.
+ * Fix: Apply `RequestInterceptor` during method invocation rather than at request execution time.
  * Change `setDebug` to `setLogLevel` on `RestAdapter` and `RestAdapter.Builder` and provide
    two levels of logging via `LogLevel`.
  * Query parameters can now be added in a request interceptor.
