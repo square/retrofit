@@ -54,6 +54,7 @@
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.2.2</jackson.version>
+    <wire.version>1.0.0</wire.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
@@ -113,7 +114,11 @@
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
      </dependency>
-
+      <dependency>
+        <groupId>com.squareup.wire</groupId>
+        <artifactId>wire-runtime</artifactId>
+        <version>${wire.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>junit</groupId>
