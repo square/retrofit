@@ -17,5 +17,6 @@
   <modules>
     <module>protobuf</module>
     <module>jackson</module>
+    <module>wire</module>
   </modules>
 </project>
