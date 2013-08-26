@@ -18,14 +18,19 @@ package retrofit;
 import android.os.Build;
 import android.os.Process;
 import android.util.Log;
+
 import com.google.gson.Gson;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+
 import retrofit.android.AndroidApacheClient;
 import retrofit.android.MainThreadExecutor;
 import retrofit.client.Client;
 import retrofit.client.OkClient;
+import retrofit.client.Request;
+import retrofit.client.Response;
 import retrofit.client.UrlConnectionClient;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
@@ -99,6 +104,8 @@ abstract class Platform {
         @Override public void log(String message) {
           System.out.println(message);
         }
+        @Override public void log(Request request) { }
+        @Override public void log(String url, Response response, long elapsedTime) { }
       };
     }
   }
@@ -147,6 +154,8 @@ abstract class Platform {
         @Override public void log(String message) {
           Log.d("Retrofit", message);
         }
+        @Override public void log(Request request) { }
+        @Override public void log(String url, Response response, long elapsedTime) { }
       };
     }
   }
