@@ -18,6 +18,12 @@ public class WireConverter implements Converter {
 
   private final Wire wire;
 
+  /** Create a converter with a default {@link Wire} instance. */
+  public WireConverter() {
+    this(new Wire());
+  }
+
+  /** Create a converter using the supplied {@link Wire} instance. */
   public WireConverter(Wire wire) {
     this.wire = wire;
   }
