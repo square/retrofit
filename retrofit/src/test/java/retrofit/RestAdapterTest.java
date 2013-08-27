@@ -129,9 +129,17 @@ public class RestAdapterTest {
 
   @Test public void logRequestResponseBasic() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -152,13 +160,23 @@ public class RestAdapterTest {
     assertThat(logMessages).hasSize(2);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logRequests).hasSize(1);
+    assertThat(logResponses).hasSize(1);
   }
 
   @Test public void logRequestResponseHeaders() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -184,13 +202,23 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(logRequests).hasSize(1);
+    assertThat(logResponses).hasSize(1);
   }
 
   @Test public void logSuccessfulRequestResponseFullWhenResponseBodyPresent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -222,13 +250,23 @@ public class RestAdapterTest {
     assertThat(logMessages.get(10)).isEqualTo("");
     assertThat(logMessages.get(11)).isEqualTo("{}");
     assertThat(logMessages.get(12)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(logRequests).hasSize(1);
+    assertThat(logResponses).hasSize(1);
   }
 
   @Test public void logSuccessfulRequestResponseFullWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -265,9 +303,17 @@ public class RestAdapterTest {
 
   @Test public void logSuccessfulRequestResponseFullWhenMimeTypeMissing() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -295,6 +341,8 @@ public class RestAdapterTest {
     assertThat(logMessages.get(6)).isEqualTo("");
     assertThat(logMessages.get(7)).isEqualTo("{}");
     assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(logRequests).hasSize(1);
+    assertThat(logResponses).hasSize(1);
   }
 
   @Test public void synchronousDoesNotUseExecutors() throws Exception {
@@ -347,9 +395,17 @@ public class RestAdapterTest {
 
   @Test public void logErrorRequestResponseFullWhenMimeTypeMissing() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -385,13 +441,23 @@ public class RestAdapterTest {
     assertThat(logMessages.get(6)).isEqualTo("");
     assertThat(logMessages.get(7)).isEqualTo("{}");
     assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(logRequests).hasSize(1);
+    assertThat(logResponses).hasSize(1);
   }
 
   @Test public void logErrorRequestResponseFullWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
+    final List<Request> logRequests = new ArrayList<Request>();
+    final List<Response> logResponses = new ArrayList<Response>();
     RestAdapter.Log log = new RestAdapter.Log() {
       public void log(String message) {
         logMessages.add(message);
+      }
+      public void log(Request request) {
+        logRequests.add(request);
+      }
+      public void log(String url, Response response, long elapsedTime) {
+        logResponses.add(response);
       }
     };
 
@@ -423,6 +489,8 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
+    assertThat(logRequests).hasSize(1);
+    assertThat(logResponses).hasSize(1);
   }
 
   @Test public void clientExceptionThrowsNetworkError() throws Exception {
