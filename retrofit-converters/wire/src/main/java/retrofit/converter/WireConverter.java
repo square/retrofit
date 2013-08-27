@@ -4,6 +4,7 @@ package retrofit.converter;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
@@ -39,10 +40,19 @@ public class WireConverter implements Converter {
       throw new IllegalArgumentException("Expected a proto but was: " + body.mimeType());
     }
 
+    InputStream in = null;
     try {
-      return wire.parseFrom(body.in(), (Class<Message>) c);
+      in = body.in();
+      return wire.parseFrom(in, (Class<Message>) c);
     } catch (IOException e) {
       throw new ConversionException(e);
+    } finally {
+      if (in != null) {
+        try {
+          in.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 
