@@ -54,7 +54,7 @@
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.2.2</jackson.version>
-    <wire.version>1.0.0</wire.version>
+    <wire.version>1.0.1-SNAPSHOT</wire.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>

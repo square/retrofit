@@ -3,10 +3,7 @@ package retrofit.converter;
 
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Type;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
@@ -43,8 +40,7 @@ public class WireConverter implements Converter {
     }
 
     try {
-      byte[] data = consumeAsBytes(body.in());
-      return wire.parseFrom(data, (Class<Message>) c);
+      return wire.parseFrom(body.in(), (Class<Message>) c);
     } catch (IOException e) {
       throw new ConversionException(e);
     }
@@ -58,21 +54,5 @@ public class WireConverter implements Converter {
     }
     byte[] bytes = ((Message) object).toByteArray();
     return new TypedByteArray(MIME_TYPE, bytes);
-  }
-
-  /** Reads a stream into a {@code byte} array. */
-  private byte[] consumeAsBytes(InputStream in) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    pipe(in, out);
-    return out.toByteArray();
-  }
-
-  /** Reads content from the given input and pipes it to the given output. */
-  private void pipe(InputStream in, OutputStream out) throws IOException {
-    byte[] buffer = new byte[4096];
-    int count;
-    while ((count = in.read(buffer)) != -1) {
-      out.write(buffer, 0, count);
-    }
   }
 }
