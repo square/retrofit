@@ -123,6 +123,16 @@ Response userList();
 @GET("/users/list")
 void userList(Callback&lt;Response> cb);</pre>
 
+            <h4>Dynamic Headers</h4>
+            <p>HTTP Headers can be added dynamically to a Request by using the <code>@Header</code>.</p>
+            <pre class="prettyprint">@GET("/user")
+              void getUser(
+                  @Header("Authorization") String authorization,
+                  @Header("X-Api-Version") String version,
+                  Callback<User> callback
+              )
+            </pre>
+
             <!--<h3 id="restadapter-configuration">RestAdapter Configuration</h3>
             <p><code>RestAdapter</code> is the class through which your API interfaces are turned into callable objects. By default, Retrofit will give you sane defaults for your platform but it allows for customization.</p>
 
