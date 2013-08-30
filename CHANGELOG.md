@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.2.1 *(2013-08-30)*
+----------------------------
+
+ * New: Converter for [Wire protocol buffers](http://github.com/square/wire)!
+
+
 Version 1.2.0 *(2013-08-23)*
 ----------------------------
 
