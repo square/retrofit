@@ -43,8 +43,8 @@ import retrofit.mime.TypedOutput;
 public class ApacheClient implements Client {
   private static HttpClient createDefaultClient() {
     HttpParams params = new BasicHttpParams();
-    HttpConnectionParams.setConnectionTimeout(params, Defaults.CONNECT_TIMEOUT);
-    HttpConnectionParams.setSoTimeout(params, Defaults.READ_TIMEOUT);
+    HttpConnectionParams.setConnectionTimeout(params, Defaults.CONNECT_TIMEOUT_MILLIS);
+    HttpConnectionParams.setSoTimeout(params, Defaults.READ_TIMEOUT_MILLIS);
     return new DefaultHttpClient(params);
   }
 

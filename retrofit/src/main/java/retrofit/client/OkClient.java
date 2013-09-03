@@ -19,13 +19,14 @@ import com.squareup.okhttp.OkHttpClient;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 /** Retrofit client that uses OkHttp for communication. */
 public class OkClient extends UrlConnectionClient {
   private final OkHttpClient client;
 
   public OkClient() {
-    this(new OkHttpClient());
+    this(generateDefaultOkHttp());
   }
 
   public OkClient(OkHttpClient client) {
@@ -33,9 +34,13 @@ public class OkClient extends UrlConnectionClient {
   }
 
   @Override protected HttpURLConnection openConnection(Request request) throws IOException {
-    HttpURLConnection connection = client.open(new URL(request.getUrl()));
-    connection.setConnectTimeout(Defaults.CONNECT_TIMEOUT);
-    connection.setReadTimeout(Defaults.READ_TIMEOUT);
-    return connection;
+    return client.open(new URL(request.getUrl()));
+  }
+
+  private static OkHttpClient generateDefaultOkHttp() {
+    OkHttpClient okHttp = new OkHttpClient();
+    okHttp.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    okHttp.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    return okHttp;
   }
 }
