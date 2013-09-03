@@ -51,8 +51,8 @@ public class UrlConnectionClient implements Client {
   protected HttpURLConnection openConnection(Request request) throws IOException {
     HttpURLConnection connection =
         (HttpURLConnection) new URL(request.getUrl()).openConnection();
-    connection.setConnectTimeout(Defaults.CONNECT_TIMEOUT);
-    connection.setReadTimeout(Defaults.READ_TIMEOUT);
+    connection.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS);
+    connection.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS);
     return connection;
   }
 
