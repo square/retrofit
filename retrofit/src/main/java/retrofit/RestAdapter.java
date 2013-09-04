@@ -115,6 +115,12 @@ public class RestAdapter {
   public interface Log {
     /** Log a debug message to the appropriate console. */
     void log(String message);
+
+    /** Log request. */
+    void log(Request request);
+
+    /** Log response. */
+    void log(String url, Response response, long elapsedTime);
   }
 
   /** Controls the level of logging. */
@@ -358,6 +364,7 @@ public class RestAdapter {
   /** Log request headers and body. Consumes request body and returns identical replacement. */
   private Request logAndReplaceRequest(Request request) throws IOException {
     log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
+    log.log(request);
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
       for (Header header : request.getHeaders()) {
@@ -408,6 +415,7 @@ public class RestAdapter {
   private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
       throws IOException {
     log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+    log.log(url, response, elapsedTime);
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
       for (Header header : response.getHeaders()) {
