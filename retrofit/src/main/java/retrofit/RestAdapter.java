@@ -425,7 +425,7 @@ public class RestAdapter {
           }
 
           if (!(body instanceof TypedByteArray)) {
-            // Read the entire response body to we can log it and replace the original response
+            // Read the entire response body so we can log it and replace the original response
             response = Utils.readBodyToBytesIfNecessary(response);
             body = response.getBody();
           }
