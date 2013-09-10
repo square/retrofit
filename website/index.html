@@ -139,12 +139,12 @@ Observable&lt;Response> userList();</pre>
 
             <h4>Converter</h4>
             <p>The converter is responsible for serializing and deserializing objects in HTTP.
-			<h4>Customizing the Gson Converter</h4>
-            <p>The built-in Gson converter cannot be customized, but a Gson implementation can be provided while building a <code>RestAdapter</code>.</p>
+			<h4>Default Gson Converter</h4>
+            <p>Retrofit will convert HTTP bodies to and from <code>JSON</code> using Gson's default configuration (the built-in Gson converter cannot be customized). If you need a customized Gson converter, an implementation can be provided while building a <code>RestAdapter</code>. The <a href="https://sites.google.com/site/gson/gson-user-guide#TOC-Built-in-Serializers-and-Deserializers">Gson documentation</a> is a great place to start when customizing the implementation.</p>
+            <h4>Custom Gson Converter Example</h4>
             <p>The following code creates a new <code>Gson</code> instance that will convert all fields from <code>LOWER_CASE_WITH_UNDERSCORES</code> to camel case and vice versa. It also registers a type adapter for the <code>Date</code> class. This <code>DateTypeAdapter</code> will be used anytime Gson encounters a <code>Date</code> field.</p>
-            <p><code>.setConverter(new GsonConverter(gson))</code> is then called passing  the Gson object that was created as a parameter.</p>
-            <p>Each call on the generated<code>GithubService</code> will now return objects that are parsed using the Gson implementation that was provided to the <code>RestAdapter</code>.</p>
-            <pre class="prettyprint">Gson gson = new GsonBuilder()
+            <p>The <code>gson</code> instance is passed as a parameter to a new <code>GsonConverter</code> which is used as the converter for RestAdapter.</p>
+             <pre class="prettyprint">Gson gson = new GsonBuilder()
     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
     .registerTypeAdapter(Date.class, new DateTypeAdapter())
     .create();
@@ -155,7 +155,7 @@ RestAdapter restAdapter = new RestAdapter.Builder()
     .build();
 
 GitHubService service = restAdapter.create(GitHubService.class);</pre>
-
+            <p>Each call on the generated<code>GithubService</code> will now return objects that are converted using the Gson implementation that was provided to the <code>RestAdapter</code>.</p>
             <h3 id="download">Download</h3>
             <p><a href="http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
             <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
