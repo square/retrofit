@@ -76,7 +76,9 @@ final class Utils {
     }
 
     String bodyMime = body.mimeType();
-    byte[] bodyBytes = Utils.streamToBytes(body.in());
+    InputStream is = body.in();
+    byte[] bodyBytes = Utils.streamToBytes(is);
+    is.close();
     body = new TypedByteArray(bodyMime, bodyBytes);
 
     return replaceResponseBody(response, body);

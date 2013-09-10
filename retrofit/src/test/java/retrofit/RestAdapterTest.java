@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -36,6 +37,7 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -476,6 +478,32 @@ public class RestAdapterTest {
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     assertThat(example.direct()).isSameAs(response);
+  }
+
+  @Test public void closeInputStream() throws IOException {
+    // Set logger and profiler on example to make sure we exercise all the code paths.
+    Example example = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setServer("http://example.com")
+        .setProfiler(mockProfiler)
+        .setLog(new RestAdapter.Log() {
+            @Override
+            public void log(String message) {
+            }
+        })
+        .setLogLevel(FULL)
+        .build()
+        .create(Example.class);
+
+    ByteArrayInputStream is = spy(new ByteArrayInputStream("hello".getBytes()));
+    TypedInput typedInput = mock(TypedInput.class);
+    when(typedInput.in()).thenReturn(is);
+    Response response = new Response(200, "OK", NO_HEADERS, typedInput);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+    example.something();
+    verify(is, times(1)).close();
   }
 
   @Test public void getResponseDirectlyAsync() throws Exception {
