@@ -77,11 +77,19 @@ final class Utils {
 
     String bodyMime = body.mimeType();
     InputStream is = body.in();
-    byte[] bodyBytes = Utils.streamToBytes(is);
-    is.close();
-    body = new TypedByteArray(bodyMime, bodyBytes);
+    try {
+      byte[] bodyBytes = Utils.streamToBytes(is);
+      body = new TypedByteArray(bodyMime, bodyBytes);
 
-    return replaceResponseBody(response, body);
+      return replaceResponseBody(response, body);
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ignored) {
+        }
+      }
+    }
   }
 
   static Response replaceResponseBody(Response response, TypedInput body) {
