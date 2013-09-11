@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -37,7 +36,6 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -487,11 +485,7 @@ public class RestAdapterTest {
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setServer("http://example.com")
         .setProfiler(mockProfiler)
-        .setLog(new RestAdapter.Log() {
-            @Override
-            public void log(String message) {
-            }
-        })
+        .setLog(RestAdapter.Log.NONE)
         .setLogLevel(FULL)
         .build()
         .create(Example.class);
@@ -503,7 +497,7 @@ public class RestAdapterTest {
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     example.something();
-    verify(is, times(1)).close();
+    verify(is).close();
   }
 
   @Test public void getResponseDirectlyAsync() throws Exception {

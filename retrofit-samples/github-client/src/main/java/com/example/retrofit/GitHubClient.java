@@ -16,9 +16,9 @@
 package com.example.retrofit;
 
 import java.util.List;
+import retrofit.RestAdapter;
 import retrofit.http.GET;
 import retrofit.http.Path;
-import retrofit.RestAdapter;
 
 public class GitHubClient {
   private static final String API_URL = "https://api.github.com";
