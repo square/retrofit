@@ -115,6 +115,12 @@ public class RestAdapter {
   public interface Log {
     /** Log a debug message to the appropriate console. */
     void log(String message);
+
+    /** A {@link Log} implementation which does not log anything. */
+    Log NONE = new Log() {
+      @Override public void log(String message) {
+      }
+    };
   }
 
   /** Controls the level of logging. */
