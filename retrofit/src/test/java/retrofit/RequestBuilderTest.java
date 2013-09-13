@@ -2,15 +2,6 @@
 package retrofit;
 
 import com.google.gson.Gson;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import retrofit.client.Header;
 import retrofit.client.Request;
@@ -21,17 +12,15 @@ import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.*;
+
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
 import static retrofit.RestMethodInfo.ParamUsage;
-import static retrofit.RestMethodInfo.ParamUsage.BODY;
-import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
-import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
-import static retrofit.RestMethodInfo.ParamUsage.FIELD;
-import static retrofit.RestMethodInfo.ParamUsage.HEADER;
-import static retrofit.RestMethodInfo.ParamUsage.PART;
-import static retrofit.RestMethodInfo.ParamUsage.PATH;
-import static retrofit.RestMethodInfo.ParamUsage.QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.*;
 import static retrofit.RestMethodInfo.RequestType;
 
 public class RequestBuilderTest {
@@ -196,7 +185,34 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void queryParamOptional() throws Exception {
+  @Test public void getWithQueryParamArray() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("ping", new String[]{"pong", "pong-too"}) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong&ping=pong-too");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQueryParamIterable() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("ping", Arrays.asList(new String[]{"pong", "pong-too"})) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong&ping=pong-too");
+    assertThat(request.getBody()).isNull();
+  }
+
+
+    @Test public void queryParamOptional() throws Exception {
     Request request1 = new Helper() //
         .setMethod("GET") //
         .setUrl("http://example.com") //
@@ -629,14 +645,14 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addQueryParam(String name, String value) {
+    Helper addQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(QUERY);
       args.add(value);
       return this;
     }
 
-    Helper addEncodedQueryParam(String name, String value) {
+    Helper addEncodedQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(ENCODED_QUERY);
       args.add(value);

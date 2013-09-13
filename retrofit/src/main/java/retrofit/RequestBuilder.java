@@ -15,10 +15,6 @@
  */
 package retrofit;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
@@ -26,6 +22,11 @@ import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
@@ -130,21 +131,39 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  @Override public void addQueryParam(String name, String value) {
+  @Override public void addQueryParam(String name, Object value) {
     addQueryParam(name, value, true);
   }
 
-  @Override public void addEncodedQueryParam(String name, String value) {
+  @Override public void addEncodedQueryParam(String name, Object value) {
     addQueryParam(name, value, false);
   }
 
-  void addQueryParam(String name, String value, boolean urlEncodeValue) {
+  void addQueryParam(String name, Object value, boolean urlEncodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
     if (value == null) {
       throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
     }
+
+    if (value instanceof Iterable) {
+        addQueryParamIterable(name, (Iterable) value, urlEncodeValue);
+    } else if (value.getClass().isArray()) {
+        Iterable arrayAsList = Arrays.asList((Object[]) value);
+        addQueryParamIterable(name, arrayAsList, urlEncodeValue);
+    } else {
+        addQueryParamString(name, value.toString(), urlEncodeValue);
+    }
+  }
+
+  void addQueryParamIterable(String name, Iterable values, boolean urlEncodeValue) {
+    for (Object value: values) {
+        addQueryParamString(name, value.toString(), urlEncodeValue);
+    }
+  }
+
+  void addQueryParamString(String name, String value, boolean urlEncodeValue) {
     try {
       if (urlEncodeValue) {
         value = URLEncoder.encode(String.valueOf(value), "UTF-8");
@@ -187,12 +206,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case QUERY:
           if (value != null) { // Skip null values.
-            addQueryParam(name, value.toString());
+            addQueryParam(name, value);
           }
           break;
         case ENCODED_QUERY:
           if (value != null) { // Skip null values.
-            addEncodedQueryParam(name, value.toString());
+            addEncodedQueryParam(name, value);
           }
           break;
         case HEADER:

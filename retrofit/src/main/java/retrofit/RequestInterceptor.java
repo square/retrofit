@@ -22,13 +22,13 @@ public interface RequestInterceptor {
     void addEncodedPathParam(String name, String value);
 
     /** Add an additional query parameter. This will not replace any existing query parameters. */
-    void addQueryParam(String name, String value);
+    void addQueryParam(String name, Object value);
 
     /**
      * Add an additional query parameter without first URI encoding. This will not replace any
      * existing query parameters.
      */
-    void addEncodedQueryParam(String name, String value);
+    void addEncodedQueryParam(String name, Object value);
   }
 
   /** A {@link RequestInterceptor} which does no modification of requests. */
