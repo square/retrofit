@@ -19,27 +19,46 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.util.Arrays;
 
 public final class FormUrlEncodedTypedOutput implements TypedOutput {
   final ByteArrayOutputStream content = new ByteArrayOutputStream();
 
-  public void addField(String name, String value) {
+  private void addFieldString(String name, String value) throws IOException {
+    name = URLEncoder.encode(name, "UTF-8");
+    value = URLEncoder.encode(value, "UTF-8");
+
+    if (content.size() > 0) {
+        content.write('&');
+    }
+    content.write(name.getBytes("UTF-8"));
+    content.write('=');
+    content.write(value.getBytes("UTF-8"));
+  }
+
+  private void addFieldIterable(String name, Iterable values) throws IOException {
+     for (Object value: values) {
+         addFieldString(name, value.toString());
+     }
+  }
+
+  public void addField(String name, Object value) {
     if (name == null) {
       throw new NullPointerException("name");
     }
     if (value == null) {
       throw new NullPointerException("value");
     }
-    if (content.size() > 0) {
-      content.write('&');
-    }
-    try {
-      name = URLEncoder.encode(name, "UTF-8");
-      value = URLEncoder.encode(value, "UTF-8");
 
-      content.write(name.getBytes("UTF-8"));
-      content.write('=');
-      content.write(value.getBytes("UTF-8"));
+    try {
+      if (value instanceof Iterable) {
+        addFieldIterable(name, (Iterable) value);
+      } else if (value.getClass().isArray()) {
+        Iterable arrayAsList = Arrays.asList((Object[]) value);
+        addFieldIterable(name, arrayAsList);
+      } else {
+        addFieldString(name, value.toString());
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

@@ -221,7 +221,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case FIELD:
           if (value != null) { // Skip null values.
-            formBody.addField(name, value.toString());
+            formBody.addField(name, value);
           }
           break;
         case PART:

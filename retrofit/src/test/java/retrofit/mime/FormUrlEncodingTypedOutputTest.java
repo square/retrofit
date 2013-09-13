@@ -1,8 +1,10 @@
 // Copyright 2013 Square, Inc.
 package retrofit.mime;
 
-import java.io.ByteArrayOutputStream;
 import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -44,5 +46,25 @@ public class FormUrlEncodingTypedOutputTest {
     fe.writeTo(out2);
     String actual2 = new String(out2.toByteArray(), "UTF-8");
     assertThat(actual2).isEqualTo("sim=ple&hey=there&help=me");
+  }
+
+  @Test public void arrayParameter() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addField("ping", new String[]{"pong", "pong-too"});
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("ping=pong&ping=pong-too");
+  }
+
+  @Test public void arrayIterable() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addField("ping", Arrays.asList(new String[]{"pong", "pong-too"}));
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("ping=pong&ping=pong-too");
   }
 }
