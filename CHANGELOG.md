@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 1.2.2 *(2013-09-12)*
+----------------------------
+
+ * Fix: Respect connection and read timeouts on supplied `OkHttpClient` instances.
+ * Fix: Ensure connection is closed on non-200 responses.
+
+
 Version 1.2.1 *(2013-08-30)*
 ----------------------------
 
