@@ -367,7 +367,7 @@ public class RestAdapter {
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
       for (Header header : request.getHeaders()) {
-        log.log(header.getName() + ": " + header.getValue());
+        log.log(header.toString());
       }
 
       long bodySize = 0;
@@ -417,7 +417,7 @@ public class RestAdapter {
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
       for (Header header : response.getHeaders()) {
-        log.log(header.getName() + ": " + header.getValue());
+        log.log(header.toString());
       }
 
       long bodySize = 0;
