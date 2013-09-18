@@ -107,7 +107,6 @@ import retrofit.mime.TypedOutput;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
-  private static final int LOG_CHUNK_SIZE = 4000;
   static final String THREAD_PREFIX = "Retrofit-";
   static final String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
 
@@ -396,11 +395,7 @@ public class RestAdapter {
           byte[] bodyBytes = ((TypedByteArray) body).getBytes();
           bodySize = bodyBytes.length;
           String bodyCharset = MimeUtil.parseCharset(bodyMime);
-          String bodyString = new String(bodyBytes, bodyCharset);
-          for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
-            int end = Math.min(len, i + LOG_CHUNK_SIZE);
-            log.log(bodyString.substring(i, end));
-          }
+          log.log(new String(bodyBytes, bodyCharset));
         }
       }
 
@@ -440,11 +435,7 @@ public class RestAdapter {
           bodySize = bodyBytes.length;
           String bodyMime = body.mimeType();
           String bodyCharset = MimeUtil.parseCharset(bodyMime);
-          String bodyString = new String(bodyBytes, bodyCharset);
-          for (int i = 0, len = bodyString.length(); i < len; i += LOG_CHUNK_SIZE) {
-            int end = Math.min(len, i + LOG_CHUNK_SIZE);
-            log.log(bodyString.substring(i, end));
-          }
+          log.log(new String(bodyBytes, bodyCharset));
         }
       }
 

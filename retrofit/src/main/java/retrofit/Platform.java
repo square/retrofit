@@ -17,12 +17,12 @@ package retrofit;
 
 import android.os.Build;
 import android.os.Process;
-import android.util.Log;
 import com.google.gson.Gson;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import retrofit.android.AndroidApacheClient;
+import retrofit.android.AndroidLog;
 import retrofit.android.MainThreadExecutor;
 import retrofit.client.Client;
 import retrofit.client.OkClient;
@@ -143,11 +143,7 @@ abstract class Platform {
     }
 
     @Override RestAdapter.Log defaultLog() {
-      return new RestAdapter.Log() {
-        @Override public void log(String message) {
-          Log.d("Retrofit", message);
-        }
-      };
+      return new AndroidLog("Retrofit");
     }
   }
 
