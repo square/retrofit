@@ -108,7 +108,7 @@ Photo listUsers(@Path("id") int id);</pre>
             <pre class="prettyprint">@GET("/user/{id}/photo")
 void listUsers(@Path("id") int id, Callback&lt;Photo> cb);</pre>
             <p>On Android, the callbacks will be executed on the main thread. For desktop applications the callbacks will happen on the same thread that executed the HTTP request.</p>
-            
+
             <h4>Response Object Type</h4>
             <p>HTTP responses are automatically converted to a specified type using the <code>RestAdapter</code>'s converter which defaults to JSON. The desired type is declared as the method return type or using the <code>Callback</code>.
             <pre class="prettyprint">@GET("/users/list")
@@ -123,12 +123,28 @@ Response userList();
 @GET("/users/list")
 void userList(Callback&lt;Response> cb);</pre>
 
-            <!--<h3 id="restadapter-configuration">RestAdapter Configuration</h3>
+			<h3 id="restadapter-configuration">RestAdapter Configuration</h3>
             <p><code>RestAdapter</code> is the class through which your API interfaces are turned into callable objects. By default, Retrofit will give you sane defaults for your platform but it allows for customization.</p>
 
             <h4>Converter</h4>
-            <p>The converter is responsible for serializing and deserializing objects in HTTP. -->
+            <p>The converter is responsible for serializing and deserializing objects in HTTP.
+			<h4>Default Gson Converter</h4>
+            <p>Retrofit will convert HTTP bodies to and from <code>JSON</code> using Gson's default configuration (the built-in Gson converter cannot be customized). If you need a customized Gson converter, an implementation can be provided while building a <code>RestAdapter</code>. The <a href="https://sites.google.com/site/gson/gson-user-guide#TOC-Built-in-Serializers-and-Deserializers">Gson documentation</a> is a great place to start when customizing the implementation.</p>
+            <h4>Custom Gson Converter Example</h4>
+            <p>The following code creates a new <code>Gson</code> instance that will convert all fields from <code>LOWER_CASE_WITH_UNDERSCORES</code> to camel case and vice versa. It also registers a type adapter for the <code>Date</code> class. This <code>DateTypeAdapter</code> will be used anytime Gson encounters a <code>Date</code> field.</p>
+            <p>The <code>gson</code> instance is passed as a parameter to a new <code>GsonConverter</code> which is used as the converter for RestAdapter.</p>
+             <pre class="prettyprint">Gson gson = new GsonBuilder()
+    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+    .registerTypeAdapter(Date.class, new DateTypeAdapter())
+    .create();
 
+RestAdapter restAdapter = new RestAdapter.Builder()
+    .setServer("https://api.github.com")
+    .setConverter(new GsonConverter(gson))
+    .build();
+
+GitHubService service = restAdapter.create(GitHubService.class);</pre>
+            <p>Each call on the generated<code>GithubService</code> will now return objects that are converted using the Gson implementation that was provided to the <code>RestAdapter</code>.</p>
             <h3 id="download">Download</h3>
             <p><a href="http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
             <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
@@ -165,7 +181,7 @@ limitations under the License.</pre>
               <ul class="nav nav-tabs nav-stacked primary">
                 <li><a href="#introduction">Introduction</a></li>
                 <li><a href="#api-declaration">API Declaration</a></li>
-                <!--<li><a href="#restadapter-configuration">RestAdapter Configuration</a></li>-->
+                <li><a href="#restadapter-configuration">RestAdapter Configuration</a></li>
                 <li><a href="#download">Download</a></li>
                 <li><a href="#contributing">Contributing</a></li>
                 <li><a href="#license">License</a></li>
