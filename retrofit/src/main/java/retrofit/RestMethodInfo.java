@@ -211,8 +211,9 @@ final class RestMethodInfo {
     List<retrofit.client.Header> headerList = new ArrayList<retrofit.client.Header>();
     for (String header : headers) {
       int colon = header.indexOf(':');
-      if (colon == -1 || colon == 0 || colon == headers.length - 1) {
-        throw new IllegalStateException("Header must be in the form 'Name: Value': " + header);
+      if (colon == -1 || colon == 0 || colon == header.length() - 1) {
+        throw new IllegalStateException(
+            "Header must be in the form \"Name: Value\": \"" + header + "\"");
       }
       headerList.add(new retrofit.client.Header(header.substring(0, colon),
           header.substring(colon + 1).trim()));
