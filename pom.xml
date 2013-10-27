@@ -55,6 +55,7 @@
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.2.2</jackson.version>
     <wire.version>1.0.1</wire.version>
+	<simplexml.version>2.7.1</simplexml.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
@@ -119,7 +120,12 @@
         <artifactId>wire-runtime</artifactId>
         <version>${wire.version}</version>
       </dependency>
-
+      <dependency>
+        <groupId>org.simpleframework</groupId>
+        <artifactId>simple-xml</artifactId>
+        <version>${simplexml.version}</version>
+      </dependency>
+      
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
