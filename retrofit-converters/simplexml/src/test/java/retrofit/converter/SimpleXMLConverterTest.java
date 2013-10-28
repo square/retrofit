@@ -27,7 +27,6 @@ public class SimpleXMLConverterTest {
 	private final Converter converter = initConverter();
 
 	private static Converter initConverter() {
-
 		Format format = new Format(0, null, new HyphenStyle(), Verbosity.HIGH);
 		Persister persister = new Persister(format);
 		return new SimpleXMLConverter(persister);

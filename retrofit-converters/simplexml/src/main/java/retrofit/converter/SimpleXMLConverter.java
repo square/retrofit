@@ -20,7 +20,7 @@ public class SimpleXMLConverter implements Converter {
   private static final String CHARSET = "UTF-8";
   private static final String MIME_TYPE = "application/xml; charset=" + CHARSET;
 
-  private Serializer serializer = null;
+  private final Serializer serializer;
 
   public SimpleXMLConverter(Serializer serializer) {
     this.serializer = serializer;
@@ -45,10 +45,6 @@ public class SimpleXMLConverter implements Converter {
       serializer.write(source, osw);
       osw.flush();
       return new TypedByteArray(MIME_TYPE, bos.toByteArray());
-    } catch (final NullPointerException e) {
-      throw new AssertionError(e);
-    } catch (IOException e) {
-      throw new AssertionError(e);
     } catch (Exception e) {
       throw new AssertionError(e);
     } finally {

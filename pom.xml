@@ -55,7 +55,7 @@
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.2.2</jackson.version>
     <wire.version>1.0.1</wire.version>
-	<simplexml.version>2.7.1</simplexml.version>
+    <simplexml.version>2.7.1</simplexml.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
