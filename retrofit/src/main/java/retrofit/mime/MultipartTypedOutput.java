@@ -13,124 +13,162 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package retrofit.mime;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 public final class MultipartTypedOutput implements TypedOutput {
-  final List<byte[]> parts = new ArrayList<byte[]>();
-  private final byte[] footer;
-  private final String boundary;
-  private long length;
 
-  public MultipartTypedOutput() {
-    this(UUID.randomUUID().toString());
-  }
+    private final class MimePart {
+        private final TypedOutput body;
+        private final String name;
+        private final boolean isFirst;
 
-  MultipartTypedOutput(String boundary) {
-    this.boundary = boundary;
-    footer = buildBoundary(boundary, false, true);
-    length = footer.length;
-  }
+        private byte[] partBoundary;
+        private byte[] partHeader;
+        private boolean isBuilt = false;
 
-  public void addPart(String name, TypedOutput body) {
-    if (name == null) {
-      throw new NullPointerException("Part name must not be null.");
-    }
-    if (body == null) {
-      throw new NullPointerException("Part body must not be null.");
-    }
-
-    byte[] part = buildPart(name, body, parts.isEmpty());
-    parts.add(part);
-    length += part.length;
-  }
-
-  public int getPartCount() {
-    return parts.size();
-  }
-
-  @Override public String fileName() {
-    return null;
-  }
-
-  @Override public String mimeType() {
-    return "multipart/form-data; boundary=" + boundary;
-  }
-
-  @Override public long length() {
-    return length;
-  }
-
-  @Override public void writeTo(OutputStream out) throws IOException {
-    for (byte[] part : parts) {
-      out.write(part);
-    }
-    out.write(footer);
-  }
-
-  private byte[] buildPart(String name, TypedOutput body, boolean first) {
-    ByteArrayOutputStream out = null;
-    try {
-      out = new ByteArrayOutputStream();
-      out.write(buildBoundary(boundary, first, false));
-      out.write(buildHeader(name, body));
-      body.writeTo(out);
-      return out.toByteArray();
-    } catch (IOException ex) {
-      throw new RuntimeException("Unable to write multipart request.", ex);
-    } finally {
-      if (out != null) {
-        try {
-          out.close();
-        } catch (IOException ignored) {
+        public MimePart(String name, TypedOutput body, boolean isFirst) {
+            this.name = name;
+            this.body = body;
+            this.isFirst = isFirst;
         }
-      }
-    }
-  }
 
-  private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
-    try {
-      StringBuilder sb = new StringBuilder();
-      if (!first) {
-        sb.append("\r\n");
-      }
-      sb.append("--");
-      sb.append(boundary);
-      if (last) {
-        sb.append("--");
-      } else {
-        sb.append("\r\n");
-      }
-      return sb.toString().getBytes("UTF-8");
-    } catch (IOException ex) {
-      throw new RuntimeException("Unable to write multipart boundary", ex);
-    }
-  }
+        public void writeTo(OutputStream out) throws IOException {
+            build();
+            out.write(partBoundary);
+            out.write(partHeader);
+            body.writeTo(out);
+        }
 
-  private byte[] buildHeader(String name, TypedOutput value) {
-    try {
-      StringBuilder headers = new StringBuilder();
-      headers.append("Content-Disposition: form-data; name=\"");
-      headers.append(name);
-      if (value.fileName() != null) {
-        headers.append("\"; filename=\"");
-        headers.append(value.fileName());
-      }
-      headers.append("\"\r\nContent-Type: ");
-      headers.append(value.mimeType());
-      if (value.length() != -1) {
-        headers.append("\r\nContent-Length: ").append(value.length());
-      }
-      headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
-      return headers.toString().getBytes("UTF-8");
-    } catch (IOException ex) {
-      throw new RuntimeException("Unable to write multipart header", ex);
+        public long size() {
+            build();
+            return body.length() + partBoundary.length + partHeader.length;
+        }
+
+        private void build() {
+            if (isBuilt) return;
+            partBoundary = buildBoundary(boundary, isFirst, false);
+            partHeader = buildHeader(name, body);
+            isBuilt = true;
+        }
     }
-  }
+
+    private final List<MimePart> mimeParts = new LinkedList<MimePart>();
+
+    private final byte[] footer;
+    private final String boundary;
+    private long length;
+
+    public MultipartTypedOutput() {
+        this(UUID.randomUUID().toString());
+    }
+
+    MultipartTypedOutput(String boundary) {
+        this.boundary = boundary;
+        footer = buildBoundary(boundary, false, true);
+        length = footer.length;
+    }
+
+    public List<byte[]> getParts() throws Exception {
+        List<byte[]> parts = new ArrayList<byte[]>();
+        for (MimePart part : mimeParts) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            try {
+                part.writeTo(bos);
+                parts.add(bos.toByteArray());
+            } finally {
+                bos.close();
+            }
+        }
+        return parts;
+    }
+
+    public void addPart(String name, TypedOutput body) {
+        if (name == null) {
+            throw new NullPointerException("Part name must not be null.");
+        }
+        if (body == null) {
+            throw new NullPointerException("Part body must not be null.");
+        }
+
+        MimePart part = new MimePart(name, body, mimeParts.isEmpty());
+        mimeParts.add(part);
+
+        length += part.size();
+    }
+
+    public int getPartCount() {
+        return mimeParts.size();
+    }
+
+    @Override
+    public String fileName() {
+        return null;
+    }
+
+    @Override
+    public String mimeType() {
+        return "multipart/form-data; boundary=" + boundary;
+    }
+
+    @Override
+    public long length() {
+        return length;
+    }
+
+    @Override
+    public void writeTo(OutputStream out) throws IOException {
+        for (MimePart part : mimeParts) {
+            part.writeTo(out);
+        }
+        out.write(footer);
+    }
+
+    private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            if (!first) {
+                sb.append("\r\n");
+            }
+            sb.append("--");
+            sb.append(boundary);
+            if (last) {
+                sb.append("--");
+            } else {
+                sb.append("\r\n");
+            }
+            return sb.toString().getBytes("UTF-8");
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to write multipart boundary", ex);
+        }
+    }
+
+    private byte[] buildHeader(String name, TypedOutput value) {
+        try {
+            StringBuilder headers = new StringBuilder();
+            headers.append("Content-Disposition: form-data; name=\"");
+            headers.append(name);
+            if (value.fileName() != null) {
+                headers.append("\"; filename=\"");
+                headers.append(value.fileName());
+            }
+            headers.append("\"\r\nContent-Type: ");
+            headers.append(value.mimeType());
+            if (value.length() != -1) {
+                headers.append("\r\nContent-Length: ").append(value.length());
+            }
+            headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+            return headers.toString().getBytes("UTF-8");
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to write multipart header", ex);
+        }
+    }
 }

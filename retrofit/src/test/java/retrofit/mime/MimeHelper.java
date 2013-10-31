@@ -5,6 +5,10 @@ import java.util.List;
 
 public class MimeHelper {
   public static List<byte[]> getParts(MultipartTypedOutput output) {
-    return output.parts;
+      try {
+          return output.getParts();
+      } catch (Exception e) {
+          throw new RuntimeException(e);
+      }
   }
 }
