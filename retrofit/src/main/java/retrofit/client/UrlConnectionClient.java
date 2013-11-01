@@ -31,6 +31,7 @@ import retrofit.mime.TypedOutput;
 
 /** Retrofit client that uses {@link HttpURLConnection} for communication. */
 public class UrlConnectionClient implements Client {
+  private static final int CHUNK_SIZE = 4096;
   private final Field methodField;
 
   public UrlConnectionClient() {
@@ -80,8 +81,10 @@ public class UrlConnectionClient implements Client {
       connection.addRequestProperty("Content-Type", body.mimeType());
       long length = body.length();
       if (length != -1) {
-          connection.setFixedLengthStreamingMode((int) length);
-          connection.addRequestProperty("Content-Length", String.valueOf(length));
+        connection.setFixedLengthStreamingMode((int) length);
+        connection.addRequestProperty("Content-Length", String.valueOf(length));
+      }else{
+        connection.setChunkedStreamingMode(CHUNK_SIZE);
       }
       body.writeTo(connection.getOutputStream());
     }
