@@ -26,7 +26,7 @@ import java.util.UUID;
 
 public final class MultipartTypedOutput implements TypedOutput {
 
-  private final static class MimePart {
+  private static final class MimePart {
     private final TypedOutput body;
     private final String name;
     private final boolean isFirst;

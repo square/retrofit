@@ -83,7 +83,7 @@ public class UrlConnectionClient implements Client {
       if (length != -1) {
         connection.setFixedLengthStreamingMode((int) length);
         connection.addRequestProperty("Content-Length", String.valueOf(length));
-      }else{
+      } else {
         connection.setChunkedStreamingMode(CHUNK_SIZE);
       }
       body.writeTo(connection.getOutputStream());
