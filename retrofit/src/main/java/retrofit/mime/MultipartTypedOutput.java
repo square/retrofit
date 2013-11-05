@@ -83,7 +83,7 @@ public final class MultipartTypedOutput implements TypedOutput {
     length = footer.length;
   }
 
-  public List<byte[]> getParts() throws IOException {
+  List<byte[]> getParts() throws IOException {
     List<byte[]> parts = new ArrayList<byte[]>(mimeParts.size());
     for (MimePart part : mimeParts) {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
