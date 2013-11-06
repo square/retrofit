@@ -138,16 +138,21 @@ public class RestAdapter {
     }
   }
 
-  private final Server server;
+  private final Map<Class<?>, Map<Method, RestMethodInfo>> serviceMethodInfoCache =
+      new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
+
+  final Server server;
+  final Executor httpExecutor;
+  final Executor callbackExecutor;
+  final RequestInterceptor requestInterceptor;
+  final Converter converter;
+  final Log log;
+  final ErrorHandler errorHandler;
+
   private final Client.Provider clientProvider;
-  private final Executor httpExecutor;
-  private final Executor callbackExecutor;
-  private final RequestInterceptor requestInterceptor;
-  private final Converter converter;
   private final Profiler profiler;
-  private final ErrorHandler errorHandler;
-  private final Log log;
-  private volatile LogLevel logLevel;
+
+  volatile LogLevel logLevel;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
@@ -180,22 +185,39 @@ public class RestAdapter {
   /** Create an implementation of the API defined by the specified {@code service} interface. */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> service) {
-    if (!service.isInterface()) {
-      throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
-    }
-    // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
-    // Android (http://b.android.com/58753) but it forces composition of API declarations which is
-    // the recommended pattern.
-    if (service.getSuperclass() != null) {
-      throw new IllegalArgumentException("Interface definitions must not extend other interfaces.");
-    }
+    Utils.validateServiceClass(service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
-        new RestHandler());
+        new RestHandler(getMethodInfoCache(service)));
+  }
+
+  Map<Method, RestMethodInfo> getMethodInfoCache(Class<?> service) {
+    synchronized (serviceMethodInfoCache) {
+      Map<Method, RestMethodInfo> methodInfoCache = serviceMethodInfoCache.get(service);
+      if (methodInfoCache == null) {
+        methodInfoCache = new LinkedHashMap<Method, RestMethodInfo>();
+        serviceMethodInfoCache.put(service, methodInfoCache);
+      }
+      return methodInfoCache;
+    }
+  }
+
+  static RestMethodInfo getMethodInfo(Map<Method, RestMethodInfo> cache, Method method) {
+    synchronized (cache) {
+      RestMethodInfo methodInfo = cache.get(method);
+      if (methodInfo == null) {
+        methodInfo = new RestMethodInfo(method);
+        cache.put(method, methodInfo);
+      }
+      return methodInfo;
+    }
   }
 
   private class RestHandler implements InvocationHandler {
-    private final Map<Method, RestMethodInfo> methodDetailsCache =
-        new LinkedHashMap<Method, RestMethodInfo>();
+    private final Map<Method, RestMethodInfo> methodDetailsCache;
+
+    RestHandler(Map<Method, RestMethodInfo> methodDetailsCache) {
+      this.methodDetailsCache = methodDetailsCache;
+    }
 
     @SuppressWarnings("unchecked") //
     @Override public Object invoke(Object proxy, Method method, final Object[] args)
@@ -206,19 +228,11 @@ public class RestAdapter {
       }
 
       // Load or create the details cache for the current method.
-      final RestMethodInfo methodDetails;
-      synchronized (methodDetailsCache) {
-        RestMethodInfo tempMethodDetails = methodDetailsCache.get(method);
-        if (tempMethodDetails == null) {
-          tempMethodDetails = new RestMethodInfo(method);
-          methodDetailsCache.put(method, tempMethodDetails);
-        }
-        methodDetails = tempMethodDetails;
-      }
+      final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
 
-      if (methodDetails.isSynchronous) {
+      if (methodInfo.isSynchronous) {
         try {
-          return invokeRequest(requestInterceptor, methodDetails, args);
+          return invokeRequest(requestInterceptor, methodInfo, args);
         } catch (RetrofitError error) {
           Throwable newError = errorHandler.handleError(error);
           if (newError == null) {
@@ -239,7 +253,7 @@ public class RestAdapter {
       Callback<?> callback = (Callback<?>) args[args.length - 1];
       httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor) {
         @Override public ResponseWrapper obtainResponse() {
-          return (ResponseWrapper) invokeRequest(interceptorTape, methodDetails, args);
+          return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
         }
       });
       return null; // Asynchronous methods should have return type of void.
@@ -252,13 +266,13 @@ public class RestAdapter {
      * @throws RetrofitError if any error occurs during the HTTP request.
      */
     private Object invokeRequest(RequestInterceptor requestInterceptor,
-        RestMethodInfo methodDetails, Object[] args) {
-      methodDetails.init(); // Ensure all relevant method information has been loaded.
+        RestMethodInfo methodInfo, Object[] args) {
+      methodInfo.init(); // Ensure all relevant method information has been loaded.
 
       String serverUrl = server.getUrl();
       String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
       try {
-        RequestBuilder requestBuilder = new RequestBuilder(converter, methodDetails);
+        RequestBuilder requestBuilder = new RequestBuilder(converter, methodInfo);
         requestBuilder.setApiUrl(serverUrl);
         requestBuilder.setArguments(args);
 
@@ -267,14 +281,14 @@ public class RestAdapter {
         Request request = requestBuilder.build();
         url = request.getUrl();
 
-        if (!methodDetails.isSynchronous) {
+        if (!methodInfo.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
           Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
         if (logLevel.log()) {
           // Log the request data.
-          request = logAndReplaceRequest(request);
+          request = logAndReplaceRequest("HTTP", request);
         }
 
         Object profilerObject = null;
@@ -288,7 +302,7 @@ public class RestAdapter {
 
         int statusCode = response.getStatus();
         if (profiler != null) {
-          RequestInformation requestInfo = getRequestInfo(serverUrl, methodDetails, request);
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodInfo, request);
           //noinspection unchecked
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
@@ -298,7 +312,7 @@ public class RestAdapter {
           response = logAndReplaceResponse(url, response, elapsedTime);
         }
 
-        Type type = methodDetails.responseObjectType;
+        Type type = methodInfo.responseObjectType;
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           // Caller requested the raw Response object directly.
@@ -306,7 +320,7 @@ public class RestAdapter {
             // Read the entire stream and replace with one backed by a byte[]
             response = Utils.readBodyToBytesIfNecessary(response);
 
-            if (methodDetails.isSynchronous) {
+            if (methodInfo.isSynchronous) {
               return response;
             }
             return new ResponseWrapper(response, response);
@@ -320,7 +334,7 @@ public class RestAdapter {
           ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
           try {
             Object convert = converter.fromBody(wrapped, type);
-            if (methodDetails.isSynchronous) {
+            if (methodInfo.isSynchronous) {
               return convert;
             }
             return new ResponseWrapper(response, convert);
@@ -353,7 +367,7 @@ public class RestAdapter {
         }
         throw RetrofitError.unexpectedError(url, t);
       } finally {
-        if (!methodDetails.isSynchronous) {
+        if (!methodInfo.isSynchronous) {
           Thread.currentThread().setName(IDLE_THREAD_NAME);
         }
       }
@@ -361,8 +375,8 @@ public class RestAdapter {
   }
 
   /** Log request headers and body. Consumes request body and returns identical replacement. */
-  private Request logAndReplaceRequest(Request request) throws IOException {
-    log.log(String.format("---> HTTP %s %s", request.getMethod(), request.getUrl()));
+  Request logAndReplaceRequest(String name, Request request) throws IOException {
+    log.log(String.format("---> %s %s %s", name, request.getMethod(), request.getUrl()));
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
       for (Header header : request.getHeaders()) {
@@ -399,7 +413,7 @@ public class RestAdapter {
         }
       }
 
-      log.log(String.format("---> END HTTP (%s-byte body)", bodySize));
+      log.log(String.format("---> END %s (%s-byte body)", name, bodySize));
     }
 
     return request;
@@ -446,7 +460,7 @@ public class RestAdapter {
   }
 
   /** Log an exception that occurred during the processing of a request or response. */
-  private void logException(Throwable t, String url) {
+  void logException(Throwable t, String url) {
     log.log(String.format("---- ERROR %s", url));
     StringWriter sw = new StringWriter();
     t.printStackTrace(new PrintWriter(sw));

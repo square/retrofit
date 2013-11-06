@@ -47,7 +47,7 @@ public class RetrofitError extends RuntimeException {
   private final Type successType;
   private final boolean networkError;
 
-  private RetrofitError(String url, Response response, Converter converter, Type successType,
+  RetrofitError(String url, Response response, Converter converter, Type successType,
       boolean networkError, Throwable exception) {
     super(exception);
     this.url = url;

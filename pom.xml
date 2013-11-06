@@ -35,6 +35,7 @@
   <modules>
     <module>retrofit</module>
     <module>retrofit-converters</module>
+    <module>retrofit-mock</module>
     <module>retrofit-samples</module>
   </modules>
 
@@ -125,7 +126,7 @@
         <artifactId>simple-xml</artifactId>
         <version>${simplexml.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
