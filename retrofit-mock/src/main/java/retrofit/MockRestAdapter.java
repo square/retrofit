@@ -30,7 +30,7 @@ import static retrofit.RestAdapter.LogLevel;
  * <p>
  * Create an API interface and a mock implementation of it.
  * <pre>
- *   public class UserService {
+ *   public interface UserService {
  *     &#64;GET("/user/{id}")
  *     User getUser(@Path("id") String userId);
  *   }
