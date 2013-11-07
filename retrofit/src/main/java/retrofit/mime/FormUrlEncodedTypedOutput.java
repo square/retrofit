@@ -18,8 +18,8 @@ package retrofit.mime;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
-import java.util.Arrays;
 
 public final class FormUrlEncodedTypedOutput implements TypedOutput {
   final ByteArrayOutputStream content = new ByteArrayOutputStream();
@@ -34,6 +34,14 @@ public final class FormUrlEncodedTypedOutput implements TypedOutput {
     content.write(name.getBytes("UTF-8"));
     content.write('=');
     content.write(value.getBytes("UTF-8"));
+  }
+
+  private void addFieldArray(String name, Object arrayValues) {
+    final int length = Array.getLength(arrayValues);
+    for (int i = 0; i < length ; i++) {
+      Object value = Array.get(arrayValues, i);
+      addField(name, value);
+    }
   }
 
   private void addFieldIterable(String name, Iterable values) throws IOException {
@@ -54,8 +62,7 @@ public final class FormUrlEncodedTypedOutput implements TypedOutput {
       if (value instanceof Iterable) {
         addFieldIterable(name, (Iterable) value);
       } else if (value.getClass().isArray()) {
-        Iterable arrayAsList = Arrays.asList((Object[]) value);
-        addFieldIterable(name, arrayAsList);
+        addFieldArray(name, value);
       } else {
         addFieldString(name, value.toString());
       }

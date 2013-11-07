@@ -58,6 +58,16 @@ public class FormUrlEncodingTypedOutputTest {
     assertThat(actual).isEqualTo("ping=pong&ping=pong-too");
   }
 
+  @Test public void arrayPrimitiveParameter() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addField("ping", new int[]{1, 2});
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("ping=1&ping=2");
+  }
+
   @Test public void arrayIterable() throws Exception {
     FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
     fe.addField("ping", Arrays.asList(new String[]{"pong", "pong-too"}));
