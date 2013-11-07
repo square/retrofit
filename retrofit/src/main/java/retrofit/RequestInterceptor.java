@@ -25,9 +25,10 @@ public interface RequestInterceptor {
      * Add an additional query parameter. This will not replace any existing query parameters.
      *
      * @param name The name of the query parameter
-     * @param value The value of the query parameter. If the value is an array or an
-     *              {@link Iterable} the parameter will be added multiple times, one per each
-     *              value
+     * @param value The value of the query parameter. It will have {@link #toString()} called on it and
+     *              that string will be added as the value for the name. If the value is an array or an
+     *              {@link Iterable} the parameter will be added multiple times, one for each
+     *              value;
      */
     void addQueryParam(String name, Object value);
 
@@ -36,9 +37,10 @@ public interface RequestInterceptor {
      * existing query parameters.
      *
      * @param name The name of the query parameter
-     * @param value The value of the query parameter. If the value is an array or an
-     *              {@link Iterable} the parameter will be added multiple times, one per each
-     *              value
+     * @param value The value of the query parameter. It will have {@link #toString()} called on it and
+     *              that string will be added as the value for the name. If the value is an array or an
+     *              {@link Iterable} the parameter will be added multiple times, one for each
+     *              value;
      */
     void addEncodedQueryParam(String name, Object value);
   }
