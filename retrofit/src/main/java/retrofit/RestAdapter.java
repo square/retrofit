@@ -130,7 +130,11 @@ public class RestAdapter {
     BASIC,
     /** Log the basic information along with request and response headers. */
     HEADERS,
-    /** Log the headers, body, and metadata for both requests and responses. */
+    /**
+     * Log the headers, body, and metadata for both requests and responses.
+     * <p>
+     * Note: This requires that the entire request and response body be buffered in memory!
+     */
     FULL;
 
     public boolean log() {
