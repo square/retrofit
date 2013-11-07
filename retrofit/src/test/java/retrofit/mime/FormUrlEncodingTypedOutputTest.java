@@ -1,6 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit.mime;
 
+import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -70,7 +71,7 @@ public class FormUrlEncodingTypedOutputTest {
 
   @Test public void arrayIterable() throws Exception {
     FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
-    fe.addField("ping", Arrays.asList(new String[]{"pong", "pong-too"}));
+    fe.addField("ping", Arrays.asList("pong", "pong-too"));
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     fe.writeTo(out);

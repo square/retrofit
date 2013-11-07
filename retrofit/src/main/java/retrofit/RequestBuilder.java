@@ -159,14 +159,14 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
   void addQueryParamArray(String name, Object arrayValues, boolean urlEncodeValue) {
     final int length = Array.getLength(arrayValues);
-    for (int i = 0; i < length ; i++) {
+    for (int i = 0; i < length; i++) {
       Object value = Array.get(arrayValues, i);
       addQueryParam(name, value, urlEncodeValue);
     }
   }
 
   void addQueryParamIterable(String name, Iterable values, boolean urlEncodeValue) {
-    for (Object value: values) {
+    for (Object value : values) {
       addQueryParam(name, value, urlEncodeValue);
     }
   }

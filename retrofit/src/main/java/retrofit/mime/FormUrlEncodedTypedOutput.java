@@ -29,7 +29,7 @@ public final class FormUrlEncodedTypedOutput implements TypedOutput {
     value = URLEncoder.encode(value, "UTF-8");
 
     if (content.size() > 0) {
-        content.write('&');
+      content.write('&');
     }
     content.write(name.getBytes("UTF-8"));
     content.write('=');
@@ -38,16 +38,16 @@ public final class FormUrlEncodedTypedOutput implements TypedOutput {
 
   private void addFieldArray(String name, Object arrayValues) {
     final int length = Array.getLength(arrayValues);
-    for (int i = 0; i < length ; i++) {
+    for (int i = 0; i < length; i++) {
       Object value = Array.get(arrayValues, i);
       addField(name, value);
     }
   }
 
   private void addFieldIterable(String name, Iterable values) throws IOException {
-     for (Object value: values) {
-         addFieldString(name, value.toString());
-     }
+    for (Object value : values) {
+      addFieldString(name, value.toString());
+    }
   }
 
   public void addField(String name, Object value) {
