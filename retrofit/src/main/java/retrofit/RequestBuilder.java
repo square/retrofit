@@ -22,10 +22,11 @@ import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
+
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
@@ -148,18 +149,25 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     if (value instanceof Iterable) {
-        addQueryParamIterable(name, (Iterable) value, urlEncodeValue);
+      addQueryParamIterable(name, (Iterable) value, urlEncodeValue);
     } else if (value.getClass().isArray()) {
-        Iterable arrayAsList = Arrays.asList((Object[]) value);
-        addQueryParamIterable(name, arrayAsList, urlEncodeValue);
+      addQueryParamArray(name, value, urlEncodeValue);
     } else {
-        addQueryParamString(name, value.toString(), urlEncodeValue);
+      addQueryParamString(name, value.toString(), urlEncodeValue);
+    }
+  }
+
+  void addQueryParamArray(String name, Object arrayValues, boolean urlEncodeValue) {
+    final int length = Array.getLength(arrayValues);
+    for (int i = 0; i < length ; i++) {
+      Object value = Array.get(arrayValues, i);
+      addQueryParam(name, value, urlEncodeValue);
     }
   }
 
   void addQueryParamIterable(String name, Iterable values, boolean urlEncodeValue) {
     for (Object value: values) {
-        addQueryParamString(name, value.toString(), urlEncodeValue);
+      addQueryParam(name, value, urlEncodeValue);
     }
   }
 

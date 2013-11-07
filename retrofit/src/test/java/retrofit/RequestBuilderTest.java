@@ -198,6 +198,19 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void getWithQueryParamArrayPrimitive() throws Exception {
+    Request request = new Helper() //
+            .setMethod("GET") //
+            .setUrl("http://example.com") //
+            .setPath("/foo/bar/") //
+            .addQueryParam("ping", new int[]{1, 2}) //
+            .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=1&ping=2");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void getWithQueryParamIterable() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -210,6 +223,8 @@ public class RequestBuilderTest {
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong&ping=pong-too");
     assertThat(request.getBody()).isNull();
   }
+
+
 
 
     @Test public void queryParamOptional() throws Exception {
