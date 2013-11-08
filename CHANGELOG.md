@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+Version 1.2.3
+----------------------------
+
+ * Ease integration with functional libraries by allowing single-method interface inheritance.
+
 Version 1.2.2 *(2013-09-12)*
 ----------------------------
 

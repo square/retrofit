@@ -1,13 +1,18 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.google.common.base.Function;
+import com.google.common.base.Supplier;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +27,7 @@ import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.POST;
+import retrofit.http.Path;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
@@ -91,13 +97,7 @@ public class RestAdapterTest {
     mockCallbackExecutor = spy(new SynchronousExecutor());
     mockProfiler = mock(Profiler.class);
 
-    example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
-        .setProfiler(mockProfiler)
-        .build()
-        .create(Example.class);
+    example = adapter().create(Example.class);
   }
 
   @Test public void objectMethodsStillWork() {
@@ -511,5 +511,88 @@ public class RestAdapterTest {
     verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
     verify(callback).success(eq(response), same(response));
+  }
+
+  interface Func0 extends Supplier<Response> {
+
+    @Override @GET("/") Response get();
+  }
+
+  @Test public void functionalInterfaceInterfaceWithNoArgs() throws Exception {
+    Supplier<Response> fn = adapter().create(Func0.class);
+
+    Response response = new Response(200, "OK", NO_HEADERS, null);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+
+    Method getMethod = Supplier.class.getDeclaredMethod("get");
+
+    assertThat(getMethod.invoke(fn)).isEqualTo(response);
+  }
+
+  interface Func1 extends Function<String, Response> {
+
+    @Override @GET("/{name}") Response apply(@Path("name") String name);
+  }
+
+  @Test public void functionalInterfaceInterfaceWithArg() throws Exception {
+    Function<String, Response> fn = adapter().create(Func1.class);
+
+    Response response = new Response(200, "OK", NO_HEADERS, null);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(response);
+
+    Method applyMethod = Function.class.getDeclaredMethod("apply", Object.class);
+
+    assertThat(applyMethod.invoke(fn, "retrofit")).isEqualTo(response);
+  }
+
+  interface MultipleInterfaces extends Supplier<Response>, Function<String, Response> {
+
+    @Override @GET("/") Response get();
+
+    @Override @GET("/{name}") Response apply(@Path("name") String name);
+  }
+
+  @Test public void multipleInterfacesNotSupported() throws Exception {
+    try {
+      Method applyMethod = Function.class.getDeclaredMethod("apply", Object.class);
+
+      applyMethod.invoke(adapter().create(MultipleInterfaces.class), "retrofit");
+      fail("shouldn't work");
+    } catch (InvocationTargetException e) {
+      assertThat(e.getCause()) //
+          .hasMessage("inheritance only supported for one functional interface.")
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+  }
+
+  interface MultipleMethods extends Queue<String> {
+
+    @Override @GET("/{name}") boolean offer(@Path("name") String name);
+
+    @Override @GET("/{name}") boolean add(@Path("name") String name);
+  }
+
+  @Test public void multipleMethodsNotSupported() throws Exception {
+    try {
+      Method offerMethod = Queue.class.getDeclaredMethod("offer", Object.class);
+
+      offerMethod.invoke(adapter().create(MultipleMethods.class), "retrofit");
+      fail("shouldn't work");
+    } catch (InvocationTargetException e) {
+      assertThat(e.getCause()) //
+          .hasMessage("inheritance only supported for one functional interface.")
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+  }
+
+  private RestAdapter adapter() {
+    return new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setServer("http://example.com")
+        .setProfiler(mockProfiler)
+        .build();
   }
 }
