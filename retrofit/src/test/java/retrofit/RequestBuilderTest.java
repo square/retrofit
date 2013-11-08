@@ -2,6 +2,15 @@
 package retrofit;
 
 import com.google.gson.Gson;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import retrofit.client.Header;
 import retrofit.client.Request;
@@ -12,15 +21,17 @@ import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.*;
-
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
 import static retrofit.RestMethodInfo.ParamUsage;
-import static retrofit.RestMethodInfo.ParamUsage.*;
+import static retrofit.RestMethodInfo.ParamUsage.BODY;
+import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
+import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.FIELD;
+import static retrofit.RestMethodInfo.ParamUsage.HEADER;
+import static retrofit.RestMethodInfo.ParamUsage.PART;
+import static retrofit.RestMethodInfo.ParamUsage.PATH;
+import static retrofit.RestMethodInfo.ParamUsage.QUERY;
 import static retrofit.RestMethodInfo.RequestType;
 
 public class RequestBuilderTest {

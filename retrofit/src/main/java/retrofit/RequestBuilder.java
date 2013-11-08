@@ -15,6 +15,11 @@
  */
 package retrofit;
 
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
@@ -22,12 +27,6 @@ import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
-
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
