@@ -13,15 +13,19 @@ import retrofit.client.Client;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.http.GET;
+import rx.Observable;
+import rx.util.functions.Action1;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static retrofit.MockRestAdapter.ValueChangeListener;
 import static retrofit.Utils.SynchronousExecutor;
 
@@ -32,6 +36,10 @@ public class MockRestAdapterTest {
 
   interface AsyncExample {
     @GET("/") void doStuff(Callback<Object> cb);
+  }
+
+  interface ObservableExample {
+    @GET("/") Observable<Object> doStuff();
   }
 
   private Executor httpExecutor;
@@ -301,6 +309,46 @@ public class MockRestAdapterTest {
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
   }
 
+  @Test public void observableApiIsCalledWithDelay() {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    final Object expected = new Object();
+    class MockObservableExample implements ObservableExample {
+      @Override public Observable<Object> doStuff() {
+        return Observable.from(expected);
+      }
+    }
+
+    ObservableExample mockService =
+        mockRestAdapter.create(ObservableExample.class, new MockObservableExample());
+
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<Object> actual = new AtomicReference<Object>();
+    Action1<Object> onSuccess = new Action1<Object>() {
+      @Override public void call(Object o) {
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        actual.set(o);
+      }
+    };
+    Action1<Throwable> onError = new Action1<Throwable>() {
+      @Override public void call(Throwable throwable) {
+        throw new AssertionError();
+      }
+    };
+
+    mockService.doStuff().subscribe(onSuccess, onError);
+
+    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verifyZeroInteractions(callbackExecutor);
+
+    assertThat(actual.get()).isNotNull().isSameAs(expected);
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+  }
+
+
   @Test public void syncHttpExceptionBecomesError() {
     mockRestAdapter.setDelay(100);
     mockRestAdapter.setVariancePercentage(0);
@@ -359,6 +407,47 @@ public class MockRestAdapterTest {
 
     verify(httpExecutor).execute(any(Runnable.class));
     verify(callbackExecutor).execute(any(Runnable.class));
+
+    RetrofitError error = errorRef.get();
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+    assertThat(error.isNetworkError()).isFalse();
+    assertThat(error.getResponse().getStatus()).isEqualTo(404);
+    assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
+    assertThat(error.getBody()).isSameAs(expected);
+  }
+
+  @Test public void observableHttpExceptionBecomesError() {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    final Object expected = new Object();
+    class MockObservableExample implements ObservableExample {
+      @Override public Observable<Object> doStuff() {
+        throw new MockHttpException(404, "Not Found", expected);
+      }
+    }
+
+    ObservableExample mockService =
+        mockRestAdapter.create(ObservableExample.class, new MockObservableExample());
+
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    mockService.doStuff().subscribe(new Action1<Object>() {
+      @Override public void call(Object o) {
+        throw new AssertionError();
+      }
+    }, new Action1<Throwable>() {
+      @Override public void call(Throwable error) {
+        assertThat(error).isInstanceOf(RetrofitError.class);
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        errorRef.set((RetrofitError) error);
+      }
+    });
+
+    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verifyZeroInteractions(callbackExecutor);
 
     RetrofitError error = errorRef.get();
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
