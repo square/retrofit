@@ -13,7 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 
 /**
  * A {@link Converter} which uses Jackson for reading and writing entities.
@@ -31,7 +30,7 @@ public class JacksonConverter implements Converter {
 
   @Override public Object fromBody(TypedInput body, final Type type) throws ConversionException {
     try {
-      final JavaType javaType = TypeFactory.defaultInstance().constructType(type);
+      final JavaType javaType = objectMapper.getTypeFactory().constructType(type);
       return objectMapper.readValue(body.in(), javaType);
     } catch (final JsonParseException e) {
       throw new ConversionException(e);
