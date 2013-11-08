@@ -6,15 +6,11 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
-import retrofit.mime.TypedInput;
 
 import static retrofit.RestAdapter.LogLevel;
 
@@ -64,7 +60,6 @@ public final class MockRestAdapter {
   private static final int DEFAULT_VARIANCE_PCT = 40; // Network delay varies by ±40%.
   private static final int DEFAULT_ERROR_PCT = 3; // 3% of network calls will fail.
   private static final int ERROR_DELAY_FACTOR = 3; // Network errors will be scaled by this value.
-  private static final List<Header> NO_HEADERS = Collections.emptyList();
 
   /**
    * Create a new {@link MockRestAdapter} which will act as a factory for mock services. Some of
@@ -313,9 +308,7 @@ public final class MockRestAdapter {
           throw innerEx;
         }
         MockHttpException httpEx = (MockHttpException) innerEx;
-
-        TypedInput body = new MockTypedInput(restAdapter.converter, httpEx.responseBody);
-        Response response = new Response(httpEx.code, httpEx.reason, NO_HEADERS, body);
+        Response response = httpEx.toResponse(restAdapter.converter);
 
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
@@ -392,9 +385,7 @@ public final class MockRestAdapter {
         }
 
         MockHttpException httpEx = (MockHttpException) innerEx;
-
-        TypedInput body = new MockTypedInput(restAdapter.converter, httpEx.responseBody);
-        Response response = new Response(httpEx.code, httpEx.reason, NO_HEADERS, body);
+        Response response = httpEx.toResponse(restAdapter.converter);
 
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
