@@ -19,6 +19,7 @@ package retrofit;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 import retrofit.client.Request;
 import retrofit.client.Response;
@@ -90,6 +91,31 @@ final class Utils {
         }
       }
     }
+  }
+
+  /**
+   * true if the interface is a functional interface, having exactly one
+   * abstract method.  Note methods from {@link Object} are not abstract!
+   */
+  static boolean isFunctionalInterface(Class<?> declaring) {
+    boolean found = false;
+    for (Method method : declaring.getDeclaredMethods()) {
+      if (found) return false;
+      if (matchesSignatureOfObjectMethod(method)) continue;
+      found = true;
+    }
+    return found;
+  }
+
+  private static boolean matchesSignatureOfObjectMethod(Method method) {
+    if (method.getParameterTypes().length == 0) {
+      if ("hashCode".equals(method.getName()) || "toString".equals(method.getName())) return true;
+    }
+    if (method.getParameterTypes().length == 1 && "equals".equals(method.getName()) //
+        && Object.class.equals(method.getParameterTypes()[0])) {
+      return true;
+    }
+    return false;
   }
 
   static Response replaceResponseBody(Response response, TypedInput body) {

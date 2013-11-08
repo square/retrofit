@@ -191,7 +191,7 @@ public class RestAdapter {
   public <T> T create(Class<T> service) {
     Utils.validateServiceClass(service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
-        new RestHandler(getMethodInfoCache(service)));
+        new RestHandler(service, getMethodInfoCache(service)));
   }
 
   Map<Method, RestMethodInfo> getMethodInfoCache(Class<?> service) {
@@ -205,11 +205,24 @@ public class RestAdapter {
     }
   }
 
-  static RestMethodInfo getMethodInfo(Map<Method, RestMethodInfo> cache, Method method) {
+  static RestMethodInfo getMethodInfo(Map<Method, RestMethodInfo> cache, Class<?> service,
+      Method method) {
     synchronized (cache) {
       RestMethodInfo methodInfo = cache.get(method);
       if (methodInfo == null) {
-        methodInfo = new RestMethodInfo(method);
+        if (method.getDeclaringClass() == service) {
+          methodInfo = new RestMethodInfo(method);
+        } else {
+          if (service.getInterfaces().length != 1 || //
+              !Utils.isFunctionalInterface(method.getDeclaringClass())) {
+            throw new IllegalArgumentException(
+                "inheritance only supported for one functional interface.");
+          }
+          // supporting only one interface makes looking up the resolved one easy!
+          Method resolvedMethod = service.getDeclaredMethods()[0];
+          methodInfo = new RestMethodInfo(resolvedMethod);
+          cache.put(resolvedMethod, methodInfo);
+        }
         cache.put(method, methodInfo);
       }
       return methodInfo;
@@ -217,9 +230,11 @@ public class RestAdapter {
   }
 
   private class RestHandler implements InvocationHandler {
+    private final Class<?> service;
     private final Map<Method, RestMethodInfo> methodDetailsCache;
 
-    RestHandler(Map<Method, RestMethodInfo> methodDetailsCache) {
+    RestHandler(Class<?> service, Map<Method, RestMethodInfo> methodDetailsCache) {
+      this.service = service;
       this.methodDetailsCache = methodDetailsCache;
     }
 
@@ -232,7 +247,7 @@ public class RestAdapter {
       }
 
       // Load or create the details cache for the current method.
-      final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
+      final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, service, method);
 
       if (methodInfo.isSynchronous) {
         try {

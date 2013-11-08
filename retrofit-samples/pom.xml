@@ -17,5 +17,6 @@
 
   <modules>
     <module>github-client</module>
+    <module>functional-playground</module>
   </modules>
 </project>

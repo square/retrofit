@@ -205,15 +205,18 @@ public final class MockRestAdapter {
   public <T> T create(Class<T> service, T mockService) {
     Utils.validateServiceClass(service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
-        new MockHandler(mockService, restAdapter.getMethodInfoCache(service)));
+        new MockHandler(mockService, service, restAdapter.getMethodInfoCache(service)));
   }
 
   private class MockHandler implements InvocationHandler {
     private final Object mockService;
+    private final Class<?> service;
     private final Map<Method, RestMethodInfo> methodInfoCache;
 
-    public MockHandler(Object mockService, Map<Method, RestMethodInfo> methodInfoCache) {
+    public MockHandler(Object mockService, Class<?> service,
+        Map<Method, RestMethodInfo> methodInfoCache) {
       this.mockService = mockService;
+      this.service = service;
       this.methodInfoCache = methodInfoCache;
     }
 
@@ -225,7 +228,7 @@ public final class MockRestAdapter {
       }
 
       // Load or create the details cache for the current method.
-      final RestMethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
+      final RestMethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, service, method);
 
       if (methodInfo.isSynchronous) {
         return invokeSync(methodInfo, restAdapter.requestInterceptor, args);
