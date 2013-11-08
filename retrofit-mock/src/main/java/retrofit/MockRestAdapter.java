@@ -11,6 +11,10 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import retrofit.client.Request;
 import retrofit.client.Response;
+import rx.Observable;
+import rx.Observer;
+import rx.Subscription;
+import rx.concurrency.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
 
@@ -238,6 +242,21 @@ public final class MockRestAdapter {
       // This way we still defer argument serialization to the background thread.
       final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
       restAdapter.requestInterceptor.intercept(interceptorTape);
+
+      if (methodInfo.isObservable) {
+        return Observable.create(new Observable.OnSubscribeFunc<Object>() {
+          @Override public Subscription onSubscribe(Observer<? super Object> observer) {
+            try {
+              Observable observable = (Observable) invokeSync(methodInfo, interceptorTape, args);
+              //noinspection unchecked
+              return observable.subscribe(observer);
+            } catch (Throwable throwable) {
+              return Observable.error(throwable).subscribe(observer);
+            }
+          }
+        }).subscribeOn(Schedulers.executor(restAdapter.httpExecutor));
+      }
+
       restAdapter.httpExecutor.execute(new Runnable() {
         @Override public void run() {
           invokeAsync(methodInfo, interceptorTape, args);

@@ -24,6 +24,7 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import retrofit.Profiler.RequestInformation;
@@ -37,6 +38,12 @@ import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
+import rx.Observable;
+import rx.Observer;
+import rx.Scheduler;
+import rx.Subscription;
+import rx.concurrency.Schedulers;
+import rx.subscriptions.Subscriptions;
 
 /**
  * Adapts a Java interface to a REST API.
@@ -156,6 +163,8 @@ public class RestAdapter {
   private final Client.Provider clientProvider;
   private final Profiler profiler;
 
+  private RxSupport rxSupport = null;
+
   volatile LogLevel logLevel;
 
   private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
@@ -164,6 +173,9 @@ public class RestAdapter {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
+    if (Platform.HAS_RX_JAVA && httpExecutor != null) {
+      this.rxSupport = new RxSupport(httpExecutor);
+    }
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
     this.converter = converter;
@@ -216,6 +228,37 @@ public class RestAdapter {
     }
   }
 
+  /** Indirection to avoid VerifyError if RxJava isn't present. */
+  private static final class RxSupport {
+    private final Scheduler scheduler;
+
+    RxSupport(Executor executor) {
+      this.scheduler = Schedulers.executor(executor);
+    }
+
+    Scheduler getScheduler() {
+      return scheduler;
+    }
+
+    Observable createRequestObservable(final Callable<ResponseWrapper> request) {
+      return Observable.create(new Observable.OnSubscribeFunc<Object>() {
+        @Override public Subscription onSubscribe(Observer<? super Object> observer) {
+          try {
+            ResponseWrapper wrapper = request.call();
+            observer.onNext(wrapper.responseBody);
+            observer.onCompleted();
+          } catch (RetrofitError e) {
+            observer.onError(e);
+          } catch (Exception e) {
+            // This is from the Callable.  It shouldn't actually throw.
+            throw new RuntimeException(e);
+          }
+          return Subscriptions.empty();
+        }
+      });
+    }
+  }
+
   private class RestHandler implements InvocationHandler {
     private final Map<Method, RestMethodInfo> methodDetailsCache;
 
@@ -250,10 +293,20 @@ public class RestAdapter {
       if (httpExecutor == null || callbackExecutor == null) {
         throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
       }
+
       // Apply the interceptor synchronously, recording the interception so we can replay it later.
       // This way we still defer argument serialization to the background thread.
       final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
       requestInterceptor.intercept(interceptorTape);
+
+      if (methodInfo.isObservable) {
+        return rxSupport.createRequestObservable(new Callable<ResponseWrapper>() {
+          @Override public ResponseWrapper call() throws Exception {
+            return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
+          }
+        }).subscribeOn(rxSupport.getScheduler());
+      }
+
       Callback<?> callback = (Callback<?>) args[args.length - 1];
       httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor) {
         @Override public ResponseWrapper obtainResponse() {

@@ -25,6 +25,8 @@ import retrofit.http.POST;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
+import rx.Observable;
+import rx.util.functions.Action1;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.fail;
@@ -32,7 +34,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -74,6 +78,7 @@ public class RestAdapterTest {
     @GET("/") void something(Callback<Object> callback);
     @GET("/") Response direct();
     @GET("/") void direct(Callback<Response> callback);
+    @POST("/") Observable<String> observable(@Body String body);
   }
   private interface InvalidExample extends Example {
   }
@@ -512,4 +517,33 @@ public class RestAdapterTest {
     verify(mockCallbackExecutor).execute(any(Runnable.class));
     verify(callback).success(eq(response), same(response));
   }
+
+  @Test public void observableCallsOnNext() throws Exception {
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("hello")));
+    Action1<String> action = mock(Action1.class);
+    example.observable("Howdy").subscribe(action);
+    verify(action).call(eq("hello"));
+  }
+
+  @Test public void observableCallsOnError() throws Exception {
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response(300, "FAIL", NO_HEADERS, new TypedString("bummer")));
+    Action1<String> onSuccess = mock(Action1.class);
+    Action1<Throwable> onError = mock(Action1.class);
+    example.observable("Howdy").subscribe(onSuccess, onError);
+    verifyZeroInteractions(onSuccess);
+    verify(onError).call(isA(RetrofitError.class));
+  }
+
+  @Test public void observableUsesHttpExecutor() throws IOException {
+    Response response = new Response(200, "OK", NO_HEADERS, new TypedString("hello"));
+    when(mockClient.execute(any(Request.class))).thenReturn(response);
+
+    example.observable("Howdy").subscribe(mock(Action1.class));
+
+    verify(mockRequestExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verifyZeroInteractions(mockCallbackExecutor);
+  }
+
 }

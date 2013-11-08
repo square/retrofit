@@ -36,6 +36,8 @@ import static java.lang.Thread.MIN_PRIORITY;
 abstract class Platform {
   private static final Platform PLATFORM = findPlatform();
 
+  static final boolean HAS_RX_JAVA = hasRxJavaOnClasspath();
+
   static Platform get() {
     return PLATFORM;
   }
@@ -165,5 +167,14 @@ abstract class Platform {
     static Client instantiate() {
       return new OkClient();
     }
+  }
+
+  private static boolean hasRxJavaOnClasspath() {
+    try {
+      Class.forName("rx.Observable");
+      return true;
+    } catch (ClassNotFoundException e) {
+    }
+    return false;
   }
 }
