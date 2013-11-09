@@ -101,7 +101,7 @@ User updateUser(@Part("photo") TypedFile photo, @Part("description") TypedString
 
             <h4>Synchronous vs. Asynchronous vs. Observable</h4>
             <p>Methods can be declared for either synchronous or asynchronous execution.</p>
-            <p>A method with a return type will be executed sychronously.</p>
+            <p>A method with a return type will be executed synchronously.</p>
             <pre class="prettyprint">@GET("/user/{id}/photo")
 Photo getUserPhoto(@Path("id") int id);</pre>
             <p>Asynchronous execution requires the last parameter of the method be a <code>Callback</code>.</p>
