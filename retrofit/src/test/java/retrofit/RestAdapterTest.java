@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import retrofit.client.Client;
@@ -22,6 +23,7 @@ import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.POST;
+import retrofit.http.Path;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
@@ -79,6 +81,7 @@ public class RestAdapterTest {
     @GET("/") Response direct();
     @GET("/") void direct(Callback<Response> callback);
     @POST("/") Observable<String> observable(@Body String body);
+    @POST("/{x}/{y}") Observable<Response> observable(@Path("x") String x, @Path("y") String y);
   }
   private interface InvalidExample extends Example {
   }
@@ -534,6 +537,22 @@ public class RestAdapterTest {
     example.observable("Howdy").subscribe(onSuccess, onError);
     verifyZeroInteractions(onSuccess);
     verify(onError).call(isA(RetrofitError.class));
+  }
+
+  @Test public void observableHandlesParams() throws Exception {
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    when(mockClient.execute(requestCaptor.capture())) //
+        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("hello")));
+    ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+    Action1<Response> action = mock(Action1.class);
+    example.observable("X", "Y").subscribe(action);
+
+    Request request = requestCaptor.getValue();
+    assertThat(request.getUrl()).contains("/X/Y");
+
+    verify(action).call(responseCaptor.capture());
+    Response response = responseCaptor.getValue();
+    assertThat(response.getStatus()).isEqualTo(200);
   }
 
   @Test public void observableUsesHttpExecutor() throws IOException {
