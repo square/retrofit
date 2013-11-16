@@ -134,6 +134,11 @@ void userList(Callback&lt;Response> cb);
 @GET("/users/list")
 Observable&lt;Response> userList();</pre>
 
+            <h4>Header Manipulation</h4>
+            <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding String parameter must be provided to the <code>@Header</code>. If the value is null it will omit the header</p>
+            <pre class="prettyprint">@GET("/user")
+void getUser(@Header("Authorization") String authorization, Callback&lt;User> callback)</pre>
+
             <!--<h3 id="restadapter-configuration">RestAdapter Configuration</h3>
             <p><code>RestAdapter</code> is the class through which your API interfaces are turned into callable objects. By default, Retrofit will give you sane defaults for your platform but it allows for customization.</p>
 
