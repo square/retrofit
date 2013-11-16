@@ -84,6 +84,7 @@ public final class MockRestAdapter {
   }
 
   private final RestAdapter restAdapter;
+  private final MockRxSupport mockRxSupport;
   final Random random = new Random();
 
   private ValueChangeListener listener = ValueChangeListener.EMPTY;
@@ -91,13 +92,13 @@ public final class MockRestAdapter {
   private int variancePct = DEFAULT_VARIANCE_PCT;
   private int errorPct = DEFAULT_ERROR_PCT;
 
-  private MockRxSupport mockRxSupport;
-
   private MockRestAdapter(RestAdapter restAdapter) {
     this.restAdapter = restAdapter;
 
     if (Platform.HAS_RX_JAVA) {
       mockRxSupport = new MockRxSupport(restAdapter);
+    } else {
+      mockRxSupport = null;
     }
   }
 
