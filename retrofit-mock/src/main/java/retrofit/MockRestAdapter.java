@@ -91,8 +91,14 @@ public final class MockRestAdapter {
   private int variancePct = DEFAULT_VARIANCE_PCT;
   private int errorPct = DEFAULT_ERROR_PCT;
 
+  private MockRxSupport mockRxSupport;
+
   private MockRestAdapter(RestAdapter restAdapter) {
     this.restAdapter = restAdapter;
+
+    if (Platform.HAS_RX_JAVA) {
+      mockRxSupport = new MockRxSupport(restAdapter);
+    }
   }
 
   /** Set a listener to be notified when any mock value changes. */
@@ -244,17 +250,7 @@ public final class MockRestAdapter {
       restAdapter.requestInterceptor.intercept(interceptorTape);
 
       if (methodInfo.isObservable) {
-        return Observable.create(new Observable.OnSubscribeFunc<Object>() {
-          @Override public Subscription onSubscribe(Observer<? super Object> observer) {
-            try {
-              Observable observable = (Observable) invokeSync(methodInfo, interceptorTape, args);
-              //noinspection unchecked
-              return observable.subscribe(observer);
-            } catch (Throwable throwable) {
-              return Observable.error(throwable).subscribe(observer);
-            }
-          }
-        }).subscribeOn(Schedulers.executor(restAdapter.httpExecutor));
+        return mockRxSupport.createMockObservable(this, methodInfo, interceptorTape, args);
       }
 
       restAdapter.httpExecutor.execute(new Runnable() {
@@ -509,5 +505,30 @@ public final class MockRestAdapter {
 
   private static long uptimeMillis() {
     return System.nanoTime() / 1000000L;
+  }
+
+  /** Indirection to avoid VerifyError if RxJava isn't present. */
+  private static class MockRxSupport {
+    private final RestAdapter restAdapter;
+
+    MockRxSupport(RestAdapter restAdapter) {
+      this.restAdapter = restAdapter;
+    }
+
+    Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
+        final RequestInterceptor interceptor, final Object[] args) {
+      return Observable.create(new Observable.OnSubscribeFunc<Object>() {
+        @Override public Subscription onSubscribe(Observer<? super Object> observer) {
+          try {
+            Observable observable =
+                (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
+            //noinspection unchecked
+            return observable.subscribe(observer);
+          } catch (Throwable throwable) {
+            return Observable.error(throwable).subscribe(observer);
+          }
+        }
+      }).subscribeOn(Schedulers.executor(restAdapter.httpExecutor));
+    }
   }
 }
