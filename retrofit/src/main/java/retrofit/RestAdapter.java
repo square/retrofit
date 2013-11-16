@@ -162,8 +162,7 @@ public class RestAdapter {
 
   private final Client.Provider clientProvider;
   private final Profiler profiler;
-
-  private RxSupport rxSupport = null;
+  private final RxSupport rxSupport;
 
   volatile LogLevel logLevel;
 
@@ -175,6 +174,8 @@ public class RestAdapter {
     this.httpExecutor = httpExecutor;
     if (Platform.HAS_RX_JAVA && httpExecutor != null) {
       this.rxSupport = new RxSupport(httpExecutor);
+    } else {
+      this.rxSupport = null;
     }
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
