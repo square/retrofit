@@ -17,5 +17,6 @@
 
   <modules>
     <module>github-client</module>
+    <module>mock-github-client</module>
   </modules>
 </project>

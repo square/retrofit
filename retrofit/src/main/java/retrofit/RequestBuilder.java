@@ -35,6 +35,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final RestMethodInfo.ParamUsage[] paramUsages;
   private final String requestMethod;
   private final boolean isSynchronous;
+  private final boolean isObservable;
 
   private final FormUrlEncodedTypedOutput formBody;
   private final MultipartTypedOutput multipartBody;
@@ -50,6 +51,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     paramUsages = methodInfo.requestParamUsage;
     requestMethod = methodInfo.requestMethod;
     isSynchronous = methodInfo.isSynchronous;
+    isObservable = methodInfo.isObservable;
 
     headers = new ArrayList<Header>();
     if (methodInfo.headers != null) {
@@ -163,7 +165,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       return;
     }
     int count = args.length;
-    if (!isSynchronous) {
+    if (!isSynchronous && !isObservable) {
       count -= 1;
     }
     for (int i = 0; i < count; i++) {

@@ -35,6 +35,7 @@
   <modules>
     <module>retrofit</module>
     <module>retrofit-converters</module>
+    <module>retrofit-mock</module>
     <module>retrofit-samples</module>
   </modules>
 
@@ -50,17 +51,19 @@
     <android.platform>16</android.platform>
     <gson.version>2.2.4</gson.version>
     <okhttp.version>1.2.1</okhttp.version>
+    <rxjava.version>0.14.9</rxjava.version>
 
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.2.2</jackson.version>
-    <wire.version>1.0.1</wire.version>
+    <wire.version>1.2.0</wire.version>
+    <simplexml.version>2.7.1</simplexml.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
     <fest.version>2.0M10</fest.version>
     <mockito.version>1.9.5</mockito.version>
-    <guava.version>14.0.1</guava.version>
+    <guava.version>15.0</guava.version>
   </properties>
 
   <scm>
@@ -103,6 +106,11 @@
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.netflix.rxjava</groupId>
+        <artifactId>rxjava-core</artifactId>
+        <version>${rxjava.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -118,6 +126,11 @@
         <groupId>com.squareup.wire</groupId>
         <artifactId>wire-runtime</artifactId>
         <version>${wire.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.simpleframework</groupId>
+        <artifactId>simple-xml</artifactId>
+        <version>${simplexml.version}</version>
       </dependency>
 
       <dependency>

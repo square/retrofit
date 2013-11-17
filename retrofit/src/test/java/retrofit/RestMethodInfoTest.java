@@ -30,6 +30,7 @@ import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.RestMethod;
 import retrofit.mime.TypedOutput;
+import rx.Observable;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -202,6 +203,47 @@ public class RestMethodInfoTest {
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
+  }
+
+  @Test public void observableResponse() {
+    class Example {
+      @GET("/foo") Observable<Response> a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    assertThat(methodInfo.isSynchronous).isFalse();
+    assertThat(methodInfo.isObservable).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
+  }
+
+  @Test public void observableGenericResponse() {
+    class Example {
+      @GET("/foo") Observable<List<String>> a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    assertThat(methodInfo.isSynchronous).isFalse();
+    assertThat(methodInfo.isObservable).isTrue();
+    Type expected = new TypeToken<List<String>>() {}.getType();
+    assertThat(methodInfo.responseObjectType).isEqualTo(expected);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void observableWithCallback() {
+    class Example {
+      @GET("/foo") Observable<Response> a(Callback<Response> callback) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    new RestMethodInfo(method);
   }
 
   @Test(expected = IllegalArgumentException.class)

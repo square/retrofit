@@ -13,17 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package retrofit.mime;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 public final class MultipartTypedOutput implements TypedOutput {
-  final List<byte[]> parts = new ArrayList<byte[]>();
+
+  private static final class MimePart {
+    private final TypedOutput body;
+    private final String name;
+    private final boolean isFirst;
+    private final String boundary;
+
+    private byte[] partBoundary;
+    private byte[] partHeader;
+    private boolean isBuilt;
+
+    public MimePart(String name, TypedOutput body, String boundary, boolean isFirst) {
+      this.name = name;
+      this.body = body;
+      this.isFirst = isFirst;
+      this.boundary = boundary;
+    }
+
+    public void writeTo(OutputStream out) throws IOException {
+      build();
+      out.write(partBoundary);
+      out.write(partHeader);
+      body.writeTo(out);
+    }
+
+    public long size() {
+      build();
+      if (body.length() > -1) {
+        return body.length() + partBoundary.length + partHeader.length;
+      } else {
+        return -1;
+      }
+    }
+
+    private void build() {
+      if (isBuilt) return;
+      partBoundary = buildBoundary(boundary, isFirst, false);
+      partHeader = buildHeader(name, body);
+      isBuilt = true;
+    }
+  }
+
+  private final List<MimePart> mimeParts = new LinkedList<MimePart>();
+
   private final byte[] footer;
   private final String boundary;
   private long length;
@@ -38,6 +83,16 @@ public final class MultipartTypedOutput implements TypedOutput {
     length = footer.length;
   }
 
+  List<byte[]> getParts() throws IOException {
+    List<byte[]> parts = new ArrayList<byte[]>(mimeParts.size());
+    for (MimePart part : mimeParts) {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      part.writeTo(bos);
+      parts.add(bos.toByteArray());
+    }
+    return parts;
+  }
+
   public void addPart(String name, TypedOutput body) {
     if (name == null) {
       throw new NullPointerException("Part name must not be null.");
@@ -46,13 +101,14 @@ public final class MultipartTypedOutput implements TypedOutput {
       throw new NullPointerException("Part body must not be null.");
     }
 
-    byte[] part = buildPart(name, body, parts.isEmpty());
-    parts.add(part);
-    length += part.length;
+    MimePart part = new MimePart(name, body, boundary, mimeParts.isEmpty());
+    mimeParts.add(part);
+
+    length += part.size();
   }
 
   public int getPartCount() {
-    return parts.size();
+    return mimeParts.size();
   }
 
   @Override public String fileName() {
@@ -68,30 +124,10 @@ public final class MultipartTypedOutput implements TypedOutput {
   }
 
   @Override public void writeTo(OutputStream out) throws IOException {
-    for (byte[] part : parts) {
-      out.write(part);
+    for (MimePart part : mimeParts) {
+      part.writeTo(out);
     }
     out.write(footer);
-  }
-
-  private byte[] buildPart(String name, TypedOutput body, boolean first) {
-    ByteArrayOutputStream out = null;
-    try {
-      out = new ByteArrayOutputStream();
-      out.write(buildBoundary(boundary, first, false));
-      out.write(buildHeader(name, body));
-      body.writeTo(out);
-      return out.toByteArray();
-    } catch (IOException ex) {
-      throw new RuntimeException("Unable to write multipart request.", ex);
-    } finally {
-      if (out != null) {
-        try {
-          out.close();
-        } catch (IOException ignored) {
-        }
-      }
-    }
   }
 
   private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
@@ -113,7 +149,7 @@ public final class MultipartTypedOutput implements TypedOutput {
     }
   }
 
-  private byte[] buildHeader(String name, TypedOutput value) {
+  private static byte[] buildHeader(String name, TypedOutput value) {
     try {
       StringBuilder headers = new StringBuilder();
       headers.append("Content-Disposition: form-data; name=\"");

@@ -5,33 +5,23 @@
 
   <parent>
     <groupId>com.squareup.retrofit</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>retrofit-converters</artifactId>
     <version>1.2.3-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>retrofit</artifactId>
-  <name>Retrofit</name>
+  <artifactId>converter-simplexml</artifactId>
+  <name>Converter: SimpleXML</name>
 
   <dependencies>
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
+      <groupId>com.squareup.retrofit</groupId>
+      <artifactId>retrofit</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.android</groupId>
-      <artifactId>android</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp</groupId>
-      <artifactId>okhttp</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <optional>true</optional>
+      <groupId>org.simpleframework</groupId>
+      <artifactId>simple-xml</artifactId>
     </dependency>
 
     <dependency>
@@ -42,11 +32,6 @@
     <dependency>
       <groupId>org.easytesting</groupId>
       <artifactId>fest-assert-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

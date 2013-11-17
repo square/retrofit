@@ -10,24 +10,22 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>retrofit</artifactId>
-  <name>Retrofit</name>
+  <artifactId>retrofit-mock</artifactId>
+  <name>Retrofit Mock Adapter</name>
 
   <dependencies>
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
+      <groupId>com.squareup.retrofit</groupId>
+      <artifactId>retrofit</artifactId>
+      <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp</groupId>
-      <artifactId>okhttp</artifactId>
-      <optional>true</optional>
-    </dependency>
+
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-core</artifactId>

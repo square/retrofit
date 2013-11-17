@@ -38,9 +38,17 @@ import retrofit.http.Part;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.RestMethod;
+import rx.Observable;
 
 /** Request metadata about a service interface declaration. */
 final class RestMethodInfo {
+
+  private enum ResponseType {
+    VOID,
+    OBSERVABLE,
+    OBJECT
+  }
+
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
@@ -64,7 +72,9 @@ final class RestMethodInfo {
   boolean loaded = false;
 
   // Method-level details
+  final ResponseType responseType;
   final boolean isSynchronous;
+  final boolean isObservable;
   Type responseObjectType;
   RequestType requestType = RequestType.SIMPLE;
   String requestMethod;
@@ -80,7 +90,9 @@ final class RestMethodInfo {
 
   RestMethodInfo(Method method) {
     this.method = method;
-    isSynchronous = parseResponseType();
+    responseType = parseResponseType();
+    isSynchronous = (responseType == ResponseType.OBJECT);
+    isObservable = (responseType == ResponseType.OBSERVABLE);
   }
 
   synchronized void init() {
@@ -222,8 +234,9 @@ final class RestMethodInfo {
   }
 
   /** Loads {@link #responseObjectType}. Returns {@code true} if method is synchronous. */
-  private boolean parseResponseType() {
+  private ResponseType parseResponseType() {
     // Synchronous methods have a non-void return type.
+    // Observable methods have a return type of Observable.
     Type returnType = method.getGenericReturnType();
 
     // Asynchronous methods should have a Callback type as the last argument.
@@ -257,27 +270,40 @@ final class RestMethodInfo {
     }
 
     if (hasReturnType) {
+      if (Platform.HAS_RX_JAVA) {
+        Class rawReturnType = Types.getRawType(returnType);
+        if (rawReturnType == Observable.class) {
+          returnType = Types.getSupertype(returnType, rawReturnType, Observable.class);
+          responseObjectType = getParameterUpperBound((ParameterizedType) returnType);
+          return ResponseType.OBSERVABLE;
+        }
+      }
       responseObjectType = returnType;
-      return true;
+      return ResponseType.OBJECT;
     }
 
     lastArgType = Types.getSupertype(lastArgType, Types.getRawType(lastArgType), Callback.class);
     if (lastArgType instanceof ParameterizedType) {
-      Type[] types = ((ParameterizedType) lastArgType).getActualTypeArguments();
-      for (int i = 0; i < types.length; i++) {
-        Type type = types[i];
-        if (type instanceof WildcardType) {
-          types[i] = ((WildcardType) type).getUpperBounds()[0];
-        }
-      }
-      responseObjectType = types[0];
-      return false;
+      responseObjectType = getParameterUpperBound((ParameterizedType) lastArgType);
+      return ResponseType.VOID;
     }
 
     throw new IllegalArgumentException("Last parameter of "
         + method.getName()
         + " must be of type Callback<X> or Callback<? super X>. Found: "
         + lastArgType);
+  }
+
+
+  private static Type getParameterUpperBound(ParameterizedType type) {
+    Type[] types = type.getActualTypeArguments();
+    for (int i = 0; i < types.length; i++) {
+      Type paramType = types[i];
+      if (paramType instanceof WildcardType) {
+        types[i] = ((WildcardType) paramType).getUpperBounds()[0];
+      }
+    }
+    return types[0];
   }
 
   /**
@@ -289,7 +315,7 @@ final class RestMethodInfo {
 
     Annotation[][] parameterAnnotationArrays = method.getParameterAnnotations();
     int count = parameterAnnotationArrays.length;
-    if (!isSynchronous) {
+    if (!isSynchronous && !isObservable) {
       count -= 1; // Callback is last argument when not a synchronous method.
     }
 
