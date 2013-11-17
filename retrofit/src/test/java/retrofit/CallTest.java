@@ -1,3 +1,4 @@
+// Copyright 2013 Square, Inc.
 package retrofit;
 
 import java.io.ByteArrayInputStream;
@@ -100,15 +101,26 @@ public class CallTest {
 			.create(Api.class);
 	}
 
-	@Test public void test() throws Exception {
+	@Test public void synchronousTest() throws Exception {
 		when(mockClient.execute(any(Request.class))) //
         	.thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("Hello")));
 
 		Call<String> c = api.something();
 
 		String result = c.execute();
-
 		assertEquals(result, "Hello");
+	}
+
+	@Test public void asyncTest() throws Exception {
+		when(mockClient.execute(any(Request.class))) //
+        	.thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("Hello")));
+
+		Call<String> c = api.something();
+
+		Callback2<String> callback = mock(Callback2.class);
+		c.execute(callback);
+
+		verify(callback).success(eq("Hello"));
 	}
 
 }

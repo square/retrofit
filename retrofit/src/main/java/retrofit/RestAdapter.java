@@ -291,8 +291,8 @@ public class RestAdapter {
 
           // Instantiate the Call<T> with its constructor
           Constructor<Call> cons = Call.class.getDeclaredConstructor(RestAdapter.RestHandler.class,
-            RequestInterceptor.class, RestMethodInfo.class, Object[].class);
-          return cons.newInstance(this, requestInterceptor, methodInfo, args);
+            RequestInterceptor.class, RestMethodInfo.class, Object[].class, Executor.class);
+          return cons.newInstance(this, requestInterceptor, methodInfo, args, httpExecutor);
         }
       }
 
