@@ -20,8 +20,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -38,6 +40,7 @@ import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
+import retrofit.Call;
 import rx.Observable;
 import rx.Observer;
 import rx.Scheduler;
@@ -259,7 +262,7 @@ public class RestAdapter {
     }
   }
 
-  private class RestHandler implements InvocationHandler {
+  class RestHandler implements InvocationHandler {
     private final Map<Method, RestMethodInfo> methodDetailsCache;
 
     RestHandler(Map<Method, RestMethodInfo> methodDetailsCache) {
@@ -276,6 +279,22 @@ public class RestAdapter {
 
       // Load or create the details cache for the current method.
       final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
+
+      // Check if the method returns a Call<T>
+      if (methodInfo.responseObjectType instanceof ParameterizedType) {
+        ParameterizedType parameterized = (ParameterizedType)methodInfo.responseObjectType;
+        Type rawType = parameterized.getRawType();
+
+        if (rawType.equals(Call.class)) {
+          if (parameterized.getActualTypeArguments().length != 1)
+            throw new IllegalArgumentException("Call must have a generic argument type");
+
+          // Instantiate the Call<T> with its constructor
+          Constructor<Call> cons = Call.class.getDeclaredConstructor(RestAdapter.RestHandler.class,
+            RequestInterceptor.class, RestMethodInfo.class, Object[].class);
+          return cons.newInstance(this, requestInterceptor, methodInfo, args);
+        }
+      }
 
       if (methodInfo.isSynchronous) {
         try {
@@ -322,7 +341,7 @@ public class RestAdapter {
      * @return HTTP response object of specified {@code type} or {@code null}.
      * @throws RetrofitError if any error occurs during the HTTP request.
      */
-    private Object invokeRequest(RequestInterceptor requestInterceptor,
+    Object invokeRequest(RequestInterceptor requestInterceptor,
         RestMethodInfo methodInfo, Object[] args) {
       methodInfo.init(); // Ensure all relevant method information has been loaded.
 
@@ -370,6 +389,19 @@ public class RestAdapter {
         }
 
         Type type = methodInfo.responseObjectType;
+
+        // Check if the method returns a Call<T>, and if so use its generic
+        // argument as the request return type
+        if (methodInfo.responseObjectType instanceof ParameterizedType) {
+          ParameterizedType parameterized = (ParameterizedType)methodInfo.responseObjectType;
+          Type rawType = parameterized.getRawType();
+
+          if (rawType.equals(Call.class)) {
+            type = parameterized.getActualTypeArguments()[0];
+            System.out.print(" --> ");
+            System.out.println(type);
+          }
+        }
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           // Caller requested the raw Response object directly.
