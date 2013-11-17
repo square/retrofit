@@ -25,6 +25,9 @@ public class Call<T> {
 	// Executor for HTTP requests
 	private Executor httpExecutor;
 
+	// Scheduled asynchronous execute() call
+	private ScheduledFuture<?> future;
+
 	/**
 	 * Constructor
 	 */
@@ -35,6 +38,7 @@ public class Call<T> {
 		this.interceptor = interceptor;
 		this.methodInfo = methodInfo;
 		this.httpExecutor = httpExecutor;
+		this.future = null;
 	}
 
 	/**
@@ -51,7 +55,7 @@ public class Call<T> {
 		// Not handling the interceptor or observable for now. The synchronous
 		// version of RestHandler.invoke() does not handle this either.
 
-		httpExecutor.execute(new Runnable() {
+		future = httpExecutor.schedule(new Runnable() {
 			@Override
 			public void run() {
 				T response;
