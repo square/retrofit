@@ -1,7 +1,6 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 
 /**
@@ -9,61 +8,58 @@ import java.util.concurrent.Executor;
  */
 public class Call<T> {
 
-	// RestHandler that created this Call<T> and that will carry out the actual
-	// request
-	private RestAdapter.RestHandler handler;
-
-	// Interceptor to call invokeRequest() with
-	private RequestInterceptor interceptor;
-
-	// RestMethodInfo to call invokeRequest() with
-	private RestMethodInfo methodInfo;
-
-	// Object[] to call invokeRequest() with
-	private Object[] args;
-
-	// Executor for HTTP requests
-	private Executor httpExecutor;
-
-	// Scheduled asynchronous execute() call
-	private ScheduledFuture<?> future;
+	private final RestAdapter.RestHandler handler;
+	private final RequestInterceptor interceptor;
+	private final RestMethodInfo methodInfo;
+	private final Object[] args;
+	private final Executor httpExecutor;
 
 	/**
-	 * Constructor
+	 * 
+	 * @param handler RestHandler that created this Call<T> and 
+	 * that will carry out the actual request.
+	 * @param interceptor Interceptor to call invokeRequest() with.
+	 * @param methodInfo RestMethodInfo to call invokeRequest() with.
+	 * @param args Object[] to call invokeRequest() with.
+	 * @param httpExecutor Executor for HTTP requests.
 	 */
-	public Call(RestAdapter.RestHandler handler, RequestInterceptor interceptor,
-		RestMethodInfo methodInfo, Object[] args, Executor httpExecutor)
-	{
+	public Call(RestAdapter.RestHandler handler,
+			RequestInterceptor interceptor, RestMethodInfo methodInfo,
+			Object[] args, Executor httpExecutor) {
 		this.handler = handler;
 		this.interceptor = interceptor;
 		this.methodInfo = methodInfo;
+		this.args = args;
 		this.httpExecutor = httpExecutor;
-		this.future = null;
 	}
 
 	/**
-	 * Execute immediately
+	 * Execute the request synchronously.
+	 * @return the request's response of type T
 	 */
+	@SuppressWarnings("unchecked")
 	public T execute() {
-		return (T)handler.invokeRequest(interceptor, methodInfo, args);
+		return (T) handler.invokeRequest(interceptor, methodInfo, args);
 	}
 
 	/**
-	 * Execute with a (API 2.0) callback
+	 * Execute the request asynchronously with a (API 2.0) callback.
+	 * @param callback (API 2.0) Callback2 to process the request with. 
+	 * @return Asynchronous execute() return void. 
 	 */
 	public void execute(final Callback2<T> callback) {
 		// Not handling the interceptor or observable for now. The synchronous
 		// version of RestHandler.invoke() does not handle this either.
 
-		future = httpExecutor.schedule(new Runnable() {
+		httpExecutor.execute(new Runnable() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void run() {
 				T response;
 
 				try {
-					response = (T)handler.invokeRequest(interceptor, methodInfo, args);
-				}
-				catch (RetrofitError err) {
+					response = (T) handler.invokeRequest(interceptor, methodInfo, args);
+				} catch (RetrofitError err) {
 					callback.failure(err);
 					return;
 				}

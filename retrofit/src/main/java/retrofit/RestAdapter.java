@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
 import retrofit.Profiler.RequestInformation;
 import retrofit.client.Client;
 import retrofit.client.Header;
@@ -279,21 +280,9 @@ public class RestAdapter {
 
       // Load or create the details cache for the current method.
       final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
-
-      // Check if the method returns a Call<T>
-      if (methodInfo.responseObjectType instanceof ParameterizedType) {
-        ParameterizedType parameterized = (ParameterizedType)methodInfo.responseObjectType;
-        Type rawType = parameterized.getRawType();
-
-        if (rawType.equals(Call.class)) {
-          if (parameterized.getActualTypeArguments().length != 1)
-            throw new IllegalArgumentException("Call must have a generic argument type");
-
-          // Instantiate the Call<T> with its constructor
-          Constructor<Call> cons = Call.class.getDeclaredConstructor(RestAdapter.RestHandler.class,
-            RequestInterceptor.class, RestMethodInfo.class, Object[].class, Executor.class);
-          return cons.newInstance(this, requestInterceptor, methodInfo, args, httpExecutor);
-        }
+      
+      if(methodInfo.isCallable) {
+    	return new Call(this, requestInterceptor, methodInfo, args, httpExecutor); 
       }
 
       if (methodInfo.isSynchronous) {
@@ -392,15 +381,9 @@ public class RestAdapter {
 
         // Check if the method returns a Call<T>, and if so use its generic
         // argument as the request return type
-        if (methodInfo.responseObjectType instanceof ParameterizedType) {
-          ParameterizedType parameterized = (ParameterizedType)methodInfo.responseObjectType;
-          Type rawType = parameterized.getRawType();
-
-          if (rawType.equals(Call.class)) {
-            type = parameterized.getActualTypeArguments()[0];
-            System.out.print(" --> ");
-            System.out.println(type);
-          }
+        if (methodInfo.isCallable) {
+          ParameterizedType pt = (ParameterizedType)methodInfo.responseObjectType;
+          type = pt.getActualTypeArguments()[0];
         }
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
