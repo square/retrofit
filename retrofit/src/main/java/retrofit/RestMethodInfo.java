@@ -273,14 +273,14 @@ final class RestMethodInfo {
 
     if (hasReturnType) {
       if (Platform.HAS_RX_JAVA) {
-    	Class rawReturnType = Types.getRawType(returnType);
+      Class rawReturnType = Types.getRawType(returnType);
         if (rawReturnType == Observable.class) {
           returnType = Types.getSupertype(returnType, rawReturnType, Observable.class);
           responseObjectType = getParameterUpperBound((ParameterizedType) returnType);
           return ResponseType.OBSERVABLE;
         }
       }
-      
+
       responseObjectType = returnType;
       return ResponseType.OBJECT;
     }

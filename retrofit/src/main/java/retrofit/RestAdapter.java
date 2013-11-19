@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -41,7 +40,6 @@ import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
-import retrofit.Call;
 import rx.Observable;
 import rx.Observer;
 import rx.Scheduler;
@@ -280,9 +278,9 @@ public class RestAdapter {
 
       // Load or create the details cache for the current method.
       final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
-      
-      if(methodInfo.isCallable) {
-    	return new Call(this, requestInterceptor, methodInfo, args, httpExecutor); 
+
+      if (methodInfo.isCallable) {
+        return new Call(this, requestInterceptor, methodInfo, args, httpExecutor);
       }
 
       if (methodInfo.isSynchronous) {
@@ -382,7 +380,7 @@ public class RestAdapter {
         // Check if the method returns a Call<T>, and if so use its generic
         // argument as the request return type
         if (methodInfo.isCallable) {
-          ParameterizedType pt = (ParameterizedType)methodInfo.responseObjectType;
+          ParameterizedType pt = (ParameterizedType) methodInfo.responseObjectType;
           type = pt.getActualTypeArguments()[0];
         }
 
