@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+Version 1.3.0 *(2013-11-25)*
+----------------------------
+
+ * New: Converter module for SimpleXML.
+ * New: Mock module which allows simulating real network behavior for local service interface
+   implementations. See 'mock-github-client' example for a demo.
+ * New: RxJava `Observable` support! Declare a return type of `Observable<Foo>` on your service
+   interfaces to automatically get an observable for that request. (Experimental API)
+ * Fix: Use `ObjectMapper`'s type factory when deserializing (Jackson converter).
+ * Multipart POST requests now stream their individual part bodies.
+ * Log chunking to 4000 characters now only happens on the Android platform.
+
+
 Version 1.2.2 *(2013-09-12)*
 ----------------------------
 
