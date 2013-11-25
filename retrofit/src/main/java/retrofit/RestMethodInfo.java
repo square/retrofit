@@ -75,6 +75,7 @@ final class RestMethodInfo {
   final ResponseType responseType;
   final boolean isSynchronous;
   final boolean isObservable;
+  final boolean isCallable; //Of type Call<T>.
   Type responseObjectType;
   RequestType requestType = RequestType.SIMPLE;
   String requestMethod;
@@ -93,6 +94,7 @@ final class RestMethodInfo {
     responseType = parseResponseType();
     isSynchronous = (responseType == ResponseType.OBJECT);
     isObservable = (responseType == ResponseType.OBSERVABLE);
+    isCallable = (Types.getRawType(responseObjectType) == Call.class);
   }
 
   synchronized void init() {
@@ -271,13 +273,14 @@ final class RestMethodInfo {
 
     if (hasReturnType) {
       if (Platform.HAS_RX_JAVA) {
-        Class rawReturnType = Types.getRawType(returnType);
+      Class rawReturnType = Types.getRawType(returnType);
         if (rawReturnType == Observable.class) {
           returnType = Types.getSupertype(returnType, rawReturnType, Observable.class);
           responseObjectType = getParameterUpperBound((ParameterizedType) returnType);
           return ResponseType.OBSERVABLE;
         }
       }
+
       responseObjectType = returnType;
       return ResponseType.OBJECT;
     }

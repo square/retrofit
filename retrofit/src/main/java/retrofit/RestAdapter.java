@@ -20,6 +20,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
 import retrofit.Profiler.RequestInformation;
 import retrofit.client.Client;
 import retrofit.client.Header;
@@ -259,7 +261,7 @@ public class RestAdapter {
     }
   }
 
-  private class RestHandler implements InvocationHandler {
+  class RestHandler implements InvocationHandler {
     private final Map<Method, RestMethodInfo> methodDetailsCache;
 
     RestHandler(Map<Method, RestMethodInfo> methodDetailsCache) {
@@ -276,6 +278,10 @@ public class RestAdapter {
 
       // Load or create the details cache for the current method.
       final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
+
+      if (methodInfo.isCallable) {
+        return new Call(this, requestInterceptor, methodInfo, args, httpExecutor);
+      }
 
       if (methodInfo.isSynchronous) {
         try {
@@ -322,7 +328,7 @@ public class RestAdapter {
      * @return HTTP response object of specified {@code type} or {@code null}.
      * @throws RetrofitError if any error occurs during the HTTP request.
      */
-    private Object invokeRequest(RequestInterceptor requestInterceptor,
+    Object invokeRequest(RequestInterceptor requestInterceptor,
         RestMethodInfo methodInfo, Object[] args) {
       methodInfo.init(); // Ensure all relevant method information has been loaded.
 
@@ -370,6 +376,13 @@ public class RestAdapter {
         }
 
         Type type = methodInfo.responseObjectType;
+
+        // Check if the method returns a Call<T>, and if so use its generic
+        // argument as the request return type
+        if (methodInfo.isCallable) {
+          ParameterizedType pt = (ParameterizedType) methodInfo.responseObjectType;
+          type = pt.getActualTypeArguments()[0];
+        }
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           // Caller requested the raw Response object directly.
