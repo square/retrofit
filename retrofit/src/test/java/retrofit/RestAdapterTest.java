@@ -117,6 +117,7 @@ public class RestAdapterTest {
   @Test public void interfaceWithExtendIsNotSupported() {
     try {
       new RestAdapter.Builder().setServer("http://foo/").build().create(InvalidExample.class);
+      fail("Interface inheritance should not be supported.");
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Interface definitions must not extend other interfaces.");
     }
