@@ -138,11 +138,11 @@ Observable&lt;Response> userList();</pre>
             <p><code>RestAdapter</code> is the class through which your API interfaces are turned into callable objects. By default, Retrofit will give you sane defaults for your platform but it allows for customization.</p>
 
             <h4>JSON Conversion</h4>
-            <p>Retrofit uses <a href="https://code.google.com/p/google-gson/">Gson</a> to convert HTTP bodies to and from JSON. If you want to specify behavior that is different from Gson's defaults (e.g. naming policies, date formats, custom types), you should provide a new <code>Gson</code> instance with your desired behavior when building a <code>RestAdapter</code>. Retrofit itself does not provide any additional customization options, so refer to the <a href="https://sites.google.com/site/gson/gson-user-guide">Gson documentation</a> for more details on customization.</p>
+            <p>Retrofit uses <a href="https://code.google.com/p/google-gson/">Gson</a> by default to convert HTTP bodies to and from JSON. If you want to specify behavior that is different from Gson's defaults (e.g. naming policies, date formats, custom types), you should provide a new <code>Gson</code> instance with your desired behavior when building a <code>RestAdapter</code>. Retrofit itself does not provide any additional customization options, so refer to the <a href="https://sites.google.com/site/gson/gson-user-guide">Gson documentation</a> for more details on customization.</p>
             <h4>Custom Gson Converter Example</h4>
             <p>The following code creates a new <code>Gson</code> instance that will convert all fields from <code>LOWER_CASE_WITH_UNDERSCORES</code> to camel case and vice versa. It also registers a type adapter for the <code>Date</code> class. This <code>DateTypeAdapter</code> will be used anytime Gson encounters a <code>Date</code> field.</p>
             <p>The <code>gson</code> instance is passed as a parameter to a new <code>GsonConverter</code>, which is simply a wrapper class used by Retrofit.</p>
-             <pre class="prettyprint">Gson gson = new GsonBuilder()
+            <pre class="prettyprint">Gson gson = new GsonBuilder()
     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
     .registerTypeAdapter(Date.class, new DateTypeAdapter())
     .create();
@@ -154,10 +154,36 @@ RestAdapter restAdapter = new RestAdapter.Builder()
 
 GitHubService service = restAdapter.create(GitHubService.class);</pre>
             <p>Each call on the generated <code>GithubService</code> will now return objects that are converted using the Gson implementation that was provided to the <code>RestAdapter</code>.</p>
+            <h4>Content-format Agnostic</h4>
+            <p>In addition to JSON, Retrofit can be configured to use other content-formats. Out of the box, Retrofit comes with converters for XML (using <a href="http://simple.sourceforge.net/">Simple</a>) and Protocol Buffers (using <a href="https://code.google.com/p/protobuf/">protobuf</a> or <a href="https://github.com/square/wire">Wire</a>). Please see the <a href="https://github.com/square/retrofit/tree/master/retrofit-converters">retrofit-converters</a> directory for the full listing of converters.</p>
+            <p>The following code shows how to use <code>SimpleXMLConverter</code> to communicate with an API that uses XML</p>
+            <pre class="prettyprint">RestAdapter restAdapter = new RestAdapter.Builder()
+    .setServer("https://api.soundcloud.com")
+    .setConverter(new SimpleXMLConverter())
+    .build();
+
+SoundCloudService service = restAdapter.create(SoundCloudService.class);</pre>
+            <h4>Custom Converters</h4>
+            <p>If you need to interface with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that implements the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/converter/Converter.java"><code>Converter</code> interface</a> and pass in an instance when building your adapter.</p>
             <h3 id="download">Download</h3>
             <p><a href="http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
             <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
+            <pre class="prettyprint">
+public class YetAnotherYamlConverter implements Converter {
 
+  @Override public Object fromBody(TypedInput body, final Type type) throws ConversionException {
+    // TODO: implement custom conversion
+  }
+  
+  @Override public TypedOutput toBody(Object object) {
+    // TODO: implement custom conversion
+  }
+}
+            
+RestAdapter restAdapter = new RestAdapter.Builder()
+    .setServer("https://yaml-api.example.com")
+    .setConverter(new YetAnotherYamlConverter())
+    .build();</pre>
             <h4>Maven</h4>
             <pre class="prettyprint">&lt;dependency>
   &lt;groupId>com.squareup.retrofit&lt;/groupId>
