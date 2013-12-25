@@ -174,7 +174,7 @@ final class RestMethodInfo {
       }
       if (requestType == RequestType.FORM_URL_ENCODED) {
         throw new IllegalStateException(
-            "Multipart can only be specific on HTTP methods with request body (e.g., POST). ("
+            "FormUrlEncoded can only be specific on HTTP methods with request body (e.g., POST). ("
                 + method.getName()
                 + ")");
       }
