@@ -4,6 +4,9 @@ package retrofit.mime;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class FormUrlEncodingTypedOutputTest {
@@ -44,5 +47,35 @@ public class FormUrlEncodingTypedOutputTest {
     fe.writeTo(out2);
     String actual2 = new String(out2.toByteArray(), "UTF-8");
     assertThat(actual2).isEqualTo("sim=ple&hey=there&help=me");
+  }
+
+  @Test public void arrayParameter() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addField("ping", new String[]{"pong", "pong-too"});
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("ping=pong&ping=pong-too");
+  }
+
+  @Test public void arrayPrimitiveParameter() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addField("ping", new int[]{1, 2});
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("ping=1&ping=2");
+  }
+
+  @Test public void arrayIterable() throws Exception {
+    FormUrlEncodedTypedOutput fe = new FormUrlEncodedTypedOutput();
+    fe.addField("ping", Arrays.asList("pong", "pong-too"));
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    fe.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo("ping=pong&ping=pong-too");
   }
 }

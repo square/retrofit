@@ -196,7 +196,49 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void queryParamOptional() throws Exception {
+  @Test public void getWithQueryParamArray() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("ping", new String[]{"pong", "pong-too"}) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong&ping=pong-too");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQueryParamArrayPrimitive() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("ping", new int[]{1, 2}) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=1&ping=2");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQueryParamIterable() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("ping", Arrays.asList("pong", "pong-too")) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong&ping=pong-too");
+    assertThat(request.getBody()).isNull();
+  }
+
+
+
+
+    @Test public void queryParamOptional() throws Exception {
     Request request1 = new Helper() //
         .setMethod("GET") //
         .setUrl("http://example.com") //
@@ -629,14 +671,14 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addQueryParam(String name, String value) {
+    Helper addQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(QUERY);
       args.add(value);
       return this;
     }
 
-    Helper addEncodedQueryParam(String name, String value) {
+    Helper addEncodedQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(ENCODED_QUERY);
       args.add(value);

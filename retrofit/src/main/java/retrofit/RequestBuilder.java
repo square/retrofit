@@ -16,6 +16,7 @@
 package retrofit;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -132,21 +133,46 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  @Override public void addQueryParam(String name, String value) {
+  @Override public void addQueryParam(String name, Object value) {
     addQueryParam(name, value, true);
   }
 
-  @Override public void addEncodedQueryParam(String name, String value) {
+  @Override public void addEncodedQueryParam(String name, Object value) {
     addQueryParam(name, value, false);
   }
 
-  void addQueryParam(String name, String value, boolean urlEncodeValue) {
+  void addQueryParam(String name, Object value, boolean urlEncodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
     if (value == null) {
       throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
     }
+
+    if (value instanceof Iterable) {
+      addQueryParamIterable(name, (Iterable) value, urlEncodeValue);
+    } else if (value.getClass().isArray()) {
+      addQueryParamArray(name, value, urlEncodeValue);
+    } else {
+      addQueryParamString(name, value.toString(), urlEncodeValue);
+    }
+  }
+
+  void addQueryParamArray(String name, Object arrayValues, boolean urlEncodeValue) {
+    final int length = Array.getLength(arrayValues);
+    for (int i = 0; i < length; i++) {
+      Object value = Array.get(arrayValues, i);
+      addQueryParam(name, value, urlEncodeValue);
+    }
+  }
+
+  void addQueryParamIterable(String name, Iterable values, boolean urlEncodeValue) {
+    for (Object value : values) {
+      addQueryParam(name, value, urlEncodeValue);
+    }
+  }
+
+  void addQueryParamString(String name, String value, boolean urlEncodeValue) {
     try {
       if (urlEncodeValue) {
         value = URLEncoder.encode(String.valueOf(value), "UTF-8");
@@ -189,12 +215,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case QUERY:
           if (value != null) { // Skip null values.
-            addQueryParam(name, value.toString());
+            addQueryParam(name, value);
           }
           break;
         case ENCODED_QUERY:
           if (value != null) { // Skip null values.
-            addEncodedQueryParam(name, value.toString());
+            addEncodedQueryParam(name, value);
           }
           break;
         case HEADER:
@@ -204,7 +230,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case FIELD:
           if (value != null) { // Skip null values.
-            formBody.addField(name, value.toString());
+            formBody.addField(name, value);
           }
           break;
         case PART:
