@@ -114,6 +114,19 @@ List&lt;Widget> widgetList();</pre>
 @GET("/users/{username}")
 User getUser(@Path("username") String username);</pre>
             <p>Note that headers do not overwrite each other. All headers with the same name will be included in the request.</p>
+            <p>Headers that need to be added to every request can be specified using a <code>RequestInterceptor</code>. The following code creates a <code>RequestInterceptor</code> that will add a User-Agent header to every request.</p>
+            <pre class="prettyprint">RequestInterceptor requestInterceptor = new RequestInterceptor() {
+
+  @Override
+  public void intercept(RequestFacade request) {
+    request.addHeader("User-Agent", "Octodroid");
+  }
+};
+
+RestAdapter restAdapter = new RestAdapter.Builder()
+  .setServer("https://api.github.com")
+  .setRequestInterceptor(requestInterceptor)
+  .build();</pre>
 
             <h4>Synchronous vs. Asynchronous vs. Observable</h4>
             <p>Methods can be declared for either synchronous or asynchronous execution.</p>
