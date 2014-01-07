@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 
+import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.Serializer;
 
 import retrofit.mime.TypedByteArray;
@@ -21,6 +22,10 @@ public class SimpleXMLConverter implements Converter {
   private static final String MIME_TYPE = "application/xml; charset=" + CHARSET;
 
   private final Serializer serializer;
+
+  public SimpleXMLConverter() {
+    this(new Persister());
+  }
 
   public SimpleXMLConverter(Serializer serializer) {
     this.serializer = serializer;
