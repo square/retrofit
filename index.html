@@ -98,6 +98,34 @@ User updateUser(@Field("first_name") String first, @Field("last_name") String la
 @PUT("/user/photo")
 User updateUser(@Part("photo") TypedFile photo, @Part("description") TypedString description);</pre>
             <p>Multipart parts use the <code>RestAdapter</code>'s converter or they can implement <code>TypedOutput</code> to handle their own serialization.</p>
+            
+            <h4>Header Manipulation</h4>
+            <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
+            <pre class="prettyprint">@Headers("Cache-Control: max-age=640000")
+@GET("/widget/list")
+List&lt;Widget> widgetList();</pre>
+            <pre class="prettyprint">@Headers({
+    "Accept: application/vnd.github.v3.full+json",
+    "User-Agent: Retrofit-Sample-App"
+})
+@GET("/users/{username}")
+User getUser(@Path("username") String username);</pre>
+            <p>Note that headers do not overwrite each other. All headers with the same name will be included in the request.</p>
+            <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding String parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted.</p>
+            <pre class="prettyprint">@GET("/user")
+void getUser(@Header("Authorization") String authorization, Callback&lt;User> callback)</pre>
+            <p>Headers that need to be added to every request can be specified using a <code>RequestInterceptor</code>. The following code creates a <code>RequestInterceptor</code> that will add a <code>User-Agent</code> header to every request.</p>
+            <pre class="prettyprint">RequestInterceptor requestInterceptor = new RequestInterceptor() {
+  @Override
+  public void intercept(RequestFacade request) {
+    request.addHeader("User-Agent", "Retrofit-Sample-App");
+  }
+};
+
+RestAdapter restAdapter = new RestAdapter.Builder()
+  .setServer("https://api.github.com")
+  .setRequestInterceptor(requestInterceptor)
+  .build();</pre>
 
             <h4>Synchronous vs. Asynchronous vs. Observable</h4>
             <p>Methods can be declared for either synchronous or asynchronous execution.</p>
