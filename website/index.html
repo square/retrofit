@@ -193,6 +193,25 @@ GitHubService service = restAdapter.create(GitHubService.class);</pre>
 SoundCloudService service = restAdapter.create(SoundCloudService.class);</pre>
             <h4>Custom Converters</h4>
             <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that implements the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/converter/Converter.java"><code>Converter</code> interface</a> and pass in an instance when building your adapter.</p>
+            <h4>Custom Synchronous Error Handling</h4>
+            <p>If you need custom error handling for synchronous requests, you may provide your own <code>ErrorHandler</code>. The following code shows how to throw a custom exception when a response returns a HTTP 401 status code</p>
+            <pre class="prettyprint">
+class MyErrorHandler implements ErrorHandler {
+  @Override public Throwable handleError(RetrofitError cause) {
+    Response r = cause.getResponse();
+    if (r != null && r.getStatus() == 401) {
+      return new UnauthorizedException(cause);
+    }
+    return cause;
+  }
+}
+
+RestAdapter restAdapter = new RestAdapter.Builder()
+    .setServer("https://api.github.com")
+    .setErrorHandler(new MyErrorHandler())
+    .build();</pre>
+            <p>Note that if the return exception is checked, it must be declared on the interface method. It is recommended that you pass the supplied <code>RetrofitError</code> as the cause to any new exceptions you throw.</p>
+
             <h3 id="download">Download</h3>
             <p><a href="http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
             <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
