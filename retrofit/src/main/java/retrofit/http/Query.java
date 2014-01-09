@@ -24,14 +24,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter appended to the URL. Values are converted to strings using
- * {@link String#valueOf(Object)}. Parameter values will be URL encoded.
+ * {@link Object#toString()}. If the Object implements Iterable, each element
+ * will be appended to the URL as a key-value pair.
  * <p>
  * <pre>
  * &#64;GET("/list")
  * void example(@Query("page") int page, ..);
  * </pre>
  * <p>
- * Query parameters may be {@code null} which will omit them from the URL.
+ * Query parameters may be {@code null} which will omit them from the URL. A
+ * {@code null} in an Iterable will also be omitted.
  */
 @Documented
 @Target(PARAMETER)
