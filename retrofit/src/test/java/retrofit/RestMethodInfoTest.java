@@ -2,6 +2,9 @@
 package retrofit;
 
 import com.google.gson.reflect.TypeToken;
+
+import org.junit.Test;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
@@ -10,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Test;
+
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.EncodedPath;
@@ -71,19 +74,6 @@ public class RestMethodInfoTest {
     if (expected.length > 0) {
       assertThat(calculated).containsExactly(expected);
     }
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void pathMustBePrefixedWithSlash() {
-    class Example {
-      @GET("foo/bar") Response a() {
-        return null;
-      }
-    }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
   }
 
   @Test public void concreteCallbackTypes() {
