@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import retrofit.http.Body;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
@@ -183,16 +184,6 @@ final class RestMethodInfo {
 
   /** Loads {@link #requestUrl}, {@link #requestUrlParamNames}, and {@link #requestQuery}. */
   private void parsePath(String path) {
-    if (path == null || path.length() == 0 || path.charAt(0) != '/') {
-      throw new IllegalArgumentException("URL path \""
-          + path
-          + "\" on method "
-          + method.getName()
-          + " must start with '/'. ("
-          + method.getName()
-          + ")");
-    }
-
     // Get the relative URL path and existing query string, if present.
     String url = path;
     String query = null;
