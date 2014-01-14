@@ -19,6 +19,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
@@ -160,6 +162,35 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
+  void addQueryListParams(String name, List<?> values) {
+    if (name == null) {
+      throw new IllegalArgumentException("Query name must not be null.");
+    }
+    if (values == null) {
+      throw new IllegalArgumentException("Query param list must not be null.");
+    }
+
+    for (Object value : values) {
+      addQueryParam(name, value.toString());
+    }
+  }
+
+  void addQueryMapParams(String name, Map<?, ?> values) {
+    if (name == null) {
+      throw new IllegalArgumentException("Query name must not be null.");
+    }
+    if (values == null) {
+      throw new IllegalArgumentException("Query param map must not be null.");
+    }
+
+    for (Map.Entry<?, ?> entry : values.entrySet()) {
+      Object value = entry.getValue();
+      if (value != null) { // Skip null values.
+        addQueryParam(entry.getKey().toString(), value.toString());
+      }
+    }
+  }
+
   void setArguments(Object[] args) {
     if (args == null) {
       return;
@@ -189,7 +220,13 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case QUERY:
           if (value != null) { // Skip null values.
-            addQueryParam(name, value.toString());
+            if (value instanceof List) {
+              addQueryListParams(name, (List<?>) value);
+            } else if (value instanceof Map) {
+              addQueryMapParams(name, (Map<?, ?>) value);
+            } else {
+              addQueryParam(name, value.toString());
+            }
           }
           break;
         case ENCODED_QUERY:
