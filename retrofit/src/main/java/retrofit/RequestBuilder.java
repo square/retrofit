@@ -162,12 +162,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  void addQueryListParams(String name, List<?> values) {
+  void addQueryListParams(String name, Iterable<?> values) {
     if (name == null) {
       throw new IllegalArgumentException("Query name must not be null.");
     }
     if (values == null) {
-      throw new IllegalArgumentException("Query param list must not be null.");
+      throw new IllegalArgumentException("Query param values must not be null.");
     }
 
     for (Object value : values) {
@@ -180,7 +180,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       throw new IllegalArgumentException("Query name must not be null.");
     }
     if (values == null) {
-      throw new IllegalArgumentException("Query param map must not be null.");
+      throw new IllegalArgumentException("Query param value map must not be null.");
     }
 
     for (Map.Entry<?, ?> entry : values.entrySet()) {
@@ -220,8 +220,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case QUERY:
           if (value != null) { // Skip null values.
-            if (value instanceof List) {
-              addQueryListParams(name, (List<?>) value);
+            if (value instanceof Iterable) {
+              addQueryListParams(name, (Iterable<?>) value);
             } else if (value instanceof Map) {
               addQueryMapParams(name, (Map<?, ?>) value);
             } else {
