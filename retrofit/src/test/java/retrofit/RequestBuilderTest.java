@@ -300,6 +300,39 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void getWithQueryParamList() throws Exception {
+    List<Object> values = new ArrayList<Object>(Arrays.asList(1, 2, "three"));
+
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryListParams("key", values) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQueryParamMap() throws Exception {
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("kit", "kat");
+    params.put("foo", null);
+    params.put("ping", "pong");
+
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryMapParams("options", params) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void normalPost() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
@@ -640,6 +673,20 @@ public class RequestBuilderTest {
       paramNames.add(name);
       paramUsages.add(ENCODED_QUERY);
       args.add(value);
+      return this;
+    }
+
+    Helper addQueryListParams(String name, List<Object> values) {
+      paramNames.add(name);
+      paramUsages.add(QUERY);
+      args.add(values);
+      return this;
+    }
+
+    Helper addQueryMapParams(String name, Map<String, Object> values) {
+      paramNames.add(name);
+      paramUsages.add(QUERY);
+      args.add(values);
       return this;
     }
 

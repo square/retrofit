@@ -24,7 +24,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter appended to the URL. Values are converted to strings using
- * {@link String#valueOf(Object)}. Parameter values will be URL encoded.
+ * {@link String#valueOf(Object)}. Parameter values will be URL encoded. List
+ * and Map contents are handled as individual query parameters.
  * <p>
  * <pre>
  * &#64;GET("/list")
