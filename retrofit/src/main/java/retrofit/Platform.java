@@ -173,7 +173,7 @@ abstract class Platform {
     try {
       Class.forName("rx.Observable");
       return true;
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
     }
     return false;
   }
