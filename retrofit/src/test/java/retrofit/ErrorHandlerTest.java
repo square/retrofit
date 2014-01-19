@@ -30,7 +30,7 @@ public class ErrorHandlerTest {
   /* An HTTP client which always returns a 400 response */
   static class MockInvalidResponseClient implements Client {
     @Override public Response execute(Request request) throws IOException {
-      return new Response(400, "invalid request", Collections.<Header>emptyList(), null);
+      return new Response("", 400, "invalid request", Collections.<Header>emptyList(), null);
     }
   }
 

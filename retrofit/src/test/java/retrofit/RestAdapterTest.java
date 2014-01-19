@@ -127,7 +127,7 @@ public class RestAdapterTest {
     Object data = new Object();
     when(mockProfiler.beforeCall()).thenReturn(data);
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, null));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, null));
 
     example.something();
 
@@ -155,7 +155,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", TWO_HEADERS, new TypedString("{}")));
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something();
     assertThat(logMessages).hasSize(2);
@@ -182,7 +182,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", TWO_HEADERS, new TypedString("{}")));
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something();
     assertThat(logMessages).hasSize(7);
@@ -214,7 +214,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", TWO_HEADERS, new TypedString("{}")));
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something(new TypedString("Hi"));
     assertThat(logMessages).hasSize(13);
@@ -252,7 +252,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", TWO_HEADERS, null));
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
 
     example.something();
     assertThat(logMessages).hasSize(7);
@@ -267,7 +267,7 @@ public class RestAdapterTest {
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, NO_MIME_BODY));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, NO_MIME_BODY));
 
     example.something();
   }
@@ -291,7 +291,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", TWO_HEADERS, NO_MIME_BODY));
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, NO_MIME_BODY));
 
     example.something();
     assertThat(logMessages).hasSize(9);
@@ -308,7 +308,7 @@ public class RestAdapterTest {
 
   @Test public void synchronousDoesNotUseExecutors() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, null));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, null));
 
     example.something();
 
@@ -317,7 +317,7 @@ public class RestAdapterTest {
   }
 
   @Test public void asynchronousUsesExecutors() throws Exception {
-    Response response = new Response(200, "OK", NO_HEADERS, new TypedString("{}"));
+    Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("{}"));
     when(mockClient.execute(any(Request.class))).thenReturn(response);
     Callback<Object> callback = mock(Callback.class);
 
@@ -330,7 +330,7 @@ public class RestAdapterTest {
 
   @Test public void malformedResponseThrowsConversionException() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("{")));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("{")));
 
     try {
       example.something();
@@ -344,7 +344,7 @@ public class RestAdapterTest {
 
   @Test public void errorResponseThrowsHttpError() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(500, "Internal Server Error", NO_HEADERS, null));
+        .thenReturn(new Response("http://example.com/", 500, "Internal Server Error", NO_HEADERS, null));
 
     try {
       example.something();
@@ -373,7 +373,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     Response responseMissingMimeType = //
-        new Response(403, "Forbidden", TWO_HEADERS, NO_MIME_BODY);
+        new Response("http://example.com/", 403, "Forbidden", TWO_HEADERS, NO_MIME_BODY);
 
     when(mockClient.execute(any(Request.class))).thenReturn(responseMissingMimeType);
 
@@ -415,7 +415,7 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(500, "Internal Server Error", TWO_HEADERS, null));
+        .thenReturn(new Response("http://example.com/", 500, "Internal Server Error", TWO_HEADERS, null));
 
     try {
       example.something();
@@ -456,7 +456,7 @@ public class RestAdapterTest {
     doReturn(bodyStream).when(body).in();
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, body));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, body));
 
     try {
       example.something();
@@ -481,7 +481,7 @@ public class RestAdapterTest {
   }
 
   @Test public void getResponseDirectly() throws Exception {
-    Response response = new Response(200, "OK", NO_HEADERS, null);
+    Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, null);
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     assertThat(example.direct()).isSameAs(response);
@@ -502,7 +502,7 @@ public class RestAdapterTest {
     ByteArrayInputStream is = spy(new ByteArrayInputStream("hello".getBytes()));
     TypedInput typedInput = mock(TypedInput.class);
     when(typedInput.in()).thenReturn(is);
-    Response response = new Response(200, "OK", NO_HEADERS, typedInput);
+    Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, typedInput);
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     example.something();
@@ -510,7 +510,7 @@ public class RestAdapterTest {
   }
 
   @Test public void getResponseDirectlyAsync() throws Exception {
-    Response response = new Response(200, "OK", NO_HEADERS, null);
+    Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, null);
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     Callback<Response> callback = mock(Callback.class);
@@ -524,7 +524,7 @@ public class RestAdapterTest {
 
   @Test public void observableCallsOnNext() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("hello")));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello")));
     Action1<String> action = mock(Action1.class);
     example.observable("Howdy").subscribe(action);
     verify(action).call(eq("hello"));
@@ -532,7 +532,7 @@ public class RestAdapterTest {
 
   @Test public void observableCallsOnError() throws Exception {
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response(300, "FAIL", NO_HEADERS, new TypedString("bummer")));
+        .thenReturn(new Response("http://example.com/", 300, "FAIL", NO_HEADERS, new TypedString("bummer")));
     Action1<String> onSuccess = mock(Action1.class);
     Action1<Throwable> onError = mock(Action1.class);
     example.observable("Howdy").subscribe(onSuccess, onError);
@@ -543,7 +543,7 @@ public class RestAdapterTest {
   @Test public void observableHandlesParams() throws Exception {
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
     when(mockClient.execute(requestCaptor.capture())) //
-        .thenReturn(new Response(200, "OK", NO_HEADERS, new TypedString("hello")));
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello")));
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     Action1<Response> action = mock(Action1.class);
     example.observable("X", "Y").subscribe(action);
@@ -557,7 +557,7 @@ public class RestAdapterTest {
   }
 
   @Test public void observableUsesHttpExecutor() throws IOException {
-    Response response = new Response(200, "OK", NO_HEADERS, new TypedString("hello"));
+    Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello"));
     when(mockClient.execute(any(Request.class))).thenReturn(response);
 
     example.observable("Howdy").subscribe(mock(Action1.class));

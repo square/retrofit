@@ -93,7 +93,8 @@ final class Utils {
   }
 
   static Response replaceResponseBody(Response response, TypedInput body) {
-    return new Response(response.getStatus(), response.getReason(), response.getHeaders(), body);
+    return new Response(response.getUrl(), response.getStatus(), response.getReason(),
+        response.getHeaders(), body);
   }
 
   static <T> void validateServiceClass(Class<T> service) {

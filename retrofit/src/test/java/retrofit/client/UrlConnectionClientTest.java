@@ -113,6 +113,7 @@ public class UrlConnectionClientTest {
     connection.setInputStream(new ByteArrayInputStream("hello".getBytes("UTF-8")));
     Response response = client.readResponse(connection);
 
+    assertThat(response.getUrl()).isEqualTo(HOST);
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(3) //
@@ -131,6 +132,7 @@ public class UrlConnectionClientTest {
     connection.setInputStream(new ByteArrayInputStream("hello".getBytes("UTF-8")));
     Response response = client.readResponse(connection);
 
+    assertThat(response.getUrl()).isEqualTo(HOST);
     assertThat(response.getStatus()).isEqualTo(201);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(3) //
@@ -159,6 +161,7 @@ public class UrlConnectionClientTest {
     connection.addResponseHeader("kit", "kat");
     Response response = client.readResponse(connection);
 
+    assertThat(response.getUrl()).isEqualTo(HOST);
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
     assertThat(response.getHeaders()).hasSize(2) //
