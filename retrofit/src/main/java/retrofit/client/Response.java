@@ -49,6 +49,25 @@ public final class Response {
     this.body = body;
   }
 
+  @Deprecated
+  public Response(int status, String reason, List<Header> headers, TypedInput body) {
+    if (status < 200) {
+      throw new IllegalArgumentException("Invalid status code: " + status);
+    }
+    if (reason == null) {
+      throw new IllegalArgumentException("reason == null");
+    }
+    if (headers == null) {
+      throw new IllegalArgumentException("headers == null");
+    }
+
+    this.url = null;
+    this.status = status;
+    this.reason = reason;
+    this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
+    this.body = body;
+  }
+
   /** Request URL. */
   public String getUrl() {
     return url;
