@@ -276,9 +276,7 @@ public final class MockRestAdapter {
 
       Request request = requestBuilder.build();
 
-      if (restAdapter.logLevel.log()) {
-        request = restAdapter.logAndReplaceRequest("MOCK", request);
-      }
+      request = restAdapter.logAndReplaceRequest("MOCK", request);
 
       return request;
     }
@@ -291,7 +289,7 @@ public final class MockRestAdapter {
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
         IOException exception = new IOException("Mock network error!");
-        if (restAdapter.logLevel.log()) {
+        if (restAdapter.logLevel.logExceptions()) {
           restAdapter.logException(exception, url);
         }
         throw RetrofitError.networkError(url, exception);
@@ -309,10 +307,13 @@ public final class MockRestAdapter {
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
+        if (logLevel.logResponseBasics()) {
           log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(returnValue + ""); // Hack to convert toString while supporting null.
+        }
+
+        if (logLevel.logResponseBody()) {
+          log.log(returnValue + ""); // Hack to convert toString while supporting null.
+          if (logLevel.logResponseBasics()) {
             log.log("<--- END MOCK");
           }
         }
@@ -330,10 +331,13 @@ public final class MockRestAdapter {
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
+        if (logLevel.logResponseBasics()) {
           log.log(String.format("<---- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
+        }
+
+        if (logLevel.logResponseBody()) {
+          log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
+          if (logLevel.logResponseBasics()) {
             log.log("<--- END MOCK");
           }
         }
@@ -368,7 +372,7 @@ public final class MockRestAdapter {
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
         final IOException exception = new IOException("Mock network error!");
-        if (restAdapter.logLevel.log()) {
+        if (restAdapter.logLevel.logExceptions()) {
           restAdapter.logException(exception, url);
         }
         restAdapter.callbackExecutor.execute(new Runnable() {
@@ -408,10 +412,13 @@ public final class MockRestAdapter {
 
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
+        if (logLevel.logResponseBasics()) {
           log.log(String.format("<---- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
+        }
+
+        if (logLevel.logResponseBody()) {
+          log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
+          if (logLevel.logResponseBasics()) {
             log.log("<--- END MOCK");
           }
         }
@@ -446,10 +453,14 @@ public final class MockRestAdapter {
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
+        if (logLevel.logResponseBasics()) {
           log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(object + ""); // Hack to convert toString while supporting null.
+        }
+
+        if (logLevel.logResponseBody()) {
+          log.log(object + ""); // Hack to convert toString while supporting null.
+
+          if (logLevel.logResponseBasics()) {
             log.log("<--- END MOCK");
           }
         }
