@@ -102,6 +102,6 @@ public class MockHttpException extends RuntimeException {
   }
 
   Response toResponse(Converter converter) {
-    return new Response(code, reason, headers, new MockTypedInput(converter, responseBody));
+    return new Response("", code, reason, headers, new MockTypedInput(converter, responseBody));
   }
 }

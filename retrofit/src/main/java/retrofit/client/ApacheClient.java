@@ -62,7 +62,7 @@ public class ApacheClient implements Client {
   @Override public Response execute(Request request) throws IOException {
     HttpUriRequest apacheRequest = createRequest(request);
     HttpResponse apacheResponse = execute(client, apacheRequest);
-    return parseResponse(apacheResponse);
+    return parseResponse(request.getUrl(), apacheResponse);
   }
 
   /** Execute the specified {@code request} using the provided {@code client}. */
@@ -74,7 +74,7 @@ public class ApacheClient implements Client {
     return new GenericHttpRequest(request);
   }
 
-  static Response parseResponse(HttpResponse response) throws IOException {
+  static Response parseResponse(String url, HttpResponse response) throws IOException {
     StatusLine statusLine = response.getStatusLine();
     int status = statusLine.getStatusCode();
     String reason = statusLine.getReasonPhrase();
@@ -97,7 +97,7 @@ public class ApacheClient implements Client {
       body = new TypedByteArray(contentType, bytes);
     }
 
-    return new Response(status, reason, headers, body);
+    return new Response(url, status, reason, headers, body);
   }
 
   private static class GenericHttpRequest extends HttpEntityEnclosingRequestBase {
