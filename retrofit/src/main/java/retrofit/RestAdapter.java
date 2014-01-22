@@ -128,23 +128,132 @@ public class RestAdapter {
     };
   }
 
-  /** Controls the level of logging. */
-  public enum LogLevel {
-    /** No logging. */
-    NONE,
-    /** Log only the request method and URL and the response status code and execution time. */
-    BASIC,
-    /** Log the basic information along with request and response headers. */
-    HEADERS,
-    /**
-     * Log the headers, body, and metadata for both requests and responses.
-     * <p>
-     * Note: This requires that the entire request and response body be buffered in memory!
-     */
-    FULL;
+  public static class LogLevel {
 
-    public boolean log() {
-      return this != NONE;
+    public static final LogLevel NONE = new Builder()
+        .build();
+
+    public static final LogLevel BASIC = new Builder()
+        .enableBasics()
+        .enableExceptions()
+        .build();
+
+    public static final LogLevel HEADERS = new Builder()
+        .enableBasics()
+        .enableHeaders()
+        .enableExceptions()
+        .build();
+
+    public static final LogLevel FULL = new Builder()
+        .enableBasics()
+        .enableHeaders()
+        .enableBodies()
+        .enableExceptions()
+        .build();
+
+    private boolean requestBasics;
+    private boolean requestHeaders;
+    private boolean requestBody;
+    private boolean responseBasics;
+    private boolean responseHeaders;
+    private boolean responseBody;
+    private boolean exceptions;
+
+    public LogLevel(boolean requestBasics, boolean requestHeaders, boolean requestBody,
+        boolean responseBasics, boolean responseHeaders, boolean responseBody, boolean exceptions) {
+      this.requestBasics = requestBasics;
+      this.requestHeaders = requestHeaders;
+      this.requestBody = requestBody;
+      this.responseBasics = responseBasics;
+      this.responseHeaders = responseHeaders;
+      this.responseBody = responseBody;
+      this.exceptions = exceptions;
+    }
+
+    public boolean logRequestBasics() {
+      return requestBasics;
+    }
+
+    public boolean logRequestHeaders() {
+      return requestHeaders;
+    }
+
+    public boolean logRequestBody() {
+      return requestBody;
+    }
+
+    public boolean logResponseBasics() {
+      return responseBasics;
+    }
+
+    public boolean logResponseHeaders() {
+      return responseHeaders;
+    }
+
+    public boolean logResponseBody() {
+      return responseBody;
+    }
+
+    public boolean logExceptions() {
+      return exceptions;
+    }
+
+    public static class Builder {
+      private boolean requestBasics = false;
+      private boolean requestHeaders = false;
+      private boolean requestBody = false;
+      private boolean responseBasics = false;
+      private boolean responseHeaders = false;
+      private boolean responseBody = false;
+      private boolean exceptions = false;
+
+      public Builder enableBasics() {
+        enableRequestBasics();
+        enableResponseBasics();
+      return this; }
+
+      public Builder enableHeaders() {
+        enableRequestHeaders();
+        enableResponseHeaders();
+      return this; }
+
+      public Builder enableBodies() {
+        enableRequestBody();
+        enableResponseBody();
+      return this; }
+
+      public Builder enableRequestBasics() {
+        requestBasics = true;
+      return this; }
+
+      public Builder enableRequestHeaders() {
+        requestHeaders = true;
+      return this; }
+
+      public Builder enableRequestBody() {
+        requestBody = true;
+      return this; }
+
+      public Builder enableResponseBasics() {
+        responseBasics = true;
+      return this; }
+
+      public Builder enableResponseHeaders() {
+        responseHeaders = true;
+      return this; }
+
+      public Builder enableResponseBody() {
+        responseBody = true;
+      return this; }
+
+      public Builder enableExceptions() {
+        exceptions = true;
+      return this; }
+
+      public LogLevel build() {
+        return new LogLevel(requestBasics, requestHeaders, requestBody,
+          responseBasics, responseHeaders, responseBody, exceptions);
+      }
     }
   }
 
@@ -343,10 +452,8 @@ public class RestAdapter {
           Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
-        if (logLevel.log()) {
-          // Log the request data.
-          request = logAndReplaceRequest("HTTP", request);
-        }
+        // Log the request data.
+        request = logAndReplaceRequest("HTTP", request);
 
         Object profilerObject = null;
         if (profiler != null) {
@@ -364,10 +471,8 @@ public class RestAdapter {
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        if (logLevel.log()) {
-          // Log the response data.
-          response = logAndReplaceResponse(url, response, elapsedTime);
-        }
+        // Log the response data.
+        response = logAndReplaceResponse(url, response, elapsedTime);
 
         Type type = methodInfo.responseObjectType;
 
@@ -414,12 +519,12 @@ public class RestAdapter {
       } catch (RetrofitError e) {
         throw e; // Pass through our own errors.
       } catch (IOException e) {
-        if (logLevel.log()) {
+        if (logLevel.logExceptions()) {
           logException(e, url);
         }
         throw RetrofitError.networkError(url, e);
       } catch (Throwable t) {
-        if (logLevel.log()) {
+        if (logLevel.logExceptions()) {
           logException(t, url);
         }
         throw RetrofitError.unexpectedError(url, t);
@@ -433,28 +538,35 @@ public class RestAdapter {
 
   /** Log request headers and body. Consumes request body and returns identical replacement. */
   Request logAndReplaceRequest(String name, Request request) throws IOException {
-    log.log(String.format("---> %s %s %s", name, request.getMethod(), request.getUrl()));
+    if (logLevel.logRequestBasics()) {
+      log.log(String.format("---> %s %s %s", name, request.getMethod(), request.getUrl()));
+    }
 
-    if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
+    if (logLevel.logRequestHeaders()) {
       for (Header header : request.getHeaders()) {
         log.log(header.toString());
       }
+    }
 
+    if (logLevel.logRequestHeaders() || logLevel.logRequestBody()) {
       long bodySize = 0;
       TypedOutput body = request.getBody();
       if (body != null) {
-        bodySize = body.length();
         String bodyMime = body.mimeType();
 
-        if (bodyMime != null) {
-          log.log("Content-Type: " + bodyMime);
-        }
-        if (bodySize != -1) {
-          log.log("Content-Length: " + bodySize);
+        if (logLevel.logRequestHeaders()) {
+          bodySize = body.length();
+
+          if (bodyMime != null) {
+            log.log("Content-Type: " + bodyMime);
+          }
+          if (bodySize != -1) {
+            log.log("Content-Length: " + bodySize);
+          }
         }
 
-        if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-          if (!request.getHeaders().isEmpty()) {
+        if (logLevel.logRequestBody()) {
+          if (logLevel.logRequestHeaders() && !request.getHeaders().isEmpty()) {
             log.log("");
           }
           if (!(body instanceof TypedByteArray)) {
@@ -479,20 +591,24 @@ public class RestAdapter {
   /** Log response headers and body. Consumes response body and returns identical replacement. */
   private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
       throws IOException {
-    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+    if (logLevel.logResponseBasics()) {
+      log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+    }
 
-    if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
+    if (logLevel.logResponseHeaders()) {
       for (Header header : response.getHeaders()) {
         log.log(header.toString());
       }
+    }
 
+    if (logLevel.logResponseBody() || logLevel.logResponseHeaders()) {
       long bodySize = 0;
       TypedInput body = response.getBody();
       if (body != null) {
         bodySize = body.length();
 
-        if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-          if (!response.getHeaders().isEmpty()) {
+        if (logLevel.logResponseBody()) {
+          if (logLevel.logResponseHeaders() && !response.getHeaders().isEmpty()) {
             log.log("");
           }
 
