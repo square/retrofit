@@ -33,6 +33,11 @@
       <artifactId>rxjava-core</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>com.jakewharton.timber</groupId>
+      <artifactId>timber</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>

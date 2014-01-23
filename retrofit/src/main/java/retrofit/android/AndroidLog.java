@@ -16,7 +16,15 @@ public class AndroidLog implements RestAdapter.Log {
   @Override public void log(String message) {
     for (int i = 0, len = message.length(); i < len; i += LOG_CHUNK_SIZE) {
       int end = Math.min(len, i + LOG_CHUNK_SIZE);
-      Log.d(tag, message.substring(i, end));
+      logChunk(message.substring(i, end));
     }
+  }
+
+  public void logChunk(String chunk) {
+    Log.d(tag, chunk);
+  }
+
+  public String getTag() {
+    return tag;
   }
 }
