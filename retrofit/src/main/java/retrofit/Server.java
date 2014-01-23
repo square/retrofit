@@ -20,6 +20,7 @@ package retrofit;
  * for the latest values rather than caching the returned values.
  *
  * @author Bob Lee (bob@squareup.com)
+ * @deprecated See {@link retrofit.Endpoints}
  */
 @Deprecated public class Server implements Endpoint {
   public static final String DEFAULT_NAME = "default";
