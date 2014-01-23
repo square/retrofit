@@ -151,7 +151,7 @@ public class RestAdapter {
   private final Map<Class<?>, Map<Method, RestMethodInfo>> serviceMethodInfoCache =
       new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
 
-  final IServer server;
+  final Endpoint server;
   final Executor httpExecutor;
   final Executor callbackExecutor;
   final RequestInterceptor requestInterceptor;
@@ -165,7 +165,7 @@ public class RestAdapter {
 
   volatile LogLevel logLevel;
 
-  private RestAdapter(IServer server, Client.Provider clientProvider, Executor httpExecutor,
+  private RestAdapter(Endpoint server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
       Profiler profiler, ErrorHandler errorHandler, Log log, LogLevel logLevel) {
     this.server = server;
@@ -545,7 +545,7 @@ public class RestAdapter {
    * <p>
    * Calling the following methods is required before calling {@link #build()}:
    * <ul>
-   * <li>{@link #setServer(IServer)}</li>
+   * <li>{@link #setServer(Endpoint)}</li>
    * <li>{@link #setClient(Client.Provider)}</li>
    * <li>{@link #setConverter(Converter)}</li>
    * </ul>
@@ -557,7 +557,7 @@ public class RestAdapter {
    * </ul>
    */
   public static class Builder {
-    private IServer server;
+    private Endpoint endpoint;
     private Client.Provider clientProvider;
     private Executor httpExecutor;
     private Executor callbackExecutor;
@@ -569,19 +569,29 @@ public class RestAdapter {
     private LogLevel logLevel = LogLevel.NONE;
 
     /** API server base URL. */
-    public Builder setServer(String endpoint) {
-      if (endpoint == null || endpoint.trim().length() == 0) {
-        throw new NullPointerException("Server may not be blank.");
-      }
-      return setServer(new Server(endpoint));
+    @Deprecated public Builder setServer(String server) {
+      return setEndpoint(server);
     }
 
     /** API server. */
-    public Builder setServer(IServer server) {
-      if (server == null) {
-        throw new NullPointerException("Server may not be null.");
+    @Deprecated public Builder setServer(Endpoint server) {
+      return setEndpoint(server);
+    }
+
+    /** API server base URL. */
+    public Builder setEndpoint(String endpoint) {
+      if (endpoint == null || endpoint.trim().length() == 0) {
+        throw new NullPointerException("Endpoint may not be blank.");
       }
-      this.server = server;
+      return setEndpoint(new Server(endpoint));
+    }
+
+    /** API server. */
+    public Builder setEndpoint(Endpoint endpoint) {
+      if (endpoint == null) {
+        throw new NullPointerException("Endpoint may not be null.");
+      }
+      this.endpoint = endpoint;
       return this;
     }
 
@@ -685,11 +695,11 @@ public class RestAdapter {
 
     /** Create the {@link RestAdapter} instances. */
     public RestAdapter build() {
-      if (server == null) {
+      if (endpoint == null) {
         throw new IllegalArgumentException("Server may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor,
+      return new RestAdapter(endpoint, clientProvider, httpExecutor, callbackExecutor,
           requestInterceptor, converter, profiler, errorHandler, log, logLevel);
     }
 

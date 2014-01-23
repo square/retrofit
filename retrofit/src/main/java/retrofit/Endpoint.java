@@ -5,9 +5,8 @@ package retrofit;
  * for the latest values rather than caching the returned values.
  *
  * @author Matt Hickman (mhickman@palantir.com)
- * @see Server, ChangeableServer
  */
-public interface IServer {
+public interface Endpoint {
 
   /** The base API URL. */
   String getUrl();

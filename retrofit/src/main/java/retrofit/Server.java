@@ -21,7 +21,7 @@ package retrofit;
  *
  * @author Bob Lee (bob@squareup.com)
  */
-public class Server implements IServer {
+@Deprecated public class Server implements Endpoint {
   public static final String DEFAULT_NAME = "default";
 
   private final String apiUrl;

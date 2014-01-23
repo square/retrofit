@@ -15,8 +15,8 @@
  */
 package retrofit;
 
-/** A {@link Server} whose URL and name can be changed at runtime. */
-public class ChangeableServer implements IServer {
+/** An {@link Endpoint} whose URL and name can be changed at runtime. */
+@Deprecated public class ChangeableServer implements Endpoint {
   private String url;
   private String name;
 
