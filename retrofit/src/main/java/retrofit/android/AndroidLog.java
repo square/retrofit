@@ -23,4 +23,8 @@ public class AndroidLog implements RestAdapter.Log {
   public void logChunk(String chunk) {
     Log.d(tag, chunk);
   }
+
+  public String getTag() {
+    return tag;
+  }
 }
