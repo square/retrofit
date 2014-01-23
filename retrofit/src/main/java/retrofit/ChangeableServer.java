@@ -16,10 +16,10 @@
 package retrofit;
 
 /**
- *  An {@link Endpoint} whose URL and name can be changed at runtime.
+ * An {@link Endpoint} whose URL and name can be changed at runtime.
  *
- *  @deprecated Instead implement {@link Endpoint} to change URL and name at runtime.
- *  */
+ * @deprecated Instead implement {@link Endpoint} to change URL and name at runtime.
+ */
 @Deprecated public class ChangeableServer implements Endpoint {
   private String url;
   private String name;
