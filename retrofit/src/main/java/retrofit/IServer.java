@@ -10,9 +10,9 @@ package retrofit;
 public interface IServer {
 
   /** The base API URL. */
-  public String getUrl();
+  String getUrl();
 
   /** A name for differentiating between multiple API URLs. */
-  public String getName();
+  String getName();
 
 }
