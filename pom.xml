@@ -52,6 +52,7 @@
     <gson.version>2.2.4</gson.version>
     <okhttp.version>1.2.1</okhttp.version>
     <rxjava.version>0.14.9</rxjava.version>
+    <timber.version>2.1.0</timber.version>
 
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
@@ -110,6 +111,11 @@
         <groupId>com.netflix.rxjava</groupId>
         <artifactId>rxjava-core</artifactId>
         <version>${rxjava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.jakewharton.timber</groupId>
+        <artifactId>timber</artifactId>
+        <version>${timber.version}</version>
       </dependency>
 
       <dependency>

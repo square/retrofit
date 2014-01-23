@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadFactory;
 import retrofit.android.AndroidApacheClient;
 import retrofit.android.AndroidLog;
 import retrofit.android.MainThreadExecutor;
+import retrofit.android.TimberLog;
 import retrofit.client.Client;
 import retrofit.client.OkClient;
 import retrofit.client.UrlConnectionClient;
@@ -145,7 +146,13 @@ abstract class Platform {
     }
 
     @Override RestAdapter.Log defaultLog() {
-      return new AndroidLog("Retrofit");
+      final String tag = "Retrofit";
+
+      if (hasTimberOnClasspath()) {
+        return new TimberLog(tag);
+      } else {
+        return new AndroidLog(tag);
+      }
     }
   }
 
@@ -153,6 +160,16 @@ abstract class Platform {
   private static boolean hasOkHttpOnClasspath() {
     try {
       Class.forName("com.squareup.okhttp.OkHttpClient");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  /** Determine whether or not Timber is present on the runtime classpath. */
+  private static boolean hasTimberOnClasspath() {
+    try {
+      Class.forName("timber.log.Timber");
       return true;
     } catch (ClassNotFoundException e) {
       return false;
