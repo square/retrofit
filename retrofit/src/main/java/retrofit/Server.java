@@ -20,9 +20,8 @@ package retrofit;
  * for the latest values rather than caching the returned values.
  *
  * @author Bob Lee (bob@squareup.com)
- * @see ChangeableServer
  */
-public class Server {
+public class Server implements IServer {
   public static final String DEFAULT_NAME = "default";
 
   private final String apiUrl;
@@ -40,12 +39,12 @@ public class Server {
   }
 
   /** The base API URL. */
-  public String getUrl() {
+  @Override public String getUrl() {
     return apiUrl;
   }
 
   /** A name for differentiating between multiple API URLs. */
-  public String getName() {
+  @Override public String getName() {
     return name;
   }
 }

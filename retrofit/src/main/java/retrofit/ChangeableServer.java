@@ -16,20 +16,18 @@
 package retrofit;
 
 /** A {@link Server} whose URL and name can be changed at runtime. */
-public class ChangeableServer extends Server {
+public class ChangeableServer implements IServer {
   private String url;
   private String name;
 
   /** Create a changeable server with the provided URL and default name. */
   public ChangeableServer(String url) {
-    super(url);
     this.url = url;
-    this.name = DEFAULT_NAME;
+    this.name = Server.DEFAULT_NAME;
   }
 
   /** Create a changeable server with the provided URL and name. */
   public ChangeableServer(String url, String name) {
-    super(url, name);
     this.url = url;
     this.name = name;
   }

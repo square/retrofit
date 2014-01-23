@@ -151,7 +151,7 @@ public class RestAdapter {
   private final Map<Class<?>, Map<Method, RestMethodInfo>> serviceMethodInfoCache =
       new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
 
-  final Server server;
+  final IServer server;
   final Executor httpExecutor;
   final Executor callbackExecutor;
   final RequestInterceptor requestInterceptor;
@@ -165,7 +165,7 @@ public class RestAdapter {
 
   volatile LogLevel logLevel;
 
-  private RestAdapter(Server server, Client.Provider clientProvider, Executor httpExecutor,
+  private RestAdapter(IServer server, Client.Provider clientProvider, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
       Profiler profiler, ErrorHandler errorHandler, Log log, LogLevel logLevel) {
     this.server = server;
@@ -545,7 +545,7 @@ public class RestAdapter {
    * <p>
    * Calling the following methods is required before calling {@link #build()}:
    * <ul>
-   * <li>{@link #setServer(Server)}</li>
+   * <li>{@link #setServer(IServer)}</li>
    * <li>{@link #setClient(Client.Provider)}</li>
    * <li>{@link #setConverter(Converter)}</li>
    * </ul>
@@ -557,7 +557,7 @@ public class RestAdapter {
    * </ul>
    */
   public static class Builder {
-    private Server server;
+    private IServer server;
     private Client.Provider clientProvider;
     private Executor httpExecutor;
     private Executor callbackExecutor;
@@ -577,7 +577,7 @@ public class RestAdapter {
     }
 
     /** API server. */
-    public Builder setServer(Server server) {
+    public Builder setServer(IServer server) {
       if (server == null) {
         throw new NullPointerException("Server may not be null.");
       }
