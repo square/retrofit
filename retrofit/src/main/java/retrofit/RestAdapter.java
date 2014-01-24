@@ -545,7 +545,7 @@ public class RestAdapter {
    * <p>
    * Calling the following methods is required before calling {@link #build()}:
    * <ul>
-   * <li>{@link #setServer(Endpoint)}</li>
+   * <li>{@link #setEndpoint(Endpoint)}</li>
    * <li>{@link #setClient(Client.Provider)}</li>
    * <li>{@link #setConverter(Converter)}</li>
    * </ul>
