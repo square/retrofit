@@ -102,7 +102,7 @@ public class RestAdapterTest {
     example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .build()
         .create(Example.class);
@@ -147,7 +147,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(BASIC)
@@ -174,7 +174,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(HEADERS)
@@ -206,7 +206,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
@@ -244,7 +244,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
@@ -283,7 +283,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
@@ -365,7 +365,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
@@ -407,7 +407,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
@@ -492,7 +492,7 @@ public class RestAdapterTest {
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setProfiler(mockProfiler)
         .setLog(RestAdapter.Log.NONE)
         .setLogLevel(FULL)
@@ -564,6 +564,15 @@ public class RestAdapterTest {
 
     verify(mockRequestExecutor, atLeastOnce()).execute(any(Runnable.class));
     verifyZeroInteractions(mockCallbackExecutor);
+  }
+
+  @Test public void testEndpointFactories() {
+    Endpoint endpoint1 = Endpoints.newFixedEndpoint("http://example.com");
+    Endpoint endpoint2 = Endpoints.newFixedEndpoint("http://example.com", "exampleName");
+
+    assertThat(endpoint1.getUrl()).isEqualTo("http://example.com");
+    assertThat(endpoint2.getUrl()).isEqualTo("http://example.com");
+    assertThat(endpoint2.getName()).isEqualTo("exampleName");
   }
 
 }
