@@ -568,25 +568,36 @@ public class RestAdapter {
     private Log log;
     private LogLevel logLevel = LogLevel.NONE;
 
-    /** API server base URL. */
-    @Deprecated public Builder setServer(String server) {
+    /**
+     * API server base URL.
+     *
+     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}.
+     */
+    @Deprecated
+    public Builder setServer(String server) {
       return setEndpoint(server);
     }
 
-    /** API server. */
-    @Deprecated public Builder setServer(Endpoint server) {
+    /**
+     * API server.
+     *
+     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}.
+     */
+    @Deprecated
+    public Builder setServer(Endpoint server) {
       return setEndpoint(server);
     }
 
-    /** API server base URL. */
+    /** API endpoint URL. */
     public Builder setEndpoint(String endpoint) {
       if (endpoint == null || endpoint.trim().length() == 0) {
         throw new NullPointerException("Endpoint may not be blank.");
       }
-      return setEndpoint(new Server(endpoint));
+      this.endpoint = Endpoints.newFixedEndpoint(endpoint);
+      return this;
     }
 
-    /** API server. */
+    /** API endpoint. */
     public Builder setEndpoint(Endpoint endpoint) {
       if (endpoint == null) {
         throw new NullPointerException("Endpoint may not be null.");

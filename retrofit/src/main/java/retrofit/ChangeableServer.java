@@ -20,7 +20,8 @@ package retrofit;
  *
  * @deprecated Instead implement {@link Endpoint} to change URL and name at runtime.
  */
-@Deprecated public class ChangeableServer implements Endpoint {
+@Deprecated
+public class ChangeableServer implements Endpoint {
   private String url;
   private String name;
 
