@@ -15,21 +15,23 @@
  */
 package retrofit;
 
-/** A {@link Server} whose URL and name can be changed at runtime. */
-public class ChangeableServer extends Server {
+/**
+ * An {@link Endpoint} whose URL and name can be changed at runtime.
+ *
+ * @deprecated Instead implement {@link Endpoint} to change URL and name at runtime.
+ */
+@Deprecated public class ChangeableServer implements Endpoint {
   private String url;
   private String name;
 
   /** Create a changeable server with the provided URL and default name. */
   public ChangeableServer(String url) {
-    super(url);
     this.url = url;
-    this.name = DEFAULT_NAME;
+    this.name = Server.DEFAULT_NAME;
   }
 
   /** Create a changeable server with the provided URL and name. */
   public ChangeableServer(String url, String name) {
-    super(url, name);
     this.url = url;
     this.name = name;
   }
