@@ -332,6 +332,22 @@ public class RequestBuilderTest {
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
     assertThat(request.getBody()).isNull();
   }
+  
+  @Test public void postWithFieldParamList() throws Exception {
+    List<String> values = Arrays.asList("one", "two",null, "three");
+    
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addField("key", values) //
+        .setFormEncoded() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "key=one&key=two&key=three");
+  }
 
   @Test public void normalPost() throws Exception {
     Request request = new Helper() //
@@ -690,7 +706,7 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addField(String name, String value) {
+    Helper addField(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(FIELD);
       args.add(value);

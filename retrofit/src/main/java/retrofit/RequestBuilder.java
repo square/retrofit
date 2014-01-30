@@ -191,6 +191,21 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
+  void addFieldListParams(String name, Iterable<?> values) {
+    if (name == null) {
+      throw new IllegalArgumentException("Field name must not be null.");
+    }
+    if (values == null) {
+      throw new IllegalArgumentException("Field param values must not be null.");
+    }
+
+    for (Object value : values) {
+      if (value != null) {
+        formBody.addField(name, value.toString());
+      }
+    }
+  }
+
   void setArguments(Object[] args) {
     if (args == null) {
       return;
@@ -241,7 +256,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case FIELD:
           if (value != null) { // Skip null values.
-            formBody.addField(name, value.toString());
+            if (value instanceof Iterable) {
+              addFieldListParams(name, (Iterable<?>) value);
+            } else {
+              formBody.addField(name, value.toString());
+            }
           }
           break;
         case PART:
