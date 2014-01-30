@@ -334,7 +334,7 @@ public class RequestBuilderTest {
   }
   
   @Test public void postWithFieldParamList() throws Exception {
-    List<Object> values = new ArrayList<Object>(Arrays.asList(1, 2, "three"));
+    List<String> values = Arrays.asList("one", "two",null, "three");
     
     Request request = new Helper() //
         .setMethod("POST") //
@@ -346,7 +346,7 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-    assertTypedBytes(request.getBody(), "key=1&key=2&key=three");
+    assertTypedBytes(request.getBody(), "key=one&key=two&key=three");
   }
 
   @Test public void normalPost() throws Exception {
