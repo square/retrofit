@@ -200,7 +200,9 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     for (Object value : values) {
-      formBody.addField(name, value.toString());
+      if (value != null) {
+        formBody.addField(name, value.toString());
+      }
     }
   }
 
