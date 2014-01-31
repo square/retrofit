@@ -243,13 +243,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           if (value != null) { // Skip null values.
             if (value instanceof Iterable) {
               for (Object v : (Iterable<?>) value) {
-                formBody.addField(name, v.toString());
+                if (v != null) { // Skip null values.
+                  formBody.addField(name, v.toString());
+                }
               }
             } else if (value instanceof Map) {
               for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-                Object v = entry.getValue();
-                if (v != null) { // Skip null values.
-                  formBody.addField(entry.getKey().toString(), v.toString());
+                Object entryValue = entry.getValue();
+                if (entryValue != null) { // Skip null values.
+                  formBody.addField(entry.getKey().toString(), entryValue.toString());
                 }
               }
             } else {

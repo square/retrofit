@@ -500,7 +500,7 @@ public class RequestBuilderTest {
   }
 
   @Test public void formEncodedFieldList() throws Exception {
-    List<Object> values = new ArrayList<Object>(Arrays.asList("foo", "bar", 3));
+    List<Object> values = new ArrayList<Object>(Arrays.asList("foo", "bar", null, 3));
 
     Request request = new Helper() //
         .setMethod("POST") //
