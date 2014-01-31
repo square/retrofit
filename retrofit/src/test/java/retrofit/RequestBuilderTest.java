@@ -27,11 +27,13 @@ import static retrofit.RestMethodInfo.ParamUsage;
 import static retrofit.RestMethodInfo.ParamUsage.BODY;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.FIELD;
 import static retrofit.RestMethodInfo.ParamUsage.HEADER;
 import static retrofit.RestMethodInfo.ParamUsage.PART;
 import static retrofit.RestMethodInfo.ParamUsage.PATH;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
 import static retrofit.RestMethodInfo.RequestType;
 
 public class RequestBuilderTest {
@@ -301,13 +303,28 @@ public class RequestBuilderTest {
   }
 
   @Test public void getWithQueryParamList() throws Exception {
-    List<Object> values = new ArrayList<Object>(Arrays.asList(1, 2, "three"));
+    List<Object> values = Arrays.<Object>asList(1, 2, "three");
 
     Request request = new Helper() //
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .addQueryListParams("key", values) //
+        .addQueryParam("key", values) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQueryParamArray() throws Exception {
+    Object[] values = { 1, 2, "three" };
+
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("key", values) //
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
@@ -330,6 +347,24 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodedQueryParamMap() throws Exception {
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("kit", "k%20t");
+    params.put("foo", null);
+    params.put("ping", "p%20g");
+
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addEncodedQueryMapParams("options", params) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
     assertThat(request.getBody()).isNull();
   }
 
@@ -694,7 +729,7 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addQueryParam(String name, String value) {
+    Helper addQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(QUERY);
       args.add(value);
@@ -708,16 +743,16 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addQueryListParams(String name, List<Object> values) {
+    Helper addQueryMapParams(String name, Map<String, Object> values) {
       paramNames.add(name);
-      paramUsages.add(QUERY);
+      paramUsages.add(QUERY_MAP);
       args.add(values);
       return this;
     }
 
-    Helper addQueryMapParams(String name, Map<String, Object> values) {
+    Helper addEncodedQueryMapParams(String name, Map<String, Object> values) {
       paramNames.add(name);
-      paramUsages.add(QUERY);
+      paramUsages.add(ENCODED_QUERY_MAP);
       args.add(values);
       return this;
     }

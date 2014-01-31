@@ -15,6 +15,7 @@ import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
+import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
@@ -28,6 +29,7 @@ import retrofit.http.PUT;
 import retrofit.http.Part;
 import retrofit.http.Path;
 import retrofit.http.Query;
+import retrofit.http.QueryMap;
 import retrofit.http.RestMethod;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
@@ -532,6 +534,40 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestParamNames).hasSize(3).containsExactly("a", "b", "c");
     assertThat(methodInfo.requestParamUsage).hasSize(3).containsExactly(QUERY, QUERY, QUERY);
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
+  }
+
+  @Test public void queryMapMustBeAMap() {
+    class Example {
+      @GET("/") Response a(@QueryMap List<String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("@QueryMap parameter type must be Map.");
+    }
+  }
+
+  @Test public void encodedQueryMapMustBeAMap() {
+    class Example {
+      @GET("/") Response a(@EncodedQueryMap List<String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("@EncodedQueryMap parameter type must be Map.");
+    }
   }
 
   @Test public void bodyObject() {
