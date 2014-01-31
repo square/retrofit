@@ -20,7 +20,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
@@ -31,8 +30,6 @@ import retrofit.mime.TypedString;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
-  private final List<Header> headers;
-  private final StringBuilder queryParams;
   private final String[] paramNames;
   private final RestMethodInfo.ParamUsage[] paramUsages;
   private final String requestMethod;
@@ -43,8 +40,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final MultipartTypedOutput multipartBody;
   private TypedOutput body;
 
-  private String relativeUrl;
   private String apiUrl;
+  private String relativeUrl;
+  private StringBuilder queryParams;
+  private List<Header> headers;
 
   RequestBuilder(Converter converter, RestMethodInfo methodInfo) {
     this.converter = converter;
@@ -55,18 +54,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     isSynchronous = methodInfo.isSynchronous;
     isObservable = methodInfo.isObservable;
 
-    headers = new ArrayList<Header>();
     if (methodInfo.headers != null) {
-      headers.addAll(methodInfo.headers);
+      headers = new ArrayList<Header>(methodInfo.headers);
     }
-
-    queryParams = new StringBuilder();
 
     relativeUrl = methodInfo.requestUrl;
 
     String requestQuery = methodInfo.requestQuery;
     if (requestQuery != null) {
-      queryParams.append('?').append(requestQuery);
+      queryParams = new StringBuilder().append('?').append(requestQuery);
     }
 
     switch (methodInfo.requestType) {
@@ -97,6 +93,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   @Override public void addHeader(String name, String value) {
     if (name == null) {
       throw new IllegalArgumentException("Header name must not be null.");
+    }
+    List<Header> headers = this.headers;
+    if (headers == null) {
+      this.headers = headers = new ArrayList<Header>(2);
     }
     headers.add(new Header(name, value));
   }
@@ -154,6 +154,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         value = URLEncoder.encode(String.valueOf(value), "UTF-8");
       }
       StringBuilder queryParams = this.queryParams;
+      if (queryParams == null) {
+        this.queryParams = queryParams = new StringBuilder();
+      }
+
       queryParams.append(queryParams.length() > 0 ? '&' : '?');
       queryParams.append(name).append('=').append(value);
     } catch (UnsupportedEncodingException e) {
@@ -287,8 +291,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   Request build() throws UnsupportedEncodingException {
-    String apiUrl = this.apiUrl;
+    if (multipartBody != null && multipartBody.getPartCount() == 0) {
+      throw new IllegalStateException("Multipart requests must contain at least one part.");
+    }
 
+    String apiUrl = this.apiUrl;
     StringBuilder url = new StringBuilder(apiUrl);
     if (apiUrl.endsWith("/")) {
       // We require relative paths to start with '/'. Prevent a double-slash.
@@ -298,12 +305,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     url.append(relativeUrl);
 
     StringBuilder queryParams = this.queryParams;
-    if (queryParams.length() > 0) {
+    if (queryParams != null) {
       url.append(queryParams);
-    }
-
-    if (multipartBody != null && multipartBody.getPartCount() == 0) {
-      throw new IllegalStateException("Multipart requests must contain at least one part.");
     }
 
     return new Request(requestMethod, url.toString(), headers, body);
