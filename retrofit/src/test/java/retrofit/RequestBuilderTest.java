@@ -499,6 +499,38 @@ public class RequestBuilderTest {
     assertTypedBytes(request.getBody(), "foo=bar&kit=kat");
   }
 
+  @Test public void formEncodedFieldList() throws Exception {
+    List<Object> values = new ArrayList<Object>(Arrays.asList("foo", "bar", 3));
+
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo") //
+        .setFormEncoded() //
+        .addFieldList("foo", values) //
+        .addField("kit", "kat") //
+        .build();
+    assertTypedBytes(request.getBody(), "foo=foo&foo=bar&foo=3&kit=kat");
+  }
+
+  @Test public void formEncodedFieldMap() throws Exception {
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("kit", "kat");
+    params.put("foo", null);
+    params.put("ping", "pong");
+
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo") //
+        .setFormEncoded() //
+        .addFieldMap("options", params) //
+        .build();
+    assertTypedBytes(request.getBody(), "kit=kat&ping=pong");
+  }
+
   @Test public void simpleHeaders() throws Exception {
     Request request = new Helper() //
         .setMethod("GET") //
@@ -694,6 +726,20 @@ public class RequestBuilderTest {
       paramNames.add(name);
       paramUsages.add(FIELD);
       args.add(value);
+      return this;
+    }
+
+    Helper addFieldList(String name, List<Object> values) {
+      paramNames.add(name);
+      paramUsages.add(FIELD);
+      args.add(values);
+      return this;
+    }
+
+    Helper addFieldMap(String name, Map<String, Object> values) {
+      paramNames.add(name);
+      paramUsages.add(FIELD);
+      args.add(values);
       return this;
     }
 
