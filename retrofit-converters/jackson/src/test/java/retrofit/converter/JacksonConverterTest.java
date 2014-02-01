@@ -55,8 +55,15 @@ public class JacksonConverterTest {
       this.count = count;
     }
 
-    @Override
-    public boolean equals(Object o) {
+    public String getMessage() {
+      return message;
+    }
+
+    public int getCount() {
+      return count;
+    }
+
+    @Override public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
@@ -65,8 +72,7 @@ public class JacksonConverterTest {
           && !(message != null ? !message.equals(myObject.message) : myObject.message != null);
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
       int result = message != null ? message.hashCode() : 0;
       result = 31 * result + count;
       return result;
