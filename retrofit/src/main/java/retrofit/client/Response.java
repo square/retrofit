@@ -49,6 +49,10 @@ public final class Response {
     this.body = body;
   }
 
+  /**
+   * @deprecated Use {@link #Response(String, int, String, java.util.List, TypedInput)}. This class
+   * will be removed in version 1.5.
+   */
   @Deprecated
   public Response(int status, String reason, List<Header> headers, TypedInput body) {
     if (status < 200) {
