@@ -42,9 +42,13 @@ import static org.junit.Assert.fail;
 import static retrofit.RestMethodInfo.ParamUsage.BODY;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY_MAP;
+import static retrofit.RestMethodInfo.ParamUsage.FIELD_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.HEADER;
 import static retrofit.RestMethodInfo.ParamUsage.PATH;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
+import static retrofit.RestMethodInfo.RequestType.FORM_URL_ENCODED;
 import static retrofit.RestMethodInfo.RequestType.MULTIPART;
 import static retrofit.RestMethodInfo.RequestType.SIMPLE;
 
@@ -537,6 +541,22 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
+  @Test public void queryMap() {
+    class Example {
+      @GET("/") Response a(@QueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.requestParamNames).hasSize(1).containsNull();
+    assertThat(methodInfo.requestParamUsage).hasSize(1).containsExactly(QUERY_MAP);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
+  }
+
   @Test public void queryMapMustBeAMap() {
     class Example {
       @GET("/") Response a(@QueryMap List<String> a) {
@@ -554,6 +574,22 @@ public class RestMethodInfoTest {
     }
   }
 
+  @Test public void encodedQueryMap() {
+    class Example {
+      @GET("/") Response a(@EncodedQueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.requestParamNames).hasSize(1).containsNull();
+    assertThat(methodInfo.requestParamUsage).hasSize(1).containsExactly(ENCODED_QUERY_MAP);
+    assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
+  }
+
   @Test public void encodedQueryMapMustBeAMap() {
     class Example {
       @GET("/") Response a(@EncodedQueryMap List<String> a) {
@@ -569,6 +605,22 @@ public class RestMethodInfoTest {
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("@EncodedQueryMap parameter type must be Map.");
     }
+  }
+
+  @Test public void fieldMap() {
+    class Example {
+      @FormUrlEncoded @POST("/") Response a(@FieldMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.requestParamNames).hasSize(1).containsNull();
+    assertThat(methodInfo.requestParamUsage).hasSize(1).containsExactly(FIELD_MAP);
+    assertThat(methodInfo.requestType).isEqualTo(FORM_URL_ENCODED);
   }
 
   @Test public void fieldMapMustBeAMap() {

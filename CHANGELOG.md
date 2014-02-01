@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 1.4.1 *(2014-02-01)*
+----------------------------
+
+ * Fix: `@QueryMap`, `@EncodedFieldMap`, and `@FieldMap` now correctly detect `Map`-based parameter
+   types.
+
+
 Version 1.4.0 *(2014-01-31)*
 ----------------------------
 

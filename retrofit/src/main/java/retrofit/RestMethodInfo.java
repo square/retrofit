@@ -372,17 +372,17 @@ final class RestMethodInfo {
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.ENCODED_QUERY;
           } else if (annotationType == QueryMap.class) {
-            if (!parameterType.isInstance(Map.class)) {
+            if (!Map.class.isAssignableFrom(parameterType)) {
               throw new IllegalStateException("@QueryMap parameter type must be Map.");
             }
 
             paramUsage[i] = ParamUsage.QUERY_MAP;
           } else if (annotationType == EncodedQueryMap.class) {
-            if (!parameterType.isInstance(Map.class)) {
+            if (!Map.class.isAssignableFrom(parameterType)) {
               throw new IllegalStateException("@EncodedQueryMap parameter type must be Map.");
             }
 
-            paramUsage[i] = ParamUsage.ENCODED_QUERY;
+            paramUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
             if (parameterType != String.class) {
@@ -407,7 +407,7 @@ final class RestMethodInfo {
               throw new IllegalStateException(
                   "@Field parameters can only be used with form encoding.");
             }
-            if (!parameterType.isInstance(Map.class)) {
+            if (!Map.class.isAssignableFrom(parameterType)) {
               throw new IllegalStateException("@FieldMap parameter type must be Map.");
             }
 
