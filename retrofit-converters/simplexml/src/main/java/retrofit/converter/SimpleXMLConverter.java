@@ -31,8 +31,7 @@ public class SimpleXMLConverter implements Converter {
     this.serializer = serializer;
   }
 
-  @Override
-  public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
     try {
       return serializer.read((Class<?>) type, body.in());
     } catch (Exception e) {
@@ -40,8 +39,7 @@ public class SimpleXMLConverter implements Converter {
     }
   }
 
-  @Override
-  public TypedOutput toBody(Object source) {
+  @Override public TypedOutput toBody(Object source) {
     OutputStreamWriter osw = null;
 
     try {
