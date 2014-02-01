@@ -8,7 +8,7 @@ To use, supply an instance of your desired converter when building your `RestAda
 
 ```java
 RestAdapter restAdapter = new RestAdapter.Builder()
-    .setServer("https://api.fake.google.com")
+    .setEndpoint("https://api.fake.google.com")
     .setConverter(new ProtoConverter())
     .build();
 ```
