@@ -571,7 +571,8 @@ public class RestAdapter {
     /**
      * API server base URL.
      *
-     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}.
+     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}. This method
+     * will be removed in version 1.5.
      */
     @Deprecated
     public Builder setServer(String server) {
@@ -581,7 +582,8 @@ public class RestAdapter {
     /**
      * API server.
      *
-     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}.
+     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}. This method
+     * will be removed in version 1.5.
      */
     @Deprecated
     public Builder setServer(Server server) {

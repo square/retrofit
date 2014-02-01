@@ -20,7 +20,7 @@ package retrofit;
  * for the latest values rather than caching the returned values.
  *
  * @author Bob Lee (bob@squareup.com)
- * @deprecated See {@link retrofit.Endpoints}
+ * @deprecated Use {@link Endpoints#newFixedEndpoint}. This class will be removed in version 1.5.
  */
 @Deprecated
 public class Server implements Endpoint {
