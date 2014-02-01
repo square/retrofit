@@ -304,7 +304,7 @@ public class RequestBuilderTest {
   }
 
   @Test public void getWithQueryParamList() throws Exception {
-    List<Object> values = Arrays.<Object>asList(1, 2, "three");
+    List<Object> values = Arrays.<Object>asList(1, 2, null, "three");
 
     Request request = new Helper() //
         .setMethod("GET") //
@@ -319,7 +319,7 @@ public class RequestBuilderTest {
   }
 
   @Test public void getWithQueryParamArray() throws Exception {
-    Object[] values = { 1, 2, "three" };
+    Object[] values = { 1, 2, null, "three" };
 
     Request request = new Helper() //
         .setMethod("GET") //
@@ -330,6 +330,21 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithQueryParamPrimitiveArray() throws Exception {
+    int[] values = { 1, 2, 3 };
+
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addQueryParam("key", values) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=3");
     assertThat(request.getBody()).isNull();
   }
 
@@ -536,7 +551,7 @@ public class RequestBuilderTest {
   }
 
   @Test public void formEncodedFieldList() throws Exception {
-    List<Object> values = new ArrayList<Object>(Arrays.asList("foo", "bar", null, 3));
+    List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
 
     Request request = new Helper() //
         .setMethod("POST") //
@@ -544,10 +559,40 @@ public class RequestBuilderTest {
         .setUrl("http://example.com") //
         .setPath("/foo") //
         .setFormEncoded() //
-        .addFieldList("foo", values) //
+        .addField("foo", values) //
         .addField("kit", "kat") //
         .build();
     assertTypedBytes(request.getBody(), "foo=foo&foo=bar&foo=3&kit=kat");
+  }
+
+  @Test public void formEncodedFieldArray() throws Exception {
+    Object[] values = { 1, 2, null, "three" };
+
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo") //
+        .setFormEncoded() //
+        .addField("foo", values) //
+        .addField("kit", "kat") //
+        .build();
+    assertTypedBytes(request.getBody(), "foo=1&foo=2&foo=three&kit=kat");
+  }
+
+  @Test public void formEncodedFieldPrimitiveArray() throws Exception {
+    int[] values = { 1, 2, 3 };
+
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo") //
+        .setFormEncoded() //
+        .addField("foo", values) //
+        .addField("kit", "kat") //
+        .build();
+    assertTypedBytes(request.getBody(), "foo=1&foo=2&foo=3&kit=kat");
   }
 
   @Test public void formEncodedFieldMap() throws Exception {
@@ -758,17 +803,10 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addField(String name, String value) {
+    Helper addField(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(FIELD);
       args.add(value);
-      return this;
-    }
-
-    Helper addFieldList(String name, List<Object> values) {
-      paramNames.add(name);
-      paramUsages.add(FIELD);
-      args.add(values);
       return this;
     }
 
