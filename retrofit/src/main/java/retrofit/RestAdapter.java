@@ -584,7 +584,7 @@ public class RestAdapter {
      * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}.
      */
     @Deprecated
-    public Builder setServer(Endpoint server) {
+    public Builder setServer(Server server) {
       return setEndpoint(server);
     }
 
