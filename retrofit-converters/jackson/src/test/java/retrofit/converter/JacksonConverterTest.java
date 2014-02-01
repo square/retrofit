@@ -1,49 +1,47 @@
 package retrofit.converter;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.ByteArrayOutputStream;
-
 import org.junit.Test;
-
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 public class JacksonConverterTest {
   private static final String MIME_TYPE = "application/json; charset=UTF-8";
+  private static final MyObject OBJECT = new MyObject("hello world", 10);
+  private final String JSON = "{\"message\":\"hello world\",\"count\":10}";
 
-  private final MyObject obj = new MyObject("hello world", 10);
-  private final String objAsJson = String.format("{\"message\":\"%s\",\"count\":%d}", obj.getMessage(), obj.getCount());
-  private final JacksonConverter converter = new JacksonConverter(new ObjectMapper());
+  private final JacksonConverter converter = new JacksonConverter();
 
   @Test public void serialize() throws Exception {
-    final TypedOutput typedOutput = converter.toBody(obj);
+    TypedOutput typedOutput = converter.toBody(OBJECT);
     assertThat(typedOutput.mimeType()).isEqualTo(MIME_TYPE);
-    assertThat(asString(typedOutput)).isEqualTo(objAsJson);
+    assertThat(asString(typedOutput)).isEqualTo(JSON);
   }
 
   @Test public void deserialize() throws Exception {
-    final TypedInput input = new TypedByteArray(MIME_TYPE, objAsJson.getBytes());
-    final MyObject result = (MyObject) converter.fromBody(input, MyObject.class);
-    assertThat(result).isEqualTo(obj);
+    TypedInput input = new TypedByteArray(MIME_TYPE, JSON.getBytes());
+    MyObject result = (MyObject) converter.fromBody(input, MyObject.class);
+    assertThat(result).isEqualTo(OBJECT);
   }
 
-  @Test(expected = ConversionException.class) public void deserializeWrongValue() throws Exception {
-    final TypedInput input = new TypedByteArray(MIME_TYPE, "{\"foo\":\"bar\"}".getBytes());
+  @Test(expected = ConversionException.class)
+  public void deserializeWrongValue() throws Exception {
+    TypedInput input = new TypedByteArray(MIME_TYPE, "{\"foo\":\"bar\"}".getBytes());
     converter.fromBody(input, MyObject.class);
   }
 
-  @Test(expected = ConversionException.class) public void deserializeWrongClass() throws Exception {
-    final TypedInput input = new TypedByteArray(MIME_TYPE, objAsJson.getBytes());
+  @Test(expected = ConversionException.class)
+  public void deserializeWrongClass() throws Exception {
+    TypedInput input = new TypedByteArray(MIME_TYPE, JSON.getBytes());
     converter.fromBody(input, String.class);
   }
 
   private String asString(TypedOutput typedOutput) throws Exception {
-    final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     typedOutput.writeTo(bytes);
     return new String(bytes.toByteArray());
   }
@@ -57,46 +55,21 @@ public class JacksonConverterTest {
       this.count = count;
     }
 
-    public String getMessage() {
-      return message;
-    }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
 
-    public int getCount() {
-      return count;
+      MyObject myObject = (MyObject) o;
+      return count == myObject.count
+          && !(message != null ? !message.equals(myObject.message) : myObject.message != null);
     }
 
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + count;
-      result = prime * result + ((message == null) ? 0 : message.hashCode());
+      int result = message != null ? message.hashCode() : 0;
+      result = 31 * result + count;
       return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      MyObject other = (MyObject) obj;
-      if (count != other.count) {
-        return false;
-      }
-      if (message == null) {
-        if (other.message != null) {
-          return false;
-        }
-      } else if (!message.equals(other.message)) {
-        return false;
-      }
-      return true;
     }
   }
 }
