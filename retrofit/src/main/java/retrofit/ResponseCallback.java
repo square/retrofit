@@ -23,8 +23,7 @@ import retrofit.client.Response;
  */
 public abstract class ResponseCallback implements Callback<Response> {
 
-  @Override
-  public void success(Response response, Response response2) {
+  @Override public void success(Response response, Response response2) {
     success(response);
   }
 
