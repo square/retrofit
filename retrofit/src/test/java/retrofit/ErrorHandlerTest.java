@@ -41,7 +41,7 @@ public class ErrorHandlerTest {
     errorHandler = mock(ErrorHandler.class);
 
     client = new RestAdapter.Builder() //
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setClient(new MockInvalidResponseClient())
         .setErrorHandler(errorHandler)
         .setExecutors(new Utils.SynchronousExecutor(), new Utils.SynchronousExecutor())

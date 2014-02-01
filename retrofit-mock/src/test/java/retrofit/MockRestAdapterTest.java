@@ -57,7 +57,7 @@ public class MockRestAdapterTest {
     RestAdapter restAdapter = new RestAdapter.Builder() //
         .setClient(client)
         .setExecutors(httpExecutor, callbackExecutor)
-        .setServer("http://example.com")
+        .setEndpoint("http://example.com")
         .setLogLevel(RestAdapter.LogLevel.NONE)
         .build();
 

@@ -39,7 +39,7 @@ public class GitHubClient {
   public static void main(String... args) {
     // Create a very simple REST adapter which points the GitHub API endpoint.
     RestAdapter restAdapter = new RestAdapter.Builder()
-        .setServer(API_URL)
+        .setEndpoint(API_URL)
         .build();
 
     // Create an instance of our GitHub API interface.
