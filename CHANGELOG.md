@@ -11,7 +11,7 @@ Version 1.4.0 *(2014-01-31)*
  * New: `Endpoint` replaces `Server` as the representation of the remote API root. The `Endpoints`
    utility class contains factories methods for creating instances. `Server` and `ChangeableServer`
    are now deprecated.
- * `SimpleXmlConverter` now has a default constructor.
+ * `SimpleXmlConverter` and `JacksonConverter` now have a default constructor.
  * `Response` now includes the URL.
  * Fix: Hide references to optional classes to prevent over-eager class verifiers from
    complaining (e.g., Dalvik).
