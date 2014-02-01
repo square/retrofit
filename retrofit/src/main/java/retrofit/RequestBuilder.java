@@ -16,6 +16,7 @@
 package retrofit;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -207,7 +208,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
                 }
               }
             } else if (value.getClass().isArray()) {
-              for (Object arrayValue : (Object[]) value) {
+              for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+                Object arrayValue = Array.get(value, x);
                 if (arrayValue != null) { // Skip null values
                   addQueryParam(name, arrayValue.toString(), urlEncodeValue);
                 }
@@ -240,6 +242,13 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
               for (Object iterableValue : (Iterable<?>) value) {
                 if (iterableValue != null) { // Skip null values.
                   formBody.addField(name, iterableValue.toString());
+                }
+              }
+            } else if (value.getClass().isArray()) {
+              for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+                Object arrayValue = Array.get(value, x);
+                if (arrayValue != null) { // Skip null values.
+                  formBody.addField(name, arrayValue.toString());
                 }
               }
             } else {
