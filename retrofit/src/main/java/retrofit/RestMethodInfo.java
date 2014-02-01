@@ -23,12 +23,14 @@ import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import retrofit.http.Body;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
+import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.Header;
@@ -37,6 +39,7 @@ import retrofit.http.Multipart;
 import retrofit.http.Part;
 import retrofit.http.Path;
 import retrofit.http.Query;
+import retrofit.http.QueryMap;
 import retrofit.http.RestMethod;
 import rx.Observable;
 
@@ -55,7 +58,16 @@ final class RestMethodInfo {
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
   enum ParamUsage {
-    PATH, ENCODED_PATH, QUERY, ENCODED_QUERY, FIELD, PART, BODY, HEADER
+    PATH,
+    ENCODED_PATH,
+    QUERY,
+    ENCODED_QUERY,
+    QUERY_MAP,
+    ENCODED_QUERY_MAP,
+    FIELD,
+    PART,
+    BODY,
+    HEADER
   }
 
   enum RequestType {
@@ -356,6 +368,18 @@ final class RestMethodInfo {
             String name = ((EncodedQuery) parameterAnnotation).value();
 
             paramNames[i] = name;
+            paramUsage[i] = ParamUsage.ENCODED_QUERY;
+          } else if (annotationType == QueryMap.class) {
+            if (!parameterType.isInstance(Map.class)) {
+              throw new IllegalStateException("@QueryMap parameter type must be Map.");
+            }
+
+            paramUsage[i] = ParamUsage.QUERY_MAP;
+          } else if (annotationType == EncodedQueryMap.class) {
+            if (!parameterType.isInstance(Map.class)) {
+              throw new IllegalStateException("@EncodedQueryMap parameter type must be Map.");
+            }
+
             paramUsage[i] = ParamUsage.ENCODED_QUERY;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();

@@ -28,6 +28,9 @@ import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
+import static retrofit.RestMethodInfo.ParamUsage.QUERY;
+import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
+
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
   private final String[] paramNames;
@@ -109,7 +112,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     addPathParam(name, value, false);
   }
 
-  void addPathParam(String name, String value, boolean urlEncodeValue) {
+  private void addPathParam(String name, String value, boolean urlEncodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Path replacement name must not be null.");
     }
@@ -142,7 +145,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     addQueryParam(name, value, false);
   }
 
-  void addQueryParam(String name, String value, boolean urlEncodeValue) {
+  private void addQueryParam(String name, String value, boolean urlEncodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
@@ -163,35 +166,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(
           "Unable to convert query parameter \"" + name + "\" value to UTF-8: " + value, e);
-    }
-  }
-
-  void addQueryListParams(String name, Iterable<?> values) {
-    if (name == null) {
-      throw new IllegalArgumentException("Query name must not be null.");
-    }
-    if (values == null) {
-      throw new IllegalArgumentException("Query param values must not be null.");
-    }
-
-    for (Object value : values) {
-      addQueryParam(name, value.toString());
-    }
-  }
-
-  void addQueryMapParams(String name, Map<?, ?> values) {
-    if (name == null) {
-      throw new IllegalArgumentException("Query name must not be null.");
-    }
-    if (values == null) {
-      throw new IllegalArgumentException("Query param value map must not be null.");
-    }
-
-    for (Map.Entry<?, ?> entry : values.entrySet()) {
-      Object value = entry.getValue();
-      if (value != null) { // Skip null values.
-        addQueryParam(entry.getKey().toString(), value.toString());
-      }
     }
   }
 
@@ -223,19 +197,36 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           addEncodedPathParam(name, value.toString());
           break;
         case QUERY:
+        case ENCODED_QUERY:
           if (value != null) { // Skip null values.
+            boolean urlEncodeValue = paramUsage == QUERY;
             if (value instanceof Iterable) {
-              addQueryListParams(name, (Iterable<?>) value);
-            } else if (value instanceof Map) {
-              addQueryMapParams(name, (Map<?, ?>) value);
+              for (Object iterableValue : (Iterable<?>) value) {
+                if (iterableValue != null) { // Skip null values
+                  addQueryParam(name, iterableValue.toString(), urlEncodeValue);
+                }
+              }
+            } else if (value.getClass().isArray()) {
+              for (Object arrayValue : (Object[]) value) {
+                if (arrayValue != null) { // Skip null values
+                  addQueryParam(name, arrayValue.toString(), urlEncodeValue);
+                }
+              }
             } else {
-              addQueryParam(name, value.toString());
+              addQueryParam(name, value.toString(), urlEncodeValue);
             }
           }
           break;
-        case ENCODED_QUERY:
+        case QUERY_MAP:
+        case ENCODED_QUERY_MAP:
           if (value != null) { // Skip null values.
-            addEncodedQueryParam(name, value.toString());
+            boolean urlEncodeValue = paramUsage == QUERY_MAP;
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+              Object entryValue = entry.getValue();
+              if (entryValue != null) { // Skip null values.
+                addQueryParam(entry.getKey().toString(), entryValue.toString(), urlEncodeValue);
+              }
+            }
           }
           break;
         case HEADER:
@@ -246,9 +237,9 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         case FIELD:
           if (value != null) { // Skip null values.
             if (value instanceof Iterable) {
-              for (Object v : (Iterable<?>) value) {
-                if (v != null) { // Skip null values.
-                  formBody.addField(name, v.toString());
+              for (Object iterableValue : (Iterable<?>) value) {
+                if (iterableValue != null) { // Skip null values.
+                  formBody.addField(name, iterableValue.toString());
                 }
               }
             } else if (value instanceof Map) {

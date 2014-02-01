@@ -23,16 +23,38 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Query parameter appended to the URL. Values are converted to strings using
- * {@link String#valueOf(Object)}. Parameter values will be URL encoded. List
- * and Map contents are handled as individual query parameters.
+ * Query parameter appended to the URL.
  * <p>
+ * Values are converted to strings using {@link String#valueOf(Object)} and then URL encoded.
+ * A {@link java.util.List List} or array will result in a query parameter for each value.
+ * {@code null} as a value to the parameter or as a value in a list will not be included in the
+ * URL.
+ * <p>
+ * Simple Example:
  * <pre>
  * &#64;GET("/list")
- * void example(@Query("page") int page, ..);
+ * void list(@Query("page") int page);
  * </pre>
+ * Calling with {@code foo.list(1)} yields {@code /list?page=1}.
  * <p>
- * Query parameters may be {@code null} which will omit them from the URL.
+ * Example with {@code null}:
+ * <pre>
+ * &#64;GET("/list")
+ * void list(@Query("category") String category);
+ * </pre>
+ * Calling with {@code foo.list(null)} yields {@code /list}.
+ * <p>
+ * Array Example:
+ * <pre>
+ * &#64;GET("/list")
+ * void list(@Query("category") String... categories);
+ * </pre>
+ * Calling with {@code foo.list("bar", "baz")} yields
+ * {@code /list?category=foo&category=bar}.
+ *
+ * @see EncodedQuery
+ * @see QueryMap
+ * @see EncodedQueryMap
  */
 @Documented
 @Target(PARAMETER)
