@@ -23,6 +23,13 @@ import java.util.concurrent.TimeUnit;
 
 /** Retrofit client that uses OkHttp for communication. */
 public class OkClient extends UrlConnectionClient {
+  private static OkHttpClient generateDefaultOkHttp() {
+    OkHttpClient client = new OkHttpClient();
+    client.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    client.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    return client;
+  }
+
   private final OkHttpClient client;
 
   public OkClient() {
@@ -35,12 +42,5 @@ public class OkClient extends UrlConnectionClient {
 
   @Override protected HttpURLConnection openConnection(Request request) throws IOException {
     return client.open(new URL(request.getUrl()));
-  }
-
-  private static OkHttpClient generateDefaultOkHttp() {
-    OkHttpClient okHttp = new OkHttpClient();
-    okHttp.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    okHttp.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    return okHttp;
   }
 }
