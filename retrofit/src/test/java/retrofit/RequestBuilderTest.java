@@ -29,6 +29,7 @@ import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.FIELD;
+import static retrofit.RestMethodInfo.ParamUsage.FIELD_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.HEADER;
 import static retrofit.RestMethodInfo.ParamUsage.PART;
 import static retrofit.RestMethodInfo.ParamUsage.PATH;
@@ -773,7 +774,7 @@ public class RequestBuilderTest {
 
     Helper addFieldMap(String name, Map<String, Object> values) {
       paramNames.add(name);
-      paramUsages.add(FIELD);
+      paramUsages.add(FIELD_MAP);
       args.add(values);
       return this;
     }

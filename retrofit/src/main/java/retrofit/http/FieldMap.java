@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2014 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,26 +23,25 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Named pair for a form-encoded request.
+ * Named key/value pairs for a form-encoded request.
  * <p>
- * Values may be {@code null} which will omit them from the request body.
+ * Field values may be {@code null} which will omit them from the request body.
  * <p>
  * Simple Example:
  * <pre>
  * &#64;FormUrlEncoded
- * &#64;POST("/")
- * void example(@Field("name") String name, @Field("occupation") String occupation);
+ * &#64;POST("/things")
+ * void things(@FieldMap Map<String, String> fields);
  * }
  * </pre>
- * Calling with {@code foo.example("Bob Smith", "President")} yields a request body of
- * {@code name=Bob+Smith&occupation=President}.
+ * Calling with {@code foo.things(ImmutableMap.of("foo", "bar", "kit", "kat")} yields a request
+ * body of {@code foo=bar&kit=kat}.
  *
  * @see FormUrlEncoded
- * @see FieldMap
+ * @see Field
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface Field {
-  String value();
+public @interface FieldMap {
 }
