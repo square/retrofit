@@ -17,6 +17,7 @@ import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
+import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.HEAD;
@@ -567,6 +568,23 @@ public class RestMethodInfoTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("@EncodedQueryMap parameter type must be Map.");
+    }
+  }
+
+  @Test public void fieldMapMustBeAMap() {
+    class Example {
+      @FormUrlEncoded @POST("/") Response a(@FieldMap List<String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("@FieldMap parameter type must be Map.");
     }
   }
 

@@ -32,6 +32,7 @@ import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
+import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.Header;
 import retrofit.http.Headers;
@@ -65,6 +66,7 @@ final class RestMethodInfo {
     QUERY_MAP,
     ENCODED_QUERY_MAP,
     FIELD,
+    FIELD_MAP,
     PART,
     BODY,
     HEADER
@@ -400,6 +402,17 @@ final class RestMethodInfo {
             gotField = true;
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.FIELD;
+          } else if (annotationType == FieldMap.class) {
+            if (requestType != RequestType.FORM_URL_ENCODED) {
+              throw new IllegalStateException(
+                  "@Field parameters can only be used with form encoding.");
+            }
+            if (!parameterType.isInstance(Map.class)) {
+              throw new IllegalStateException("@FieldMap parameter type must be Map.");
+            }
+
+            gotField = true;
+            paramUsage[i] = ParamUsage.FIELD_MAP;
           } else if (annotationType == Part.class) {
             if (requestType != RequestType.MULTIPART) {
               throw new IllegalStateException(
