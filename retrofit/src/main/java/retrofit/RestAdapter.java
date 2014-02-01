@@ -709,7 +709,7 @@ public class RestAdapter {
     /** Create the {@link RestAdapter} instances. */
     public RestAdapter build() {
       if (endpoint == null) {
-        throw new IllegalArgumentException("Server may not be null.");
+        throw new IllegalArgumentException("Endpoint may not be null.");
       }
       ensureSaneDefaults();
       return new RestAdapter(endpoint, clientProvider, httpExecutor, callbackExecutor,
