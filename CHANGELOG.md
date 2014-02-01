@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+Version 1.4.0 *(2014-01-31)*
+----------------------------
+
+ * New: `@Query` and `@EncodedQuery` now accept `List` or arrays for multiple values.
+ * New: `@QueryMap` and `@EncodedQueryMap` accept a `Map` of key/value pairs for query parameters.
+ * New: `@Field` now accepts `List` or arrays for multiple values.
+ * New: `@FieldMap` accepts a `Map` of name/value pairs for form URL-encoded request bodies.
+ * New: `Endpoint` replaces `Server` as the representation of the remote API root. The `Endpoints`
+   utility class contains factories methods for creating instances. `Server` and `ChangeableServer`
+   are now deprecated.
+ * `SimpleXmlConverter` now has a default constructor.
+ * `Response` now includes the URL.
+ * Fix: Hide references to optional classes to prevent over-eager class verifiers from
+   complaining (e.g., Dalvik).
+ * Fix: Properly detect and reject interfaces which extend from other interfaces.
+
+
 Version 1.3.0 *(2013-11-25)*
 ----------------------------
 
