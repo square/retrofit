@@ -82,7 +82,7 @@ List&lt;User> groupList(@Path("id") int groupId);</pre>
 List&lt;User> groupList(@Path("id") int groupId, @Query("sort") String sort);</pre>
             <p>For complex query parameter combinations a <code>Map</code> can be used.</p>
             <pre class="prettyprint">@GET("/group/{id}/users")
-List&lt;User> groupList(@Path("id") int groupId, @Query("options") Map&lt;String, String&gt; options);</pre>
+List&lt;User> groupList(@Path("id") int groupId, @QueryMap Map&lt;String, String&gt; options);</pre>
 
             <h4>Request Body</h4>
             <p>An object can be specified for use as an HTTP request body with the <code>@Body</code> annotation.</p>
