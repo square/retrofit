@@ -1,6 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import retrofit.mime.MultipartTypedOutput;
@@ -26,11 +27,7 @@ public abstract class TestingUtils {
     return typedOutput;
   }
 
-  public static void assertMultipart(TypedOutput typedOutput) {
-    assertThat(typedOutput).isInstanceOf(MultipartTypedOutput.class);
-  }
-
-  public static void assertBytes(byte[] bytes, String expected) throws Exception {
+  public static void assertBytes(byte[] bytes, String expected) throws IOException {
     assertThat(new String(bytes, "UTF-8")).isEqualTo(expected);
   }
 }
