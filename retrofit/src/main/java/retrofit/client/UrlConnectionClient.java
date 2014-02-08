@@ -43,8 +43,12 @@ public class UrlConnectionClient implements Client {
     }
   }
 
-  @Override public Response execute(Request request) throws IOException {
+  @Override public Response execute(Request request, Integer timeout) throws IOException {
     HttpURLConnection connection = openConnection(request);
+	if (timeout != null) {
+		connection.setConnectTimeout(timeout);
+		connection.setReadTimeout(timeout);
+	}
     prepareRequest(connection, request);
     return readResponse(connection);
   }

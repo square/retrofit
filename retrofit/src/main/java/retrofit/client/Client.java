@@ -26,7 +26,7 @@ public interface Client {
    * Synchronously execute an HTTP represented by {@code request} and encapsulate all response data
    * into a {@link Response} instance.
    */
-  Response execute(Request request) throws IOException;
+  Response execute(Request request, Integer timeout) throws IOException;
 
   /**
    * Deferred means of obtaining a {@link Client}. For asynchronous requests this will always be
