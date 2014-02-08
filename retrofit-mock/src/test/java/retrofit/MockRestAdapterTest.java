@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.matchers.Any;
+
 import retrofit.client.Client;
 import retrofit.client.Request;
 import retrofit.client.Response;
@@ -19,6 +21,7 @@ import rx.util.functions.Action1;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -49,7 +52,7 @@ public class MockRestAdapterTest {
 
   @Before public void setUp() throws IOException {
     Client client = mock(Client.class);
-    doThrow(new AssertionError()).when(client).execute(any(Request.class));
+    doThrow(new AssertionError()).when(client).execute(any(Request.class), anyInt());
 
     httpExecutor = spy(new SynchronousExecutor());
     callbackExecutor = spy(new SynchronousExecutor());

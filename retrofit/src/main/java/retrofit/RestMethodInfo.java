@@ -176,9 +176,8 @@ final class RestMethodInfo {
         }
         requestType = RequestType.FORM_URL_ENCODED;
       } else if (annotationType == Timeout.class) {
-    	  timeout = ((Timeout) methodAnnotation).value();
+        timeout = ((Timeout) methodAnnotation).value();
       }
-      
     }
 
     if (requestMethod == null) {
