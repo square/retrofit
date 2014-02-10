@@ -104,7 +104,12 @@ public final class MultipartTypedOutput implements TypedOutput {
     MimePart part = new MimePart(name, body, boundary, mimeParts.isEmpty());
     mimeParts.add(part);
 
-    length += part.size();
+    long size = part.size();
+    if (size == -1) {
+      length = -1;
+    } else if (length != -1) {
+      length += size;
+    }
   }
 
   public int getPartCount() {

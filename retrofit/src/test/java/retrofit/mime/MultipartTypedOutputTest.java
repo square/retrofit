@@ -64,4 +64,17 @@ public class MultipartTypedOutputTest {
     assertThat(actual).isEqualTo(expected);
     assertThat(mto.mimeType()).isEqualTo("multipart/form-data; boundary=123");
   }
+
+  @Test public void withPartOfUnknownLength() throws Exception {
+    MultipartTypedOutput mto = new MultipartTypedOutput("123");
+
+    mto.addPart("first", new TypedString("value"));
+    mto.addPart("second", new TypedString("unknown size") {
+      @Override public long length() {
+        return -1;
+      }
+    });
+
+    assertThat(mto.length()).isEqualTo(-1);
+  }
 }
