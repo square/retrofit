@@ -52,6 +52,7 @@ import static retrofit.RestMethodInfo.RequestType.FORM_URL_ENCODED;
 import static retrofit.RestMethodInfo.RequestType.MULTIPART;
 import static retrofit.RestMethodInfo.RequestType.SIMPLE;
 
+@SuppressWarnings("unused") // Lots of unused parameters for example code.
 public class RestMethodInfoTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
@@ -80,8 +81,7 @@ public class RestMethodInfoTest {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void pathMustBePrefixedWithSlash() {
+  @Test public void pathMustBePrefixedWithSlash() {
     class Example {
       @GET("foo/bar") Response a() {
         return null;
@@ -90,7 +90,12 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: URL path \"foo/bar\" must start with '/'.");
+    }
   }
 
   @Test public void concreteCallbackTypes() {
@@ -241,8 +246,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void observableWithCallback() {
+  @Test public void observableWithCallback() {
     class Example {
       @GET("/foo") Observable<Response> a(Callback<Response> callback) {
         return null;
@@ -250,22 +254,32 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
-    new RestMethodInfo(method);
+    try {
+      new RestMethodInfo(method);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Must have return type or Callback as last argument, not both.");
+    }
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void missingCallbackTypes() {
+  @Test public void missingCallbackTypes() {
     class Example {
       @GET("/foo") void a(@Query("id") String id) {
       }
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
-    new RestMethodInfo(method);
+    try {
+      new RestMethodInfo(method);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Must have either a return type or Callback as last argument.");
+    }
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void synchronousWithAsyncCallback() {
+  @Test public void synchronousWithAsyncCallback() {
     class Example {
       @GET("/foo") Response a(Callback<Response> callback) {
         return null;
@@ -273,10 +287,16 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
-    new RestMethodInfo(method);
+    try {
+      new RestMethodInfo(method);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Must have return type or Callback as last argument, not both.");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void lackingMethod() {
     class Example {
       Response a() {
@@ -286,7 +306,13 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: HTTP method annotation is required (e.g., @GET, @POST, etc.).");
+    }
   }
 
   @Test public void deleteMethod() {
@@ -569,8 +595,8 @@ public class RestMethodInfoTest {
     try {
       methodInfo.init();
       fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("@QueryMap parameter type must be Map.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: @QueryMap parameter type must be Map. (parameter #1)");
     }
   }
 
@@ -602,8 +628,9 @@ public class RestMethodInfoTest {
     try {
       methodInfo.init();
       fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("@EncodedQueryMap parameter type must be Map.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @EncodedQueryMap parameter type must be Map. (parameter #1)");
     }
   }
 
@@ -635,8 +662,8 @@ public class RestMethodInfoTest {
     try {
       methodInfo.init();
       fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("@FieldMap parameter type must be Map.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: @FieldMap parameter type must be Map. (parameter #1)");
     }
   }
 
@@ -672,8 +699,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void twoBodies() {
+  @Test public void twoBodies() {
     class Example {
       @PUT("/") Response a(@Body int o1, @Body int o2) {
         return null;
@@ -682,7 +708,12 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: Multiple @Body method annotations found.");
+    }
   }
 
   @Test public void bodyWithOtherParams() {
@@ -700,8 +731,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestType).isEqualTo(SIMPLE);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void pathParamNonPathParamAndTypedBytes() {
+  @Test public void pathParamNonPathParamAndTypedBytes() {
     class Example {
       @PUT("/{a}") Response a(@Path("a") int a, @Path("b") int b, @Body int c) {
         return null;
@@ -710,11 +740,15 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: URL \"/{a}\" does not contain \"{b}\". (parameter #2)");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void parameterWithoutAnnotation() {
+  @Test public void parameterWithoutAnnotation() {
     class Example {
       @GET("/") Response a(String a) {
         return null;
@@ -723,11 +757,15 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: No Retrofit annotation found. (parameter #1)");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void nonBodyHttpMethodWithSingleEntity() {
+  @Test public void nonBodyHttpMethodWithSingleEntity() {
     class Example {
       @GET("/") Response a(@Body Object o) {
         return null;
@@ -736,20 +774,13 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void nonBodyHttpMethodWithTypedBytes() {
-    class Example {
-      @GET("/") Response a(@Path("a") TypedOutput a) {
-        return null;
-      }
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Non-body HTTP method cannot contain @Body or @TypedOutput.");
     }
-
-    Method method = TestingUtils.getMethod(Example.class, "a");
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
   }
 
   @Test public void simpleMultipart() {
@@ -797,8 +828,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestType).isEqualTo(MULTIPART);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void implicitMultipartForbidden() {
+  @Test public void implicitMultipartForbidden() {
     class Example {
       @POST("/") Response a(@Part("a") int a) {
         return null;
@@ -807,11 +837,16 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @Part parameters can only be used with multipart encoding. (parameter #1)");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void multipartFailsOnNonBodyMethod() {
+  @Test public void multipartFailsOnNonBodyMethod() {
     class Example {
       @Multipart @GET("/") Response a() {
         return null;
@@ -820,11 +855,16 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void multipartFailsWithNoParts() {
+  @Test public void multipartFailsWithNoParts() {
     class Example {
       @Multipart @POST("/") Response a() {
         return null;
@@ -833,11 +873,15 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: Multipart method must contain at least one @Part.");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void implicitFormEncodingForbidden() {
+  @Test public void implicitFormEncodingForbidden() {
     class Example {
       @POST("/") Response a(@Field("a") int a) {
         return null;
@@ -846,11 +890,16 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @Field parameters can only be used with form encoding. (parameter #1)");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void formEncodingFailsOnNonBodyMethod() {
+  @Test public void formEncodingFailsOnNonBodyMethod() {
     class Example {
       @FormUrlEncoded @GET("/") Response a() {
         return null;
@@ -859,11 +908,16 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void formEncodingFailsWithNoParts() {
+  @Test public void formEncodingFailsWithNoParts() {
     class Example {
       @FormUrlEncoded @POST("/") Response a() {
         return null;
@@ -872,11 +926,15 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: Form-encoded method must contain at least one @Field.");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void headersFailWhenEmptyOnMethod() {
+  @Test public void headersFailWhenEmptyOnMethod() {
     class Example {
       @GET("/") @Headers({}) Response a() {
         return null;
@@ -885,7 +943,12 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: @Headers annotation is empty.");
+    }
   }
 
   @Test public void twoMethodHeaders() {
@@ -924,8 +987,7 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestParamUsage).containsExactly(HEADER, HEADER);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void headerParamMustBeString() {
+  @Test public void headerParamMustBeString() {
     class Example {
       @GET("/")
       Response a(@Header("a") TypedOutput a, @Header("b") int b) {
@@ -935,11 +997,16 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @Header parameter type must be String. Found: TypedOutput. (parameter #1)");
+    }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void onlyOneEncodingIsAllowed() {
+  @Test public void onlyOneEncodingIsAllowed() {
     class Example {
       @Multipart
       @FormUrlEncoded
@@ -951,7 +1018,12 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: Only one encoding annotation is allowed.");
+    }
   }
 
   @Test public void invalidPathParam() throws Exception {
@@ -966,8 +1038,9 @@ public class RestMethodInfoTest {
     try {
       methodInfo.init();
       fail();
-    } catch (IllegalStateException e) {
-      assertThat(e.getMessage()).startsWith("Path parameter name is not valid: hey!.");
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}. Found: hey! (parameter #1)");
     }
   }
 

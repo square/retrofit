@@ -109,6 +109,18 @@ final class RestMethodInfo {
     isObservable = (responseType == ResponseType.OBSERVABLE);
   }
 
+  private RuntimeException methodError(String message, Object... args) {
+    if (args.length > 0) {
+      message = String.format(message, args);
+    }
+    return new IllegalArgumentException(
+        method.getDeclaringClass().getSimpleName() + "." + method.getName() + ": " + message);
+  }
+
+  private RuntimeException parameterError(int index, String message, Object... args) {
+    return methodError(message + " (parameter #" + (index + 1) + ")", args);
+  }
+
   synchronized void init() {
     if (loaded) return;
 
@@ -134,22 +146,18 @@ final class RestMethodInfo {
 
       if (methodInfo != null) {
         if (requestMethod != null) {
-          throw new IllegalArgumentException("Method "
-              + method.getName()
-              + " contains multiple HTTP methods. Found: "
-              + requestMethod
-              + " and "
-              + methodInfo.value());
+          throw methodError("Only one HTTP method is allowed. Found: %s and %s.", requestMethod,
+              methodInfo.value());
         }
         String path;
         try {
           path = (String) annotationType.getMethod("value").invoke(methodAnnotation);
         } catch (Exception e) {
-          throw new RuntimeException("Failed to extract path from "
+          throw new IllegalStateException("Failed to extract path from "
               + annotationType.getSimpleName()
-              + " annotation on "
+              + " annotation on method '"
               + method.getName()
-              + ".", e);
+              + "'.", e);
         }
         parsePath(path);
         requestMethod = methodInfo.value();
@@ -157,40 +165,33 @@ final class RestMethodInfo {
       } else if (annotationType == Headers.class) {
         String[] headersToParse = ((Headers) methodAnnotation).value();
         if (headersToParse.length == 0) {
-          throw new IllegalStateException("Headers annotation was empty.");
+          throw methodError("@Headers annotation is empty.");
         }
         headers = parseHeaders(headersToParse);
       } else if (annotationType == Multipart.class) {
         if (requestType != RequestType.SIMPLE) {
-          throw new IllegalStateException(
-              "Only one encoding annotation per method is allowed: " + method.getName());
+          throw methodError("Only one encoding annotation is allowed.");
         }
         requestType = RequestType.MULTIPART;
       } else if (annotationType == FormUrlEncoded.class) {
         if (requestType != RequestType.SIMPLE) {
-          throw new IllegalStateException(
-              "Only one encoding annotation per method is allowed: " + method.getName());
+          throw methodError("Only one encoding annotation is allowed.");
         }
         requestType = RequestType.FORM_URL_ENCODED;
       }
     }
 
     if (requestMethod == null) {
-      throw new IllegalStateException(
-          "Method " + method.getName() + " not annotated with request type (e.g., GET, POST).");
+      throw methodError("HTTP method annotation is required (e.g., @GET, @POST, etc.).");
     }
     if (!requestHasBody) {
       if (requestType == RequestType.MULTIPART) {
-        throw new IllegalStateException(
-            "Multipart can only be specified on HTTP methods with request body (e.g., POST). ("
-                + method.getName()
-                + ")");
+        throw methodError(
+            "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
       }
       if (requestType == RequestType.FORM_URL_ENCODED) {
-        throw new IllegalStateException(
-            "FormUrlEncoded can only be specified on HTTP methods with request body (e.g., POST). ("
-                + method.getName()
-                + ")");
+        throw methodError("FormUrlEncoded can only be specified on HTTP methods with request body "
+                + "(e.g., @POST).");
       }
     }
   }
@@ -198,13 +199,7 @@ final class RestMethodInfo {
   /** Loads {@link #requestUrl}, {@link #requestUrlParamNames}, and {@link #requestQuery}. */
   private void parsePath(String path) {
     if (path == null || path.length() == 0 || path.charAt(0) != '/') {
-      throw new IllegalArgumentException("URL path \""
-          + path
-          + "\" on method "
-          + method.getName()
-          + " must start with '/'. ("
-          + method.getName()
-          + ")");
+      throw methodError("URL path \"%s\" must start with '/'.", path);
     }
 
     // Get the relative URL path and existing query string, if present.
@@ -218,11 +213,7 @@ final class RestMethodInfo {
       // Ensure the query string does not have any named parameters.
       Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(query);
       if (queryParamMatcher.find()) {
-        throw new IllegalStateException("URL query string \""
-            + query
-            + "\" on method "
-            + method.getName()
-            + " may not have replace block.");
+        throw methodError("URL query string \"%s\" must not have replace block.", query);
       }
     }
 
@@ -238,8 +229,7 @@ final class RestMethodInfo {
     for (String header : headers) {
       int colon = header.indexOf(':');
       if (colon == -1 || colon == 0 || colon == header.length() - 1) {
-        throw new IllegalStateException(
-            "Header must be in the form \"Name: Value\": \"" + header + "\"");
+        throw methodError("Header must be in the form \"Name: Value\". Found: \"%s\"", header);
       }
       headerList.add(new retrofit.client.Header(header.substring(0, colon),
           header.substring(colon + 1).trim()));
@@ -273,14 +263,10 @@ final class RestMethodInfo {
 
     // Check for invalid configurations.
     if (hasReturnType && hasCallback) {
-      throw new IllegalArgumentException("Method "
-          + method.getName()
-          + " may only have return type or Callback as last argument, not both.");
+      throw methodError("Must have return type or Callback as last argument, not both.");
     }
     if (!hasReturnType && !hasCallback) {
-      throw new IllegalArgumentException("Method "
-          + method.getName()
-          + " must have either a return type or Callback as last argument.");
+      throw methodError("Must have either a return type or Callback as last argument.");
     }
 
     if (hasReturnType) {
@@ -302,12 +288,10 @@ final class RestMethodInfo {
       return ResponseType.VOID;
     }
 
-    throw new IllegalArgumentException("Last parameter of "
-        + method.getName()
-        + " must be of type Callback<X> or Callback<? super X>. Found: "
-        + lastArgType);
+    throw methodError(
+        "Last parameter must be of type Callback<X> or Callback<? super X>. Found: %s.",
+        lastArgType);
   }
-
 
   private static Type getParameterUpperBound(ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
@@ -351,13 +335,13 @@ final class RestMethodInfo {
 
           if (annotationType == Path.class) {
             String name = ((Path) parameterAnnotation).value();
-            validatePathName(name);
+            validatePathName(i, name);
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.PATH;
           } else if (annotationType == EncodedPath.class) {
             String name = ((EncodedPath) parameterAnnotation).value();
-            validatePathName(name);
+            validatePathName(i, name);
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.ENCODED_PATH;
@@ -373,28 +357,28 @@ final class RestMethodInfo {
             paramUsage[i] = ParamUsage.ENCODED_QUERY;
           } else if (annotationType == QueryMap.class) {
             if (!Map.class.isAssignableFrom(parameterType)) {
-              throw new IllegalStateException("@QueryMap parameter type must be Map.");
+              throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
 
             paramUsage[i] = ParamUsage.QUERY_MAP;
           } else if (annotationType == EncodedQueryMap.class) {
             if (!Map.class.isAssignableFrom(parameterType)) {
-              throw new IllegalStateException("@EncodedQueryMap parameter type must be Map.");
+              throw parameterError(i, "@EncodedQueryMap parameter type must be Map.");
             }
 
             paramUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
             if (parameterType != String.class) {
-              throw new IllegalStateException("@Header parameter type must be String: " + name);
+              throw parameterError(i, "@Header parameter type must be String. Found: %s.",
+                  parameterType.getSimpleName());
             }
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.HEADER;
           } else if (annotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
-              throw new IllegalStateException(
-                  "@Field parameters can only be used with form encoding.");
+              throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
 
             String name = ((Field) parameterAnnotation).value();
@@ -404,19 +388,17 @@ final class RestMethodInfo {
             paramUsage[i] = ParamUsage.FIELD;
           } else if (annotationType == FieldMap.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
-              throw new IllegalStateException(
-                  "@Field parameters can only be used with form encoding.");
+              throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
             if (!Map.class.isAssignableFrom(parameterType)) {
-              throw new IllegalStateException("@FieldMap parameter type must be Map.");
+              throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
 
             gotField = true;
             paramUsage[i] = ParamUsage.FIELD_MAP;
           } else if (annotationType == Part.class) {
             if (requestType != RequestType.MULTIPART) {
-              throw new IllegalStateException(
-                  "@Part parameters can only be used with multipart encoding.");
+              throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
 
             String name = ((Part) parameterAnnotation).value();
@@ -426,12 +408,11 @@ final class RestMethodInfo {
             paramUsage[i] = ParamUsage.PART;
           } else if (annotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
-              throw new IllegalStateException(
+              throw parameterError(i,
                   "@Body parameters cannot be used with form or multi-part encoding.");
             }
             if (gotBody) {
-              throw new IllegalStateException(
-                  "Method annotated with multiple Body method annotations: " + method);
+              throw methodError("Multiple @Body method annotations found.");
             }
 
             gotBody = true;
@@ -441,33 +422,29 @@ final class RestMethodInfo {
       }
 
       if (paramUsage[i] == null) {
-        throw new IllegalStateException(
-            "No Retrofit annotation found on parameter " + (i + 1) + " of " + method.getName());
+        throw parameterError(i, "No Retrofit annotation found.");
       }
     }
 
     if (requestType == RequestType.SIMPLE && !requestHasBody && gotBody) {
-      throw new IllegalStateException("Non-body HTTP method cannot contain @Body or @TypedOutput.");
+      throw methodError("Non-body HTTP method cannot contain @Body or @TypedOutput.");
     }
     if (requestType == RequestType.FORM_URL_ENCODED && !gotField) {
-      throw new IllegalStateException("Form-encoded method must contain at least one @Field.");
+      throw methodError("Form-encoded method must contain at least one @Field.");
     }
     if (requestType == RequestType.MULTIPART && !gotPart) {
-      throw new IllegalStateException("Multipart method must contain at least one @Part.");
+      throw methodError("Multipart method must contain at least one @Part.");
     }
   }
 
-  private void validatePathName(String name) {
+  private void validatePathName(int index, String name) {
     if (!PARAM_NAME_REGEX.matcher(name).matches()) {
-      throw new IllegalStateException("Path parameter name is not valid: "
-          + name
-          + ". Must match "
-          + PARAM_URL_REGEX.pattern());
+      throw parameterError(index, "@Path parameter name must match %s. Found: %s",
+          PARAM_URL_REGEX.pattern(), name);
     }
     // Verify URL replacement name is actually present in the URL path.
     if (!requestUrlParamNames.contains(name)) {
-      throw new IllegalStateException(
-          "Method URL \"" + requestUrl + "\" does not contain {" + name + "}.");
+      throw parameterError(index, "URL \"%s\" does not contain \"{%s}\".", requestUrl, name);
     }
   }
 
