@@ -153,11 +153,8 @@ final class RestMethodInfo {
         try {
           path = (String) annotationType.getMethod("value").invoke(methodAnnotation);
         } catch (Exception e) {
-          throw new IllegalStateException("Failed to extract path from "
-              + annotationType.getSimpleName()
-              + " annotation on method '"
-              + method.getName()
-              + "'.", e);
+          throw methodError("Failed to extract String 'value' from @%s annotation.",
+              annotationType.getSimpleName());
         }
         parsePath(path);
         requestMethod = methodInfo.value();
@@ -229,7 +226,8 @@ final class RestMethodInfo {
     for (String header : headers) {
       int colon = header.indexOf(':');
       if (colon == -1 || colon == 0 || colon == header.length() - 1) {
-        throw methodError("Header must be in the form \"Name: Value\". Found: \"%s\"", header);
+        throw methodError("@Headers value must be in the form \"Name: Value\". Found: \"%s\"",
+            header);
       }
       headerList.add(new retrofit.client.Header(header.substring(0, colon),
           header.substring(colon + 1).trim()));
@@ -288,9 +286,7 @@ final class RestMethodInfo {
       return ResponseType.VOID;
     }
 
-    throw methodError(
-        "Last parameter must be of type Callback<X> or Callback<? super X>. Found: %s.",
-        lastArgType);
+    throw methodError("Last parameter must be of type Callback<X> or Callback<? super X>.");
   }
 
   private static Type getParameterUpperBound(ParameterizedType type) {
@@ -388,7 +384,7 @@ final class RestMethodInfo {
             paramUsage[i] = ParamUsage.FIELD;
           } else if (annotationType == FieldMap.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
-              throw parameterError(i, "@Field parameters can only be used with form encoding.");
+              throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
             if (!Map.class.isAssignableFrom(parameterType)) {
               throw parameterError(i, "@FieldMap parameter type must be Map.");

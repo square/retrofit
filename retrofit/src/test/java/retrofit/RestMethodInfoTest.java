@@ -43,6 +43,7 @@ import static retrofit.RestMethodInfo.ParamUsage.BODY;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY_MAP;
+import static retrofit.RestMethodInfo.ParamUsage.FIELD;
 import static retrofit.RestMethodInfo.ParamUsage.FIELD_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.HEADER;
 import static retrofit.RestMethodInfo.ParamUsage.PATH;
@@ -279,6 +280,22 @@ public class RestMethodInfoTest {
     }
   }
 
+  @Test public void nonParameterizedCallbackFails() {
+    class Example {
+      @GET("/foo") void a(Callback cb) {
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    try {
+      new RestMethodInfo(method);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Last parameter must be of type Callback<X> or Callback<? super X>.");
+    }
+  }
+
   @Test public void synchronousWithAsyncCallback() {
     class Example {
       @GET("/foo") Response a(Callback<Response> callback) {
@@ -409,6 +426,50 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestMethod).isEqualTo("PATCH");
     assertThat(methodInfo.requestHasBody).isTrue();
     assertThat(methodInfo.requestUrl).isEqualTo("/foo");
+  }
+
+  @Test public void twoMethodsFail() {
+    class Example {
+      @PATCH("/foo") @POST("/foo") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Only one HTTP method is allowed. Found: PATCH and POST.");
+    }
+  }
+
+  @RestMethod("BAD")
+  @Target(METHOD) @Retention(RUNTIME)
+  private @interface BAD_CUSTOM {
+    int value();
+  }
+
+  @Test public void customWithoutRestMethod() {
+    class Example {
+      @BAD_CUSTOM(12) Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Failed to extract String 'value' from @BAD_CUSTOM annotation.");
+    }
   }
 
   @RestMethod("CUSTOM1")
@@ -716,6 +777,25 @@ public class RestMethodInfoTest {
     }
   }
 
+  @Test public void bodyInNonBodyRequest() {
+    class Example {
+      @Multipart
+      @PUT("/") Response a(@Part("one") int o1, @Body int o2) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @Body parameters cannot be used with form or multi-part encoding. (parameter #2)");
+    }
+  }
+
   @Test public void bodyWithOtherParams() {
     class Example {
       @PUT("/{a}/{c}") Response a(@Path("a") int a, @Body int b, @Path("c") int c) {
@@ -881,7 +961,7 @@ public class RestMethodInfoTest {
     }
   }
 
-  @Test public void implicitFormEncodingForbidden() {
+  @Test public void implicitFormEncodingByFieldForbidden() {
     class Example {
       @POST("/") Response a(@Field("a") int a) {
         return null;
@@ -896,6 +976,24 @@ public class RestMethodInfoTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "Example.a: @Field parameters can only be used with form encoding. (parameter #1)");
+    }
+  }
+
+  @Test public void implicitFormEncodingByFieldMapForbidden() {
+    class Example {
+      @POST("/") Response a(@FieldMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @FieldMap parameters can only be used with form encoding. (parameter #1)");
     }
   }
 
@@ -934,6 +1032,22 @@ public class RestMethodInfoTest {
     }
   }
 
+  @Test public void simpleFormEncoding() {
+    class Example {
+      @FormUrlEncoded @PUT("/")
+      Response a(@Field("a") String a) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.requestType).isEqualTo(FORM_URL_ENCODED);
+    assertThat(methodInfo.requestParamUsage).containsExactly(FIELD);
+  }
+
   @Test public void headersFailWhenEmptyOnMethod() {
     class Example {
       @GET("/") @Headers({}) Response a() {
@@ -948,6 +1062,24 @@ public class RestMethodInfoTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Example.a: @Headers annotation is empty.");
+    }
+  }
+
+  @Test public void headersFailWhenMalformed() {
+    class Example {
+      @GET("/") @Headers("Malformed") Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @Headers value must be in the form \"Name: Value\". Found: \"Malformed\"");
     }
   }
 
@@ -1006,10 +1138,31 @@ public class RestMethodInfoTest {
     }
   }
 
-  @Test public void onlyOneEncodingIsAllowed() {
+  @Test public void onlyOneEncodingIsAllowedMultipartFirst() {
     class Example {
       @Multipart
       @FormUrlEncoded
+      @POST("/")
+      Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.a: Only one encoding annotation is allowed.");
+    }
+  }
+
+
+  @Test public void onlyOneEncodingIsAllowedFormEncodingFirst() {
+    class Example {
+      @FormUrlEncoded
+      @Multipart
       @POST("/")
       Response a() {
         return null;
@@ -1041,6 +1194,24 @@ public class RestMethodInfoTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "Example.a: @Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}. Found: hey! (parameter #1)");
+    }
+  }
+
+  @Test public void pathParamNotAllowedInQuery() throws Exception {
+    class Example {
+      @GET("/foo?bar={bar}") Response a(@Path("bar") String thing) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: URL query string \"bar={bar}\" must not have replace block.");
     }
   }
 
