@@ -294,10 +294,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   Request build() throws UnsupportedEncodingException {
-    if (multipartBody != null && multipartBody.getPartCount() == 0) {
-      throw new IllegalStateException("Multipart requests must contain at least one part.");
-    }
-
     String apiUrl = this.apiUrl;
     StringBuilder url = new StringBuilder(apiUrl);
     if (apiUrl.endsWith("/")) {
