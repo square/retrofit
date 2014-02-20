@@ -13,8 +13,9 @@ import retrofit.client.Request;
 import retrofit.client.Response;
 import rx.Observable;
 import rx.Observer;
+import rx.Scheduler;
 import rx.Subscription;
-import rx.concurrency.Schedulers;
+import rx.schedulers.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
 
@@ -510,10 +511,10 @@ public final class MockRestAdapter {
 
   /** Indirection to avoid VerifyError if RxJava isn't present. */
   private static class MockRxSupport {
-    private final RestAdapter restAdapter;
+    private final Scheduler scheduler;
 
     MockRxSupport(RestAdapter restAdapter) {
-      this.restAdapter = restAdapter;
+      scheduler = Schedulers.executor(restAdapter.httpExecutor);
     }
 
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
@@ -529,7 +530,7 @@ public final class MockRestAdapter {
             return Observable.error(throwable).subscribe(observer);
           }
         }
-      }).subscribeOn(Schedulers.executor(restAdapter.httpExecutor));
+      }).subscribeOn(scheduler);
     }
   }
 }

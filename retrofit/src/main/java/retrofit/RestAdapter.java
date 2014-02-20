@@ -236,10 +236,6 @@ public class RestAdapter {
       this.scheduler = Schedulers.executor(executor);
     }
 
-    Scheduler getScheduler() {
-      return scheduler;
-    }
-
     Observable createRequestObservable(final Callable<ResponseWrapper> request) {
       return Observable.create(new Observable.OnSubscribeFunc<Object>() {
         @Override public Subscription onSubscribe(Observer<? super Object> observer) {
@@ -255,7 +251,7 @@ public class RestAdapter {
           }
           return Subscriptions.empty();
         }
-      });
+      }).subscribeOn(scheduler);
     }
   }
 
@@ -304,7 +300,7 @@ public class RestAdapter {
           @Override public ResponseWrapper call() throws Exception {
             return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
           }
-        }).subscribeOn(rxSupport.getScheduler());
+        });
       }
 
       Callback<?> callback = (Callback<?>) args[args.length - 1];
