@@ -1158,7 +1158,6 @@ public class RestMethodInfoTest {
     }
   }
 
-
   @Test public void onlyOneEncodingIsAllowedFormEncodingFirst() {
     class Example {
       @FormUrlEncoded
