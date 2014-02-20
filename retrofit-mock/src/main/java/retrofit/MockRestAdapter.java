@@ -268,8 +268,8 @@ public final class MockRestAdapter {
       methodInfo.init();
 
       // Begin building a normal request.
-      RequestBuilder requestBuilder = new RequestBuilder(restAdapter.converter, methodInfo);
-      requestBuilder.setApiUrl(restAdapter.server.getUrl());
+      String apiUrl = restAdapter.server.getUrl();
+      RequestBuilder requestBuilder = new RequestBuilder(apiUrl, methodInfo, restAdapter.converter);
       requestBuilder.setArguments(args);
 
       // Run it through the interceptor.

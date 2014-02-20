@@ -325,8 +325,7 @@ public class RestAdapter {
       String serverUrl = server.getUrl();
       String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
       try {
-        RequestBuilder requestBuilder = new RequestBuilder(converter, methodInfo);
-        requestBuilder.setApiUrl(serverUrl);
+        RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
         requestBuilder.setArguments(args);
 
         requestInterceptor.intercept(requestBuilder);

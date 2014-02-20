@@ -890,7 +890,7 @@ public class RequestBuilderTest {
       methodInfo.headers = headers;
       methodInfo.loaded = true;
 
-      RequestBuilder requestBuilder = new RequestBuilder(GSON, methodInfo);
+      RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, GSON);
 
       // Simulate request interceptor invocation.
       for (Header header : interceptorHeaders) {
@@ -903,7 +903,6 @@ public class RequestBuilderTest {
         requestBuilder.addQueryParam(entry.getKey(), entry.getValue());
       }
 
-      requestBuilder.setApiUrl(url);
       requestBuilder.setArguments(args.toArray(new Object[args.size()]));
 
       return requestBuilder.build();

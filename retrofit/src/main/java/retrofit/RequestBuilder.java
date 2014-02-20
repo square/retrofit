@@ -39,17 +39,18 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final String requestMethod;
   private final boolean isSynchronous;
   private final boolean isObservable;
+  private final String apiUrl;
 
   private final FormUrlEncodedTypedOutput formBody;
   private final MultipartTypedOutput multipartBody;
   private TypedOutput body;
 
-  private String apiUrl;
   private String relativeUrl;
   private StringBuilder queryParams;
   private List<Header> headers;
 
-  RequestBuilder(Converter converter, RestMethodInfo methodInfo) {
+  RequestBuilder(String apiUrl, RestMethodInfo methodInfo, Converter converter) {
+    this.apiUrl = apiUrl;
     this.converter = converter;
 
     paramNames = methodInfo.requestParamNames;
@@ -88,10 +89,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       default:
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
     }
-  }
-
-  void setApiUrl(String apiUrl) {
-    this.apiUrl = apiUrl;
   }
 
   @Override public void addHeader(String name, String value) {
