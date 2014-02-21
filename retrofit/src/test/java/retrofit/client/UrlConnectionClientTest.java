@@ -167,4 +167,15 @@ public class UrlConnectionClientTest {
     assertThat(response.getHeaders()).hasSize(2) //
         .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
   }
+
+  @Test public void noReasonMessage() throws Exception {
+    DummyHttpUrlConnection connection = new DummyHttpUrlConnection(HOST);
+    connection.setResponseCode(504);
+    connection.setResponseMessage(null);
+    Response response = client.readResponse(connection);
+
+    assertThat(response.getUrl()).isEqualTo(HOST);
+    assertThat(response.getStatus()).isEqualTo(504);
+    assertThat(response.getReason()).isEmpty();
+  }
 }
