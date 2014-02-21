@@ -93,6 +93,7 @@ public class UrlConnectionClient implements Client {
   Response readResponse(HttpURLConnection connection) throws IOException {
     int status = connection.getResponseCode();
     String reason = connection.getResponseMessage();
+    if (reason == null) reason = ""; // HttpURLConnection treats empty reason as null.
 
     List<Header> headers = new ArrayList<Header>();
     for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
