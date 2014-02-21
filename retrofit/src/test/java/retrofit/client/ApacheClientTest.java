@@ -2,6 +2,7 @@
 package retrofit.client;
 
 import com.google.common.io.ByteStreams;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,12 +17,12 @@ import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
 import retrofit.TestingUtils;
+import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static retrofit.TestingUtils.assertBytes;
-import static retrofit.TestingUtils.assertMultipart;
 import static retrofit.client.ApacheClient.TypedOutputEntity;
 
 public class ApacheClientTest {
@@ -41,14 +42,14 @@ public class ApacheClientTest {
     }
   }
 
-  @Test public void post() throws Exception {
+  @Test public void post() throws IOException {
     TypedString body = new TypedString("hi");
     Request request = new Request("POST", HOST + "/foo/bar/", null, body);
     HttpUriRequest apacheRequest = ApacheClient.createRequest(request);
 
     assertThat(apacheRequest.getMethod()).isEqualTo("POST");
     assertThat(apacheRequest.getURI().toString()).isEqualTo(HOST + "/foo/bar/");
-    assertThat(apacheRequest.getAllHeaders()).hasSize(0);
+    assertThat(apacheRequest.getAllHeaders()).isEmpty();
 
     assertThat(apacheRequest).isInstanceOf(HttpEntityEnclosingRequest.class);
     HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) apacheRequest;
@@ -68,12 +69,12 @@ public class ApacheClientTest {
 
     assertThat(apacheRequest.getMethod()).isEqualTo("POST");
     assertThat(apacheRequest.getURI().toString()).isEqualTo(HOST + "/that/");
-    assertThat(apacheRequest.getAllHeaders()).hasSize(0);
+    assertThat(apacheRequest.getAllHeaders()).isEmpty();
 
     assertThat(apacheRequest).isInstanceOf(HttpEntityEnclosingRequest.class);
     HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) apacheRequest;
     TypedOutputEntity entity = (TypedOutputEntity) entityRequest.getEntity();
-    assertMultipart(entity.typedOutput);
+    assertThat(entity.typedOutput).isInstanceOf(MultipartTypedOutput.class);
     // TODO test more?
   }
 
@@ -93,7 +94,7 @@ public class ApacheClientTest {
     assertThat(foo.getValue()).isEqualTo("bar");
   }
 
-  @Test public void response() throws Exception {
+  @Test public void response() throws IOException {
     StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK");
     HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
     apacheResponse.setEntity(new TypedOutputEntity(new TypedString("hello")));
@@ -111,7 +112,7 @@ public class ApacheClientTest {
     assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
   }
 
-  @Test public void emptyResponse() throws Exception {
+  @Test public void emptyResponse() throws IOException {
     StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK");
     HttpResponse apacheResponse = new BasicHttpResponse(statusLine);
     apacheResponse.addHeader("foo", "bar");
