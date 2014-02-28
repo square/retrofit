@@ -76,6 +76,7 @@ public class GitHubClient {
     RestAdapter restAdapter = new RestAdapter.Builder()
         .setEndpoint(API_URL)
         .build();
+    //restAdapter.setLogLevel(RestAdapter.LogLevel.FULL);
 
     // Wrap our REST adapter to allow mock implementations and fake network delay.
     MockRestAdapter mockRestAdapter = MockRestAdapter.from(restAdapter);

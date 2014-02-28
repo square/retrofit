@@ -17,12 +17,15 @@ package retrofit.converter;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import retrofit.mime.MimeUtil;
+import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
@@ -31,7 +34,7 @@ import retrofit.mime.TypedOutput;
  *
  * @author Jake Wharton (jw@squareup.com)
  */
-public class GsonConverter implements Converter {
+public class GsonConverter implements LoggingConverter {
   private final Gson gson;
   private String encoding;
 
@@ -81,6 +84,36 @@ public class GsonConverter implements Converter {
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }
+  }
+
+  @Override public String bodyToLogString(TypedInput body, Type type) {
+    String charset = "UTF-8";
+    if (body.mimeType() != null) {
+      charset = MimeUtil.parseCharset(body.mimeType());
+    }
+
+    try {
+      byte[] data;
+      if (body instanceof TypedByteArray) {
+        data = ((TypedByteArray) body).getBytes();
+      } else {
+        InputStream in = body.in();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int count;
+        while ((count = in.read(buffer)) != -1) {
+          baos.write(buffer, 0, count);
+        }
+        data = baos.toByteArray();
+      }
+      return new String(data, charset);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override public String bodyToLogString(Object object) {
+    return gson.toJson(object);
   }
 
   private static class JsonTypedOutput implements TypedOutput {

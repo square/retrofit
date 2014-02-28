@@ -3,14 +3,16 @@ package retrofit;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import retrofit.client.Request;
 import retrofit.client.Response;
+import retrofit.converter.Converter;
+import retrofit.converter.LoggingConverter;
 import rx.Observable;
 import rx.Observer;
 import rx.Scheduler;
@@ -278,7 +280,7 @@ public final class MockRestAdapter {
       Request request = requestBuilder.build();
 
       if (restAdapter.logLevel.log()) {
-        request = restAdapter.logAndReplaceRequest("MOCK", request);
+        request = restAdapter.logAndReplaceRequest("MOCK", request, requestBuilder.getBodyValue());
       }
 
       return request;
@@ -298,9 +300,6 @@ public final class MockRestAdapter {
         throw RetrofitError.networkError(url, exception);
       }
 
-      LogLevel logLevel = restAdapter.logLevel;
-      RestAdapter.Log log = restAdapter.log;
-
       int callDelay = calculateDelayForCall();
       long beforeNanos = System.nanoTime();
       try {
@@ -310,16 +309,10 @@ public final class MockRestAdapter {
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
-          log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(returnValue + ""); // Hack to convert toString while supporting null.
-            log.log("<--- END MOCK");
-          }
-        }
+        logSuccessResponseObject(returnValue, url, callDelay);
 
         return returnValue;
-      } catch (InvocationTargetException e) {
+      } catch (Exception e) {
         Throwable innerEx = e.getCause();
         if (!(innerEx instanceof MockHttpException)) {
           throw innerEx;
@@ -331,13 +324,7 @@ public final class MockRestAdapter {
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
-          log.log(String.format("<---- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
-            log.log("<--- END MOCK");
-          }
-        }
+        logFailureResponseObject(httpEx, url, callDelay);
 
         throw new MockHttpRetrofitError(url, response, httpEx.responseBody);
       }
@@ -356,9 +343,6 @@ public final class MockRestAdapter {
         });
         return;
       }
-
-      LogLevel logLevel = restAdapter.logLevel;
-      RestAdapter.Log log = restAdapter.log;
 
       long beforeNanos = System.nanoTime();
       int callDelay = calculateDelayForCall();
@@ -406,16 +390,9 @@ public final class MockRestAdapter {
 
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
-
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
-          log.log(String.format("<---- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
-            log.log("<--- END MOCK");
-          }
-        }
+        logFailureResponseObject(httpEx, url, callDelay);
 
         final RetrofitError error = new MockHttpRetrofitError(url, response, httpEx.responseBody);
         restAdapter.callbackExecutor.execute(new Runnable() {
@@ -431,6 +408,7 @@ public final class MockRestAdapter {
       private final String url;
       private final Callback realCallback;
       private final long callDelay;
+      private final AtomicBoolean called = new AtomicBoolean(false);
 
       private DelayingCallback(long beforeNanos, int callDelay, String url, Callback realCallback) {
         this.beforeNanos = beforeNanos;
@@ -440,20 +418,15 @@ public final class MockRestAdapter {
       }
 
       @Override public void success(final Object object, final Response response) {
-        LogLevel logLevel = restAdapter.logLevel;
-        RestAdapter.Log log = restAdapter.log;
+        if (called.getAndSet(true)) {
+          throw new IllegalStateException("Success may only be called once.");
+        }
 
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
 
-        if (logLevel.log()) {
-          log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(object + ""); // Hack to convert toString while supporting null.
-            log.log("<--- END MOCK");
-          }
-        }
+        logSuccessResponseObject(object, url, callDelay);
 
         restAdapter.callbackExecutor.execute(new Runnable() {
           @SuppressWarnings("unchecked") //
@@ -470,6 +443,43 @@ public final class MockRestAdapter {
                 "Calling failure directly is not supported. Throw MockHttpException instead.");
           }
         });
+      }
+    }
+  }
+
+  private void logSuccessResponseObject(Object object, String url, long callDelay) {
+    LogLevel logLevel = restAdapter.logLevel;
+    RestAdapter.Log log = restAdapter.log;
+    Converter converter = restAdapter.converter;
+
+    if (logLevel.log()) {
+      log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
+      if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
+        if (object == null) {
+          log.log("null");
+        } else if (converter instanceof LoggingConverter) {
+          LoggingConverter loggingConverter = (LoggingConverter) converter;
+          if (mockRxSupport != null) {
+            object = mockRxSupport.maybeUnwrap(object);
+          }
+          log.log(loggingConverter.bodyToLogString(object));
+        } else {
+          log.log("(converter unable to log)");
+        }
+        log.log("<--- END MOCK");
+      }
+    }
+  }
+
+  private void logFailureResponseObject(MockHttpException httpEx, String url, long callDelay) {
+    LogLevel logLevel = restAdapter.logLevel;
+    RestAdapter.Log log = restAdapter.log;
+
+    if (logLevel.log()) {
+      log.log(String.format("<--- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
+      if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
+        log.log(String.valueOf(httpEx.responseBody));
+        log.log("<--- END MOCK");
       }
     }
   }
@@ -517,6 +527,13 @@ public final class MockRestAdapter {
       scheduler = Schedulers.executor(restAdapter.httpExecutor);
     }
 
+    Object maybeUnwrap(Object object) {
+      if (object instanceof MockObservable) {
+        return ((MockObservable) object).value;
+      }
+      return object;
+    }
+
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
         final RequestInterceptor interceptor, final Object[] args) {
       return Observable.create(new Observable.OnSubscribeFunc<Object>() {
@@ -524,6 +541,12 @@ public final class MockRestAdapter {
           try {
             Observable observable =
                 (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
+
+            if (!(observable instanceof MockObservable)) {
+              throw new IllegalArgumentException(
+                  "Mock methods returning Observable must use MockObservable.");
+            }
+
             //noinspection unchecked
             return observable.subscribe(observer);
           } catch (Throwable throwable) {

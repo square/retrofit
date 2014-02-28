@@ -41,6 +41,7 @@ public class GitHubClient {
     RestAdapter restAdapter = new RestAdapter.Builder()
         .setEndpoint(API_URL)
         .build();
+    //restAdapter.setLogLevel(RestAdapter.LogLevel.FULL);
 
     // Create an instance of our GitHub API interface.
     GitHub github = restAdapter.create(GitHub.class);

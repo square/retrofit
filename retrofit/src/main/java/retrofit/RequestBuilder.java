@@ -44,6 +44,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final FormUrlEncodedTypedOutput formBody;
   private final MultipartTypedOutput multipartBody;
   private TypedOutput body;
+  private Object bodyValue;
 
   private String relativeUrl;
   private StringBuilder queryParams;
@@ -89,6 +90,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       default:
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
     }
+  }
+
+  /** The argument used for serializing the body, if any. Must call {@link #setArguments} first. */
+  Object getBodyValue() {
+    return bodyValue;
   }
 
   @Override public void addHeader(String name, String value) {
@@ -281,6 +287,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           if (value instanceof TypedOutput) {
             body = (TypedOutput) value;
           } else {
+            bodyValue = value;
             body = converter.toBody(value);
           }
           break;
