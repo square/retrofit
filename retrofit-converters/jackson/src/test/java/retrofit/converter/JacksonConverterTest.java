@@ -7,7 +7,7 @@ import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JacksonConverterTest {
   private static final String MIME_TYPE = "application/json; charset=UTF-8";

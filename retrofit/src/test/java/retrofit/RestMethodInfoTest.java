@@ -37,7 +37,7 @@ import rx.Observable;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static retrofit.RestMethodInfo.ParamUsage.BODY;
 import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;

@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import org.junit.Test;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TypedFileTest {
   private static final String PNG = "image/png";

@@ -62,7 +62,7 @@
 
     <!-- Test Dependencies -->
     <junit.version>4.10</junit.version>
-    <fest.version>2.0M10</fest.version>
+    <assertj.version>1.5.0</assertj.version>
     <mockito.version>1.9.5</mockito.version>
     <guava.version>16.0</guava.version>
   </properties>
@@ -145,9 +145,9 @@
         <version>${junit.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.easytesting</groupId>
-        <artifactId>fest-assert-core</artifactId>
-        <version>${fest.version}</version>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>

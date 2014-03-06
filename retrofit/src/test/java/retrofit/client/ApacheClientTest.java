@@ -21,7 +21,7 @@ import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static retrofit.TestingUtils.assertBytes;
 import static retrofit.client.ApacheClient.TypedOutputEntity;
 

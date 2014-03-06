@@ -7,7 +7,7 @@ import java.util.Map;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class TestingUtils {
   public static Method getMethod(Class c, String name) {

@@ -11,7 +11,7 @@ import org.junit.Test;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedOutput;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static retrofit.converter.PhoneProtos.Phone;
 
