@@ -3,7 +3,7 @@ package retrofit.mime;
 
 import org.junit.Test;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TypedByteArrayTest {
   private static final String GIF = "image/gif";

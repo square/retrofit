@@ -4,7 +4,7 @@ package retrofit.mime;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FormUrlEncodingTypedOutputTest {
   @Test public void urlEncoding() throws Exception {

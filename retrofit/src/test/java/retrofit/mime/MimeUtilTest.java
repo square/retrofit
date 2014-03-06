@@ -3,7 +3,7 @@ package retrofit.mime;
 
 import org.junit.Test;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static retrofit.mime.MimeUtil.parseCharset;
 
 public class MimeUtilTest {

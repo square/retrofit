@@ -22,7 +22,7 @@ import retrofit.mime.TypedString;
 import static com.google.appengine.api.urlfetch.HTTPMethod.GET;
 import static com.google.appengine.api.urlfetch.HTTPMethod.POST;
 import static java.util.Arrays.asList;
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static retrofit.TestingUtils.assertBytes;
