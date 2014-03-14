@@ -14,7 +14,7 @@ import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.http.GET;
 import rx.Observable;
-import rx.util.functions.Action1;
+import rx.functions.Action1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;

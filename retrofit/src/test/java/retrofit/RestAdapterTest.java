@@ -28,7 +28,7 @@ import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 import rx.Observable;
-import rx.util.functions.Action1;
+import rx.functions.Action1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;

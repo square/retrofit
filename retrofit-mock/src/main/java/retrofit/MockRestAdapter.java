@@ -12,9 +12,8 @@ import java.util.concurrent.TimeUnit;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import rx.Observable;
-import rx.Observer;
 import rx.Scheduler;
-import rx.Subscription;
+import rx.Subscriber;
 import rx.schedulers.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
@@ -519,15 +518,15 @@ public final class MockRestAdapter {
 
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
         final RequestInterceptor interceptor, final Object[] args) {
-      return Observable.create(new Observable.OnSubscribeFunc<Object>() {
-        @Override public Subscription onSubscribe(Observer<? super Object> observer) {
+      return Observable.create(new Observable.OnSubscribe<Object>() {
+        @Override public void call(Subscriber<? super Object> subscriber) {
           try {
             Observable observable =
                 (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
             //noinspection unchecked
-            return observable.subscribe(observer);
+            observable.subscribe(subscriber);
           } catch (Throwable throwable) {
-            return Observable.error(throwable).subscribe(observer);
+            Observable.error(throwable).subscribe(subscriber);
           }
         }
       }).subscribeOn(scheduler);
