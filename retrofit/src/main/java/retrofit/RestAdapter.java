@@ -169,11 +169,6 @@ public class RestAdapter {
     this.server = server;
     this.clientProvider = clientProvider;
     this.httpExecutor = httpExecutor;
-    if (Platform.HAS_RX_JAVA && httpExecutor != null) {
-      this.rxSupport = new RxSupport(httpExecutor);
-    } else {
-      this.rxSupport = null;
-    }
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
     this.converter = converter;
@@ -181,6 +176,11 @@ public class RestAdapter {
     this.errorHandler = errorHandler;
     this.log = log;
     this.logLevel = logLevel;
+    if (Platform.HAS_RX_JAVA && httpExecutor != null) {
+      this.rxSupport = new RxSupport(httpExecutor, errorHandler);
+    } else {
+      this.rxSupport = null;
+    }
   }
 
   /** Change the level of logging. */
@@ -229,9 +229,11 @@ public class RestAdapter {
   /** Indirection to avoid VerifyError if RxJava isn't present. */
   private static final class RxSupport {
     private final Scheduler scheduler;
+    private final ErrorHandler errorHandler;
 
-    RxSupport(Executor executor) {
+    RxSupport(Executor executor, ErrorHandler errorHandler) {
       this.scheduler = Schedulers.executor(executor);
+      this.errorHandler = errorHandler;
     }
 
     Observable createRequestObservable(final Callable<ResponseWrapper> request) {
@@ -248,7 +250,7 @@ public class RestAdapter {
             subscriber.onNext(wrapper.responseBody);
             subscriber.onCompleted();
           } catch (RetrofitError e) {
-            subscriber.onError(e);
+            subscriber.onError(errorHandler.handleError(e));
           } catch (Exception e) {
             // This is from the Callable.  It shouldn't actually throw.
             throw new RuntimeException(e);
@@ -307,7 +309,7 @@ public class RestAdapter {
       }
 
       Callback<?> callback = (Callback<?>) args[args.length - 1];
-      httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor) {
+      httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor, errorHandler) {
         @Override public ResponseWrapper obtainResponse() {
           return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
         }

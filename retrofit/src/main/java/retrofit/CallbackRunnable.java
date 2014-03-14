@@ -17,6 +17,8 @@ package retrofit;
 
 import java.util.concurrent.Executor;
 
+import static retrofit.RetrofitError.unexpectedError;
+
 /**
  * A {@link Runnable} executed on a background thread to invoke {@link #obtainResponse()} which
  * performs an HTTP request. The response of the request, whether it be an object or exception, is
@@ -26,10 +28,12 @@ import java.util.concurrent.Executor;
 abstract class CallbackRunnable<T> implements Runnable {
   private final Callback<T> callback;
   private final Executor callbackExecutor;
+  private final ErrorHandler errorHandler;
 
-  CallbackRunnable(Callback<T> callback, Executor callbackExecutor) {
+  CallbackRunnable(Callback<T> callback, Executor callbackExecutor, ErrorHandler errorHandler) {
     this.callback = callback;
     this.callbackExecutor = callbackExecutor;
+    this.errorHandler = errorHandler;
   }
 
   @SuppressWarnings("unchecked")
@@ -41,10 +45,12 @@ abstract class CallbackRunnable<T> implements Runnable {
           callback.success((T) wrapper.responseBody, wrapper.response);
         }
       });
-    } catch (final RetrofitError e) {
+    } catch (RetrofitError e) {
+      Throwable cause = errorHandler.handleError(e);
+      final RetrofitError handled = cause == e ? e : unexpectedError(e.getUrl(), cause);
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          callback.failure(e);
+          callback.failure(handled);
         }
       });
     }

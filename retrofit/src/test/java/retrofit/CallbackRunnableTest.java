@@ -4,10 +4,6 @@ package retrofit;
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.Callback;
-import retrofit.CallbackRunnable;
-import retrofit.ResponseWrapper;
-import retrofit.RetrofitError;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -21,10 +17,11 @@ public class CallbackRunnableTest {
   private Executor executor = spy(new SynchronousExecutor());
   private CallbackRunnable<Object> callbackRunnable;
   private Callback<Object> callback;
+  private ErrorHandler errorHandler = ErrorHandler.DEFAULT;
 
   @Before public void setUp() {
     callback = mock(Callback.class);
-    callbackRunnable = spy(new CallbackRunnable<Object>(callback, executor) {
+    callbackRunnable = spy(new CallbackRunnable<Object>(callback, executor, errorHandler) {
       @Override public ResponseWrapper obtainResponse() {
         return null; // Must be mocked.
       }
