@@ -16,7 +16,7 @@
 package retrofit;
 
 /**
- * A hook allowing clients to customize error exceptions for synchronous requests.
+ * A hook allowing clients to customize {@link retrofit.client.Response response} exceptions.
  *
  * @author Sam Beran sberan@gmail.com
  */
@@ -41,8 +41,8 @@ public interface ErrorHandler {
    * </pre>
    *
    * @param cause the original {@link RetrofitError} exception
-   * @return Throwable an exception which will be thrown from the client interface method. Must not
-   *         be {@code null}.
+   * @return Throwable an exception which will be thrown from a synchronous interface method or
+   *         passed to an asynchronous error callback. Must not be {@code null}.
    */
   Throwable handleError(RetrofitError cause);
 
