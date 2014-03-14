@@ -39,11 +39,9 @@ import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
-import rx.Observer;
 import rx.Scheduler;
-import rx.Subscription;
+import rx.Subscriber;
 import rx.schedulers.Schedulers;
-import rx.subscriptions.Subscriptions;
 
 /**
  * Adapts a Java interface to a REST API.
@@ -237,19 +235,24 @@ public class RestAdapter {
     }
 
     Observable createRequestObservable(final Callable<ResponseWrapper> request) {
-      return Observable.create(new Observable.OnSubscribeFunc<Object>() {
-        @Override public Subscription onSubscribe(Observer<? super Object> observer) {
+      return Observable.create(new Observable.OnSubscribe<Object>() {
+        @Override public void call(Subscriber<? super Object> subscriber) {
+          if (subscriber.isUnsubscribed()) {
+            return;
+          }
           try {
             ResponseWrapper wrapper = request.call();
-            observer.onNext(wrapper.responseBody);
-            observer.onCompleted();
+            if (subscriber.isUnsubscribed()) {
+              return;
+            }
+            subscriber.onNext(wrapper.responseBody);
+            subscriber.onCompleted();
           } catch (RetrofitError e) {
-            observer.onError(e);
+            subscriber.onError(e);
           } catch (Exception e) {
             // This is from the Callable.  It shouldn't actually throw.
             throw new RuntimeException(e);
           }
-          return Subscriptions.empty();
         }
       }).subscribeOn(scheduler);
     }
