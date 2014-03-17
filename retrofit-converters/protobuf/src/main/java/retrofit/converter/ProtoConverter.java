@@ -2,6 +2,8 @@
 package retrofit.converter;
 
 import com.google.protobuf.AbstractMessageLite;
+import com.google.protobuf.Message;
+import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -12,10 +14,15 @@ import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
 /** A {@link Converter} that reads and writes protocol buffers. */
-public class ProtoConverter implements Converter {
+public class ProtoConverter implements LoggingConverter {
   private static final String MIME_TYPE = "application/x-protobuf";
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+    return convertToMessage(body, type);
+  }
+
+  private AbstractMessageLite convertToMessage(TypedInput body, Type type)
+      throws ConversionException {
     if (!(type instanceof Class<?>)) {
       throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
     }
@@ -31,7 +38,7 @@ public class ProtoConverter implements Converter {
 
     try {
       Method parseFrom = c.getMethod("parseFrom", InputStream.class);
-      return parseFrom.invoke(null, body.in());
+      return (AbstractMessageLite) parseFrom.invoke(null, body.in());
     } catch (InvocationTargetException e) {
       throw new ConversionException(c.getName() + ".parseFrom() failed", e.getCause());
     } catch (NoSuchMethodException e) {
@@ -44,12 +51,28 @@ public class ProtoConverter implements Converter {
   }
 
   @Override public TypedOutput toBody(Object object) {
+    AbstractMessageLite message = getAsMessage(object);
+    return new TypedByteArray(MIME_TYPE, message.toByteArray());
+  }
+
+  @Override public String bodyToLogString(TypedInput body, Type type) throws ConversionException {
+    return bodyToLogString(convertToMessage(body, type));
+  }
+
+  @Override public String bodyToLogString(Object object) {
+    AbstractMessageLite message = getAsMessage(object);
+    if (message instanceof Message) {
+      return TextFormat.printToString((Message) message);
+    }
+    return "(lite protos cannot be represented)";
+  }
+
+  private static AbstractMessageLite getAsMessage(Object object) {
     if (!(object instanceof AbstractMessageLite)) {
       throw new IllegalArgumentException(
           "Expected a protobuf message but was " + (object != null ? object.getClass().getName()
               : "null"));
     }
-    byte[] bytes = ((AbstractMessageLite) object).toByteArray();
-    return new TypedByteArray(MIME_TYPE, bytes);
+    return (AbstractMessageLite) object;
   }
 }

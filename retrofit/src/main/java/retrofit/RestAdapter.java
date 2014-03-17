@@ -34,10 +34,12 @@ import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
+import retrofit.converter.LoggingConverter;
 import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
+import retrofit.mime.TypedString;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
@@ -323,9 +325,11 @@ public class RestAdapter {
      * @return HTTP response object of specified {@code type} or {@code null}.
      * @throws RetrofitError if any error occurs during the HTTP request.
      */
-    private Object invokeRequest(RequestInterceptor requestInterceptor,
-        RestMethodInfo methodInfo, Object[] args) {
+    private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
+        Object[] args) {
       methodInfo.init(); // Ensure all relevant method information has been loaded.
+
+      boolean log = logLevel.log();
 
       String serverUrl = server.getUrl();
       String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
@@ -343,9 +347,8 @@ public class RestAdapter {
           Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
         }
 
-        if (logLevel.log()) {
-          // Log the request data.
-          request = logAndReplaceRequest("HTTP", request);
+        if (log) { // Log the request data.
+          request = logAndReplaceRequest("HTTP", request, requestBuilder.getBodyValue());
         }
 
         Object profilerObject = null;
@@ -364,12 +367,11 @@ public class RestAdapter {
           profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
         }
 
-        if (logLevel.log()) {
-          // Log the response data.
-          response = logAndReplaceResponse(url, response, elapsedTime);
-        }
-
         Type type = methodInfo.responseObjectType;
+
+        if (log) { // Log the response data.
+          response = logAndReplaceResponse(url, response, type, elapsedTime);
+        }
 
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           // Caller requested the raw Response object directly.
@@ -414,12 +416,12 @@ public class RestAdapter {
       } catch (RetrofitError e) {
         throw e; // Pass through our own errors.
       } catch (IOException e) {
-        if (logLevel.log()) {
+        if (log) {
           logException(e, url);
         }
         throw RetrofitError.networkError(url, e);
       } catch (Throwable t) {
-        if (logLevel.log()) {
+        if (log) {
           logException(t, url);
         }
         throw RetrofitError.unexpectedError(url, t);
@@ -432,7 +434,7 @@ public class RestAdapter {
   }
 
   /** Log request headers and body. Consumes request body and returns identical replacement. */
-  Request logAndReplaceRequest(String name, Request request) throws IOException {
+  Request logAndReplaceRequest(String name, Request request, Object bodyValue) throws IOException {
     log.log(String.format("---> %s %s %s", name, request.getMethod(), request.getUrl()));
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
@@ -440,10 +442,9 @@ public class RestAdapter {
         log.log(header.toString());
       }
 
-      long bodySize = 0;
       TypedOutput body = request.getBody();
       if (body != null) {
-        bodySize = body.length();
+        long bodySize = body.length();
         String bodyMime = body.mimeType();
 
         if (bodyMime != null) {
@@ -454,31 +455,34 @@ public class RestAdapter {
         }
 
         if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-          if (!request.getHeaders().isEmpty()) {
-            log.log("");
-          }
-          if (!(body instanceof TypedByteArray)) {
-            // Read the entire response body to we can log it and replace the original response
-            request = Utils.readBodyToBytesIfNecessary(request);
-            body = request.getBody();
-          }
+          log.log("");
 
-          byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-          bodySize = bodyBytes.length;
-          String bodyCharset = MimeUtil.parseCharset(bodyMime);
-          log.log(new String(bodyBytes, bodyCharset));
+          if (body instanceof TypedString) {
+            // TODO Is this a safe assumption? Connotation of a string is being directly loggable.
+            TypedString bodyString = (TypedString) body;
+            String bodyCharset = MimeUtil.parseCharset(body.mimeType());
+            log.log(new String(bodyString.getBytes(), bodyCharset));
+          } else if (body instanceof TypedInput) {
+            log.log("(not enough type information)");
+          } else if (converter instanceof LoggingConverter) {
+            LoggingConverter loggingConverter = (LoggingConverter) converter;
+            log.log(loggingConverter.bodyToLogString(bodyValue));
+          } else {
+            log.log("(converter unable to log)");
+          }
         }
+        log.log(String.format("---> END %s (%s-byte body)", name, bodySize));
+      } else {
+        log.log(String.format("---> END %s (empty body)", name));
       }
-
-      log.log(String.format("---> END %s (%s-byte body)", name, bodySize));
     }
 
     return request;
   }
 
   /** Log response headers and body. Consumes response body and returns identical replacement. */
-  private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
-      throws IOException {
+  private Response logAndReplaceResponse(String url, Response response, Type type, long elapsedTime)
+      throws IOException, ConversionException {
     log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
@@ -486,31 +490,34 @@ public class RestAdapter {
         log.log(header.toString());
       }
 
-      long bodySize = 0;
       TypedInput body = response.getBody();
       if (body != null) {
-        bodySize = body.length();
+        long bodySize = body.length();
 
         if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-          if (!response.getHeaders().isEmpty()) {
-            log.log("");
-          }
+          log.log("");
 
-          if (!(body instanceof TypedByteArray)) {
-            // Read the entire response body so we can log it and replace the original response
-            response = Utils.readBodyToBytesIfNecessary(response);
-            body = response.getBody();
-          }
+          if (type == Response.class) {
+            log.log("(not enough type information)");
+          } else if (converter instanceof LoggingConverter) {
+            if (!(body instanceof TypedByteArray)) {
+              // Read the entire response body so we can log it and replace the original response.
+              response = Utils.readBodyToBytesIfNecessary(response);
+              body = response.getBody();
+            }
+            byte[] bodyBytes = ((TypedByteArray) body).getBytes();
+            bodySize = bodyBytes.length;
 
-          byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-          bodySize = bodyBytes.length;
-          String bodyMime = body.mimeType();
-          String bodyCharset = MimeUtil.parseCharset(bodyMime);
-          log.log(new String(bodyBytes, bodyCharset));
+            LoggingConverter loggingConverter = (LoggingConverter) converter;
+            log.log(loggingConverter.bodyToLogString(body, type));
+          } else {
+            log.log("(converter unable to log)");
+          }
         }
+        log.log(String.format("<--- END HTTP (%s-byte body)", bodySize));
+      } else {
+        log.log("<--- END HTTP (empty body)");
       }
-
-      log.log(String.format("<--- END HTTP (%s-byte body)", bodySize));
     }
 
     return response;

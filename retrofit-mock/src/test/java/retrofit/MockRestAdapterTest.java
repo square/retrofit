@@ -2,6 +2,7 @@
 package retrofit;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,6 +45,7 @@ public class MockRestAdapterTest {
 
   private Executor httpExecutor;
   private Executor callbackExecutor;
+  private RecordingLog log;
   private MockRestAdapter mockRestAdapter;
   private ValueChangeListener valueChangeListener;
 
@@ -53,12 +55,14 @@ public class MockRestAdapterTest {
 
     httpExecutor = spy(new SynchronousExecutor());
     callbackExecutor = spy(new SynchronousExecutor());
+    log = new RecordingLog();
 
     RestAdapter restAdapter = new RestAdapter.Builder() //
         .setClient(client)
         .setExecutors(httpExecutor, callbackExecutor)
         .setEndpoint("http://example.com")
-        .setLogLevel(RestAdapter.LogLevel.NONE)
+        .setLog(log)
+        .setLogLevel(RestAdapter.LogLevel.FULL)
         .build();
 
     valueChangeListener = mock(ValueChangeListener.class);
@@ -128,7 +132,7 @@ public class MockRestAdapterTest {
         failures += 1;
       }
     }
-    assertThat(failures).isEqualTo(2964); // ~3% of 100k
+    assertThat(failures).isEqualTo(2964); // Approximately 3% of 100,000.
   }
 
   @Test public void delayVarianceIsAccurate() {
@@ -151,8 +155,8 @@ public class MockRestAdapterTest {
         lowerBound = delay;
       }
     }
-    assertThat(upperBound).isEqualTo(2799); // ~40% above 2000
-    assertThat(lowerBound).isEqualTo(1200); // ~40% below 2000
+    assertThat(upperBound).isEqualTo(2799); // Approximately 40% above 2000.
+    assertThat(lowerBound).isEqualTo(1200); // Approximately 40% below 2000.
   }
 
   @Test public void errorVarianceIsAccurate() {
@@ -169,7 +173,7 @@ public class MockRestAdapterTest {
         lowerBound = delay;
       }
     }
-    assertThat(upperBound).isEqualTo(5999); // 3 * 2000
+    assertThat(upperBound).isEqualTo(5999); // Approximately 3 * 2000.
     assertThat(lowerBound).isEqualTo(0);
   }
 
@@ -216,6 +220,13 @@ public class MockRestAdapterTest {
       assertThat(e.isNetworkError()).isTrue();
       assertThat(e.getCause()).hasMessage("Mock network error!");
     }
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).isEqualTo("---- ERROR http://example.com/");
+    assertThat(log.get(3)).startsWith("java.io.IOException: Mock network error!");
+    assertThat(log.get(4)).isEqualTo("---- END ERROR");
   }
 
   @Test public void asyncFailureTriggersNetworkError() {
@@ -247,6 +258,13 @@ public class MockRestAdapterTest {
     RetrofitError error = errorRef.get();
     assertThat(error.isNetworkError()).isTrue();
     assertThat(error.getCause()).hasMessage("Mock network error!");
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).isEqualTo("---- ERROR http://example.com/");
+    assertThat(log.get(3)).startsWith("java.io.IOException: Mock network error!");
+    assertThat(log.get(4)).isEqualTo("---- END ERROR");
   }
 
   @Test public void syncApiIsCalledWithDelay() {
@@ -272,6 +290,13 @@ public class MockRestAdapterTest {
     assertThat(called.get()).isTrue();
     assertThat(actual).isEqualTo(expected);
     assertThat(tookMs).isGreaterThanOrEqualTo(100);
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).matches("<--- MOCK 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(3)).isEqualTo("{}");
+    assertThat(log.get(4)).isEqualTo("<--- END MOCK");
   }
 
   @Test public void asyncApiIsCalledWithDelay() {
@@ -307,6 +332,13 @@ public class MockRestAdapterTest {
 
     assertThat(actual.get()).isNotNull().isSameAs(expected);
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).matches("<--- MOCK 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(3)).isEqualTo("{}");
+    assertThat(log.get(4)).isEqualTo("<--- END MOCK");
   }
 
   @Test public void observableApiIsCalledWithDelay() {
@@ -317,7 +349,7 @@ public class MockRestAdapterTest {
     final Object expected = new Object();
     class MockObservableExample implements ObservableExample {
       @Override public Observable<Object> doStuff() {
-        return Observable.from(expected);
+        return MockObservable.from(expected);
       }
     }
 
@@ -346,15 +378,21 @@ public class MockRestAdapterTest {
 
     assertThat(actual.get()).isNotNull().isSameAs(expected);
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-  }
 
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).matches("<--- MOCK 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(3)).isEqualTo("{}");
+    assertThat(log.get(4)).isEqualTo("<--- END MOCK");
+  }
 
   @Test public void syncHttpExceptionBecomesError() {
     mockRestAdapter.setDelay(100);
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    final String expected = "Hi, there!";
     class MockSyncExample implements SyncExample {
       @Override public Object doStuff() {
         throw new MockHttpException(404, "Not Found", expected);
@@ -375,6 +413,13 @@ public class MockRestAdapterTest {
       assertThat(e.getResponse().getReason()).isEqualTo("Not Found");
       assertThat(e.getBody()).isSameAs(expected);
     }
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).matches("<--- MOCK 404 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(3)).isEqualTo("Hi, there!");
+    assertThat(log.get(4)).isEqualTo("<--- END MOCK");
   }
 
   @Test public void asyncHttpExceptionBecomesError() {
@@ -382,7 +427,7 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    final String expected = "Hi, there!";
     class MockAsyncExample implements AsyncExample {
       @Override public void doStuff(Callback<Object> cb) {
         throw new MockHttpException(404, "Not Found", expected);
@@ -414,6 +459,13 @@ public class MockRestAdapterTest {
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).matches("<--- MOCK 404 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(3)).isEqualTo("Hi, there!");
+    assertThat(log.get(4)).isEqualTo("<--- END MOCK");
   }
 
   @Test public void observableHttpExceptionBecomesError() {
@@ -421,7 +473,7 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    final String expected = "Hi, there!";
     class MockObservableExample implements ObservableExample {
       @Override public Observable<Object> doStuff() {
         throw new MockHttpException(404, "Not Found", expected);
@@ -455,6 +507,13 @@ public class MockRestAdapterTest {
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
+
+    assertThat(log).hasSize(5);
+    assertThat(log.get(0)).isEqualTo("---> MOCK GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("---> END MOCK (empty body)");
+    assertThat(log.get(2)).matches("<--- MOCK 404 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(3)).isEqualTo("Hi, there!");
+    assertThat(log.get(4)).isEqualTo("<--- END MOCK");
   }
 
   @Test public void asyncCallToFailureIsNotAllowed() {
@@ -474,6 +533,12 @@ public class MockRestAdapterTest {
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage(
           "Calling failure directly is not supported. Throw MockHttpException instead.");
+    }
+  }
+
+  private static class RecordingLog extends ArrayList<String> implements RestAdapter.Log {
+    @Override public void log(String message) {
+      add(message);
     }
   }
 }

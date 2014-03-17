@@ -137,18 +137,11 @@ public class RestAdapterTest {
   }
 
   @Test public void logRequestResponseBasic() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(BASIC)
         .build()
@@ -158,24 +151,17 @@ public class RestAdapterTest {
         .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something();
-    assertThat(logMessages).hasSize(2);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(log).hasSize(2);
+    assertThat(log.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(log.get(1)).matches("<--- HTTP 200 http://example.com/ \\(\\d+ms\\)");
   }
 
   @Test public void logRequestResponseHeaders() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(HEADERS)
         .build()
@@ -185,29 +171,22 @@ public class RestAdapterTest {
         .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something();
-    assertThat(logMessages).hasSize(7);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(log).hasSize(7);
+    assertThat(log.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("Foo: Bar");
+    assertThat(log.get(2)).isEqualTo("---> END HTTP (empty body)");
+    assertThat(log.get(3)).matches("<--- HTTP 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(4)).isEqualTo("Content-Type: application/json");
+    assertThat(log.get(5)).isEqualTo("Content-Length: 42");
+    assertThat(log.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
   @Test public void logSuccessfulRequestResponseFullWhenResponseBodyPresent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -217,35 +196,28 @@ public class RestAdapterTest {
         .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something(new TypedString("Hi"));
-    assertThat(logMessages).hasSize(13);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP POST http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("Content-Type: text/plain; charset=UTF-8");
-    assertThat(logMessages.get(3)).isEqualTo("Content-Length: 2");
-    assertThat(logMessages.get(4)).isEqualTo("");
-    assertThat(logMessages.get(5)).isEqualTo("Hi");
-    assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
-    assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(10)).isEqualTo("");
-    assertThat(logMessages.get(11)).isEqualTo("{}");
-    assertThat(logMessages.get(12)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(log).hasSize(13);
+    assertThat(log.get(0)).isEqualTo("---> HTTP POST http://example.com/");
+    assertThat(log.get(1)).isEqualTo("Foo: Bar");
+    assertThat(log.get(2)).isEqualTo("Content-Type: text/plain; charset=UTF-8");
+    assertThat(log.get(3)).isEqualTo("Content-Length: 2");
+    assertThat(log.get(4)).isEqualTo("");
+    assertThat(log.get(5)).isEqualTo("Hi");
+    assertThat(log.get(6)).isEqualTo("---> END HTTP (2-byte body)");
+    assertThat(log.get(7)).matches("<--- HTTP 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(8)).isEqualTo("Content-Type: application/json");
+    assertThat(log.get(9)).isEqualTo("Content-Length: 42");
+    assertThat(log.get(10)).isEqualTo("");
+    assertThat(log.get(11)).isEqualTo("{}");
+    assertThat(log.get(12)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
   @Test public void logSuccessfulRequestResponseFullWhenResponseBodyAbsent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -255,14 +227,14 @@ public class RestAdapterTest {
         .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
 
     example.something();
-    assertThat(logMessages).hasSize(7);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
+    assertThat(log).hasSize(7);
+    assertThat(log.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("Foo: Bar");
+    assertThat(log.get(2)).isEqualTo("---> END HTTP (empty body)");
+    assertThat(log.get(3)).matches("<--- HTTP 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(4)).isEqualTo("Content-Type: application/json");
+    assertThat(log.get(5)).isEqualTo("Content-Length: 42");
+    assertThat(log.get(6)).isEqualTo("<--- END HTTP (empty body)");
   }
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
@@ -273,18 +245,11 @@ public class RestAdapterTest {
   }
 
   @Test public void logSuccessfulRequestResponseFullWhenMimeTypeMissing() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -294,16 +259,16 @@ public class RestAdapterTest {
         .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, NO_MIME_BODY));
 
     example.something();
-    assertThat(logMessages).hasSize(9);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("");
-    assertThat(logMessages.get(7)).isEqualTo("{}");
-    assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(log).hasSize(9);
+    assertThat(log.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("Foo: Bar");
+    assertThat(log.get(2)).isEqualTo("---> END HTTP (empty body)");
+    assertThat(log.get(3)).matches("<--- HTTP 200 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(4)).isEqualTo("Content-Type: application/json");
+    assertThat(log.get(5)).isEqualTo("Content-Length: 42");
+    assertThat(log.get(6)).isEqualTo("");
+    assertThat(log.get(7)).isEqualTo("{}");
+    assertThat(log.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
   @Test public void synchronousDoesNotUseExecutors() throws Exception {
@@ -355,18 +320,11 @@ public class RestAdapterTest {
   }
 
   @Test public void logErrorRequestResponseFullWhenMimeTypeMissing() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -384,31 +342,24 @@ public class RestAdapterTest {
       assertThat(e.getResponse().getStatus()).isEqualTo(403);
     }
 
-    assertThat(logMessages).hasSize(9);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 403 http://example.com/ \\([0-9]+ms\\)");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("");
-    assertThat(logMessages.get(7)).isEqualTo("{}");
-    assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
+    assertThat(log).hasSize(9);
+    assertThat(log.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("Foo: Bar");
+    assertThat(log.get(2)).isEqualTo("---> END HTTP (empty body)");
+    assertThat(log.get(3)).matches("<--- HTTP 403 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(4)).isEqualTo("Content-Type: application/json");
+    assertThat(log.get(5)).isEqualTo("Content-Length: 42");
+    assertThat(log.get(6)).isEqualTo("");
+    assertThat(log.get(7)).isEqualTo("{}");
+    assertThat(log.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
   @Test public void logErrorRequestResponseFullWhenResponseBodyAbsent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
+    RecordingLog log = new RecordingLog();
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -424,14 +375,14 @@ public class RestAdapterTest {
       assertThat(e.getResponse().getStatus()).isEqualTo(500);
     }
 
-    assertThat(logMessages).hasSize(7);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 500 http://example.com/ \\([0-9]+ms\\)");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
+    assertThat(log).hasSize(7);
+    assertThat(log.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(log.get(1)).isEqualTo("Foo: Bar");
+    assertThat(log.get(2)).isEqualTo("---> END HTTP (empty body)");
+    assertThat(log.get(3)).matches("<--- HTTP 500 http://example.com/ \\(\\d+ms\\)");
+    assertThat(log.get(4)).isEqualTo("Content-Type: application/json");
+    assertThat(log.get(5)).isEqualTo("Content-Length: 42");
+    assertThat(log.get(6)).isEqualTo("<--- END HTTP (empty body)");
   }
 
   @Test public void clientExceptionThrowsNetworkError() throws Exception {
@@ -575,4 +526,9 @@ public class RestAdapterTest {
     assertThat(endpoint2.getName()).isEqualTo("exampleName");
   }
 
+  private static class RecordingLog extends ArrayList<String> implements RestAdapter.Log {
+    @Override public void log(String message) {
+      add(message);
+    }
+  }
 }

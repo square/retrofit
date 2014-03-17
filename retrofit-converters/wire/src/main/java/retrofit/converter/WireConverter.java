@@ -11,7 +11,7 @@ import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
 /** A {@link Converter} that reads and writes protocol buffers using Wire. */
-public class WireConverter implements Converter {
+public class WireConverter implements LoggingConverter {
   private static final String MIME_TYPE = "application/x-protobuf";
 
   private final Wire wire;
@@ -28,6 +28,10 @@ public class WireConverter implements Converter {
 
   @SuppressWarnings("unchecked") //
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+    return convertBodyToMessage(body, type);
+  }
+
+  private Object convertBodyToMessage(TypedInput body, Type type) throws ConversionException {
     if (!(type instanceof Class<?>)) {
       throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
     }
@@ -57,12 +61,24 @@ public class WireConverter implements Converter {
   }
 
   @Override public TypedOutput toBody(Object object) {
+    Message message = getObjectAsMessage(object);
+    return new TypedByteArray(MIME_TYPE, message.toByteArray());
+  }
+
+  @Override public String bodyToLogString(TypedInput body, Type type) throws ConversionException {
+    return bodyToLogString(convertBodyToMessage(body, type));
+  }
+
+  @Override public String bodyToLogString(Object object) {
+    return getObjectAsMessage(object).toString();
+  }
+
+  private static Message getObjectAsMessage(Object object) {
     if (!(object instanceof Message)) {
       throw new IllegalArgumentException(
           "Expected a proto message but was " + (object != null ? object.getClass().getName()
               : "null"));
     }
-    byte[] bytes = ((Message) object).toByteArray();
-    return new TypedByteArray(MIME_TYPE, bytes);
+    return (Message) object;
   }
 }
