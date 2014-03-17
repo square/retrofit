@@ -59,7 +59,7 @@ public class ApacheClient implements Client {
     this.client = client;
   }
 
-  @Override public Response execute(Request request) throws IOException {
+  @Override public Response execute(Request request, Integer timeout) throws IOException {
     HttpUriRequest apacheRequest = createRequest(request);
     HttpResponse apacheResponse = execute(client, apacheRequest);
     return parseResponse(request.getUrl(), apacheResponse);

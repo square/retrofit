@@ -354,7 +354,7 @@ public class RestAdapter {
         }
 
         long start = System.nanoTime();
-        Response response = clientProvider.get().execute(request);
+        Response response = clientProvider.get().execute(request, methodInfo.timeout);
         long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
         int statusCode = response.getStatus();

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import retrofit.http.Body;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
@@ -42,6 +43,7 @@ import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 import retrofit.http.RestMethod;
+import retrofit.http.Timeout;
 import rx.Observable;
 
 /** Request metadata about a service interface declaration. */
@@ -97,6 +99,7 @@ final class RestMethodInfo {
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
+  Integer timeout;
 
   // Parameter-level details
   String[] requestParamNames;
@@ -175,6 +178,8 @@ final class RestMethodInfo {
           throw methodError("Only one encoding annotation is allowed.");
         }
         requestType = RequestType.FORM_URL_ENCODED;
+      } else if (annotationType == Timeout.class) {
+        timeout = ((Timeout) methodAnnotation).value();
       }
     }
 
