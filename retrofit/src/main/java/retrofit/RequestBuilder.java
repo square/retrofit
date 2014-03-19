@@ -48,6 +48,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private String relativeUrl;
   private StringBuilder queryParams;
   private List<Header> headers;
+  private boolean hasContentTypeHeader;
 
   RequestBuilder(String apiUrl, RestMethodInfo methodInfo, Converter converter) {
     this.apiUrl = apiUrl;
@@ -62,6 +63,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     if (methodInfo.headers != null) {
       headers = new ArrayList<Header>(methodInfo.headers);
     }
+    hasContentTypeHeader = methodInfo.hasContentTypeHeader;
 
     relativeUrl = methodInfo.requestUrl;
 
@@ -100,6 +102,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       this.headers = headers = new ArrayList<Header>(2);
     }
     headers.add(new Header(name, value));
+
+    if ("Content-Type".equalsIgnoreCase(name)) {
+      hasContentTypeHeader = true;
+    }
   }
 
   @Override public void addPathParam(String name, String value) {
@@ -307,6 +313,20 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     StringBuilder queryParams = this.queryParams;
     if (queryParams != null) {
       url.append(queryParams);
+    }
+
+    TypedOutput body = this.body;
+    if (body != null) {
+      // Only add Content-Type header from the body if one is not already set.
+      if (!hasContentTypeHeader) {
+        addHeader("Content-Type", body.mimeType());
+      }
+
+      // Only add Content-Length header from the body if it is known.
+      long length = body.length();
+      if (length != -1) {
+        addHeader("Content-Length", String.valueOf(length));
+      }
     }
 
     return new Request(requestMethod, url.toString(), headers, body);

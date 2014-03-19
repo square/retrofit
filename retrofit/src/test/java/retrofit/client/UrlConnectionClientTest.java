@@ -46,10 +46,7 @@ public class UrlConnectionClientTest {
 
     assertThat(connection.getRequestMethod()).isEqualTo("POST");
     assertThat(connection.getURL().toString()).isEqualTo(HOST + "/foo/bar/");
-    assertThat(connection.getRequestProperties()).hasSize(2);
-    assertThat(connection.getRequestProperty("Content-Type")) //
-        .isEqualTo("text/plain; charset=UTF-8");
-    assertThat(connection.getRequestProperty("Content-Length")).isEqualTo("2");
+    assertThat(connection.getRequestProperties()).hasSize(0);
     assertBytes(connection.getOutputStream().toByteArray(), "hi");
   }
 
@@ -67,9 +64,7 @@ public class UrlConnectionClientTest {
 
     assertThat(connection.getRequestMethod()).isEqualTo("POST");
     assertThat(connection.getURL().toString()).isEqualTo(HOST + "/that/");
-    assertThat(connection.getRequestProperties()).hasSize(2);
-    assertThat(connection.getRequestProperty("Content-Type")).startsWith("multipart/form-data;");
-    assertThat(connection.getRequestProperty("Content-Length")).isEqualTo(String.valueOf(output.length));
+    assertThat(connection.getRequestProperties()).hasSize(0);
     assertThat(output.length).isGreaterThan(0);
   }
 

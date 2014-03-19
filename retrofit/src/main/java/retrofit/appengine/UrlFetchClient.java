@@ -71,12 +71,6 @@ public class UrlFetchClient implements Client {
 
     TypedOutput body = request.getBody();
     if (body != null) {
-      fetchRequest.setHeader(new HTTPHeader("Content-Type", body.mimeType()));
-      long length = body.length();
-      if (length != -1) {
-        fetchRequest.setHeader(new HTTPHeader("Content-Length", String.valueOf(length)));
-      }
-
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       body.writeTo(baos);
       fetchRequest.setPayload(baos.toByteArray());

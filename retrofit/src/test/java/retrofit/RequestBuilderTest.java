@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -420,7 +421,9 @@ public class RequestBuilderTest {
         .setBody(Arrays.asList("quick", "brown", "fox")) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getHeaders()).containsExactly(
+        new Header("Content-Type", "application/json; charset=UTF-8"),
+        new Header("Content-Length", "23"));
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
@@ -451,7 +454,9 @@ public class RequestBuilderTest {
         .addPathParam("kit", "kat") //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getHeaders()).containsExactly(
+        new Header("Content-Type", "application/json; charset=UTF-8"),
+        new Header("Content-Length", "23"));
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
@@ -467,7 +472,9 @@ public class RequestBuilderTest {
         .addPart("kit", new TypedString("kat")) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getHeaders()).hasSize(2);
+    assertThat(request.getHeaders().get(0).getName()).isEqualTo("Content-Type");
+    assertThat(request.getHeaders().get(1)).isEqualTo(new Header("Content-Length", "414"));
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
 
     MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
@@ -494,7 +501,9 @@ public class RequestBuilderTest {
         .addPart("fizz", null) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getHeaders()).hasSize(2);
+    assertThat(request.getHeaders().get(0).getName()).isEqualTo("Content-Type");
+    assertThat(request.getHeaders().get(1)).isEqualTo(new Header("Content-Length", "228"));
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
 
     MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
@@ -617,8 +626,7 @@ public class RequestBuilderTest {
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
-        .addHeader("kit", "kat") //
+        .addHeaders("ping: pong", "kit: kat") //
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
@@ -647,7 +655,7 @@ public class RequestBuilderTest {
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
+        .addHeaders("ping: pong") //
         .addInterceptorHeader("kit", "kat") //
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
@@ -662,7 +670,7 @@ public class RequestBuilderTest {
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
+        .addHeaders("ping: pong") //
         .addInterceptorHeader("kit", "kat") //
         .addHeaderParam("fizz", "buzz") //
         .build();
@@ -678,7 +686,7 @@ public class RequestBuilderTest {
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
+        .addHeaders("ping: pong") //
         .addHeaderParam("kit", "kat") //
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
@@ -693,7 +701,7 @@ public class RequestBuilderTest {
         .setMethod("GET") //
         .setUrl("http://example.com") //
         .setPath("/foo/bar/") //
-        .addHeader("ping", "pong") //
+        .addHeaders("ping: pong") //
         .addHeaderParam("kit", "kat") //
         .build();
     assertThat(request.getMethod()).isEqualTo("GET");
@@ -710,6 +718,32 @@ public class RequestBuilderTest {
         .setPath("/foo/bar/") //
         .build();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+  }
+
+  @Test public void contentTypeAnnotationHeaderOverrides() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setUrl("http://example.com") //
+        .setPath("/") //
+        .addHeaders("Content-Type: text/not-plain") //
+        .setBody(new TypedString("Plain")) //
+        .build();
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("Content-Type", "text/not-plain"),
+            new Header("Content-Length", "5"));
+  }
+
+  @Test public void contentTypeParameterHeaderOverrides() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setUrl("http://example.com") //
+        .setPath("/") //
+        .addHeaderParam("Content-Type", "text/not-plain") //
+        .setBody(new TypedString("Plain")) //
+        .build();
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("Content-Type", "text/not-plain"),
+            new Header("Content-Length", "5"));
   }
 
   private static void assertTypedBytes(TypedOutput bytes, String expected) throws IOException {
@@ -730,7 +764,7 @@ public class RequestBuilderTest {
     private final List<String> paramNames = new ArrayList<String>();
     private final List<ParamUsage> paramUsages = new ArrayList<ParamUsage>();
     private final List<Object> args = new ArrayList<Object>();
-    private final List<Header> headers = new ArrayList<Header>();
+    private final List<String> headers = new ArrayList<String>();
     private final List<Header> interceptorHeaders = new ArrayList<Header>();
     private final Map<String, String> interceptorPathParams = new LinkedHashMap<String, String>();
     private final Map<String, String> interceptorQueryParams = new LinkedHashMap<String, String>();
@@ -838,8 +872,8 @@ public class RequestBuilderTest {
       return this;
     }
 
-    Helper addHeader(String name, String value) {
-      headers.add(new Header(name, value));
+    Helper addHeaders(String... headers) {
+      Collections.addAll(this.headers, headers);
       return this;
     }
 
@@ -887,7 +921,7 @@ public class RequestBuilderTest {
       methodInfo.requestQuery = query;
       methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
       methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
-      methodInfo.headers = headers;
+      methodInfo.headers = methodInfo.parseHeaders(headers.toArray(new String[headers.size()]));
       methodInfo.loaded = true;
 
       RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, GSON);

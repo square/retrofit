@@ -56,7 +56,6 @@ public class ApacheClientTest {
     HttpEntity entity = entityRequest.getEntity();
     assertThat(entity).isNotNull();
     assertBytes(ByteStreams.toByteArray(entity.getContent()), "hi");
-    assertThat(entity.getContentType().getValue()).isEqualTo("text/plain; charset=UTF-8");
   }
 
   @Test public void multipart() {
