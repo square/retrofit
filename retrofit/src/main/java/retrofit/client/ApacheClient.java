@@ -131,7 +131,6 @@ public class ApacheClient implements Client {
 
     TypedOutputEntity(TypedOutput typedOutput) {
       this.typedOutput = typedOutput;
-      setContentType(typedOutput.mimeType());
     }
 
     @Override public boolean isRepeatable() {

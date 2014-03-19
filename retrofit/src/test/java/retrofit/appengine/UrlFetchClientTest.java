@@ -48,9 +48,7 @@ public class UrlFetchClientTest {
     assertThat(fetchRequest.getMethod()).isEqualTo(POST);
     assertThat(fetchRequest.getURL().toString()).isEqualTo(HOST + "/foo/bar/");
     List<HTTPHeader> fetchHeaders = fetchRequest.getHeaders();
-    assertThat(fetchHeaders).hasSize(2);
-    assertHeader(fetchHeaders.get(0), "Content-Type", "text/plain; charset=UTF-8");
-    assertHeader(fetchHeaders.get(1), "Content-Length", "2");
+    assertThat(fetchHeaders).hasSize(0);
     assertBytes(fetchRequest.getPayload(), "hi");
   }
 
@@ -65,11 +63,7 @@ public class UrlFetchClientTest {
     assertThat(fetchRequest.getMethod()).isEqualTo(POST);
     assertThat(fetchRequest.getURL().toString()).isEqualTo(HOST + "/that/");
     List<HTTPHeader> fetchHeaders = fetchRequest.getHeaders();
-    assertThat(fetchHeaders).hasSize(2);
-    HTTPHeader headerZero = fetchHeaders.get(0);
-    assertThat(headerZero.getName()).isEqualTo("Content-Type");
-    assertThat(headerZero.getValue()).startsWith("multipart/form-data; boundary=");
-    assertHeader(fetchHeaders.get(1), "Content-Length", String.valueOf(body.length()));
+    assertThat(fetchHeaders).hasSize(0);
     assertThat(fetchRequest.getPayload()).isNotEmpty();
   }
 

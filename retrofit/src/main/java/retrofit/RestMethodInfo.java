@@ -97,6 +97,7 @@ final class RestMethodInfo {
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
+  boolean hasContentTypeHeader;
 
   // Parameter-level details
   String[] requestParamNames;
@@ -221,7 +222,7 @@ final class RestMethodInfo {
     requestQuery = query;
   }
 
-  private List<retrofit.client.Header> parseHeaders(String[] headers) {
+  List<retrofit.client.Header> parseHeaders(String[] headers) {
     List<retrofit.client.Header> headerList = new ArrayList<retrofit.client.Header>();
     for (String header : headers) {
       int colon = header.indexOf(':');
@@ -229,8 +230,12 @@ final class RestMethodInfo {
         throw methodError("@Headers value must be in the form \"Name: Value\". Found: \"%s\"",
             header);
       }
-      headerList.add(new retrofit.client.Header(header.substring(0, colon),
-          header.substring(colon + 1).trim()));
+      String headerName = header.substring(0, colon);
+      String headerValue = header.substring(colon + 1).trim();
+      if ("Content-Type".equalsIgnoreCase(headerName)) {
+        hasContentTypeHeader = true;
+      }
+      headerList.add(new retrofit.client.Header(headerName, headerValue));
     }
     return headerList;
   }
@@ -372,6 +377,10 @@ final class RestMethodInfo {
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.HEADER;
+
+            if ("Content-Type".equalsIgnoreCase(name)) {
+              hasContentTypeHeader = true;
+            }
           } else if (annotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
