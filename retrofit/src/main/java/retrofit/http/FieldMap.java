@@ -31,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * &#64;FormUrlEncoded
  * &#64;POST("/things")
- * void things(@FieldMap Map<String, String> fields);
+ * void things(@FieldMap Map&lt;String, String&gt; fields);
  * }
  * </pre>
  * Calling with {@code foo.things(ImmutableMap.of("foo", "bar", "kit", "kat")} yields a request

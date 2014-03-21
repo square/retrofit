@@ -5,7 +5,7 @@
  * <pre>
  * public interface GitHubService {
  *   &#64;GET("/users/{user}/repos")
- *   List<Repo> listRepos(@Path("user") String user);
+ *   List&lt;Repo&gt; listRepos(@Path("user") String user);
  * }
  * </pre>
  */

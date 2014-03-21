@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * <pre>
  * &#64;GET("/")
- * void foo(@Header("Accept-Language") String lang, Callback&lt;Response> cb);
+ * void foo(@Header("Accept-Language") String lang, Callback&lt;Response&gt; cb);
  * </pre>
  * <p>
  * Header parameters may be {@code null} which will omit them from the request.

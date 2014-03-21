@@ -31,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Simple Example:
  * <pre>
  * &#64;GET("/search")
- * void list(@QueryMap Map<String, String> filters);
+ * void list(@QueryMap Map&lt;String, String&gt; filters);
  * </pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "bar", "kit", "kat"))} yields
  * {@code /search?foo=bar&kit=kat}.

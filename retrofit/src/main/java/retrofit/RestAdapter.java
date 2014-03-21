@@ -98,9 +98,10 @@ import rx.schedulers.Schedulers;
  * <pre>
  * public interface MyApi {
  *   &#64;POST("/category/{cat}") // Asynchronous execution.
- *   void categoryList(@Path("cat") String a, @Query("page") int b, Callback&lt;List&lt;Item>> cb);
+ *   void categoryList(@Path("cat") String a, @Query("page") int b,
+ *                     Callback&lt;List&lt;Item&gt;&gt; cb);
  *   &#64;POST("/category/{cat}") // Synchronous execution.
- *   List&lt;Item> categoryList(@Path("cat") String a, @Query("page") int b);
+ *   List&lt;Item&gt; categoryList(@Path("cat") String a, @Query("page") int b);
  * }
  * </pre>
  * <p>
