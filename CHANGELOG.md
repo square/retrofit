@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+Version 1.5.0 *(2014-03-20)*
+----------------------------
+
+ * New: Support for AppEngine's [URL Fetch](https://developers.google.com/appengine/docs/java/urlfetch/)
+   HTTP client.
+ * New: Multipart requests of unknown length are now supported.
+ * New: HTTP `Content-Type` can be overridden with a method-level or paramter header annotation.
+ * New: Exceptions from malformed interface methods now include detailed information.
+ * Fix: Support empty HTTP response status reason.
+ * If an `ErrorHandler` is supplied it will be invoked for `Callback` and `Observable` methods.
+ * HTTP `PATCH` method using `HttpUrlConnection` is no longer supported. Add the
+   [OkHttp](http://square.github.io/okhttp) jar to your project if you need this behavior.
+ * Custom `Client` implementations should no longer set `Content-Type` or `Content-Length` headers
+   based on the `TypedInput` body of the `Request`. These headers will now be added automatically
+   as part of the standard `Request` header list.
+
+
 Version 1.4.1 *(2014-02-01)*
 ----------------------------
 

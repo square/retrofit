@@ -10,15 +10,17 @@ Download
 --------
 
 Download [the latest JAR][2] or grab via Maven:
-
 ```xml
 <dependency>
-    <groupId>com.squareup.retrofit</groupId>
-    <artifactId>retrofit</artifactId>
-    <version>(insert latest version)</version>
+  <groupId>com.squareup.retrofit</groupId>
+  <artifactId>retrofit</artifactId>
+  <version>1.5.0</version>
 </dependency>
 ```
-
+or Gradle:
+```groovy
+compile 'com.squareup.retrofit:retrofit:1.5.0'
+```
 
 
 
