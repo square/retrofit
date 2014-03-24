@@ -2,6 +2,7 @@
 package retrofit;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,6 +17,7 @@ import retrofit.http.GET;
 import rx.Observable;
 import rx.functions.Action1;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -46,6 +48,7 @@ public class MockRestAdapterTest {
   private Executor callbackExecutor;
   private MockRestAdapter mockRestAdapter;
   private ValueChangeListener valueChangeListener;
+  private Throwable nextError;
 
   @Before public void setUp() throws IOException {
     Client client = mock(Client.class);
@@ -59,6 +62,16 @@ public class MockRestAdapterTest {
         .setExecutors(httpExecutor, callbackExecutor)
         .setEndpoint("http://example.com")
         .setLogLevel(RestAdapter.LogLevel.NONE)
+        .setErrorHandler(new ErrorHandler() {
+          @Override public Throwable handleError(RetrofitError cause) {
+            if (nextError != null) {
+              Throwable error = nextError;
+              nextError = null;
+              return error;
+            }
+            return cause;
+          }
+        })
         .build();
 
     valueChangeListener = mock(ValueChangeListener.class);
@@ -475,5 +488,87 @@ public class MockRestAdapterTest {
       assertThat(e).hasMessage(
           "Calling failure directly is not supported. Throw MockHttpException instead.");
     }
+  }
+
+  @Test public void syncErrorUsesErrorHandler() {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockSyncExample implements SyncExample {
+      @Override public Object doStuff() {
+        throw MockHttpException.newNotFound(new Object());
+      }
+    }
+
+    SyncExample mockService = mockRestAdapter.create(SyncExample.class, new MockSyncExample());
+    nextError = new IllegalArgumentException("Test");
+
+    try {
+      mockService.doStuff();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Test");
+    }
+  }
+
+  @Test public void asyncErrorUsesErrorHandler() throws InterruptedException {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockAsyncExample implements AsyncExample {
+      @Override public void doStuff(Callback<Object> cb) {
+        throw MockHttpException.newNotFound(new Object());
+      }
+    }
+
+    AsyncExample mockService = mockRestAdapter.create(AsyncExample.class, new MockAsyncExample());
+    nextError = new IllegalArgumentException("Test");
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    mockService.doStuff(new Callback<Object>() {
+      @Override public void success(Object o, Response response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(RetrofitError error) {
+        assertThat(error.getCause()).hasMessage("Test");
+        latch.countDown();
+      }
+    });
+    latch.await(5, SECONDS);
+  }
+
+  @Test public void observableErrorUsesErrorHandler() throws InterruptedException {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockObservableExample implements ObservableExample {
+      @Override public Observable<Object> doStuff() {
+        throw MockHttpException.newNotFound(new Object());
+      }
+    }
+
+    ObservableExample mockService =
+        mockRestAdapter.create(ObservableExample.class, new MockObservableExample());
+    nextError = new IllegalArgumentException("Test");
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    final AtomicBoolean called = new AtomicBoolean();
+    mockService.doStuff().subscribe(new Action1<Object>() {
+      @Override public void call(Object o) {
+        throw new AssertionError();
+      }
+    }, new Action1<Throwable>() {
+      @Override public void call(Throwable error) {
+        assertThat(error).hasMessage("Test");
+        called.set(true);
+        latch.countDown();
+      }
+    });
+    latch.await(5, SECONDS);
+    assertThat(called.get()).isTrue();
   }
 }
