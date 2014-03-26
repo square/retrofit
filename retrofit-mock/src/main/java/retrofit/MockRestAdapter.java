@@ -17,6 +17,7 @@ import rx.Subscriber;
 import rx.schedulers.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
+import static retrofit.RetrofitError.unexpectedError;
 
 /**
  * Wraps mocks implementations of API interfaces so that they exhibit the delay and error
@@ -239,7 +240,16 @@ public final class MockRestAdapter {
       final RestMethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
 
       if (methodInfo.isSynchronous) {
-        return invokeSync(methodInfo, restAdapter.requestInterceptor, args);
+        try {
+          return invokeSync(methodInfo, restAdapter.requestInterceptor, args);
+        } catch (RetrofitError error) {
+          Throwable newError = restAdapter.errorHandler.handleError(error);
+          if (newError == null) {
+            throw new IllegalStateException("Error handler returned null for wrapped exception.",
+                error);
+          }
+          throw newError;
+        }
       }
 
       if (restAdapter.httpExecutor == null || restAdapter.callbackExecutor == null) {
@@ -367,13 +377,16 @@ public final class MockRestAdapter {
 
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
-        final IOException exception = new IOException("Mock network error!");
+        IOException exception = new IOException("Mock network error!");
         if (restAdapter.logLevel.log()) {
           restAdapter.logException(exception, url);
         }
+        RetrofitError error = RetrofitError.networkError(url, exception);
+        Throwable cause = restAdapter.errorHandler.handleError(error);
+        final RetrofitError e = cause == error ? error : unexpectedError(error.getUrl(), cause);
         restAdapter.callbackExecutor.execute(new Runnable() {
           @Override public void run() {
-            realCallback.failure(RetrofitError.networkError(url, exception));
+            realCallback.failure(e);
           }
         });
         return;
@@ -416,10 +429,12 @@ public final class MockRestAdapter {
           }
         }
 
-        final RetrofitError error = new MockHttpRetrofitError(url, response, httpEx.responseBody);
+        RetrofitError error = new MockHttpRetrofitError(url, response, httpEx.responseBody);
+        Throwable cause = restAdapter.errorHandler.handleError(error);
+        final RetrofitError e = cause == error ? error : unexpectedError(error.getUrl(), cause);
         restAdapter.callbackExecutor.execute(new Runnable() {
           @Override public void run() {
-            realCallback.failure(error);
+            realCallback.failure(e);
           }
         });
       }
@@ -511,9 +526,11 @@ public final class MockRestAdapter {
   /** Indirection to avoid VerifyError if RxJava isn't present. */
   private static class MockRxSupport {
     private final Scheduler scheduler;
+    private final ErrorHandler errorHandler;
 
     MockRxSupport(RestAdapter restAdapter) {
       scheduler = Schedulers.executor(restAdapter.httpExecutor);
+      errorHandler = restAdapter.errorHandler;
     }
 
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
@@ -525,8 +542,10 @@ public final class MockRestAdapter {
                 (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
             //noinspection unchecked
             observable.subscribe(subscriber);
-          } catch (Throwable throwable) {
-            Observable.error(throwable).subscribe(subscriber);
+          } catch (RetrofitError e) {
+            subscriber.onError(errorHandler.handleError(e));
+          } catch (Throwable e) {
+            subscriber.onError(e);
           }
         }
       }).subscribeOn(scheduler);
