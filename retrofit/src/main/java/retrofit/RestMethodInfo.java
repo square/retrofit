@@ -36,12 +36,14 @@ import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.Header;
 import retrofit.http.Headers;
+import retrofit.http.JsonRpcMethod;
 import retrofit.http.Multipart;
 import retrofit.http.Part;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 import retrofit.http.RestMethod;
+import retrofit.http.RpcParam;
 import rx.Observable;
 
 /** Request metadata about a service interface declaration. */
@@ -69,7 +71,8 @@ final class RestMethodInfo {
     FIELD_MAP,
     PART,
     BODY,
-    HEADER
+    HEADER,
+    RPC_PARAM,
   }
 
   enum RequestType {
@@ -78,7 +81,8 @@ final class RestMethodInfo {
     /** Multi-part request body. */
     MULTIPART,
     /** Form URL-encoded request body. */
-    FORM_URL_ENCODED
+    FORM_URL_ENCODED,
+    JSON_RPC
   }
 
   final Method method;
@@ -94,6 +98,7 @@ final class RestMethodInfo {
   String requestMethod;
   boolean requestHasBody;
   String requestUrl;
+  String rpcRequestMethod;
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
@@ -137,6 +142,10 @@ final class RestMethodInfo {
       Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
       RestMethod methodInfo = null;
 
+      if (annotationType.isAssignableFrom(JsonRpcMethod.class)) {
+        requestType = RequestType.JSON_RPC;
+      }
+
       // Look for a @RestMethod annotation on the parameter annotation indicating request method.
       for (Annotation innerAnnotation : annotationType.getAnnotations()) {
         if (RestMethod.class == innerAnnotation.annotationType()) {
@@ -157,7 +166,12 @@ final class RestMethodInfo {
           throw methodError("Failed to extract String 'value' from @%s annotation.",
               annotationType.getSimpleName());
         }
-        parsePath(path);
+
+        if (requestType != RequestType.JSON_RPC) {
+          parsePath(path);
+        } else {
+          rpcRequestMethod = path;
+        }
         requestMethod = methodInfo.value();
         requestHasBody = methodInfo.hasBody();
       } else if (annotationType == Headers.class) {
@@ -422,6 +436,11 @@ final class RestMethodInfo {
 
             gotBody = true;
             paramUsage[i] = ParamUsage.BODY;
+          } else if (annotationType == RpcParam.class) {
+            String name = ((RpcParam) parameterAnnotation).value();
+
+            paramNames[i] = name;
+            paramUsage[i] = ParamUsage.RPC_PARAM;
           }
         }
       }
