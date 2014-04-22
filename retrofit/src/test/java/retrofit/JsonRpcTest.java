@@ -15,6 +15,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -64,9 +65,6 @@ import static retrofit.RestAdapter.LogLevel.HEADERS;
 
 public class JsonRpcTest {
   private static final List<Header> NO_HEADERS = Collections.emptyList();
-  private static final List<Header> TWO_HEADERS =
-      Arrays.asList(new Header("Content-Type", "application/json"),
-                    new Header("Content-Length", "42"));
 
   /** Not all servers play nice and add content-type headers to responses. */
   private static final TypedInput NO_MIME_BODY = new TypedInput() {
@@ -86,6 +84,9 @@ public class JsonRpcTest {
   private interface Example {
     @JsonRpcMethod("my_test_method")
     Object my_test_method(@RpcParam("param1") String param1, @RpcParam("param2") String param2);
+
+    @JsonRpcMethod("my_test_method")
+    void my_test_method_async(@RpcParam("param1") String param1, @RpcParam("param2") String param2, Callback<ResultResponse> data);
   }
 
   private interface InvalidExample extends Example {
@@ -110,7 +111,7 @@ public class JsonRpcTest {
     example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setEndpoint("http://example.com")
+        .setEndpoint("http://example.com:3344/api")
         .setProfiler(mockProfiler)
         .setConverter(new JsonRpcConverter(gson))
         .setLogLevel(RestAdapter.LogLevel.FULL)
@@ -119,13 +120,64 @@ public class JsonRpcTest {
   }
 
   @Test
-  public void makeRpcRequest() throws IOException {
+  public void makeRpcRequestSync() throws IOException {
     Object data = new Object();
     when(mockProfiler.beforeCall()).thenReturn(data);
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, null));
 
     example.my_test_method("value1", "value2");
+
+    verify(mockProfiler).beforeCall();
+    verify(mockClient).execute(any(Request.class));
+    verify(mockProfiler).afterCall(any(Profiler.RequestInformation.class), anyInt(), eq(200), same(data));
+  }
+
+  private class ResultResponse {
+    String result;
+
+    private ResultResponse(String result) {
+      this.result = result;
+    }
+  }
+
+  @Test
+  public void makeRpcRequestAsync() throws IOException {
+    final String test_data = "test result";
+    final String json = gson.toJson(new ResultResponse(test_data));
+    Object data = new Object();
+    when(mockProfiler.beforeCall()).thenReturn(data);
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedInput() {
+          @Override
+          public String mimeType() {
+            return "application/json";
+          }
+
+          @Override
+          public long length() {
+            return json.length();
+          }
+
+          @Override
+          public InputStream in() throws IOException {
+            return new ByteArrayInputStream(json.getBytes());
+          }
+        }));
+
+    example.my_test_method_async("value1", "value2", new Callback<ResultResponse>() {
+      @Override
+      public void success(ResultResponse o, Response response) {
+        assertThat(o != null);
+        assertThat(o.result != null);
+        assertThat(o.result.equals(test_data));
+      }
+
+      @Override
+      public void failure(RetrofitError error) {
+
+      }
+    });
 
     verify(mockProfiler).beforeCall();
     verify(mockClient).execute(any(Request.class));

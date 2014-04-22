@@ -78,7 +78,7 @@ public class JsonRpcConverter implements Converter {
     private final String encoding;
 
     JsonRpcTypedOutput(String data, String encode) throws UnsupportedEncodingException {
-      this.mimeType = "application/x-www-form-urlencoded; charset=" + encode;
+      this.mimeType = "application/x-www-form-urlencoded";
       this.encoding = encode;
       this.data = "request=" + URLEncoder.encode(data, encoding);
     }
