@@ -20,7 +20,7 @@ import static retrofit.RestAdapter.LogLevel;
 import static retrofit.RetrofitError.unexpectedError;
 
 /**
- * Wraps mocks implementations of API interfaces so that they exhibit the delay and error
+ * Wraps mock implementations of API interfaces so that they exhibit the delay and error
  * characteristics of a real network.
  * <p>
  * Because APIs are defined as interfaces, versions of the API that use mock data can be created by
