@@ -328,7 +328,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
     String apiUrl = this.apiUrl;
     StringBuilder url = new StringBuilder(apiUrl);
-    if (apiUrl.endsWith("/")) {
+
+    if (requestType != RestMethodInfo.RequestType.JSON_RPC && apiUrl.endsWith("/")) {
       // We require relative paths to start with '/'. Prevent a double-slash.
       url.deleteCharAt(url.length() - 1);
     }
