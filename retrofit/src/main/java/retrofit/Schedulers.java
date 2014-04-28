@@ -64,8 +64,8 @@ import rx.subscriptions.Subscriptions;
           //  This will always execute, meaning we could lock up the retrofit threads if:
           //    1. The user un-subscribes before starting the execution in the pool.
           //    2. The request is active for a long time, timing out etc...
-          //  I would potentially force an API change to make sure this is always an ExecutorService.
-          //
+          //  I would potentially force an API change to make sure this is always an
+          //  ExecutorService.
           s = Subscriptions.empty();
           executor.execute(getActionRunnable(action, sf));
         }
