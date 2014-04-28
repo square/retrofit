@@ -41,14 +41,14 @@ import rx.subscriptions.Subscriptions;
       private final CompositeSubscription innerSubscription = new CompositeSubscription();
       private final Executor executor;
 
-      /* package */ EventLoopScheduler(Executor executor) {
+      /*package*/ EventLoopScheduler(Executor executor) {
         this.executor = executor;
       }
 
       @Override
       public Subscription schedule(final Action0 action) {
         if (innerSubscription.isUnsubscribed()) {
-          // don't schedule, we are unsubscribed
+          // Don't schedule, we are un-subscribed.
           return Subscriptions.empty();
         }
 
@@ -59,11 +59,13 @@ import rx.subscriptions.Subscriptions;
                   getActionRunnable(action, sf)));
         } else {
             /*
-            This is not ideal, we should use a ExecutorService, that way we can pass future
-            back to the subscription, so if the user un-subscribe from the parent we can
-            request the Future to cancel. This will always execute, meaning we could
-            lock of the retrofit threads if a request is active for a long time.
-            I would potentially force an API change to make sure this is always an ExecutorService
+            This is not ideal, we should use a ExecutorService, that way we can pass Future
+            back to the subscription, so if the user un-subscribed from the parent we can
+            request the Future to cancel.
+            This will always execute, meaning we could lock up the retrofit threads if:
+             1. The user un-subscribes before starting the execution in the pool.
+             2. The request is active for a long time, timing out etc...
+            I would potentially force an API change to make sure this is always an ExecutorService.
             */
           s = Subscriptions.empty();
           executor.execute(getActionRunnable(action, sf));
@@ -83,7 +85,7 @@ import rx.subscriptions.Subscriptions;
               if (innerSubscription.isUnsubscribed()) return;
               action.call();
             } finally {
-              // remove the subscription now that we're completed
+              // Remove the subscription now that we've completed.
               Subscription s = sf.get();
               if (s != null) innerSubscription.remove(s);
             }
@@ -93,7 +95,7 @@ import rx.subscriptions.Subscriptions;
 
       @Override
       public Subscription schedule(final Action0 action, long delayTime, TimeUnit unit) {
-        throw new UnsupportedOperationException("This Scheduler does not support timed requests");
+        throw new UnsupportedOperationException("This Scheduler does not support timed Actions");
       }
 
       @Override
