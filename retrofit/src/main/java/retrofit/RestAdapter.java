@@ -296,13 +296,16 @@ public class RestAdapter {
           final AtomicReference<Subscription> sf = new AtomicReference<Subscription>();
           final Subscription s;
           if (executor instanceof ExecutorService) {
-            s = Subscriptions.from(((ExecutorService) executor).submit(getActionRunnable(action, sf)));
+            s = Subscriptions.from(((ExecutorService) executor).submit(
+                    getActionRunnable(action, sf)));
           } else {
-            //This is not ideal, we should use a ExecutorService, that way we can pass future
-            // back to the subscription, so if the user un-subscribe from the parent we can
-            // request the Future to cancel. This will always execute, meaning we could
-            // lock of the retrofit threads if a request is active for a long time.
-            // I would potentially force an API change to make sure this is always an ExecutorService
+            /*
+            This is not ideal, we should use a ExecutorService, that way we can pass future
+            back to the subscription, so if the user un-subscribe from the parent we can
+            request the Future to cancel. This will always execute, meaning we could
+            lock of the retrofit threads if a request is active for a long time.
+            I would potentially force an API change to make sure this is always an ExecutorService
+            */
             s = Subscriptions.empty();
             executor.execute(getActionRunnable(action, sf));
           }
@@ -312,7 +315,8 @@ public class RestAdapter {
           return s;
         }
 
-        private Runnable getActionRunnable(final Action0 action, final AtomicReference<Subscription> sf) {
+        private Runnable getActionRunnable(final Action0 action,
+                                           final AtomicReference<Subscription> sf) {
           return new Runnable() {
             @Override
             public void run() {
