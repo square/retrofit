@@ -26,9 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import retrofit.Profiler.RequestInformation;
 import retrofit.client.Client;
@@ -44,10 +42,6 @@ import retrofit.mime.TypedOutput;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
-import rx.Subscription;
-import rx.functions.Action0;
-import rx.subscriptions.CompositeSubscription;
-import rx.subscriptions.Subscriptions;
 
 /**
  * Adapts a Java interface to a REST API.
