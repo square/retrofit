@@ -14,7 +14,6 @@ import retrofit.client.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
 import static retrofit.RetrofitError.unexpectedError;
@@ -529,7 +528,7 @@ public final class MockRestAdapter {
     private final ErrorHandler errorHandler;
 
     MockRxSupport(RestAdapter restAdapter) {
-      scheduler = Schedulers.executor(restAdapter.httpExecutor);
+      scheduler = new Schedulers.RetrofitScheduler(restAdapter.httpExecutor);
       errorHandler = restAdapter.errorHandler;
     }
 
