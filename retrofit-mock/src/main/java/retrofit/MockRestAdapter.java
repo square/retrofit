@@ -528,7 +528,7 @@ public final class MockRestAdapter {
     private final ErrorHandler errorHandler;
 
     MockRxSupport(RestAdapter restAdapter) {
-      scheduler = new Schedulers.RetrofitScheduler(restAdapter.httpExecutor);
+      scheduler = new RxSupport.RetrofitScheduler(restAdapter.httpExecutor);
       errorHandler = restAdapter.errorHandler;
     }
 

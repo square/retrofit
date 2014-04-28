@@ -1,20 +1,54 @@
 package retrofit;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import rx.Observable;
 import rx.Scheduler;
+import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action0;
 import rx.subscriptions.CompositeSubscription;
 import rx.subscriptions.Subscriptions;
 
 /**
- * Indirect access to Scheduler API for
+ * Indirection to avoid VerifyError if RxJava isn't present.
  */
-/*package*/ final class Schedulers {
+final class RxSupport {
+  private final Scheduler scheduler;
+  private final ErrorHandler errorHandler;
+
+  RxSupport(Executor executor, ErrorHandler errorHandler) {
+    this.scheduler = new RetrofitScheduler(executor);
+    this.errorHandler = errorHandler;
+  }
+
+  Observable createRequestObservable(final Callable<ResponseWrapper> request) {
+    return Observable.create(new Observable.OnSubscribe<Object>() {
+      @Override public void call(Subscriber<? super Object> subscriber) {
+        if (subscriber.isUnsubscribed()) {
+          return;
+        }
+        try {
+          ResponseWrapper wrapper = request.call();
+          if (subscriber.isUnsubscribed()) {
+            return;
+          }
+          subscriber.onNext(wrapper.responseBody);
+          subscriber.onCompleted();
+        } catch (RetrofitError e) {
+          subscriber.onError(errorHandler.handleError(e));
+        } catch (Exception e) {
+          // This is from the Callable.  It shouldn't actually throw.
+          throw new RuntimeException(e);
+        }
+      }
+    }).subscribeOn(scheduler);
+  }
+
 
   /**
    * RetrofitScheduler, similar to the {@link rx.schedulers.EventLoopsScheduler} in the same way
@@ -37,11 +71,11 @@ import rx.subscriptions.Subscriptions;
       return new EventLoopScheduler(executorService);
     }
 
-    static class EventLoopScheduler extends Scheduler.Worker implements Subscription {
+    static class EventLoopScheduler extends Worker implements Subscription {
       private final CompositeSubscription innerSubscription = new CompositeSubscription();
       private final Executor executor;
 
-      /*package*/ EventLoopScheduler(Executor executor) {
+      EventLoopScheduler(Executor executor) {
         this.executor = executor;
       }
 
@@ -75,6 +109,21 @@ import rx.subscriptions.Subscriptions;
         return s;
       }
 
+      @Override
+      public Subscription schedule(final Action0 action, long delayTime, TimeUnit unit) {
+        throw new UnsupportedOperationException("This Scheduler does not support timed Actions");
+      }
+
+      @Override
+      public void unsubscribe() {
+        innerSubscription.unsubscribe();
+      }
+
+      @Override
+      public boolean isUnsubscribed() {
+        return innerSubscription.isUnsubscribed();
+      }
+
       private Runnable getActionRunnable(final Action0 action,
                                          final AtomicReference<Subscription> sf) {
         return new Runnable() {
@@ -90,21 +139,6 @@ import rx.subscriptions.Subscriptions;
             }
           }
         };
-      }
-
-      @Override
-      public Subscription schedule(final Action0 action, long delayTime, TimeUnit unit) {
-        throw new UnsupportedOperationException("This Scheduler does not support timed Actions");
-      }
-
-      @Override
-      public void unsubscribe() {
-        innerSubscription.unsubscribe();
-      }
-
-      @Override
-      public boolean isUnsubscribed() {
-        return innerSubscription.isUnsubscribed();
       }
     }
   }
