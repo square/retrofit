@@ -22,20 +22,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import retrofit.Profiler.RequestInformation;
@@ -54,7 +46,6 @@ import rx.Scheduler;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action0;
-import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 import rx.subscriptions.Subscriptions;
 
