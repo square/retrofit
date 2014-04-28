@@ -2,7 +2,7 @@ package retrofit;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -87,22 +87,10 @@ final class RxSupport {
         }
 
         final AtomicReference<Subscription> sf = new AtomicReference<Subscription>();
-        final Subscription s;
-        if (executor instanceof ExecutorService) {
-          s = Subscriptions.from(((ExecutorService) executor).submit(
-                  getActionRunnable(action, sf)));
-        } else {
-          //  This is not ideal, we should use a ExecutorService, that way we can pass Future
-          //  back to the subscription, so if the user un-subscribed from the parent we can
-          //  request the Future to cancel.
-          //  This will always execute, meaning we could lock up the retrofit threads if:
-          //    1. The user un-subscribes before starting the execution in the pool.
-          //    2. The request is active for a long time, timing out etc...
-          //  I would potentially force an API change to make sure this is always an
-          //  ExecutorService.
-          s = Subscriptions.empty();
-          executor.execute(getActionRunnable(action, sf));
-        }
+        final FutureTask<Void> futureTask =
+                new FutureTask<Void>(getActionRunnable(action, sf), null);
+        final Subscription s = Subscriptions.from(futureTask);
+        executor.execute(futureTask);
 
         sf.set(s);
         innerSubscription.add(s);
