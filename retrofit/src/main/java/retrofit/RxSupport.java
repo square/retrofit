@@ -15,7 +15,11 @@ import rx.subscriptions.CompositeSubscription;
 import rx.subscriptions.Subscriptions;
 
 /**
- * Indirection to avoid VerifyError if RxJava isn't present.
+ * Utilities for supporting RxJava Observables.
+ * Used primarily by {@link retrofit.RestAdapter}.
+ *
+ * Remember RxJava might not be on the classpath, check its included before calling, use
+ * {@link Platform#HAS_RX_JAVA}
  */
 final class RxSupport {
   private final Scheduler scheduler;
@@ -53,7 +57,7 @@ final class RxSupport {
   /**
    * RetrofitScheduler, similar to the {@link rx.schedulers.EventLoopsScheduler} in the same way
    * it dumps requests onto a Executor, but we can pass in the Executor.
-   * <p/>
+   *
    * This does not support Scheduled execution, which may cause issues with peoples implementations.
    * If they are doing, wait() or debouncing() on this scheduler. Future implementations, should
    * either add {@code schedule()} support, or let the user provide the {@link rx.Scheduler} to
