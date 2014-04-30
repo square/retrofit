@@ -34,7 +34,7 @@ final class RxSupport {
         final FutureTask<Void> task = new FutureTask<Void>(getRunnable(subscriber, request), null);
         final Subscription s = Subscriptions.from(task);
         // We add our subscription to the current subscriber so the future task can be
-        // unSubscribed from from thegc
+        // unSubscribed from.
         subscriber.add(s);
         executor.execute(task);
       }
