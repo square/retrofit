@@ -38,6 +38,7 @@ import retrofit.http.Header;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
 import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
@@ -68,6 +69,7 @@ final class RestMethodInfo {
     FIELD,
     FIELD_MAP,
     PART,
+    PART_MAP,
     BODY,
     HEADER
   }
@@ -411,6 +413,17 @@ final class RestMethodInfo {
             gotPart = true;
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.PART;
+          } else if (annotationType == PartMap.class) {
+            if (requestType != RequestType.MULTIPART) {
+              throw parameterError(i,
+                  "@PartMap parameters can only be used with multipart encoding.");
+            }
+            if (!Map.class.isAssignableFrom(parameterType)) {
+              throw parameterError(i, "@PartMap parameter type must be Map.");
+            }
+
+            gotPart = true;
+            paramUsage[i] = ParamUsage.PART_MAP;
           } else if (annotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
               throw parameterError(i,

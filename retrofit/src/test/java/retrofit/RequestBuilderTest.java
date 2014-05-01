@@ -33,6 +33,7 @@ import static retrofit.RestMethodInfo.ParamUsage.FIELD;
 import static retrofit.RestMethodInfo.ParamUsage.FIELD_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.HEADER;
 import static retrofit.RestMethodInfo.ParamUsage.PART;
+import static retrofit.RestMethodInfo.ParamUsage.PART_MAP;
 import static retrofit.RestMethodInfo.ParamUsage.PATH;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
@@ -490,6 +491,38 @@ public class RequestBuilderTest {
     assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
   }
 
+  @Test public void multipartPartMap() throws Exception {
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("ping", "pong");
+    params.put("kit", new TypedString("kat"));
+
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setMultipart() //
+        .addPartMap("params", params) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).hasSize(2);
+    assertThat(request.getHeaders().get(0).getName()).isEqualTo("Content-Type");
+    assertThat(request.getHeaders().get(1)).isEqualTo(new Header("Content-Length", "414"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    List<byte[]> bodyParts = MimeHelper.getParts(body);
+    assertThat(bodyParts).hasSize(2);
+
+    Iterator<byte[]> iterator = bodyParts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("name=\"ping\"\r\n").endsWith("\r\npong");
+
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
+  }
+
   @Test public void multipartNullRemovesPart() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
@@ -855,6 +888,13 @@ public class RequestBuilderTest {
       paramNames.add(name);
       paramUsages.add(PART);
       args.add(value);
+      return this;
+    }
+
+    Helper addPartMap(String name, Map<String, Object> values) {
+      paramNames.add(name);
+      paramUsages.add(PART_MAP);
+      args.add(values);
       return this;
     }
 

@@ -28,6 +28,7 @@ import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
@@ -908,6 +909,21 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestType).isEqualTo(MULTIPART);
   }
 
+  @Test public void partMapMultipart() {
+    class Example {
+      @Multipart @PUT("/")
+      Response a(@Part("a") TypedOutput a, @PartMap Map<String, String> b) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.requestType).isEqualTo(MULTIPART);
+  }
+
   @Test public void implicitMultipartForbidden() {
     class Example {
       @POST("/") Response a(@Part("a") int a) {
@@ -923,6 +939,24 @@ public class RestMethodInfoTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "Example.a: @Part parameters can only be used with multipart encoding. (parameter #1)");
+    }
+  }
+
+  @Test public void implicitMultipartWithPartMapForbidden() {
+    class Example {
+      @POST("/") Response a(@PartMap Map<String, String> params) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: @PartMap parameters can only be used with multipart encoding. (parameter #1)");
     }
   }
 
