@@ -280,6 +280,23 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             }
           }
           break;
+        case PART_MAP:
+          if (value != null) { // Skip null values.
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+              String entryName = entry.getKey().toString();
+              Object entryValue = entry.getValue();
+              if (entryValue != null) { // Skip null values.
+                if (entryValue instanceof TypedOutput) {
+                  multipartBody.addPart(entryName, (TypedOutput) entryValue);
+                } else if (entryValue instanceof String) {
+                  multipartBody.addPart(entryName, new TypedString((String) entryValue));
+                } else {
+                  multipartBody.addPart(entryName, converter.toBody(entryValue));
+                }
+              }
+            }
+          }
+          break;
         case BODY:
           if (value == null) {
             throw new IllegalArgumentException("Body parameter value must not be null.");
