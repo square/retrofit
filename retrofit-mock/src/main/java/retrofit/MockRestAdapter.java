@@ -85,7 +85,7 @@ public final class MockRestAdapter {
   }
 
   private final RestAdapter restAdapter;
-  private final MockRxSupport mockRxSupport;
+  private MockRxSupport mockRxSupport;
   final Random random = new Random();
 
   private ValueChangeListener listener = ValueChangeListener.EMPTY;
@@ -95,12 +95,6 @@ public final class MockRestAdapter {
 
   private MockRestAdapter(RestAdapter restAdapter) {
     this.restAdapter = restAdapter;
-
-    if (Platform.HAS_RX_JAVA) {
-      mockRxSupport = new MockRxSupport(restAdapter);
-    } else {
-      mockRxSupport = null;
-    }
   }
 
   /** Set a listener to be notified when any mock value changes. */
@@ -261,6 +255,13 @@ public final class MockRestAdapter {
       restAdapter.requestInterceptor.intercept(interceptorTape);
 
       if (methodInfo.isObservable) {
+        if (mockRxSupport == null) {
+          if (Platform.HAS_RX_JAVA) {
+            mockRxSupport = new MockRxSupport(restAdapter);
+          } else {
+            throw new IllegalStateException("Observable method found but no RxJava on classpath");
+          }
+        }
         return mockRxSupport.createMockObservable(this, methodInfo, interceptorTape, args);
       }
 
