@@ -160,7 +160,7 @@ public class RestAdapter {
 
   private final Client.Provider clientProvider;
   private final Profiler profiler;
-  private final RxSupport rxSupport;
+  private RxSupport rxSupport;
 
   volatile LogLevel logLevel;
 
@@ -177,11 +177,6 @@ public class RestAdapter {
     this.errorHandler = errorHandler;
     this.log = log;
     this.logLevel = logLevel;
-    if (Platform.HAS_RX_JAVA && httpExecutor != null) {
-      this.rxSupport = new RxSupport(httpExecutor, errorHandler);
-    } else {
-      this.rxSupport = null;
-    }
   }
 
   /** Change the level of logging. */
@@ -302,6 +297,13 @@ public class RestAdapter {
       requestInterceptor.intercept(interceptorTape);
 
       if (methodInfo.isObservable) {
+        if (rxSupport == null) {
+          if (Platform.HAS_RX_JAVA) {
+            rxSupport = new RxSupport(httpExecutor, errorHandler);
+          } else {
+            throw new IllegalStateException("Observable method found but no RxJava on classpath");
+          }
+        }
         return rxSupport.createRequestObservable(new Callable<ResponseWrapper>() {
           @Override public ResponseWrapper call() throws Exception {
             return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
@@ -324,8 +326,8 @@ public class RestAdapter {
      * @return HTTP response object of specified {@code type} or {@code null}.
      * @throws RetrofitError if any error occurs during the HTTP request.
      */
-    private Object invokeRequest(RequestInterceptor requestInterceptor,
-        RestMethodInfo methodInfo, Object[] args) {
+    private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
+        Object[] args) {
       methodInfo.init(); // Ensure all relevant method information has been loaded.
 
       String serverUrl = server.getUrl();
