@@ -8,13 +8,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import rx.Observable;
-import rx.Scheduler;
 import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
 import static retrofit.RetrofitError.unexpectedError;
@@ -526,30 +525,36 @@ public final class MockRestAdapter {
 
   /** Indirection to avoid VerifyError if RxJava isn't present. */
   private static class MockRxSupport {
-    private final Scheduler scheduler;
+    private final Executor httpExecutor;
     private final ErrorHandler errorHandler;
 
     MockRxSupport(RestAdapter restAdapter) {
-      scheduler = Schedulers.executor(restAdapter.httpExecutor);
+      httpExecutor = restAdapter.httpExecutor;
       errorHandler = restAdapter.errorHandler;
     }
 
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
         final RequestInterceptor interceptor, final Object[] args) {
       return Observable.create(new Observable.OnSubscribe<Object>() {
-        @Override public void call(Subscriber<? super Object> subscriber) {
-          try {
-            Observable observable =
-                (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
-            //noinspection unchecked
-            observable.subscribe(subscriber);
-          } catch (RetrofitError e) {
-            subscriber.onError(errorHandler.handleError(e));
-          } catch (Throwable e) {
-            subscriber.onError(e);
-          }
+        @Override public void call(final Subscriber<? super Object> subscriber) {
+          if (subscriber.isUnsubscribed()) return;
+          httpExecutor.execute(new Runnable() {
+            @Override public void run() {
+              try {
+                if (subscriber.isUnsubscribed()) return;
+                Observable observable =
+                        (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
+                //noinspection unchecked
+                observable.subscribe(subscriber);
+              } catch (RetrofitError e) {
+                subscriber.onError(errorHandler.handleError(e));
+              } catch (Throwable e) {
+                subscriber.onError(e);
+              }
+            }
+          });
         }
-      }).subscribeOn(scheduler);
+      });
     }
   }
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
 import retrofit.Profiler.RequestInformation;
 import retrofit.client.Client;
 import retrofit.client.Header;
@@ -38,10 +39,6 @@ import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 /**
  * Adapts a Java interface to a REST API.
@@ -219,40 +216,6 @@ public class RestAdapter {
         cache.put(method, methodInfo);
       }
       return methodInfo;
-    }
-  }
-
-  /** Indirection to avoid VerifyError if RxJava isn't present. */
-  private static final class RxSupport {
-    private final Scheduler scheduler;
-    private final ErrorHandler errorHandler;
-
-    RxSupport(Executor executor, ErrorHandler errorHandler) {
-      this.scheduler = Schedulers.executor(executor);
-      this.errorHandler = errorHandler;
-    }
-
-    Observable createRequestObservable(final Callable<ResponseWrapper> request) {
-      return Observable.create(new Observable.OnSubscribe<Object>() {
-        @Override public void call(Subscriber<? super Object> subscriber) {
-          if (subscriber.isUnsubscribed()) {
-            return;
-          }
-          try {
-            ResponseWrapper wrapper = request.call();
-            if (subscriber.isUnsubscribed()) {
-              return;
-            }
-            subscriber.onNext(wrapper.responseBody);
-            subscriber.onCompleted();
-          } catch (RetrofitError e) {
-            subscriber.onError(errorHandler.handleError(e));
-          } catch (Exception e) {
-            // This is from the Callable.  It shouldn't actually throw.
-            throw new RuntimeException(e);
-          }
-        }
-      }).subscribeOn(scheduler);
     }
   }
 
