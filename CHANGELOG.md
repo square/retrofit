@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 1.5.1 *(2014-05-08)*
+----------------------------
+
+ * New: `@PartMap` annotation accepts a `Map` of key/value pairs for multi-part.
+ * Fix: `MockRestAdpater` uses the `ErrorHandler` from its parent `RestAdapter`.
+ * Experimental RxJava support updated for v0.18 and is now lazily initialized.
+
+
 Version 1.5.0 *(2014-03-20)*
 ----------------------------
 
