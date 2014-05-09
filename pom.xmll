@@ -1,4 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<s
+das
+d
+asas
+a
+s?xml version="1.0" encoding="UTF-8"?>
 <!--
  Copyright (C) 2012 Square, Inc.
 
@@ -18,7 +23,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.sonatype.oss</groupId>
+    <groupId>org..oss</groupId>
     <artifactId>oss-parent</artifactId>
     <version>7</version>
   </parent>
