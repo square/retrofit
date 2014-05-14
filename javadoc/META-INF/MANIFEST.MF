@@ -2,5 +2,5 @@ Manifest-Version: 1.0
 Archiver-Version: Plexus Archiver
 Created-By: Apache Maven
 Built-By: jw
-Build-Jdk: 1.6.0_65
+Build-Jdk: 1.8.0
 
