@@ -1,174 +1,109 @@
 package retrofit;
 
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import retrofit.client.Header;
 import retrofit.client.Response;
-import retrofit.mime.TypedInput;
-import rx.Observer;
-import rx.Subscription;
-import rx.schedulers.Schedulers;
-import rx.schedulers.TestScheduler;
+import rx.observers.TestSubscriber;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author christopherperry
+ */
 public class RxSupportTest {
 
-  private Object response;
-  private ResponseWrapper responseWrapper;
-  private Callable<ResponseWrapper> callable = spy(new Callable<ResponseWrapper>() {
+  @SuppressWarnings("unchecked")
+  @Test public void requestObservable_shouldMakeRequest() {
+    // Given
+    RxSupport rxSupport = new RxSupport(null);
+    Object response = new Object();
+
+    // When
+    TestSubscriber testSubscriber = new TestSubscriber();
+    rxSupport.createRequestObservable(new TestCallable(response)) //
+      .subscribe(testSubscriber);
+
+    // Then
+    testSubscriber.assertReceivedOnNext(Arrays.asList(response));
+    testSubscriber.assertUnsubscribed();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test public void requestObservable_shouldNotMakeRequest_whenUnsubscribed() {
+    // Given
+    RxSupport rxSupport = new RxSupport(null);
+    Object response = new Object();
+
+    // When
+    TestSubscriber testSubscriber = new TestSubscriber();
+    testSubscriber.unsubscribe();
+    rxSupport.createRequestObservable(new TestCallable(response)) //
+      .subscribe(testSubscriber);
+
+    // Then
+    List onNextEvents = testSubscriber.getOnNextEvents();
+    assertThat(onNextEvents).isEmpty();
+    testSubscriber.assertUnsubscribed();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test public void requestObservable_shouldPassRetrofitErrorsToErrorHandlers() {
+    // Given
+    TestErrorHandler errorHandler = new TestErrorHandler();
+    RxSupport rxSupport = new RxSupport(errorHandler);
+
+    // When
+    TestSubscriber testSubscriber = new TestSubscriber();
+    ThrowingCallable request = new ThrowingCallable();
+    rxSupport.createRequestObservable(request) //
+      .subscribe(testSubscriber);
+
+    // Then
+    assertThat(errorHandler.error).isEqualTo(request.error);
+    List onErrorEvents = testSubscriber.getOnErrorEvents();
+    assertThat(onErrorEvents).hasSize(1).containsExactly(request.error);
+  }
+
+  // Simply passes back the original error
+  static class TestErrorHandler implements ErrorHandler {
+    private RetrofitError error;
+
+    @Override public Throwable handleError(RetrofitError cause) {
+      error = cause;
+      return error;
+    }
+  }
+
+  // Always throws a RetrofitError when called
+  static class ThrowingCallable implements Callable<ResponseWrapper> {
+    private RetrofitError error =
+      new RetrofitError(null, null, null, null, false, null);
+
     @Override public ResponseWrapper call() throws Exception {
-      return responseWrapper;
+      throw error;
     }
-  });
-
-  private QueuedSynchronousExecutor executor;
-  private RxSupport rxSupport;
-
-  @Mock Observer<Object> subscriber;
-
-  @Before public void setUp() {
-    MockitoAnnotations.initMocks(this);
-    response = new Object();
-    responseWrapper = new ResponseWrapper(
-            new Response(
-                    "http://example.com", 200, "Success",
-                    Collections.<Header>emptyList(), mock(TypedInput.class)
-            ), response
-    );
-    executor = spy(new QueuedSynchronousExecutor());
-    rxSupport = new RxSupport(executor, ErrorHandler.DEFAULT);
   }
 
-  @Test public void testObservableCallsOnNextOnHttpExecutor() {
-    rxSupport.createRequestObservable(callable).subscribe(subscriber);
-    executor.executeNextInQueue();
-    verify(subscriber, times(1)).onNext(response);
-  }
+  // Returns a canned ResponseWrapper wrapping the response passed in when called
+  static class TestCallable implements Callable<ResponseWrapper> {
+    private final Object response;
 
-  @Test public void testObservableCallsOnNextOnHttpExecutorWithSubscriber() {
-    TestScheduler test = Schedulers.test();
-    rxSupport.createRequestObservable(callable).subscribeOn(test).subscribe(subscriber);
-    // Subscription is handled via the Scheduler.
-    test.triggerActions();
-    // This will only execute up to the executor in OnSubscribe.
-    verify(subscriber, never()).onNext(any());
-    // Upon continuing the executor we then run the retrofit request.
-    executor.executeNextInQueue();
-    verify(subscriber, times(1)).onNext(response);
-  }
-
-  @Test public void testObservableUnSubscribesDoesNotExecuteCallable() throws Exception {
-    Subscription subscription = rxSupport.createRequestObservable(callable).subscribe(subscriber);
-    verify(subscriber, never()).onNext(any());
-
-    // UnSubscribe here should cancel the queued runnable.
-    subscription.unsubscribe();
-
-    executor.executeNextInQueue();
-    verify(callable, never()).call();
-    verify(subscriber, never()).onNext(response);
-  }
-
-  @Test public void testObservableCallsOperatorsOffHttpExecutor() {
-    TestScheduler test = Schedulers.test();
-    rxSupport.createRequestObservable(callable)
-            .delaySubscription(1000, TimeUnit.MILLISECONDS, test)
-            .subscribe(subscriber);
-
-    verify(subscriber, never()).onNext(any());
-    test.advanceTimeBy(1000, TimeUnit.MILLISECONDS);
-    // Upon continuing the executor we then run the retrofit request.
-    executor.executeNextInQueue();
-    verify(subscriber, times(1)).onNext(response);
-  }
-
-  @Test public void testObservableDoesNotLockExecutor() {
-    TestScheduler test = Schedulers.test();
-    rxSupport.createRequestObservable(callable)
-            .delay(1000, TimeUnit.MILLISECONDS, test)
-            .subscribe(subscriber);
-
-    rxSupport.createRequestObservable(callable)
-            .delay(2000, TimeUnit.MILLISECONDS, test)
-            .subscribe(subscriber);
-
-    // Nothing fired yet
-    verify(subscriber, never()).onNext(any());
-    // Subscriptions should of been queued up and executed even tho we delayed on the Subscriber.
-    executor.executeNextInQueue();
-    executor.executeNextInQueue();
-
-    verify(subscriber, never()).onNext(response);
-
-    test.advanceTimeBy(1000, TimeUnit.MILLISECONDS);
-    verify(subscriber, times(1)).onNext(response);
-
-    test.advanceTimeBy(1000, TimeUnit.MILLISECONDS);
-    verify(subscriber, times(2)).onNext(response);
-  }
-
-  @Test public void testObservableRespectsObserveOn() throws Exception {
-    TestScheduler observe = Schedulers.test();
-    rxSupport.createRequestObservable(callable)
-            .observeOn(observe)
-            .subscribe(subscriber);
-
-    verify(subscriber, never()).onNext(any());
-    executor.executeNextInQueue();
-
-    // Should have no response yet, but callback should of been executed.
-    verify(subscriber, never()).onNext(any());
-    verify(callable, times(1)).call();
-
-    // Forward the Observable Scheduler
-    observe.triggerActions();
-    verify(subscriber, times(1)).onNext(response);
-  }
-
-  /**
-   * Test Executor to iterate through Executions to aid in checking
-   * that the Observable implementation is correct.
-   */
-  static class QueuedSynchronousExecutor implements Executor {
-    Deque<Runnable> runnableQueue = new ArrayDeque<Runnable>();
-
-    @Override public void execute(Runnable runnable) {
-      runnableQueue.add(runnable);
+    TestCallable(Object response) {
+      this.response = response;
     }
 
-    /**
-     * Will throw exception if you are expecting something to be added to the Executor
-     * and it hasn't.
-     */
-    void executeNextInQueue() {
-      runnableQueue.removeFirst().run();
-    }
-
-    /**
-     * Executes any queued executions on the executor.
-     */
-    void executeAll() {
-      Iterator<Runnable> iterator = runnableQueue.iterator();
-      while (iterator.hasNext()) {
-        Runnable next = iterator.next();
-        next.run();
-        iterator.remove();
-      }
+    @Override public ResponseWrapper call() throws Exception {
+      return new ResponseWrapper(
+        new Response(
+          "http://example.com", 200, "Success",
+          Collections.<Header>emptyList(), null
+        ), response
+      );
     }
   }
 }

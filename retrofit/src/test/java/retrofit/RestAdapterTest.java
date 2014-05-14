@@ -556,13 +556,13 @@ public class RestAdapterTest {
     assertThat(response.getStatus()).isEqualTo(200);
   }
 
-  @Test public void observableUsesHttpExecutor() throws IOException {
+  @Test public void observableDoesNotUseHttpExecutor() throws IOException {
     Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello"));
     when(mockClient.execute(any(Request.class))).thenReturn(response);
 
     example.observable("Howdy").subscribe(mock(Action1.class));
 
-    verify(mockRequestExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verifyZeroInteractions(mockRequestExecutor);
     verifyZeroInteractions(mockCallbackExecutor);
   }
 
