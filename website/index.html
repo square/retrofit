@@ -216,7 +216,7 @@ RestAdapter restAdapter = new RestAdapter.Builder()
             <p>Note that if the return exception is checked, it must be declared on the interface method. It is recommended that you pass the supplied <code>RetrofitError</code> as the cause to any new exceptions you throw.</p>
 
             <h4>Logging</h4>
-            <p>If you need to take a closer look at the requests and responses you can easily add logging levels to the rest adapter with the <code>LogLevel</code> property. The possible logging levels are <code>BASIC</code>, <code>FULL</code>, <code>HEADERS</code>, and <code>NONE</code>.</p>
+            <p>If you need to take a closer look at the requests and responses you can easily add logging levels to the <code>RestAdapter</code> with the <code>LogLevel</code> property. The possible logging levels are <code>BASIC</code>, <code>FULL</code>, <code>HEADERS</code>, and <code>NONE</code>.</p>
             <p>The following code shows the addition of a full log level which will log the headers, body, and metadata for both requests and responses.</p>
             <pre class="prettyprint">
 RestAdapter restAdapter = new RestAdapter.Builder()
