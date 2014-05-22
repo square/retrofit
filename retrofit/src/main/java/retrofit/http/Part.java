@@ -35,6 +35,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * retrofit.converter.Converter#toBody(Object)}.</li>
  * </ul>
  * <p>
+ * Values may be {@code null} which will omit them from the request body.
+ * <p>
  * <pre>
  * &#64;Multipart
  * &#64;POST("/")
