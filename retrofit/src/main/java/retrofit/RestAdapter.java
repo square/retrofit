@@ -261,7 +261,7 @@ public class RestAdapter {
       if (methodInfo.isObservable) {
         if (rxSupport == null) {
           if (Platform.HAS_RX_JAVA) {
-            rxSupport = new RxSupport(httpExecutor, errorHandler);
+            rxSupport = new RxSupport(errorHandler);
           } else {
             throw new IllegalStateException("Observable method found but no RxJava on classpath");
           }
