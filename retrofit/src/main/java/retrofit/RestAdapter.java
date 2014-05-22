@@ -525,28 +525,6 @@ public class RestAdapter {
     private Log log;
     private LogLevel logLevel = LogLevel.NONE;
 
-    /**
-     * API server base URL.
-     *
-     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}. This method
-     * will be removed in version 1.5.
-     */
-    @Deprecated
-    public Builder setServer(String server) {
-      return setEndpoint(server);
-    }
-
-    /**
-     * API server.
-     *
-     * @deprecated Use {@link #setEndpoint(String)} or {@link #setEndpoint(Endpoint)}. This method
-     * will be removed in version 1.5.
-     */
-    @Deprecated
-    public Builder setServer(Server server) {
-      return setEndpoint(server);
-    }
-
     /** API endpoint URL. */
     public Builder setEndpoint(String endpoint) {
       if (endpoint == null || endpoint.trim().length() == 0) {
