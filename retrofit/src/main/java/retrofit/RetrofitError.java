@@ -78,18 +78,7 @@ public class RetrofitError extends RuntimeException {
    * response.
    */
   public Object getBody() {
-    if (response == null) {
-      return null;
-    }
-    TypedInput body = response.getBody();
-    if (body == null) {
-      return null;
-    }
-    try {
-      return converter.fromBody(body, successType);
-    } catch (ConversionException e) {
-      throw new RuntimeException(e);
-    }
+    return getBodyAs(successType);
   }
 
   /**
