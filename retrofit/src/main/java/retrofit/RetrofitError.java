@@ -74,7 +74,8 @@ public class RetrofitError extends RuntimeException {
 
   /**
    * HTTP response body converted to the type declared by either the interface method return type or
-   * the generic type of the supplied {@link Callback} parameter.
+   * the generic type of the supplied {@link Callback} parameter. {@code null} if there is no
+   * response.
    */
   public Object getBody() {
     if (response == null) {
@@ -91,7 +92,9 @@ public class RetrofitError extends RuntimeException {
     }
   }
 
-  /** HTTP response body converted to specified {@code type}. */
+  /**
+   * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
+   */
   public Object getBodyAs(Type type) {
     if (response == null) {
       return null;
