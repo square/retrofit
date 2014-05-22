@@ -7,8 +7,8 @@ import retrofit.client.Response;
 class MockHttpRetrofitError extends RetrofitError {
   private final Object body;
 
-  MockHttpRetrofitError(String url, Response response, Object body) {
-    super(url, response, null, null, false, null);
+  MockHttpRetrofitError(String message, String url, Response response, Object body) {
+    super(message, url, response, null, null, false, null);
     this.body = body;
   }
 

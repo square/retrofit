@@ -24,21 +24,23 @@ import retrofit.mime.TypedInput;
 
 public class RetrofitError extends RuntimeException {
   public static RetrofitError networkError(String url, IOException exception) {
-    return new RetrofitError(url, null, null, null, true, exception);
+    return new RetrofitError(exception.getMessage(), url, null, null, null, true, exception);
   }
 
   public static RetrofitError conversionError(String url, Response response, Converter converter,
       Type successType, ConversionException exception) {
-    return new RetrofitError(url, response, converter, successType, false, exception);
+    return new RetrofitError(exception.getMessage(), url, response, converter, successType, false,
+        exception);
   }
 
   public static RetrofitError httpError(String url, Response response, Converter converter,
       Type successType) {
-    return new RetrofitError(url, response, converter, successType, false, null);
+    String message = response.getStatus() + " " + response.getReason();
+    return new RetrofitError(message, url, response, converter, successType, false, null);
   }
 
   public static RetrofitError unexpectedError(String url, Throwable exception) {
-    return new RetrofitError(url, null, null, null, false, exception);
+    return new RetrofitError(exception.getMessage(), url, null, null, null, false, exception);
   }
 
   private final String url;
@@ -47,9 +49,9 @@ public class RetrofitError extends RuntimeException {
   private final Type successType;
   private final boolean networkError;
 
-  RetrofitError(String url, Response response, Converter converter, Type successType,
-      boolean networkError, Throwable exception) {
-    super(exception);
+  RetrofitError(String message, String url, Response response, Converter converter,
+      Type successType, boolean networkError, Throwable exception) {
+    super(message, exception);
     this.url = url;
     this.response = response;
     this.converter = converter;

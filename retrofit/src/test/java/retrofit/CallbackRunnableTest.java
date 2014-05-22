@@ -39,7 +39,7 @@ public class CallbackRunnableTest {
   }
 
   @Test public void errorPassedToFailure() {
-    RetrofitError exception = RetrofitError.unexpectedError("", null);
+    RetrofitError exception = RetrofitError.unexpectedError("", new RuntimeException());
     when(callbackRunnable.obtainResponse()).thenThrow(exception);
 
     callbackRunnable.run();
