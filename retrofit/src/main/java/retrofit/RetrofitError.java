@@ -77,6 +77,9 @@ public class RetrofitError extends RuntimeException {
    * the generic type of the supplied {@link Callback} parameter.
    */
   public Object getBody() {
+    if (response == null) {
+      return null;
+    }
     TypedInput body = response.getBody();
     if (body == null) {
       return null;
@@ -90,6 +93,9 @@ public class RetrofitError extends RuntimeException {
 
   /** HTTP response body converted to specified {@code type}. */
   public Object getBodyAs(Type type) {
+    if (response == null) {
+      return null;
+    }
     TypedInput body = response.getBody();
     if (body == null) {
       return null;
