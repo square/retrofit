@@ -40,6 +40,12 @@ public class MockRestAdapterTest {
     @GET("/") void doStuff(Callback<Object> cb);
   }
 
+  interface AsyncCallbackSubtypeExample {
+    abstract class Foo implements Callback<String> {}
+
+    @GET("/") void doStuff(Foo foo);
+  }
+
   interface ObservableExample {
     @GET("/") Observable<Object> doStuff();
   }
@@ -470,26 +476,6 @@ public class MockRestAdapterTest {
     assertThat(error.getBody()).isSameAs(expected);
   }
 
-  @Test public void asyncCallToFailureIsNotAllowed() {
-    mockRestAdapter.setErrorPercentage(0);
-
-    class MockAsyncExample implements AsyncExample {
-      @Override public void doStuff(Callback<Object> cb) {
-        cb.failure(null);
-      }
-    }
-
-    AsyncExample mockService = mockRestAdapter.create(AsyncExample.class, new MockAsyncExample());
-
-    try {
-      mockService.doStuff(mock(Callback.class));
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Calling failure directly is not supported. Throw MockHttpException instead.");
-    }
-  }
-
   @Test public void syncErrorUsesErrorHandler() {
     mockRestAdapter.setDelay(100);
     mockRestAdapter.setVariancePercentage(0);
@@ -570,5 +556,34 @@ public class MockRestAdapterTest {
     });
     latch.await(5, SECONDS);
     assertThat(called.get()).isTrue();
+  }
+
+  @Test public void asyncCanUseCallbackSubtype() {
+    mockRestAdapter.setDelay(1);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockAsyncCallbackSubtypeExample implements AsyncCallbackSubtypeExample {
+      @Override public void doStuff(Foo foo) {
+        foo.success("Hello!", null);
+      }
+    }
+
+    AsyncCallbackSubtypeExample mockService =
+        mockRestAdapter.create(AsyncCallbackSubtypeExample.class,
+            new MockAsyncCallbackSubtypeExample());
+
+    final AtomicReference<String> actual = new AtomicReference<String>();
+    mockService.doStuff(new AsyncCallbackSubtypeExample.Foo() {
+      @Override public void success(String result, Response response) {
+        actual.set(result);
+      }
+
+      @Override public void failure(RetrofitError error) {
+        throw new AssertionError();
+      }
+    });
+
+    assertThat(actual.get()).isNotNull().isEqualTo("Hello!");
   }
 }
