@@ -290,11 +290,11 @@ public class RestAdapter {
      */
     private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
         Object[] args) {
-      methodInfo.init(); // Ensure all relevant method information has been loaded.
-
-      String serverUrl = server.getUrl();
-      String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
+      String url = null;
       try {
+        methodInfo.init(); // Ensure all relevant method information has been loaded.
+
+        String serverUrl = server.getUrl();
         RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
         requestBuilder.setArguments(args);
 
@@ -475,7 +475,7 @@ public class RestAdapter {
 
   /** Log an exception that occurred during the processing of a request or response. */
   void logException(Throwable t, String url) {
-    log.log(String.format("---- ERROR %s", url));
+    log.log(String.format("---- ERROR %s", url != null ? url : ""));
     StringWriter sw = new StringWriter();
     t.printStackTrace(new PrintWriter(sw));
     log.log(sw.toString());
