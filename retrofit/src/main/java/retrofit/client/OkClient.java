@@ -15,13 +15,18 @@
  */
 package retrofit.client;
 
+import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.OkHttpClient;
+import retrofit.mime.TypedInput;
+
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/** Retrofit client that uses OkHttp for communication. */
+/**
+ * Retrofit client that uses OkHttp for communication.
+ */
 public class OkClient extends UrlConnectionClient {
   private static OkHttpClient generateDefaultOkHttp() {
     OkHttpClient client = new OkHttpClient();
@@ -40,7 +45,31 @@ public class OkClient extends UrlConnectionClient {
     this.client = client;
   }
 
-  @Override protected HttpURLConnection openConnection(Request request) throws IOException {
-    return client.open(new URL(request.getUrl()));
+  @Override
+  public Response execute(Request request) throws IOException {
+    com.squareup.okhttp.Request requestOk = new com.squareup.okhttp.Request.Builder()
+        .url(request.getUrl())
+        .build();
+
+    com.squareup.okhttp.Response response = client.newCall(requestOk).execute();
+
+    List<Header> headerList = new ArrayList<Header>();
+    Headers headers = response.headers();
+
+    for (int i = 0; i < headers.size(); i++) {
+      Header header = new Header(headers.name(i),
+          headers.value(i));
+      headerList.add(header);
+    }
+
+    TypedInput responseBody = new TypedInputStream(
+        response.body().contentType().type(),
+        response.body().contentLength(),
+        response.body().byteStream());
+
+    Response resp = new Response(request.getUrl(),
+        response.code(), response.message(),
+        headerList, responseBody);
+    return resp;
   }
 }

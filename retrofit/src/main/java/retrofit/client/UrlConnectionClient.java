@@ -15,6 +15,9 @@
  */
 package retrofit.client;
 
+import retrofit.mime.TypedInput;
+import retrofit.mime.TypedOutput;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -22,17 +25,18 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import retrofit.mime.TypedInput;
-import retrofit.mime.TypedOutput;
 
-/** Retrofit client that uses {@link HttpURLConnection} for communication. */
+/**
+ * Retrofit client that uses {@link HttpURLConnection} for communication.
+ */
 public class UrlConnectionClient implements Client {
   private static final int CHUNK_SIZE = 4096;
 
   public UrlConnectionClient() {
   }
 
-  @Override public Response execute(Request request) throws IOException {
+  @Override
+  public Response execute(Request request) throws IOException {
     HttpURLConnection connection = openConnection(request);
     prepareRequest(connection, request);
     return readResponse(connection);
@@ -92,26 +96,29 @@ public class UrlConnectionClient implements Client {
     return new Response(connection.getURL().toString(), status, reason, headers, responseBody);
   }
 
-  private static class TypedInputStream implements TypedInput {
+  protected static class TypedInputStream implements TypedInput {
     private final String mimeType;
     private final long length;
     private final InputStream stream;
 
-    private TypedInputStream(String mimeType, long length, InputStream stream) {
+    public TypedInputStream(String mimeType, long length, InputStream stream) {
       this.mimeType = mimeType;
       this.length = length;
       this.stream = stream;
     }
 
-    @Override public String mimeType() {
+    @Override
+    public String mimeType() {
       return mimeType;
     }
 
-    @Override public long length() {
+    @Override
+    public long length() {
       return length;
     }
 
-    @Override public InputStream in() throws IOException {
+    @Override
+    public InputStream in() throws IOException {
       return stream;
     }
   }
