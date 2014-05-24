@@ -18,10 +18,7 @@ package retrofit.client;
 import com.squareup.okhttp.*;
 import retrofit.mime.TypedInput;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -53,17 +50,22 @@ public class OkClient extends UrlConnectionClient {
                 .build();
 
         com.squareup.okhttp.Response response = client.newCall(requestOk).execute();
-        //public Response(String url, int status, String reason, List<Header> headers, TypedInput body) {
+
         List<Header> headerList = new ArrayList<Header>();
         for(int i = 0; i < response.headers().size(); i++ ) {
-            Header header = new Header(response.headers().name(i), response.headers().value(i));
+            Header header = new Header(response.headers().name(i), 
+									   response.headers().value(i));
             headerList.add(header);
         }
 
-        TypedInput responseBody = new TypedInputStream(response.body().contentType().type(), response.body().contentLength(),
-                response.body().byteStream());
+        TypedInput responseBody = new TypedInputStream(
+                                            response.body().contentType().type(), 
+					 					    response.body().contentLength(),
+					   					    response.body().byteStream());
 
-        Response resp = new Response(request.getUrl(), response.code(), response.message(), headerList, responseBody);
+        Response resp = new Response(request.getUrl(), 
+									 response.code(), response.message(), 
+									 headerList, responseBody);
         return resp;
     }
 /*
