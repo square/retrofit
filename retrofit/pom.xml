@@ -28,7 +28,6 @@
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>okhttp</artifactId>
       <optional>true</optional>
-      <version>2.0.0-RC1</version>
     </dependency>
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
