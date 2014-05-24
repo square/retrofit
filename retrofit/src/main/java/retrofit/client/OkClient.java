@@ -15,7 +15,7 @@
  */
 package retrofit.client;
 
-import com.squareup.okhttp.*;
+import com.squareup.okhttp.OkHttpClient;
 import retrofit.mime.TypedInput;
 
 import java.io.IOException;
@@ -46,32 +46,26 @@ public class OkClient extends UrlConnectionClient {
 
     @Override public Response execute(Request request) throws IOException {
         com.squareup.okhttp.Request requestOk = new com.squareup.okhttp.Request.Builder()
-                .url(request.getUrl())
-                .build();
+        .url(request.getUrl())
+        .build();
 
         com.squareup.okhttp.Response response = client.newCall(requestOk).execute();
 
         List<Header> headerList = new ArrayList<Header>();
-        for(int i = 0; i < response.headers().size(); i++ ) {
-            Header header = new Header(response.headers().name(i), 
-									   response.headers().value(i));
+        for (int i = 0; i < response.headers().size(); i++) {
+            Header header = new Header(response.headers().name(i),
+                                       response.headers().value(i));
             headerList.add(header);
         }
 
         TypedInput responseBody = new TypedInputStream(
-                                            response.body().contentType().type(), 
-					 					    response.body().contentLength(),
-					   					    response.body().byteStream());
+            response.body().contentType().type(),
+            response.body().contentLength(),
+            response.body().byteStream());
 
-        Response resp = new Response(request.getUrl(), 
-									 response.code(), response.message(), 
-									 headerList, responseBody);
+        Response resp = new Response(request.getUrl(),
+                                     response.code(), response.message(),
+                                     headerList, responseBody);
         return resp;
     }
-/*
-    @Override
-    protected HttpURLConnection openConnection(Request request) throws IOException {
-        return client.open(new URL(request.getUrl()));
-    }
-    */
 }
