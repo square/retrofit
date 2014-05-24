@@ -92,12 +92,12 @@ public class UrlConnectionClient implements Client {
     return new Response(connection.getURL().toString(), status, reason, headers, responseBody);
   }
 
-  private static class TypedInputStream implements TypedInput {
+  protected static class TypedInputStream implements TypedInput {
     private final String mimeType;
     private final long length;
     private final InputStream stream;
 
-    private TypedInputStream(String mimeType, long length, InputStream stream) {
+    public TypedInputStream(String mimeType, long length, InputStream stream) {
       this.mimeType = mimeType;
       this.length = length;
       this.stream = stream;

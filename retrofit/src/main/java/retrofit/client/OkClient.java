@@ -15,32 +15,61 @@
  */
 package retrofit.client;
 
-import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.*;
+import retrofit.mime.TypedInput;
+
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/** Retrofit client that uses OkHttp for communication. */
+/**
+ * Retrofit client that uses OkHttp for communication.
+ */
 public class OkClient extends UrlConnectionClient {
-  private static OkHttpClient generateDefaultOkHttp() {
-    OkHttpClient client = new OkHttpClient();
-    client.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    client.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    return client;
-  }
+    private static OkHttpClient generateDefaultOkHttp() {
+        OkHttpClient client = new OkHttpClient();
+        client.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+        client.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+        return client;
+    }
 
-  private final OkHttpClient client;
+    private final OkHttpClient client;
 
-  public OkClient() {
-    this(generateDefaultOkHttp());
-  }
+    public OkClient() {
+        this(generateDefaultOkHttp());
+    }
 
-  public OkClient(OkHttpClient client) {
-    this.client = client;
-  }
+    public OkClient(OkHttpClient client) {
+        this.client = client;
+    }
 
-  @Override protected HttpURLConnection openConnection(Request request) throws IOException {
-    return client.open(new URL(request.getUrl()));
-  }
+    @Override public Response execute(Request request) throws IOException {
+        com.squareup.okhttp.Request requestOk = new com.squareup.okhttp.Request.Builder()
+                .url(request.getUrl())
+                .build();
+
+        com.squareup.okhttp.Response response = client.newCall(requestOk).execute();
+        //public Response(String url, int status, String reason, List<Header> headers, TypedInput body) {
+        List<Header> headerList = new ArrayList<Header>();
+        for(int i = 0; i < response.headers().size(); i++ ) {
+            Header header = new Header(response.headers().name(i), response.headers().value(i));
+            headerList.add(header);
+        }
+
+        TypedInput responseBody = new TypedInputStream(response.body().contentType().type(), response.body().contentLength(),
+                response.body().byteStream());
+
+        Response resp = new Response(request.getUrl(), response.code(), response.message(), headerList, responseBody);
+        return resp;
+    }
+/*
+    @Override
+    protected HttpURLConnection openConnection(Request request) throws IOException {
+        return client.open(new URL(request.getUrl()));
+    }
+    */
 }
