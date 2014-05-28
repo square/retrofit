@@ -30,6 +30,11 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>com.squareup.okhttp</groupId>
+      <artifactId>okhttp-urlconnection</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-core</artifactId>
       <optional>true</optional>
