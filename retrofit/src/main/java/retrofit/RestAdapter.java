@@ -404,10 +404,10 @@ public class RestAdapter {
         log.log(header.toString());
       }
 
-      long bodySize = 0;
+      String bodySize = "no";
       TypedOutput body = request.getBody();
       if (body != null) {
-        bodySize = body.length();
+        bodySize = body.length() + "-byte";
 
         if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
           if (!request.getHeaders().isEmpty()) {
@@ -420,13 +420,12 @@ public class RestAdapter {
           }
 
           byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-          bodySize = bodyBytes.length;
           String bodyCharset = MimeUtil.parseCharset(body.mimeType());
           log.log(new String(bodyBytes, bodyCharset));
         }
       }
 
-      log.log(String.format("---> END %s (%s-byte body)", name, bodySize));
+      log.log(String.format("---> END %s (%s body)", name, bodySize));
     }
 
     return request;
