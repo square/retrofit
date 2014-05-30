@@ -24,7 +24,6 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import retrofit.Profiler.RequestInformation;
@@ -253,25 +252,25 @@ public class RestAdapter {
         throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
       }
 
+      if (methodInfo.isObservable) {
+        if (rxSupport == null) {
+          if (Platform.HAS_RX_JAVA) {
+            rxSupport = new RxSupport(httpExecutor, errorHandler, requestInterceptor);
+          } else {
+            throw new IllegalStateException("Observable method found but no RxJava on classpath.");
+          }
+        }
+        return rxSupport.createRequestObservable(new RxSupport.Invoker() {
+          @Override public ResponseWrapper invoke(RequestInterceptor requestInterceptor) {
+            return (ResponseWrapper) invokeRequest(requestInterceptor, methodInfo, args);
+          }
+        });
+      }
+
       // Apply the interceptor synchronously, recording the interception so we can replay it later.
       // This way we still defer argument serialization to the background thread.
       final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
       requestInterceptor.intercept(interceptorTape);
-
-      if (methodInfo.isObservable) {
-        if (rxSupport == null) {
-          if (Platform.HAS_RX_JAVA) {
-            rxSupport = new RxSupport(httpExecutor, errorHandler);
-          } else {
-            throw new IllegalStateException("Observable method found but no RxJava on classpath");
-          }
-        }
-        return rxSupport.createRequestObservable(new Callable<ResponseWrapper>() {
-          @Override public ResponseWrapper call() throws Exception {
-            return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
-          }
-        });
-      }
 
       Callback<?> callback = (Callback<?>) args[args.length - 1];
       httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor, errorHandler) {

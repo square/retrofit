@@ -4,7 +4,6 @@ import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
@@ -25,14 +24,21 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static retrofit.RequestInterceptor.RequestFacade;
+import static retrofit.RxSupport.Invoker;
 
 public class RxSupportTest {
 
   private Object response;
   private ResponseWrapper responseWrapper;
-  private Callable<ResponseWrapper> callable = spy(new Callable<ResponseWrapper>() {
-    @Override public ResponseWrapper call() throws Exception {
+  private Invoker invoker = spy(new Invoker() {
+    @Override public ResponseWrapper invoke(RequestInterceptor requestInterceptor) {
       return responseWrapper;
+    }
+  });
+  private RequestInterceptor requestInterceptor = spy(new RequestInterceptor() {
+    @Override public void intercept(RequestFacade request) {
     }
   });
 
@@ -51,18 +57,18 @@ public class RxSupportTest {
             ), response
     );
     executor = spy(new QueuedSynchronousExecutor());
-    rxSupport = new RxSupport(executor, ErrorHandler.DEFAULT);
+    rxSupport = new RxSupport(executor, ErrorHandler.DEFAULT, requestInterceptor);
   }
 
-  @Test public void testObservableCallsOnNextOnHttpExecutor() {
-    rxSupport.createRequestObservable(callable).subscribe(subscriber);
+  @Test public void observableCallsOnNextOnHttpExecutor() {
+    rxSupport.createRequestObservable(invoker).subscribe(subscriber);
     executor.executeNextInQueue();
     verify(subscriber, times(1)).onNext(response);
   }
 
-  @Test public void testObservableCallsOnNextOnHttpExecutorWithSubscriber() {
+  @Test public void observableCallsOnNextOnHttpExecutorWithSubscriber() {
     TestScheduler test = Schedulers.test();
-    rxSupport.createRequestObservable(callable).subscribeOn(test).subscribe(subscriber);
+    rxSupport.createRequestObservable(invoker).subscribeOn(test).subscribe(subscriber);
     // Subscription is handled via the Scheduler.
     test.triggerActions();
     // This will only execute up to the executor in OnSubscribe.
@@ -72,21 +78,21 @@ public class RxSupportTest {
     verify(subscriber, times(1)).onNext(response);
   }
 
-  @Test public void testObservableUnSubscribesDoesNotExecuteCallable() throws Exception {
-    Subscription subscription = rxSupport.createRequestObservable(callable).subscribe(subscriber);
+  @Test public void observableUnSubscribesDoesNotExecuteCallable() throws Exception {
+    Subscription subscription = rxSupport.createRequestObservable(invoker).subscribe(subscriber);
     verify(subscriber, never()).onNext(any());
 
     // UnSubscribe here should cancel the queued runnable.
     subscription.unsubscribe();
 
     executor.executeNextInQueue();
-    verify(callable, never()).call();
+    verify(invoker, never()).invoke(any(RequestInterceptor.class));
     verify(subscriber, never()).onNext(response);
   }
 
-  @Test public void testObservableCallsOperatorsOffHttpExecutor() {
+  @Test public void observableCallsOperatorsOffHttpExecutor() {
     TestScheduler test = Schedulers.test();
-    rxSupport.createRequestObservable(callable)
+    rxSupport.createRequestObservable(invoker)
             .delaySubscription(1000, TimeUnit.MILLISECONDS, test)
             .subscribe(subscriber);
 
@@ -97,13 +103,13 @@ public class RxSupportTest {
     verify(subscriber, times(1)).onNext(response);
   }
 
-  @Test public void testObservableDoesNotLockExecutor() {
+  @Test public void observableDoesNotLockExecutor() {
     TestScheduler test = Schedulers.test();
-    rxSupport.createRequestObservable(callable)
+    rxSupport.createRequestObservable(invoker)
             .delay(1000, TimeUnit.MILLISECONDS, test)
             .subscribe(subscriber);
 
-    rxSupport.createRequestObservable(callable)
+    rxSupport.createRequestObservable(invoker)
             .delay(2000, TimeUnit.MILLISECONDS, test)
             .subscribe(subscriber);
 
@@ -122,9 +128,9 @@ public class RxSupportTest {
     verify(subscriber, times(2)).onNext(response);
   }
 
-  @Test public void testObservableRespectsObserveOn() throws Exception {
+  @Test public void observableRespectsObserveOn() throws Exception {
     TestScheduler observe = Schedulers.test();
-    rxSupport.createRequestObservable(callable)
+    rxSupport.createRequestObservable(invoker)
             .observeOn(observe)
             .subscribe(subscriber);
 
@@ -133,11 +139,23 @@ public class RxSupportTest {
 
     // Should have no response yet, but callback should of been executed.
     verify(subscriber, never()).onNext(any());
-    verify(callable, times(1)).call();
+    verify(invoker, times(1)).invoke(any(RequestInterceptor.class));
 
     // Forward the Observable Scheduler
     observe.triggerActions();
     verify(subscriber, times(1)).onNext(response);
+  }
+
+  @Test public void observableCallsInterceptorForEverySubscription() throws Exception {
+    rxSupport.createRequestObservable(invoker).subscribe(subscriber);
+    rxSupport.createRequestObservable(invoker).subscribe(subscriber);
+
+    // The interceptor should have been called for each request upon subscription.
+    verify(requestInterceptor, times(2)).intercept(any(RequestFacade.class));
+
+    // Background execution of the requests should not touch the interceptor.
+    executor.executeAll();
+    verifyNoMoreInteractions(requestInterceptor);
   }
 
   /**
