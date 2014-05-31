@@ -188,7 +188,7 @@ public class RestAdapterTest {
     assertThat(logMessages).hasSize(7);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
+    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
     assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
@@ -258,7 +258,7 @@ public class RestAdapterTest {
     assertThat(logMessages).hasSize(7);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
+    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
     assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
@@ -297,7 +297,7 @@ public class RestAdapterTest {
     assertThat(logMessages).hasSize(9);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
+    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
     assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
@@ -387,7 +387,7 @@ public class RestAdapterTest {
     assertThat(logMessages).hasSize(9);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
+    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
     assertThat(logMessages.get(3)).matches("<--- HTTP 403 http://example.com/ \\([0-9]+ms\\)");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
@@ -427,7 +427,7 @@ public class RestAdapterTest {
     assertThat(logMessages).hasSize(7);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (0-byte body)");
+    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
     assertThat(logMessages.get(3)).matches("<--- HTTP 500 http://example.com/ \\([0-9]+ms\\)");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
