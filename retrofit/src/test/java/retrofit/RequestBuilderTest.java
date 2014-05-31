@@ -422,9 +422,7 @@ public class RequestBuilderTest {
         .setBody(Arrays.asList("quick", "brown", "fox")) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).containsExactly(
-        new Header("Content-Type", "application/json; charset=UTF-8"),
-        new Header("Content-Length", "23"));
+    assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
@@ -455,9 +453,7 @@ public class RequestBuilderTest {
         .addPathParam("kit", "kat") //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).containsExactly(
-        new Header("Content-Type", "application/json; charset=UTF-8"),
-        new Header("Content-Length", "23"));
+    assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
@@ -473,9 +469,7 @@ public class RequestBuilderTest {
         .addPart("kit", new TypedString("kat")) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).hasSize(2);
-    assertThat(request.getHeaders().get(0).getName()).isEqualTo("Content-Type");
-    assertThat(request.getHeaders().get(1)).isEqualTo(new Header("Content-Length", "414"));
+    assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
 
     MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
@@ -505,9 +499,7 @@ public class RequestBuilderTest {
         .addPartMap("params", params) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).hasSize(2);
-    assertThat(request.getHeaders().get(0).getName()).isEqualTo("Content-Type");
-    assertThat(request.getHeaders().get(1)).isEqualTo(new Header("Content-Length", "414"));
+    assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
 
     MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
@@ -534,9 +526,7 @@ public class RequestBuilderTest {
         .addPart("fizz", null) //
         .build();
     assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).hasSize(2);
-    assertThat(request.getHeaders().get(0).getName()).isEqualTo("Content-Type");
-    assertThat(request.getHeaders().get(1)).isEqualTo(new Header("Content-Length", "228"));
+    assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
 
     MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
@@ -761,9 +751,7 @@ public class RequestBuilderTest {
         .addHeaders("Content-Type: text/not-plain") //
         .setBody(new TypedString("Plain")) //
         .build();
-    assertThat(request.getHeaders()) //
-        .containsExactly(new Header("Content-Type", "text/not-plain"),
-            new Header("Content-Length", "5"));
+    assertThat(request.getBody().mimeType()).isEqualTo("text/not-plain");
   }
 
   @Test public void contentTypeParameterHeaderOverrides() throws Exception {
@@ -774,9 +762,7 @@ public class RequestBuilderTest {
         .addHeaderParam("Content-Type", "text/not-plain") //
         .setBody(new TypedString("Plain")) //
         .build();
-    assertThat(request.getHeaders()) //
-        .containsExactly(new Header("Content-Type", "text/not-plain"),
-            new Header("Content-Length", "5"));
+    assertThat(request.getBody().mimeType()).isEqualTo("text/not-plain");
   }
 
   private static void assertTypedBytes(TypedOutput bytes, String expected) throws IOException {

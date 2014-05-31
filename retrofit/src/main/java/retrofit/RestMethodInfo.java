@@ -99,7 +99,7 @@ final class RestMethodInfo {
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
-  boolean hasContentTypeHeader;
+  String contentTypeHeader;
 
   // Parameter-level details
   String[] requestParamNames;
@@ -235,9 +235,10 @@ final class RestMethodInfo {
       String headerName = header.substring(0, colon);
       String headerValue = header.substring(colon + 1).trim();
       if ("Content-Type".equalsIgnoreCase(headerName)) {
-        hasContentTypeHeader = true;
+        contentTypeHeader = headerValue;
+      } else {
+        headerList.add(new retrofit.client.Header(headerName, headerValue));
       }
-      headerList.add(new retrofit.client.Header(headerName, headerValue));
     }
     return headerList;
   }
@@ -379,10 +380,6 @@ final class RestMethodInfo {
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.HEADER;
-
-            if ("Content-Type".equalsIgnoreCase(name)) {
-              hasContentTypeHeader = true;
-            }
           } else if (annotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");

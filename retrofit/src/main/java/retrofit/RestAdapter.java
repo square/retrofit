@@ -407,7 +407,16 @@ public class RestAdapter {
       String bodySize = "no";
       TypedOutput body = request.getBody();
       if (body != null) {
-        bodySize = body.length() + "-byte";
+        String bodyMime = body.mimeType();
+        if (bodyMime != null) {
+          log.log("Content-Type: " + bodyMime);
+        }
+
+        long bodyLength = body.length();
+        bodySize = bodyLength + "-byte";
+        if (bodyLength != -1) {
+          log.log("Content-Length: " + bodyLength);
+        }
 
         if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
           if (!request.getHeaders().isEmpty()) {

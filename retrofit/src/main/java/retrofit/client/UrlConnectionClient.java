@@ -57,9 +57,11 @@ public class UrlConnectionClient implements Client {
     TypedOutput body = request.getBody();
     if (body != null) {
       connection.setDoOutput(true);
+      connection.addRequestProperty("Content-Type", body.mimeType());
       long length = body.length();
       if (length != -1) {
         connection.setFixedLengthStreamingMode((int) length);
+        connection.addRequestProperty("Content-Length", String.valueOf(length));
       } else {
         connection.setChunkedStreamingMode(CHUNK_SIZE);
       }
