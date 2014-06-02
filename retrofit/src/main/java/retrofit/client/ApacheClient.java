@@ -28,6 +28,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -71,6 +72,9 @@ public class ApacheClient implements Client {
   }
 
   static HttpUriRequest createRequest(Request request) {
+    if (request.getBody() != null) {
+      return new GenericEntityHttpRequest(request);
+    }
     return new GenericHttpRequest(request);
   }
 
@@ -100,10 +104,28 @@ public class ApacheClient implements Client {
     return new Response(url, status, reason, headers, body);
   }
 
-  private static class GenericHttpRequest extends HttpEntityEnclosingRequestBase {
+  private static class GenericHttpRequest extends HttpRequestBase {
     private final String method;
 
-    GenericHttpRequest(Request request) {
+    public GenericHttpRequest(Request request) {
+      method = request.getMethod();
+      setURI(URI.create(request.getUrl()));
+
+      // Add all headers.
+      for (Header header : request.getHeaders()) {
+        addHeader(new BasicHeader(header.getName(), header.getValue()));
+      }
+    }
+
+    @Override public String getMethod() {
+      return method;
+    }
+  }
+
+  private static class GenericEntityHttpRequest extends HttpEntityEnclosingRequestBase {
+    private final String method;
+
+    GenericEntityHttpRequest(Request request) {
       super();
       method = request.getMethod();
       setURI(URI.create(request.getUrl()));
@@ -113,11 +135,8 @@ public class ApacheClient implements Client {
         addHeader(new BasicHeader(header.getName(), header.getValue()));
       }
 
-      // Add the content body, if any.
-      TypedOutput body = request.getBody();
-      if (body != null) {
-        setEntity(new TypedOutputEntity(body));
-      }
+      // Add the content body.
+      setEntity(new TypedOutputEntity(request.getBody()));
     }
 
     @Override public String getMethod() {
@@ -131,6 +150,7 @@ public class ApacheClient implements Client {
 
     TypedOutputEntity(TypedOutput typedOutput) {
       this.typedOutput = typedOutput;
+      setContentType(typedOutput.mimeType());
     }
 
     @Override public boolean isRepeatable() {
