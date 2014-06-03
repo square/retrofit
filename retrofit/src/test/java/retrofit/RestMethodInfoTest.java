@@ -32,6 +32,7 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
+import retrofit.http.Raw;
 import retrofit.http.RestMethod;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
@@ -217,6 +218,70 @@ public class RestMethodInfoTest {
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
+  }
+
+  @Test public void rawResponse() {
+    class Example {
+      @GET("/foo") @Raw retrofit.client.Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.isRaw).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(retrofit.client.Response.class);
+  }
+
+  @Test public void rawResponseWithCallback() {
+    class Example {
+      @GET("/foo") @Raw void a(Callback<retrofit.client.Response> callback) {
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.isRaw).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(retrofit.client.Response.class);
+  }
+
+  @Test public void rawResponseNotAllowed() {
+    class Example {
+      @GET("/foo") @Raw String a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+              "Example.a: Only methods having Response as response data type are allowed to have @Raw annotation.");
+    }
+  }
+
+  @Test public void rawResponseWithCallbackNotAllowed() {
+    class Example {
+      @GET("/foo") @Raw void a(Callback<String> callback) {
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+              "Example.a: Only methods having Response as response data type are allowed to have @Raw annotation.");
+    }
   }
 
   @Test public void observableResponse() {
