@@ -57,9 +57,6 @@ final class RxSupport {
           subscriber.onCompleted();
         } catch (RetrofitError e) {
           subscriber.onError(errorHandler.handleError(e));
-        } catch (Exception e) {
-          // This is from the Callable.  It shouldn't actually throw.
-          throw new RuntimeException(e);
         }
       }
     };
