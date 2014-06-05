@@ -565,14 +565,4 @@ public class RestAdapterTest {
     verify(mockRequestExecutor, atLeastOnce()).execute(any(Runnable.class));
     verifyZeroInteractions(mockCallbackExecutor);
   }
-
-  @Test public void testEndpointFactories() {
-    Endpoint endpoint1 = Endpoints.newFixedEndpoint("http://example.com");
-    Endpoint endpoint2 = Endpoints.newFixedEndpoint("http://example.com", "exampleName");
-
-    assertThat(endpoint1.getUrl()).isEqualTo("http://example.com");
-    assertThat(endpoint2.getUrl()).isEqualTo("http://example.com");
-    assertThat(endpoint2.getName()).isEqualTo("exampleName");
-  }
-
 }
