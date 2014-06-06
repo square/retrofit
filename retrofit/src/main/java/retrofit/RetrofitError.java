@@ -84,6 +84,14 @@ public class RetrofitError extends RuntimeException {
   }
 
   /**
+   * The type declared by either the interface method return type or the generic type of the
+   * supplied {@link Callback} parameter.
+   */
+  public Type getSuccessType() {
+    return successType;
+  }
+
+  /**
    * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
    */
   public Object getBodyAs(Type type) {

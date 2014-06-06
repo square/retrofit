@@ -351,6 +351,9 @@ public class RestAdapter {
 
           TypedInput body = response.getBody();
           if (body == null) {
+            if (methodInfo.isSynchronous) {
+              return null;
+            }
             return new ResponseWrapper(response, null);
           }
 
