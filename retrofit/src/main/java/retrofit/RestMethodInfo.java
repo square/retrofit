@@ -43,7 +43,7 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.Raw;
+import retrofit.http.Streaming;
 import retrofit.http.RestMethod;
 import rx.Observable;
 
@@ -102,7 +102,7 @@ final class RestMethodInfo {
   String requestQuery;
   List<retrofit.client.Header> headers;
   String contentTypeHeader;
-  boolean isRaw;
+  boolean isStreaming;
 
   // Parameter-level details
   String[] requestParamNames;
@@ -181,13 +181,13 @@ final class RestMethodInfo {
           throw methodError("Only one encoding annotation is allowed.");
         }
         requestType = RequestType.FORM_URL_ENCODED;
-      } else if (annotationType == Raw.class) {
+      } else if (annotationType == Streaming.class) {
         if (responseObjectType != Response.class) {
           throw methodError(
-              "Only methods having %s as response data type are allowed to have @%s annotation.",
-              Response.class.getSimpleName(), Raw.class.getSimpleName());
+              "Only methods having %s as data type are allowed to have @%s annotation.",
+              Response.class.getSimpleName(), Streaming.class.getSimpleName());
         }
-        isRaw = true;
+        isStreaming = true;
       }
     }
 

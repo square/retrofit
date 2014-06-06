@@ -23,12 +23,11 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Treat the response body on methods returning {@link retrofit.client.Response} as is, i.e.
- * without converting {@link retrofit.client.Response#getBody()} to byte[].
+ * Treat the response body on methods returning {@link retrofit.client.Response Response} as is,
+ * i.e. without converting {@link retrofit.client.Response#getBody() getBody()} to {@code byte[]}.
  */
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface Raw {
-
+public @interface Streaming {
 }

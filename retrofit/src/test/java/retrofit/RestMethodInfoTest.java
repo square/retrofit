@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.EncodedPath;
@@ -32,8 +33,8 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.Raw;
 import retrofit.http.RestMethod;
+import retrofit.http.Streaming;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
 
@@ -220,9 +221,9 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
   }
 
-  @Test public void rawResponse() {
+  @Test public void streamingResponse() {
     class Example {
-      @GET("/foo") @Raw retrofit.client.Response a() {
+      @GET("/foo") @Streaming Response a() {
         return null;
       }
     }
@@ -231,13 +232,13 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.isRaw).isTrue();
-    assertThat(methodInfo.responseObjectType).isEqualTo(retrofit.client.Response.class);
+    assertThat(methodInfo.isStreaming).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
-  @Test public void rawResponseWithCallback() {
+  @Test public void streamingResponseWithCallback() {
     class Example {
-      @GET("/foo") @Raw void a(Callback<retrofit.client.Response> callback) {
+      @GET("/foo") @Streaming void a(Callback<Response> callback) {
       }
     }
 
@@ -245,13 +246,13 @@ public class RestMethodInfoTest {
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
-    assertThat(methodInfo.isRaw).isTrue();
-    assertThat(methodInfo.responseObjectType).isEqualTo(retrofit.client.Response.class);
+    assertThat(methodInfo.isStreaming).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
-  @Test public void rawResponseNotAllowed() {
+  @Test public void streamingResponseNotAllowed() {
     class Example {
-      @GET("/foo") @Raw String a() {
+      @GET("/foo") @Streaming String a() {
         return null;
       }
     }
@@ -263,13 +264,13 @@ public class RestMethodInfoTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-              "Example.a: Only methods having Response as response data type are allowed to have @Raw annotation.");
+          "Example.a: Only methods having Response as data type are allowed to have @Streaming annotation.");
     }
   }
 
-  @Test public void rawResponseWithCallbackNotAllowed() {
+  @Test public void streamingResponseWithCallbackNotAllowed() {
     class Example {
-      @GET("/foo") @Raw void a(Callback<String> callback) {
+      @GET("/foo") @Streaming void a(Callback<String> callback) {
       }
     }
 
@@ -280,7 +281,7 @@ public class RestMethodInfoTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-              "Example.a: Only methods having Response as response data type are allowed to have @Raw annotation.");
+          "Example.a: Only methods having Response as data type are allowed to have @Streaming annotation.");
     }
   }
 
@@ -1311,9 +1312,6 @@ public class RestMethodInfoTest {
       assertThat(e).hasMessage(
           "Example.a: URL query string \"bar={bar}\" must not have replace block.");
     }
-  }
-
-  private static class Response {
   }
 
   private static interface ResponseCallback extends Callback<Response> {
