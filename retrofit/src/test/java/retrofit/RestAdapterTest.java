@@ -24,6 +24,7 @@ import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.POST;
 import retrofit.http.Path;
+import retrofit.http.Streaming;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
@@ -80,6 +81,7 @@ public class RestAdapterTest {
     @GET("/") void something(Callback<Object> callback);
     @GET("/") Response direct();
     @GET("/") void direct(Callback<Response> callback);
+    @GET("/") @Streaming Response streaming();
     @POST("/") Observable<String> observable(@Body String body);
     @POST("/{x}/{y}") Observable<Response> observable(@Path("x") String x, @Path("y") String y);
   }
@@ -155,7 +157,8 @@ public class RestAdapterTest {
         .create(Example.class);
 
     when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
+        .thenReturn(
+            new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something();
     assertThat(logMessages).hasSize(2);
@@ -485,6 +488,29 @@ public class RestAdapterTest {
     when(mockClient.execute(any(Request.class))) //
         .thenReturn(response);
     assertThat(example.direct()).isSameAs(response);
+  }
+
+  @Test public void streamingResponse() throws Exception {
+    final InputStream is = new ByteArrayInputStream("Hey".getBytes("UTF-8"));
+    TypedInput in = new TypedInput() {
+      @Override public String mimeType() {
+        return "text/string";
+      }
+
+      @Override public long length() {
+        return 3;
+      }
+
+      @Override public InputStream in() throws IOException {
+        return is;
+      }
+    };
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, in));
+
+    Response response = example.streaming();
+    assertThat(response.getBody().in()).isSameAs(is);
   }
 
   @Test public void closeInputStream() throws IOException {

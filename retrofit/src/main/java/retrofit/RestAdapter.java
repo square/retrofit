@@ -338,8 +338,10 @@ public class RestAdapter {
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           // Caller requested the raw Response object directly.
           if (type.equals(Response.class)) {
-            // Read the entire stream and replace with one backed by a byte[]
-            response = Utils.readBodyToBytesIfNecessary(response);
+            if (!methodInfo.isStreaming) {
+              // Read the entire stream and replace with one backed by a byte[].
+              response = Utils.readBodyToBytesIfNecessary(response);
+            }
 
             if (methodInfo.isSynchronous) {
               return response;

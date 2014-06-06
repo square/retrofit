@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.EncodedPath;
@@ -33,6 +34,7 @@ import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 import retrofit.http.RestMethod;
+import retrofit.http.Streaming;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
 
@@ -217,6 +219,70 @@ public class RestMethodInfoTest {
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
+  }
+
+  @Test public void streamingResponse() {
+    class Example {
+      @GET("/foo") @Streaming Response a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.isStreaming).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
+  }
+
+  @Test public void streamingResponseWithCallback() {
+    class Example {
+      @GET("/foo") @Streaming void a(Callback<Response> callback) {
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    methodInfo.init();
+
+    assertThat(methodInfo.isStreaming).isTrue();
+    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
+  }
+
+  @Test public void streamingResponseNotAllowed() {
+    class Example {
+      @GET("/foo") @Streaming String a() {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Only methods having Response as data type are allowed to have @Streaming annotation.");
+    }
+  }
+
+  @Test public void streamingResponseWithCallbackNotAllowed() {
+    class Example {
+      @GET("/foo") @Streaming void a(Callback<String> callback) {
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Only methods having Response as data type are allowed to have @Streaming annotation.");
+    }
   }
 
   @Test public void observableResponse() {
@@ -1246,9 +1312,6 @@ public class RestMethodInfoTest {
       assertThat(e).hasMessage(
           "Example.a: URL query string \"bar={bar}\" must not have replace block.");
     }
-  }
-
-  private static class Response {
   }
 
   private static interface ResponseCallback extends Callback<Response> {

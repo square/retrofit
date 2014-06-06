@@ -20,7 +20,13 @@ import java.util.Collections;
 import java.util.List;
 import retrofit.mime.TypedInput;
 
-/** An HTTP response. */
+/**
+ * An HTTP response.
+ * <p>
+ * When used directly as a data type for an interface method, the response body is buffered to a
+ * {@code byte[]}. Annotate the method with {@link retrofit.http.Streaming @Streaming} for an
+ * unbuffered stream from the network.
+ */
 public final class Response {
   private final String url;
   private final int status;
