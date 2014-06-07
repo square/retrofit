@@ -5,7 +5,7 @@ Version 1.6.0 *(2014-06-06)*
 ----------------------------
 
  * New: `@Streaming` on a `Response` type will skip buffering the body to a `byte[]` before delivering.
- * When using OkHttp, verson 1.6.0 or newer (including 2.0.0+) is now required.
+ * When using OkHttp, version 1.6.0 or newer (including 2.0.0+) is now required.
  * The absence of a response body and an empty body are now differentiated in the log messages.
  * Fix: If set, the `RequestInterceptor` is now applied at the time of `Observable` subscription rather
    than at the time of its creation.
