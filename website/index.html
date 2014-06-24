@@ -234,7 +234,29 @@ RestAdapter restAdapter = new RestAdapter.Builder()
   &lt;artifactId>retrofit&lt;/artifactId>
   &lt;version><span class="version pln"><em>(insert latest version)</em></span>&lt;/version>
 &lt;/dependency></pre>
-
+            <h4>Gradle</h4>
+            <pre class="prettyprint">
+compile 'com.squareup.retrofit:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
+</pre>
+<h4>Integration with OkHttp</h4>
+            <p>When using Retrofit together with OkHttp, OkHttp (version 1.6.0 or newer) and OkHttp-UrlConnection are now required.</p>
+            <h4>Maven</h4>
+            <pre class="prettyprint">&lt;dependency>
+  &lt;groupId>com.squareup.okhttp&lt;/groupId>
+  &lt;artifactId>okhttp&lt;/artifactId>
+  &lt;version>2.0.0&lt;/version>
+&lt;/dependency>
+&lt;dependency>
+  &lt;groupId>com.squareup.okhttp&lt;/groupId>
+  &lt;artifactId>okhttp-urlconnection&lt;/artifactId>
+  &lt;version>2.0.0&lt;/version>
+&lt;/dependency>
+</pre>
+            <h4>Gradle</h4>
+<pre class="prettyprint">
+compile 'com.squareup.okhttp:okhttp-urlconnection:2.0.0'
+compile 'com.squareup.okhttp:okhttp:2.0.0'
+</pre>
             <h3 id="contributing">Contributing</h3>
             <p>If you would like to contribute code you can do so through GitHub by forking the repository and sending a pull request.</p>
             <p>When submitting code, please make every effort to follow existing conventions and style in order to keep the code as readable as possible. Please also make sure your code compiles by running <code>mvn clean verify</code>.</p>
