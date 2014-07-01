@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import retrofit.client.Header;
@@ -92,6 +93,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         break;
       default:
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
+    }
+    if(methodInfo.finalFields!=null)
+    {
+        Iterator<Map.Entry<String, String>> iterator = methodInfo.finalFields.entrySet().iterator();
+        while(iterator.hasNext())
+        {
+            Map.Entry<String, String> entry = iterator.next();
+            formBody.addField(entry.getKey(), entry.getValue());
+        }
     }
   }
 
