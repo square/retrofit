@@ -336,8 +336,13 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     TypedOutput body = this.body;
-    if (body != null && contentTypeHeader != null) {
-      body = new MimeOverridingTypedOutput(body, contentTypeHeader);
+    List<Header> headers = this.headers;
+    if (contentTypeHeader != null) {
+      if (body != null) {
+        body = new MimeOverridingTypedOutput(body, contentTypeHeader);
+      } else {
+        headers.add(new Header("Content-Type", contentTypeHeader));
+      }
     }
 
     return new Request(requestMethod, url.toString(), headers, body);

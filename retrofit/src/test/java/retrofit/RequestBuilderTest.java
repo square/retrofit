@@ -754,6 +754,16 @@ public class RequestBuilderTest {
     assertThat(request.getBody().mimeType()).isEqualTo("text/not-plain");
   }
 
+  @Test public void contentTypeAnnotationHeaderAddsHeaderWithNoBody() throws Exception {
+    Request request = new Helper() //
+        .setMethod("DELETE") //
+        .setUrl("http://example.com") //
+        .setPath("/") //
+        .addHeaders("Content-Type: text/not-plain") //
+        .build();
+    assertThat(request.getHeaders()).contains(new Header("Content-Type", "text/not-plain"));
+  }
+
   @Test public void contentTypeParameterHeaderOverrides() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
