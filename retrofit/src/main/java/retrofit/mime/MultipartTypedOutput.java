@@ -145,9 +145,8 @@ public final class MultipartTypedOutput implements TypedOutput {
       sb.append(boundary);
       if (last) {
         sb.append("--");
-      } else {
-        sb.append("\r\n");
       }
+      sb.append("\r\n");
       return sb.toString().getBytes("UTF-8");
     } catch (IOException ex) {
       throw new RuntimeException("Unable to write multipart boundary", ex);
