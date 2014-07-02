@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 1.6.1 *(2014-07-02)*
+----------------------------
+
+ * Fix: Add any explicitly-specified 'Content-Type' header (via annotation or param) to the request even
+   if there is no request body (e.g., DELETE).
+ * Fix: Include trailing CRLF in multi-part uploads to work around a bug in .NET MVC 4 parsing.
+ * Fix: Allow `null` mock exception bodies and use the success type from the declared service interface.
+
+
 Version 1.6.0 *(2014-06-06)*
 ----------------------------
 
