@@ -35,7 +35,6 @@ import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
-import retrofit.http.FinalField;
 import retrofit.http.FinalFields;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.Header;
