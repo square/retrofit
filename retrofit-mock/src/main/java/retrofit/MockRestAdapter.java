@@ -348,7 +348,8 @@ public final class MockRestAdapter {
           }
         }
 
-        throw new MockHttpRetrofitError(httpEx.reason, url, response, httpEx.responseBody);
+        throw new MockHttpRetrofitError(httpEx.reason, url, response, httpEx.responseBody,
+            methodInfo.responseObjectType);
       }
     }
 
@@ -420,7 +421,7 @@ public final class MockRestAdapter {
             }
 
             RetrofitError error = new MockHttpRetrofitError(httpEx.getMessage(), url, response,
-                httpEx.responseBody);
+                httpEx.responseBody, methodInfo.responseObjectType);
             Throwable cause = restAdapter.errorHandler.handleError(error);
             final RetrofitError e = cause == error ? error : unexpectedError(error.getUrl(), cause);
             callback.failure(e);
