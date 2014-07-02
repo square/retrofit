@@ -399,7 +399,7 @@ public class MockRestAdapterTest {
       assertThat(e.getResponse().getStatus()).isEqualTo(404);
       assertThat(e.getResponse().getReason()).isEqualTo("Not Found");
       assertThat(e.getBody()).isSameAs(expected);
-      assertThat(e.getSuccessType()).isEqualTo(String.class);
+      assertThat(e.getSuccessType()).isEqualTo(Object.class);
     }
   }
 
@@ -486,6 +486,47 @@ public class MockRestAdapterTest {
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
+    assertThat(error.getSuccessType()).isEqualTo(String.class);
+  }
+
+  @Test public void nullBodyIsAllowedOnHttpException() throws Exception {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockObservableExample implements ObservableExample {
+      @Override public Observable<String> doStuff() {
+        throw MockHttpException.newBadRequest(null);
+      }
+    }
+
+    ObservableExample mockService =
+        mockRestAdapter.create(ObservableExample.class, new MockObservableExample());
+
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    mockService.doStuff().subscribe(new Action1<Object>() {
+      @Override public void call(Object o) {
+        throw new AssertionError();
+      }
+    }, new Action1<Throwable>() {
+      @Override public void call(Throwable error) {
+        assertThat(error).isInstanceOf(RetrofitError.class);
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        errorRef.set((RetrofitError) error);
+      }
+    });
+
+    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verifyZeroInteractions(callbackExecutor);
+
+    RetrofitError error = errorRef.get();
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+    assertThat(error.isNetworkError()).isFalse();
+    assertThat(error.getResponse().getStatus()).isEqualTo(400);
+    assertThat(error.getResponse().getReason()).isEqualTo("Bad Request");
+    assertThat(error.getBody()).isNull();
     assertThat(error.getSuccessType()).isEqualTo(String.class);
   }
 
