@@ -16,7 +16,7 @@ public class MultipartTypedOutputTest {
         + "Content-Transfer-Encoding: binary\r\n" //
         + "\r\n" //
         + "Hello, World!\r\n" //
-        + "--123--";
+        + "--123--\r\n";
 
     MultipartTypedOutput mto = new MultipartTypedOutput("123");
     mto.addPart("greet", new TypedString("Hello, World!"));
@@ -51,7 +51,7 @@ public class MultipartTypedOutputTest {
         + "Content-Transfer-Encoding: binary\r\n"
         + "\r\n"
         + "dog\r\n"
-        + "--123--";
+        + "--123--\r\n";
 
     MultipartTypedOutput mto = new MultipartTypedOutput("123");
     mto.addPart("quick", new TypedString("brown"));
