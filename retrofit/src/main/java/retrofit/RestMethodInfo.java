@@ -21,6 +21,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
+import retrofit.http.FinalFields;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.Header;
 import retrofit.http.Headers;
@@ -73,7 +75,8 @@ final class RestMethodInfo {
     PART,
     PART_MAP,
     BODY,
-    HEADER
+    HEADER,
+    FINAL_FIELD
   }
 
   enum RequestType {
@@ -101,6 +104,7 @@ final class RestMethodInfo {
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
+  Map<String, String> finalFields;
   String contentTypeHeader;
   boolean isStreaming;
 
@@ -188,6 +192,16 @@ final class RestMethodInfo {
               Response.class.getSimpleName(), Streaming.class.getSimpleName());
         }
         isStreaming = true;
+      } else if (annotationType == FinalFields.class) {
+        FinalFields finalField = ((FinalFields) methodAnnotation);
+        if (finalFields == null)
+          finalFields = new HashMap<String, String>();
+        String[] names = finalField.names();
+        String[] values = finalField.values();
+        if (names.length != values.length)
+          throw methodError("Final fields annotation should have exactly same names and values");
+        for (int i = 0; i < names.length; i++)
+          finalFields.put(names[i], values[i]);
       }
     }
 
@@ -454,7 +468,7 @@ final class RestMethodInfo {
     if (requestType == RequestType.SIMPLE && !requestHasBody && gotBody) {
       throw methodError("Non-body HTTP method cannot contain @Body or @TypedOutput.");
     }
-    if (requestType == RequestType.FORM_URL_ENCODED && !gotField) {
+    if (requestType == RequestType.FORM_URL_ENCODED && !gotField && finalFields == null) {
       throw methodError("Form-encoded method must contain at least one @Field.");
     }
     if (requestType == RequestType.MULTIPART && !gotPart) {
