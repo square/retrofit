@@ -94,11 +94,9 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       default:
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
     }
-    if(methodInfo.finalFields!=null)
-    {
+    if (methodInfo.finalFields != null) {
         Iterator<Map.Entry<String, String>> iterator = methodInfo.finalFields.entrySet().iterator();
-        while(iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             Map.Entry<String, String> entry = iterator.next();
             formBody.addField(entry.getKey(), entry.getValue());
         }

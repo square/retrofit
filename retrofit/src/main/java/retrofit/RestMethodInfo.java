@@ -104,7 +104,7 @@ final class RestMethodInfo {
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
-  Map<String,String> finalFields;
+  Map<String, String> finalFields;
   String contentTypeHeader;
   boolean isStreaming;
 
@@ -193,16 +193,15 @@ final class RestMethodInfo {
         }
         isStreaming = true;
       } else if (annotationType == FinalFields.class) {
-          FinalFields finalField = ((FinalFields) methodAnnotation);
-          if(finalFields == null)
-              finalFields = new HashMap<String, String>();
-          String[] names=finalField.names();
-          String[] values=finalField.values();
-          if(names.length!=values.length)
-          throw methodError(
-                  "Final fields annotation should have exactly same names and values");
-          for(int i=0;i<names.length;i++)
-              finalFields.put(names[i],values[i]);
+        FinalFields finalField = ((FinalFields) methodAnnotation);
+        if (finalFields == null)
+          finalFields = new HashMap<String, String>();
+        String[] names = finalField.names();
+        String[] values = finalField.values();
+        if (names.length != values.length)
+          throw methodError("Final fields annotation should have exactly same names and values");
+        for (int i = 0; i < names.length; i++)
+          finalFields.put(names[i], values[i]);
       }
     }
 
