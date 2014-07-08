@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import retrofit.client.Header;
@@ -341,7 +342,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       if (body != null) {
         body = new MimeOverridingTypedOutput(body, contentTypeHeader);
       } else {
-        headers.add(new Header("Content-Type", contentTypeHeader));
+        Header header = new Header("Content-Type", contentTypeHeader);
+        if (headers == null) {
+          headers = Arrays.asList(header);
+        } else {
+          headers.add(header);
+        }
       }
     }
 

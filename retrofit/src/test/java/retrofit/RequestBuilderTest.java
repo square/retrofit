@@ -764,6 +764,16 @@ public class RequestBuilderTest {
     assertThat(request.getHeaders()).contains(new Header("Content-Type", "text/not-plain"));
   }
 
+  @Test public void contentTypeInterceptorHeaderAddsHeaderWithNoBody() throws Exception {
+    Request request = new Helper() //
+        .setMethod("DELETE") //
+        .setUrl("http://example.com") //
+        .setPath("/") //
+        .addInterceptorHeader("Content-Type", "text/not-plain") //
+        .build();
+    assertThat(request.getHeaders()).contains(new Header("Content-Type", "text/not-plain"));
+  }
+
   @Test public void contentTypeParameterHeaderOverrides() throws Exception {
     Request request = new Helper() //
         .setMethod("POST") //
@@ -957,7 +967,8 @@ public class RequestBuilderTest {
       methodInfo.requestQuery = query;
       methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
       methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
-      methodInfo.headers = methodInfo.parseHeaders(headers.toArray(new String[headers.size()]));
+      methodInfo.headers = headers.isEmpty() ? null
+          : methodInfo.parseHeaders(headers.toArray(new String[headers.size()]));
       methodInfo.loaded = true;
 
       RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, GSON);
