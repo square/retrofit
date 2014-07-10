@@ -19,5 +19,6 @@
     <module>jackson</module>
     <module>wire</module>
     <module>simplexml</module>
+    <module>multipartresponse</module>
   </modules>
 </project>
