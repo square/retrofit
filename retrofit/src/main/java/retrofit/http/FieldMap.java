@@ -36,6 +36,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  * Calling with {@code foo.things(ImmutableMap.of("foo", "bar", "kit", "kat")} yields a request
  * body of {@code foo=bar&kit=kat}.
+ * <p>
+ * Iterable example:
+ * <pre>
+ * &#64;FormUrlEncoded
+ * &#64;POST("/things")
+ * void things(@FieldMap Map&lt;String, Iterable&lt;String&gt;&gt; fields);
+ * </pre>
+ * Calling with {@code foo.things(ImmutableMap.of("foo", ImmutableSet.of("bar", "baz")))} yields
+ * a request body of {@code foo=bar&foo=baz}.
  *
  * @see FormUrlEncoded
  * @see Field

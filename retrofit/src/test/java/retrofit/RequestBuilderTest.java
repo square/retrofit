@@ -369,6 +369,24 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void getWithQueryParamsMap() throws Exception {
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("k1", Arrays.asList(1, 2, null, "3"));
+    params.put("k2", new Object[] {1, 2, null, "3"});
+    params.put("k3", new int[] {1, 2});
+
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/") //
+        .addQueryMapParams("options", params) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/?k1=1&k1=2&k1=3&k2=1&k2=2&k2=3&k3=1&k3=2");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void getWithEncodedQueryParamMap() throws Exception {
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("kit", "k%20t");
