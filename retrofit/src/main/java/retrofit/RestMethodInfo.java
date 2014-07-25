@@ -383,10 +383,6 @@ final class RestMethodInfo {
             paramUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
-            if (parameterType != String.class) {
-              throw parameterError(i, "@Header parameter type must be String. Found: %s.",
-                  parameterType.getSimpleName());
-            }
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.HEADER;
