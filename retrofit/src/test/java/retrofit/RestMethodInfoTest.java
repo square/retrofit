@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -1219,23 +1220,19 @@ public class RestMethodInfoTest {
     assertThat(methodInfo.requestParamUsage).containsExactly(HEADER, HEADER);
   }
 
-  @Test public void headerParamMustBeString() {
+  @Test public void headerConvertedToString() {
     class Example {
-      @GET("/")
-      Response a(@Header("a") TypedOutput a, @Header("b") int b) {
+      @GET("/") Response a(@Header("first") BigInteger bi) {
         return null;
       }
     }
 
     Method method = TestingUtils.getMethod(Example.class, "a");
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    try {
-      methodInfo.init();
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.a: @Header parameter type must be String. Found: TypedOutput. (parameter #1)");
-    }
+    methodInfo.init();
+
+    assertThat(methodInfo.requestParamNames).containsExactly("first");
+    assertThat(methodInfo.requestParamUsage).containsExactly(HEADER);
   }
 
   @Test public void onlyOneEncodingIsAllowedMultipartFirst() {
