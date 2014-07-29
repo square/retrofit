@@ -287,7 +287,7 @@ public final class MockRestAdapter {
       Request request = requestBuilder.build();
 
       if (restAdapter.logLevel.log()) {
-        request = restAdapter.logAndReplaceRequest("MOCK", request);
+        request = restAdapter.logAndReplaceRequest("MOCK", request, args);
       }
 
       return request;

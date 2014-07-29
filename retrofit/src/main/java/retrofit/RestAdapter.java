@@ -130,6 +130,8 @@ public class RestAdapter {
     BASIC,
     /** Log the basic information along with request and response headers. */
     HEADERS,
+    /** Log the basic information along with request and response objects via toString(). */
+    HEADERS_AND_ARGS,
     /**
      * Log the headers, body, and metadata for both requests and responses.
      * <p>
@@ -309,7 +311,7 @@ public class RestAdapter {
 
         if (logLevel.log()) {
           // Log the request data.
-          request = logAndReplaceRequest("HTTP", request);
+          request = logAndReplaceRequest("HTTP", request, args);
         }
 
         Object profilerObject = null;
@@ -360,6 +362,7 @@ public class RestAdapter {
           ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
           try {
             Object convert = converter.fromBody(wrapped, type);
+            logResponseBody(body, convert);
             if (methodInfo.isSynchronous) {
               return convert;
             }
@@ -401,7 +404,7 @@ public class RestAdapter {
   }
 
   /** Log request headers and body. Consumes request body and returns identical replacement. */
-  Request logAndReplaceRequest(String name, Request request) throws IOException {
+  Request logAndReplaceRequest(String name, Request request, Object[] args) throws IOException {
     log.log(String.format("---> %s %s %s", name, request.getMethod(), request.getUrl()));
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
@@ -436,6 +439,13 @@ public class RestAdapter {
           byte[] bodyBytes = ((TypedByteArray) body).getBytes();
           String bodyCharset = MimeUtil.parseCharset(body.mimeType());
           log.log(new String(bodyBytes, bodyCharset));
+        } else if (logLevel.ordinal() >= LogLevel.HEADERS_AND_ARGS.ordinal()) {
+          if (!request.getHeaders().isEmpty()) {
+            log.log("---> REQUEST:");
+          }
+          for (int i = 0; i < args.length; i++) {
+            log.log("#" + i + ": " + args[i].toString());
+          }
         }
       }
 
@@ -483,6 +493,13 @@ public class RestAdapter {
     }
 
     return response;
+  }
+
+  private void logResponseBody(TypedInput body, Object convert) {
+    if (logLevel.ordinal() == LogLevel.HEADERS_AND_ARGS.ordinal()) {
+      log.log("<--- BODY:");
+      log.log(convert.toString());
+    }
   }
 
   /** Log an exception that occurred during the processing of a request or response. */

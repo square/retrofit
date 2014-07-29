@@ -87,4 +87,8 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     result = 31 * result + Arrays.hashCode(bytes);
     return result;
   }
+
+  public String toString() {
+    return "TypedByteArray[length=" + length() + "]";
+  }
 }

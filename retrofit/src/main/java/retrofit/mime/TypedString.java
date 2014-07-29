@@ -18,6 +18,7 @@ package retrofit.mime;
 import java.io.UnsupportedEncodingException;
 
 public class TypedString extends TypedByteArray {
+
   public TypedString(String string) {
     super("text/plain; charset=UTF-8", convertToBytes(string));
   }
@@ -27,6 +28,14 @@ public class TypedString extends TypedByteArray {
       return string.getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  public String toString() {
+    try {
+      return "TypedString[" + new String(getBytes(), "UTF-8") + "]";
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError("Must be able to decode UTF-8");
     }
   }
 }
