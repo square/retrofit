@@ -31,7 +31,7 @@ public class TypedString extends TypedByteArray {
     }
   }
 
-  public String toString() {
+  @Override public String toString() {
     try {
       return "TypedString[" + new String(getBytes(), "UTF-8") + "]";
     } catch (UnsupportedEncodingException e) {

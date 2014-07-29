@@ -88,7 +88,7 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     return result;
   }
 
-  public String toString() {
+  @Override public String toString() {
     return "TypedByteArray[length=" + length() + "]";
   }
 }

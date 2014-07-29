@@ -140,7 +140,7 @@ public class RestAdapterTest {
   @Test public void logRequestResponseBasic() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -167,7 +167,7 @@ public class RestAdapterTest {
   @Test public void logRequestResponseHeaders() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -199,7 +199,7 @@ public class RestAdapterTest {
   @Test public void logRequestResponseHeadersAndArgs() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -233,7 +233,7 @@ public class RestAdapterTest {
   @Test public void logSuccessfulRequestResponseFullWhenResponseBodyPresent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -271,7 +271,7 @@ public class RestAdapterTest {
   @Test public void logSuccessfulRequestResponseHeadersAndArgsWhenResponseBodyPresent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -310,7 +310,7 @@ public class RestAdapterTest {
   @Test public void logSuccessfulRequestResponseFullWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -342,7 +342,7 @@ public class RestAdapterTest {
   @Test public void logSuccessfulRequestResponseHeadersAndArgsWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -385,7 +385,7 @@ public class RestAdapterTest {
   @Test public void logSuccessfulRequestResponseFullWhenMimeTypeMissing() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -468,7 +468,7 @@ public class RestAdapterTest {
   @Test public void logErrorRequestResponseFullWhenMimeTypeMissing() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
@@ -510,7 +510,7 @@ public class RestAdapterTest {
   @Test public void logErrorRequestResponseFullWhenResponseBodyAbsent() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
-      public void log(String message) {
+      @Override public void log(String message) {
         logMessages.add(message);
       }
     };
