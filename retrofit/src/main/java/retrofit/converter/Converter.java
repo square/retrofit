@@ -39,7 +39,7 @@ public interface Converter {
   Object fromBody(TypedInput body, Type type) throws ConversionException;
 
   /**
-   * Convert and object to an appropriate representation for HTTP transport.
+   * Convert an object to an appropriate representation for HTTP transport.
    *
    * @param object Object instance to convert.
    * @return Representation of the specified object as bytes.
