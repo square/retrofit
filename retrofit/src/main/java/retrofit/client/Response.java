@@ -20,7 +20,13 @@ import java.util.Collections;
 import java.util.List;
 import retrofit.mime.TypedInput;
 
-/** An HTTP response. */
+/**
+ * An HTTP response.
+ * <p>
+ * When used directly as a data type for an interface method, the response body is buffered to a
+ * {@code byte[]}. Annotate the method with {@link retrofit.http.Streaming @Streaming} for an
+ * unbuffered stream from the network.
+ */
 public final class Response {
   private final String url;
   private final int status;
@@ -43,29 +49,6 @@ public final class Response {
     }
 
     this.url = url;
-    this.status = status;
-    this.reason = reason;
-    this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
-    this.body = body;
-  }
-
-  /**
-   * @deprecated Use {@link #Response(String, int, String, java.util.List, TypedInput)}. This class
-   * will be removed in version 1.5.
-   */
-  @Deprecated
-  public Response(int status, String reason, List<Header> headers, TypedInput body) {
-    if (status < 200) {
-      throw new IllegalArgumentException("Invalid status code: " + status);
-    }
-    if (reason == null) {
-      throw new IllegalArgumentException("reason == null");
-    }
-    if (headers == null) {
-      throw new IllegalArgumentException("headers == null");
-    }
-
-    this.url = null;
     this.status = status;
     this.reason = reason;
     this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));

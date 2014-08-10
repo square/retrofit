@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
@@ -39,9 +40,11 @@ import retrofit.http.Headers;
 import retrofit.http.JsonRpcMethod;
 import retrofit.http.Multipart;
 import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
+import retrofit.http.Streaming;
 import retrofit.http.RestMethod;
 import retrofit.http.RpcParam;
 import rx.Observable;
@@ -70,6 +73,7 @@ final class RestMethodInfo {
     FIELD,
     FIELD_MAP,
     PART,
+    PART_MAP,
     BODY,
     HEADER,
     RPC_PARAM,
@@ -102,7 +106,8 @@ final class RestMethodInfo {
   Set<String> requestUrlParamNames;
   String requestQuery;
   List<retrofit.client.Header> headers;
-  boolean hasContentTypeHeader;
+  String contentTypeHeader;
+  boolean isStreaming;
 
   // Parameter-level details
   String[] requestParamNames;
@@ -190,6 +195,13 @@ final class RestMethodInfo {
           throw methodError("Only one encoding annotation is allowed.");
         }
         requestType = RequestType.FORM_URL_ENCODED;
+      } else if (annotationType == Streaming.class) {
+        if (responseObjectType != Response.class) {
+          throw methodError(
+              "Only methods having %s as data type are allowed to have @%s annotation.",
+              Response.class.getSimpleName(), Streaming.class.getSimpleName());
+        }
+        isStreaming = true;
       }
     }
 
@@ -247,9 +259,10 @@ final class RestMethodInfo {
       String headerName = header.substring(0, colon);
       String headerValue = header.substring(colon + 1).trim();
       if ("Content-Type".equalsIgnoreCase(headerName)) {
-        hasContentTypeHeader = true;
+        contentTypeHeader = headerValue;
+      } else {
+        headerList.add(new retrofit.client.Header(headerName, headerValue));
       }
-      headerList.add(new retrofit.client.Header(headerName, headerValue));
     }
     return headerList;
   }
@@ -384,17 +397,9 @@ final class RestMethodInfo {
             paramUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
           } else if (annotationType == Header.class) {
             String name = ((Header) parameterAnnotation).value();
-            if (parameterType != String.class) {
-              throw parameterError(i, "@Header parameter type must be String. Found: %s.",
-                  parameterType.getSimpleName());
-            }
 
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.HEADER;
-
-            if ("Content-Type".equalsIgnoreCase(name)) {
-              hasContentTypeHeader = true;
-            }
           } else if (annotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
@@ -425,6 +430,17 @@ final class RestMethodInfo {
             gotPart = true;
             paramNames[i] = name;
             paramUsage[i] = ParamUsage.PART;
+          } else if (annotationType == PartMap.class) {
+            if (requestType != RequestType.MULTIPART) {
+              throw parameterError(i,
+                  "@PartMap parameters can only be used with multipart encoding.");
+            }
+            if (!Map.class.isAssignableFrom(parameterType)) {
+              throw parameterError(i, "@PartMap parameter type must be Map.");
+            }
+
+            gotPart = true;
+            paramUsage[i] = ParamUsage.PART_MAP;
           } else if (annotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
               throw parameterError(i,

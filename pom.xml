@@ -25,7 +25,7 @@
 
   <groupId>com.squareup.retrofit</groupId>
   <artifactId>parent</artifactId>
-  <version>1.5.1-SNAPSHOT</version>
+  <version>1.6.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Retrofit (Parent)</name>
@@ -50,21 +50,21 @@
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
     <gson.version>2.2.4</gson.version>
-    <okhttp.version>1.3.0</okhttp.version>
-    <rxjava.version>0.17.1</rxjava.version>
-    <appengine.version>1.8.9</appengine.version>
+    <okhttp.version>2.0.0</okhttp.version>
+    <rxjava.version>0.19.2</rxjava.version>
+    <appengine.version>1.9.6</appengine.version>
 
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
-    <jackson.version>2.3.1</jackson.version>
-    <wire.version>1.2.0</wire.version>
+    <jackson.version>2.4.1</jackson.version>
+    <wire.version>1.5.1</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
 
     <!-- Test Dependencies -->
-    <junit.version>4.10</junit.version>
-    <assertj.version>1.5.0</assertj.version>
+    <junit.version>4.11</junit.version>
+    <assertj.version>1.6.1</assertj.version>
     <mockito.version>1.9.5</mockito.version>
-    <guava.version>16.0</guava.version>
+    <guava.version>17.0</guava.version>
   </properties>
 
   <scm>
@@ -101,6 +101,11 @@
       <dependency>
         <groupId>com.squareup.okhttp</groupId>
         <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp</groupId>
+        <artifactId>okhttp-urlconnection</artifactId>
         <version>${okhttp.version}</version>
       </dependency>
       <dependency>
@@ -159,6 +164,11 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>${okhttp.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

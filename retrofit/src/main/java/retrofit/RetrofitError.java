@@ -24,21 +24,23 @@ import retrofit.mime.TypedInput;
 
 public class RetrofitError extends RuntimeException {
   public static RetrofitError networkError(String url, IOException exception) {
-    return new RetrofitError(url, null, null, null, true, exception);
+    return new RetrofitError(exception.getMessage(), url, null, null, null, true, exception);
   }
 
   public static RetrofitError conversionError(String url, Response response, Converter converter,
       Type successType, ConversionException exception) {
-    return new RetrofitError(url, response, converter, successType, false, exception);
+    return new RetrofitError(exception.getMessage(), url, response, converter, successType, false,
+        exception);
   }
 
   public static RetrofitError httpError(String url, Response response, Converter converter,
       Type successType) {
-    return new RetrofitError(url, response, converter, successType, false, null);
+    String message = response.getStatus() + " " + response.getReason();
+    return new RetrofitError(message, url, response, converter, successType, false, null);
   }
 
   public static RetrofitError unexpectedError(String url, Throwable exception) {
-    return new RetrofitError(url, null, null, null, false, exception);
+    return new RetrofitError(exception.getMessage(), url, null, null, null, false, exception);
   }
 
   private final String url;
@@ -47,9 +49,9 @@ public class RetrofitError extends RuntimeException {
   private final Type successType;
   private final boolean networkError;
 
-  RetrofitError(String url, Response response, Converter converter, Type successType,
-      boolean networkError, Throwable exception) {
-    super(exception);
+  RetrofitError(String message, String url, Response response, Converter converter,
+      Type successType, boolean networkError, Throwable exception) {
+    super(message, exception);
     this.url = url;
     this.response = response;
     this.converter = converter;
@@ -74,22 +76,28 @@ public class RetrofitError extends RuntimeException {
 
   /**
    * HTTP response body converted to the type declared by either the interface method return type or
-   * the generic type of the supplied {@link Callback} parameter.
+   * the generic type of the supplied {@link Callback} parameter. {@code null} if there is no
+   * response.
    */
   public Object getBody() {
-    TypedInput body = response.getBody();
-    if (body == null) {
-      return null;
-    }
-    try {
-      return converter.fromBody(body, successType);
-    } catch (ConversionException e) {
-      throw new RuntimeException(e);
-    }
+    return getBodyAs(successType);
   }
 
-  /** HTTP response body converted to specified {@code type}. */
+  /**
+   * The type declared by either the interface method return type or the generic type of the
+   * supplied {@link Callback} parameter.
+   */
+  public Type getSuccessType() {
+    return successType;
+  }
+
+  /**
+   * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
+   */
   public Object getBodyAs(Type type) {
+    if (response == null) {
+      return null;
+    }
     TypedInput body = response.getBody();
     if (body == null) {
       return null;

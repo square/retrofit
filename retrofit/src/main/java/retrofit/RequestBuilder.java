@@ -15,11 +15,15 @@
  */
 package retrofit;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+
 import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import retrofit.client.Header;
@@ -54,7 +58,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private String relativeUrl;
   private StringBuilder queryParams;
   private List<Header> headers;
-  private boolean hasContentTypeHeader;
+  private String contentTypeHeader;
 
   RequestBuilder(String apiUrl, RestMethodInfo methodInfo, Converter converter) {
     this.apiUrl = apiUrl;
@@ -70,7 +74,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     if (methodInfo.headers != null) {
       headers = new ArrayList<Header>(methodInfo.headers);
     }
-    hasContentTypeHeader = methodInfo.hasContentTypeHeader;
+    contentTypeHeader = methodInfo.contentTypeHeader;
 
     relativeUrl = methodInfo.requestUrl;
     methodName = methodInfo.requestUrl;
@@ -111,15 +115,16 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     if (name == null) {
       throw new IllegalArgumentException("Header name must not be null.");
     }
+    if ("Content-Type".equalsIgnoreCase(name)) {
+      contentTypeHeader = value;
+      return;
+    }
+
     List<Header> headers = this.headers;
     if (headers == null) {
       this.headers = headers = new ArrayList<Header>(2);
     }
     headers.add(new Header(name, value));
-
-    if ("Content-Type".equalsIgnoreCase(name)) {
-      hasContentTypeHeader = true;
-    }
   }
 
   @Override public void addPathParam(String name, String value) {
@@ -296,6 +301,23 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             }
           }
           break;
+        case PART_MAP:
+          if (value != null) { // Skip null values.
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+              String entryName = entry.getKey().toString();
+              Object entryValue = entry.getValue();
+              if (entryValue != null) { // Skip null values.
+                if (entryValue instanceof TypedOutput) {
+                  multipartBody.addPart(entryName, (TypedOutput) entryValue);
+                } else if (entryValue instanceof String) {
+                  multipartBody.addPart(entryName, new TypedString((String) entryValue));
+                } else {
+                  multipartBody.addPart(entryName, converter.toBody(entryValue));
+                }
+              }
+            }
+          }
+          break;
         case BODY:
           if (value == null) {
             throw new IllegalArgumentException("Body parameter value must not be null.");
@@ -344,19 +366,46 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     TypedOutput body = this.body;
-    if (body != null) {
-      // Only add Content-Type header from the body if one is not already set.
-      if (!hasContentTypeHeader) {
-        addHeader("Content-Type", body.mimeType());
-      }
-
-      // Only add Content-Length header from the body if it is known.
-      long length = body.length();
-      if (length != -1) {
-        addHeader("Content-Length", String.valueOf(length));
+    List<Header> headers = this.headers;
+    if (contentTypeHeader != null) {
+      if (body != null) {
+        body = new MimeOverridingTypedOutput(body, contentTypeHeader);
+      } else {
+        Header header = new Header("Content-Type", contentTypeHeader);
+        if (headers == null) {
+          headers = Arrays.asList(header);
+        } else {
+          headers.add(header);
+        }
       }
     }
 
     return new Request(requestMethod, url.toString(), headers, body);
+  }
+
+  private static class MimeOverridingTypedOutput implements TypedOutput {
+    private final TypedOutput delegate;
+    private final String mimeType;
+
+    MimeOverridingTypedOutput(TypedOutput delegate, String mimeType) {
+      this.delegate = delegate;
+      this.mimeType = mimeType;
+    }
+
+    @Override public String fileName() {
+      return delegate.fileName();
+    }
+
+    @Override public String mimeType() {
+      return mimeType;
+    }
+
+    @Override public long length() {
+      return delegate.length();
+    }
+
+    @Override public void writeTo(OutputStream out) throws IOException {
+      delegate.writeTo(out);
+    }
   }
 }

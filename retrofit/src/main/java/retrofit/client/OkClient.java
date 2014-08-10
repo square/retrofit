@@ -16,6 +16,7 @@
 package retrofit.client;
 
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.OkUrlFactory;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -30,17 +31,17 @@ public class OkClient extends UrlConnectionClient {
     return client;
   }
 
-  private final OkHttpClient client;
+  private final OkUrlFactory okUrlFactory;
 
   public OkClient() {
     this(generateDefaultOkHttp());
   }
 
   public OkClient(OkHttpClient client) {
-    this.client = client;
+    this.okUrlFactory = new OkUrlFactory(client);
   }
 
   @Override protected HttpURLConnection openConnection(Request request) throws IOException {
-    return client.open(new URL(request.getUrl()));
+    return okUrlFactory.open(new URL(request.getUrl()));
   }
 }

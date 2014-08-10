@@ -37,11 +37,17 @@ public class MockRestAdapterTest {
   }
 
   interface AsyncExample {
-    @GET("/") void doStuff(Callback<Object> cb);
+    @GET("/") void doStuff(Callback<String> cb);
+  }
+
+  interface AsyncCallbackSubtypeExample {
+    abstract class Foo implements Callback<String> {}
+
+    @GET("/") void doStuff(Foo foo);
   }
 
   interface ObservableExample {
-    @GET("/") Observable<Object> doStuff();
+    @GET("/") Observable<String> doStuff();
   }
 
   private Executor httpExecutor;
@@ -236,7 +242,7 @@ public class MockRestAdapterTest {
     mockRestAdapter.setErrorPercentage(100);
 
     class MockAsyncExample implements AsyncExample {
-      @Override public void doStuff(Callback<Object> cb) {
+      @Override public void doStuff(Callback<String> cb) {
         throw new AssertionError();
       }
     }
@@ -244,8 +250,8 @@ public class MockRestAdapterTest {
     AsyncExample mockService = mockRestAdapter.create(AsyncExample.class, new MockAsyncExample());
 
     final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
-    mockService.doStuff(new Callback<Object>() {
-      @Override public void success(Object o, Response response) {
+    mockService.doStuff(new Callback<String>() {
+      @Override public void success(String o, Response response) {
         throw new AssertionError();
       }
 
@@ -292,9 +298,11 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    @SuppressWarnings("RedundantStringConstructorCall") // Allocated on-heap.
+    final String expected = new String("Hi");
+
     class MockAsyncExample implements AsyncExample {
-      @Override public void doStuff(Callback<Object> cb) {
+      @Override public void doStuff(Callback<String> cb) {
         cb.success(expected, null);
       }
     }
@@ -304,8 +312,8 @@ public class MockRestAdapterTest {
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
     final AtomicReference<Object> actual = new AtomicReference<Object>();
-    mockService.doStuff(new Callback<Object>() {
-      @Override public void success(Object result, Response response) {
+    mockService.doStuff(new Callback<String>() {
+      @Override public void success(String result, Response response) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
         actual.set(result);
       }
@@ -327,9 +335,11 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    @SuppressWarnings("RedundantStringConstructorCall") // Allocated on-heap.
+    final String expected = new String("Hello");
+
     class MockObservableExample implements ObservableExample {
-      @Override public Observable<Object> doStuff() {
+      @Override public Observable<String> doStuff() {
         return Observable.from(expected);
       }
     }
@@ -367,9 +377,11 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    @SuppressWarnings("RedundantStringConstructorCall") // Allocated on-heap.
+    final String expected = new String("Hello");
+
     class MockSyncExample implements SyncExample {
-      @Override public Object doStuff() {
+      @Override public String doStuff() {
         throw new MockHttpException(404, "Not Found", expected);
       }
     }
@@ -387,6 +399,7 @@ public class MockRestAdapterTest {
       assertThat(e.getResponse().getStatus()).isEqualTo(404);
       assertThat(e.getResponse().getReason()).isEqualTo("Not Found");
       assertThat(e.getBody()).isSameAs(expected);
+      assertThat(e.getSuccessType()).isEqualTo(Object.class);
     }
   }
 
@@ -395,9 +408,11 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    @SuppressWarnings("RedundantStringConstructorCall") // Allocated on-heap.
+    final String expected = new String("Greetings");
+
     class MockAsyncExample implements AsyncExample {
-      @Override public void doStuff(Callback<Object> cb) {
+      @Override public void doStuff(Callback<String> cb) {
         throw new MockHttpException(404, "Not Found", expected);
       }
     }
@@ -407,8 +422,8 @@ public class MockRestAdapterTest {
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
     final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
-    mockService.doStuff(new Callback<Object>() {
-      @Override public void success(Object o, Response response) {
+    mockService.doStuff(new Callback<String>() {
+      @Override public void success(String o, Response response) {
         throw new AssertionError();
       }
 
@@ -427,6 +442,7 @@ public class MockRestAdapterTest {
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
+    assertThat(error.getSuccessType()).isEqualTo(String.class);
   }
 
   @Test public void observableHttpExceptionBecomesError() {
@@ -434,9 +450,11 @@ public class MockRestAdapterTest {
     mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    final Object expected = new Object();
+    @SuppressWarnings("RedundantStringConstructorCall") // Allocated on-heap.
+    final String expected = new String("Hi");
+
     class MockObservableExample implements ObservableExample {
-      @Override public Observable<Object> doStuff() {
+      @Override public Observable<String> doStuff() {
         throw new MockHttpException(404, "Not Found", expected);
       }
     }
@@ -468,26 +486,48 @@ public class MockRestAdapterTest {
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
+    assertThat(error.getSuccessType()).isEqualTo(String.class);
   }
 
-  @Test public void asyncCallToFailureIsNotAllowed() {
+  @Test public void nullBodyIsAllowedOnHttpException() throws Exception {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
     mockRestAdapter.setErrorPercentage(0);
 
-    class MockAsyncExample implements AsyncExample {
-      @Override public void doStuff(Callback<Object> cb) {
-        cb.failure(null);
+    class MockObservableExample implements ObservableExample {
+      @Override public Observable<String> doStuff() {
+        throw MockHttpException.newBadRequest(null);
       }
     }
 
-    AsyncExample mockService = mockRestAdapter.create(AsyncExample.class, new MockAsyncExample());
+    ObservableExample mockService =
+        mockRestAdapter.create(ObservableExample.class, new MockObservableExample());
 
-    try {
-      mockService.doStuff(mock(Callback.class));
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Calling failure directly is not supported. Throw MockHttpException instead.");
-    }
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    mockService.doStuff().subscribe(new Action1<Object>() {
+      @Override public void call(Object o) {
+        throw new AssertionError();
+      }
+    }, new Action1<Throwable>() {
+      @Override public void call(Throwable error) {
+        assertThat(error).isInstanceOf(RetrofitError.class);
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        errorRef.set((RetrofitError) error);
+      }
+    });
+
+    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verifyZeroInteractions(callbackExecutor);
+
+    RetrofitError error = errorRef.get();
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+    assertThat(error.isNetworkError()).isFalse();
+    assertThat(error.getResponse().getStatus()).isEqualTo(400);
+    assertThat(error.getResponse().getReason()).isEqualTo("Bad Request");
+    assertThat(error.getBody()).isNull();
+    assertThat(error.getSuccessType()).isEqualTo(String.class);
   }
 
   @Test public void syncErrorUsesErrorHandler() {
@@ -518,7 +558,7 @@ public class MockRestAdapterTest {
     mockRestAdapter.setErrorPercentage(0);
 
     class MockAsyncExample implements AsyncExample {
-      @Override public void doStuff(Callback<Object> cb) {
+      @Override public void doStuff(Callback<String> cb) {
         throw MockHttpException.newNotFound(new Object());
       }
     }
@@ -527,8 +567,8 @@ public class MockRestAdapterTest {
     nextError = new IllegalArgumentException("Test");
 
     final CountDownLatch latch = new CountDownLatch(1);
-    mockService.doStuff(new Callback<Object>() {
-      @Override public void success(Object o, Response response) {
+    mockService.doStuff(new Callback<String>() {
+      @Override public void success(String o, Response response) {
         throw new AssertionError();
       }
 
@@ -546,7 +586,7 @@ public class MockRestAdapterTest {
     mockRestAdapter.setErrorPercentage(0);
 
     class MockObservableExample implements ObservableExample {
-      @Override public Observable<Object> doStuff() {
+      @Override public Observable<String> doStuff() {
         throw MockHttpException.newNotFound(new Object());
       }
     }
@@ -570,5 +610,34 @@ public class MockRestAdapterTest {
     });
     latch.await(5, SECONDS);
     assertThat(called.get()).isTrue();
+  }
+
+  @Test public void asyncCanUseCallbackSubtype() {
+    mockRestAdapter.setDelay(1);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockAsyncCallbackSubtypeExample implements AsyncCallbackSubtypeExample {
+      @Override public void doStuff(Foo foo) {
+        foo.success("Hello!", null);
+      }
+    }
+
+    AsyncCallbackSubtypeExample mockService =
+        mockRestAdapter.create(AsyncCallbackSubtypeExample.class,
+            new MockAsyncCallbackSubtypeExample());
+
+    final AtomicReference<String> actual = new AtomicReference<String>();
+    mockService.doStuff(new AsyncCallbackSubtypeExample.Foo() {
+      @Override public void success(String result, Response response) {
+        actual.set(result);
+      }
+
+      @Override public void failure(RetrofitError error) {
+        throw new AssertionError();
+      }
+    });
+
+    assertThat(actual.get()).isNotNull().isEqualTo("Hello!");
   }
 }

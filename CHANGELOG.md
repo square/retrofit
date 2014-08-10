@@ -1,6 +1,41 @@
 Change Log
 ==========
 
+Version 1.6.1 *(2014-07-02)*
+----------------------------
+
+ * Fix: Add any explicitly-specified 'Content-Type' header (via annotation or param) to the request even
+   if there is no request body (e.g., DELETE).
+ * Fix: Include trailing CRLF in multi-part uploads to work around a bug in .NET MVC 4 parsing.
+ * Fix: Allow `null` mock exception bodies and use the success type from the declared service interface.
+
+
+Version 1.6.0 *(2014-06-06)*
+----------------------------
+
+ * New: `@Streaming` on a `Response` type will skip buffering the body to a `byte[]` before delivering.
+ * When using OkHttp, version 1.6.0 or newer (including 2.0.0+) is now required.
+ * The absence of a response body and an empty body are now differentiated in the log messages.
+ * Fix: If set, the `RequestInterceptor` is now applied at the time of `Observable` subscription rather
+   than at the time of its creation.
+ * Fix: `Callback` subtypes are now supported when using `MockRestAdapter`.
+ * Fix: `RetrofitError` now contains a useful message indicating the reason for the failure.
+ * Fix: Exceptions thrown when parsing the response type of the interface are now properly propagated.
+ * Fix: Calling `Response#getBody` when `null` body now correctly returns instead of throwing an NPE.
+ * Experimental RxJava support updated for v0.19.
+ * The `Content-Type` and `Content-Length` headers are no longer automatically added to the header list
+   on the `Request` object. This reverts erroneous behavior added in v1.5.0. Custom `Client` implementations
+   should revert to adding these headers based on the `TypedInput` body of the `Request`.
+
+
+Version 1.5.1 *(2014-05-08)*
+----------------------------
+
+ * New: `@PartMap` annotation accepts a `Map` of key/value pairs for multi-part.
+ * Fix: `MockRestAdpater` uses the `ErrorHandler` from its parent `RestAdapter`.
+ * Experimental RxJava support updated for v0.18 and is now lazily initialized.
+
+
 Version 1.5.0 *(2014-03-20)*
 ----------------------------
 

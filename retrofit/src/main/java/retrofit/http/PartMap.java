@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2014 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Denotes a single part of a multi-part request.
+ * Denotes name and value parts of a multi-part request
  * <p>
- * The parameter type on which this annotation exists will be processed in one of three ways:
+ * Values of the map on which this annotation exists will be processed in one of three ways:
  * <ul>
  * <li>If the type implements {@link retrofit.mime.TypedOutput TypedOutput} the headers and
  * body will be used directly.</li>
@@ -35,22 +35,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * retrofit.converter.Converter#toBody(Object)}.</li>
  * </ul>
  * <p>
- * Values may be {@code null} which will omit them from the request body.
- * <p>
  * <pre>
  * &#64;Multipart
- * &#64;POST("/")
- * void example(&#64;Part("description") String description,
- *              &#64;Part("image") TypedFile image,
- *              ...
- * );
+ * &#64;POST("/upload")
+ * void upload(&#64;Part("file") TypedFile file, &#64;PartMap Map&lt;String, String&gt; params);
  * </pre>
  * <p>
- * Part parameters may not be {@code null}.
+ *
+ * @see Multipart
+ * @see Part
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface Part {
-  String value();
+public @interface PartMap {
 }
