@@ -8,55 +8,55 @@ import java.util.List;
  * An HTTP Response
  */
 abstract class AbstractResponse<T> {
-    protected final String url;
-    protected final int status;
-    protected final String reason;
-    protected final List<Header> headers;
-    protected final T body;
+  protected final String url;
+  protected final int status;
+  protected final String reason;
+  protected final List<Header> headers;
+  protected final T body;
 
-    public AbstractResponse(String url, int status, String reason, List<Header> headers, T body) {
-        if (url == null) {
-            throw new IllegalArgumentException("url == null");
-        }
-        if (status < 200) {
-            throw new IllegalArgumentException("Invalid status code: " + status);
-        }
-        if (reason == null) {
-            throw new IllegalArgumentException("reason == null");
-        }
-        if (headers == null) {
-            throw new IllegalArgumentException("headers == null");
-        }
-
-        this.url = url;
-        this.status = status;
-        this.reason = reason;
-        this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
-        this.body = body;
+  public AbstractResponse(String url, int status, String reason, List<Header> headers, T body) {
+    if (url == null) {
+      throw new IllegalArgumentException("url == null");
+    }
+    if (status < 200) {
+      throw new IllegalArgumentException("Invalid status code: " + status);
+    }
+    if (reason == null) {
+      throw new IllegalArgumentException("reason == null");
+    }
+    if (headers == null) {
+      throw new IllegalArgumentException("headers == null");
     }
 
-    /** Request URL. */
-    public String getUrl() {
-        return url;
-    }
+    this.url = url;
+    this.status = status;
+    this.reason = reason;
+    this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
+    this.body = body;
+  }
 
-    /** Status line code. */
-    public int getStatus() {
-        return status;
-    }
+  /** Request URL. */
+  public String getUrl() {
+    return url;
+  }
 
-    /** Status line reason phrase. */
-    public String getReason() {
-        return reason;
-    }
+  /** Status line code. */
+  public int getStatus() {
+    return status;
+  }
 
-    /** An unmodifiable collection of headers. */
-    public List<Header> getHeaders() {
-        return headers;
-    }
+  /** Status line reason phrase. */
+  public String getReason() {
+    return reason;
+  }
 
-    /** Response body.  May be {@code null}. */
-    public T getBody() {
-        return body;
-    }
+  /** An unmodifiable collection of headers. */
+  public List<Header> getHeaders() {
+    return headers;
+  }
+
+  /** Response body.  May be {@code null}. */
+  public T getBody() {
+    return body;
+  }
 }
