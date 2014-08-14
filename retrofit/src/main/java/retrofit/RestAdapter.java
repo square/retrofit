@@ -15,28 +15,31 @@
  */
 package retrofit;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import retrofit.Profiler.RequestInformation;
 import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
+import retrofit.client.RestResponse;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
 import retrofit.mime.MimeUtil;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Adapts a Java interface to a REST API.
@@ -361,7 +364,31 @@ public class RestAdapter {
 
           ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
           try {
-            Object convert = converter.fromBody(wrapped, type);
+            Object convert;
+
+            if (type instanceof ParameterizedType
+                    && ((ParameterizedType) type).getRawType() == RestResponse.class) {
+              Type[] paramTypes = ((ParameterizedType) type).getActualTypeArguments();
+              boolean isResponseType = false;
+              for (Type t : paramTypes) {
+                if (((Class) t).getCanonicalName().equals(Response.class.getCanonicalName())) {
+                  isResponseType = true;
+                }
+              }
+
+              if (isResponseType) {
+                convert = response;
+              } else {
+                Type deserType = ((ParameterizedType) type).getActualTypeArguments()[0];
+                convert = converter.fromBody(wrapped, deserType);
+              }
+
+              return new RestResponse<Object>(response.getUrl(),
+                  response.getStatus(), response.getReason(),
+                  response.getHeaders(), convert);
+            }
+
+            convert = converter.fromBody(wrapped, type);
             logResponseBody(body, convert);
             if (methodInfo.isSynchronous) {
               return convert;

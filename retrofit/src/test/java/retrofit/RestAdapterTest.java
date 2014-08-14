@@ -1,14 +1,6 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +10,7 @@ import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
+import retrofit.client.RestResponse;
 import retrofit.converter.ConversionException;
 import retrofit.http.Body;
 import retrofit.http.GET;
@@ -30,6 +23,15 @@ import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 import rx.Observable;
 import rx.functions.Action1;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -83,8 +85,23 @@ public class RestAdapterTest {
     @GET("/") @Streaming Response streaming();
     @POST("/") Observable<String> observable(@Body String body);
     @POST("/{x}/{y}") Observable<Response> observable(@Path("x") String x, @Path("y") String y);
+    @GET("/") RestResponse<ExampleType> restResponseType();
+    @GET("/") RestResponse<Response> restResponseResponseType();
   }
   private interface InvalidExample extends Example {
+  }
+
+  @SuppressWarnings("unused") // setter
+  private class ExampleType {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
   }
 
   private Client mockClient;
@@ -543,6 +560,30 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
+  }
+
+  @Test public void restResponseReturnsDeserializedType() throws Exception {
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS,
+                new TypedString("{\"name\" : \"foo\"}")));
+
+    RestResponse<ExampleType> response = example.restResponseType();
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getBody()).isNotEqualTo(null);
+    assertThat(response.getBody().getClass()).isEqualTo(ExampleType.class);
+    assertThat(response.getBody().getName()).isEqualTo("foo");
+  }
+
+  @Test public void restResponseOfTypeResponseRetainsType() throws Exception {
+    when(mockClient.execute(any(Request.class)))
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS,
+            new TypedString("{\"name\" : \"foo\"}")));
+
+    RestResponse<Response> response = example.restResponseResponseType();
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getBody()).isNotEqualTo(null);
+    assertThat(response.getClass()).isEqualTo(RestResponse.class);
+    assertThat(response.getBody().getClass()).isEqualTo(Response.class);
   }
 
   @Test public void clientExceptionThrowsNetworkError() throws Exception {
