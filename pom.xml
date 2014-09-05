@@ -55,7 +55,7 @@
     <appengine.version>1.9.6</appengine.version>
 
     <!-- Converter Dependencies -->
-    <protobuf.version>2.6.0</protobuf.version>
+    <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.4.1</jackson.version>
     <wire.version>1.5.1</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
