@@ -64,7 +64,7 @@ public final class WireConverterTest {
     try {
       converter.fromBody(decodeBase64("////", "yummy/bytes"), Person.class);
       fail();
-    } catch (IllegalArgumentException e) {
+    } catch (ConversionException e) {
       assertThat(e).hasMessage("Expected a proto but was: yummy/bytes");
     }
   }
