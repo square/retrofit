@@ -37,7 +37,7 @@ public class WireConverter implements Converter {
     }
 
     if (!MIME_TYPE.equalsIgnoreCase(body.mimeType())) {
-      throw new IllegalArgumentException("Expected a proto but was: " + body.mimeType());
+      throw new ConversionException("Expected a proto but was: " + body.mimeType());
     }
 
     InputStream in = null;
