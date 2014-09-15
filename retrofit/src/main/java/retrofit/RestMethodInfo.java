@@ -223,7 +223,8 @@ final class RestMethodInfo {
       // Ensure the query string does not have any named parameters.
       Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(query);
       if (queryParamMatcher.find()) {
-        throw methodError("URL query string \"%s\" must not have replace block.", query);
+        throw methodError("URL query string \"%s\" must not have replace block. For dynamic query"
+            + " parameters use @Query.", query);
       }
     }
 

@@ -1307,7 +1307,8 @@ public class RestMethodInfoTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.a: URL query string \"bar={bar}\" must not have replace block.");
+          "Example.a: URL query string \"bar={bar}\" must not have replace block. For dynamic query"
+              + " parameters use @Query.");
     }
   }
 
