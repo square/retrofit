@@ -49,7 +49,7 @@
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
-    <gson.version>2.2.4</gson.version>
+    <gson.version>2.3</gson.version>
     <okhttp.version>2.0.0</okhttp.version>
     <rxjava.version>0.19.2</rxjava.version>
     <appengine.version>1.9.6</appengine.version>
