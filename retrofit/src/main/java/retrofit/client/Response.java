@@ -15,9 +15,13 @@
  */
 package retrofit.client;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import retrofit.mime.TypedInput;
 
 /**
@@ -34,7 +38,8 @@ public final class Response {
   private final List<Header> headers;
   private final TypedInput body;
 
-  public Response(String url, int status, String reason, List<Header> headers, TypedInput body) {
+  public Response(@NotNull String url, int status, @NotNull String reason,
+      @NotNull List<Header> headers, @Nullable TypedInput body) {
     if (url == null) {
       throw new IllegalArgumentException("url == null");
     }
@@ -56,7 +61,7 @@ public final class Response {
   }
 
   /** Request URL. */
-  public String getUrl() {
+  @NotNull public String getUrl() {
     return url;
   }
 
@@ -66,17 +71,17 @@ public final class Response {
   }
 
   /** Status line reason phrase. */
-  public String getReason() {
+  @NotNull public String getReason() {
     return reason;
   }
 
   /** An unmodifiable collection of headers. */
-  public List<Header> getHeaders() {
+  @NotNull public List<Header> getHeaders() {
     return headers;
   }
 
   /** Response body. May be {@code null}. */
-  public TypedInput getBody() {
+  @Nullable public TypedInput getBody() {
     return body;
   }
 }

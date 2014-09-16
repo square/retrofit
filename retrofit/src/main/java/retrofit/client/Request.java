@@ -15,9 +15,13 @@
  */
 package retrofit.client;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import retrofit.mime.TypedOutput;
 
 /** Encapsulates all of the information necessary to make an HTTP request. */
@@ -27,7 +31,8 @@ public final class Request {
   private final List<Header> headers;
   private final TypedOutput body;
 
-  public Request(String method, String url, List<Header> headers, TypedOutput body) {
+  public Request(@NotNull String method, @NotNull String url, @Nullable List<Header> headers,
+      @Nullable TypedOutput body) {
     if (method == null) {
       throw new NullPointerException("Method must not be null.");
     }
@@ -47,22 +52,22 @@ public final class Request {
   }
 
   /** HTTP method verb. */
-  public String getMethod() {
+  @NotNull public String getMethod() {
     return method;
   }
 
   /** Target URL. */
-  public String getUrl() {
+  @NotNull public String getUrl() {
     return url;
   }
 
   /** Returns an unmodifiable list of headers, never {@code null}. */
-  public List<Header> getHeaders() {
+  @NotNull public List<Header> getHeaders() {
     return headers;
   }
 
   /** Returns the request body or {@code null}. */
-  public TypedOutput getBody() {
+  @Nullable public TypedOutput getBody() {
     return body;
   }
 }

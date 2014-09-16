@@ -53,6 +53,7 @@
     <okhttp.version>2.0.0</okhttp.version>
     <rxjava.version>0.19.2</rxjava.version>
     <appengine.version>1.9.6</appengine.version>
+    <annotations.version>13.0</annotations.version>
 
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
@@ -122,6 +123,11 @@
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine-api-1.0-sdk</artifactId>
         <version>${appengine.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${annotations.version}</version>
       </dependency>
 
       <dependency>
