@@ -33,7 +33,7 @@ import retrofit.mime.TypedOutput;
  */
 public class GsonConverter implements Converter {
   private final Gson gson;
-  private String encoding;
+  private String charset;
 
   /**
    * Create an instance using the supplied {@link Gson} object for conversion. Encoding to JSON and
@@ -45,17 +45,17 @@ public class GsonConverter implements Converter {
 
   /**
    * Create an instance using the supplied {@link Gson} object for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use the specified encoding.
+   * decoding from JSON (when no charset is specified by a header) will use the specified charset.
    */
-  public GsonConverter(Gson gson, String encoding) {
+  public GsonConverter(Gson gson, String charset) {
     this.gson = gson;
-    this.encoding = encoding;
+    this.charset = charset;
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
-    String charset = "UTF-8";
+    String charset = this.charset;
     if (body.mimeType() != null) {
-      charset = MimeUtil.parseCharset(body.mimeType());
+      charset = MimeUtil.parseCharset(body.mimeType(), charset);
     }
     InputStreamReader isr = null;
     try {
@@ -77,7 +77,7 @@ public class GsonConverter implements Converter {
 
   @Override public TypedOutput toBody(Object object) {
     try {
-      return new JsonTypedOutput(gson.toJson(object).getBytes(encoding), encoding);
+      return new JsonTypedOutput(gson.toJson(object).getBytes(charset), charset);
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }
