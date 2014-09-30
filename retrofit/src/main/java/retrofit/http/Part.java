@@ -21,6 +21,7 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static retrofit.mime.MultipartTypedOutput.DEFAULT_TRANSFER_ENCODING;
 
 /**
  * Denotes a single part of a multi-part request.
@@ -53,4 +54,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Part {
   String value();
+  /** The {@code Content-Transfer-Encoding} of this part. */
+  String encoding() default DEFAULT_TRANSFER_ENCODING;
 }

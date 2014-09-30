@@ -25,10 +25,12 @@ import java.util.List;
 import java.util.UUID;
 
 public final class MultipartTypedOutput implements TypedOutput {
+  public static final String DEFAULT_TRANSFER_ENCODING = "binary";
 
   private static final class MimePart {
     private final TypedOutput body;
     private final String name;
+    private final String transferEncoding;
     private final boolean isFirst;
     private final String boundary;
 
@@ -36,8 +38,10 @@ public final class MultipartTypedOutput implements TypedOutput {
     private byte[] partHeader;
     private boolean isBuilt;
 
-    public MimePart(String name, TypedOutput body, String boundary, boolean isFirst) {
+    public MimePart(String name, String transferEncoding, TypedOutput body, String boundary,
+        boolean isFirst) {
       this.name = name;
+      this.transferEncoding = transferEncoding;
       this.body = body;
       this.isFirst = isFirst;
       this.boundary = boundary;
@@ -62,7 +66,7 @@ public final class MultipartTypedOutput implements TypedOutput {
     private void build() {
       if (isBuilt) return;
       partBoundary = buildBoundary(boundary, isFirst, false);
-      partHeader = buildHeader(name, body);
+      partHeader = buildHeader(name, transferEncoding, body);
       isBuilt = true;
     }
   }
@@ -94,14 +98,21 @@ public final class MultipartTypedOutput implements TypedOutput {
   }
 
   public void addPart(String name, TypedOutput body) {
+    addPart(name, DEFAULT_TRANSFER_ENCODING, body);
+  }
+
+  public void addPart(String name, String transferEncoding, TypedOutput body) {
     if (name == null) {
       throw new NullPointerException("Part name must not be null.");
+    }
+    if (transferEncoding == null) {
+      throw new NullPointerException("Transfer encoding must not be null.");
     }
     if (body == null) {
       throw new NullPointerException("Part body must not be null.");
     }
 
-    MimePart part = new MimePart(name, body, boundary, mimeParts.isEmpty());
+    MimePart part = new MimePart(name, transferEncoding, body, boundary, mimeParts.isEmpty());
     mimeParts.add(part);
 
     long size = part.size();
@@ -137,7 +148,9 @@ public final class MultipartTypedOutput implements TypedOutput {
 
   private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
     try {
-      StringBuilder sb = new StringBuilder();
+      // Pre-size for the last boundary, the worst case scenario.
+      StringBuilder sb = new StringBuilder(boundary.length() + 8);
+
       if (!first) {
         sb.append("\r\n");
       }
@@ -153,21 +166,32 @@ public final class MultipartTypedOutput implements TypedOutput {
     }
   }
 
-  private static byte[] buildHeader(String name, TypedOutput value) {
+  private static byte[] buildHeader(String name, String transferEncoding, TypedOutput value) {
     try {
-      StringBuilder headers = new StringBuilder();
+      // Initial size estimate based on always-present strings and conservative value lengths.
+      StringBuilder headers = new StringBuilder(128);
+
       headers.append("Content-Disposition: form-data; name=\"");
       headers.append(name);
-      if (value.fileName() != null) {
+
+      String fileName = value.fileName();
+      if (fileName != null) {
         headers.append("\"; filename=\"");
-        headers.append(value.fileName());
+        headers.append(fileName);
       }
+
       headers.append("\"\r\nContent-Type: ");
       headers.append(value.mimeType());
-      if (value.length() != -1) {
-        headers.append("\r\nContent-Length: ").append(value.length());
+
+      long length = value.length();
+      if (length != -1) {
+        headers.append("\r\nContent-Length: ").append(length);
       }
-      headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+
+      headers.append("\r\nContent-Transfer-Encoding: ");
+      headers.append(transferEncoding);
+      headers.append("\r\n\r\n");
+
       return headers.toString().getBytes("UTF-8");
     } catch (IOException ex) {
       throw new RuntimeException("Unable to write multipart header", ex);

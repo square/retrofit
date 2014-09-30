@@ -107,6 +107,7 @@ final class RestMethodInfo {
   // Parameter-level details
   String[] requestParamNames;
   ParamUsage[] requestParamUsage;
+  Annotation[] requestParamAnnotation;
 
   RestMethodInfo(Method method) {
     this.method = method;
@@ -320,115 +321,115 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #requestParamNames} and {@link #requestParamUsage}. Must be called after
-   * {@link #parseMethodAnnotations()}.
+   * Loads {@link #requestParamNames}, {@link #requestParamUsage}, and
+   * {@link #requestParamAnnotation}. Must be called after {@link #parseMethodAnnotations()}.
    */
   private void parseParameters() {
-    Class<?>[] parameterTypes = method.getParameterTypes();
+    Class<?>[] methodParameterTypes = method.getParameterTypes();
 
-    Annotation[][] parameterAnnotationArrays = method.getParameterAnnotations();
-    int count = parameterAnnotationArrays.length;
+    Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
+    int count = methodParameterAnnotationArrays.length;
     if (!isSynchronous && !isObservable) {
       count -= 1; // Callback is last argument when not a synchronous method.
     }
 
-    String[] paramNames = new String[count];
-    requestParamNames = paramNames;
-    ParamUsage[] paramUsage = new ParamUsage[count];
-    requestParamUsage = paramUsage;
+    String[] requestParamNames = new String[count];
+    ParamUsage[] requestParamUsage = new ParamUsage[count];
+    Annotation[] requestParamAnnotation = new Annotation[count];
 
     boolean gotField = false;
     boolean gotPart = false;
     boolean gotBody = false;
 
     for (int i = 0; i < count; i++) {
-      Class<?> parameterType = parameterTypes[i];
-      Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
-      if (parameterAnnotations != null) {
-        for (Annotation parameterAnnotation : parameterAnnotations) {
-          Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
+      Class<?> methodParameterType = methodParameterTypes[i];
+      Annotation[] methodParameterAnnotations = methodParameterAnnotationArrays[i];
+      if (methodParameterAnnotations != null) {
+        for (Annotation methodParameterAnnotation : methodParameterAnnotations) {
+          Class<? extends Annotation> methodAnnotationType =
+              methodParameterAnnotation.annotationType();
 
-          if (annotationType == Path.class) {
-            String name = ((Path) parameterAnnotation).value();
+          if (methodAnnotationType == Path.class) {
+            String name = ((Path) methodParameterAnnotation).value();
             validatePathName(i, name);
 
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.PATH;
-          } else if (annotationType == EncodedPath.class) {
-            String name = ((EncodedPath) parameterAnnotation).value();
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.PATH;
+          } else if (methodAnnotationType == EncodedPath.class) {
+            String name = ((EncodedPath) methodParameterAnnotation).value();
             validatePathName(i, name);
 
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.ENCODED_PATH;
-          } else if (annotationType == Query.class) {
-            String name = ((Query) parameterAnnotation).value();
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.ENCODED_PATH;
+          } else if (methodAnnotationType == Query.class) {
+            String name = ((Query) methodParameterAnnotation).value();
 
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.QUERY;
-          } else if (annotationType == EncodedQuery.class) {
-            String name = ((EncodedQuery) parameterAnnotation).value();
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.QUERY;
+          } else if (methodAnnotationType == EncodedQuery.class) {
+            String name = ((EncodedQuery) methodParameterAnnotation).value();
 
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.ENCODED_QUERY;
-          } else if (annotationType == QueryMap.class) {
-            if (!Map.class.isAssignableFrom(parameterType)) {
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.ENCODED_QUERY;
+          } else if (methodAnnotationType == QueryMap.class) {
+            if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
 
-            paramUsage[i] = ParamUsage.QUERY_MAP;
-          } else if (annotationType == EncodedQueryMap.class) {
-            if (!Map.class.isAssignableFrom(parameterType)) {
+            requestParamUsage[i] = ParamUsage.QUERY_MAP;
+          } else if (methodAnnotationType == EncodedQueryMap.class) {
+            if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@EncodedQueryMap parameter type must be Map.");
             }
 
-            paramUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
-          } else if (annotationType == Header.class) {
-            String name = ((Header) parameterAnnotation).value();
+            requestParamUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
+          } else if (methodAnnotationType == Header.class) {
+            String name = ((Header) methodParameterAnnotation).value();
 
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.HEADER;
-          } else if (annotationType == Field.class) {
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.HEADER;
+          } else if (methodAnnotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
 
-            String name = ((Field) parameterAnnotation).value();
+            String name = ((Field) methodParameterAnnotation).value();
 
             gotField = true;
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.FIELD;
-          } else if (annotationType == FieldMap.class) {
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.FIELD;
+          } else if (methodAnnotationType == FieldMap.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
-            if (!Map.class.isAssignableFrom(parameterType)) {
+            if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
 
             gotField = true;
-            paramUsage[i] = ParamUsage.FIELD_MAP;
-          } else if (annotationType == Part.class) {
+            requestParamUsage[i] = ParamUsage.FIELD_MAP;
+          } else if (methodAnnotationType == Part.class) {
             if (requestType != RequestType.MULTIPART) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
 
-            String name = ((Part) parameterAnnotation).value();
+            String name = ((Part) methodParameterAnnotation).value();
 
             gotPart = true;
-            paramNames[i] = name;
-            paramUsage[i] = ParamUsage.PART;
-          } else if (annotationType == PartMap.class) {
+            requestParamNames[i] = name;
+            requestParamUsage[i] = ParamUsage.PART;
+          } else if (methodAnnotationType == PartMap.class) {
             if (requestType != RequestType.MULTIPART) {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
             }
-            if (!Map.class.isAssignableFrom(parameterType)) {
+            if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
 
             gotPart = true;
-            paramUsage[i] = ParamUsage.PART_MAP;
-          } else if (annotationType == Body.class) {
+            requestParamUsage[i] = ParamUsage.PART_MAP;
+          } else if (methodAnnotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
               throw parameterError(i,
                   "@Body parameters cannot be used with form or multi-part encoding.");
@@ -438,12 +439,23 @@ final class RestMethodInfo {
             }
 
             gotBody = true;
-            paramUsage[i] = ParamUsage.BODY;
+            requestParamUsage[i] = ParamUsage.BODY;
+          } else {
+            // This is a non-Retrofit annotation. Skip to the next one.
+            continue;
           }
+
+          if (requestParamAnnotation[i] != null) {
+            throw parameterError(i,
+                "Multiple Retrofit annotations found, only one allowed: @%s, @%s.",
+                requestParamAnnotation[i].annotationType().getSimpleName(),
+                methodAnnotationType.getSimpleName());
+          }
+          requestParamAnnotation[i] = methodParameterAnnotation;
         }
       }
 
-      if (paramUsage[i] == null) {
+      if (requestParamUsage[i] == null) {
         throw parameterError(i, "No Retrofit annotation found.");
       }
     }
@@ -457,6 +469,10 @@ final class RestMethodInfo {
     if (requestType == RequestType.MULTIPART && !gotPart) {
       throw methodError("Multipart method must contain at least one @Part.");
     }
+
+    this.requestParamNames = requestParamNames;
+    this.requestParamUsage = requestParamUsage;
+    this.requestParamAnnotation = requestParamAnnotation;
   }
 
   private void validatePathName(int index, String name) {

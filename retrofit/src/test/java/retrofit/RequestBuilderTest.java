@@ -4,6 +4,7 @@ package retrofit;
 import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
+import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.mime.MimeHelper;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
@@ -39,6 +42,7 @@ import static retrofit.RestMethodInfo.ParamUsage.PATH;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
 import static retrofit.RestMethodInfo.RequestType;
+import static retrofit.mime.MultipartTypedOutput.DEFAULT_TRANSFER_ENCODING;
 
 public class RequestBuilderTest {
   @Test public void normalGet() throws Exception {
@@ -486,6 +490,37 @@ public class RequestBuilderTest {
     assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
   }
 
+  @Test public void multipartWithEncoding() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setMultipart() //
+        .addPart("ping", "8-bit", "pong") //
+        .addPart("kit", "7-bit", new TypedString("kat")) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    List<byte[]> bodyParts = MimeHelper.getParts(body);
+    assertThat(bodyParts).hasSize(2);
+
+    Iterator<byte[]> iterator = bodyParts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("name=\"ping\"\r\n")
+        .contains("Content-Transfer-Encoding: 8-bit")
+        .endsWith("\r\npong");
+
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("name=\"kit\"")
+        .contains("Content-Transfer-Encoding: 7-bit")
+        .endsWith("\r\nkat");
+  }
+
   @Test public void multipartPartMap() throws Exception {
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("ping", "pong");
@@ -514,6 +549,40 @@ public class RequestBuilderTest {
 
     String two = new String(iterator.next(), "UTF-8");
     assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
+  }
+
+  @Test public void multipartPartMapWithEncoding() throws Exception {
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("ping", "pong");
+    params.put("kit", new TypedString("kat"));
+
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setMultipart() //
+        .addPartMap("params", "8-bit", params) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    List<byte[]> bodyParts = MimeHelper.getParts(body);
+    assertThat(bodyParts).hasSize(2);
+
+    Iterator<byte[]> iterator = bodyParts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("name=\"ping\"\r\n")
+        .contains("Content-Transfer-Encoding: 8-bit")
+        .endsWith("\r\npong");
+
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("name=\"kit\"")
+        .contains("Content-Transfer-Encoding: 8-bit")
+        .endsWith("\r\nkat");
   }
 
   @Test public void multipartNullRemovesPart() throws Exception {
@@ -818,6 +887,7 @@ public class RequestBuilderTest {
     private String query;
     private final List<String> paramNames = new ArrayList<String>();
     private final List<ParamUsage> paramUsages = new ArrayList<ParamUsage>();
+    private final List<Annotation> paramAnnotations = new ArrayList<Annotation>();
     private final List<Object> args = new ArrayList<Object>();
     private final List<String> headers = new ArrayList<String>();
     private final List<Header> interceptorHeaders = new ArrayList<Header>();
@@ -853,6 +923,7 @@ public class RequestBuilderTest {
     Helper addPathParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(PATH);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -860,6 +931,7 @@ public class RequestBuilderTest {
     Helper addEncodedPathParam(String name, String value) {
       paramNames.add(name);
       paramUsages.add(ENCODED_PATH);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -867,6 +939,7 @@ public class RequestBuilderTest {
     Helper addQueryParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(QUERY);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -874,6 +947,7 @@ public class RequestBuilderTest {
     Helper addEncodedQueryParam(String name, String value) {
       paramNames.add(name);
       paramUsages.add(ENCODED_QUERY);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -881,6 +955,7 @@ public class RequestBuilderTest {
     Helper addQueryMapParams(String name, Map<String, Object> values) {
       paramNames.add(name);
       paramUsages.add(QUERY_MAP);
+      paramAnnotations.add(null); // Not used.
       args.add(values);
       return this;
     }
@@ -888,6 +963,7 @@ public class RequestBuilderTest {
     Helper addEncodedQueryMapParams(String name, Map<String, Object> values) {
       paramNames.add(name);
       paramUsages.add(ENCODED_QUERY_MAP);
+      paramAnnotations.add(null); // Not used.
       args.add(values);
       return this;
     }
@@ -895,6 +971,7 @@ public class RequestBuilderTest {
     Helper addField(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(FIELD);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -902,20 +979,51 @@ public class RequestBuilderTest {
     Helper addFieldMap(String name, Map<String, Object> values) {
       paramNames.add(name);
       paramUsages.add(FIELD_MAP);
+      paramAnnotations.add(null); // Not used.
       args.add(values);
       return this;
     }
 
-    Helper addPart(String name, Object value) {
+    Helper addPart(final String name, Object value) {
+      return addPart(name, DEFAULT_TRANSFER_ENCODING, value);
+    }
+
+    Helper addPart(final String name, final String transferEncoding, Object value) {
       paramNames.add(name);
       paramUsages.add(PART);
+      paramAnnotations.add(new Part() {
+        @Override public Class<? extends Annotation> annotationType() {
+          return Part.class;
+        }
+
+        @Override public String value() {
+          return name;
+        }
+
+        @Override public String encoding() {
+          return transferEncoding;
+        }
+      });
       args.add(value);
       return this;
     }
 
     Helper addPartMap(String name, Map<String, Object> values) {
+      return addPartMap(name, DEFAULT_TRANSFER_ENCODING, values);
+    }
+
+    Helper addPartMap(String name, final String transferEncoding, Map<String, Object> values) {
       paramNames.add(name);
       paramUsages.add(PART_MAP);
+      paramAnnotations.add(new PartMap() {
+        @Override public Class<? extends Annotation> annotationType() {
+          return PartMap.class;
+        }
+
+        @Override public String encoding() {
+          return transferEncoding;
+        }
+      });
       args.add(values);
       return this;
     }
@@ -923,6 +1031,7 @@ public class RequestBuilderTest {
     Helper setBody(Object value) {
       paramNames.add(null);
       paramUsages.add(BODY);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -930,6 +1039,7 @@ public class RequestBuilderTest {
     Helper addHeaderParam(String name, Object value) {
       paramNames.add(name);
       paramUsages.add(HEADER);
+      paramAnnotations.add(null); // Not used.
       args.add(value);
       return this;
     }
@@ -983,6 +1093,8 @@ public class RequestBuilderTest {
       methodInfo.requestQuery = query;
       methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
       methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
+      methodInfo.requestParamAnnotation =
+          paramAnnotations.toArray(new Annotation[paramAnnotations.size()]);
       methodInfo.headers = headers.isEmpty() ? null
           : methodInfo.parseHeaders(headers.toArray(new String[headers.size()]));
       methodInfo.loaded = true;

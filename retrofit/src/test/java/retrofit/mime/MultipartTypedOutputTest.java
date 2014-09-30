@@ -28,6 +28,27 @@ public class MultipartTypedOutputTest {
     assertThat(mto.mimeType()).isEqualTo("multipart/form-data; boundary=123");
   }
 
+  @Test public void singlePartWithTransferEncoding() throws Exception {
+    String expected = "" //
+        + "--123\r\n"
+        + "Content-Disposition: form-data; name=\"greet\"\r\n"
+        + "Content-Type: text/plain; charset=UTF-8\r\n"
+        + "Content-Length: 13\r\n"
+        + "Content-Transfer-Encoding: 8-bit\r\n" //
+        + "\r\n" //
+        + "Hello, World!\r\n" //
+        + "--123--\r\n";
+
+    MultipartTypedOutput mto = new MultipartTypedOutput("123");
+    mto.addPart("greet", "8-bit", new TypedString("Hello, World!"));
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    mto.writeTo(out);
+    String actual = new String(out.toByteArray(), "UTF-8");
+    assertThat(actual).isEqualTo(expected);
+    assertThat(mto.mimeType()).isEqualTo("multipart/form-data; boundary=123");
+  }
+
   @Test public void threeParts() throws Exception {
     String expected = ""
         + "--123\r\n"
