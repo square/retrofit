@@ -21,6 +21,8 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -31,18 +33,23 @@ import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
+import retrofit.rpc.RpcRequest;
 
 import static retrofit.RestMethodInfo.ParamUsage.QUERY;
 import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
+import static retrofit.RestMethodInfo.ParamUsage.RPC_PARAM;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
   private final String[] paramNames;
   private final RestMethodInfo.ParamUsage[] paramUsages;
   private final String requestMethod;
+  private final String methodName;
+  private final RestMethodInfo.RequestType requestType;
   private final boolean isSynchronous;
   private final boolean isObservable;
   private final String apiUrl;
+  private final String rpcRequestMethod;
 
   private final FormUrlEncodedTypedOutput formBody;
   private final MultipartTypedOutput multipartBody;
@@ -62,6 +69,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     requestMethod = methodInfo.requestMethod;
     isSynchronous = methodInfo.isSynchronous;
     isObservable = methodInfo.isObservable;
+    rpcRequestMethod = methodInfo.rpcRequestMethod;
 
     if (methodInfo.headers != null) {
       headers = new ArrayList<Header>(methodInfo.headers);
@@ -69,12 +77,14 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     contentTypeHeader = methodInfo.contentTypeHeader;
 
     relativeUrl = methodInfo.requestUrl;
+    methodName = methodInfo.requestUrl;
 
     String requestQuery = methodInfo.requestQuery;
     if (requestQuery != null) {
       queryParams = new StringBuilder().append('?').append(requestQuery);
     }
 
+    requestType = methodInfo.requestType;
     switch (methodInfo.requestType) {
       case FORM_URL_ENCODED:
         formBody = new FormUrlEncodedTypedOutput();
@@ -90,6 +100,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         formBody = null;
         multipartBody = null;
         // If present, 'body' will be set in 'setArguments' call.
+        break;
+
+      case JSON_RPC:
+        formBody = null;
+        multipartBody = null;
         break;
       default:
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
@@ -185,6 +200,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     if (!isSynchronous && !isObservable) {
       count -= 1;
     }
+
+    Map<String, Object> rpcParams = new HashMap<String, Object>();
     for (int i = 0; i < count; i++) {
       String name = paramNames[i];
       Object value = args[i];
@@ -311,9 +328,18 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             body = converter.toBody(value);
           }
           break;
+
+        case RPC_PARAM:
+          rpcParams.put(name, value);
+          break;
+
         default:
           throw new IllegalArgumentException("Unknown parameter usage: " + paramUsage);
       }
+    }
+
+    if (requestType == RestMethodInfo.RequestType.JSON_RPC) {
+      body = converter.toBody(new RpcRequest(rpcRequestMethod, rpcParams));
     }
   }
 
@@ -324,12 +350,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
     String apiUrl = this.apiUrl;
     StringBuilder url = new StringBuilder(apiUrl);
-    if (apiUrl.endsWith("/")) {
+
+    if (requestType != RestMethodInfo.RequestType.JSON_RPC && apiUrl.endsWith("/")) {
       // We require relative paths to start with '/'. Prevent a double-slash.
       url.deleteCharAt(url.length() - 1);
     }
 
-    url.append(relativeUrl);
+    if (relativeUrl != null) {
+      url.append(relativeUrl);
+    }
 
     StringBuilder queryParams = this.queryParams;
     if (queryParams != null) {

@@ -306,7 +306,11 @@ public class RestAdapter {
 
         if (!methodInfo.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
-          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+          if (methodInfo.requestType != RestMethodInfo.RequestType.JSON_RPC) {
+            Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+          } else {
+            Thread.currentThread().setName(THREAD_PREFIX + methodInfo.rpcRequestMethod);
+          }
         }
 
         if (logLevel.log()) {
