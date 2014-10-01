@@ -15,8 +15,12 @@
  */
 package retrofit;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
+
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
@@ -60,12 +64,12 @@ public class RetrofitError extends RuntimeException {
   }
 
   /** The request URL which produced the error. */
-  public String getUrl() {
+  @NotNull public String getUrl() {
     return url;
   }
 
   /** Response object containing status code, headers, body, etc. */
-  public Response getResponse() {
+  @Nullable public Response getResponse() {
     return response;
   }
 
@@ -79,7 +83,7 @@ public class RetrofitError extends RuntimeException {
    * the generic type of the supplied {@link Callback} parameter. {@code null} if there is no
    * response.
    */
-  public Object getBody() {
+  @Nullable public Object getBody() {
     return getBodyAs(successType);
   }
 
@@ -94,7 +98,7 @@ public class RetrofitError extends RuntimeException {
   /**
    * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
    */
-  public Object getBodyAs(Type type) {
+  @Nullable public Object getBodyAs(Type type) {
     if (response == null) {
       return null;
     }
