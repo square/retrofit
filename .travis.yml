@@ -1,8 +1,12 @@
 language: java
 
+before_install: sudo pip install codecov
+
 branches:
   except:
     - gh-pages
 
 notifications:
   email: false
+
+after_success: codecov
