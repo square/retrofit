@@ -71,6 +71,11 @@ public class UrlFetchClient implements Client {
 
     TypedOutput body = request.getBody();
     if (body != null) {
+      String mimeType = body.mimeType();
+      if (mimeType != null) {
+        fetchRequest.addHeader(new HTTPHeader("Content-Type", mimeType));
+      }
+
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       body.writeTo(baos);
       fetchRequest.setPayload(baos.toByteArray());
