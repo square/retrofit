@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Process;
 import com.google.gson.Gson;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import retrofit.android.AndroidApacheClient;
@@ -33,6 +34,7 @@ import retrofit.converter.GsonConverter;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static java.lang.Thread.MIN_PRIORITY;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 abstract class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -86,16 +88,26 @@ abstract class Platform {
     }
 
     @Override Executor defaultHttpExecutor() {
-      return Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override public Thread newThread(final Runnable r) {
-          return new Thread(new Runnable() {
-            @Override public void run() {
-              Thread.currentThread().setPriority(MIN_PRIORITY);
-              r.run();
-            }
-          }, RestAdapter.IDLE_THREAD_NAME);
+      final ExecutorService httpExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override public Thread newThread(Runnable r) {
+          Thread thread = new Thread(r, RestAdapter.IDLE_THREAD_NAME);
+          thread.setDaemon(true);
+          thread.setPriority(MIN_PRIORITY);
+          return thread;
         }
       });
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override public void run() {
+          httpExecutor.shutdown();
+          try {
+            if (!httpExecutor.awaitTermination(120, SECONDS)) {
+              System.err.println("Unable to safely terminate HTTP executor.");
+            }
+          } catch (InterruptedException ignored) {
+          }
+        }
+      });
+      return httpExecutor;
     }
 
     @Override Executor defaultCallbackExecutor() {
