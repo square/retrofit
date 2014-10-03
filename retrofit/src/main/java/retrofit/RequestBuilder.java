@@ -18,6 +18,7 @@ package retrofit;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ import java.util.Map;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
+import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
@@ -39,6 +42,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
   private final String[] paramNames;
   private final RestMethodInfo.ParamUsage[] paramUsages;
+  private final Annotation[] paramAnnotations;
   private final String requestMethod;
   private final boolean isSynchronous;
   private final boolean isObservable;
@@ -59,6 +63,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
     paramNames = methodInfo.requestParamNames;
     paramUsages = methodInfo.requestParamUsage;
+    paramAnnotations = methodInfo.requestParamAnnotation;
     requestMethod = methodInfo.requestMethod;
     isSynchronous = methodInfo.isSynchronous;
     isObservable = methodInfo.isObservable;
@@ -187,6 +192,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
     for (int i = 0; i < count; i++) {
       String name = paramNames[i];
+      Annotation annotation = paramAnnotations[i];
       Object value = args[i];
       RestMethodInfo.ParamUsage paramUsage = paramUsages[i];
       switch (paramUsage) {
@@ -275,27 +281,30 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           break;
         case PART:
           if (value != null) { // Skip null values.
+            String transferEncoding = ((Part) annotation).encoding();
             if (value instanceof TypedOutput) {
-              multipartBody.addPart(name, (TypedOutput) value);
+              multipartBody.addPart(name, transferEncoding, (TypedOutput) value);
             } else if (value instanceof String) {
-              multipartBody.addPart(name, new TypedString((String) value));
+              multipartBody.addPart(name, transferEncoding, new TypedString((String) value));
             } else {
-              multipartBody.addPart(name, converter.toBody(value));
+              multipartBody.addPart(name, transferEncoding, converter.toBody(value));
             }
           }
           break;
         case PART_MAP:
           if (value != null) { // Skip null values.
+            String transferEncoding = ((PartMap) annotation).encoding();
             for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
               String entryName = entry.getKey().toString();
               Object entryValue = entry.getValue();
               if (entryValue != null) { // Skip null values.
                 if (entryValue instanceof TypedOutput) {
-                  multipartBody.addPart(entryName, (TypedOutput) entryValue);
+                  multipartBody.addPart(entryName, transferEncoding, (TypedOutput) entryValue);
                 } else if (entryValue instanceof String) {
-                  multipartBody.addPart(entryName, new TypedString((String) entryValue));
+                  multipartBody.addPart(entryName, transferEncoding,
+                      new TypedString((String) entryValue));
                 } else {
-                  multipartBody.addPart(entryName, converter.toBody(entryValue));
+                  multipartBody.addPart(entryName, transferEncoding, converter.toBody(entryValue));
                 }
               }
             }

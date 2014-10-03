@@ -1312,6 +1312,24 @@ public class RestMethodInfoTest {
     }
   }
 
+  @Test public void multipleParameterAnnotationsNotAllowed() throws Exception {
+    class Example {
+      @GET("/") Response a(@Body @Query("nope") Object o) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.getMethod(Example.class, "a");
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    try {
+      methodInfo.init();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.a: Multiple Retrofit annotations found, only one allowed: @Body, @Query. (parameter #1)");
+    }
+  }
+
   private static interface ResponseCallback extends Callback<Response> {
   }
 
