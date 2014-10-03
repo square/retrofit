@@ -27,6 +27,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Both keys and values are converted to strings using {@link String#valueOf(Object)}. Values are
  * URL encoded and {@code null} will not include the query parameter in the URL.
+ * Passing an {@link java.lang.Iterable Iterable} or array as a value will result in a query
+ * parameter for each non-{@code null} item.
  * <p>
  * Simple Example:
  * <pre>
@@ -35,6 +37,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "bar", "kit", "kat"))} yields
  * {@code /search?foo=bar&kit=kat}.
+ * <p>
+ * Iterable example:
+ * <pre>
+ * &#64;GET("/search")
+ * void list(@QueryMap Map&lt;String, Iterable&lt;String&gt;&gt; filters);
+ * </pre>
+ * Calling with {@code foo.list(ImmutableMap.of("foo", ImmutableSet.of("bar", "baz")))} yields
+ * {@code /search?foo=bar&foo=baz}.
  *
  * @see Query
  * @see QueryMap
