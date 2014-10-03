@@ -24,6 +24,7 @@ import static com.google.appengine.api.urlfetch.HTTPMethod.POST;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static retrofit.TestingUtils.assertBytes;
 
@@ -81,6 +82,8 @@ public class UrlFetchClientTest {
   }
 
   @Test public void response() throws Exception {
+    HTTPRequest creatingRequest = mock(HTTPRequest.class);
+
     HTTPResponse fetchResponse = mock(HTTPResponse.class);
     when(fetchResponse.getHeaders()).thenReturn(
         asList(new HTTPHeader("foo", "bar"), new HTTPHeader("kit", "kat"),
@@ -89,7 +92,32 @@ public class UrlFetchClientTest {
     when(fetchResponse.getFinalUrl()).thenReturn(new URL(HOST + "/foo/bar/"));
     when(fetchResponse.getResponseCode()).thenReturn(200);
 
-    Response response = UrlFetchClient.parseResponse(fetchResponse);
+    Response response = UrlFetchClient.parseResponse(fetchResponse, creatingRequest);
+
+    assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getReason()).isEqualTo("");
+    assertThat(response.getHeaders()).hasSize(3) //
+        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"),
+            new Header("Content-Type", "text/plain"));
+    assertBytes(ByteStreams.toByteArray(response.getBody().in()), "hello");
+
+    verifyNoMoreInteractions(creatingRequest);
+  }
+
+  @Test public void responseNullUrlPullsFromRequest() throws Exception {
+    HTTPRequest creatingRequest = mock(HTTPRequest.class);
+    when(creatingRequest.getURL()).thenReturn(new URL(HOST + "/foo/bar/"));
+
+    HTTPResponse fetchResponse = mock(HTTPResponse.class);
+    when(fetchResponse.getHeaders()).thenReturn(
+        asList(new HTTPHeader("foo", "bar"), new HTTPHeader("kit", "kat"),
+            new HTTPHeader("Content-Type", "text/plain")));
+    when(fetchResponse.getContent()).thenReturn("hello".getBytes("UTF-8"));
+    when(fetchResponse.getFinalUrl()).thenReturn(null);
+    when(fetchResponse.getResponseCode()).thenReturn(200);
+
+    Response response = UrlFetchClient.parseResponse(fetchResponse, creatingRequest);
 
     assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
     assertThat(response.getStatus()).isEqualTo(200);
@@ -101,6 +129,8 @@ public class UrlFetchClientTest {
   }
 
   @Test public void emptyResponse() throws Exception {
+    HTTPRequest creatingRequest = mock(HTTPRequest.class);
+
     HTTPResponse fetchResponse = mock(HTTPResponse.class);
     when(fetchResponse.getHeaders()).thenReturn(
         asList(new HTTPHeader("foo", "bar"), new HTTPHeader("kit", "kat")));
@@ -108,7 +138,7 @@ public class UrlFetchClientTest {
     when(fetchResponse.getFinalUrl()).thenReturn(new URL(HOST + "/foo/bar/"));
     when(fetchResponse.getResponseCode()).thenReturn(200);
 
-    Response response = UrlFetchClient.parseResponse(fetchResponse);
+    Response response = UrlFetchClient.parseResponse(fetchResponse, creatingRequest);
 
     assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
     assertThat(response.getStatus()).isEqualTo(200);
@@ -116,6 +146,8 @@ public class UrlFetchClientTest {
     assertThat(response.getHeaders()).hasSize(2) //
         .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
     assertThat(response.getBody()).isNull();
+
+    verifyNoMoreInteractions(creatingRequest);
   }
 
   private static void assertHeader(HTTPHeader header, String name, String value) {
