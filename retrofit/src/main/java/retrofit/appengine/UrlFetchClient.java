@@ -51,7 +51,7 @@ public class UrlFetchClient implements Client {
   @Override public Response execute(Request request) throws IOException {
     HTTPRequest fetchRequest = createRequest(request);
     HTTPResponse fetchResponse = execute(urlFetchService, fetchRequest);
-    return parseResponse(fetchResponse);
+    return parseResponse(fetchResponse, fetchRequest);
   }
 
   /** Execute the specified {@code request} using the provided {@code urlFetchService}. */
@@ -84,8 +84,11 @@ public class UrlFetchClient implements Client {
     return fetchRequest;
   }
 
-  static Response parseResponse(HTTPResponse response) {
-    String url = response.getFinalUrl().toString();
+  static Response parseResponse(HTTPResponse response, HTTPRequest creatingRequest) {
+    // Response URL will be null if it is the same as the request URL.
+    URL responseUrl = response.getFinalUrl();
+    String urlString = (responseUrl != null ? responseUrl : creatingRequest.getURL()).toString();
+
     int status = response.getResponseCode();
 
     List<HTTPHeader> fetchHeaders = response.getHeaders();
@@ -106,6 +109,6 @@ public class UrlFetchClient implements Client {
       body = new TypedByteArray(contentType, fetchBody);
     }
 
-    return new Response(url, status, "", headers, body);
+    return new Response(urlString, status, "", headers, body);
   }
 }
