@@ -11,4 +11,8 @@ public class MimeHelper {
       throw new RuntimeException(e);
     }
   }
+
+  public static MultipartTypedOutput newMultipart(String boundary) {
+    return new MultipartTypedOutput(boundary);
+  }
 }

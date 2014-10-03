@@ -4,12 +4,13 @@ package retrofit;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import retrofit.mime.MimeHelper;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public abstract class TestingUtils {
+public final class TestingUtils {
   public static Method getMethod(Class c, String name) {
     for (Method method : c.getDeclaredMethods()) {
       if (method.getName().equals(name)) {
@@ -20,7 +21,7 @@ public abstract class TestingUtils {
   }
 
   public static TypedOutput createMultipart(Map<String, TypedOutput> parts) {
-    MultipartTypedOutput typedOutput = new MultipartTypedOutput();
+    MultipartTypedOutput typedOutput = MimeHelper.newMultipart("foobarbaz");
     for (Map.Entry<String, TypedOutput> part : parts.entrySet()) {
       typedOutput.addPart(part.getKey(), part.getValue());
     }
