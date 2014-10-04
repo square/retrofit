@@ -54,9 +54,7 @@ import retrofit.mime.TypedOutput;
  * Method parameters can be used to replace parts of the URL by annotating them with
  * {@link retrofit.http.Path @Path}. Replacement sections are denoted by an identifier surrounded
  * by curly braces (e.g., "{foo}"). To add items to the query string of a URL use
- * {@link retrofit.http.Query @Query}. If the path or query element has already been URI encoded
- * use {@link retrofit.http.EncodedPath @EncodedPath} or
- * {@link retrofit.http.EncodedQuery @EncodedQuery} to prevent repeated encoding.
+ * {@link retrofit.http.Query @Query}.
  * <p>
  * HTTP requests happen in one of two ways:
  * <ul>

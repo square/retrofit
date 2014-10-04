@@ -11,13 +11,12 @@ import retrofit.mime.TypedOutput;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class TestingUtils {
-  public static Method getMethod(Class c, String name) {
-    for (Method method : c.getDeclaredMethods()) {
-      if (method.getName().equals(name)) {
-        return method;
-      }
+  public static Method onlyMethod(Class c) {
+    Method[] declaredMethods = c.getDeclaredMethods();
+    if (declaredMethods.length == 1) {
+      return declaredMethods[0];
     }
-    throw new IllegalArgumentException("Unknown method '" + name + "' on " + c);
+    throw new IllegalArgumentException("More than one method declared.");
   }
 
   public static TypedOutput createMultipart(Map<String, TypedOutput> parts) {

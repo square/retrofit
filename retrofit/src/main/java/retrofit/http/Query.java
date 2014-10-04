@@ -50,14 +50,35 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  * Calling with {@code foo.list("bar", "baz")} yields
  * {@code /list?category=foo&category=bar}.
+ * <p>
+ * Parameter names are not URL encoded. Specify {@link #encodeName() encodeName=true} to change
+ * this behavior.
+ * <pre>
+ * &#64;GET("/search")
+ * void list(@Query(value="foo+bar", encodeName=true) String foobar);
+ * </pre>
+ * Calling with {@code foo.list("baz")} yields {@code /search?foo%2Bbar=foo}.
+ * <p>
+ * Parameter values are URL encoded by default. Specify {@link #encodeValue() encodeValue=false} to
+ * change this behavior.
+ * <pre>
+ * &#64;GET("/search")
+ * void list(@Query(value="foo", encodeValue=false) String foo);
+ * </pre>
+ * Calling with {@code foo.list("foo+foo"))} yields {@code /search?foo=foo+bar}.
  *
- * @see EncodedQuery
  * @see QueryMap
- * @see EncodedQueryMap
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface Query {
+  /** The query parameter name. */
   String value();
+
+  /** Specifies whether {@link #value()} is URL encoded. */
+  boolean encodeName() default false;
+
+  /** Specifies whether the argument value to the annotated method parameter is URL encoded. */
+  boolean encodeValue() default true;
 }

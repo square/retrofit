@@ -28,20 +28,24 @@ import java.util.Map;
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
+import retrofit.http.Body;
+import retrofit.http.EncodedPath;
+import retrofit.http.EncodedQuery;
+import retrofit.http.EncodedQueryMap;
+import retrofit.http.Field;
+import retrofit.http.FieldMap;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
+import retrofit.http.Path;
+import retrofit.http.Query;
+import retrofit.http.QueryMap;
 import retrofit.mime.FormUrlEncodedTypedOutput;
 import retrofit.mime.MultipartTypedOutput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
-import static retrofit.RestMethodInfo.ParamUsage.QUERY;
-import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
-
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
-  private final String[] paramNames;
-  private final RestMethodInfo.ParamUsage[] paramUsages;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
   private final boolean isSynchronous;
@@ -61,9 +65,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     this.apiUrl = apiUrl;
     this.converter = converter;
 
-    paramNames = methodInfo.requestParamNames;
-    paramUsages = methodInfo.requestParamUsage;
-    paramAnnotations = methodInfo.requestParamAnnotation;
+    paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
     isSynchronous = methodInfo.isSynchronous;
     isObservable = methodInfo.isObservable;
@@ -151,14 +153,33 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   @Override public void addQueryParam(String name, String value) {
-    addQueryParam(name, value, true);
+    addQueryParam(name, value, false, true);
   }
 
   @Override public void addEncodedQueryParam(String name, String value) {
-    addQueryParam(name, value, false);
+    addQueryParam(name, value, false, false);
   }
 
-  private void addQueryParam(String name, String value, boolean urlEncodeValue) {
+  private void addQueryParam(String name, Object value, boolean encodeName, boolean encodeValue) {
+    if (value instanceof Iterable) {
+      for (Object iterableValue : (Iterable<?>) value) {
+        if (iterableValue != null) { // Skip null values
+          addQueryParam(name, iterableValue.toString(), encodeName, encodeValue);
+        }
+      }
+    } else if (value.getClass().isArray()) {
+      for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+        Object arrayValue = Array.get(value, x);
+        if (arrayValue != null) { // Skip null values
+          addQueryParam(name, arrayValue.toString(), encodeName, encodeValue);
+        }
+      }
+    } else {
+      addQueryParam(name, value.toString(), encodeName, encodeValue);
+    }
+  }
+
+  private void addQueryParam(String name, String value, boolean encodeName, boolean encodeValue) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
@@ -166,19 +187,38 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
     }
     try {
-      if (urlEncodeValue) {
-        value = URLEncoder.encode(String.valueOf(value), "UTF-8");
-      }
       StringBuilder queryParams = this.queryParams;
       if (queryParams == null) {
         this.queryParams = queryParams = new StringBuilder();
       }
 
       queryParams.append(queryParams.length() > 0 ? '&' : '?');
+
+      if (encodeName) {
+        name = URLEncoder.encode(name, "UTF-8");
+      }
+      if (encodeValue) {
+        value = URLEncoder.encode(value, "UTF-8");
+      }
       queryParams.append(name).append('=').append(value);
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(
           "Unable to convert query parameter \"" + name + "\" value to UTF-8: " + value, e);
+    }
+  }
+
+  private void addQueryParamMap(int parameterNumber, Map<?, ?> map, boolean encodeNames,
+      boolean encodeValues) {
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      Object entryKey = entry.getKey();
+      if (entryKey == null) {
+        throw new IllegalArgumentException(
+            "Parameter #" + (parameterNumber + 1) + " query map contained null key.");
+      }
+      Object entryValue = entry.getValue();
+      if (entryValue != null) { // Skip null values.
+        addQueryParam(entryKey.toString(), entryValue.toString(), encodeNames, encodeValues);
+      }
     }
   }
 
@@ -191,137 +231,130 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       count -= 1;
     }
     for (int i = 0; i < count; i++) {
-      String name = paramNames[i];
-      Annotation annotation = paramAnnotations[i];
       Object value = args[i];
-      RestMethodInfo.ParamUsage paramUsage = paramUsages[i];
-      switch (paramUsage) {
-        case PATH:
-          if (value == null) {
-            throw new IllegalArgumentException(
-                "Path parameter \"" + name + "\" value must not be null.");
-          }
-          addPathParam(name, value.toString());
-          break;
-        case ENCODED_PATH:
-          if (value == null) {
-            throw new IllegalArgumentException(
-                "Path parameter \"" + name + "\" value must not be null.");
-          }
-          addEncodedPathParam(name, value.toString());
-          break;
-        case QUERY:
-        case ENCODED_QUERY:
-          if (value != null) { // Skip null values.
-            boolean urlEncodeValue = paramUsage == QUERY;
-            if (value instanceof Iterable) {
-              for (Object iterableValue : (Iterable<?>) value) {
-                if (iterableValue != null) { // Skip null values
-                  addQueryParam(name, iterableValue.toString(), urlEncodeValue);
-                }
-              }
-            } else if (value.getClass().isArray()) {
-              for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-                Object arrayValue = Array.get(value, x);
-                if (arrayValue != null) { // Skip null values
-                  addQueryParam(name, arrayValue.toString(), urlEncodeValue);
-                }
-              }
-            } else {
-              addQueryParam(name, value.toString(), urlEncodeValue);
-            }
-          }
-          break;
-        case QUERY_MAP:
-        case ENCODED_QUERY_MAP:
-          if (value != null) { // Skip null values.
-            boolean urlEncodeValue = paramUsage == QUERY_MAP;
-            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-              Object entryValue = entry.getValue();
-              if (entryValue != null) { // Skip null values.
-                addQueryParam(entry.getKey().toString(), entryValue.toString(), urlEncodeValue);
-              }
-            }
-          }
-          break;
-        case HEADER:
-          if (value != null) { // Skip null values.
-            addHeader(name, value.toString());
-          }
-          break;
-        case FIELD:
-          if (value != null) { // Skip null values.
-            if (value instanceof Iterable) {
-              for (Object iterableValue : (Iterable<?>) value) {
-                if (iterableValue != null) { // Skip null values.
-                  formBody.addField(name, iterableValue.toString());
-                }
-              }
-            } else if (value.getClass().isArray()) {
-              for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-                Object arrayValue = Array.get(value, x);
-                if (arrayValue != null) { // Skip null values.
-                  formBody.addField(name, arrayValue.toString());
-                }
-              }
-            } else {
-              formBody.addField(name, value.toString());
-            }
-          }
-          break;
-        case FIELD_MAP:
-          if (value != null) { // Skip null values.
-            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-              Object entryValue = entry.getValue();
-              if (entryValue != null) { // Skip null values.
-                formBody.addField(entry.getKey().toString(), entryValue.toString());
+
+      Annotation annotation = paramAnnotations[i];
+      Class<? extends Annotation> annotationType = annotation.annotationType();
+      if (annotationType == Path.class) {
+        Path path = (Path) annotation;
+        String name = path.value();
+        if (value == null) {
+          throw new IllegalArgumentException(
+              "Path parameter \"" + name + "\" value must not be null.");
+        }
+        addPathParam(name, value.toString(), path.encode());
+      } else if (annotationType == EncodedPath.class) {
+        String name = ((EncodedPath) annotation).value();
+        if (value == null) {
+          throw new IllegalArgumentException(
+              "Path parameter \"" + name + "\" value must not be null.");
+        }
+        addPathParam(name, value.toString(), false);
+      } else if (annotationType == Query.class) {
+        if (value != null) { // Skip null values.
+          Query query = (Query) annotation;
+          addQueryParam(query.value(), value, query.encodeName(), query.encodeValue());
+        }
+      } else if (annotationType == EncodedQuery.class) {
+        if (value != null) { // Skip null values.
+          EncodedQuery query = (EncodedQuery) annotation;
+          addQueryParam(query.value(), value, false, false);
+        }
+      } else if (annotationType == QueryMap.class) {
+        if (value != null) { // Skip null values.
+          QueryMap queryMap = (QueryMap) annotation;
+          addQueryParamMap(i, (Map<?, ?>) value, queryMap.encodeNames(), queryMap.encodeValues());
+        }
+      } else if (annotationType == EncodedQueryMap.class) {
+        if (value != null) { // Skip null values.
+          addQueryParamMap(i, (Map<?, ?>) value, false, false);
+        }
+      } else if (annotationType == retrofit.http.Header.class) {
+        if (value != null) { // Skip null values.
+          String name = ((retrofit.http.Header) annotation).value();
+          addHeader(name, value.toString());
+        }
+      } else if (annotationType == Field.class) {
+        String name = ((Field) annotation).value();
+        if (value != null) { // Skip null values.
+          if (value instanceof Iterable) {
+            for (Object iterableValue : (Iterable<?>) value) {
+              if (iterableValue != null) { // Skip null values.
+                formBody.addField(name, iterableValue.toString());
               }
             }
-          }
-          break;
-        case PART:
-          if (value != null) { // Skip null values.
-            String transferEncoding = ((Part) annotation).encoding();
-            if (value instanceof TypedOutput) {
-              multipartBody.addPart(name, transferEncoding, (TypedOutput) value);
-            } else if (value instanceof String) {
-              multipartBody.addPart(name, transferEncoding, new TypedString((String) value));
-            } else {
-              multipartBody.addPart(name, transferEncoding, converter.toBody(value));
-            }
-          }
-          break;
-        case PART_MAP:
-          if (value != null) { // Skip null values.
-            String transferEncoding = ((PartMap) annotation).encoding();
-            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-              String entryName = entry.getKey().toString();
-              Object entryValue = entry.getValue();
-              if (entryValue != null) { // Skip null values.
-                if (entryValue instanceof TypedOutput) {
-                  multipartBody.addPart(entryName, transferEncoding, (TypedOutput) entryValue);
-                } else if (entryValue instanceof String) {
-                  multipartBody.addPart(entryName, transferEncoding,
-                      new TypedString((String) entryValue));
-                } else {
-                  multipartBody.addPart(entryName, transferEncoding, converter.toBody(entryValue));
-                }
+          } else if (value.getClass().isArray()) {
+            for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+              Object arrayValue = Array.get(value, x);
+              if (arrayValue != null) { // Skip null values.
+                formBody.addField(name, arrayValue.toString());
               }
             }
-          }
-          break;
-        case BODY:
-          if (value == null) {
-            throw new IllegalArgumentException("Body parameter value must not be null.");
-          }
-          if (value instanceof TypedOutput) {
-            body = (TypedOutput) value;
           } else {
-            body = converter.toBody(value);
+            formBody.addField(name, value.toString());
           }
-          break;
-        default:
-          throw new IllegalArgumentException("Unknown parameter usage: " + paramUsage);
+        }
+      } else if (annotationType == FieldMap.class) {
+        if (value != null) { // Skip null values.
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+            Object entryKey = entry.getKey();
+            if (entryKey == null) {
+              throw new IllegalArgumentException(
+                  "Parameter #" + (i + 1) + " field map contained null key.");
+            }
+            Object entryValue = entry.getValue();
+            if (entryValue != null) { // Skip null values.
+              formBody.addField(entryKey.toString(), entryValue.toString());
+            }
+          }
+        }
+      } else if (annotationType == Part.class) {
+        String name = ((Part) annotation).value();
+        if (value != null) { // Skip null values.
+          String transferEncoding = ((Part) annotation).encoding();
+          if (value instanceof TypedOutput) {
+            multipartBody.addPart(name, transferEncoding, (TypedOutput) value);
+          } else if (value instanceof String) {
+            multipartBody.addPart(name, transferEncoding, new TypedString((String) value));
+          } else {
+            multipartBody.addPart(name, transferEncoding, converter.toBody(value));
+          }
+        }
+      } else if (annotationType == PartMap.class) {
+        if (value != null) { // Skip null values.
+          String transferEncoding = ((PartMap) annotation).encoding();
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+            Object entryKey = entry.getKey();
+            if (entryKey == null) {
+              throw new IllegalArgumentException(
+                  "Parameter #" + (i + 1) + " part map contained null key.");
+            }
+            String entryName = entryKey.toString();
+            Object entryValue = entry.getValue();
+            if (entryValue != null) { // Skip null values.
+              if (entryValue instanceof TypedOutput) {
+                multipartBody.addPart(entryName, transferEncoding, (TypedOutput) entryValue);
+              } else if (entryValue instanceof String) {
+                multipartBody.addPart(entryName, transferEncoding,
+                    new TypedString((String) entryValue));
+              } else {
+                multipartBody.addPart(entryName, transferEncoding, converter.toBody(entryValue));
+              }
+            }
+          }
+        }
+      } else if (annotationType == Body.class) {
+        if (value == null) {
+          throw new IllegalArgumentException("Body parameter value must not be null.");
+        }
+        if (value instanceof TypedOutput) {
+          body = (TypedOutput) value;
+        } else {
+          body = converter.toBody(value);
+        }
+      } else {
+        throw new IllegalArgumentException(
+            "Unknown annotation: " + annotationType.getCanonicalName());
       }
     }
   }

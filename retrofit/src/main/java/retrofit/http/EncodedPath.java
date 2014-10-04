@@ -33,8 +33,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  * <p>
  * Path parameters may not be {@code null}.
+ *
+ * @see Path
+ * @deprecated Use {@link Path} with {@link Path#encode() encode = false}.
  */
 @Documented
+@Deprecated
 @Retention(RUNTIME)
 @Target(PARAMETER)
 public @interface EncodedPath {
