@@ -4,12 +4,12 @@ package retrofit;
 import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
+import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,462 +17,1188 @@ import java.util.Map;
 import org.junit.Test;
 import retrofit.client.Header;
 import retrofit.client.Request;
+import retrofit.client.Response;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
+import retrofit.http.Body;
+import retrofit.http.DELETE;
+import retrofit.http.EncodedPath;
+import retrofit.http.EncodedQuery;
+import retrofit.http.EncodedQueryMap;
+import retrofit.http.Field;
+import retrofit.http.FieldMap;
+import retrofit.http.FormUrlEncoded;
+import retrofit.http.GET;
+import retrofit.http.HEAD;
+import retrofit.http.Headers;
+import retrofit.http.Multipart;
+import retrofit.http.PATCH;
+import retrofit.http.POST;
+import retrofit.http.PUT;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
+import retrofit.http.Path;
+import retrofit.http.Query;
+import retrofit.http.QueryMap;
+import retrofit.http.RestMethod;
+import retrofit.http.Streaming;
 import retrofit.mime.MimeHelper;
 import retrofit.mime.MultipartTypedOutput;
+import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
+import rx.Observable;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static retrofit.RestMethodInfo.ParamUsage;
-import static retrofit.RestMethodInfo.ParamUsage.BODY;
-import static retrofit.RestMethodInfo.ParamUsage.ENCODED_PATH;
-import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY;
-import static retrofit.RestMethodInfo.ParamUsage.ENCODED_QUERY_MAP;
-import static retrofit.RestMethodInfo.ParamUsage.FIELD;
-import static retrofit.RestMethodInfo.ParamUsage.FIELD_MAP;
-import static retrofit.RestMethodInfo.ParamUsage.HEADER;
-import static retrofit.RestMethodInfo.ParamUsage.PART;
-import static retrofit.RestMethodInfo.ParamUsage.PART_MAP;
-import static retrofit.RestMethodInfo.ParamUsage.PATH;
-import static retrofit.RestMethodInfo.ParamUsage.QUERY;
-import static retrofit.RestMethodInfo.ParamUsage.QUERY_MAP;
-import static retrofit.RestMethodInfo.RequestType;
-import static retrofit.mime.MultipartTypedOutput.DEFAULT_TRANSFER_ENCODING;
+import static org.junit.Assert.fail;
 
+@SuppressWarnings("UnusedParameters") // Parameters inspected reflectively.
 public class RequestBuilderTest {
-  @Test public void normalGet() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .build();
+  private RequestInterceptor interceptor;
+
+  @RestMethod("BAD")
+  @Target(METHOD) @Retention(RUNTIME)
+  private @interface BAD_CUSTOM {
+    int value();
+  }
+
+  @Test public void customWithoutRestMethod() {
+    class Example {
+      @BAD_CUSTOM(12) //
+      Response method() {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Failed to extract String 'value' from @BAD_CUSTOM annotation.");
+    }
+  }
+
+  @RestMethod("CUSTOM1")
+  @Target(METHOD) @Retention(RUNTIME)
+  private @interface CUSTOM1 {
+    String value();
+  }
+
+  @Test public void custom1Method() {
+    class Example {
+      @CUSTOM1("/foo") //
+      Response method() {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class);
+    assertThat(request.getMethod()).isEqualTo("CUSTOM1");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @RestMethod(value = "CUSTOM2", hasBody = true)
+  @Target(METHOD) @Retention(RUNTIME)
+  private @interface CUSTOM2 {
+    String value();
+  }
+
+  @Test public void custom2Method() {
+    class Example {
+      @CUSTOM2("/foo") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, new TypedString("hi"));
+    assertThat(request.getMethod()).isEqualTo("CUSTOM2");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo");
+    assertTypedBytes(request.getBody(), "hi");
+  }
+
+  @Test public void onlyOneEncodingIsAllowedMultipartFirst() {
+    class Example {
+      @Multipart //
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
+    }
+  }
+
+  @Test public void onlyOneEncodingIsAllowedFormEncodingFirst() {
+    class Example {
+      @FormUrlEncoded //
+      @Multipart //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
+    }
+  }
+
+  @Test public void invalidPathParam() throws Exception {
+    class Example {
+      @GET("/") //
+      Response method(@Path("hey!") String thing) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}."
+              + " Found: hey! (parameter #1)");
+    }
+  }
+
+  @Test public void pathParamNotAllowedInQuery() throws Exception {
+    class Example {
+      @GET("/foo?bar={bar}") //
+      Response method(@Path("bar") String thing) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: URL query string \"bar={bar}\" must not have replace block."
+              + " For dynamic query parameters use @Query.");
+    }
+  }
+
+  @Test public void multipleParameterAnnotationsNotAllowed() throws Exception {
+    class Example {
+      @GET("/") //
+      Response method(@Body @Query("nope") Object o) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Multiple Retrofit annotations found, only one allowed:"
+              + " @Body, @Query. (parameter #1)");
+    }
+  }
+
+  @Test public void twoMethodsFail() {
+    class Example {
+      @PATCH("/foo") //
+      @POST("/foo") //
+      Response method() {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Only one HTTP method is allowed. Found: PATCH and POST.");
+    }
+  }
+
+  @Test public void pathMustBePrefixedWithSlash() {
+    class Example {
+      @GET("foo/bar") //
+      Response method() {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: URL path \"foo/bar\" must start with '/'.");
+    }
+  }
+
+  @Test public void streamingResponseNotAllowed() {
+    class Example {
+      @GET("/foo") //
+      @Streaming //
+      String method() {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Only methods having Response as data type are allowed to have @Streaming annotation.");
+    }
+  }
+
+  @Test public void streamingResponseWithCallbackNotAllowed() {
+    class Example {
+      @GET("/foo") //
+      @Streaming //
+      void method(Callback<String> callback) {
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Only methods having Response as data type are allowed to have @Streaming annotation.");
+    }
+  }
+
+  @Test public void observableWithCallback() {
+    class Example {
+      @GET("/foo") //
+      Observable<Response> method(Callback<Response> callback) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Must have return type or Callback as last argument, not both.");
+    }
+  }
+
+  @Test public void missingCallbackTypes() {
+    class Example {
+      @GET("/foo") //
+      void method(@Query("id") String id) {
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Must have either a return type or Callback as last argument.");
+    }
+  }
+
+  @Test public void nonParameterizedCallbackFails() {
+    class Example {
+      @GET("/foo") //
+      void method(Callback cb) {
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Last parameter must be of type Callback<X> or Callback<? super X>.");
+    }
+  }
+
+  @Test public void synchronousWithAsyncCallback() {
+    class Example {
+      @GET("/foo") //
+      Response method(Callback<Response> callback) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Must have return type or Callback as last argument, not both.");
+    }
+  }
+
+  @Test public void lackingMethod() {
+    class Example {
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: HTTP method annotation is required (e.g., @GET, @POST, etc.).");
+    }
+  }
+
+  @Test public void implicitMultipartForbidden() {
+    class Example {
+      @POST("/") //
+      Response method(@Part("a") int a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @Part parameters can only be used with multipart encoding. (parameter #1)");
+    }
+  }
+
+  @Test public void implicitMultipartWithPartMapForbidden() {
+    class Example {
+      @POST("/") //
+      Response method(@PartMap Map<String, String> params) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @PartMap parameters can only be used with multipart encoding. (parameter #1)");
+    }
+  }
+
+  @Test public void multipartFailsOnNonBodyMethod() {
+    class Example {
+      @Multipart //
+      @GET("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
+    }
+  }
+
+  @Test public void multipartFailsWithNoParts() {
+    class Example {
+      @Multipart //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Multipart method must contain at least one @Part.");
+    }
+  }
+
+  @Test public void implicitFormEncodingByFieldForbidden() {
+    class Example {
+      @POST("/") //
+      Response method(@Field("a") int a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @Field parameters can only be used with form encoding. (parameter #1)");
+    }
+  }
+
+  @Test public void implicitFormEncodingByFieldMapForbidden() {
+    class Example {
+      @POST("/") //
+      Response method(@FieldMap Map<String, String> a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @FieldMap parameters can only be used with form encoding. (parameter #1)");
+    }
+  }
+
+  @Test public void formEncodingFailsOnNonBodyMethod() {
+    class Example {
+      @FormUrlEncoded //
+      @GET("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).");
+    }
+  }
+
+  @Test public void formEncodingFailsWithNoParts() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Form-encoded method must contain at least one @Field.");
+    }
+  }
+
+  @Test public void headersFailWhenEmptyOnMethod() {
+    class Example {
+      @GET("/") //
+      @Headers({}) //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: @Headers annotation is empty.");
+    }
+  }
+
+  @Test public void headersFailWhenMalformed() {
+    class Example {
+      @GET("/") //
+      @Headers("Malformed") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @Headers value must be in the form \"Name: Value\". Found: \"Malformed\"");
+    }
+  }
+
+  @Test public void pathParamNonPathParamAndTypedBytes() {
+    class Example {
+      @PUT("/{a}") //
+      Response method(@Path("a") int a, @Path("b") int b, @Body int c) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: URL \"/{a}\" does not contain \"{b}\". (parameter #2)");
+    }
+  }
+
+  @Test public void parameterWithoutAnnotation() {
+    class Example {
+      @GET("/") //
+      Response method(String a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: No Retrofit annotation found. (parameter #1)");
+    }
+  }
+
+  @Test public void nonBodyHttpMethodWithSingleEntity() {
+    class Example {
+      @GET("/") //
+      Response method(@Body Object o) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Non-body HTTP method cannot contain @Body or @TypedOutput.");
+    }
+  }
+
+  @Test public void queryMapMustBeAMap() {
+    class Example {
+      @GET("/") //
+      Response method(@QueryMap List<String> a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: @QueryMap parameter type must be Map. (parameter #1)");
+    }
+  }
+
+  @Test public void twoBodies() {
+    class Example {
+      @PUT("/") //
+      Response method(@Body int o1, @Body int o2) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Multiple @Body method annotations found.");
+    }
+  }
+
+  @Test public void bodyInNonBodyRequest() {
+    class Example {
+      @Multipart //
+      @PUT("/") //
+      Response method(@Part("one") int o1, @Body int o2) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @Body parameters cannot be used with form or multi-part encoding. (parameter #2)");
+    }
+  }
+
+  @Test public void get() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong") //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("GET");
+  @Test public void delete() {
+    class Example {
+      @DELETE("/foo/bar/") //
+      Response method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.getMethod()).isEqualTo("DELETE");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedPathParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addEncodedPathParam("ping", "po%20ng") //
-        .build();
+  @Test public void head() {
+    class Example {
+      @HEAD("/foo/bar/") //
+      Response method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.getMethod()).isEqualTo("HEAD");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void post() {
+    class Example {
+      @POST("/foo/bar/") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new TypedString("hi"));
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "hi");
+  }
+
+  @Test public void put() {
+    class Example {
+      @PUT("/foo/bar/") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new TypedString("hi"));
+    assertThat(request.getMethod()).isEqualTo("PUT");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "hi");
+  }
+
+  @Test public void patch() {
+    class Example {
+      @PATCH("/foo/bar/") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new TypedString("hi"));
+    assertThat(request.getMethod()).isEqualTo("PATCH");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "hi");
+  }
+
+  @Test public void getWithPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "po ng");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithInterceptorPathParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addInterceptorPathParam("ping", "pong") //
-        .build();
+  @Test public void getWithEncodedPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@EncodedPath("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "po%20ng");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathParamAndInterceptorPathParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/{kit}/") //
-        .addPathParam("ping", "pong") //
-        .addInterceptorPathParam("kit", "kat")
-        .build();
+  @Test public void getWithInterceptorPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addPathParam("ping", "po ng");
+      }
+    };
+    Request request = buildRequest(Example.class);
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithInterceptorEncodedPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addEncodedPathParam("ping", "po%20ng");
+      }
+    };
+    Request request = buildRequest(Example.class);
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithPathParamAndInterceptorPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/{kit}/") //
+      Response method(@Path("ping") String ping) {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addPathParam("kit", "kat");
+      }
+    };
+    Request request = buildRequest(Example.class, "pong");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithInterceptorQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addInterceptorQueryParam("butter", "finger") //
-        .build();
+  @Test public void getWithInterceptorQueryParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addQueryParam("ping", "po ng");
+      }
+    };
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?butter=finger");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=po+ng");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathParamAndInterceptorQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong") //
-        .addInterceptorQueryParam("butter", "finger")
-        .build();
+  @Test public void getWithPathParamAndInterceptorQueryParam() {
+    class Example {
+      @GET("/foo/bar/{kit}/") //
+      Response method(@Path("kit") String kit) {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addQueryParam("ping", "pong");
+      }
+    };
+    Request request = buildRequest(Example.class, "kat");
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/kat/?ping=pong");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithInterceptorPathParamAndInterceptorQueryParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addPathParam("ping", "pong");
+        request.addQueryParam("butter", "finger");
+      }
+    };
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?butter=finger");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithInterceptorPathParamAndInterceptorQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addInterceptorPathParam("ping", "pong") //
-        .addInterceptorQueryParam("butter", "finger") //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?butter=finger");
-    assertThat(request.getBody()).isNull();
-  }
-
-  @Test public void getWithPathParamAndInterceptorPathParamAndInterceptorQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/{kit}/") //
-        .addPathParam("ping", "pong") //
-        .addInterceptorPathParam("kit", "kat")
-        .addInterceptorQueryParam("butter", "finger")
-        .build();
+  @Test public void getWithPathParamAndInterceptorPathParamAndInterceptorQueryParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/{kit}/") //
+      Response method(@Path("ping") String ping) {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addPathParam("kit", "kat");
+        request.addQueryParam("butter", "finger");
+      }
+    };
+    Request request = buildRequest(Example.class, "pong");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/?butter=finger");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void pathParamRequired() throws Exception {
+  @Test public void pathParamRequired() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping) {
+        return null;
+      }
+    }
     try {
-      new Helper() //
-          .setMethod("GET") //
-          .setUrl("http://example.com") //
-          .setPath("/foo/bar/{ping}/") //
-          .addPathParam("ping", null) //
-          .build();
-      fail("Null path parameters not allowed.");
+      buildRequest(Example.class, new Object[] { null });
+      fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("Path parameter \"ping\" value must not be null.");
     }
   }
 
-  @Test public void getWithQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryParam("ping", "pong") //
-        .build();
+  @Test public void getWithQueryParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@EncodedQuery("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=pong");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addEncodedQueryParam("ping", "p+o+n+g") //
-        .build();
+  @Test public void getWithEncodedQueryParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@EncodedQuery("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "p+o+n+g");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=p+o+n+g");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void queryParamOptional() throws Exception {
-    Request request1 = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryParam("ping", null) //
-        .build();
-    assertThat(request1.getUrl()).isEqualTo("http://example.com/foo/bar/");
-
-    Request request2 = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryParam("foo", "bar") //
-        .addQueryParam("ping", null) //
-        .addQueryParam("kit", "kat") //
-        .build();
-    assertThat(request2.getUrl()).isEqualTo("http://example.com/foo/bar/?foo=bar&kit=kat");
+  @Test public void queryParamOptionalOmitsQuery() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new Object[] { null });
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
   }
 
-  @Test public void getWithQueryUrlAndParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setQuery("hi=mom") //
-        .addQueryParam("ping", "pong") //
-        .build();
+  @Test public void queryParamOptional() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query("foo") String foo, @Query("ping") String ping,
+          @Query("kit") String kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", null, "kat");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?foo=bar&kit=kat");
+  }
+
+  @Test public void getWithQueryUrlAndParam() {
+    class Example {
+      @GET("/foo/bar/?hi=mom") //
+      Response method(@Query("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?hi=mom&ping=pong");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithQuery() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setQuery("hi=mom") //
-        .build();
+  @Test public void getWithQuery() {
+    class Example {
+      @GET("/foo/bar/?hi=mom") //
+      Response method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?hi=mom");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathAndQueryParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong") //
-        .addQueryParam("kit", "kat") //
-        .addQueryParam("riff", "raff") //
-        .build();
+  @Test public void getWithPathAndQueryParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping, @Query("kit") String kit,
+          @Query("riff") String riff) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", "kat", "raff");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathAndQueryQuestionMarkParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong?") //
-        .addQueryParam("kit", "kat?") //
-        .build();
+  @Test public void getWithPathAndQueryQuestionMarkParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping, @Query("kit") String kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong?", "kat?");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat%3F");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathAndQueryAmpersandParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong&") //
-        .addQueryParam("kit", "kat&") //
-        .build();
+  @Test public void getWithPathAndQueryAmpersandParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping, @Query("kit") String kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong&", "kat&");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%26/?kit=kat%26");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithPathAndQueryHashParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong#") //
-        .addQueryParam("kit", "kat#") //
-        .build();
+  @Test public void getWithPathAndQueryHashParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping, @Query("kit") String kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong#", "kat#");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithQueryParamList() throws Exception {
+  @Test public void getWithQueryParamList() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query("key") List<Object> keys) {
+        return null;
+      }
+    }
+
     List<Object> values = Arrays.<Object>asList(1, 2, null, "three");
-
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryParam("key", values) //
-        .build();
+    Request request = buildRequest(Example.class, values);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithQueryParamArray() throws Exception {
+  @Test public void getWithQueryParamArray() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query("key") Object[] keys) {
+        return null;
+      }
+    }
+
     Object[] values = { 1, 2, null, "three" };
-
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryParam("key", values) //
-        .build();
+    Request request = buildRequest(Example.class, new Object[] { values });
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithQueryParamPrimitiveArray() throws Exception {
-    int[] values = { 1, 2, 3 };
+  @Test public void getWithQueryParamPrimitiveArray() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query("key") int[] keys) {
+        return null;
+      }
+    }
 
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryParam("key", values) //
-        .build();
+    int[] values = { 1, 2, 3 };
+    Request request = buildRequest(Example.class, new Object[] { values });
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=3");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithQueryParamMap() throws Exception {
+  @Test public void getWithQueryParamMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@QueryMap Map<String, Object> query) {
+        return null;
+      }
+    }
+
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("kit", "kat");
     params.put("foo", null);
     params.put("ping", "pong");
 
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addQueryMapParams("options", params) //
-        .build();
+    Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedQueryParamMap() throws Exception {
+  @Test public void getWithEncodedQueryParamMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@EncodedQueryMap Map<String, Object> query) {
+        return null;
+      }
+    }
+
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("kit", "k%20t");
     params.put("foo", null);
     params.put("ping", "p%20g");
 
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addEncodedQueryMapParams("options", params) //
-        .build();
+    Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void normalPost() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("POST");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.getBody()).isNull();
+  @Test public void encodedQueryMapMustBeAMap() {
+    class Example {
+      @GET("/") //
+      Response method(@EncodedQueryMap List<String> a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @EncodedQueryMap parameter type must be Map. (parameter #1)");
+    }
   }
 
-  @Test public void normalPostWithPathParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/") //
-        .addPathParam("ping", "pong") //
-        .build();
+  @Test public void normalPostWithPathParam() {
+    class Example {
+      @POST("/foo/bar/{ping}/") //
+      Response method(@Path("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void body() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setBody(Arrays.asList("quick", "brown", "fox")) //
-        .build();
+  @Test public void bodyGson() {
+    class Example {
+      @POST("/foo/bar/") //
+      Response method(@Body Object body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, Arrays.asList("quick", "brown", "fox"));
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
 
-  @Test public void bodyRequired() throws Exception {
+  @Test public void bodyTypedInput() {
+    class Example {
+      @POST("/foo/bar/") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new TypedString("hi"));
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "hi");
+  }
+
+  @Test public void bodyRequired() {
+    class Example {
+      @POST("/foo/bar/") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
     try {
-      new Helper() //
-          .setMethod("POST") //
-          .setHasBody() //
-          .setUrl("http://example.com") //
-          .setPath("/foo/bar/") //
-          .setBody(null) //
-          .build();
-      fail("Null body not allowed.");
+      buildRequest(Example.class, new Object[] { null });
+      fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("Body parameter value must not be null.");
     }
   }
 
-  @Test public void bodyWithPathParams() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/{ping}/{kit}/") //
-        .addPathParam("ping", "pong") //
-        .setBody(Arrays.asList("quick", "brown", "fox")) //
-        .addPathParam("kit", "kat") //
-        .build();
+  @Test public void bodyWithPathParams() {
+    class Example {
+      @POST("/foo/bar/{ping}/{kit}/") //
+      Response method(@Path("ping") String ping, @Body Object body, @Path("kit") String kit) {
+        return null;
+      }
+    }
+    Request request =
+        buildRequest(Example.class, "pong", Arrays.asList("quick", "brown", "fox"), "kat");
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
   }
 
-  @Test public void simpleMultipart() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setMultipart() //
-        .addPart("ping", "pong") //
-        .addPart("kit", new TypedString("kat")) //
-        .build();
+  @Test public void simpleMultipart() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part("ping") String ping, @Part("kit") TypedInput kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", new TypedString("kat"));
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
@@ -483,23 +1209,24 @@ public class RequestBuilderTest {
 
     Iterator<byte[]> iterator = bodyParts.iterator();
 
-    String one = new String(iterator.next(), "UTF-8");
+    String one = new String(iterator.next(), UTF_8);
     assertThat(one).contains("name=\"ping\"\r\n").endsWith("\r\npong");
 
-    String two = new String(iterator.next(), "UTF-8");
+    String two = new String(iterator.next(), UTF_8);
     assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
   }
 
-  @Test public void multipartWithEncoding() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setMultipart() //
-        .addPart("ping", "8-bit", "pong") //
-        .addPart("kit", "7-bit", new TypedString("kat")) //
-        .build();
+  @Test public void multipartWithEncoding() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part(value = "ping", encoding = "8-bit") String ping,
+          @Part(value = "kit", encoding = "7-bit") TypedInput kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", new TypedString("kat"));
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
@@ -510,30 +1237,31 @@ public class RequestBuilderTest {
 
     Iterator<byte[]> iterator = bodyParts.iterator();
 
-    String one = new String(iterator.next(), "UTF-8");
+    String one = new String(iterator.next(), UTF_8);
     assertThat(one).contains("name=\"ping\"\r\n")
         .contains("Content-Transfer-Encoding: 8-bit")
         .endsWith("\r\npong");
 
-    String two = new String(iterator.next(), "UTF-8");
+    String two = new String(iterator.next(), UTF_8);
     assertThat(two).contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 7-bit")
         .endsWith("\r\nkat");
   }
 
-  @Test public void multipartPartMap() throws Exception {
+  @Test public void multipartPartMap() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@PartMap Map<String, Object> parts) {
+        return null;
+      }
+    }
+
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("ping", "pong");
     params.put("kit", new TypedString("kat"));
 
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setMultipart() //
-        .addPartMap("params", params) //
-        .build();
+    Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
@@ -544,26 +1272,27 @@ public class RequestBuilderTest {
 
     Iterator<byte[]> iterator = bodyParts.iterator();
 
-    String one = new String(iterator.next(), "UTF-8");
+    String one = new String(iterator.next(), UTF_8);
     assertThat(one).contains("name=\"ping\"\r\n").endsWith("\r\npong");
 
-    String two = new String(iterator.next(), "UTF-8");
+    String two = new String(iterator.next(), UTF_8);
     assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
   }
 
-  @Test public void multipartPartMapWithEncoding() throws Exception {
+  @Test public void multipartPartMapWithEncoding() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@PartMap(encoding = "8-bit") Map<String, Object> parts) {
+        return null;
+      }
+    }
+
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("ping", "pong");
     params.put("kit", new TypedString("kat"));
 
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setMultipart() //
-        .addPartMap("params", "8-bit", params) //
-        .build();
+    Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
@@ -574,27 +1303,26 @@ public class RequestBuilderTest {
 
     Iterator<byte[]> iterator = bodyParts.iterator();
 
-    String one = new String(iterator.next(), "UTF-8");
+    String one = new String(iterator.next(), UTF_8);
     assertThat(one).contains("name=\"ping\"\r\n")
         .contains("Content-Transfer-Encoding: 8-bit")
         .endsWith("\r\npong");
 
-    String two = new String(iterator.next(), "UTF-8");
+    String two = new String(iterator.next(), UTF_8);
     assertThat(two).contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 8-bit")
         .endsWith("\r\nkat");
   }
 
-  @Test public void multipartNullRemovesPart() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .setMultipart() //
-        .addPart("ping", "pong") //
-        .addPart("fizz", null) //
-        .build();
+  @Test public void multipartNullRemovesPart() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part("ping") String ping, @Part("fizz") String fizz) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong", null);
     assertThat(request.getMethod()).isEqualTo("POST");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
@@ -605,122 +1333,139 @@ public class RequestBuilderTest {
 
     Iterator<byte[]> iterator = bodyParts.iterator();
 
-    String one = new String(iterator.next(), "UTF-8");
+    String one = new String(iterator.next(), UTF_8);
     assertThat(one).contains("name=\"ping\"").endsWith("\r\npong");
   }
 
-  @Test public void multipartPartOptional() throws Exception {
+  @Test public void multipartPartOptional() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part("ping") TypedInput ping) {
+        return null;
+      }
+    }
     try {
-      new Helper() //
-          .setMethod("POST") //
-          .setHasBody() //
-          .setUrl("http://example.com") //
-          .setPath("/foo/bar/") //
-          .setMultipart() //
-          .addPart("ping", null) //
-          .build();
-      fail("Empty multipart request is not allowed.");
+      buildRequest(Example.class, new Object[] { null });
+      fail();
     } catch (IllegalStateException e) {
       assertThat(e.getMessage()).isEqualTo("Multipart requests must contain at least one part.");
     }
   }
 
-  @Test public void simpleFormEncoded() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo") //
-        .setFormEncoded() //
-        .addField("foo", "bar") //
-        .addField("ping", "pong") //
-        .build();
+  @Test public void simpleFormEncoded() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") String foo, @Field("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", "pong");
     assertTypedBytes(request.getBody(), "foo=bar&ping=pong");
   }
 
-  @Test public void formEncodedFieldOptional() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo") //
-        .setFormEncoded() //
-        .addField("foo", "bar") //
-        .addField("ping", null) //
-        .addField("kit", "kat") //
-        .build();
+  @Test public void formEncodedFieldOptional() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") String foo, @Field("ping") String ping,
+          @Field("kit") String kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", null, "kat");
     assertTypedBytes(request.getBody(), "foo=bar&kit=kat");
   }
 
-  @Test public void formEncodedFieldList() throws Exception {
-    List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
+  @Test public void formEncodedFieldList() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") List<Object> fields, @Field("kit") String kit) {
+        return null;
+      }
+    }
 
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo") //
-        .setFormEncoded() //
-        .addField("foo", values) //
-        .addField("kit", "kat") //
-        .build();
+    List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
+    Request request = buildRequest(Example.class, values, "kat");
     assertTypedBytes(request.getBody(), "foo=foo&foo=bar&foo=3&kit=kat");
   }
 
-  @Test public void formEncodedFieldArray() throws Exception {
-    Object[] values = { 1, 2, null, "three" };
+  @Test public void formEncodedFieldArray() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") Object[] fields, @Field("kit") String kit) {
+        return null;
+      }
+    }
 
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo") //
-        .setFormEncoded() //
-        .addField("foo", values) //
-        .addField("kit", "kat") //
-        .build();
+    Object[] values = { 1, 2, null, "three" };
+    Request request = buildRequest(Example.class, values, "kat");
     assertTypedBytes(request.getBody(), "foo=1&foo=2&foo=three&kit=kat");
   }
 
-  @Test public void formEncodedFieldPrimitiveArray() throws Exception {
-    int[] values = { 1, 2, 3 };
+  @Test public void formEncodedFieldPrimitiveArray() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") int[] fields, @Field("kit") String kit) {
+        return null;
+      }
+    }
 
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo") //
-        .setFormEncoded() //
-        .addField("foo", values) //
-        .addField("kit", "kat") //
-        .build();
+    int[] values = { 1, 2, 3 };
+    Request request = buildRequest(Example.class, values, "kat");
     assertTypedBytes(request.getBody(), "foo=1&foo=2&foo=3&kit=kat");
   }
 
-  @Test public void formEncodedFieldMap() throws Exception {
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
-    params.put("kit", "kat");
-    params.put("foo", null);
-    params.put("ping", "pong");
+  @Test public void formEncodedFieldMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@FieldMap Map<String, Object> fieldMap) {
+        return null;
+      }
+    }
 
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setHasBody() //
-        .setUrl("http://example.com") //
-        .setPath("/foo") //
-        .setFormEncoded() //
-        .addFieldMap("options", params) //
-        .build();
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put("foo", null);
+    fieldMap.put("ping", "pong");
+
+    Request request = buildRequest(Example.class, fieldMap);
     assertTypedBytes(request.getBody(), "kit=kat&ping=pong");
   }
 
-  @Test public void simpleHeaders() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeaders("ping: pong", "kit: kat") //
-        .build();
+  @Test public void fieldMapMustBeAMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method(@FieldMap List<String> a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: @FieldMap parameter type must be Map. (parameter #1)");
+    }
+  }
+
+  @Test public void simpleHeaders() {
+    class Example {
+      @GET("/foo/bar/")
+      @Headers({
+          "ping: pong",
+          "kit: kat"
+      })
+      Response method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
         .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
@@ -728,14 +1473,20 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void simpleInterceptorHeaders() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addInterceptorHeader("ping", "pong") //
-        .addInterceptorHeader("kit", "kat") //
-        .build();
+  @Test public void simpleInterceptorHeaders() {
+    class Example {
+      @GET("/foo/bar/")
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addHeader("ping", "pong");
+        request.addHeader("kit", "kat");
+      }
+    };
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
         .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
@@ -743,14 +1494,20 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void headersAndInterceptorHeaders() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeaders("ping: pong") //
-        .addInterceptorHeader("kit", "kat") //
-        .build();
+  @Test public void headersAndInterceptorHeaders() {
+    class Example {
+      @GET("/foo/bar/") //
+      @Headers("ping: pong") //
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addHeader("kit", "kat");
+      }
+    };
+    Request request = buildRequest(Example.class);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
         .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
@@ -758,15 +1515,20 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void allThreeHeaderTypes() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeaders("ping: pong") //
-        .addInterceptorHeader("kit", "kat") //
-        .addHeaderParam("fizz", "buzz") //
-        .build();
+  @Test public void allThreeHeaderTypes() {
+    class Example {
+      @GET("/foo/bar/") //
+      @Headers("ping: pong") //
+      Response method(@retrofit.http.Header("fizz") String fizz) {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addHeader("kit", "kat");
+      }
+    };
+    Request request = buildRequest(Example.class, "buzz");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).containsExactly(new Header("ping", "pong"),
         new Header("kit", "kat"), new Header("fizz", "buzz"));
@@ -774,29 +1536,14 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void methodHeader() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeaders("ping: pong") //
-        .addHeaderParam("kit", "kat") //
-        .build();
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()) //
-        .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.getBody()).isNull();
-  }
-
-  @Test public void headerParamToString() throws Exception {
-    Object toStringHeaderParam = new BigInteger("1234");
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeaderParam("kit", toStringHeaderParam) //
-        .build();
+  @Test public void headerParamToString() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@retrofit.http.Header("kit") BigInteger kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new BigInteger("1234"));
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
         .containsExactly(new Header("kit", "1234"));
@@ -804,14 +1551,15 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void headerParam() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com") //
-        .setPath("/foo/bar/") //
-        .addHeaders("ping: pong") //
-        .addHeaderParam("kit", "kat") //
-        .build();
+  @Test public void headerParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      @Headers("ping: pong") //
+      Response method(@retrofit.http.Header("kit") String kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "kat");
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
         .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
@@ -819,307 +1567,90 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void noDuplicateSlashes() throws Exception {
-    Request request = new Helper() //
-        .setMethod("GET") //
-        .setUrl("http://example.com/") //
-        .setPath("/foo/bar/") //
-        .build();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
-  }
-
-  @Test public void contentTypeAnnotationHeaderOverrides() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setUrl("http://example.com") //
-        .setPath("/") //
-        .addHeaders("Content-Type: text/not-plain") //
-        .setBody(new TypedString("Plain")) //
-        .build();
+  @Test public void contentTypeAnnotationHeaderOverrides() {
+    class Example {
+      @POST("/") //
+      @Headers("Content-Type: text/not-plain") //
+      Response method(@Body TypedInput body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new TypedString("Plain"));
     assertThat(request.getBody().mimeType()).isEqualTo("text/not-plain");
   }
 
-  @Test public void contentTypeAnnotationHeaderAddsHeaderWithNoBody() throws Exception {
-    Request request = new Helper() //
-        .setMethod("DELETE") //
-        .setUrl("http://example.com") //
-        .setPath("/") //
-        .addHeaders("Content-Type: text/not-plain") //
-        .build();
+  @Test public void contentTypeAnnotationHeaderAddsHeaderWithNoBody() {
+    class Example {
+      @DELETE("/") //
+      @Headers("Content-Type: text/not-plain") //
+      Response method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
     assertThat(request.getHeaders()).contains(new Header("Content-Type", "text/not-plain"));
   }
 
-  @Test public void contentTypeInterceptorHeaderAddsHeaderWithNoBody() throws Exception {
-    Request request = new Helper() //
-        .setMethod("DELETE") //
-        .setUrl("http://example.com") //
-        .setPath("/") //
-        .addInterceptorHeader("Content-Type", "text/not-plain") //
-        .build();
+  @Test public void contentTypeInterceptorHeaderAddsHeaderWithNoBody() {
+    class Example {
+      @DELETE("/") //
+      Response method() {
+        return null;
+      }
+    }
+    interceptor = new RequestInterceptor() {
+      @Override public void intercept(RequestFacade request) {
+        request.addHeader("Content-Type", "text/not-plain");
+      }
+    };
+    Request request = buildRequest(Example.class);
     assertThat(request.getHeaders()).contains(new Header("Content-Type", "text/not-plain"));
   }
 
-  @Test public void contentTypeParameterHeaderOverrides() throws Exception {
-    Request request = new Helper() //
-        .setMethod("POST") //
-        .setUrl("http://example.com") //
-        .setPath("/") //
-        .addHeaderParam("Content-Type", "text/not-plain") //
-        .setBody(new TypedString("Plain")) //
-        .build();
+  @Test public void contentTypeParameterHeaderOverrides() {
+    class Example {
+      @POST("/") //
+      Response method(@retrofit.http.Header("Content-Type") String contentType,
+          @Body TypedInput body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "text/not-plain", new TypedString("Plain"));
     assertThat(request.getBody().mimeType()).isEqualTo("text/not-plain");
   }
 
-  private static void assertTypedBytes(TypedOutput bytes, String expected) throws IOException {
-    assertThat(bytes).isNotNull();
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    bytes.writeTo(baos);
-    assertThat(new String(baos.toByteArray(), "UTF-8")).isEqualTo(expected);
+  private static void assertTypedBytes(TypedOutput bytes, String expected) {
+    try {
+      assertThat(bytes).isNotNull();
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      bytes.writeTo(baos);
+      assertThat(new String(baos.toByteArray(), "UTF-8")).isEqualTo(expected);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  private static class Helper {
-    private static final Converter GSON = new GsonConverter(new Gson());
+  private static final Converter GSON = new GsonConverter(new Gson());
 
-    private RequestType requestType = RequestType.SIMPLE;
-    private String method;
-    private boolean hasBody = false;
-    private String path;
-    private String query;
-    private final List<String> paramNames = new ArrayList<String>();
-    private final List<ParamUsage> paramUsages = new ArrayList<ParamUsage>();
-    private final List<Annotation> paramAnnotations = new ArrayList<Annotation>();
-    private final List<Object> args = new ArrayList<Object>();
-    private final List<String> headers = new ArrayList<String>();
-    private final List<Header> interceptorHeaders = new ArrayList<Header>();
-    private final Map<String, String> interceptorPathParams = new LinkedHashMap<String, String>();
-    private final Map<String, String> interceptorQueryParams = new LinkedHashMap<String, String>();
-    private String url;
-
-    Helper setMethod(String method) {
-      this.method = method;
-      return this;
+  private Request buildRequest(Class<?> cls, Object... args) {
+    Method[] methods = cls.getDeclaredMethods();
+    if (methods.length != 1) {
+      throw new IllegalStateException("More than one method declared.");
     }
 
-    Helper setHasBody() {
-      hasBody = true;
-      return this;
+    RestMethodInfo methodInfo = new RestMethodInfo(methods[0]);
+    methodInfo.init();
+
+    RequestBuilder builder = new RequestBuilder("http://example.com/", methodInfo, GSON);
+    if (interceptor != null) {
+      interceptor.intercept(builder);
     }
+    builder.setArguments(args);
 
-    Helper setUrl(String url) {
-      this.url = url;
-      return this;
-    }
-
-    Helper setPath(String path) {
-      this.path = path;
-      return this;
-    }
-
-    Helper setQuery(String query) {
-      this.query = query;
-      return this;
-    }
-
-    Helper addPathParam(String name, Object value) {
-      paramNames.add(name);
-      paramUsages.add(PATH);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addEncodedPathParam(String name, String value) {
-      paramNames.add(name);
-      paramUsages.add(ENCODED_PATH);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addQueryParam(String name, Object value) {
-      paramNames.add(name);
-      paramUsages.add(QUERY);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addEncodedQueryParam(String name, String value) {
-      paramNames.add(name);
-      paramUsages.add(ENCODED_QUERY);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addQueryMapParams(String name, Map<String, Object> values) {
-      paramNames.add(name);
-      paramUsages.add(QUERY_MAP);
-      paramAnnotations.add(null); // Not used.
-      args.add(values);
-      return this;
-    }
-
-    Helper addEncodedQueryMapParams(String name, Map<String, Object> values) {
-      paramNames.add(name);
-      paramUsages.add(ENCODED_QUERY_MAP);
-      paramAnnotations.add(null); // Not used.
-      args.add(values);
-      return this;
-    }
-
-    Helper addField(String name, Object value) {
-      paramNames.add(name);
-      paramUsages.add(FIELD);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addFieldMap(String name, Map<String, Object> values) {
-      paramNames.add(name);
-      paramUsages.add(FIELD_MAP);
-      paramAnnotations.add(null); // Not used.
-      args.add(values);
-      return this;
-    }
-
-    Helper addPart(final String name, Object value) {
-      return addPart(name, DEFAULT_TRANSFER_ENCODING, value);
-    }
-
-    Helper addPart(final String name, final String transferEncoding, Object value) {
-      paramNames.add(name);
-      paramUsages.add(PART);
-      paramAnnotations.add(new Part() {
-        @Override public Class<? extends Annotation> annotationType() {
-          return Part.class;
-        }
-
-        @Override public String value() {
-          return name;
-        }
-
-        @Override public String encoding() {
-          return transferEncoding;
-        }
-      });
-      args.add(value);
-      return this;
-    }
-
-    Helper addPartMap(String name, Map<String, Object> values) {
-      return addPartMap(name, DEFAULT_TRANSFER_ENCODING, values);
-    }
-
-    Helper addPartMap(String name, final String transferEncoding, Map<String, Object> values) {
-      paramNames.add(name);
-      paramUsages.add(PART_MAP);
-      paramAnnotations.add(new PartMap() {
-        @Override public Class<? extends Annotation> annotationType() {
-          return PartMap.class;
-        }
-
-        @Override public String encoding() {
-          return transferEncoding;
-        }
-      });
-      args.add(values);
-      return this;
-    }
-
-    Helper setBody(Object value) {
-      paramNames.add(null);
-      paramUsages.add(BODY);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addHeaderParam(String name, Object value) {
-      paramNames.add(name);
-      paramUsages.add(HEADER);
-      paramAnnotations.add(null); // Not used.
-      args.add(value);
-      return this;
-    }
-
-    Helper addHeaders(String... headers) {
-      Collections.addAll(this.headers, headers);
-      return this;
-    }
-
-    Helper addInterceptorHeader(String name, String value) {
-      interceptorHeaders.add(new Header(name, value));
-      return this;
-    }
-
-    Helper addInterceptorPathParam(String name, String value) {
-      interceptorPathParams.put(name, value);
-      return this;
-    }
-
-    Helper addInterceptorQueryParam(String name, String value) {
-      interceptorQueryParams.put(name, value);
-      return this;
-    }
-
-    Helper setMultipart() {
-      requestType = RequestType.MULTIPART;
-      return this;
-    }
-
-    Helper setFormEncoded() {
-      requestType = RequestType.FORM_URL_ENCODED;
-      return this;
-    }
-
-    Request build() throws Exception {
-      if (method == null) {
-        throw new IllegalStateException("Method must be set.");
-      }
-      if (path == null) {
-        throw new IllegalStateException("Path must be set.");
-      }
-
-      Method method = getClass().getDeclaredMethod("dummySync");
-
-      RestMethodInfo methodInfo = new RestMethodInfo(method);
-      methodInfo.requestMethod = this.method;
-      methodInfo.requestHasBody = hasBody;
-      methodInfo.requestType = requestType;
-      methodInfo.requestUrl = path;
-      methodInfo.requestUrlParamNames = RestMethodInfo.parsePathParameters(path);
-      methodInfo.requestQuery = query;
-      methodInfo.requestParamNames = paramNames.toArray(new String[paramNames.size()]);
-      methodInfo.requestParamUsage = paramUsages.toArray(new ParamUsage[paramUsages.size()]);
-      methodInfo.requestParamAnnotation =
-          paramAnnotations.toArray(new Annotation[paramAnnotations.size()]);
-      methodInfo.headers = headers.isEmpty() ? null
-          : methodInfo.parseHeaders(headers.toArray(new String[headers.size()]));
-      methodInfo.loaded = true;
-
-      RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, GSON);
-
-      // Simulate request interceptor invocation.
-      for (Header header : interceptorHeaders) {
-        requestBuilder.addHeader(header.getName(), header.getValue());
-      }
-      for (Map.Entry<String, String> entry : interceptorPathParams.entrySet()) {
-        requestBuilder.addPathParam(entry.getKey(), entry.getValue());
-      }
-      for (Map.Entry<String, String> entry : interceptorQueryParams.entrySet()) {
-        requestBuilder.addQueryParam(entry.getKey(), entry.getValue());
-      }
-
-      requestBuilder.setArguments(args.toArray(new Object[args.size()]));
-
-      return requestBuilder.build();
-    }
-
-    @SuppressWarnings("UnusedDeclaration") // Accessed via reflection.
-    private Object dummySync() {
-      return null;
+    try {
+      return builder.build();
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
     }
   }
 }
