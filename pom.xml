@@ -64,7 +64,7 @@
     <junit.version>4.11</junit.version>
     <assertj.version>1.6.1</assertj.version>
     <mockito.version>1.9.5</mockito.version>
-    <guava.version>17.0</guava.version>
+    <guava.version>18.0</guava.version>
   </properties>
 
   <scm>
