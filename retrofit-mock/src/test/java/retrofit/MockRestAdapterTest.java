@@ -232,7 +232,7 @@ public class MockRestAdapterTest {
       mockService.doStuff();
       fail();
     } catch (RetrofitError e) {
-      assertThat(e.isNetworkError()).isTrue();
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
       assertThat(e.getCause()).hasMessage("Mock network error!");
     }
   }
@@ -264,7 +264,7 @@ public class MockRestAdapterTest {
     verify(callbackExecutor).execute(any(Runnable.class));
 
     RetrofitError error = errorRef.get();
-    assertThat(error.isNetworkError()).isTrue();
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
     assertThat(error.getCause()).hasMessage("Mock network error!");
   }
 
@@ -395,7 +395,7 @@ public class MockRestAdapterTest {
     } catch (RetrofitError e) {
       long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
       assertThat(tookMs).isGreaterThanOrEqualTo(100);
-      assertThat(e.isNetworkError()).isFalse();
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
       assertThat(e.getResponse().getStatus()).isEqualTo(404);
       assertThat(e.getResponse().getReason()).isEqualTo("Not Found");
       assertThat(e.getBody()).isSameAs(expected);
@@ -438,7 +438,7 @@ public class MockRestAdapterTest {
 
     RetrofitError error = errorRef.get();
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-    assertThat(error.isNetworkError()).isFalse();
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
@@ -482,7 +482,7 @@ public class MockRestAdapterTest {
 
     RetrofitError error = errorRef.get();
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-    assertThat(error.isNetworkError()).isFalse();
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
     assertThat(error.getResponse().getStatus()).isEqualTo(404);
     assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
@@ -523,7 +523,7 @@ public class MockRestAdapterTest {
 
     RetrofitError error = errorRef.get();
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-    assertThat(error.isNetworkError()).isFalse();
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
     assertThat(error.getResponse().getStatus()).isEqualTo(400);
     assertThat(error.getResponse().getReason()).isEqualTo("Bad Request");
     assertThat(error.getBody()).isNull();
