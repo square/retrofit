@@ -78,6 +78,9 @@ public class RetrofitError extends RuntimeException {
    * HTTP response body converted to the type declared by either the interface method return type or
    * the generic type of the supplied {@link Callback} parameter. {@code null} if there is no
    * response.
+   *
+   * @throws RuntimeException if unable to convert the body to the {@link #getSuccessType() success
+   * type}.
    */
   public Object getBody() {
     return getBodyAs(successType);
@@ -93,6 +96,8 @@ public class RetrofitError extends RuntimeException {
 
   /**
    * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
+   *
+   * @throws RuntimeException if unable to convert the body to the specified {@code type.}
    */
   public Object getBodyAs(Type type) {
     if (response == null) {
