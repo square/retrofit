@@ -57,7 +57,7 @@
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.4.3</jackson.version>
-    <wire.version>1.5.1</wire.version>
+    <wire.version>1.5.2</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
 
     <!-- Test Dependencies -->
