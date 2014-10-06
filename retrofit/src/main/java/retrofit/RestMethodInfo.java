@@ -61,21 +61,6 @@ final class RestMethodInfo {
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  enum ParamUsage {
-    PATH,
-    ENCODED_PATH,
-    QUERY,
-    ENCODED_QUERY,
-    QUERY_MAP,
-    ENCODED_QUERY_MAP,
-    FIELD,
-    FIELD_MAP,
-    PART,
-    PART_MAP,
-    BODY,
-    HEADER
-  }
-
   enum RequestType {
     /** No content-specific logic required. */
     SIMPLE,
@@ -105,9 +90,7 @@ final class RestMethodInfo {
   boolean isStreaming;
 
   // Parameter-level details
-  String[] requestParamNames;
-  ParamUsage[] requestParamUsage;
-  Annotation[] requestParamAnnotation;
+  Annotation[] requestParamAnnotations;
 
   RestMethodInfo(Method method) {
     this.method = method;
@@ -321,8 +304,7 @@ final class RestMethodInfo {
   }
 
   /**
-   * Loads {@link #requestParamNames}, {@link #requestParamUsage}, and
-   * {@link #requestParamAnnotation}. Must be called after {@link #parseMethodAnnotations()}.
+   * Loads {@link #requestParamAnnotations}. Must be called after {@link #parseMethodAnnotations()}.
    */
   private void parseParameters() {
     Class<?>[] methodParameterTypes = method.getParameterTypes();
@@ -333,9 +315,7 @@ final class RestMethodInfo {
       count -= 1; // Callback is last argument when not a synchronous method.
     }
 
-    String[] requestParamNames = new String[count];
-    ParamUsage[] requestParamUsage = new ParamUsage[count];
-    Annotation[] requestParamAnnotation = new Annotation[count];
+    Annotation[] requestParamAnnotations = new Annotation[count];
 
     boolean gotField = false;
     boolean gotPart = false;
@@ -352,52 +332,31 @@ final class RestMethodInfo {
           if (methodAnnotationType == Path.class) {
             String name = ((Path) methodParameterAnnotation).value();
             validatePathName(i, name);
-
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.PATH;
           } else if (methodAnnotationType == EncodedPath.class) {
             String name = ((EncodedPath) methodParameterAnnotation).value();
             validatePathName(i, name);
-
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.ENCODED_PATH;
           } else if (methodAnnotationType == Query.class) {
-            String name = ((Query) methodParameterAnnotation).value();
-
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.QUERY;
+            // Nothing to do.
           } else if (methodAnnotationType == EncodedQuery.class) {
-            String name = ((EncodedQuery) methodParameterAnnotation).value();
-
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.ENCODED_QUERY;
+            // Nothing to do.
           } else if (methodAnnotationType == QueryMap.class) {
             if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
 
-            requestParamUsage[i] = ParamUsage.QUERY_MAP;
           } else if (methodAnnotationType == EncodedQueryMap.class) {
             if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@EncodedQueryMap parameter type must be Map.");
             }
 
-            requestParamUsage[i] = ParamUsage.ENCODED_QUERY_MAP;
           } else if (methodAnnotationType == Header.class) {
-            String name = ((Header) methodParameterAnnotation).value();
-
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.HEADER;
+            // Nothing to do.
           } else if (methodAnnotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
 
-            String name = ((Field) methodParameterAnnotation).value();
-
             gotField = true;
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.FIELD;
           } else if (methodAnnotationType == FieldMap.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
@@ -407,17 +366,12 @@ final class RestMethodInfo {
             }
 
             gotField = true;
-            requestParamUsage[i] = ParamUsage.FIELD_MAP;
           } else if (methodAnnotationType == Part.class) {
             if (requestType != RequestType.MULTIPART) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
 
-            String name = ((Part) methodParameterAnnotation).value();
-
             gotPart = true;
-            requestParamNames[i] = name;
-            requestParamUsage[i] = ParamUsage.PART;
           } else if (methodAnnotationType == PartMap.class) {
             if (requestType != RequestType.MULTIPART) {
               throw parameterError(i,
@@ -428,7 +382,6 @@ final class RestMethodInfo {
             }
 
             gotPart = true;
-            requestParamUsage[i] = ParamUsage.PART_MAP;
           } else if (methodAnnotationType == Body.class) {
             if (requestType != RequestType.SIMPLE) {
               throw parameterError(i,
@@ -439,23 +392,22 @@ final class RestMethodInfo {
             }
 
             gotBody = true;
-            requestParamUsage[i] = ParamUsage.BODY;
           } else {
             // This is a non-Retrofit annotation. Skip to the next one.
             continue;
           }
 
-          if (requestParamAnnotation[i] != null) {
+          if (requestParamAnnotations[i] != null) {
             throw parameterError(i,
                 "Multiple Retrofit annotations found, only one allowed: @%s, @%s.",
-                requestParamAnnotation[i].annotationType().getSimpleName(),
+                requestParamAnnotations[i].annotationType().getSimpleName(),
                 methodAnnotationType.getSimpleName());
           }
-          requestParamAnnotation[i] = methodParameterAnnotation;
+          requestParamAnnotations[i] = methodParameterAnnotation;
         }
       }
 
-      if (requestParamUsage[i] == null) {
+      if (requestParamAnnotations[i] == null) {
         throw parameterError(i, "No Retrofit annotation found.");
       }
     }
@@ -470,9 +422,7 @@ final class RestMethodInfo {
       throw methodError("Multipart method must contain at least one @Part.");
     }
 
-    this.requestParamNames = requestParamNames;
-    this.requestParamUsage = requestParamUsage;
-    this.requestParamAnnotation = requestParamAnnotation;
+    this.requestParamAnnotations = requestParamAnnotations;
   }
 
   private void validatePathName(int index, String name) {

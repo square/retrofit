@@ -579,6 +579,26 @@ public class RequestBuilderTest {
     }
   }
 
+  @Test public void queryMapRejectsNullKeys() {
+    class Example {
+      @GET("/") //
+      Response method(@QueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Map<String, String> queryParams = new LinkedHashMap<String, String>();
+    queryParams.put("ping", "pong");
+    queryParams.put(null, "kat");
+
+    try {
+      buildRequest(Example.class, queryParams);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter #1 query map contained null key.");
+    }
+  }
+
   @Test public void twoBodies() {
     class Example {
       @PUT("/") //
@@ -710,6 +730,20 @@ public class RequestBuilderTest {
   }
 
   @Test public void getWithEncodedPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Response method(@Path(value = "ping", encode = false) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "po%20ng");
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodedPathParamDeprecated() {
     class Example {
       @GET("/foo/bar/{ping}/") //
       Response method(@EncodedPath("ping") String ping) {
@@ -876,7 +910,7 @@ public class RequestBuilderTest {
   @Test public void getWithQueryParam() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@EncodedQuery("ping") String ping) {
+      Response method(@Query("ping") String ping) {
         return null;
       }
     }
@@ -888,6 +922,48 @@ public class RequestBuilderTest {
   }
 
   @Test public void getWithEncodedQueryParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query(value = "ping", encodeValue = false) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "p+o+n+g");
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=p+o+n+g");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodeNameQueryParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query(value = "pi ng", encodeName = true) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?pi+ng=pong");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodeNameEncodedValueQueryParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Query(value = "pi ng", encodeName = true, encodeValue = false) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "po+ng");
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?pi+ng=po+ng");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodedQueryParamDeprecated() {
     class Example {
       @GET("/foo/bar/") //
       Response method(@EncodedQuery("ping") String ping) {
@@ -1081,7 +1157,7 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedQueryParamMap() {
+  @Test public void getWithEncodedQueryParamMapDeprecated() {
     class Example {
       @GET("/foo/bar/") //
       Response method(@EncodedQueryMap Map<String, Object> query) {
@@ -1098,6 +1174,67 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodedQueryParamMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@QueryMap(encodeValues = false) Map<String, Object> query) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("kit", "k%20t");
+    params.put("foo", null);
+    params.put("ping", "p%20g");
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodeNameQueryParamMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@QueryMap(encodeNames = true) Map<String, Object> query) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("k it", "k t");
+    params.put("fo o", null);
+    params.put("pi ng", "p g");
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k+t&pi+ng=p+g");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void getWithEncodeNameEncodedValueQueryParamMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(
+          @QueryMap(encodeNames = true, encodeValues = false) Map<String, Object> query) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("k it", "k%20t");
+    params.put("fo o", null);
+    params.put("pi ng", "p%20g");
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k%20t&pi+ng=p%20g");
     assertThat(request.getBody()).isNull();
   }
 
@@ -1314,6 +1451,27 @@ public class RequestBuilderTest {
         .endsWith("\r\nkat");
   }
 
+  @Test public void multipartPartMapRejectsNullKeys() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@PartMap Map<String, Object> parts) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("ping", "pong");
+    params.put(null, "kat");
+
+    try {
+      buildRequest(Example.class, params);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter #1 part map contained null key.");
+    }
+  }
+
   @Test public void multipartNullRemovesPart() {
     class Example {
       @Multipart //
@@ -1436,6 +1594,28 @@ public class RequestBuilderTest {
 
     Request request = buildRequest(Example.class, fieldMap);
     assertTypedBytes(request.getBody(), "kit=kat&ping=pong");
+  }
+
+  @Test public void fieldMapRejectsNullKeys() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put("foo", null);
+    fieldMap.put(null, "pong");
+
+    try {
+      buildRequest(Example.class, fieldMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter #1 field map contained null key.");
+    }
   }
 
   @Test public void fieldMapMustBeAMap() {
@@ -1633,12 +1813,8 @@ public class RequestBuilderTest {
   private static final Converter GSON = new GsonConverter(new Gson());
 
   private Request buildRequest(Class<?> cls, Object... args) {
-    Method[] methods = cls.getDeclaredMethods();
-    if (methods.length != 1) {
-      throw new IllegalStateException("More than one method declared.");
-    }
-
-    RestMethodInfo methodInfo = new RestMethodInfo(methods[0]);
+    Method method = TestingUtils.onlyMethod(cls);
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
     RequestBuilder builder = new RequestBuilder("http://example.com/", methodInfo, GSON);

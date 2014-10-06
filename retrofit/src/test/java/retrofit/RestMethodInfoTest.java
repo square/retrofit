@@ -51,7 +51,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
@@ -63,7 +63,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
@@ -75,7 +75,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
@@ -87,7 +87,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
@@ -99,7 +99,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
@@ -111,7 +111,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
 
@@ -129,7 +129,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(
@@ -143,7 +143,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isTrue();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
@@ -156,7 +156,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isTrue();
 
@@ -171,7 +171,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
@@ -185,7 +185,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     methodInfo.init();
 
@@ -200,7 +200,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.isObservable).isTrue();
@@ -214,7 +214,7 @@ public class RestMethodInfoTest {
       }
     }
 
-    Method method = TestingUtils.getMethod(Example.class, "a");
+    Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
     assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.isObservable).isTrue();

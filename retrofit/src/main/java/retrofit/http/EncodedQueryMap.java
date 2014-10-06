@@ -31,9 +31,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see Query
  * @see QueryMap
- * @see EncodedQuery
+ * @deprecated Use {@link QueryMap} with {@link QueryMap#encodeValues() encodeValues = false}.
  */
 @Documented
+@Deprecated
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface EncodedQueryMap {
