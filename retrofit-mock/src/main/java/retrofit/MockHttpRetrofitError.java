@@ -9,7 +9,7 @@ class MockHttpRetrofitError extends RetrofitError {
 
   MockHttpRetrofitError(String message, String url, Response response, Object body,
       Type responseType) {
-    super(message, url, response, null, responseType, false, null);
+    super(message, url, response, null, responseType, Kind.HTTP, null);
     this.body = body;
   }
 

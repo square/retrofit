@@ -446,6 +446,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected on malformed response body.");
     } catch (RetrofitError e) {
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.CONVERSION);
       assertThat(e.getResponse().getStatus()).isEqualTo(200);
       assertThat(e.getCause()).isInstanceOf(ConversionException.class);
       assertThat(e.getResponse().getBody()).isNull();
@@ -460,6 +461,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected on non-2XX response code.");
     } catch (RetrofitError e) {
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
       assertThat(e.getResponse().getStatus()).isEqualTo(500);
       assertThat(e.getSuccessType()).isEqualTo(String.class);
     }
@@ -553,6 +555,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected when client throws exception.");
     } catch (RetrofitError e) {
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
       assertThat(e.getCause()).isSameAs(exception);
     }
   }
@@ -573,6 +576,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected on malformed response body.");
     } catch (RetrofitError e) {
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
       assertThat(e.isNetworkError());
       assertThat(e.getCause()).isInstanceOf(IOException.class);
       assertThat(e.getCause()).hasMessage("I'm broken!");
@@ -587,6 +591,7 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected when unexpected exception thrown.");
     } catch (RetrofitError e) {
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.UNEXPECTED);
       assertThat(e.getCause()).isSameAs(exception);
     }
   }

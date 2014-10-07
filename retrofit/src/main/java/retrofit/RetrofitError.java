@@ -24,39 +24,56 @@ import retrofit.mime.TypedInput;
 
 public class RetrofitError extends RuntimeException {
   public static RetrofitError networkError(String url, IOException exception) {
-    return new RetrofitError(exception.getMessage(), url, null, null, null, true, exception);
+    return new RetrofitError(exception.getMessage(), url, null, null, null, Kind.NETWORK,
+        exception);
   }
 
   public static RetrofitError conversionError(String url, Response response, Converter converter,
       Type successType, ConversionException exception) {
-    return new RetrofitError(exception.getMessage(), url, response, converter, successType, false,
-        exception);
+    return new RetrofitError(exception.getMessage(), url, response, converter, successType,
+        Kind.CONVERSION, exception);
   }
 
   public static RetrofitError httpError(String url, Response response, Converter converter,
       Type successType) {
     String message = response.getStatus() + " " + response.getReason();
-    return new RetrofitError(message, url, response, converter, successType, false, null);
+    return new RetrofitError(message, url, response, converter, successType, Kind.HTTP, null);
   }
 
   public static RetrofitError unexpectedError(String url, Throwable exception) {
-    return new RetrofitError(exception.getMessage(), url, null, null, null, false, exception);
+    return new RetrofitError(exception.getMessage(), url, null, null, null, Kind.UNEXPECTED,
+        exception);
+  }
+
+  /** Identifies the event kind which triggered a {@link RetrofitError}. */
+  public enum Kind {
+    /** An {@link IOException} occurred while communicating to the server. */
+    NETWORK,
+    /** An exception was thrown while (de)serializing a body. */
+    CONVERSION,
+    /** A non-200 HTTP status code was received from the server. */
+    HTTP,
+    /**
+     * An internal error occurred while attempting to execute a request. It is best practice to
+     * re-throw this exception so your application crashes.
+     */
+    UNEXPECTED
   }
 
   private final String url;
   private final Response response;
   private final Converter converter;
   private final Type successType;
-  private final boolean networkError;
+  private final Kind kind;
 
   RetrofitError(String message, String url, Response response, Converter converter,
-      Type successType, boolean networkError, Throwable exception) {
+      Type successType, Kind kind, Throwable exception) {
     super(message, exception);
     this.url = url;
     this.response = response;
     this.converter = converter;
     this.successType = successType;
-    this.networkError = networkError;
+    this.kind = kind;
   }
 
   /** The request URL which produced the error. */
@@ -69,14 +86,23 @@ public class RetrofitError extends RuntimeException {
     return response;
   }
 
-  /** Whether or not this error was the result of a network error. */
-  public boolean isNetworkError() {
-    return networkError;
+  /**
+   * Whether or not this error was the result of a network error.
+   *
+   * @deprecated Use {@link #getKind() getKind() == Kind.NETWORK}.
+   */
+  @Deprecated public boolean isNetworkError() {
+    return kind == Kind.NETWORK;
+  }
+
+  /** The event kind which triggered this error. */
+  public Kind getKind() {
+    return kind;
   }
 
   /**
-   * HTTP response body converted to the type declared by either the interface method return type or
-   * the generic type of the supplied {@link Callback} parameter. {@code null} if there is no
+   * HTTP response body converted to the type declared by either the interface method return type
+   * or the generic type of the supplied {@link Callback} parameter. {@code null} if there is no
    * response.
    *
    * @throws RuntimeException if unable to convert the body to the {@link #getSuccessType() success
