@@ -477,7 +477,7 @@ public class MockRestAdapterTest {
       }
     });
 
-    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verify(httpExecutor).execute(any(Runnable.class));
     verifyZeroInteractions(callbackExecutor);
 
     RetrofitError error = errorRef.get();
@@ -518,7 +518,7 @@ public class MockRestAdapterTest {
       }
     });
 
-    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verify(httpExecutor).execute(any(Runnable.class));
     verifyZeroInteractions(callbackExecutor);
 
     RetrofitError error = errorRef.get();
