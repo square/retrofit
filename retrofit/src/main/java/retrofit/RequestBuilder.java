@@ -22,7 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import retrofit.client.Header;
@@ -386,7 +386,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       } else {
         Header header = new Header("Content-Type", contentTypeHeader);
         if (headers == null) {
-          headers = Arrays.asList(header);
+          headers = Collections.singletonList(header);
         } else {
           headers.add(header);
         }
