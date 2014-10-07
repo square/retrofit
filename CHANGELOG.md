@@ -9,6 +9,8 @@ Version 1.7.0 *(In Development)*
    header list.
  * New: `@Part` and `@PartMap` now support specifying the `Content-Transfer-Encoding` of their respective
    values.
+ * New: `@Path`, `@Query`, and `@QueryMap` now have options for enabling or disabling URL encoding on
+   names (where appropriate) and values.
  * `@Header` now accepts all object types, invoking `String.valueOf` when neccesary.
  * Attempting to use a `@Path` replacement block (`{name}`) in a query parameter now suggested `@Query` in
    the exception message.
