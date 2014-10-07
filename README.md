@@ -21,7 +21,7 @@ or Gradle:
 ```groovy
 compile 'com.squareup.retrofit:retrofit:1.6.1'
 ```
-
+Retrofit requires at minimum Java 6 or Android 2.3.
 
 
 License
