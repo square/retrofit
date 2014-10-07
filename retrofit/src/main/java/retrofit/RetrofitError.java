@@ -123,7 +123,7 @@ public class RetrofitError extends RuntimeException {
   /**
    * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
    *
-   * @throws RuntimeException if unable to convert the body to the specified {@code type.}
+   * @throws RuntimeException if unable to convert the body to the specified {@code type}.
    */
   public Object getBodyAs(Type type) {
     if (response == null) {
