@@ -1,6 +1,27 @@
 Change Log
 ==========
 
+Version 1.7.0 *(In Development)*
+--------------------------------
+
+ * New: `RetrofitError`'s `getKind()` now disambiguates the type of error represented.
+ * New: `HEADERS_AND_ARGS` log level displays parameters passed to method invocation along with normal
+   header list.
+ * New: `@Part` and `@PartMap` now support specifying the `Content-Transfer-Encoding` of their respective
+   values.
+ * `@Header` now accepts all object types, invoking `String.valueOf` when neccesary.
+ * Attempting to use a `@Path` replacement block (`{name}`) in a query parameter now suggested `@Query` in
+   the exception message.
+ * Fix: Correct NPE when `Content-Type` override is specified on requests without a body.
+ * Fix: `WireConverter` now correctly throws `ConversionException` on incorrect MIME types for parity with
+   `ProtoConverter`.
+ * Fix: Include `Content-Type` on AppEngine requests.
+ * Fix: Account for NPE on AppEngine when the response URL was not automatically populated in certain cases.
+ * Fix: `MockRestAdapter`'s RxJava support now correctly schedules work on the HTTP executor, specifically
+   when chaining multiple requests together.
+ * Experimental RxJava support updated for v0.20.
+
+
 Version 1.6.1 *(2014-07-02)*
 ----------------------------
 
