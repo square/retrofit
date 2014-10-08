@@ -29,9 +29,6 @@ import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
 import retrofit.http.Body;
-import retrofit.http.EncodedPath;
-import retrofit.http.EncodedQuery;
-import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
 import retrofit.http.Part;
@@ -243,31 +240,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
               "Path parameter \"" + name + "\" value must not be null.");
         }
         addPathParam(name, value.toString(), path.encode());
-      } else if (annotationType == EncodedPath.class) {
-        String name = ((EncodedPath) annotation).value();
-        if (value == null) {
-          throw new IllegalArgumentException(
-              "Path parameter \"" + name + "\" value must not be null.");
-        }
-        addPathParam(name, value.toString(), false);
       } else if (annotationType == Query.class) {
         if (value != null) { // Skip null values.
           Query query = (Query) annotation;
           addQueryParam(query.value(), value, query.encodeName(), query.encodeValue());
         }
-      } else if (annotationType == EncodedQuery.class) {
-        if (value != null) { // Skip null values.
-          EncodedQuery query = (EncodedQuery) annotation;
-          addQueryParam(query.value(), value, false, false);
-        }
       } else if (annotationType == QueryMap.class) {
         if (value != null) { // Skip null values.
           QueryMap queryMap = (QueryMap) annotation;
           addQueryParamMap(i, (Map<?, ?>) value, queryMap.encodeNames(), queryMap.encodeValues());
-        }
-      } else if (annotationType == EncodedQueryMap.class) {
-        if (value != null) { // Skip null values.
-          addQueryParamMap(i, (Map<?, ?>) value, false, false);
         }
       } else if (annotationType == retrofit.http.Header.class) {
         if (value != null) { // Skip null values.

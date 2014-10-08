@@ -29,9 +29,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import retrofit.client.Response;
 import retrofit.http.Body;
-import retrofit.http.EncodedPath;
-import retrofit.http.EncodedQuery;
-import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
@@ -43,8 +40,8 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.Streaming;
 import retrofit.http.RestMethod;
+import retrofit.http.Streaming;
 import rx.Observable;
 
 /** Request metadata about a service interface declaration. */
@@ -332,23 +329,12 @@ final class RestMethodInfo {
           if (methodAnnotationType == Path.class) {
             String name = ((Path) methodParameterAnnotation).value();
             validatePathName(i, name);
-          } else if (methodAnnotationType == EncodedPath.class) {
-            String name = ((EncodedPath) methodParameterAnnotation).value();
-            validatePathName(i, name);
           } else if (methodAnnotationType == Query.class) {
-            // Nothing to do.
-          } else if (methodAnnotationType == EncodedQuery.class) {
             // Nothing to do.
           } else if (methodAnnotationType == QueryMap.class) {
             if (!Map.class.isAssignableFrom(methodParameterType)) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
-
-          } else if (methodAnnotationType == EncodedQueryMap.class) {
-            if (!Map.class.isAssignableFrom(methodParameterType)) {
-              throw parameterError(i, "@EncodedQueryMap parameter type must be Map.");
-            }
-
           } else if (methodAnnotationType == Header.class) {
             // Nothing to do.
           } else if (methodAnnotationType == Field.class) {
