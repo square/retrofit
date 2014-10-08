@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Version 1.7.0 *(In Development)*
---------------------------------
+Version 1.7.0 *(2014-10-08)*
+----------------------------
 
  * New: `RetrofitError`'s `getKind()` now disambiguates the type of error represented.
  * New: `HEADERS_AND_ARGS` log level displays parameters passed to method invocation along with normal
