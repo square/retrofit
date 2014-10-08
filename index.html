@@ -114,7 +114,7 @@ List&lt;Widget> widgetList();</pre>
 @GET("/users/{username}")
 User getUser(@Path("username") String username);</pre>
             <p>Note that headers do not overwrite each other. All headers with the same name will be included in the request.</p>
-            <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding String parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted.</p>
+            <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted. Otherwise, <code>toString</code> will be called on the value, and the result used.</p>
             <pre class="prettyprint">@GET("/user")
 void getUser(@Header("Authorization") String authorization, Callback&lt;User> callback)</pre>
             <p>Headers that need to be added to every request can be specified using a <code>RequestInterceptor</code>. The following code creates a <code>RequestInterceptor</code> that will add a <code>User-Agent</code> header to every request.</p>
@@ -238,7 +238,9 @@ RestAdapter restAdapter = new RestAdapter.Builder()
             <pre class="prettyprint">
 compile 'com.squareup.retrofit:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
 </pre>
-<h4>Integration with OkHttp</h4>
+            <p>Retrofit requires at minimum Java 6 or Android 2.3.</p>
+
+            <h4>Integration with OkHttp</h4>
             <p>When using Retrofit together with OkHttp, OkHttp (version 1.6.0 or newer) and OkHttp-UrlConnection are now required.</p>
             <h4>Maven</h4>
             <pre class="prettyprint">&lt;dependency>
