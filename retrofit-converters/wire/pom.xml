@@ -10,7 +10,7 @@
   <parent>
     <groupId>com.squareup.retrofit</groupId>
     <artifactId>retrofit-converters</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
