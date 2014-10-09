@@ -22,9 +22,6 @@ import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
-import retrofit.http.EncodedPath;
-import retrofit.http.EncodedQuery;
-import retrofit.http.EncodedQueryMap;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
@@ -743,20 +740,6 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedPathParamDeprecated() {
-    class Example {
-      @GET("/foo/bar/{ping}/") //
-      Response method(@EncodedPath("ping") String ping) {
-        return null;
-      }
-    }
-    Request request = buildRequest(Example.class, "po%20ng");
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/po%20ng/");
-    assertThat(request.getBody()).isNull();
-  }
-
   @Test public void getWithInterceptorPathParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
@@ -963,20 +946,6 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedQueryParamDeprecated() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method(@EncodedQuery("ping") String ping) {
-        return null;
-      }
-    }
-    Request request = buildRequest(Example.class, "p+o+n+g");
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?ping=p+o+n+g");
-    assertThat(request.getBody()).isNull();
-  }
-
   @Test public void queryParamOptionalOmitsQuery() {
     class Example {
       @GET("/foo/bar/") //
@@ -1157,26 +1126,6 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @Test public void getWithEncodedQueryParamMapDeprecated() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method(@EncodedQueryMap Map<String, Object> query) {
-        return null;
-      }
-    }
-
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
-    params.put("kit", "k%20t");
-    params.put("foo", null);
-    params.put("ping", "p%20g");
-
-    Request request = buildRequest(Example.class, params);
-    assertThat(request.getMethod()).isEqualTo("GET");
-    assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
-    assertThat(request.getBody()).isNull();
-  }
-
   @Test public void getWithEncodedQueryParamMap() {
     class Example {
       @GET("/foo/bar/") //
@@ -1236,22 +1185,6 @@ public class RequestBuilderTest {
     assertThat(request.getHeaders()).isEmpty();
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k%20t&pi+ng=p%20g");
     assertThat(request.getBody()).isNull();
-  }
-
-  @Test public void encodedQueryMapMustBeAMap() {
-    class Example {
-      @GET("/") //
-      Response method(@EncodedQueryMap List<String> a) {
-        return null;
-      }
-    }
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: @EncodedQueryMap parameter type must be Map. (parameter #1)");
-    }
   }
 
   @Test public void normalPostWithPathParam() {
