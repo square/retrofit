@@ -86,15 +86,6 @@ public class RetrofitError extends RuntimeException {
     return response;
   }
 
-  /**
-   * Whether or not this error was the result of a network error.
-   *
-   * @deprecated Use {@link #getKind() getKind() == Kind.NETWORK}.
-   */
-  @Deprecated public boolean isNetworkError() {
-    return kind == Kind.NETWORK;
-  }
-
   /** The event kind which triggered this error. */
   public Kind getKind() {
     return kind;

@@ -577,7 +577,6 @@ public class RestAdapterTest {
       fail("RetrofitError expected on malformed response body.");
     } catch (RetrofitError e) {
       assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
-      assertThat(e.isNetworkError());
       assertThat(e.getCause()).isInstanceOf(IOException.class);
       assertThat(e.getCause()).hasMessage("I'm broken!");
     }
