@@ -60,7 +60,7 @@ abstract class Platform {
   }
 
   abstract Converter defaultConverter();
-  abstract Client.Provider defaultClient();
+  abstract Client defaultClient();
   abstract Executor defaultHttpExecutor();
   abstract Executor defaultCallbackExecutor();
   abstract RestAdapter.Log defaultLog();
@@ -71,18 +71,11 @@ abstract class Platform {
       return new GsonConverter(new Gson());
     }
 
-    @Override Client.Provider defaultClient() {
-      final Client client;
+    @Override Client defaultClient() {
       if (hasOkHttpOnClasspath()) {
-        client = OkClientInstantiator.instantiate();
-      } else {
-        client = new UrlConnectionClient();
+        return OkClientInstantiator.instantiate();
       }
-      return new Client.Provider() {
-        @Override public Client get() {
-          return client;
-        }
-      };
+      return new UrlConnectionClient();
     }
 
     @Override Executor defaultHttpExecutor() {
@@ -117,20 +110,14 @@ abstract class Platform {
       return new GsonConverter(new Gson());
     }
 
-    @Override Client.Provider defaultClient() {
-      final Client client;
+    @Override Client defaultClient() {
       if (hasOkHttpOnClasspath()) {
-        client = OkClientInstantiator.instantiate();
-      } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-        client = new AndroidApacheClient();
-      } else {
-        client = new UrlConnectionClient();
+        return OkClientInstantiator.instantiate();
       }
-      return new Client.Provider() {
-        @Override public Client get() {
-          return client;
-        }
-      };
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+        return new AndroidApacheClient();
+      }
+      return new UrlConnectionClient();
     }
 
     @Override Executor defaultHttpExecutor() {
@@ -156,13 +143,8 @@ abstract class Platform {
   }
 
   private static class AppEngine extends Base {
-    @Override Client.Provider defaultClient() {
-      final UrlFetchClient client = new UrlFetchClient();
-      return new Client.Provider() {
-        @Override public Client get() {
-          return client;
-        }
-      };
+    @Override Client defaultClient() {
+      return new UrlFetchClient();
     }
   }
 

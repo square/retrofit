@@ -153,17 +153,17 @@ public class RestAdapter {
   final Log log;
   final ErrorHandler errorHandler;
 
-  private final Client.Provider clientProvider;
+  private final Client client;
   private final Profiler profiler;
   private RxSupport rxSupport;
 
   volatile LogLevel logLevel;
 
-  private RestAdapter(Endpoint server, Client.Provider clientProvider, Executor httpExecutor,
+  private RestAdapter(Endpoint server, Client client, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
       Profiler profiler, ErrorHandler errorHandler, Log log, LogLevel logLevel) {
     this.server = server;
-    this.clientProvider = clientProvider;
+    this.client = client;
     this.httpExecutor = httpExecutor;
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
@@ -318,7 +318,7 @@ public class RestAdapter {
         }
 
         long start = System.nanoTime();
-        Response response = clientProvider.get().execute(request);
+        Response response = client.execute(request);
         long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
         int statusCode = response.getStatus();
@@ -527,22 +527,12 @@ public class RestAdapter {
   /**
    * Build a new {@link RestAdapter}.
    * <p>
-   * Calling the following methods is required before calling {@link #build()}:
-   * <ul>
-   * <li>{@link #setEndpoint(Endpoint)}</li>
-   * <li>{@link #setClient(Client.Provider)}</li>
-   * <li>{@link #setConverter(Converter)}</li>
-   * </ul>
-   * <p>
-   * If you are using asynchronous execution (i.e., with {@link Callback Callbacks}) the following
-   * is also required:
-   * <ul>
-   * <li>{@link #setExecutors(java.util.concurrent.Executor, java.util.concurrent.Executor)}</li>
-   * </ul>
+   * Calling {@link #setEndpoint} is required before calling {@link #build()}. All other methods
+   * are optional.
    */
   public static class Builder {
     private Endpoint endpoint;
-    private Client.Provider clientProvider;
+    private Client client;
     private Executor httpExecutor;
     private Executor callbackExecutor;
     private RequestInterceptor requestInterceptor;
@@ -571,23 +561,11 @@ public class RestAdapter {
     }
 
     /** The HTTP client used for requests. */
-    public Builder setClient(final Client client) {
+    public Builder setClient(Client client) {
       if (client == null) {
         throw new NullPointerException("Client may not be null.");
       }
-      return setClient(new Client.Provider() {
-        @Override public Client get() {
-          return client;
-        }
-      });
-    }
-
-    /** The HTTP client used for requests. */
-    public Builder setClient(Client.Provider clientProvider) {
-      if (clientProvider == null) {
-        throw new NullPointerException("Client provider may not be null.");
-      }
-      this.clientProvider = clientProvider;
+      this.client = client;
       return this;
     }
 
@@ -674,7 +652,7 @@ public class RestAdapter {
         throw new IllegalArgumentException("Endpoint may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(endpoint, clientProvider, httpExecutor, callbackExecutor,
+      return new RestAdapter(endpoint, client, httpExecutor, callbackExecutor,
           requestInterceptor, converter, profiler, errorHandler, log, logLevel);
     }
 
@@ -682,8 +660,8 @@ public class RestAdapter {
       if (converter == null) {
         converter = Platform.get().defaultConverter();
       }
-      if (clientProvider == null) {
-        clientProvider = Platform.get().defaultClient();
+      if (client == null) {
+        client = Platform.get().defaultClient();
       }
       if (httpExecutor == null) {
         httpExecutor = Platform.get().defaultHttpExecutor();
