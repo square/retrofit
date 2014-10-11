@@ -34,7 +34,6 @@ import rx.functions.Action1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.atLeastOnce;
@@ -44,7 +43,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static retrofit.Profiler.RequestInformation;
 import static retrofit.RestAdapter.LogLevel.BASIC;
 import static retrofit.RestAdapter.LogLevel.FULL;
 import static retrofit.RestAdapter.LogLevel.HEADERS;
@@ -90,7 +88,6 @@ public class RestAdapterTest {
   private Client mockClient;
   private Executor mockRequestExecutor;
   private Executor mockCallbackExecutor;
-  private Profiler<Object> mockProfiler;
   private Example example;
 
   @SuppressWarnings("unchecked") // Mock profiler type erasure.
@@ -98,13 +95,11 @@ public class RestAdapterTest {
     mockClient = mock(Client.class);
     mockRequestExecutor = spy(new SynchronousExecutor());
     mockCallbackExecutor = spy(new SynchronousExecutor());
-    mockProfiler = mock(Profiler.class);
 
     example = new RestAdapter.Builder() //
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .build()
         .create(Example.class);
   }
@@ -124,19 +119,6 @@ public class RestAdapterTest {
     }
   }
 
-  @Test public void profilerObjectPassThrough() throws Exception {
-    Object data = new Object();
-    when(mockProfiler.beforeCall()).thenReturn(data);
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("Hey")));
-
-    example.something();
-
-    verify(mockProfiler).beforeCall();
-    verify(mockClient).execute(any(Request.class));
-    verify(mockProfiler).afterCall(any(RequestInformation.class), anyInt(), eq(200), same(data));
-  }
-
   @Test public void logRequestResponseBasic() throws Exception {
     final List<String> logMessages = new ArrayList<String>();
     RestAdapter.Log log = new RestAdapter.Log() {
@@ -149,7 +131,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(BASIC)
         .build()
@@ -176,7 +157,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(HEADERS)
         .build()
@@ -208,7 +188,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(HEADERS_AND_ARGS)
         .build()
@@ -242,7 +221,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -280,7 +258,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(HEADERS_AND_ARGS)
         .build()
@@ -319,7 +296,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -351,7 +327,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(HEADERS_AND_ARGS)
         .build()
@@ -394,7 +369,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -479,7 +453,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -521,7 +494,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(log)
         .setLogLevel(FULL)
         .build()
@@ -582,9 +554,9 @@ public class RestAdapterTest {
     }
   }
 
-  @Test public void unexpectedExceptionThrows() {
+  @Test public void unexpectedExceptionThrows() throws IOException {
     RuntimeException exception = new RuntimeException("More breakage.");
-    when(mockProfiler.beforeCall()).thenThrow(exception);
+    when(mockClient.execute(any(Request.class))).thenThrow(exception);
 
     try {
       example.something();
@@ -631,7 +603,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setExecutors(mockRequestExecutor, mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setProfiler(mockProfiler)
         .setLog(RestAdapter.Log.NONE)
         .setLogLevel(FULL)
         .build()

@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import retrofit.Profiler.RequestInformation;
 import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
@@ -154,21 +153,19 @@ public class RestAdapter {
   final ErrorHandler errorHandler;
 
   private final Client client;
-  private final Profiler profiler;
   private RxSupport rxSupport;
 
   volatile LogLevel logLevel;
 
   private RestAdapter(Endpoint server, Client client, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
-      Profiler profiler, ErrorHandler errorHandler, Log log, LogLevel logLevel) {
+      ErrorHandler errorHandler, Log log, LogLevel logLevel) {
     this.server = server;
     this.client = client;
     this.httpExecutor = httpExecutor;
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
     this.converter = converter;
-    this.profiler = profiler;
     this.errorHandler = errorHandler;
     this.log = log;
     this.logLevel = logLevel;
@@ -312,21 +309,9 @@ public class RestAdapter {
           request = logAndReplaceRequest("HTTP", request, args);
         }
 
-        Object profilerObject = null;
-        if (profiler != null) {
-          profilerObject = profiler.beforeCall();
-        }
-
         long start = System.nanoTime();
         Response response = client.execute(request);
         long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-        int statusCode = response.getStatus();
-        if (profiler != null) {
-          RequestInformation requestInfo = getRequestInfo(serverUrl, methodInfo, request);
-          //noinspection unchecked
-          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
-        }
 
         if (logLevel.log()) {
           // Log the response data.
@@ -335,6 +320,7 @@ public class RestAdapter {
 
         Type type = methodInfo.responseObjectType;
 
+        int statusCode = response.getStatus();
         if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
           // Caller requested the raw Response object directly.
           if (type.equals(Response.class)) {
@@ -509,21 +495,6 @@ public class RestAdapter {
     log.log("---- END ERROR");
   }
 
-  private static Profiler.RequestInformation getRequestInfo(String serverUrl,
-      RestMethodInfo methodDetails, Request request) {
-    long contentLength = 0;
-    String contentType = null;
-
-    TypedOutput body = request.getBody();
-    if (body != null) {
-      contentLength = body.length();
-      contentType = body.mimeType();
-    }
-
-    return new Profiler.RequestInformation(methodDetails.requestMethod, serverUrl,
-        methodDetails.requestUrl, contentLength, contentType);
-  }
-
   /**
    * Build a new {@link RestAdapter}.
    * <p>
@@ -537,7 +508,6 @@ public class RestAdapter {
     private Executor callbackExecutor;
     private RequestInterceptor requestInterceptor;
     private Converter converter;
-    private Profiler profiler;
     private ErrorHandler errorHandler;
     private Log log;
     private LogLevel logLevel = LogLevel.NONE;
@@ -607,15 +577,6 @@ public class RestAdapter {
       return this;
     }
 
-    /** Set the profiler used to measure requests. */
-    public Builder setProfiler(Profiler profiler) {
-      if (profiler == null) {
-        throw new NullPointerException("Profiler may not be null.");
-      }
-      this.profiler = profiler;
-      return this;
-    }
-
     /**
      * The error handler allows you to customize the type of exception thrown for errors on
      * synchronous requests.
@@ -653,7 +614,7 @@ public class RestAdapter {
       }
       ensureSaneDefaults();
       return new RestAdapter(endpoint, client, httpExecutor, callbackExecutor,
-          requestInterceptor, converter, profiler, errorHandler, log, logLevel);
+          requestInterceptor, converter, errorHandler, log, logLevel);
     }
 
     private void ensureSaneDefaults() {
