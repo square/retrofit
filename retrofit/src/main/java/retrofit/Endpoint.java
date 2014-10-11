@@ -7,11 +7,6 @@ package retrofit;
  * @author Matt Hickman (mhickman@palantir.com)
  */
 public interface Endpoint {
-
   /** The base API URL. */
   String getUrl();
-
-  /** A name for differentiating between multiple API URLs. */
-  String getName();
-
 }
