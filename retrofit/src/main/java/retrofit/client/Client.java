@@ -31,13 +31,4 @@ public interface Client {
    * these values as they might have been set as a result of an application-level configuration.
    */
   Response execute(Request request) throws IOException;
-
-  /**
-   * Deferred means of obtaining a {@link Client}. For asynchronous requests this will always be
-   * called on a background thread.
-   */
-  interface Provider {
-    /** Obtain an HTTP client. Called once for each request. */
-    Client get();
-  }
 }
