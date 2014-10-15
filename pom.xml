@@ -51,7 +51,7 @@
     <android.platform>16</android.platform>
     <gson.version>2.3</gson.version>
     <okhttp.version>2.0.0</okhttp.version>
-    <rxjava.version>0.20.5</rxjava.version>
+    <rxjava.version>1.0.0-rc.4</rxjava.version>
     <appengine.version>1.9.12</appengine.version>
 
     <!-- Converter Dependencies -->
@@ -114,8 +114,8 @@
         <version>${gson.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.netflix.rxjava</groupId>
-        <artifactId>rxjava-core</artifactId>
+        <groupId>io.reactivex</groupId>
+        <artifactId>rxjava</artifactId>
         <version>${rxjava.version}</version>
       </dependency>
       <dependency>
