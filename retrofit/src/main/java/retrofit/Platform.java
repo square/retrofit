@@ -24,7 +24,6 @@ import java.util.concurrent.ThreadFactory;
 import retrofit.android.AndroidApacheClient;
 import retrofit.android.AndroidLog;
 import retrofit.android.MainThreadExecutor;
-import retrofit.appengine.UrlFetchClient;
 import retrofit.client.Client;
 import retrofit.client.OkClient;
 import retrofit.client.UrlConnectionClient;
@@ -50,10 +49,6 @@ abstract class Platform {
         return new Android();
       }
     } catch (ClassNotFoundException ignored) {
-    }
-
-    if (System.getProperty("com.google.appengine.runtime.version") != null) {
-      return new AppEngine();
     }
 
     return new Base();
@@ -139,12 +134,6 @@ abstract class Platform {
 
     @Override RestAdapter.Log defaultLog() {
       return new AndroidLog("Retrofit");
-    }
-  }
-
-  private static class AppEngine extends Base {
-    @Override Client defaultClient() {
-      return new UrlFetchClient();
     }
   }
 
