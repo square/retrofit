@@ -27,8 +27,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
       <optional>true</optional>
     </dependency>
 
