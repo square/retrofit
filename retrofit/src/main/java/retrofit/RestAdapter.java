@@ -428,7 +428,7 @@ public class RestAdapter {
             log.log("---> REQUEST:");
           }
           for (int i = 0; i < args.length; i++) {
-            log.log("#" + i + ": " + args[i].toString());
+            log.log("#" + i + ": " + args[i]);
           }
         }
       }
