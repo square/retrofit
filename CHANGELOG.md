@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.7.1 *(2014-10-23)*
+----------------------------
+
+ * Fix: Correctly log `null` request arguments for `HEADERS_AND_ARGS` log level.
+
+
 Version 1.7.0 *(2014-10-08)*
 ----------------------------
 
