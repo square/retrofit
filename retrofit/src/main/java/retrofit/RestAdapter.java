@@ -421,7 +421,7 @@ public class RestAdapter {
           }
 
           byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-          String bodyCharset = MimeUtil.parseCharset(body.mimeType());
+          String bodyCharset = MimeUtil.parseCharset(body.mimeType(), "UTF-8");
           log.log(new String(bodyBytes, bodyCharset));
         } else if (logLevel.ordinal() >= LogLevel.HEADERS_AND_ARGS.ordinal()) {
           if (!request.getHeaders().isEmpty()) {
@@ -468,7 +468,7 @@ public class RestAdapter {
           byte[] bodyBytes = ((TypedByteArray) body).getBytes();
           bodySize = bodyBytes.length;
           String bodyMime = body.mimeType();
-          String bodyCharset = MimeUtil.parseCharset(bodyMime);
+          String bodyCharset = MimeUtil.parseCharset(bodyMime, "UTF-8");
           log.log(new String(bodyBytes, bodyCharset));
         }
       }
