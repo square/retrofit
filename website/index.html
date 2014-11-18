@@ -140,7 +140,7 @@ Photo getUserPhoto(@Path("id") int id);</pre>
 void getUserPhoto(@Path("id") int id, Callback&lt;Photo> cb);</pre>
             <p>On Android, callbacks will be executed on the main thread. For desktop applications callbacks will happen on the same thread that executed the HTTP request.</p>
 
-            <p>Retrofit also integrates <a href="https://github.com/Netflix/RxJava/wiki">RxJava</a> to support methods with a return type of <code>rx.Observable</code></p>
+            <p>Retrofit also integrates <a href="https://github.com/ReactiveX/RxJava/wiki">RxJava</a> to support methods with a return type of <code>rx.Observable</code></p>
             <pre class="prettyprint">@GET("/user/{id}/photo")
 Observable&lt;Photo> getUserPhoto(@Path("id") int id);</pre>
             <p>Observable requests are subscribed asynchronously and observed on the same thread that executed the HTTP request.  To observe on a different thread (e.g. Android's main thread) call <code>observeOn(Scheduler)</code> on the returned <code>Observable</code>.</p>

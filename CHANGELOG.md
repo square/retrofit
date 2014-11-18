@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 1.8.0 *(2014-11-18)*
+----------------------------
+
+ * Update to RxJava 1.0. This comes with the project's 'groupId' change from `com.netflix.rxjava` to
+   `io.reactivex` which is why the minor version was bumped.
+
+
 Version 1.7.1 *(2014-10-23)*
 ----------------------------
 
