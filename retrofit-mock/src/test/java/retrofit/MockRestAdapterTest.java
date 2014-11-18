@@ -340,7 +340,7 @@ public class MockRestAdapterTest {
 
     class MockObservableExample implements ObservableExample {
       @Override public Observable<String> doStuff() {
-        return Observable.from(expected);
+        return Observable.just(expected);
       }
     }
 
