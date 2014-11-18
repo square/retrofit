@@ -21,6 +21,7 @@ public class MimeUtilTest {
     assertThat(parseCharset("text/plain; notthecharset=utf-16;", "UTF-8")).isEqualToIgnoringCase("UTF-8");
   }
 
+  @SuppressWarnings("deprecation")
   @Test public void oldCharsetParsing() {
     assertThat(parseCharset("text/plain;charset=utf-8")).isEqualToIgnoringCase("UTF-8");
     assertThat(parseCharset("text/plain; charset=utf-8")).isEqualToIgnoringCase("UTF-8");

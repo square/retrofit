@@ -235,7 +235,7 @@ final class RestMethodInfo {
     return headerList;
   }
 
-  /** Loads {@link #responseObjectType}. Returns {@code true} if method is synchronous. */
+  /** Loads {@link #responseObjectType}. */
   private ResponseType parseResponseType() {
     // Synchronous methods have a non-void return type.
     // Observable methods have a return type of Observable.
