@@ -23,17 +23,24 @@ public class SimpleXMLConverter implements Converter {
 
   private final Serializer serializer;
 
+  private final boolean strict;
+
   public SimpleXMLConverter() {
     this(new Persister());
   }
 
   public SimpleXMLConverter(Serializer serializer) {
-    this.serializer = serializer;
+    this(serializer, true);
+  }
+
+  public SimpleXMLConverter(Serializer serializer, boolean strict) {
+      this.serializer = serializer;
+      this.strict = strict;
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
     try {
-      return serializer.read((Class<?>) type, body.in());
+      return serializer.read((Class<?>) type, body.in(), strict);
     } catch (Exception e) {
       throw new ConversionException(e);
     }
@@ -60,4 +67,9 @@ public class SimpleXMLConverter implements Converter {
       }
     }
   }
+
+  public boolean isStrict() {
+      return strict;
+  }
+
 }
