@@ -18,19 +18,29 @@ import retrofit.mime.TypedOutput;
  * @author Fabien Ric (fabien.ric@gmail.com)
  */
 public class SimpleXMLConverter implements Converter {
+  private static final boolean DEFAULT_STRICT = true;
   private static final String CHARSET = "UTF-8";
   private static final String MIME_TYPE = "application/xml; charset=" + CHARSET;
 
   private final Serializer serializer;
 
-  private boolean strict = true;
+  private final boolean strict;
 
   public SimpleXMLConverter() {
-    this(new Persister());
+    this(DEFAULT_STRICT);
+  }
+
+  public SimpleXMLConverter(boolean strict) {
+    this(new Persister(), strict);
   }
 
   public SimpleXMLConverter(Serializer serializer) {
+    this(serializer, DEFAULT_STRICT);
+  }
+
+  public SimpleXMLConverter(Serializer serializer, boolean strict) {
     this.serializer = serializer;
+    this.strict = strict;
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
@@ -64,11 +74,6 @@ public class SimpleXMLConverter implements Converter {
   }
 
   public boolean isStrict() {
-      return strict;
+    return strict;
   }
-
-  public void setStrict(boolean strict) {
-      this.strict = strict;
-  }
-
 }
