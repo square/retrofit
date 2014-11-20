@@ -23,14 +23,19 @@ public class SimpleXMLConverter implements Converter {
 
   private final Serializer serializer;
 
-  private boolean strict = true;
+  private final boolean strict;
 
   public SimpleXMLConverter() {
     this(new Persister());
   }
 
   public SimpleXMLConverter(Serializer serializer) {
-    this.serializer = serializer;
+    this(serializer, true);
+  }
+
+  public SimpleXMLConverter(Serializer serializer, boolean strict) {
+      this.serializer = serializer;
+      this.strict = strict;
   }
 
   @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
@@ -65,10 +70,6 @@ public class SimpleXMLConverter implements Converter {
 
   public boolean isStrict() {
       return strict;
-  }
-
-  public void setStrict(boolean strict) {
-      this.strict = strict;
   }
 
 }
