@@ -140,7 +140,7 @@ Photo getUserPhoto(@Path("id") int id);</pre>
 void getUserPhoto(@Path("id") int id, Callback&lt;Photo> cb);</pre>
             <p>On Android, callbacks will be executed on the main thread. For desktop applications callbacks will happen on the same thread that executed the HTTP request.</p>
 
-            <p>Retrofit also integrates <a href="https://github.com/Netflix/RxJava/wiki">RxJava</a> to support methods with a return type of <code>rx.Observable</code></p>
+            <p>Retrofit also integrates <a href="https://github.com/ReactiveX/RxJava/wiki">RxJava</a> to support methods with a return type of <code>rx.Observable</code></p>
             <pre class="prettyprint">@GET("/user/{id}/photo")
 Observable&lt;Photo> getUserPhoto(@Path("id") int id);</pre>
             <p>Observable requests are subscribed asynchronously and observed on the same thread that executed the HTTP request.  To observe on a different thread (e.g. Android's main thread) call <code>observeOn(Scheduler)</code> on the returned <code>Observable</code>.</p>
@@ -226,7 +226,7 @@ RestAdapter restAdapter = new RestAdapter.Builder()
             <p>This logging can be added or changed at any point in the <code>RestAdapter</code>'s lifecycle by calling the same <code>.setLogLevel()</code> method and supplying a different <code>LogLevel</code> value.</p>
 
             <h3 id="download">Download</h3>
-            <p><a href="http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
+            <p><a href="https://search.maven.org/remote_content?g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
             <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
             <h4>Maven</h4>
             <pre class="prettyprint">&lt;dependency>
