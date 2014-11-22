@@ -24,6 +24,10 @@ public final class FormUrlEncodedTypedOutput implements TypedOutput {
   final ByteArrayOutputStream content = new ByteArrayOutputStream();
 
   public void addField(String name, String value) {
+    addField(name, value, true, true);
+  }
+
+  public void addField(String name, String value, boolean encodeName, boolean encodeValue) {
     if (name == null) {
       throw new NullPointerException("name");
     }
@@ -34,8 +38,12 @@ public final class FormUrlEncodedTypedOutput implements TypedOutput {
       content.write('&');
     }
     try {
-      name = URLEncoder.encode(name, "UTF-8");
-      value = URLEncoder.encode(value, "UTF-8");
+      if (encodeName) {
+        name = URLEncoder.encode(name, "UTF-8");
+      }
+      if (encodeValue) {
+        value = URLEncoder.encode(value, "UTF-8");
+      }
 
       content.write(name.getBytes("UTF-8"));
       content.write('=');

@@ -1456,6 +1456,30 @@ public class RequestBuilderTest {
     assertTypedBytes(request.getBody(), "foo=bar&ping=pong");
   }
 
+  @Test public void formEncodedWithEncodedName() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field(value = "na+me", encodeName = false, encodeValue = true) String foo) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "ba r");
+    assertTypedBytes(request.getBody(), "na+me=ba+r");
+  }
+
+  @Test public void formEncodedWithEncodedValue() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field(value = "na me", encodeName = true, encodeValue = false) String foo) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "ba+r");
+    assertTypedBytes(request.getBody(), "na+me=ba+r");
+  }
+
   @Test public void formEncodedFieldOptional() {
     class Example {
       @FormUrlEncoded //
