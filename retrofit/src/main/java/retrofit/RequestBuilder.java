@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -254,6 +255,17 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         if (value != null) { // Skip null values.
           String name = ((retrofit.http.Header) annotation).value();
           addHeader(name, value.toString());
+        }
+      } else if (annotationType == retrofit.http.Cookies.class) {
+        if (value != null) { // Skip null values.
+          if (value instanceof Collection) {
+            Collection cookies = (Collection) value;
+            for (Object cookie : cookies) {
+              addHeader("Cookie", (String) cookie);
+            }
+          } else {
+            throw new IllegalArgumentException("Cookies parameter must extend Collection");
+          }
         }
       } else if (annotationType == Field.class) {
         String name = ((Field) annotation).value();

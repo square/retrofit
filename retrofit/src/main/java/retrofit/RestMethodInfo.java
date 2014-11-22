@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import retrofit.client.Response;
 import retrofit.http.Body;
+import retrofit.http.Cookies;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
@@ -336,6 +337,8 @@ final class RestMethodInfo {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
           } else if (methodAnnotationType == Header.class) {
+            // Nothing to do.
+          } else if (methodAnnotationType == Cookies.class) {
             // Nothing to do.
           } else if (methodAnnotationType == Field.class) {
             if (requestType != RequestType.FORM_URL_ENCODED) {

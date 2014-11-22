@@ -9,6 +9,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -21,6 +22,7 @@ import retrofit.client.Response;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
 import retrofit.http.Body;
+import retrofit.http.Cookies;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
@@ -1676,6 +1678,21 @@ public class RequestBuilderTest {
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()) //
         .containsExactly(new Header("ping", "pong"), new Header("kit", "kat"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void cookiesParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@Cookies List cookies) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new ArrayList<String>() {{ add("foo"); add("bar"); }});
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("Cookie", "foo"), new Header("Cookie", "bar"));
     assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.getBody()).isNull();
   }
