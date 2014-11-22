@@ -272,26 +272,32 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         }
       } else if (annotationType == Field.class) {
         if (value != null) { // Skip null values.
-          String name = ((Field) annotation).value();
+          Field field = (Field) annotation;
+          String name = field.value();
+          boolean encodeName = field.encodeName();
+          boolean encodeValue = field.encodeValue();
           if (value instanceof Iterable) {
             for (Object iterableValue : (Iterable<?>) value) {
               if (iterableValue != null) { // Skip null values.
-                formBody.addField(name, iterableValue.toString());
+                formBody.addField(name, iterableValue.toString(), encodeName, encodeValue);
               }
             }
           } else if (value.getClass().isArray()) {
             for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
               Object arrayValue = Array.get(value, x);
               if (arrayValue != null) { // Skip null values.
-                formBody.addField(name, arrayValue.toString());
+                formBody.addField(name, arrayValue.toString(), encodeName, encodeValue);
               }
             }
           } else {
-            formBody.addField(name, value.toString());
+            formBody.addField(name, value.toString(), encodeName, encodeValue);
           }
         }
       } else if (annotationType == FieldMap.class) {
         if (value != null) { // Skip null values.
+          FieldMap fieldMap = (FieldMap) annotation;
+          boolean encodeNames = fieldMap.encodeNames();
+          boolean encodeValues = fieldMap.encodeValues();
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
             Object entryKey = entry.getKey();
             if (entryKey == null) {
@@ -300,7 +306,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             }
             Object entryValue = entry.getValue();
             if (entryValue != null) { // Skip null values.
-              formBody.addField(entryKey.toString(), entryValue.toString());
+              formBody.addField(entryKey.toString(), entryValue.toString(),
+                  encodeNames, encodeValues);
             }
           }
         }
