@@ -1456,7 +1456,7 @@ public class RequestBuilderTest {
     assertTypedBytes(request.getBody(), "foo=bar&ping=pong");
   }
 
-  @Test public void formEncodedWithEncodedName() {
+  @Test public void formEncodedWithEncodedNameFieldParam() {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
@@ -1468,7 +1468,7 @@ public class RequestBuilderTest {
     assertTypedBytes(request.getBody(), "na+me=ba+r");
   }
 
-  @Test public void formEncodedWithEncodedValue() {
+  @Test public void formEncodedWithEncodedValueFieldParam() {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
@@ -1533,6 +1533,40 @@ public class RequestBuilderTest {
     int[] values = { 1, 2, 3 };
     Request request = buildRequest(Example.class, values, "kat");
     assertTypedBytes(request.getBody(), "foo=1&foo=2&foo=3&kit=kat");
+  }
+
+  @Test public void formEncodedWithEncodedNameFieldParamMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@FieldMap(encodeNames = false, encodeValues = true) Map<String, Object> fieldMap) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("k+it", "k at");
+    fieldMap.put("pin+g", "po ng");
+
+    Request request = buildRequest(Example.class, fieldMap);
+    assertTypedBytes(request.getBody(), "k+it=k+at&pin+g=po+ng");
+  }
+
+  @Test public void formEncodedWithEncodedValueFieldParamMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@FieldMap(encodeNames = true, encodeValues = false) Map<String, Object> fieldMap) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("k it", "k+at");
+    fieldMap.put("pin g", "po+ng");
+
+    Request request = buildRequest(Example.class, fieldMap);
+    assertTypedBytes(request.getBody(), "k+it=k+at&pin+g=po+ng");
   }
 
   @Test public void formEncodedFieldMap() {

@@ -280,6 +280,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         }
       } else if (annotationType == FieldMap.class) {
         if (value != null) { // Skip null values.
+          FieldMap fieldMap = (FieldMap) annotation;
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
             Object entryKey = entry.getKey();
             if (entryKey == null) {
@@ -288,7 +289,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             }
             Object entryValue = entry.getValue();
             if (entryValue != null) { // Skip null values.
-              formBody.addField(entryKey.toString(), entryValue.toString());
+              formBody.addField(entryKey.toString(), entryValue.toString(), fieldMap.encodeNames(), fieldMap.encodeValues());
             }
           }
         }
