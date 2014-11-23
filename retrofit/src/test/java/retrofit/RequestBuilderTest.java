@@ -1738,6 +1738,36 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
+  @Test public void headerParamList() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@retrofit.http.Header("foo") List<String> kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, Arrays.asList("bar", null, "baz"));
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("foo", "bar"), new Header("foo", "baz"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
+  @Test public void headerParamArray() {
+    class Example {
+      @GET("/foo/bar/") //
+      Response method(@retrofit.http.Header("foo") String[] kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, (Object) new String[] { "bar", null, "baz" });
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()) //
+        .containsExactly(new Header("foo", "bar"), new Header("foo", "baz"));
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.getBody()).isNull();
+  }
+
   @Test public void contentTypeAnnotationHeaderOverrides() {
     class Example {
       @POST("/") //
