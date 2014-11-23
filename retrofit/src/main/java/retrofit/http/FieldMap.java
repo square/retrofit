@@ -45,7 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface FieldMap {
   /** Specifies whether parameter names (keys in the map) are URL encoded. */
-  boolean encodeNames() default false;
+  boolean encodeNames() default true;
 
   /** Specifies whether parameter values (values in the map) are URL encoded. */
   boolean encodeValues() default true;
