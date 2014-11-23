@@ -30,7 +30,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * void foo(@Header("Accept-Language") String lang, Callback&lt;Response&gt; cb);
  * </pre>
  * <p>
- * Header parameters may be {@code null} which will omit them from the request.
+ * Header parameters may be {@code null} which will omit them from the request. Passing a
+ * {@link java.util.List List} or array will result in a header for each non-{@code null} item.
  * <p>
  * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
  * be included in the request.
