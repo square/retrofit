@@ -253,11 +253,26 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       } else if (annotationType == retrofit.http.Header.class) {
         if (value != null) { // Skip null values.
           String name = ((retrofit.http.Header) annotation).value();
-          addHeader(name, value.toString());
+          if (value instanceof Iterable) {
+            for (Object iterableValue : (Iterable<?>) value) {
+              if (iterableValue != null) { // Skip null values.
+                addHeader(name, iterableValue.toString());
+              }
+            }
+          } else if (value.getClass().isArray()) {
+            for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+              Object arrayValue = Array.get(value, x);
+              if (arrayValue != null) { // Skip null values.
+                addHeader(name, arrayValue.toString());
+              }
+            }
+          } else {
+            addHeader(name, value.toString());
+          }
         }
       } else if (annotationType == Field.class) {
-        String name = ((Field) annotation).value();
         if (value != null) { // Skip null values.
+          String name = ((Field) annotation).value();
           if (value instanceof Iterable) {
             for (Object iterableValue : (Iterable<?>) value) {
               if (iterableValue != null) { // Skip null values.
@@ -290,8 +305,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           }
         }
       } else if (annotationType == Part.class) {
-        String name = ((Part) annotation).value();
         if (value != null) { // Skip null values.
+          String name = ((Part) annotation).value();
           String transferEncoding = ((Part) annotation).encoding();
           if (value instanceof TypedOutput) {
             multipartBody.addPart(name, transferEncoding, (TypedOutput) value);
