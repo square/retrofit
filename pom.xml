@@ -34,6 +34,7 @@
 
   <modules>
     <module>retrofit</module>
+    <module>retrofit-appengine</module>
     <module>retrofit-converters</module>
     <module>retrofit-mock</module>
     <module>samples</module>
