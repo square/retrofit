@@ -482,7 +482,7 @@ public class RestAdapter {
   private void logResponseBody(TypedInput body, Object convert) {
     if (logLevel.ordinal() == LogLevel.HEADERS_AND_ARGS.ordinal()) {
       log.log("<--- BODY:");
-      log.log(convert.toString());
+      log.log(convert != null ? convert.toString() : "null");
     }
   }
 
