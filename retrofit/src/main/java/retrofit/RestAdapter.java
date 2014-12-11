@@ -171,7 +171,7 @@ public class RestAdapter {
     this.errorHandler = errorHandler;
     this.log = log;
     this.logLevel = logLevel;
-    this.allowExtendingInterface=false;
+    this.allowExtendingInterface = false;
   }
 
   /** Change the level of logging. */
@@ -183,8 +183,8 @@ public class RestAdapter {
   }
 
   /** Change the ability to extend interfaces, may break Android **/
-  public void setAllowExtendingInterface(boolean allowExtendingInterface){
-    this.allowExtendingInterface=allowExtendingInterface;
+  public void setAllowExtendingInterface(boolean allowExtendingInterface) {
+    this.allowExtendingInterface = allowExtendingInterface;
   }
 
   /** The current logging level. */
@@ -195,7 +195,7 @@ public class RestAdapter {
   /** Create an implementation of the API defined by the specified {@code service} interface. */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> service) {
-    Utils.validateServiceClass(allowExtendingInterface,service);
+    Utils.validateServiceClass(allowExtendingInterface, service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new RestHandler(getMethodInfoCache(service)));
   }
@@ -522,8 +522,8 @@ public class RestAdapter {
     private boolean allowExtendingInterface = false;
 
     /** Change the ability to extend interfaces, may break Android **/
-    public Builder setAllowExtendingInterface(boolean allowExtendingInterface){
-      this.allowExtendingInterface=allowExtendingInterface;
+    public Builder setAllowExtendingInterface(boolean allowExtendingInterface) {
+      this.allowExtendingInterface = allowExtendingInterface;
       return this;
     }
 

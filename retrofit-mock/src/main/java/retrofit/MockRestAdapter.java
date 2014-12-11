@@ -209,7 +209,7 @@ public final class MockRestAdapter {
    */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> service, T mockService) {
-    Utils.validateServiceClass(service);
+    Utils.validateServiceClass(false, service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new MockHandler(mockService, restAdapter.getMethodInfoCache(service)));
   }
