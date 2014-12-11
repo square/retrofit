@@ -157,6 +157,8 @@ public class RestAdapter {
 
   volatile LogLevel logLevel;
 
+  volatile boolean allowExtendingInterface;
+
   private RestAdapter(Endpoint server, Client client, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
       ErrorHandler errorHandler, Log log, LogLevel logLevel) {
@@ -169,6 +171,7 @@ public class RestAdapter {
     this.errorHandler = errorHandler;
     this.log = log;
     this.logLevel = logLevel;
+    this.allowExtendingInterface=false;
   }
 
   /** Change the level of logging. */
@@ -179,6 +182,11 @@ public class RestAdapter {
     this.logLevel = loglevel;
   }
 
+  /** Change the ability to extend interfaces, may break Android **/
+  public void setAllowExtendingInterface(boolean allowExtendingInterface){
+    this.allowExtendingInterface=allowExtendingInterface;
+  }
+
   /** The current logging level. */
   public LogLevel getLogLevel() {
     return logLevel;
@@ -187,7 +195,7 @@ public class RestAdapter {
   /** Create an implementation of the API defined by the specified {@code service} interface. */
   @SuppressWarnings("unchecked")
   public <T> T create(Class<T> service) {
-    Utils.validateServiceClass(service);
+    Utils.validateServiceClass(allowExtendingInterface,service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new RestHandler(getMethodInfoCache(service)));
   }
@@ -511,6 +519,13 @@ public class RestAdapter {
     private ErrorHandler errorHandler;
     private Log log;
     private LogLevel logLevel = LogLevel.NONE;
+    private boolean allowExtendingInterface = false;
+
+    /** Change the ability to extend interfaces, may break Android **/
+    public Builder setAllowExtendingInterface(boolean allowExtendingInterface){
+      this.allowExtendingInterface=allowExtendingInterface;
+      return this;
+    }
 
     /** API endpoint URL. */
     public Builder setEndpoint(String endpoint) {
@@ -613,8 +628,10 @@ public class RestAdapter {
         throw new IllegalArgumentException("Endpoint may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(endpoint, client, httpExecutor, callbackExecutor,
-          requestInterceptor, converter, errorHandler, log, logLevel);
+      RestAdapter restAdapter = new RestAdapter(endpoint, client, httpExecutor, callbackExecutor,
+              requestInterceptor, converter, errorHandler, log, logLevel);
+      restAdapter.setAllowExtendingInterface(this.allowExtendingInterface);
+      return restAdapter;
     }
 
     private void ensureSaneDefaults() {
