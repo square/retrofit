@@ -301,7 +301,12 @@ public class RestAdapter {
 
         if (!methodInfo.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
-          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+          int substrEnd = url.indexOf("?", serverUrl.length());
+          if (substrEnd == -1) {
+            substrEnd = url.length();
+          }
+          Thread.currentThread().setName(THREAD_PREFIX
+              + url.substring(serverUrl.length(), substrEnd));
         }
 
         if (logLevel.log()) {
