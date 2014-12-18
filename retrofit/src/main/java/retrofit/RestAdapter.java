@@ -301,8 +301,8 @@ public class RestAdapter {
 
         if (!methodInfo.isSynchronous) {
           // If we are executing asynchronously then update the current thread with a useful name.
-          int substrEnd = url.indexOf("?");
-          if (substrEnd < serverUrl.length()) {
+          int substrEnd = url.indexOf("?", serverUrl.length());
+          if (substrEnd == -1) {
             substrEnd = url.length();
           }
           Thread.currentThread().setName(THREAD_PREFIX
