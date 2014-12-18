@@ -306,7 +306,7 @@ public class RestAdapter {
             substrEnd = url.length();
           }
           Thread.currentThread().setName(THREAD_PREFIX
-            + url.substring(serverUrl.length(), substrEnd));
+              + url.substring(serverUrl.length(), substrEnd));
         }
 
         if (logLevel.log()) {
