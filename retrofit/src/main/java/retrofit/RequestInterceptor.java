@@ -17,7 +17,7 @@ public interface RequestInterceptor {
 
     /**
      * Add a path parameter replacement without first URI encoding. This works exactly like a
-     * {@link retrofit.http.EncodedPath &#64;EncodedPath}-annotated method argument.
+     * {@link retrofit.http.Path &#64;Path}-annotated method argument with {@code encode=false}.
      */
     void addEncodedPathParam(String name, String value);
 
