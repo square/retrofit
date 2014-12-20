@@ -21,7 +21,11 @@ or Gradle:
 ```groovy
 compile 'com.squareup.retrofit:retrofit:1.8.0'
 ```
+
+Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+
 Retrofit requires at minimum Java 6 or Android 2.3.
+
 
 
 License
@@ -44,3 +48,4 @@ License
 
  [1]: http://square.github.io/retrofit/
  [2]: https://search.maven.org/remote_content?g=com.squareup.retrofit&a=retrofit&v=LATEST
+ [snap]: https://oss.sonatype.org/content/repositories/snapshots/
