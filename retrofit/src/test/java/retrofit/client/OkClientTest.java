@@ -86,6 +86,30 @@ public final class OkClientTest {
     assertBytes(ByteStreams.toByteArray(responseBody.in()), "hello");
   }
 
+  @Test public void responseNoContentType() throws IOException {
+    com.squareup.okhttp.Response okResponse = new com.squareup.okhttp.Response.Builder()
+        .code(200).message("OK")
+        .body(new TestResponseBody("hello", null))
+        .addHeader("foo", "bar")
+        .addHeader("kit", "kat")
+        .protocol(Protocol.HTTP_1_1)
+        .request(new com.squareup.okhttp.Request.Builder()
+            .url(HOST + "/foo/bar/")
+            .get()
+            .build())
+        .build();
+    Response response = OkClient.parseResponse(okResponse);
+
+    assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getReason()).isEqualTo("OK");
+    assertThat(response.getHeaders()) //
+        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"));
+    TypedInput responseBody = response.getBody();
+    assertThat(responseBody.mimeType()).isNull();
+    assertBytes(ByteStreams.toByteArray(responseBody.in()), "hello");
+  }
+
   @Test public void emptyResponse() throws IOException {
     com.squareup.okhttp.Response okResponse = new com.squareup.okhttp.Response.Builder()
         .code(200)
