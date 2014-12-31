@@ -98,7 +98,8 @@ public class OkClient implements Client {
     }
     return new TypedInput() {
       @Override public String mimeType() {
-        return body.contentType().toString();
+        MediaType mediaType = body.contentType();
+        return mediaType == null ? null : mediaType.toString();
       }
 
       @Override public long length() {
