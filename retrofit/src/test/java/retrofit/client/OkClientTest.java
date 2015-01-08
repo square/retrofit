@@ -53,13 +53,15 @@ public final class OkClientTest {
     List<Header> headers = new ArrayList<Header>();
     headers.add(new Header("kit", "kat"));
     headers.add(new Header("foo", "bar"));
+    headers.add(new Header("ping", null));
     Request request = new Request("GET", HOST + "/this/", headers, null);
     com.squareup.okhttp.Request okRequest = OkClient.createRequest(request);
 
     Headers okHeaders = okRequest.headers();
-    assertThat(okHeaders.size()).isEqualTo(2);
+    assertThat(okHeaders.size()).isEqualTo(3);
     assertThat(okHeaders.get("kit")).isEqualTo("kat");
     assertThat(okHeaders.get("foo")).isEqualTo("bar");
+    assertThat(okHeaders.get("ping")).isEqualTo("");
   }
 
   @Test public void response() throws IOException {
