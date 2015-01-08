@@ -8,7 +8,7 @@ Version 1.9.0 *(2015-01-07)*
    is 2.2 at time of writing) and you no longer need to use the `okhttp-urlconnection` shim.
  * New: Allow disabling Simple XML Framework's strict parsing.
  * New: `@Header` now accepts a `List` or array for a type.
- * New: `@Field` and `@FieldMap` now ahve options for enabling or disabling URL encoding of names and values.
+ * New: `@Field` and `@FieldMap` now have options for enabling or disabling URL encoding of names and values.
  * Fix: Remove query parameters from thread name when running background requests for asynchronous use.
 
 
