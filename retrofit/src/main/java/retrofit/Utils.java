@@ -97,15 +97,19 @@ final class Utils {
         response.getHeaders(), body);
   }
 
-  static <T> void validateServiceClass(Class<T> service) {
+  static <T> void validateServiceClass(boolean allowExtendingInterface, Class<T> service) {
     if (!service.isInterface()) {
       throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
     }
     // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
     // Android (http://b.android.com/58753) but it forces composition of API declarations which is
     // the recommended pattern.
-    if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("Interface definitions must not extend other interfaces.");
+    if (!allowExtendingInterface) {
+      if (service.getInterfaces().length > 0) {
+        throw new IllegalArgumentException(
+                "Interface definitions must not extend other interfaces."
+        );
+      }
     }
   }
 
