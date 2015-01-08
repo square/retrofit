@@ -61,7 +61,9 @@ public class OkClient implements Client {
     List<Header> headers = request.getHeaders();
     for (int i = 0, size = headers.size(); i < size; i++) {
       Header header = headers.get(i);
-      builder.addHeader(header.getName(), header.getValue());
+      String value = header.getValue();
+      if (value == null) value = "";
+      builder.addHeader(header.getName(), value);
     }
 
     return builder.build();
