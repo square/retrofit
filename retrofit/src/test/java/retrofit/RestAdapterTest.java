@@ -19,10 +19,14 @@ import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
+import retrofit.converter.Converter;
 import retrofit.http.Body;
+import retrofit.http.Field;
+import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.Headers;
 import retrofit.http.POST;
+import retrofit.http.PUT;
 import retrofit.http.Path;
 import retrofit.http.Streaming;
 import retrofit.mime.TypedInput;
@@ -76,6 +80,7 @@ public class RestAdapterTest {
     @Headers("Foo: Bar")
     @POST("/") Object something(@Body TypedOutput body);
     @GET("/") void something(Callback<String> callback);
+    @PUT("/") @FormUrlEncoded Void something(@Field("x") String x);
     @GET("/") Response direct();
     @GET("/") void direct(Callback<Response> callback);
     @GET("/") @Streaming Response streaming();
@@ -348,6 +353,63 @@ public class RestAdapterTest {
     assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(10)).isEqualTo("<--- END HTTP (0-byte body)");
+  }
+
+  @Test public void logSuccessfulRequestResponseHeadersAndArgsWhenBodyVoid() throws Exception {
+    final List<String> logMessages = new ArrayList<String>();
+    RestAdapter.Log log = new RestAdapter.Log() {
+      @Override public void log(String message) {
+        logMessages.add(message);
+      }
+    };
+
+    TypedInput body = new TypedInput() {
+      @Override
+      public String mimeType() {
+        return "application/json";
+      }
+
+      @Override
+      public long length() {
+        return -1;
+      }
+
+      @Override
+      public InputStream in() throws IOException {
+        InputStream mockStream = mock(InputStream.class);
+        when(mockStream.read(any(byte[].class))).thenReturn(-1);
+        return mockStream;
+      }
+    };
+    Converter mockJsonConverter = mock(Converter.class);
+    when(mockJsonConverter.fromBody(body, Void.TYPE)).thenReturn(null);
+
+    Example example = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setConverter(mockJsonConverter)
+        .setEndpoint("http://example.com")
+        .setLog(log)
+        .setLogLevel(HEADERS_AND_ARGS)
+        .build()
+        .create(Example.class);
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, body));
+
+    example.something("x");
+    assertThat(logMessages).hasSize(11);
+    assertThat(logMessages.get(0)).isEqualTo("---> HTTP PUT http://example.com/");
+    assertThat(logMessages.get(1)).isEqualTo("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
+    assertThat(logMessages.get(2)).isEqualTo("Content-Length: 3");
+    assertThat(logMessages.get(3)).isEqualTo("#0: x");
+    assertThat(logMessages.get(4)).isEqualTo("---> END HTTP (3-byte body)");
+    assertThat(logMessages.get(5)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(6)).isEqualTo("Content-Type: application/json");
+    assertThat(logMessages.get(7)).isEqualTo("Content-Length: 42");
+    assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (-1-byte body)");
+    assertThat(logMessages.get(9)).isEqualTo("<--- BODY:");
+    assertThat(logMessages.get(10)).isEqualTo("null");
   }
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
