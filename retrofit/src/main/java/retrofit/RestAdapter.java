@@ -157,7 +157,7 @@ public class RestAdapter {
 
   volatile LogLevel logLevel;
 
-  private RestAdapter(Endpoint server, Client client, Executor httpExecutor,
+  protected RestAdapter(Endpoint server, Client client, Executor httpExecutor,
       Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
       ErrorHandler errorHandler, Log log, LogLevel logLevel) {
     this.server = server;
@@ -214,7 +214,7 @@ public class RestAdapter {
     }
   }
 
-  private class RestHandler implements InvocationHandler {
+  protected class RestHandler implements InvocationHandler {
     private final Map<Method, RestMethodInfo> methodDetailsCache;
 
     RestHandler(Map<Method, RestMethodInfo> methodDetailsCache) {
