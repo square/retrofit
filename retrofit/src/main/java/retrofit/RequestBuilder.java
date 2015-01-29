@@ -45,8 +45,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
-  private final boolean isSynchronous;
-  private final boolean isObservable;
+  private final boolean async;
   private final String apiUrl;
 
   private final FormUrlEncodedTypedOutput formBody;
@@ -64,8 +63,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
-    isSynchronous = methodInfo.isSynchronous;
-    isObservable = methodInfo.isObservable;
+    async = methodInfo.executionType == RestMethodInfo.ExecutionType.ASYNC;
 
     if (methodInfo.headers != null) {
       headers = new ArrayList<Header>(methodInfo.headers);
@@ -224,7 +222,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       return;
     }
     int count = args.length;
-    if (!isSynchronous && !isObservable) {
+    if (async) {
       count -= 1;
     }
     for (int i = 0; i < count; i++) {
@@ -362,7 +360,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  Request build() throws UnsupportedEncodingException {
+  Request build() {
     if (multipartBody != null && multipartBody.getPartCount() == 0) {
       throw new IllegalStateException("Multipart requests must contain at least one part.");
     }

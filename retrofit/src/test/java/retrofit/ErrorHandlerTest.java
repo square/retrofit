@@ -1,7 +1,6 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import java.io.IOException;
 import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,8 +37,9 @@ public class ErrorHandlerTest {
 
   /* An HTTP client which always returns a 400 response */
   static class MockInvalidResponseClient implements Client {
-    @Override public Response execute(Request request) throws IOException {
-      return new Response("", 400, "invalid request", Collections.<Header>emptyList(), null);
+    @Override public void execute(Request request, AsyncCallback callback) {
+      callback.onResponse(
+          new Response("", 400, "invalid request", Collections.<Header>emptyList(), null));
     }
   }
 
@@ -53,7 +53,7 @@ public class ErrorHandlerTest {
         .setEndpoint("http://example.com")
         .setClient(new MockInvalidResponseClient())
         .setErrorHandler(errorHandler)
-        .setExecutors(new Utils.SynchronousExecutor(), new Utils.SynchronousExecutor())
+        .setCallbackExecutor(new Utils.SynchronousExecutor())
         .build()
         .create(ExampleClient.class);
   }

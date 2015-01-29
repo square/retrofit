@@ -46,11 +46,10 @@ import rx.Observable;
 
 /** Request metadata about a service interface declaration. */
 final class RestMethodInfo {
-
-  private enum ResponseType {
-    VOID,
-    OBSERVABLE,
-    OBJECT
+  enum ExecutionType {
+    ASYNC,
+    RX,
+    SYNC
   }
 
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
@@ -69,12 +68,8 @@ final class RestMethodInfo {
 
   final Method method;
 
-  boolean loaded = false;
-
   // Method-level details
-  final ResponseType responseType;
-  final boolean isSynchronous;
-  final boolean isObservable;
+  final ExecutionType executionType;
   Type responseObjectType;
   RequestType requestType = RequestType.SIMPLE;
   String requestMethod;
@@ -91,9 +86,10 @@ final class RestMethodInfo {
 
   RestMethodInfo(Method method) {
     this.method = method;
-    responseType = parseResponseType();
-    isSynchronous = (responseType == ResponseType.OBJECT);
-    isObservable = (responseType == ResponseType.OBSERVABLE);
+    executionType = parseResponseType();
+
+    parseMethodAnnotations();
+    parseParameters();
   }
 
   private RuntimeException methodError(String message, Object... args) {
@@ -106,15 +102,6 @@ final class RestMethodInfo {
 
   private RuntimeException parameterError(int index, String message, Object... args) {
     return methodError(message + " (parameter #" + (index + 1) + ")", args);
-  }
-
-  synchronized void init() {
-    if (loaded) return;
-
-    parseMethodAnnotations();
-    parseParameters();
-
-    loaded = true;
   }
 
   /** Loads {@link #requestMethod} and {@link #requestType}. */
@@ -236,7 +223,7 @@ final class RestMethodInfo {
   }
 
   /** Loads {@link #responseObjectType}. */
-  private ResponseType parseResponseType() {
+  private ExecutionType parseResponseType() {
     // Synchronous methods have a non-void return type.
     // Observable methods have a return type of Observable.
     Type returnType = method.getGenericReturnType();
@@ -273,17 +260,17 @@ final class RestMethodInfo {
         if (RxSupport.isObservable(rawReturnType)) {
           returnType = RxSupport.getObservableType(returnType, rawReturnType);
           responseObjectType = getParameterUpperBound((ParameterizedType) returnType);
-          return ResponseType.OBSERVABLE;
+          return ExecutionType.RX;
         }
       }
       responseObjectType = returnType;
-      return ResponseType.OBJECT;
+      return ExecutionType.SYNC;
     }
 
     lastArgType = Types.getSupertype(lastArgType, Types.getRawType(lastArgType), Callback.class);
     if (lastArgType instanceof ParameterizedType) {
       responseObjectType = getParameterUpperBound((ParameterizedType) lastArgType);
-      return ResponseType.VOID;
+      return ExecutionType.ASYNC;
     }
 
     throw methodError("Last parameter must be of type Callback<X> or Callback<? super X>.");
@@ -308,7 +295,7 @@ final class RestMethodInfo {
 
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
     int count = methodParameterAnnotationArrays.length;
-    if (!isSynchronous && !isObservable) {
+    if (executionType == ExecutionType.ASYNC) {
       count -= 1; // Callback is last argument when not a synchronous method.
     }
 

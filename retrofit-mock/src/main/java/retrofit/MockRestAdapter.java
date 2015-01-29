@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import retrofit.client.Request;
 import retrofit.client.Response;
@@ -70,8 +71,8 @@ public final class MockRestAdapter {
    * Create a new {@link MockRestAdapter} which will act as a factory for mock services. Some of
    * the configuration of the supplied {@link RestAdapter} will be used generating mock behavior.
    */
-  public static MockRestAdapter from(RestAdapter restAdapter) {
-    return new MockRestAdapter(restAdapter);
+  public static MockRestAdapter from(RestAdapter restAdapter, Executor executor) {
+    return new MockRestAdapter(restAdapter, executor);
   }
 
   /** A listener invoked when the network behavior values for a {@link MockRestAdapter} change. */
@@ -85,6 +86,7 @@ public final class MockRestAdapter {
   }
 
   private final RestAdapter restAdapter;
+  private final Executor executor;
   private MockRxSupport mockRxSupport;
   final Random random = new Random();
 
@@ -93,8 +95,9 @@ public final class MockRestAdapter {
   private int variancePct = DEFAULT_VARIANCE_PCT;
   private int errorPct = DEFAULT_ERROR_PCT;
 
-  private MockRestAdapter(RestAdapter restAdapter) {
+  private MockRestAdapter(RestAdapter restAdapter, Executor executor) {
     this.restAdapter = restAdapter;
+    this.executor = executor;
   }
 
   /** Set a listener to be notified when any mock value changes. */
@@ -233,7 +236,7 @@ public final class MockRestAdapter {
       // Load or create the details cache for the current method.
       final RestMethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
 
-      if (methodInfo.isSynchronous) {
+      if (methodInfo.executionType == RestMethodInfo.ExecutionType.SYNC) {
         try {
           return invokeSync(methodInfo, restAdapter.requestInterceptor, args);
         } catch (RetrofitError error) {
@@ -246,18 +249,15 @@ public final class MockRestAdapter {
         }
       }
 
-      if (restAdapter.httpExecutor == null || restAdapter.callbackExecutor == null) {
-        throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
-      }
       // Apply the interceptor synchronously, recording the interception so we can replay it later.
       // This way we still defer argument serialization to the background thread.
       final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
       restAdapter.requestInterceptor.intercept(interceptorTape);
 
-      if (methodInfo.isObservable) {
+      if (methodInfo.executionType == RestMethodInfo.ExecutionType.RX) {
         if (mockRxSupport == null) {
           if (Platform.HAS_RX_JAVA) {
-            mockRxSupport = new MockRxSupport(restAdapter);
+            mockRxSupport = new MockRxSupport(restAdapter, executor);
           } else {
             throw new IllegalStateException("Observable method found but no RxJava on classpath");
           }
@@ -265,7 +265,7 @@ public final class MockRestAdapter {
         return mockRxSupport.createMockObservable(this, methodInfo, interceptorTape, args);
       }
 
-      restAdapter.httpExecutor.execute(new Runnable() {
+      executor.execute(new Runnable() {
         @Override public void run() {
           invokeAsync(methodInfo, interceptorTape, args);
         }
@@ -275,8 +275,6 @@ public final class MockRestAdapter {
 
     private Request buildRequest(RestMethodInfo methodInfo, RequestInterceptor interceptor,
         Object[] args) throws Throwable {
-      methodInfo.init();
-
       // Begin building a normal request.
       String apiUrl = restAdapter.server.getUrl();
       RequestBuilder requestBuilder = new RequestBuilder(apiUrl, methodInfo, restAdapter.converter);
@@ -472,8 +470,8 @@ public final class MockRestAdapter {
     private final Scheduler httpScheduler;
     private final ErrorHandler errorHandler;
 
-    MockRxSupport(RestAdapter restAdapter) {
-      httpScheduler = Schedulers.from(restAdapter.httpExecutor);
+    MockRxSupport(RestAdapter restAdapter, Executor executor) {
+      httpScheduler = Schedulers.from(executor);
       errorHandler = restAdapter.errorHandler;
     }
 

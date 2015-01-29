@@ -9,13 +9,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import retrofit.client.Client;
 import retrofit.client.Header;
+import retrofit.client.MockClient;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
@@ -36,7 +35,6 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -85,24 +83,14 @@ public class RestAdapterTest {
   private interface InvalidExample extends Example {
   }
 
-  private Client mockClient;
-  private Executor mockRequestExecutor;
-  private Executor mockCallbackExecutor;
-  private Example example;
-
-  @SuppressWarnings("unchecked") // Mock profiler type erasure.
-  @Before public void setUp() throws Exception{
-    mockClient = mock(Client.class);
-    mockRequestExecutor = spy(new SynchronousExecutor());
-    mockCallbackExecutor = spy(new SynchronousExecutor());
-
-    example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .build()
-        .create(Example.class);
-  }
+  private final MockClient mockClient = new MockClient();
+  private final Executor mockCallbackExecutor = spy(new SynchronousExecutor());
+  private final Example example = new RestAdapter.Builder() //
+      .setClient(mockClient)
+      .setCallbackExecutor(mockCallbackExecutor)
+      .setEndpoint("http://example.com")
+      .build()
+      .create(Example.class);
 
   @Test public void objectMethodsStillWork() {
     assertThat(example.hashCode()).isNotZero();
@@ -129,20 +117,20 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(BASIC)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
 
     example.something();
     assertThat(logMessages).hasSize(2);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(1)).isEqualTo("<--- HTTP 200 http://example.com/");
   }
 
   @Test public void logRequestResponseHeaders() throws Exception {
@@ -155,22 +143,22 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(HEADERS)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
 
     example.something();
     assertThat(logMessages).hasSize(7);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
     assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
@@ -186,22 +174,22 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(HEADERS_AND_ARGS)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
 
     example.something();
     assertThat(logMessages).hasSize(9);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
     assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
@@ -219,15 +207,15 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something(new TypedString("Hi"));
     assertThat(logMessages).hasSize(13);
@@ -238,7 +226,7 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("");
     assertThat(logMessages.get(5)).isEqualTo("Hi");
     assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(7)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(10)).isEqualTo("");
@@ -256,16 +244,15 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(HEADERS_AND_ARGS)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS,
-            new TypedString("{}")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
 
     example.something(new TypedString("Hi"));
     assertThat(logMessages).hasSize(13);
@@ -276,7 +263,7 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("---> REQUEST:");
     assertThat(logMessages.get(5)).isEqualTo("#0: TypedString[Hi]");
     assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(7)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(10)).isEqualTo("<--- END HTTP (2-byte body)");
@@ -294,22 +281,21 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
+    mockClient.enqueueResponse(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
 
     example.something();
     assertThat(logMessages).hasSize(7);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
     assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
@@ -325,15 +311,14 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(HEADERS_AND_ARGS)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
+    mockClient.enqueueResponse(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
 
     example.something(new TypedString("Hi"));
     assertThat(logMessages).hasSize(11);
@@ -344,15 +329,15 @@ public class RestAdapterTest {
     assertThat(logMessages.get(4)).isEqualTo("---> REQUEST:");
     assertThat(logMessages.get(5)).isEqualTo("#0: TypedString[Hi]");
     assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(7)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(10)).isEqualTo("<--- END HTTP (0-byte body)");
   }
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, NO_MIME_BODY));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", NO_HEADERS, NO_MIME_BODY));
 
     example.something();
   }
@@ -367,22 +352,22 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, NO_MIME_BODY));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", TWO_HEADERS, NO_MIME_BODY));
 
     example.something();
     assertThat(logMessages).hasSize(9);
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
     assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("");
@@ -390,31 +375,20 @@ public class RestAdapterTest {
     assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
-  @Test public void synchronousDoesNotUseExecutors() throws Exception {
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("Hi")));
-
-    example.something();
-
-    verifyZeroInteractions(mockRequestExecutor);
-    verifyZeroInteractions(mockCallbackExecutor);
-  }
-
-  @Test public void asynchronousUsesExecutors() throws Exception {
+  @Test public void asynchronousUsesCalbackExecutor() throws Exception {
     Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("Hey"));
-    when(mockClient.execute(any(Request.class))).thenReturn(response);
+    mockClient.enqueueResponse(response);
     Callback<String> callback = mock(Callback.class);
 
     example.something(callback);
 
-    verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
     verify(callback).success(eq("Hey"), same(response));
   }
 
   @Test public void malformedResponseThrowsConversionException() throws Exception {
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("{")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("{")));
 
     try {
       example.something();
@@ -428,8 +402,8 @@ public class RestAdapterTest {
   }
 
   @Test public void errorResponseThrowsHttpError() throws Exception {
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 500, "Internal Server Error", NO_HEADERS, null));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 500, "Internal Server Error", NO_HEADERS, null));
 
     try {
       example.something();
@@ -451,7 +425,7 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(FULL)
@@ -461,7 +435,7 @@ public class RestAdapterTest {
     Response responseMissingMimeType = //
         new Response("http://example.com/", 403, "Forbidden", TWO_HEADERS, NO_MIME_BODY);
 
-    when(mockClient.execute(any(Request.class))).thenReturn(responseMissingMimeType);
+    mockClient.enqueueResponse(responseMissingMimeType);
 
     try {
       example.something();
@@ -474,7 +448,7 @@ public class RestAdapterTest {
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
     assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 403 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 403 http://example.com/");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("");
@@ -492,15 +466,15 @@ public class RestAdapterTest {
 
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
         .setLog(log)
         .setLogLevel(FULL)
         .build()
         .create(Example.class);
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 500, "Internal Server Error", TWO_HEADERS, null));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 500, "Internal Server Error", TWO_HEADERS, null));
 
     try {
       example.something();
@@ -513,7 +487,7 @@ public class RestAdapterTest {
     assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
     assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
     assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).matches("<--- HTTP 500 http://example.com/ \\([0-9]+ms\\)");
+    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 500 http://example.com/");
     assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
     assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
     assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
@@ -521,7 +495,7 @@ public class RestAdapterTest {
 
   @Test public void clientExceptionThrowsNetworkError() throws Exception {
     IOException exception = new IOException("I'm broken!");
-    when(mockClient.execute(any(Request.class))).thenThrow(exception);
+    mockClient.enqueueIOException(exception);
 
     try {
       example.something();
@@ -541,8 +515,7 @@ public class RestAdapterTest {
     });
     doReturn(bodyStream).when(body).in();
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, body));
+    mockClient.enqueueResponse(new Response("http://example.com/", 200, "OK", NO_HEADERS, body));
 
     try {
       example.something();
@@ -556,7 +529,7 @@ public class RestAdapterTest {
 
   @Test public void unexpectedExceptionThrows() throws IOException {
     RuntimeException exception = new RuntimeException("More breakage.");
-    when(mockClient.execute(any(Request.class))).thenThrow(exception);
+    mockClient.enqueueUnexpectedException(exception);
 
     try {
       example.something();
@@ -569,8 +542,7 @@ public class RestAdapterTest {
 
   @Test public void getResponseDirectly() throws Exception {
     Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, null);
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(response);
+    mockClient.enqueueResponse(response);
     assertThat(example.direct()).isSameAs(response);
   }
 
@@ -590,8 +562,7 @@ public class RestAdapterTest {
       }
     };
 
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, in));
+    mockClient.enqueueResponse(new Response("http://example.com/", 200, "OK", NO_HEADERS, in));
 
     Response response = example.streaming();
     assertThat(response.getBody().in()).isSameAs(is);
@@ -601,9 +572,12 @@ public class RestAdapterTest {
     // Set logger and profiler on example to make sure we exercise all the code paths.
     Example example = new RestAdapter.Builder() //
         .setClient(mockClient)
-        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setLog(RestAdapter.Log.NONE)
+        .setLog(new RestAdapter.Log() {
+          @Override public void log(String message) {
+          }
+        })
         .setLogLevel(FULL)
         .build()
         .create(Example.class);
@@ -612,34 +586,29 @@ public class RestAdapterTest {
     TypedInput typedInput = mock(TypedInput.class);
     when(typedInput.in()).thenReturn(is);
     Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, typedInput);
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(response);
+    mockClient.enqueueResponse(response);
     example.something();
     verify(is).close();
   }
 
   @Test public void getResponseDirectlyAsync() throws Exception {
     Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("Hey"));
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(response);
+    mockClient.enqueueResponse(response);
     Callback<Response> callback = mock(Callback.class);
 
     example.direct(callback);
 
-    verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
     verify(callback).success(eq(response), same(response));
   }
 
   @Test public void getAsync() throws Exception {
     Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("Hey"));
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(response);
+    mockClient.enqueueResponse(response);
     Callback<String> callback = mock(Callback.class);
 
     example.something(callback);
 
-    verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
 
     ArgumentCaptor<String> responseCaptor = ArgumentCaptor.forClass(String.class);
@@ -650,13 +619,11 @@ public class RestAdapterTest {
 
   @Test public void errorAsync() throws Exception {
     Response response = new Response("http://example.com/", 500, "Broken!", NO_HEADERS, new TypedString("Hey"));
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(response);
+    mockClient.enqueueResponse(response);
     Callback<String> callback = mock(Callback.class);
 
     example.something(callback);
 
-    verify(mockRequestExecutor).execute(any(CallbackRunnable.class));
     verify(mockCallbackExecutor).execute(any(Runnable.class));
 
     ArgumentCaptor<RetrofitError> errorCaptor = ArgumentCaptor.forClass(RetrofitError.class);
@@ -669,16 +636,16 @@ public class RestAdapterTest {
   }
 
   @Test public void observableCallsOnNext() throws Exception {
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello")));
     Action1<String> action = mock(Action1.class);
     example.observable("Howdy").subscribe(action);
     verify(action).call(eq("hello"));
   }
 
   @Test public void observableCallsOnError() throws Exception {
-    when(mockClient.execute(any(Request.class))) //
-        .thenReturn(new Response("http://example.com/", 300, "FAIL", NO_HEADERS, new TypedString("bummer")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 300, "FAIL", NO_HEADERS, new TypedString("bummer")));
     Action1<String> onSuccess = mock(Action1.class);
     Action1<Throwable> onError = mock(Action1.class);
     example.observable("Howdy").subscribe(onSuccess, onError);
@@ -691,28 +658,17 @@ public class RestAdapterTest {
   }
 
   @Test public void observableHandlesParams() throws Exception {
-    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
-    when(mockClient.execute(requestCaptor.capture())) //
-        .thenReturn(new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello")));
+    mockClient.enqueueResponse(
+        new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello")));
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     Action1<Response> action = mock(Action1.class);
     example.observable("X", "Y").subscribe(action);
 
-    Request request = requestCaptor.getValue();
+    Request request = mockClient.takeRequest();
     assertThat(request.getUrl()).contains("/X/Y");
 
     verify(action).call(responseCaptor.capture());
     Response response = responseCaptor.getValue();
     assertThat(response.getStatus()).isEqualTo(200);
-  }
-
-  @Test public void observableUsesHttpExecutor() throws IOException {
-    Response response = new Response("http://example.com/", 200, "OK", NO_HEADERS, new TypedString("hello"));
-    when(mockClient.execute(any(Request.class))).thenReturn(response);
-
-    example.observable("Howdy").subscribe(mock(Action1.class));
-
-    verify(mockRequestExecutor, atLeastOnce()).execute(any(Runnable.class));
-    verifyZeroInteractions(mockCallbackExecutor);
   }
 }

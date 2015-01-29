@@ -1836,7 +1836,6 @@ public class RequestBuilderTest {
   private Request buildRequest(Class<?> cls, Object... args) {
     Method method = TestingUtils.onlyMethod(cls);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
 
     RequestBuilder builder = new RequestBuilder("http://example.com/", methodInfo, GSON);
     if (interceptor != null) {
@@ -1844,10 +1843,6 @@ public class RequestBuilderTest {
     }
     builder.setArguments(args);
 
-    try {
-      return builder.build();
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return builder.build();
   }
 }

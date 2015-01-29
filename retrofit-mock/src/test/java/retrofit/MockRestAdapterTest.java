@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -57,15 +56,18 @@ public class MockRestAdapterTest {
   private Throwable nextError;
 
   @Before public void setUp() throws IOException {
-    Client client = mock(Client.class);
-    doThrow(new AssertionError()).when(client).execute(any(Request.class));
+    Client client = new Client() {
+      @Override public void execute(Request request, AsyncCallback callback) {
+        throw new AssertionError();
+      }
+    };
 
     httpExecutor = spy(new SynchronousExecutor());
     callbackExecutor = spy(new SynchronousExecutor());
 
     RestAdapter restAdapter = new RestAdapter.Builder() //
         .setClient(client)
-        .setExecutors(httpExecutor, callbackExecutor)
+        .setCallbackExecutor(callbackExecutor)
         .setEndpoint("http://example.com")
         .setLogLevel(RestAdapter.LogLevel.NONE)
         .setErrorHandler(new ErrorHandler() {
@@ -82,7 +84,7 @@ public class MockRestAdapterTest {
 
     valueChangeListener = mock(ValueChangeListener.class);
 
-    mockRestAdapter = MockRestAdapter.from(restAdapter);
+    mockRestAdapter = MockRestAdapter.from(restAdapter, httpExecutor);
     mockRestAdapter.setValueChangeListener(valueChangeListener);
 
     // Seed the random with a value so the tests are deterministic.

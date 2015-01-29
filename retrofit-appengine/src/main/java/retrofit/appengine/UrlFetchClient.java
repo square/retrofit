@@ -48,10 +48,8 @@ public class UrlFetchClient implements Client {
     this.urlFetchService = urlFetchService;
   }
 
-  @Override public Response execute(Request request) throws IOException {
-    HTTPRequest fetchRequest = createRequest(request);
-    HTTPResponse fetchResponse = execute(urlFetchService, fetchRequest);
-    return parseResponse(fetchResponse, fetchRequest);
+  @Override public void execute(Request request, AsyncCallback callback) {
+    throw new UnsupportedOperationException("Not implemented."); // TODO
   }
 
   /** Execute the specified {@code request} using the provided {@code urlFetchService}. */

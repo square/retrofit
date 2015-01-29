@@ -24,8 +24,9 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import retrofit.client.Client;
 import retrofit.client.Header;
 import retrofit.client.Request;
@@ -104,19 +105,10 @@ import retrofit.mime.TypedOutput;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
-  static final String THREAD_PREFIX = "Retrofit-";
-  static final String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
-
   /** Simple logging abstraction for debug messages. */
   public interface Log {
     /** Log a debug message to the appropriate console. */
     void log(String message);
-
-    /** A {@link Log} implementation which does not log anything. */
-    Log NONE = new Log() {
-      @Override public void log(String message) {
-      }
-    };
   }
 
   /** Controls the level of logging. */
@@ -145,7 +137,6 @@ public class RestAdapter {
       new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
 
   final Endpoint server;
-  final Executor httpExecutor;
   final Executor callbackExecutor;
   final RequestInterceptor requestInterceptor;
   final Converter converter;
@@ -157,12 +148,11 @@ public class RestAdapter {
 
   volatile LogLevel logLevel;
 
-  private RestAdapter(Endpoint server, Client client, Executor httpExecutor,
-      Executor callbackExecutor, RequestInterceptor requestInterceptor, Converter converter,
-      ErrorHandler errorHandler, Log log, LogLevel logLevel) {
+  private RestAdapter(Endpoint server, Client client, Executor callbackExecutor,
+      RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler,
+      Log log, LogLevel logLevel) {
     this.server = server;
     this.client = client;
-    this.httpExecutor = httpExecutor;
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
     this.converter = converter;
@@ -229,166 +219,196 @@ public class RestAdapter {
         return method.invoke(this, args);
       }
 
-      // Load or create the details cache for the current method.
-      final RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
-
-      if (methodInfo.isSynchronous) {
-        try {
-          return invokeRequest(requestInterceptor, methodInfo, args);
-        } catch (RetrofitError error) {
-          Throwable newError = errorHandler.handleError(error);
-          if (newError == null) {
-            throw new IllegalStateException("Error handler returned null for wrapped exception.",
-                error);
-          }
-          throw newError;
-        }
+      RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
+      Request request = createRequest(methodInfo, args);
+      switch (methodInfo.executionType) {
+        case SYNC:
+          return invokeSync(methodInfo, request);
+        case ASYNC:
+          invokeAsync(methodInfo, request, (Callback) args[args.length - 1]);
+          return null; // Async has void return type.
+        case RX:
+          return invokeRx(methodInfo, request);
+        default:
+          throw new IllegalStateException("Unknown response type: " + methodInfo.executionType);
       }
-
-      if (httpExecutor == null || callbackExecutor == null) {
-        throw new IllegalStateException("Asynchronous invocation requires calling setExecutors.");
-      }
-
-      if (methodInfo.isObservable) {
-        if (rxSupport == null) {
-          if (Platform.HAS_RX_JAVA) {
-            rxSupport = new RxSupport(httpExecutor, errorHandler, requestInterceptor);
-          } else {
-            throw new IllegalStateException("Observable method found but no RxJava on classpath.");
-          }
-        }
-        return rxSupport.createRequestObservable(new RxSupport.Invoker() {
-          @Override public ResponseWrapper invoke(RequestInterceptor requestInterceptor) {
-            return (ResponseWrapper) invokeRequest(requestInterceptor, methodInfo, args);
-          }
-        });
-      }
-
-      // Apply the interceptor synchronously, recording the interception so we can replay it later.
-      // This way we still defer argument serialization to the background thread.
-      final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
-      requestInterceptor.intercept(interceptorTape);
-
-      Callback<?> callback = (Callback<?>) args[args.length - 1];
-      httpExecutor.execute(new CallbackRunnable(callback, callbackExecutor, errorHandler) {
-        @Override public ResponseWrapper obtainResponse() {
-          return (ResponseWrapper) invokeRequest(interceptorTape, methodInfo, args);
-        }
-      });
-      return null; // Asynchronous methods should have return type of void.
     }
 
-    /**
-     * Execute an HTTP request.
-     *
-     * @return HTTP response object of specified {@code type} or {@code null}.
-     * @throws RetrofitError if any error occurs during the HTTP request.
-     */
-    private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
-        Object[] args) {
-      String url = null;
-      try {
-        methodInfo.init(); // Ensure all relevant method information has been loaded.
-
-        String serverUrl = server.getUrl();
-        RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
-        requestBuilder.setArguments(args);
-
-        requestInterceptor.intercept(requestBuilder);
-
-        Request request = requestBuilder.build();
-        url = request.getUrl();
-
-        if (!methodInfo.isSynchronous) {
-          // If we are executing asynchronously then update the current thread with a useful name.
-          int substrEnd = url.indexOf("?", serverUrl.length());
-          if (substrEnd == -1) {
-            substrEnd = url.length();
-          }
-          Thread.currentThread().setName(THREAD_PREFIX
-              + url.substring(serverUrl.length(), substrEnd));
+    private Object invokeSync(RestMethodInfo methodInfo, Request request) throws Throwable {
+      final CountDownLatch latch = new CountDownLatch(1);
+      final AtomicReference<Object> result = new AtomicReference<Object>();
+      final AtomicReference<RetrofitError> error = new AtomicReference<RetrofitError>();
+      invokeAsync(methodInfo, request, new Callback() {
+        @Override public void success(Object o, Response response) {
+          result.set(o);
+          latch.countDown();
         }
 
-        if (logLevel.log()) {
-          // Log the request data.
-          request = logAndReplaceRequest("HTTP", request, args);
+        @Override public void failure(RetrofitError e) {
+          error.set(e);
+          latch.countDown();
         }
+      });
+      latch.await();
 
-        long start = System.nanoTime();
-        Response response = client.execute(request);
-        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+      RetrofitError actualError = error.get();
+      if (actualError != null) {
+        throw handleError(actualError);
+      }
+      return result.get();
+    }
 
-        if (logLevel.log()) {
-          // Log the response data.
-          response = logAndReplaceResponse(url, response, elapsedTime);
-        }
+    private Throwable handleError(RetrofitError actualError) {
+      Throwable throwable = errorHandler.handleError(actualError);
+      if (throwable == null) {
+        return new IllegalStateException("Error handler returned null for wrapped exception.");
+      }
+      return throwable;
+    }
 
-        Type type = methodInfo.responseObjectType;
-
-        int statusCode = response.getStatus();
-        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
-          // Caller requested the raw Response object directly.
-          if (type.equals(Response.class)) {
-            if (!methodInfo.isStreaming) {
-              // Read the entire stream and replace with one backed by a byte[].
-              response = Utils.readBodyToBytesIfNecessary(response);
-            }
-
-            if (methodInfo.isSynchronous) {
-              return response;
-            }
-            return new ResponseWrapper(response, response);
-          }
-
-          TypedInput body = response.getBody();
-          if (body == null) {
-            if (methodInfo.isSynchronous) {
-              return null;
-            }
-            return new ResponseWrapper(response, null);
-          }
-
-          ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
+    private void invokeAsync(final RestMethodInfo methodInfo, final Request request,
+        final Callback callback) {
+      Client.AsyncCallback async = new Client.AsyncCallback() {
+        @Override public void onResponse(Response response) {
           try {
-            Object convert = converter.fromBody(wrapped, type);
-            logResponseBody(body, convert);
-            if (methodInfo.isSynchronous) {
-              return convert;
+            handleAsyncResponse(methodInfo, request, response, callback);
+          } catch (RetrofitError e) {
+            Throwable throwable = errorHandler.handleError(e);
+            if (throwable != e) {
+              e = RetrofitError.unexpectedError(request.getUrl(), throwable);
             }
-            return new ResponseWrapper(response, convert);
-          } catch (ConversionException e) {
-            // If the underlying input stream threw an exception, propagate that rather than
-            // indicating that it was a conversion exception.
-            if (wrapped.threwException()) {
-              throw wrapped.getThrownException();
-            }
-
-            // The response body was partially read by the converter. Replace it with null.
-            response = Utils.replaceResponseBody(response, null);
-
-            throw RetrofitError.conversionError(url, response, converter, type, e);
+            callFailure(callback, e);
+          } catch (IOException e) {
+            callFailure(callback, RetrofitError.networkError(request.getUrl(), e));
+          } catch (Throwable t) {
+            callFailure(callback, RetrofitError.unexpectedError(request.getUrl(), t));
           }
         }
 
-        response = Utils.readBodyToBytesIfNecessary(response);
-        throw RetrofitError.httpError(url, response, converter, type);
-      } catch (RetrofitError e) {
-        throw e; // Pass through our own errors.
-      } catch (IOException e) {
-        if (logLevel.log()) {
-          logException(e, url);
+        @Override public void onFailure(IOException e) {
+          callFailure(callback, RetrofitError.networkError(request.getUrl(), e));
         }
-        throw RetrofitError.networkError(url, e);
-      } catch (Throwable t) {
-        if (logLevel.log()) {
-          logException(t, url);
-        }
-        throw RetrofitError.unexpectedError(url, t);
-      } finally {
-        if (!methodInfo.isSynchronous) {
-          Thread.currentThread().setName(IDLE_THREAD_NAME);
+      };
+      try {
+        client.execute(request, async);
+      } catch (RuntimeException e) {
+        callFailure(callback, RetrofitError.unexpectedError(request.getUrl(), e));
+      }
+    }
+
+    private Object invokeRx(final RestMethodInfo methodInfo, final Request request) {
+      if (rxSupport == null) {
+        if (Platform.HAS_RX_JAVA) {
+          rxSupport = new RxSupport();
+        } else {
+          throw new IllegalStateException("Found Observable return type but RxJava not present.");
         }
       }
+      return rxSupport.createRequestObservable(new RxSupport.Invoker() {
+        @Override public void invoke(final RxSupport.Callback callback) {
+          invokeAsync(methodInfo, request, new Callback() {
+            @Override public void success(Object o, Response response) {
+              callback.result(o);
+            }
+
+            @Override public void failure(RetrofitError error) {
+              callback.error(handleError(error));
+            }
+          });
+        }
+      });
+    }
+
+    private void handleAsyncResponse(RestMethodInfo methodInfo, Request request, Response response,
+        Callback callback) throws IOException {
+      String url = request.getUrl();
+
+      if (logLevel.log()) {
+        response = logAndReplaceResponse(url, response);
+      }
+
+      Type type = methodInfo.responseObjectType;
+
+      int statusCode = response.getStatus();
+      if (statusCode < 200 || statusCode >= 300) {
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      }
+
+      // Caller requested the raw Response object directly.
+      if (type.equals(Response.class)) {
+        if (!methodInfo.isStreaming) {
+          // Read the entire stream and replace with one backed by a byte[].
+          response = Utils.readBodyToBytesIfNecessary(response);
+        }
+        callResponse(callback, response, response);
+      } else {
+        handleAsyncResponseBody(request, response, type, callback);
+      }
+    }
+
+    private void handleAsyncResponseBody(Request request, Response response, Type type,
+        Callback callback) throws IOException {
+      TypedInput body = response.getBody();
+      if (body == null) {
+        callResponse(callback, null, response);
+        return;
+      }
+
+      ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
+      try {
+        Object convert = converter.fromBody(wrapped, type);
+        logResponseBody(convert);
+        callResponse(callback, convert, response);
+      } catch (ConversionException e) {
+        // If the underlying input stream threw an exception, propagate that rather than
+        // indicating that it was a conversion exception.
+        if (wrapped.threwException()) {
+          throw wrapped.getThrownException();
+        }
+
+        // The response body was partially read by the converter. Replace it with null.
+        response = Utils.replaceResponseBody(response, null);
+
+        throw RetrofitError.conversionError(request.getUrl(), response, converter, type, e);
+      }
+    }
+
+    private void callResponse(final Callback callback, final Object result,
+        final Response response) {
+      callbackExecutor.execute(new Runnable() {
+        @Override public void run() {
+          callback.success(result, response);
+        }
+      });
+    }
+
+    private void callFailure(final Callback callback, final RetrofitError error) {
+      callbackExecutor.execute(new Runnable() {
+        @Override public void run() {
+          callback.failure(error);
+        }
+      });
+    }
+
+    private Request createRequest(RestMethodInfo methodInfo, Object[] args) {
+      String serverUrl = server.getUrl();
+      RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
+      requestBuilder.setArguments(args);
+
+      requestInterceptor.intercept(requestBuilder);
+
+      Request request = requestBuilder.build();
+
+      if (logLevel.log()) {
+        try {
+          request = logAndReplaceRequest("HTTP", request, args);
+        } catch (IOException e) {
+          throw new RuntimeException("Unable to buffer request while logging.", e);
+        }
+      }
+
+      return request;
     }
   }
 
@@ -445,9 +465,8 @@ public class RestAdapter {
   }
 
   /** Log response headers and body. Consumes response body and returns identical replacement. */
-  private Response logAndReplaceResponse(String url, Response response, long elapsedTime)
-      throws IOException {
-    log.log(String.format("<--- HTTP %s %s (%sms)", response.getStatus(), url, elapsedTime));
+  private Response logAndReplaceResponse(String url, Response response) throws IOException {
+    log.log(String.format("<--- HTTP %s %s", response.getStatus(), url));
 
     if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
       for (Header header : response.getHeaders()) {
@@ -484,10 +503,10 @@ public class RestAdapter {
     return response;
   }
 
-  private void logResponseBody(TypedInput body, Object convert) {
+  private void logResponseBody(Object body) {
     if (logLevel.ordinal() == LogLevel.HEADERS_AND_ARGS.ordinal()) {
       log.log("<--- BODY:");
-      log.log(convert.toString());
+      log.log(String.valueOf(body));
     }
   }
 
@@ -509,7 +528,6 @@ public class RestAdapter {
   public static class Builder {
     private Endpoint endpoint;
     private Client client;
-    private Executor httpExecutor;
     private Executor callbackExecutor;
     private RequestInterceptor requestInterceptor;
     private Converter converter;
@@ -519,11 +537,7 @@ public class RestAdapter {
 
     /** API endpoint URL. */
     public Builder setEndpoint(String endpoint) {
-      if (endpoint == null || endpoint.trim().length() == 0) {
-        throw new NullPointerException("Endpoint may not be blank.");
-      }
-      this.endpoint = Endpoints.newFixedEndpoint(endpoint);
-      return this;
+       return setEndpoint(Endpoints.newFixedEndpoint(endpoint));
     }
 
     /** API endpoint. */
@@ -545,21 +559,13 @@ public class RestAdapter {
     }
 
     /**
-     * Executors used for asynchronous HTTP client downloads and callbacks.
-     *
-     * @param httpExecutor Executor on which HTTP client calls will be made.
-     * @param callbackExecutor Executor on which any {@link Callback} methods will be invoked. If
-     * this argument is {@code null} then callback methods will be run on the same thread as the
-     * HTTP client.
+     * Executor on which any {@link Callback} methods will be invoked. If this argument is
+     * {@code null} then callback methods will be run on the same thread as the HTTP client.
      */
-    public Builder setExecutors(Executor httpExecutor, Executor callbackExecutor) {
-      if (httpExecutor == null) {
-        throw new NullPointerException("HTTP executor may not be null.");
-      }
+    public Builder setCallbackExecutor(Executor callbackExecutor) {
       if (callbackExecutor == null) {
         callbackExecutor = new Utils.SynchronousExecutor();
       }
-      this.httpExecutor = httpExecutor;
       this.callbackExecutor = callbackExecutor;
       return this;
     }
@@ -618,7 +624,7 @@ public class RestAdapter {
         throw new IllegalArgumentException("Endpoint may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(endpoint, client, httpExecutor, callbackExecutor,
+      return new RestAdapter(endpoint, client, callbackExecutor,
           requestInterceptor, converter, errorHandler, log, logLevel);
     }
 
@@ -628,9 +634,6 @@ public class RestAdapter {
       }
       if (client == null) {
         client = Platform.get().defaultClient();
-      }
-      if (httpExecutor == null) {
-        httpExecutor = Platform.get().defaultHttpExecutor();
       }
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();

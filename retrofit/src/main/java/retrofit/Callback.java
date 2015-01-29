@@ -29,7 +29,7 @@ import retrofit.client.Response;
  * </ul>
  *
  * @param <T> expected response type
- * @see RestAdapter.Builder#setExecutors
+ * @see RestAdapter.Builder#setCallbackExecutor
  */
 public interface Callback<T> {
 

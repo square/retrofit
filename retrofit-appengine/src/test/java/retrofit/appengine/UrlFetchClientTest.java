@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Ignore;
 import org.junit.Test;
 import retrofit.TestingUtils;
 import retrofit.client.Header;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static retrofit.TestingUtils.assertBytes;
 
+@Ignore // TODO Not currently implemented.
 public class UrlFetchClientTest {
   private static final String HOST = "http://example.com";
 
