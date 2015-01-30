@@ -71,6 +71,7 @@ final class RestMethodInfo {
   // Method-level details
   final ExecutionType executionType;
   Type responseObjectType;
+  Type requestObjectType;
   RequestType requestType = RequestType.SIMPLE;
   String requestMethod;
   boolean requestHasBody;
@@ -291,7 +292,7 @@ final class RestMethodInfo {
    * Loads {@link #requestParamAnnotations}. Must be called after {@link #parseMethodAnnotations()}.
    */
   private void parseParameters() {
-    Class<?>[] methodParameterTypes = method.getParameterTypes();
+    Type[] methodParameterTypes = method.getGenericParameterTypes();
 
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
     int count = methodParameterAnnotationArrays.length;
@@ -306,7 +307,7 @@ final class RestMethodInfo {
     boolean gotBody = false;
 
     for (int i = 0; i < count; i++) {
-      Class<?> methodParameterType = methodParameterTypes[i];
+      Type methodParameterType = methodParameterTypes[i];
       Annotation[] methodParameterAnnotations = methodParameterAnnotationArrays[i];
       if (methodParameterAnnotations != null) {
         for (Annotation methodParameterAnnotation : methodParameterAnnotations) {
@@ -319,7 +320,7 @@ final class RestMethodInfo {
           } else if (methodAnnotationType == Query.class) {
             // Nothing to do.
           } else if (methodAnnotationType == QueryMap.class) {
-            if (!Map.class.isAssignableFrom(methodParameterType)) {
+            if (!Map.class.isAssignableFrom(Types.getRawType(methodParameterType))) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
           } else if (methodAnnotationType == Header.class) {
@@ -334,7 +335,7 @@ final class RestMethodInfo {
             if (requestType != RequestType.FORM_URL_ENCODED) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
-            if (!Map.class.isAssignableFrom(methodParameterType)) {
+            if (!Map.class.isAssignableFrom(Types.getRawType(methodParameterType))) {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
 
@@ -350,7 +351,7 @@ final class RestMethodInfo {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
             }
-            if (!Map.class.isAssignableFrom(methodParameterType)) {
+            if (!Map.class.isAssignableFrom(Types.getRawType(methodParameterType))) {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
 
@@ -364,6 +365,7 @@ final class RestMethodInfo {
               throw methodError("Multiple @Body method annotations found.");
             }
 
+            requestObjectType = methodParameterType;
             gotBody = true;
           } else {
             // This is a non-Retrofit annotation. Skip to the next one.

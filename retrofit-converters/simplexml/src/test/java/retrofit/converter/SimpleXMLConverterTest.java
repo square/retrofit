@@ -1,9 +1,6 @@
 package retrofit.converter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.ByteArrayOutputStream;
-
 import org.junit.Test;
 import org.simpleframework.xml.Default;
 import org.simpleframework.xml.DefaultType;
@@ -12,10 +9,11 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Verbosity;
-
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SimpleXMLConverterTest {
 	private static final String MIME_TYPE = "application/xml; charset=UTF-8";
@@ -34,7 +32,7 @@ public class SimpleXMLConverterTest {
 
 	@Test
 	public void serialize() throws Exception {
-		final TypedOutput typedOutput = converter.toBody(obj);
+		final TypedOutput typedOutput = converter.toBody(obj, MyObject.class);
 		assertThat(typedOutput.mimeType()).isEqualTo(MIME_TYPE);
 		assertThat(asString(typedOutput)).isEqualTo(objAsXML);
 	}

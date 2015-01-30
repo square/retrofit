@@ -17,7 +17,7 @@ public class JacksonConverterTest {
   private final JacksonConverter converter = new JacksonConverter();
 
   @Test public void serialize() throws Exception {
-    TypedOutput typedOutput = converter.toBody(OBJECT);
+    TypedOutput typedOutput = converter.toBody(OBJECT, MyObject.class);
     assertThat(typedOutput.mimeType()).isEqualTo(MIME_TYPE);
     assertThat(asString(typedOutput)).isEqualTo(JSON);
   }

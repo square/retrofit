@@ -43,7 +43,7 @@ public class ProtoConverter implements Converter {
     }
   }
 
-  @Override public TypedOutput toBody(Object object) {
+  @Override public TypedOutput toBody(Object object, Type type) {
     if (!(object instanceof AbstractMessageLite)) {
       throw new IllegalArgumentException(
           "Expected a protobuf message but was " + (object != null ? object.getClass().getName()

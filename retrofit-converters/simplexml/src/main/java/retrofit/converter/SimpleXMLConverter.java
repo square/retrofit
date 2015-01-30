@@ -51,7 +51,7 @@ public class SimpleXMLConverter implements Converter {
     }
   }
 
-  @Override public TypedOutput toBody(Object source) {
+  @Override public TypedOutput toBody(Object source, Type type) {
     OutputStreamWriter osw = null;
 
     try {
