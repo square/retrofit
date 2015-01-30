@@ -29,6 +29,13 @@ import retrofit.mime.TypedOutput;
 final class Utils {
   private static final int BUFFER_SIZE = 0x1000;
 
+  static <T> T checkNotNull(T object, String message, Object... args) {
+    if (object == null) {
+      throw new NullPointerException(String.format(message, args));
+    }
+    return object;
+  }
+
   /**
    * Creates a {@code byte[]} from reading the entirety of an {@link InputStream}. May return an
    * empty array but never {@code null}.
