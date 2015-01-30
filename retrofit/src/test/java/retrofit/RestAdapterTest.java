@@ -4,7 +4,6 @@ package retrofit;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,10 +40,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static retrofit.RestAdapter.LogLevel.BASIC;
-import static retrofit.RestAdapter.LogLevel.FULL;
-import static retrofit.RestAdapter.LogLevel.HEADERS;
-import static retrofit.RestAdapter.LogLevel.HEADERS_AND_ARGS;
 import static retrofit.Utils.SynchronousExecutor;
 
 public class RestAdapterTest {
@@ -107,272 +102,11 @@ public class RestAdapterTest {
     }
   }
 
-  @Test public void logRequestResponseBasic() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(BASIC)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
-
-    example.something();
-    assertThat(logMessages).hasSize(2);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("<--- HTTP 200 http://example.com/");
-  }
-
-  @Test public void logRequestResponseHeaders() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(HEADERS)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
-
-    example.something();
-    assertThat(logMessages).hasSize(7);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
-  }
-
-  @Test public void logRequestResponseHeadersAndArgs() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(HEADERS_AND_ARGS)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
-
-    example.something();
-    assertThat(logMessages).hasSize(9);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).isEqualTo("<--- BODY:");
-    assertThat(logMessages.get(8)).isEqualTo("Hi");
-  }
-
-  @Test public void logSuccessfulRequestResponseFullWhenResponseBodyPresent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(FULL)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
-
-    example.something(new TypedString("Hi"));
-    assertThat(logMessages).hasSize(13);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP POST http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("Content-Type: text/plain; charset=UTF-8");
-    assertThat(logMessages.get(3)).isEqualTo("Content-Length: 2");
-    assertThat(logMessages.get(4)).isEqualTo("");
-    assertThat(logMessages.get(5)).isEqualTo("Hi");
-    assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(10)).isEqualTo("");
-    assertThat(logMessages.get(11)).isEqualTo("{}");
-    assertThat(logMessages.get(12)).isEqualTo("<--- END HTTP (2-byte body)");
-  }
-
-  @Test public void logSuccessfulRequestResponseHeadersAndArgsWhenResponseBodyPresent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(HEADERS_AND_ARGS)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
-
-    example.something(new TypedString("Hi"));
-    assertThat(logMessages).hasSize(13);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP POST http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("Content-Type: text/plain; charset=UTF-8");
-    assertThat(logMessages.get(3)).isEqualTo("Content-Length: 2");
-    assertThat(logMessages.get(4)).isEqualTo("---> REQUEST:");
-    assertThat(logMessages.get(5)).isEqualTo("#0: TypedString[Hi]");
-    assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(10)).isEqualTo("<--- END HTTP (2-byte body)");
-    assertThat(logMessages.get(11)).isEqualTo("<--- BODY:");
-    assertThat(logMessages.get(12)).isEqualTo("{}");
-  }
-
-  @Test public void logSuccessfulRequestResponseFullWhenResponseBodyAbsent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(FULL)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
-
-    example.something();
-    assertThat(logMessages).hasSize(7);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
-  }
-
-  @Test public void logSuccessfulRequestResponseHeadersAndArgsWhenResponseBodyAbsent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(HEADERS_AND_ARGS)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(new Response("http://example.com/", 200, "OK", TWO_HEADERS, null));
-
-    example.something(new TypedString("Hi"));
-    assertThat(logMessages).hasSize(11);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP POST http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("Content-Type: text/plain; charset=UTF-8");
-    assertThat(logMessages.get(3)).isEqualTo("Content-Length: 2");
-    assertThat(logMessages.get(4)).isEqualTo("---> REQUEST:");
-    assertThat(logMessages.get(5)).isEqualTo("#0: TypedString[Hi]");
-    assertThat(logMessages.get(6)).isEqualTo("---> END HTTP (2-byte body)");
-    assertThat(logMessages.get(7)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(8)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(9)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(10)).isEqualTo("<--- END HTTP (0-byte body)");
-  }
-
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
     mockClient.enqueueResponse(
         new Response("http://example.com/", 200, "OK", NO_HEADERS, NO_MIME_BODY));
 
     example.something();
-  }
-
-  @Test public void logSuccessfulRequestResponseFullWhenMimeTypeMissing() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(FULL)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 200, "OK", TWO_HEADERS, NO_MIME_BODY));
-
-    example.something();
-    assertThat(logMessages).hasSize(9);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 200 http://example.com/");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("");
-    assertThat(logMessages.get(7)).isEqualTo("Hi");
-    assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
   }
 
   @Test public void asynchronousUsesCalbackExecutor() throws Exception {
@@ -413,84 +147,6 @@ public class RestAdapterTest {
       assertThat(e.getResponse().getStatus()).isEqualTo(500);
       assertThat(e.getSuccessType()).isEqualTo(String.class);
     }
-  }
-
-  @Test public void logErrorRequestResponseFullWhenMimeTypeMissing() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(FULL)
-        .build()
-        .create(Example.class);
-
-    Response responseMissingMimeType = //
-        new Response("http://example.com/", 403, "Forbidden", TWO_HEADERS, NO_MIME_BODY);
-
-    mockClient.enqueueResponse(responseMissingMimeType);
-
-    try {
-      example.something();
-      fail("RetrofitError expected on non-2XX response code.");
-    } catch (RetrofitError e) {
-      assertThat(e.getResponse().getStatus()).isEqualTo(403);
-    }
-
-    assertThat(logMessages).hasSize(9);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 403 http://example.com/");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("");
-    assertThat(logMessages.get(7)).isEqualTo("Hi");
-    assertThat(logMessages.get(8)).isEqualTo("<--- END HTTP (2-byte body)");
-  }
-
-  @Test public void logErrorRequestResponseFullWhenResponseBodyAbsent() throws Exception {
-    final List<String> logMessages = new ArrayList<String>();
-    RestAdapter.Log log = new RestAdapter.Log() {
-      @Override public void log(String message) {
-        logMessages.add(message);
-      }
-    };
-
-    Example example = new RestAdapter.Builder() //
-        .setClient(mockClient)
-        .setCallbackExecutor(mockCallbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLog(log)
-        .setLogLevel(FULL)
-        .build()
-        .create(Example.class);
-
-    mockClient.enqueueResponse(
-        new Response("http://example.com/", 500, "Internal Server Error", TWO_HEADERS, null));
-
-    try {
-      example.something();
-      fail("RetrofitError expected on non-2XX response code.");
-    } catch (RetrofitError e) {
-      assertThat(e.getResponse().getStatus()).isEqualTo(500);
-    }
-
-    assertThat(logMessages).hasSize(7);
-    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
-    assertThat(logMessages.get(1)).isEqualTo("Foo: Bar");
-    assertThat(logMessages.get(2)).isEqualTo("---> END HTTP (no body)");
-    assertThat(logMessages.get(3)).isEqualTo("<--- HTTP 500 http://example.com/");
-    assertThat(logMessages.get(4)).isEqualTo("Content-Type: application/json");
-    assertThat(logMessages.get(5)).isEqualTo("Content-Length: 42");
-    assertThat(logMessages.get(6)).isEqualTo("<--- END HTTP (0-byte body)");
   }
 
   @Test public void clientExceptionThrowsNetworkError() throws Exception {
@@ -574,11 +230,6 @@ public class RestAdapterTest {
         .setClient(mockClient)
         .setCallbackExecutor(mockCallbackExecutor)
         .setEndpoint("http://example.com")
-        .setLog(new RestAdapter.Log() {
-          @Override public void log(String message) {
-          }
-        })
-        .setLogLevel(FULL)
         .build()
         .create(Example.class);
 

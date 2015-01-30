@@ -69,7 +69,6 @@ public class MockRestAdapterTest {
         .setClient(client)
         .setCallbackExecutor(callbackExecutor)
         .setEndpoint("http://example.com")
-        .setLogLevel(RestAdapter.LogLevel.NONE)
         .setErrorHandler(new ErrorHandler() {
           @Override public Throwable handleError(RetrofitError cause) {
             if (nextError != null) {

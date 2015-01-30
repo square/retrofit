@@ -19,7 +19,6 @@ import android.os.Build;
 import com.google.gson.Gson;
 import java.util.concurrent.Executor;
 import retrofit.android.AndroidApacheClient;
-import retrofit.android.AndroidLog;
 import retrofit.android.MainThreadExecutor;
 import retrofit.client.Client;
 import retrofit.client.OkClient;
@@ -50,9 +49,7 @@ abstract class Platform {
 
   abstract Converter defaultConverter();
   abstract Client defaultClient();
-
   abstract Executor defaultCallbackExecutor();
-  abstract RestAdapter.Log defaultLog();
 
   /** Provides sane defaults for operation on the JVM. */
   private static class Base extends Platform {
@@ -69,14 +66,6 @@ abstract class Platform {
 
     @Override Executor defaultCallbackExecutor() {
       return new Utils.SynchronousExecutor();
-    }
-
-    @Override RestAdapter.Log defaultLog() {
-      return new RestAdapter.Log() {
-        @Override public void log(String message) {
-          System.out.println(message);
-        }
-      };
     }
   }
 
@@ -98,10 +87,6 @@ abstract class Platform {
 
     @Override Executor defaultCallbackExecutor() {
       return new MainThreadExecutor();
-    }
-
-    @Override RestAdapter.Log defaultLog() {
-      return new AndroidLog("Retrofit");
     }
   }
 

@@ -17,7 +17,6 @@ import rx.Scheduler;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import static retrofit.RestAdapter.LogLevel;
 import static retrofit.RetrofitError.unexpectedError;
 
 /**
@@ -283,13 +282,7 @@ public final class MockRestAdapter {
       // Run it through the interceptor.
       interceptor.intercept(requestBuilder);
 
-      Request request = requestBuilder.build();
-
-      if (restAdapter.logLevel.log()) {
-        request = restAdapter.logAndReplaceRequest("MOCK", request, args);
-      }
-
-      return request;
+      return requestBuilder.build();
     }
 
     private Object invokeSync(RestMethodInfo methodInfo, RequestInterceptor interceptor,
@@ -300,14 +293,8 @@ public final class MockRestAdapter {
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
         IOException exception = new IOException("Mock network error!");
-        if (restAdapter.logLevel.log()) {
-          restAdapter.logException(exception, url);
-        }
         throw RetrofitError.networkError(url, exception);
       }
-
-      LogLevel logLevel = restAdapter.logLevel;
-      RestAdapter.Log log = restAdapter.log;
 
       int callDelay = calculateDelayForCall();
       long beforeNanos = System.nanoTime();
@@ -317,14 +304,6 @@ public final class MockRestAdapter {
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
-
-        if (logLevel.log()) {
-          log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(returnValue + ""); // Hack to convert toString while supporting null.
-            log.log("<--- END MOCK");
-          }
-        }
 
         return returnValue;
       } catch (InvocationTargetException e) {
@@ -338,14 +317,6 @@ public final class MockRestAdapter {
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
         sleep(callDelay - tookMs);
-
-        if (logLevel.log()) {
-          log.log(String.format("<---- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
-          if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-            log.log(httpEx.responseBody + ""); // Hack to convert toString while supporting null.
-            log.log("<--- END MOCK");
-          }
-        }
 
         throw new MockHttpRetrofitError(httpEx.reason, url, response, httpEx.responseBody,
             methodInfo.responseObjectType);
@@ -372,9 +343,6 @@ public final class MockRestAdapter {
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
         IOException exception = new IOException("Mock network error!");
-        if (restAdapter.logLevel.log()) {
-          restAdapter.logException(exception, url);
-        }
         RetrofitError error = RetrofitError.networkError(url, exception);
         Throwable cause = restAdapter.errorHandler.handleError(error);
         final RetrofitError e = cause == error ? error : unexpectedError(error.getUrl(), cause);
@@ -391,14 +359,8 @@ public final class MockRestAdapter {
 
       restAdapter.callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          LogLevel logLevel = restAdapter.logLevel;
-          RestAdapter.Log log = restAdapter.log;
-
           try {
             methodInfo.method.invoke(mockService, args);
-            if (logLevel.log()) {
-              log.log(String.format("<--- MOCK 200 %s (%sms)", url, callDelay));
-            }
           } catch (Throwable throwable) {
             final Throwable innerEx = throwable.getCause();
             if (!(innerEx instanceof MockHttpException)) {
@@ -410,14 +372,6 @@ public final class MockRestAdapter {
 
             MockHttpException httpEx = (MockHttpException) innerEx;
             Response response = httpEx.toResponse(restAdapter.converter);
-
-            if (logLevel.log()) {
-              log.log(String.format("<---- MOCK %s %s (%sms)", httpEx.code, url, callDelay));
-              if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-                log.log(String.valueOf(httpEx.responseBody));
-                log.log("<--- END MOCK");
-              }
-            }
 
             RetrofitError error = new MockHttpRetrofitError(httpEx.getMessage(), url, response,
                 httpEx.responseBody, methodInfo.responseObjectType);
