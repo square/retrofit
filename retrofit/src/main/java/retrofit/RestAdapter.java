@@ -27,6 +27,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import retrofit.client.Client;
 import retrofit.client.Header;
+import retrofit.client.OkClient;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
@@ -438,7 +439,7 @@ public class RestAdapter {
         converter = Platform.get().defaultConverter();
       }
       if (client == null) {
-        client = Platform.get().defaultClient();
+        client = new OkClient();
       }
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();

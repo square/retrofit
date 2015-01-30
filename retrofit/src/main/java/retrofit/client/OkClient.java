@@ -34,8 +34,9 @@ import retrofit.mime.TypedOutput;
 public class OkClient implements Client {
   private static OkHttpClient generateDefaultOkHttp() {
     OkHttpClient client = new OkHttpClient();
-    client.setConnectTimeout(Defaults.CONNECT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    client.setReadTimeout(Defaults.READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    client.setConnectTimeout(15, TimeUnit.SECONDS);
+    client.setReadTimeout(15, TimeUnit.SECONDS);
+    client.setWriteTimeout(15, TimeUnit.SECONDS);
     return client;
   }
 

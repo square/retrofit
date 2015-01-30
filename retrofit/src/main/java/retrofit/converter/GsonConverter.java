@@ -28,12 +28,18 @@ import retrofit.mime.TypedOutput;
 
 /**
  * A {@link Converter} which uses GSON for serialization and deserialization of entities.
- *
- * @author Jake Wharton (jw@squareup.com)
  */
 public class GsonConverter implements Converter {
   private final Gson gson;
   private String charset;
+
+  /**
+   * Create an instance using a default {@link Gson} instance for conversion. Encoding to JSON and
+   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
+   */
+  public GsonConverter() {
+    this(new Gson());
+  }
 
   /**
    * Create an instance using the supplied {@link Gson} object for conversion. Encoding to JSON and
