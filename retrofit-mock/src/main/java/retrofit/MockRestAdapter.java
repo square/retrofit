@@ -234,10 +234,11 @@ public final class MockRestAdapter {
 
       // Load or create the details cache for the current method.
       final RestMethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
+      final Request request = buildRequest(methodInfo, restAdapter.requestInterceptor, args);
 
       if (methodInfo.executionType == RestMethodInfo.ExecutionType.SYNC) {
         try {
-          return invokeSync(methodInfo, restAdapter.requestInterceptor, args);
+          return invokeSync(methodInfo, args, request);
         } catch (RetrofitError error) {
           Throwable newError = restAdapter.errorHandler.handleError(error);
           if (newError == null) {
@@ -248,11 +249,6 @@ public final class MockRestAdapter {
         }
       }
 
-      // Apply the interceptor synchronously, recording the interception so we can replay it later.
-      // This way we still defer argument serialization to the background thread.
-      final RequestInterceptorTape interceptorTape = new RequestInterceptorTape();
-      restAdapter.requestInterceptor.intercept(interceptorTape);
-
       if (methodInfo.executionType == RestMethodInfo.ExecutionType.RX) {
         if (mockRxSupport == null) {
           if (Platform.HAS_RX_JAVA) {
@@ -261,12 +257,12 @@ public final class MockRestAdapter {
             throw new IllegalStateException("Observable method found but no RxJava on classpath");
           }
         }
-        return mockRxSupport.createMockObservable(this, methodInfo, interceptorTape, args);
+        return mockRxSupport.createMockObservable(this, methodInfo, args, request);
       }
 
       executor.execute(new Runnable() {
         @Override public void run() {
-          invokeAsync(methodInfo, interceptorTape, args);
+          invokeAsync(methodInfo, args, request);
         }
       });
       return null; // Asynchronous methods should have return type of void.
@@ -285,9 +281,8 @@ public final class MockRestAdapter {
       return requestBuilder.build();
     }
 
-    private Object invokeSync(RestMethodInfo methodInfo, RequestInterceptor interceptor,
-        Object[] args) throws Throwable {
-      Request request = buildRequest(methodInfo, interceptor, args);
+    private Object invokeSync(RestMethodInfo methodInfo, Object[] args, Request request)
+        throws Throwable {
       String url = request.getUrl();
 
       if (calculateIsFailure()) {
@@ -323,20 +318,8 @@ public final class MockRestAdapter {
       }
     }
 
-    private void invokeAsync(final RestMethodInfo methodInfo, RequestInterceptor interceptorTape,
-        final Object[] args) {
-      Request request;
-      try {
-        request = buildRequest(methodInfo, interceptorTape, args);
-      } catch (final Throwable throwable) {
-        restAdapter.callbackExecutor.execute(new Runnable() {
-          @Override public void run() {
-            throw new RuntimeException(throwable);
-          }
-        });
-        return;
-      }
-
+    private void invokeAsync(final RestMethodInfo methodInfo, final Object[] args,
+        Request request) {
       final String url = request.getUrl();
       final Callback callback = (Callback) args[args.length - 1];
 
@@ -430,12 +413,12 @@ public final class MockRestAdapter {
     }
 
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
-        final RequestInterceptor interceptor, final Object[] args) {
+        final Object[] args, final Request request) {
       return Observable.just("nothing") //
           .flatMap(new Func1<String, Observable<?>>() {
             @Override public Observable<?> call(String s) {
               try {
-                return (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
+                return (Observable) mockHandler.invokeSync(methodInfo, args, request);
               } catch (RetrofitError e) {
                 return Observable.error(errorHandler.handleError(e));
               } catch (Throwable throwable) {
