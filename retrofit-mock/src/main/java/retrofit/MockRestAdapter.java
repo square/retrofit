@@ -276,7 +276,7 @@ public final class MockRestAdapter {
     private Request buildRequest(RestMethodInfo methodInfo, RequestInterceptor interceptor,
         Object[] args) throws Throwable {
       // Begin building a normal request.
-      String apiUrl = restAdapter.server.getUrl();
+      String apiUrl = restAdapter.endpoint.url();
       RequestBuilder requestBuilder = new RequestBuilder(apiUrl, methodInfo, restAdapter.converter);
       requestBuilder.setArguments(args);
 

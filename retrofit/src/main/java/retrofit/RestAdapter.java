@@ -136,7 +136,7 @@ public class RestAdapter {
   private final Map<Class<?>, Map<Method, RestMethodInfo>> serviceMethodInfoCache =
       new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
 
-  final Endpoint server;
+  final Endpoint endpoint;
   final Executor callbackExecutor;
   final RequestInterceptor requestInterceptor;
   final Converter converter;
@@ -148,10 +148,10 @@ public class RestAdapter {
 
   volatile LogLevel logLevel;
 
-  private RestAdapter(Endpoint server, Client client, Executor callbackExecutor,
+  private RestAdapter(Endpoint endpoint, Client client, Executor callbackExecutor,
       RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler,
       Log log, LogLevel logLevel) {
-    this.server = server;
+    this.endpoint = endpoint;
     this.client = client;
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
@@ -392,7 +392,7 @@ public class RestAdapter {
     }
 
     private Request createRequest(RestMethodInfo methodInfo, Object[] args) {
-      String serverUrl = server.getUrl();
+      String serverUrl = endpoint.url();
       RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
       requestBuilder.setArguments(args);
 
@@ -536,8 +536,8 @@ public class RestAdapter {
     private LogLevel logLevel = LogLevel.NONE;
 
     /** API endpoint URL. */
-    public Builder setEndpoint(String endpoint) {
-       return setEndpoint(Endpoints.newFixedEndpoint(endpoint));
+    public Builder setEndpoint(String url) {
+       return setEndpoint(Endpoint.createFixed(url));
     }
 
     /** API endpoint. */
