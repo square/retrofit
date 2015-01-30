@@ -16,8 +16,6 @@
 package retrofit;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -33,8 +31,6 @@ import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
-import retrofit.mime.MimeUtil;
-import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
@@ -105,34 +101,6 @@ import retrofit.mime.TypedOutput;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
-  /** Simple logging abstraction for debug messages. */
-  public interface Log {
-    /** Log a debug message to the appropriate console. */
-    void log(String message);
-  }
-
-  /** Controls the level of logging. */
-  public enum LogLevel {
-    /** No logging. */
-    NONE,
-    /** Log only the request method and URL and the response status code and execution time. */
-    BASIC,
-    /** Log the basic information along with request and response headers. */
-    HEADERS,
-    /** Log the basic information along with request and response objects via toString(). */
-    HEADERS_AND_ARGS,
-    /**
-     * Log the headers, body, and metadata for both requests and responses.
-     * <p>
-     * Note: This requires that the entire request and response body be buffered in memory!
-     */
-    FULL;
-
-    public boolean log() {
-      return this != NONE;
-    }
-  }
-
   private final Map<Class<?>, Map<Method, RestMethodInfo>> serviceMethodInfoCache =
       new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
 
@@ -140,38 +108,19 @@ public class RestAdapter {
   final Executor callbackExecutor;
   final RequestInterceptor requestInterceptor;
   final Converter converter;
-  final Log log;
   final ErrorHandler errorHandler;
 
   private final Client client;
   private RxSupport rxSupport;
 
-  volatile LogLevel logLevel;
-
   private RestAdapter(Endpoint endpoint, Client client, Executor callbackExecutor,
-      RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler,
-      Log log, LogLevel logLevel) {
+      RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler) {
     this.endpoint = endpoint;
     this.client = client;
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
     this.converter = converter;
     this.errorHandler = errorHandler;
-    this.log = log;
-    this.logLevel = logLevel;
-  }
-
-  /** Change the level of logging. */
-  public void setLogLevel(LogLevel loglevel) {
-    if (logLevel == null) {
-      throw new NullPointerException("Log level may not be null.");
-    }
-    this.logLevel = loglevel;
-  }
-
-  /** The current logging level. */
-  public LogLevel getLogLevel() {
-    return logLevel;
   }
 
   /** Create an implementation of the API defined by the specified {@code service} interface. */
@@ -322,11 +271,6 @@ public class RestAdapter {
     private void handleAsyncResponse(RestMethodInfo methodInfo, Request request, Response response,
         Callback callback) throws IOException {
       String url = request.getUrl();
-
-      if (logLevel.log()) {
-        response = logAndReplaceResponse(url, response);
-      }
-
       Type type = methodInfo.responseObjectType;
 
       int statusCode = response.getStatus();
@@ -358,7 +302,6 @@ public class RestAdapter {
       ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
       try {
         Object convert = converter.fromBody(wrapped, type);
-        logResponseBody(convert);
         callResponse(callback, convert, response);
       } catch (ConversionException e) {
         // If the underlying input stream threw an exception, propagate that rather than
@@ -398,125 +341,8 @@ public class RestAdapter {
 
       requestInterceptor.intercept(requestBuilder);
 
-      Request request = requestBuilder.build();
-
-      if (logLevel.log()) {
-        try {
-          request = logAndReplaceRequest("HTTP", request, args);
-        } catch (IOException e) {
-          throw new RuntimeException("Unable to buffer request while logging.", e);
-        }
-      }
-
-      return request;
+      return requestBuilder.build();
     }
-  }
-
-  /** Log request headers and body. Consumes request body and returns identical replacement. */
-  Request logAndReplaceRequest(String name, Request request, Object[] args) throws IOException {
-    log.log(String.format("---> %s %s %s", name, request.getMethod(), request.getUrl()));
-
-    if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
-      for (Header header : request.getHeaders()) {
-        log.log(header.toString());
-      }
-
-      String bodySize = "no";
-      TypedOutput body = request.getBody();
-      if (body != null) {
-        String bodyMime = body.mimeType();
-        if (bodyMime != null) {
-          log.log("Content-Type: " + bodyMime);
-        }
-
-        long bodyLength = body.length();
-        bodySize = bodyLength + "-byte";
-        if (bodyLength != -1) {
-          log.log("Content-Length: " + bodyLength);
-        }
-
-        if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-          if (!request.getHeaders().isEmpty()) {
-            log.log("");
-          }
-          if (!(body instanceof TypedByteArray)) {
-            // Read the entire response body to we can log it and replace the original response
-            request = Utils.readBodyToBytesIfNecessary(request);
-            body = request.getBody();
-          }
-
-          byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-          String bodyCharset = MimeUtil.parseCharset(body.mimeType(), "UTF-8");
-          log.log(new String(bodyBytes, bodyCharset));
-        } else if (logLevel.ordinal() >= LogLevel.HEADERS_AND_ARGS.ordinal()) {
-          if (!request.getHeaders().isEmpty()) {
-            log.log("---> REQUEST:");
-          }
-          for (int i = 0; i < args.length; i++) {
-            log.log("#" + i + ": " + args[i]);
-          }
-        }
-      }
-
-      log.log(String.format("---> END %s (%s body)", name, bodySize));
-    }
-
-    return request;
-  }
-
-  /** Log response headers and body. Consumes response body and returns identical replacement. */
-  private Response logAndReplaceResponse(String url, Response response) throws IOException {
-    log.log(String.format("<--- HTTP %s %s", response.getStatus(), url));
-
-    if (logLevel.ordinal() >= LogLevel.HEADERS.ordinal()) {
-      for (Header header : response.getHeaders()) {
-        log.log(header.toString());
-      }
-
-      long bodySize = 0;
-      TypedInput body = response.getBody();
-      if (body != null) {
-        bodySize = body.length();
-
-        if (logLevel.ordinal() >= LogLevel.FULL.ordinal()) {
-          if (!response.getHeaders().isEmpty()) {
-            log.log("");
-          }
-
-          if (!(body instanceof TypedByteArray)) {
-            // Read the entire response body so we can log it and replace the original response
-            response = Utils.readBodyToBytesIfNecessary(response);
-            body = response.getBody();
-          }
-
-          byte[] bodyBytes = ((TypedByteArray) body).getBytes();
-          bodySize = bodyBytes.length;
-          String bodyMime = body.mimeType();
-          String bodyCharset = MimeUtil.parseCharset(bodyMime, "UTF-8");
-          log.log(new String(bodyBytes, bodyCharset));
-        }
-      }
-
-      log.log(String.format("<--- END HTTP (%s-byte body)", bodySize));
-    }
-
-    return response;
-  }
-
-  private void logResponseBody(Object body) {
-    if (logLevel.ordinal() == LogLevel.HEADERS_AND_ARGS.ordinal()) {
-      log.log("<--- BODY:");
-      log.log(String.valueOf(body));
-    }
-  }
-
-  /** Log an exception that occurred during the processing of a request or response. */
-  void logException(Throwable t, String url) {
-    log.log(String.format("---- ERROR %s", url != null ? url : ""));
-    StringWriter sw = new StringWriter();
-    t.printStackTrace(new PrintWriter(sw));
-    log.log(sw.toString());
-    log.log("---- END ERROR");
   }
 
   /**
@@ -532,8 +358,6 @@ public class RestAdapter {
     private RequestInterceptor requestInterceptor;
     private Converter converter;
     private ErrorHandler errorHandler;
-    private Log log;
-    private LogLevel logLevel = LogLevel.NONE;
 
     /** API endpoint URL. */
     public Builder setEndpoint(String url) {
@@ -599,33 +423,14 @@ public class RestAdapter {
       this.errorHandler = errorHandler;
       return this;
     }
-
-    /** Configure debug logging mechanism. */
-    public Builder setLog(Log log) {
-      if (log == null) {
-        throw new NullPointerException("Log may not be null.");
-      }
-      this.log = log;
-      return this;
-    }
-
-    /** Change the level of logging. */
-    public Builder setLogLevel(LogLevel logLevel) {
-      if (logLevel == null) {
-        throw new NullPointerException("Log level may not be null.");
-      }
-      this.logLevel = logLevel;
-      return this;
-    }
-
     /** Create the {@link RestAdapter} instances. */
     public RestAdapter build() {
       if (endpoint == null) {
         throw new IllegalArgumentException("Endpoint may not be null.");
       }
       ensureSaneDefaults();
-      return new RestAdapter(endpoint, client, callbackExecutor,
-          requestInterceptor, converter, errorHandler, log, logLevel);
+      return new RestAdapter(endpoint, client, callbackExecutor, requestInterceptor, converter,
+          errorHandler);
     }
 
     private void ensureSaneDefaults() {
@@ -640,9 +445,6 @@ public class RestAdapter {
       }
       if (errorHandler == null) {
         errorHandler = ErrorHandler.DEFAULT;
-      }
-      if (log == null) {
-        log = Platform.get().defaultLog();
       }
       if (requestInterceptor == null) {
         requestInterceptor = RequestInterceptor.NONE;
