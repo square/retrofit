@@ -22,7 +22,7 @@ public final class WireConverterTest {
   private WireConverter converter = new WireConverter(new Wire());
 
   @Test public void serialize() throws Exception {
-    TypedOutput protoBytes = converter.toBody(PROTO);
+    TypedOutput protoBytes = converter.toBody(PROTO, Person.class);
     assertThat(protoBytes.mimeType()).isEqualTo("application/x-protobuf");
     assertThat(bytesOf(protoBytes)).isEqualTo(bytesOf(decodeBase64(PROTO_ENCODED)));
   }

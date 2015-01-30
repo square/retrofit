@@ -40,7 +40,7 @@ class MockTypedInput implements TypedInput {
   private synchronized void initBytes() throws IOException {
     if (bytes == null) {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-      converter.toBody(body).writeTo(out);
+      converter.toBody(body, body.getClass()).writeTo(out);
       bytes = out.toByteArray();
     }
   }

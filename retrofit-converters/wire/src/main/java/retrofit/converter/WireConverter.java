@@ -56,7 +56,7 @@ public class WireConverter implements Converter {
     }
   }
 
-  @Override public TypedOutput toBody(Object object) {
+  @Override public TypedOutput toBody(Object object, Type type) {
     if (!(object instanceof Message)) {
       throw new IllegalArgumentException(
           "Expected a proto message but was " + (object != null ? object.getClass().getName()

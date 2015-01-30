@@ -318,7 +318,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           } else if (value instanceof String) {
             multipartBody.addPart(name, transferEncoding, new TypedString((String) value));
           } else {
-            multipartBody.addPart(name, transferEncoding, converter.toBody(value));
+            multipartBody.addPart(name, transferEncoding,
+                converter.toBody(value, value.getClass()));
           }
         }
       } else if (annotationType == PartMap.class) {
@@ -339,7 +340,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
                 multipartBody.addPart(entryName, transferEncoding,
                     new TypedString((String) entryValue));
               } else {
-                multipartBody.addPart(entryName, transferEncoding, converter.toBody(entryValue));
+                multipartBody.addPart(entryName, transferEncoding,
+                    converter.toBody(entryValue, entryValue.getClass()));
               }
             }
           }
@@ -351,7 +353,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         if (value instanceof TypedOutput) {
           body = (TypedOutput) value;
         } else {
-          body = converter.toBody(value);
+          body = converter.toBody(value, value.getClass());
         }
       } else {
         throw new IllegalArgumentException(

@@ -75,9 +75,10 @@ public class GsonConverter implements Converter {
     }
   }
 
-  @Override public TypedOutput toBody(Object object) {
+  @Override public TypedOutput toBody(Object object, Type type) {
     try {
-      return new JsonTypedOutput(gson.toJson(object).getBytes(charset), charset);
+      String json = gson.toJson(object, type);
+      return new JsonTypedOutput(json.getBytes(charset), charset);
     } catch (UnsupportedEncodingException e) {
       throw new AssertionError(e);
     }

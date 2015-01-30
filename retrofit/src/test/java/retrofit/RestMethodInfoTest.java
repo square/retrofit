@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 import retrofit.client.Response;
+import retrofit.http.Body;
 import retrofit.http.GET;
+import retrofit.http.POST;
 import retrofit.http.Streaming;
 import rx.Observable;
 
@@ -42,6 +44,47 @@ public class RestMethodInfoTest {
     if (expected.length > 0) {
       assertThat(calculated).containsExactly(expected);
     }
+  }
+
+  static class Dummy {
+  }
+
+  @Test public void concreteBodyType() {
+    class Example {
+      @POST("/foo") Response a(@Body Dummy body) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.onlyMethod(Example.class);
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    assertThat(methodInfo.requestObjectType).isEqualTo(Dummy.class);
+  }
+
+  @Test public void genericBodyType() {
+    class Example {
+      @POST("/foo") Response a(@Body List<String> body) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.onlyMethod(Example.class);
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    Type expected = new TypeToken<List<String>>() {}.getType();
+    assertThat(methodInfo.requestObjectType).isEqualTo(expected);
+  }
+
+  @Test public void wildcardBodyType() {
+    class Example {
+      @POST("/foo") Response a(@Body List<? super String> body) {
+        return null;
+      }
+    }
+
+    Method method = TestingUtils.onlyMethod(Example.class);
+    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    Type expected = new TypeToken<List<? super String>>() {}.getType();
+    assertThat(methodInfo.requestObjectType).isEqualTo(expected);
   }
 
   @Test public void concreteCallbackTypes() {

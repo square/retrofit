@@ -44,5 +44,5 @@ public interface Converter {
    * @param object Object instance to convert.
    * @return Representation of the specified object as bytes.
    */
-  TypedOutput toBody(Object object);
+  TypedOutput toBody(Object object, Type type);
 }

@@ -22,7 +22,7 @@ public final class ProtoConverterTest {
   private final ProtoConverter protoConverter = new ProtoConverter();
 
   @Test public void serialize() throws Exception {
-    TypedOutput protoBytes = protoConverter.toBody(PROTO);
+    TypedOutput protoBytes = protoConverter.toBody(PROTO, Phone.class);
     assertThat(protoBytes.mimeType()).isEqualTo("application/x-protobuf");
     assertThat(bytesOf(protoBytes)).isEqualTo(bytesOf(decodeBase64(ENCODED_PROTO)));
   }
