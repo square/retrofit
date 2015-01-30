@@ -16,17 +16,13 @@
 package retrofit;
 
 import android.os.Build;
-import com.google.gson.Gson;
+import android.os.Handler;
+import android.os.Looper;
 import java.util.concurrent.Executor;
-import retrofit.android.AndroidApacheClient;
-import retrofit.android.MainThreadExecutor;
-import retrofit.client.Client;
-import retrofit.client.OkClient;
-import retrofit.client.UrlConnectionClient;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
 
-abstract class Platform {
+class Platform {
   private static final Platform PLATFORM = findPlatform();
 
   static final boolean HAS_RX_JAVA = hasRxJavaOnClasspath();
@@ -44,69 +40,27 @@ abstract class Platform {
     } catch (ClassNotFoundException ignored) {
     }
 
-    return new Base();
+    return new Platform();
   }
 
-  abstract Converter defaultConverter();
-  abstract Client defaultClient();
-  abstract Executor defaultCallbackExecutor();
+  Converter defaultConverter() {
+    return new GsonConverter();
+  }
 
-  /** Provides sane defaults for operation on the JVM. */
-  private static class Base extends Platform {
-    @Override Converter defaultConverter() {
-      return new GsonConverter(new Gson());
-    }
-
-    @Override Client defaultClient() {
-      if (hasOkHttpOnClasspath()) {
-        return OkClientInstantiator.instantiate();
-      }
-      return new UrlConnectionClient();
-    }
-
-    @Override Executor defaultCallbackExecutor() {
-      return new Utils.SynchronousExecutor();
-    }
+  Executor defaultCallbackExecutor() {
+    return new Utils.SynchronousExecutor();
   }
 
   /** Provides sane defaults for operation on Android. */
   private static class Android extends Platform {
-    @Override Converter defaultConverter() {
-      return new GsonConverter(new Gson());
-    }
-
-    @Override Client defaultClient() {
-      if (hasOkHttpOnClasspath()) {
-        return OkClientInstantiator.instantiate();
-      }
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-        return new AndroidApacheClient();
-      }
-      return new UrlConnectionClient();
-    }
-
     @Override Executor defaultCallbackExecutor() {
-      return new MainThreadExecutor();
-    }
-  }
+      return new Executor() {
+        private final Handler handler = new Handler(Looper.getMainLooper());
 
-  /** Determine whether or not OkHttp 1.6 or newer is present on the runtime classpath. */
-  private static boolean hasOkHttpOnClasspath() {
-    try {
-      Class.forName("com.squareup.okhttp.OkHttpClient");
-      return true;
-    } catch (ClassNotFoundException ignored) {
-    }
-    return false;
-  }
-
-  /**
-   * Indirection for OkHttp class to prevent VerifyErrors on Android 2.0 and earlier when the
-   * dependency is not present.
-   */
-  private static class OkClientInstantiator {
-    static Client instantiate() {
-      return new OkClient();
+        @Override public void execute(Runnable r) {
+          handler.post(r);
+        }
+      };
     }
   }
 
