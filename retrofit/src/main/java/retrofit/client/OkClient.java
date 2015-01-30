@@ -15,6 +15,7 @@
  */
 package retrofit.client;
 
+import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -49,8 +50,16 @@ public class OkClient implements Client {
     this.client = client;
   }
 
-  @Override public Response execute(Request request) throws IOException {
-    return parseResponse(client.newCall(createRequest(request)).execute());
+  @Override public void execute(Request request, final AsyncCallback callback) {
+    client.newCall(createRequest(request)).enqueue(new Callback() {
+      @Override public void onFailure(com.squareup.okhttp.Request request, IOException e) {
+        callback.onFailure(e);
+      }
+
+      @Override public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+        callback.onResponse(parseResponse(response));
+      }
+    });
   }
 
   static com.squareup.okhttp.Request createRequest(Request request) {

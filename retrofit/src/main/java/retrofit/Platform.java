@@ -16,11 +16,8 @@
 package retrofit;
 
 import android.os.Build;
-import android.os.Process;
 import com.google.gson.Gson;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import retrofit.android.AndroidApacheClient;
 import retrofit.android.AndroidLog;
 import retrofit.android.MainThreadExecutor;
@@ -29,9 +26,6 @@ import retrofit.client.OkClient;
 import retrofit.client.UrlConnectionClient;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
-
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static java.lang.Thread.MIN_PRIORITY;
 
 abstract class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -56,7 +50,7 @@ abstract class Platform {
 
   abstract Converter defaultConverter();
   abstract Client defaultClient();
-  abstract Executor defaultHttpExecutor();
+
   abstract Executor defaultCallbackExecutor();
   abstract RestAdapter.Log defaultLog();
 
@@ -71,19 +65,6 @@ abstract class Platform {
         return OkClientInstantiator.instantiate();
       }
       return new UrlConnectionClient();
-    }
-
-    @Override Executor defaultHttpExecutor() {
-      return Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override public Thread newThread(final Runnable r) {
-          return new Thread(new Runnable() {
-            @Override public void run() {
-              Thread.currentThread().setPriority(MIN_PRIORITY);
-              r.run();
-            }
-          }, RestAdapter.IDLE_THREAD_NAME);
-        }
-      });
     }
 
     @Override Executor defaultCallbackExecutor() {
@@ -113,19 +94,6 @@ abstract class Platform {
         return new AndroidApacheClient();
       }
       return new UrlConnectionClient();
-    }
-
-    @Override Executor defaultHttpExecutor() {
-      return Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override public Thread newThread(final Runnable r) {
-          return new Thread(new Runnable() {
-            @Override public void run() {
-              Process.setThreadPriority(THREAD_PRIORITY_BACKGROUND);
-              r.run();
-            }
-          }, RestAdapter.IDLE_THREAD_NAME);
-        }
-      });
     }
 
     @Override Executor defaultCallbackExecutor() {

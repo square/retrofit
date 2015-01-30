@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import retrofit.MockRestAdapter;
 import retrofit.RestAdapter;
 import retrofit.http.GET;
@@ -78,7 +79,8 @@ public class GitHubClient {
         .build();
 
     // Wrap our REST adapter to allow mock implementations and fake network delay.
-    MockRestAdapter mockRestAdapter = MockRestAdapter.from(restAdapter);
+    MockRestAdapter mockRestAdapter =
+        MockRestAdapter.from(restAdapter, Executors.newSingleThreadExecutor());
 
     // Instantiate a mock object so we can interact with it later.
     MockGitHub mockGitHub = new MockGitHub();

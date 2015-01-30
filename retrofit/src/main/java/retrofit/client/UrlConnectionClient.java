@@ -32,10 +32,8 @@ public class UrlConnectionClient implements Client {
   public UrlConnectionClient() {
   }
 
-  @Override public Response execute(Request request) throws IOException {
-    HttpURLConnection connection = openConnection(request);
-    prepareRequest(connection, request);
-    return readResponse(connection);
+  @Override public void execute(Request request, AsyncCallback callback) {
+    throw new UnsupportedOperationException();
   }
 
   protected HttpURLConnection openConnection(Request request) throws IOException {

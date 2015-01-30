@@ -10,7 +10,6 @@ import java.util.Set;
 import org.junit.Test;
 import retrofit.client.Response;
 import retrofit.http.GET;
-import retrofit.http.Query;
 import retrofit.http.Streaming;
 import rx.Observable;
 
@@ -53,19 +52,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
-  }
-
-  @Test public void concreteCallbackTypesWithParams() {
-    class Example {
-      @GET("/foo") void a(@Query("id") String id, ResponseCallback cb) {
-      }
-    }
-
-    Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -77,19 +63,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
-  }
-
-  @Test public void genericCallbackTypesWithParams() {
-    class Example {
-      @GET("/foo") void a(@Query("id") String id, Callback<Response> c) {
-      }
-    }
-
-    Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -101,7 +74,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -113,7 +85,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
@@ -131,7 +102,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
     assertThat(methodInfo.responseObjectType).isEqualTo(
         RestMethodInfoTest.class.getDeclaredField("extendingGenericCallbackType").getGenericType());
   }
@@ -145,7 +115,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isTrue();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -158,7 +127,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isTrue();
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
@@ -173,23 +141,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.isStreaming).isTrue();
-    assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
-  }
-
-  @Test public void streamingResponseWithCallback() {
-    class Example {
-      @GET("/foo") @Streaming void a(Callback<Response> callback) {
-      }
-    }
-
-    Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
-    methodInfo.init();
-
-    assertThat(methodInfo.isStreaming).isTrue();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -202,8 +153,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.isObservable).isTrue();
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -216,8 +165,6 @@ public class RestMethodInfoTest {
 
     Method method = TestingUtils.onlyMethod(Example.class);
     RestMethodInfo methodInfo = new RestMethodInfo(method);
-    assertThat(methodInfo.isSynchronous).isFalse();
-    assertThat(methodInfo.isObservable).isTrue();
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
   }
