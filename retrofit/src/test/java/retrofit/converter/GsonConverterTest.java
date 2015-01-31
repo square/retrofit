@@ -60,7 +60,7 @@ public final class GsonConverterTest {
     assertJson("{\"name\":\"value\"}", output);
   }
 
-  @Test public void deserialization() throws ConversionException {
+  @Test public void deserialization() throws IOException {
     TypedString json = new TypedString("{\"theName\":\"value\"}");
     Impl impl = (Impl) converter.fromBody(json, Impl.class);
     assertEquals("value", impl.getName());

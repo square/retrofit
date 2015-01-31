@@ -18,7 +18,6 @@ package retrofit;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import retrofit.client.Response;
-import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
 import retrofit.mime.TypedInput;
 
@@ -28,10 +27,10 @@ public class RetrofitError extends RuntimeException {
         exception);
   }
 
-  public static RetrofitError conversionError(String url, Response response, Converter converter,
-      Type successType, ConversionException exception) {
+  public static RetrofitError unexpectedError(String url, Response response, Converter converter,
+      Type successType, Throwable exception) {
     return new RetrofitError(exception.getMessage(), url, response, converter, successType,
-        Kind.CONVERSION, exception);
+        Kind.UNEXPECTED, exception);
   }
 
   public static RetrofitError httpError(String url, Response response, Converter converter,
@@ -49,8 +48,6 @@ public class RetrofitError extends RuntimeException {
   public enum Kind {
     /** An {@link IOException} occurred while communicating to the server. */
     NETWORK,
-    /** An exception was thrown while (de)serializing a body. */
-    CONVERSION,
     /** A non-200 HTTP status code was received from the server. */
     HTTP,
     /**
@@ -126,8 +123,8 @@ public class RetrofitError extends RuntimeException {
     }
     try {
       return converter.fromBody(body, type);
-    } catch (ConversionException e) {
-      throw new RuntimeException(e);
+    } catch (IOException e) {
+      throw new RuntimeException(e); // Body is a byte[], can't be a real IO exception.
     }
   }
 }

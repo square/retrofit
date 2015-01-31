@@ -55,8 +55,7 @@ public final class WireConverterTest {
     try {
       converter.fromBody(decodeBase64("////"), Person.class);
       fail();
-    } catch (ConversionException expected) {
-      assertThat(expected.getCause()).isInstanceOf(IOException.class);
+    } catch (IOException ignored) {
     }
   }
 
@@ -64,7 +63,7 @@ public final class WireConverterTest {
     try {
       converter.fromBody(decodeBase64("////", "yummy/bytes"), Person.class);
       fail();
-    } catch (ConversionException e) {
+    } catch (RuntimeException e) {
       assertThat(e).hasMessage("Expected a proto but was: yummy/bytes");
     }
   }

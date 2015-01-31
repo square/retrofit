@@ -16,7 +16,6 @@
 package retrofit.converter;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -31,7 +30,7 @@ import retrofit.mime.TypedOutput;
  */
 public class GsonConverter implements Converter {
   private final Gson gson;
-  private String charset;
+  private final String charset;
 
   /**
    * Create an instance using a default {@link Gson} instance for conversion. Encoding to JSON and
@@ -58,7 +57,7 @@ public class GsonConverter implements Converter {
     this.charset = charset;
   }
 
-  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(TypedInput body, Type type) throws IOException {
     String charset = this.charset;
     if (body.mimeType() != null) {
       charset = MimeUtil.parseCharset(body.mimeType(), charset);
@@ -67,10 +66,6 @@ public class GsonConverter implements Converter {
     try {
       isr = new InputStreamReader(body.in(), charset);
       return gson.fromJson(isr, type);
-    } catch (IOException e) {
-      throw new ConversionException(e);
-    } catch (JsonParseException e) {
-      throw new ConversionException(e);
     } finally {
       if (isr != null) {
         try {

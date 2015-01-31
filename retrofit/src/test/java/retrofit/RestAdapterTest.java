@@ -1,6 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.google.gson.JsonParseException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +13,6 @@ import org.mockito.stubbing.Answer;
 import retrofit.client.MockClient;
 import retrofit.client.Request;
 import retrofit.client.Response;
-import retrofit.converter.ConversionException;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Headers;
@@ -126,9 +126,9 @@ public class RestAdapterTest {
       example.something();
       fail("RetrofitError expected on malformed response body.");
     } catch (RetrofitError e) {
-      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.CONVERSION);
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.UNEXPECTED);
       assertThat(e.getResponse().getStatus()).isEqualTo(200);
-      assertThat(e.getCause()).isInstanceOf(ConversionException.class);
+      assertThat(e.getCause()).isInstanceOf(JsonParseException.class);
       assertThat(e.getResponse().getBody()).isNull();
     }
   }
