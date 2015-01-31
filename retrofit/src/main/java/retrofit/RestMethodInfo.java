@@ -20,9 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -78,7 +76,7 @@ final class RestMethodInfo {
   String requestUrl;
   Set<String> requestUrlParamNames;
   String requestQuery;
-  List<retrofit.client.Header> headers;
+  com.squareup.okhttp.Headers headers;
   String contentTypeHeader;
   boolean isStreaming;
 
@@ -204,8 +202,8 @@ final class RestMethodInfo {
     requestQuery = query;
   }
 
-  List<retrofit.client.Header> parseHeaders(String[] headers) {
-    List<retrofit.client.Header> headerList = new ArrayList<retrofit.client.Header>();
+  com.squareup.okhttp.Headers parseHeaders(String[] headers) {
+    com.squareup.okhttp.Headers.Builder builder = new com.squareup.okhttp.Headers.Builder();
     for (String header : headers) {
       int colon = header.indexOf(':');
       if (colon == -1 || colon == 0 || colon == header.length() - 1) {
@@ -217,10 +215,10 @@ final class RestMethodInfo {
       if ("Content-Type".equalsIgnoreCase(headerName)) {
         contentTypeHeader = headerValue;
       } else {
-        headerList.add(new retrofit.client.Header(headerName, headerValue));
+        builder.add(headerName, headerValue);
       }
     }
-    return headerList;
+    return builder.build();
   }
 
   /** Loads {@link #responseObjectType}. */

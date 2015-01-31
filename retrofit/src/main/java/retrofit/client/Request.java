@@ -15,34 +15,29 @@
  */
 package retrofit.client;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.squareup.okhttp.Headers;
 import retrofit.mime.TypedOutput;
 
 /** Encapsulates all of the information necessary to make an HTTP request. */
 public final class Request {
   private final String method;
   private final String url;
-  private final List<Header> headers;
+  private final Headers headers;
   private final TypedOutput body;
 
-  public Request(String method, String url, List<Header> headers, TypedOutput body) {
+  public Request(String method, String url, Headers headers, TypedOutput body) {
     if (method == null) {
       throw new NullPointerException("Method must not be null.");
     }
     if (url == null) {
       throw new NullPointerException("URL must not be null.");
     }
+    if (headers == null) {
+      throw new NullPointerException("Headers must not be null.");
+    }
     this.method = method;
     this.url = url;
-
-    if (headers == null) {
-      this.headers = Collections.emptyList();
-    } else {
-      this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
-    }
-
+    this.headers = headers;
     this.body = body;
   }
 
@@ -56,8 +51,8 @@ public final class Request {
     return url;
   }
 
-  /** Returns an unmodifiable list of headers, never {@code null}. */
-  public List<Header> getHeaders() {
+  /** Returns an unmodifiable list of headers. May be {@code null}. */
+  public Headers getHeaders() {
     return headers;
   }
 

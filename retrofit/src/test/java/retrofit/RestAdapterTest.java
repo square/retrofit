@@ -4,15 +4,11 @@ package retrofit;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Executor;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import retrofit.client.Header;
 import retrofit.client.MockClient;
 import retrofit.client.Request;
 import retrofit.client.Response;
@@ -43,10 +39,12 @@ import static org.mockito.Mockito.when;
 import static retrofit.Utils.SynchronousExecutor;
 
 public class RestAdapterTest {
-  private static final List<Header> NO_HEADERS = Collections.emptyList();
-  private static final List<Header> TWO_HEADERS =
-      Arrays.asList(new Header("Content-Type", "application/json"),
-          new Header("Content-Length", "42"));
+  private static final com.squareup.okhttp.Headers NO_HEADERS = com.squareup.okhttp.Headers.of();
+  private static final com.squareup.okhttp.Headers TWO_HEADERS =
+      new com.squareup.okhttp.Headers.Builder()
+          .add("Content-Type", "application/json")
+          .add("Content-Length", "42")
+          .build();
 
   /** Not all servers play nice and add content-type headers to responses. */
   private static final TypedInput NO_MIME_BODY = new TypedInput() {

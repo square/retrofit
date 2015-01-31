@@ -8,8 +8,6 @@ import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import okio.Buffer;
 import okio.BufferedSource;
 import org.junit.Test;
@@ -23,7 +21,7 @@ public final class OkClientTest {
   private static final String HOST = "http://example.com";
 
   @Test public void get() {
-    Request request = new Request("GET", HOST + "/foo/bar/?kit=kat", null, null);
+    Request request = new Request("GET", HOST + "/foo/bar/?kit=kat", Headers.of(), null);
     com.squareup.okhttp.Request okRequest = OkClient.createRequest(request);
 
     assertThat(okRequest.method()).isEqualTo("GET");
@@ -34,7 +32,7 @@ public final class OkClientTest {
 
   @Test public void post() throws IOException {
     TypedString body = new TypedString("hi");
-    Request request = new Request("POST", HOST + "/foo/bar/", null, body);
+    Request request = new Request("POST", HOST + "/foo/bar/", Headers.of(), body);
     com.squareup.okhttp.Request okRequest = OkClient.createRequest(request);
 
     assertThat(okRequest.method()).isEqualTo("POST");
@@ -50,10 +48,11 @@ public final class OkClientTest {
   }
 
   @Test public void headers() {
-    List<Header> headers = new ArrayList<Header>();
-    headers.add(new Header("kit", "kat"));
-    headers.add(new Header("foo", "bar"));
-    headers.add(new Header("ping", null));
+    Headers headers = new Headers.Builder()
+        .add("kit", "kat")
+        .add("foo", "bar")
+        .add("ping", "")
+        .build();
     Request request = new Request("GET", HOST + "/this/", headers, null);
     com.squareup.okhttp.Request okRequest = OkClient.createRequest(request);
 
@@ -81,8 +80,10 @@ public final class OkClientTest {
     assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
-    assertThat(response.getHeaders()) //
-        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"));
+    Headers headers = response.getHeaders();
+    assertThat(headers.size()).isEqualTo(2);
+    assertThat(headers.get("foo")).isEqualTo("bar");
+    assertThat(headers.get("kit")).isEqualTo("kat");
     TypedInput responseBody = response.getBody();
     assertThat(responseBody.mimeType()).isEqualTo("text/plain");
     assertBytes(ByteStreams.toByteArray(responseBody.in()), "hello");
@@ -105,8 +106,10 @@ public final class OkClientTest {
     assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
-    assertThat(response.getHeaders()) //
-        .containsOnly(new Header("foo", "bar"), new Header("kit", "kat"));
+    Headers headers = response.getHeaders();
+    assertThat(headers.size()).isEqualTo(2);
+    assertThat(headers.get("foo")).isEqualTo("bar");
+    assertThat(headers.get("kit")).isEqualTo("kat");
     TypedInput responseBody = response.getBody();
     assertThat(responseBody.mimeType()).isNull();
     assertBytes(ByteStreams.toByteArray(responseBody.in()), "hello");
@@ -130,8 +133,10 @@ public final class OkClientTest {
     assertThat(response.getUrl()).isEqualTo(HOST + "/foo/bar/");
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getReason()).isEqualTo("OK");
-    assertThat(response.getHeaders()) //
-        .containsExactly(new Header("foo", "bar"), new Header("kit", "kat"));
+    Headers headers = response.getHeaders();
+    assertThat(headers.size()).isEqualTo(2);
+    assertThat(headers.get("foo")).isEqualTo("bar");
+    assertThat(headers.get("kit")).isEqualTo("kat");
     assertThat(response.getBody()).isNull();
   }
 

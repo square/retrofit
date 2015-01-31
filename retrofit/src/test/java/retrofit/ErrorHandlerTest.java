@@ -1,11 +1,10 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import java.util.Collections;
+import com.squareup.okhttp.Headers;
 import org.junit.Before;
 import org.junit.Test;
 import retrofit.client.Client;
-import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.http.GET;
@@ -38,8 +37,7 @@ public class ErrorHandlerTest {
   /* An HTTP client which always returns a 400 response */
   static class MockInvalidResponseClient implements Client {
     @Override public void execute(Request request, AsyncCallback callback) {
-      callback.onResponse(
-          new Response("", 400, "invalid request", Collections.<Header>emptyList(), null));
+      callback.onResponse(new Response("", 400, "invalid request", Headers.of(), null));
     }
   }
 
