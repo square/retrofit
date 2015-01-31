@@ -16,15 +16,12 @@
 package retrofit.client;
 
 import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import okio.BufferedSink;
 import retrofit.mime.TypedInput;
@@ -64,24 +61,16 @@ public class OkClient implements Client {
   }
 
   static com.squareup.okhttp.Request createRequest(Request request) {
-    com.squareup.okhttp.Request.Builder builder = new com.squareup.okhttp.Request.Builder()
+    return new com.squareup.okhttp.Request.Builder()
         .url(request.getUrl())
-        .method(request.getMethod(), createRequestBody(request.getBody()));
-
-    List<Header> headers = request.getHeaders();
-    for (int i = 0, size = headers.size(); i < size; i++) {
-      Header header = headers.get(i);
-      String value = header.getValue();
-      if (value == null) value = "";
-      builder.addHeader(header.getName(), value);
-    }
-
-    return builder.build();
+        .headers(request.getHeaders())
+        .method(request.getMethod(), createRequestBody(request.getBody()))
+        .build();
   }
 
   static Response parseResponse(com.squareup.okhttp.Response response) {
     return new Response(response.request().urlString(), response.code(), response.message(),
-        createHeaders(response.headers()), createResponseBody(response.body()));
+        response.headers(), createResponseBody(response.body()));
   }
 
   private static RequestBody createRequestBody(final TypedOutput body) {
@@ -122,14 +111,5 @@ public class OkClient implements Client {
         return body.byteStream();
       }
     };
-  }
-
-  private static List<Header> createHeaders(Headers headers) {
-    int size = headers.size();
-    List<Header> headerList = new ArrayList<Header>(size);
-    for (int i = 0; i < size; i++) {
-      headerList.add(new Header(headers.name(i), headers.value(i)));
-    }
-    return headerList;
   }
 }

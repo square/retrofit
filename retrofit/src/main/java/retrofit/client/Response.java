@@ -15,9 +15,7 @@
  */
 package retrofit.client;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.squareup.okhttp.Headers;
 import retrofit.mime.TypedInput;
 
 /**
@@ -31,10 +29,10 @@ public final class Response {
   private final String url;
   private final int status;
   private final String reason;
-  private final List<Header> headers;
+  private final Headers headers;
   private final TypedInput body;
 
-  public Response(String url, int status, String reason, List<Header> headers, TypedInput body) {
+  public Response(String url, int status, String reason, Headers headers, TypedInput body) {
     if (url == null) {
       throw new IllegalArgumentException("url == null");
     }
@@ -51,7 +49,7 @@ public final class Response {
     this.url = url;
     this.status = status;
     this.reason = reason;
-    this.headers = Collections.unmodifiableList(new ArrayList<Header>(headers));
+    this.headers = headers;
     this.body = body;
   }
 
@@ -71,7 +69,7 @@ public final class Response {
   }
 
   /** An unmodifiable collection of headers. */
-  public List<Header> getHeaders() {
+  public Headers getHeaders() {
     return headers;
   }
 

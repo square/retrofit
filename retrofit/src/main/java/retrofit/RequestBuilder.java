@@ -15,17 +15,14 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.Headers;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
 import retrofit.http.Body;
@@ -42,6 +39,8 @@ import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
+  private static final Headers NO_HEADERS = Headers.of();
+
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
@@ -54,7 +53,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
   private String relativeUrl;
   private StringBuilder queryParams;
-  private List<Header> headers;
+  private Headers.Builder headers;
   private String contentTypeHeader;
 
   RequestBuilder(String apiUrl, RestMethodInfo methodInfo, Converter converter) {
@@ -66,7 +65,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     async = methodInfo.executionType == RestMethodInfo.ExecutionType.ASYNC;
 
     if (methodInfo.headers != null) {
-      headers = new ArrayList<Header>(methodInfo.headers);
+      headers = methodInfo.headers.newBuilder();
     }
     contentTypeHeader = methodInfo.contentTypeHeader;
 
@@ -107,11 +106,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       return;
     }
 
-    List<Header> headers = this.headers;
+    Headers.Builder headers = this.headers;
     if (headers == null) {
-      this.headers = headers = new ArrayList<Header>(2);
+      this.headers = headers = new Headers.Builder();
     }
-    headers.add(new Header(name, value));
+    headers.add(name, value);
   }
 
   @Override public void addPathParam(String name, String value) {
@@ -382,19 +381,19 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     TypedOutput body = this.body;
-    List<Header> headers = this.headers;
+    Headers.Builder headerBuilder = this.headers;
     if (contentTypeHeader != null) {
       if (body != null) {
         body = new MimeOverridingTypedOutput(body, contentTypeHeader);
       } else {
-        Header header = new Header("Content-Type", contentTypeHeader);
-        if (headers == null) {
-          headers = Collections.singletonList(header);
-        } else {
-          headers.add(header);
+        if (headerBuilder == null) {
+          headerBuilder = new Headers.Builder();
         }
+        headerBuilder.add("Content-Type", contentTypeHeader);
       }
     }
+
+    Headers headers = headerBuilder != null ? headerBuilder.build() : NO_HEADERS;
 
     return new Request(requestMethod, url.toString(), headers, body);
   }

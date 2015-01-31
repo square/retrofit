@@ -26,12 +26,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import retrofit.client.Client;
-import retrofit.client.Header;
 import retrofit.client.OkClient;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
+import retrofit.http.Header;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
