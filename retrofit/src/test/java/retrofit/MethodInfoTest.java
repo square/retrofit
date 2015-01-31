@@ -2,13 +2,13 @@
 package retrofit;
 
 import com.google.gson.reflect.TypeToken;
+import com.squareup.okhttp.Response;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
-import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
@@ -18,7 +18,7 @@ import rx.Observable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unused") // Lots of unused parameters for example code.
-public class RestMethodInfoTest {
+public class MethodInfoTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
@@ -39,7 +39,7 @@ public class RestMethodInfoTest {
   }
 
   private static void expectParams(String path, String... expected) {
-    Set<String> calculated = RestMethodInfo.parsePathParameters(path);
+    Set<String> calculated = MethodInfo.parsePathParameters(path);
     assertThat(calculated).hasSize(expected.length);
     if (expected.length > 0) {
       assertThat(calculated).containsExactly(expected);
@@ -57,7 +57,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.requestObjectType).isEqualTo(Dummy.class);
   }
 
@@ -69,7 +69,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.requestObjectType).isEqualTo(expected);
   }
@@ -82,7 +82,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     Type expected = new TypeToken<List<? super String>>() {}.getType();
     assertThat(methodInfo.requestObjectType).isEqualTo(expected);
   }
@@ -94,7 +94,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -105,7 +105,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -116,7 +116,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -127,7 +127,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
@@ -144,9 +144,9 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(
-        RestMethodInfoTest.class.getDeclaredField("extendingGenericCallbackType").getGenericType());
+        MethodInfoTest.class.getDeclaredField("extendingGenericCallbackType").getGenericType());
   }
 
   @Test public void synchronousResponse() {
@@ -157,7 +157,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -169,7 +169,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
 
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
@@ -183,7 +183,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -195,7 +195,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     assertThat(methodInfo.responseObjectType).isEqualTo(Response.class);
   }
 
@@ -207,7 +207,7 @@ public class RestMethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    RestMethodInfo methodInfo = new RestMethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method);
     Type expected = new TypeToken<List<String>>() {}.getType();
     assertThat(methodInfo.responseObjectType).isEqualTo(expected);
   }

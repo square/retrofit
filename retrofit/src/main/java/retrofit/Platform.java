@@ -18,7 +18,9 @@ package retrofit;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import com.squareup.okhttp.OkHttpClient;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import retrofit.converter.Converter;
 import retrofit.converter.GsonConverter;
 
@@ -49,6 +51,14 @@ class Platform {
 
   Executor defaultCallbackExecutor() {
     return new Utils.SynchronousExecutor();
+  }
+
+  OkHttpClient defaultClient() {
+    OkHttpClient client = new OkHttpClient();
+    client.setConnectTimeout(15, TimeUnit.SECONDS);
+    client.setReadTimeout(15, TimeUnit.SECONDS);
+    client.setWriteTimeout(15, TimeUnit.SECONDS);
+    return client;
   }
 
   /** Provides sane defaults for operation on Android. */

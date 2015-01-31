@@ -7,14 +7,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import java.io.ByteArrayOutputStream;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import okio.Buffer;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.mime.TypedOutput;
-import retrofit.mime.TypedString;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 public final class GsonConverterTest {
@@ -51,25 +54,25 @@ public final class GsonConverterTest {
   }
 
   @Test public void serialization() throws IOException {
-    TypedOutput output = converter.toBody(new Impl("value"), Impl.class);
-    assertJson("{\"theName\":\"value\"}", output);
+    RequestBody body = converter.toBody(new Impl("value"), Impl.class);
+    assertBody(body).isEqualTo("{\"theName\":\"value\"}");
   }
 
   @Test public void serializationTypeUsed() throws IOException {
-    TypedOutput output = converter.toBody(new Impl("value"), Example.class);
-    assertJson("{\"name\":\"value\"}", output);
+    RequestBody body = converter.toBody(new Impl("value"), Example.class);
+    assertBody(body).isEqualTo("{\"name\":\"value\"}");
   }
 
   @Test public void deserialization() throws IOException {
-    TypedString json = new TypedString("{\"theName\":\"value\"}");
-    Impl impl = (Impl) converter.fromBody(json, Impl.class);
+    ResponseBody body =
+        ResponseBody.create(MediaType.parse("text/plain"), "{\"theName\":\"value\"}");
+    Impl impl = (Impl) converter.fromBody(body, Impl.class);
     assertEquals("value", impl.getName());
   }
 
-  private void assertJson(String expected, TypedOutput output) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    output.writeTo(baos);
-    String json = new String(baos.toByteArray(), "UTF-8");
-    assertEquals(expected, json);
+  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body) throws IOException {
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    return assertThat(buffer.readUtf8());
   }
 }

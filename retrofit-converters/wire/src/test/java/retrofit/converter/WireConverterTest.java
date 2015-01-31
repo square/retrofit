@@ -1,15 +1,15 @@
 // Copyright 2013 Square, Inc.
 package retrofit.converter;
 
-import com.google.common.io.BaseEncoding;
-import com.squareup.wire.Wire;
-import java.io.ByteArrayOutputStream;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import okio.Buffer;
+import okio.ByteString;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.Test;
-import retrofit.mime.TypedByteArray;
-import retrofit.mime.TypedOutput;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -17,24 +17,24 @@ import static org.junit.Assert.fail;
 public final class WireConverterTest {
   private static final Person PROTO =
       new Person.Builder().id(42).name("Omar Little").email("omar@theking.org").build();
-  private static final String PROTO_ENCODED = "CgtPbWFyIExpdHRsZRAqGhBvbWFyQHRoZWtpbmcub3Jn";
+  private static final String ENCODED_PROTO = "CgtPbWFyIExpdHRsZRAqGhBvbWFyQHRoZWtpbmcub3Jn";
 
-  private WireConverter converter = new WireConverter(new Wire());
+  private final WireConverter converter = new WireConverter();
 
   @Test public void serialize() throws Exception {
-    TypedOutput protoBytes = converter.toBody(PROTO, Person.class);
-    assertThat(protoBytes.mimeType()).isEqualTo("application/x-protobuf");
-    assertThat(bytesOf(protoBytes)).isEqualTo(bytesOf(decodeBase64(PROTO_ENCODED)));
+    RequestBody body = converter.toBody(PROTO, Person.class);
+    assertThat(body.contentType().toString()).isEqualTo("application/x-protobuf");
+    assertBody(body).isEqualTo(ENCODED_PROTO);
   }
 
   @Test public void deserialize() throws Exception {
-    Object proto = converter.fromBody(decodeBase64(PROTO_ENCODED), Person.class);
+    Object proto = converter.fromBody(protoResponse(ENCODED_PROTO), Person.class);
     assertThat(proto).isEqualTo(PROTO);
   }
 
   @Test public void deserializeWrongClass() throws Exception {
     try {
-      converter.fromBody(decodeBase64(PROTO_ENCODED), String.class);
+      converter.fromBody(protoResponse(ENCODED_PROTO), String.class);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Expected a proto message but was java.lang.String");
@@ -43,7 +43,7 @@ public final class WireConverterTest {
 
   @Test public void deserializeWrongType() throws Exception {
     try {
-      converter.fromBody(decodeBase64(PROTO_ENCODED),
+      converter.fromBody(protoResponse(ENCODED_PROTO),
           ArrayList.class.getGenericSuperclass());
       fail();
     } catch (IllegalArgumentException e) {
@@ -53,32 +53,20 @@ public final class WireConverterTest {
 
   @Test public void deserializeWrongValue() throws Exception {
     try {
-      converter.fromBody(decodeBase64("////"), Person.class);
+      converter.fromBody(protoResponse("////"), Person.class);
       fail();
     } catch (IOException ignored) {
     }
   }
 
-  @Test public void deserializeWrongMime() throws Exception {
-    try {
-      converter.fromBody(decodeBase64("////", "yummy/bytes"), Person.class);
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Expected a proto but was: yummy/bytes");
-    }
+  private static ResponseBody protoResponse(String encodedProto) {
+    return ResponseBody.create(MediaType.parse("application/x-protobuf"),
+        ByteString.decodeBase64(encodedProto).toByteArray());
   }
 
-  private static byte[] bytesOf(TypedOutput protoBytes) throws IOException {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    protoBytes.writeTo(bytes);
-    return bytes.toByteArray();
-  }
-
-  private static TypedByteArray decodeBase64(String base64) throws UnsupportedEncodingException {
-    return decodeBase64(base64, "application/x-protobuf");
-  }
-
-  private static TypedByteArray decodeBase64(String base64, String mime) throws UnsupportedEncodingException {
-    return new TypedByteArray(mime, BaseEncoding.base64().decode(base64));
+  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body) throws IOException {
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    return assertThat(buffer.readByteString().base64());
   }
 }

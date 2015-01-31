@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.Response;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -25,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -49,7 +49,7 @@ import retrofit.http.Streaming;
 import rx.Observable;
 
 /** Request metadata about a service interface declaration. */
-final class RestMethodInfo {
+final class MethodInfo {
   enum ExecutionType {
     ASYNC,
     RX,
@@ -89,7 +89,7 @@ final class RestMethodInfo {
   // Parameter-level details
   Annotation[] requestParamAnnotations;
 
-  RestMethodInfo(Method method) {
+  MethodInfo(Method method) {
     this.method = method;
     executionType = parseResponseType();
 
@@ -138,12 +138,14 @@ final class RestMethodInfo {
         if (requestType != RequestType.SIMPLE) {
           throw methodError("Only one encoding annotation is allowed.");
         }
-        requestType = RequestType.MULTIPART;
+        throw new UnsupportedOperationException("Multipart shall return!");
+        //requestType = RequestType.MULTIPART;
       } else if (annotationType == FormUrlEncoded.class) {
         if (requestType != RequestType.SIMPLE) {
           throw methodError("Only one encoding annotation is allowed.");
         }
-        requestType = RequestType.FORM_URL_ENCODED;
+        throw new UnsupportedOperationException("Form URL encoding shall return!");
+        //requestType = RequestType.FORM_URL_ENCODED;
       } else if (annotationType == Streaming.class) {
         if (responseObjectType != Response.class) {
           throw methodError(

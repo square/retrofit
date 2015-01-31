@@ -15,6 +15,11 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -22,18 +27,10 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReference;
-import retrofit.client.Client;
-import retrofit.client.OkClient;
-import retrofit.client.Request;
-import retrofit.client.Response;
 import retrofit.converter.Converter;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
-import retrofit.mime.TypedInput;
-import retrofit.mime.TypedOutput;
 
 /**
  * Adapts a Java interface to a REST API.
@@ -101,8 +98,8 @@ import retrofit.mime.TypedOutput;
  * @author Jake Wharton (jw@squareup.com)
  */
 public class RestAdapter {
-  private final Map<Class<?>, Map<Method, RestMethodInfo>> serviceMethodInfoCache =
-      new LinkedHashMap<Class<?>, Map<Method, RestMethodInfo>>();
+  private final Map<Class<?>, Map<Method, MethodInfo>> serviceMethodInfoCache =
+      new LinkedHashMap<Class<?>, Map<Method, MethodInfo>>();
 
   final Endpoint endpoint;
   final Executor callbackExecutor;
@@ -110,10 +107,10 @@ public class RestAdapter {
   final Converter converter;
   final ErrorHandler errorHandler;
 
-  private final Client client;
+  private final OkHttpClient client;
   private RxSupport rxSupport;
 
-  private RestAdapter(Endpoint endpoint, Client client, Executor callbackExecutor,
+  private RestAdapter(Endpoint endpoint, OkHttpClient client, Executor callbackExecutor,
       RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler) {
     this.endpoint = endpoint;
     this.client = client;
@@ -131,22 +128,22 @@ public class RestAdapter {
         new RestHandler(getMethodInfoCache(service)));
   }
 
-  Map<Method, RestMethodInfo> getMethodInfoCache(Class<?> service) {
+  Map<Method, MethodInfo> getMethodInfoCache(Class<?> service) {
     synchronized (serviceMethodInfoCache) {
-      Map<Method, RestMethodInfo> methodInfoCache = serviceMethodInfoCache.get(service);
+      Map<Method, MethodInfo> methodInfoCache = serviceMethodInfoCache.get(service);
       if (methodInfoCache == null) {
-        methodInfoCache = new LinkedHashMap<Method, RestMethodInfo>();
+        methodInfoCache = new LinkedHashMap<Method, MethodInfo>();
         serviceMethodInfoCache.put(service, methodInfoCache);
       }
       return methodInfoCache;
     }
   }
 
-  static RestMethodInfo getMethodInfo(Map<Method, RestMethodInfo> cache, Method method) {
+  static MethodInfo getMethodInfo(Map<Method, MethodInfo> cache, Method method) {
     synchronized (cache) {
-      RestMethodInfo methodInfo = cache.get(method);
+      MethodInfo methodInfo = cache.get(method);
       if (methodInfo == null) {
-        methodInfo = new RestMethodInfo(method);
+        methodInfo = new MethodInfo(method);
         cache.put(method, methodInfo);
       }
       return methodInfo;
@@ -154,9 +151,9 @@ public class RestAdapter {
   }
 
   private class RestHandler implements InvocationHandler {
-    private final Map<Method, RestMethodInfo> methodDetailsCache;
+    private final Map<Method, MethodInfo> methodDetailsCache;
 
-    RestHandler(Map<Method, RestMethodInfo> methodDetailsCache) {
+    RestHandler(Map<Method, MethodInfo> methodDetailsCache) {
       this.methodDetailsCache = methodDetailsCache;
     }
 
@@ -168,7 +165,7 @@ public class RestAdapter {
         return method.invoke(this, args);
       }
 
-      RestMethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
+      MethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
       Request request = createRequest(methodInfo, args);
       switch (methodInfo.executionType) {
         case SYNC:
@@ -183,69 +180,46 @@ public class RestAdapter {
       }
     }
 
-    private Object invokeSync(RestMethodInfo methodInfo, Request request) throws Throwable {
-      final CountDownLatch latch = new CountDownLatch(1);
-      final AtomicReference<Object> result = new AtomicReference<Object>();
-      final AtomicReference<RetrofitError> error = new AtomicReference<RetrofitError>();
-      invokeAsync(methodInfo, request, new Callback() {
-        @Override public void success(Object o, Response response) {
-          result.set(o);
-          latch.countDown();
-        }
-
-        @Override public void failure(RetrofitError e) {
-          error.set(e);
-          latch.countDown();
-        }
-      });
-      latch.await();
-
-      RetrofitError actualError = error.get();
-      if (actualError != null) {
-        throw handleError(actualError);
+    private Object invokeSync(MethodInfo methodInfo, Request request) throws Throwable {
+      try {
+        Response response = client.newCall(request).execute();
+        return createResult(methodInfo, response);
+      } catch (IOException e) {
+        throw handleError(RetrofitError.networkFailure(request.urlString(), e));
+      } catch (RetrofitError error) {
+        throw handleError(error);
       }
-      return result.get();
     }
 
-    private Throwable handleError(RetrofitError actualError) {
-      Throwable throwable = errorHandler.handleError(actualError);
+    private Throwable handleError(RetrofitError error) {
+      Throwable throwable = errorHandler.handleError(error);
       if (throwable == null) {
-        return new IllegalStateException("Error handler returned null for wrapped exception.");
+        return new IllegalStateException("Error handler returned null for wrapped exception.",
+            error);
       }
       return throwable;
     }
 
-    private void invokeAsync(final RestMethodInfo methodInfo, final Request request,
+    private void invokeAsync(final MethodInfo methodInfo, final Request request,
         final Callback callback) {
-      Client.AsyncCallback async = new Client.AsyncCallback() {
+      Call call = client.newCall(request);
+      call.enqueue(new com.squareup.okhttp.Callback() {
+        @Override public void onFailure(Request request, IOException e) {
+          callFailure(callback, RetrofitError.networkFailure(request.urlString(), e));
+        }
+
         @Override public void onResponse(Response response) {
           try {
-            handleAsyncResponse(methodInfo, request, response, callback);
-          } catch (RetrofitError e) {
-            Throwable throwable = errorHandler.handleError(e);
-            if (throwable != e) {
-              e = RetrofitError.unexpectedError(request.getUrl(), throwable);
-            }
-            callFailure(callback, e);
-          } catch (IOException e) {
-            callFailure(callback, RetrofitError.networkError(request.getUrl(), e));
-          } catch (Throwable t) {
-            callFailure(callback, RetrofitError.unexpectedError(request.getUrl(), t));
+            Object result = createResult(methodInfo, response);
+            callResponse(callback, result, response);
+          } catch (RetrofitError error) {
+            callFailure(callback, error);
           }
         }
-
-        @Override public void onFailure(IOException e) {
-          callFailure(callback, RetrofitError.networkError(request.getUrl(), e));
-        }
-      };
-      try {
-        client.execute(request, async);
-      } catch (RuntimeException e) {
-        callFailure(callback, RetrofitError.unexpectedError(request.getUrl(), e));
-      }
+      });
     }
 
-    private Object invokeRx(final RestMethodInfo methodInfo, final Request request) {
+    private Object invokeRx(final MethodInfo methodInfo, final Request request) {
       if (rxSupport == null) {
         if (Platform.HAS_RX_JAVA) {
           rxSupport = new RxSupport();
@@ -254,65 +228,84 @@ public class RestAdapter {
         }
       }
       return rxSupport.createRequestObservable(new RxSupport.Invoker() {
-        @Override public void invoke(final RxSupport.Callback callback) {
-          invokeAsync(methodInfo, request, new Callback() {
-            @Override public void success(Object o, Response response) {
-              callback.result(o);
+        @Override public void invoke(final Callback callback) {
+          Call call = client.newCall(request);
+          call.enqueue(new com.squareup.okhttp.Callback() {
+            @Override public void onFailure(Request request, IOException e) {
+              callback.next(RetrofitError.networkFailure(request.urlString(), e));
             }
 
-            @Override public void failure(RetrofitError error) {
-              callback.error(handleError(error));
+            @Override public void onResponse(Response response) {
+              try {
+                Object result = createResult(methodInfo, response);
+                callback.next(result);
+              } catch (RetrofitError error) {
+                callback.error(handleError(error));
+              }
             }
           });
+
         }
       });
     }
 
-    private void handleAsyncResponse(RestMethodInfo methodInfo, Request request, Response response,
-        Callback callback) throws IOException {
-      String url = request.getUrl();
+    /**
+     * Create the object to return to the caller for a response.
+     *
+     * @throws RetrofitError if any HTTP, network, or unexpected errors occurred.
+     */
+    private Object createResult(MethodInfo methodInfo, Response response) {
+      try {
+        return parseResult(methodInfo, response);
+      } catch (RetrofitError error) {
+        throw error; // Let our own errors pass through.
+      } catch (IOException e) {
+        throw RetrofitError.networkError(response, e);
+      } catch (Throwable t) {
+        throw RetrofitError.unexpectedError(response, t);
+      }
+    }
+
+    /**
+     * Parse the object to return to the caller from a response.
+     *
+     * @throws RetrofitError on non-2xx response codes (kind = HTTP).
+     * @throws IOException on network problems reading the response data.
+     * @throws RuntimeException on malformed response data.
+     */
+    private Object parseResult(MethodInfo methodInfo, Response response)
+        throws IOException {
       Type type = methodInfo.responseObjectType;
 
-      int statusCode = response.getStatus();
+      int statusCode = response.code();
       if (statusCode < 200 || statusCode >= 300) {
         response = Utils.readBodyToBytesIfNecessary(response);
-        throw RetrofitError.httpError(url, response, converter, type);
+        throw RetrofitError.httpError(response, converter, type);
       }
 
-      // Caller requested the raw Response object directly.
       if (type.equals(Response.class)) {
         if (!methodInfo.isStreaming) {
           // Read the entire stream and replace with one backed by a byte[].
           response = Utils.readBodyToBytesIfNecessary(response);
         }
-        callResponse(callback, response, response);
-      } else {
-        handleAsyncResponseBody(request, response, type, callback);
+        return response;
       }
-    }
 
-    private void handleAsyncResponseBody(Request request, Response response, Type type,
-        Callback callback) throws IOException {
-      TypedInput body = response.getBody();
+      ResponseBody body = response.body();
       if (body == null) {
-        callResponse(callback, null, response);
-        return;
+        return null;
       }
 
-      ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
+      ExceptionCatchingRequestBody wrapped = new ExceptionCatchingRequestBody(body);
       try {
-        Object convert = converter.fromBody(wrapped, type);
-        callResponse(callback, convert, response);
+        return converter.fromBody(wrapped, type);
       } catch (RuntimeException e) {
         // If the underlying input stream threw an exception, propagate that rather than
         // indicating that it was a conversion exception.
         if (wrapped.threwException()) {
           throw wrapped.getThrownException();
         }
-
-        // The response body was partially read by the converter. Replace it with null.
-        response = Utils.replaceResponseBody(response, null);
-        throw RetrofitError.unexpectedError(request.getUrl(), response, converter, type, e);
+        throw e;
       }
     }
 
@@ -325,15 +318,25 @@ public class RestAdapter {
       });
     }
 
-    private void callFailure(final Callback callback, final RetrofitError error) {
+    private void callFailure(final Callback callback, RetrofitError error) {
+      Throwable throwable = handleError(error);
+      if (throwable != error) {
+        Response response = error.getResponse();
+        if (response != null) {
+          error = RetrofitError.unexpectedError(response, throwable);
+        } else {
+          error = RetrofitError.unexpectedError(error.getUrl(), throwable);
+        }
+      }
+      final RetrofitError finalError = error;
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          callback.failure(error);
+          callback.failure(finalError);
         }
       });
     }
 
-    private Request createRequest(RestMethodInfo methodInfo, Object[] args) {
+    private Request createRequest(MethodInfo methodInfo, Object[] args) {
       String serverUrl = endpoint.url();
       RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
       requestBuilder.setArguments(args);
@@ -352,7 +355,7 @@ public class RestAdapter {
    */
   public static class Builder {
     private Endpoint endpoint;
-    private Client client;
+    private OkHttpClient client;
     private Executor callbackExecutor;
     private RequestInterceptor requestInterceptor;
     private Converter converter;
@@ -373,7 +376,7 @@ public class RestAdapter {
     }
 
     /** The HTTP client used for requests. */
-    public Builder setClient(Client client) {
+    public Builder setClient(OkHttpClient client) {
       if (client == null) {
         throw new NullPointerException("Client may not be null.");
       }
@@ -437,7 +440,7 @@ public class RestAdapter {
         converter = Platform.get().defaultConverter();
       }
       if (client == null) {
-        client = new OkClient();
+        client = Platform.get().defaultClient();
       }
       if (callbackExecutor == null) {
         callbackExecutor = Platform.get().defaultCallbackExecutor();

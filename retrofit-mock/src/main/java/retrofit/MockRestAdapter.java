@@ -1,6 +1,8 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -10,8 +12,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import retrofit.client.Request;
-import retrofit.client.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Func1;
@@ -218,9 +218,9 @@ public final class MockRestAdapter {
 
   private class MockHandler implements InvocationHandler {
     private final Object mockService;
-    private final Map<Method, RestMethodInfo> methodInfoCache;
+    private final Map<Method, MethodInfo> methodInfoCache;
 
-    public MockHandler(Object mockService, Map<Method, RestMethodInfo> methodInfoCache) {
+    public MockHandler(Object mockService, Map<Method, MethodInfo> methodInfoCache) {
       this.mockService = mockService;
       this.methodInfoCache = methodInfoCache;
     }
@@ -233,10 +233,10 @@ public final class MockRestAdapter {
       }
 
       // Load or create the details cache for the current method.
-      final RestMethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
+      final MethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
       final Request request = buildRequest(methodInfo, restAdapter.requestInterceptor, args);
 
-      if (methodInfo.executionType == RestMethodInfo.ExecutionType.SYNC) {
+      if (methodInfo.executionType == MethodInfo.ExecutionType.SYNC) {
         try {
           return invokeSync(methodInfo, args, request);
         } catch (RetrofitError error) {
@@ -249,7 +249,7 @@ public final class MockRestAdapter {
         }
       }
 
-      if (methodInfo.executionType == RestMethodInfo.ExecutionType.RX) {
+      if (methodInfo.executionType == MethodInfo.ExecutionType.RX) {
         if (mockRxSupport == null) {
           if (Platform.HAS_RX_JAVA) {
             mockRxSupport = new MockRxSupport(restAdapter, executor);
@@ -268,7 +268,7 @@ public final class MockRestAdapter {
       return null; // Asynchronous methods should have return type of void.
     }
 
-    private Request buildRequest(RestMethodInfo methodInfo, RequestInterceptor interceptor,
+    private Request buildRequest(MethodInfo methodInfo, RequestInterceptor interceptor,
         Object[] args) throws Throwable {
       // Begin building a normal request.
       String apiUrl = restAdapter.endpoint.url();
@@ -281,14 +281,14 @@ public final class MockRestAdapter {
       return requestBuilder.build();
     }
 
-    private Object invokeSync(RestMethodInfo methodInfo, Object[] args, Request request)
+    private Object invokeSync(MethodInfo methodInfo, Object[] args, Request request)
         throws Throwable {
-      String url = request.getUrl();
+      String url = request.urlString();
 
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
         IOException exception = new IOException("Mock network error!");
-        throw RetrofitError.networkError(url, exception);
+        throw RetrofitError.networkFailure(url, exception);
       }
 
       int callDelay = calculateDelayForCall();
@@ -307,7 +307,7 @@ public final class MockRestAdapter {
           throw innerEx;
         }
         MockHttpException httpEx = (MockHttpException) innerEx;
-        Response response = httpEx.toResponse(restAdapter.converter);
+        Response response = httpEx.toResponse(request, restAdapter.converter);
 
         // Sleep for whatever amount of time is left to satisfy the network delay, if any.
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - beforeNanos);
@@ -318,15 +318,15 @@ public final class MockRestAdapter {
       }
     }
 
-    private void invokeAsync(final RestMethodInfo methodInfo, final Object[] args,
-        Request request) {
-      final String url = request.getUrl();
+    private void invokeAsync(final MethodInfo methodInfo, final Object[] args,
+        final Request request) {
+      final String url = request.urlString();
       final Callback callback = (Callback) args[args.length - 1];
 
       if (calculateIsFailure()) {
         sleep(calculateDelayForError());
         IOException exception = new IOException("Mock network error!");
-        RetrofitError error = RetrofitError.networkError(url, exception);
+        RetrofitError error = RetrofitError.networkFailure(url, exception);
         Throwable cause = restAdapter.errorHandler.handleError(error);
         final RetrofitError e = cause == error ? error : unexpectedError(error.getUrl(), cause);
         restAdapter.callbackExecutor.execute(new Runnable() {
@@ -354,7 +354,7 @@ public final class MockRestAdapter {
             }
 
             MockHttpException httpEx = (MockHttpException) innerEx;
-            Response response = httpEx.toResponse(restAdapter.converter);
+            Response response = httpEx.toResponse(request, restAdapter.converter);
 
             RetrofitError error = new MockHttpRetrofitError(httpEx.getMessage(), url, response,
                 httpEx.responseBody, methodInfo.responseObjectType);
@@ -412,7 +412,7 @@ public final class MockRestAdapter {
       errorHandler = restAdapter.errorHandler;
     }
 
-    Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
+    Observable createMockObservable(final MockHandler mockHandler, final MethodInfo methodInfo,
         final Object[] args, final Request request) {
       return Observable.just("nothing") //
           .flatMap(new Func1<String, Observable<?>>() {

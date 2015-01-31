@@ -1,8 +1,8 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.squareup.okhttp.Response;
 import java.lang.reflect.Type;
-import retrofit.client.Response;
 
 class MockHttpRetrofitError extends RetrofitError {
   private final Object body;
