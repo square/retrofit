@@ -19,13 +19,14 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Documented
-@Target(ANNOTATION_TYPE)
+@Target(METHOD)
 @Retention(RUNTIME)
-public @interface RestMethod {
-  String value();
+public @interface HTTP {
+  String method();
+  String path();
   boolean hasBody() default false;
 }

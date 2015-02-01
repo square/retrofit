@@ -27,18 +27,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import retrofit.client.Response;
 import retrofit.http.Body;
+import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
+import retrofit.http.GET;
+import retrofit.http.HEAD;
 import retrofit.http.Header;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
+import retrofit.http.PATCH;
+import retrofit.http.POST;
+import retrofit.http.PUT;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.RestMethod;
+import retrofit.http.HTTP;
 import retrofit.http.Streaming;
 import rx.Observable;
 
@@ -107,31 +113,21 @@ final class RestMethodInfo {
   private void parseMethodAnnotations() {
     for (Annotation methodAnnotation : method.getAnnotations()) {
       Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-      RestMethod methodInfo = null;
-
-      // Look for a @RestMethod annotation on the parameter annotation indicating request method.
-      for (Annotation innerAnnotation : annotationType.getAnnotations()) {
-        if (RestMethod.class == innerAnnotation.annotationType()) {
-          methodInfo = (RestMethod) innerAnnotation;
-          break;
-        }
-      }
-
-      if (methodInfo != null) {
-        if (requestMethod != null) {
-          throw methodError("Only one HTTP method is allowed. Found: %s and %s.", requestMethod,
-              methodInfo.value());
-        }
-        String path;
-        try {
-          path = (String) annotationType.getMethod("value").invoke(methodAnnotation);
-        } catch (Exception e) {
-          throw methodError("Failed to extract String 'value' from @%s annotation.",
-              annotationType.getSimpleName());
-        }
-        parsePath(path);
-        requestMethod = methodInfo.value();
-        requestHasBody = methodInfo.hasBody();
+      if (annotationType == DELETE.class) {
+        parseHttpMethodAndPath("DELETE", ((DELETE) methodAnnotation).value(), false);
+      } else if (annotationType == GET.class) {
+        parseHttpMethodAndPath("GET", ((GET) methodAnnotation).value(), false);
+      } else if (annotationType == HEAD.class) {
+        parseHttpMethodAndPath("HEAD", ((HEAD) methodAnnotation).value(), false);
+      } else if (annotationType == PATCH.class) {
+        parseHttpMethodAndPath("PATCH", ((PATCH) methodAnnotation).value(), true);
+      } else if (annotationType == POST.class) {
+        parseHttpMethodAndPath("POST", ((POST) methodAnnotation).value(), true);
+      } else if (annotationType == PUT.class) {
+        parseHttpMethodAndPath("PUT", ((PUT) methodAnnotation).value(), true);
+      } else if (annotationType == HTTP.class) {
+        HTTP http = (HTTP) methodAnnotation;
+        parseHttpMethodAndPath(http.method(), http.path(), http.hasBody());
       } else if (annotationType == Headers.class) {
         String[] headersToParse = ((Headers) methodAnnotation).value();
         if (headersToParse.length == 0) {
@@ -174,7 +170,11 @@ final class RestMethodInfo {
   }
 
   /** Loads {@link #requestUrl}, {@link #requestUrlParamNames}, and {@link #requestQuery}. */
-  private void parsePath(String path) {
+  private void parseHttpMethodAndPath(String method, String path, boolean hasBody) {
+    if (requestMethod != null) {
+      throw methodError("Only one HTTP method is allowed. Found: %s and %s.", requestMethod,
+          method);
+    }
     if (path == null || path.length() == 0 || path.charAt(0) != '/') {
       throw methodError("URL path \"%s\" must start with '/'.", path);
     }
@@ -197,6 +197,8 @@ final class RestMethodInfo {
 
     Set<String> urlParams = parsePathParameters(path);
 
+    requestMethod = method;
+    requestHasBody = hasBody;
     requestUrl = url;
     requestUrlParamNames = urlParams;
     requestQuery = query;

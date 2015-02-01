@@ -31,6 +31,7 @@ import retrofit.client.Request;
 import retrofit.client.Response;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
+import retrofit.http.HTTP;
 import retrofit.http.Header;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
@@ -43,10 +44,9 @@ import retrofit.mime.TypedOutput;
  * <p>
  * The relative path for a given method is obtained from an annotation on the method describing
  * the request type. The built-in methods are {@link retrofit.http.GET GET},
- * {@link retrofit.http.PUT PUT}, {@link retrofit.http.POST POST}, {@link retrofit.http.HEAD HEAD},
- * and {@link retrofit.http.DELETE DELETE}. You can define your own HTTP method by creating an
- * annotation that takes a {code String} value and itself is annotated with
- * {@link retrofit.http.RestMethod @RestMethod}.
+ * {@link retrofit.http.PUT PUT}, {@link retrofit.http.POST POST}, {@link retrofit.http.POST PATCH},
+ * {@link retrofit.http.HEAD HEAD}, and {@link retrofit.http.DELETE DELETE}. You can use a custom
+ * HTTP method with {@link HTTP @HTTP}.
  * <p>
  * Method parameters can be used to replace parts of the URL by annotating them with
  * {@link retrofit.http.Path @Path}. Replacement sections are denoted by an identifier surrounded

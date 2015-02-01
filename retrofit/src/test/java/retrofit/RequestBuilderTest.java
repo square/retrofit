@@ -4,9 +4,6 @@ package retrofit;
 import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -26,6 +23,7 @@ import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.HEAD;
+import retrofit.http.HTTP;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
 import retrofit.http.PATCH;
@@ -36,7 +34,6 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.RestMethod;
 import retrofit.http.Streaming;
 import retrofit.mime.MimeHelper;
 import retrofit.mime.MultipartTypedOutput;
@@ -46,8 +43,6 @@ import retrofit.mime.TypedString;
 import rx.Observable;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -55,38 +50,9 @@ import static org.junit.Assert.fail;
 public class RequestBuilderTest {
   private RequestInterceptor interceptor;
 
-  @RestMethod("BAD")
-  @Target(METHOD) @Retention(RUNTIME)
-  private @interface BAD_CUSTOM {
-    int value();
-  }
-
-  @Test public void customWithoutRestMethod() {
-    class Example {
-      @BAD_CUSTOM(12) //
-      Response method() {
-        return null;
-      }
-    }
-
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Failed to extract String 'value' from @BAD_CUSTOM annotation.");
-    }
-  }
-
-  @RestMethod("CUSTOM1")
-  @Target(METHOD) @Retention(RUNTIME)
-  private @interface CUSTOM1 {
-    String value();
-  }
-
   @Test public void custom1Method() {
     class Example {
-      @CUSTOM1("/foo") //
+      @HTTP(method = "CUSTOM1", path = "/foo")
       Response method() {
         return null;
       }
@@ -98,15 +64,9 @@ public class RequestBuilderTest {
     assertThat(request.getBody()).isNull();
   }
 
-  @RestMethod(value = "CUSTOM2", hasBody = true)
-  @Target(METHOD) @Retention(RUNTIME)
-  private @interface CUSTOM2 {
-    String value();
-  }
-
   @Test public void custom2Method() {
     class Example {
-      @CUSTOM2("/foo") //
+      @HTTP(method = "CUSTOM2", path = "/foo", hasBody = true)
       Response method(@Body TypedInput body) {
         return null;
       }
