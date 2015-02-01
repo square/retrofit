@@ -1,9 +1,7 @@
 package retrofit.converter;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,18 +29,12 @@ public class JacksonConverter implements Converter {
     this.objectMapper = objectMapper;
   }
 
-  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(TypedInput body, Type type) throws IOException {
     InputStream in = null;
     try {
       JavaType javaType = objectMapper.getTypeFactory().constructType(type);
       in = body.in();
       return objectMapper.readValue(in, javaType);
-    } catch (JsonParseException e) {
-      throw new ConversionException(e);
-    } catch (JsonMappingException e) {
-      throw new ConversionException(e);
-    } catch (IOException e) {
-      throw new ConversionException(e);
     } finally {
       try {
         if (in != null) {

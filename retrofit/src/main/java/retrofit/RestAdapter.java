@@ -29,7 +29,6 @@ import retrofit.client.Client;
 import retrofit.client.OkClient;
 import retrofit.client.Request;
 import retrofit.client.Response;
-import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
@@ -304,7 +303,7 @@ public class RestAdapter {
       try {
         Object convert = converter.fromBody(wrapped, type);
         callResponse(callback, convert, response);
-      } catch (ConversionException e) {
+      } catch (RuntimeException e) {
         // If the underlying input stream threw an exception, propagate that rather than
         // indicating that it was a conversion exception.
         if (wrapped.threwException()) {
@@ -313,8 +312,7 @@ public class RestAdapter {
 
         // The response body was partially read by the converter. Replace it with null.
         response = Utils.replaceResponseBody(response, null);
-
-        throw RetrofitError.conversionError(request.getUrl(), response, converter, type, e);
+        throw RetrofitError.unexpectedError(request.getUrl(), response, converter, type, e);
       }
     }
 

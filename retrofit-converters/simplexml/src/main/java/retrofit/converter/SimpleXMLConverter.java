@@ -43,11 +43,13 @@ public class SimpleXMLConverter implements Converter {
     this.strict = strict;
   }
 
-  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(TypedInput body, Type type) throws IOException {
     try {
       return serializer.read((Class<?>) type, body.in(), strict);
+    } catch (IOException e) {
+      throw e;
     } catch (Exception e) {
-      throw new ConversionException(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -67,8 +69,7 @@ public class SimpleXMLConverter implements Converter {
         if (osw != null) {
           osw.close();
         }
-      } catch (IOException e) {
-        throw new AssertionError(e);
+      } catch (IOException ignored) {
       }
     }
   }

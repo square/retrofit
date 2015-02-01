@@ -15,14 +15,13 @@
  */
 package retrofit.converter;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
 /**
  * Arbiter for converting objects to and from their representation in HTTP.
- *
- * @author Jake Wharton (jw@squareup.com)
  */
 public interface Converter {
   /**
@@ -31,12 +30,8 @@ public interface Converter {
    * @param body HTTP response body.
    * @param type Target object type.
    * @return Instance of {@code type} which will be cast by the caller.
-   * @throws ConversionException if conversion was unable to complete. This will trigger a call to
-   * {@link retrofit.Callback#failure(retrofit.RetrofitError)} or throw a
-   * {@link retrofit.RetrofitError}. The exception message should report all necessary information
-   * about its cause as the response body will be set to {@code null}.
    */
-  Object fromBody(TypedInput body, Type type) throws ConversionException;
+  Object fromBody(TypedInput body, Type type) throws IOException;
 
   /**
    * Convert an object to an appropriate representation for HTTP transport.

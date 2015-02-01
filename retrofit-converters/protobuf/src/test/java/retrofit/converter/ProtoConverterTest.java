@@ -54,7 +54,7 @@ public final class ProtoConverterTest {
     try {
       protoConverter.fromBody(decodeBase64("////"), Phone.class);
       fail();
-    } catch (ConversionException expected) {
+    } catch (RuntimeException expected) {
       assertThat(expected.getCause() instanceof InvalidProtocolBufferException);
     }
   }
@@ -63,7 +63,7 @@ public final class ProtoConverterTest {
     try {
       protoConverter.fromBody(decodeBase64("////", "yummy/bytes"), Phone.class);
       fail();
-    } catch (ConversionException e) {
+    } catch (RuntimeException e) {
       assertThat(e).hasMessage("Response content type was not a proto: yummy/bytes");
     }
   }

@@ -27,7 +27,7 @@ public class WireConverter implements Converter {
   }
 
   @SuppressWarnings("unchecked") //
-  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(TypedInput body, Type type) throws IOException {
     if (!(type instanceof Class<?>)) {
       throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
     }
@@ -37,15 +37,13 @@ public class WireConverter implements Converter {
     }
 
     if (!MIME_TYPE.equalsIgnoreCase(body.mimeType())) {
-      throw new ConversionException("Expected a proto but was: " + body.mimeType());
+      throw new IllegalStateException("Expected a proto but was: " + body.mimeType());
     }
 
     InputStream in = null;
     try {
       in = body.in();
       return wire.parseFrom(in, (Class<Message>) c);
-    } catch (IOException e) {
-      throw new ConversionException(e);
     } finally {
       if (in != null) {
         try {
