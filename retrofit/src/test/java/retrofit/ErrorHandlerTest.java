@@ -1,18 +1,22 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Response;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.client.Client;
-import retrofit.client.Request;
-import retrofit.client.Response;
 import retrofit.http.GET;
 import rx.Observable;
 import rx.Observer;
 
+import static com.squareup.okhttp.Protocol.HTTP_1_1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -34,22 +38,27 @@ public class ErrorHandlerTest {
   static class TestException extends Exception {
   }
 
-  /* An HTTP client which always returns a 400 response */
-  static class MockInvalidResponseClient implements Client {
-    @Override public void execute(Request request, AsyncCallback callback) {
-      callback.onResponse(new Response("", 400, "invalid request", Headers.of(), null));
-    }
-  }
-
-  ExampleClient client;
+  ExampleClient example;
   ErrorHandler errorHandler;
 
   @Before public void setup() {
     errorHandler = mock(ErrorHandler.class);
 
-    client = new RestAdapter.Builder() //
+    OkHttpClient client = new OkHttpClient();
+    client.interceptors().add(new Interceptor() {
+      @Override public Response intercept(Chain chain) throws IOException {
+        return new Response.Builder()
+            .code(400)
+            .message("Invalid")
+            .request(chain.request())
+            .protocol(HTTP_1_1)
+            .build();
+      }
+    });
+
+    example = new RestAdapter.Builder() //
         .setEndpoint("http://example.com")
-        .setClient(new MockInvalidResponseClient())
+        .setClient(client)
         .setErrorHandler(errorHandler)
         .setCallbackExecutor(new Utils.SynchronousExecutor())
         .build()
@@ -61,7 +70,7 @@ public class ErrorHandlerTest {
     doReturn(exception).when(errorHandler).handleError(any(RetrofitError.class));
 
     try {
-      client.throwsCustomException();
+      example.throwsCustomException();
       failBecauseExceptionWasNotThrown(TestException.class);
     } catch (TestException e) {
       assertThat(e).isSameAs(exception);
@@ -72,7 +81,7 @@ public class ErrorHandlerTest {
     final TestException exception = new TestException();
     doReturn(exception).when(errorHandler).handleError(any(RetrofitError.class));
 
-    client.onErrorWrappedCustomException(new Callback<Response>() {
+    example.onErrorWrappedCustomException(new Callback<Response>() {
 
       @Override public void success(Response response, Response response2) {
         failBecauseExceptionWasNotThrown(TestException.class);
@@ -88,26 +97,29 @@ public class ErrorHandlerTest {
     final TestException exception = new TestException();
     doReturn(exception).when(errorHandler).handleError(any(RetrofitError.class));
 
-    client.onErrorCustomException().subscribe(new Observer<Response>() {
+    final CountDownLatch latch = new CountDownLatch(1);
+    example.onErrorCustomException().subscribe(new Observer<Response>() {
       @Override public void onCompleted() {
         failBecauseExceptionWasNotThrown(TestException.class);
       }
 
       @Override public void onError(Throwable e) {
         assertThat(e).isSameAs(exception);
+        latch.countDown();
       }
 
       @Override public void onNext(Response response) {
         failBecauseExceptionWasNotThrown(TestException.class);
       }
     });
+    assertTrue(latch.await(1, TimeUnit.SECONDS));
   }
 
   @Test public void returningNullThrowsException() throws Exception {
     doReturn(null).when(errorHandler).handleError(any(RetrofitError.class));
 
     try {
-      client.throwsCustomException();
+      example.throwsCustomException();
       fail();
     } catch (IllegalStateException e) {
       assertThat(e.getMessage()).isEqualTo("Error handler returned null for wrapped exception.");

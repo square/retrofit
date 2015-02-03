@@ -2,7 +2,9 @@
 package retrofit;
 
 import com.squareup.okhttp.Headers;
-import retrofit.client.Response;
+import com.squareup.okhttp.Protocol;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import retrofit.converter.Converter;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -99,8 +101,14 @@ public class MockHttpException extends RuntimeException {
     return this;
   }
 
-  Response toResponse(Converter converter) {
-    return new Response("", code, reason, headers.build(),
-        new MockTypedInput(converter, responseBody));
+  Response toResponse(Request request, Converter converter) {
+    return new Response.Builder()
+        .code(code)
+        .message(reason)
+        .headers(headers.build())
+        .body(new MockResponseBody(converter, responseBody))
+        .protocol(Protocol.HTTP_1_1)
+        .request(request)
+        .build();
   }
 }

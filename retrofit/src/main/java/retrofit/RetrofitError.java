@@ -15,28 +15,34 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import retrofit.client.Response;
 import retrofit.converter.Converter;
-import retrofit.mime.TypedInput;
 
 public class RetrofitError extends RuntimeException {
-  public static RetrofitError networkError(String url, IOException exception) {
+  public static RetrofitError networkFailure(String url, IOException exception) {
     return new RetrofitError(exception.getMessage(), url, null, null, null, Kind.NETWORK,
         exception);
   }
 
-  public static RetrofitError unexpectedError(String url, Response response, Converter converter,
-      Type successType, Throwable exception) {
-    return new RetrofitError(exception.getMessage(), url, response, converter, successType,
-        Kind.UNEXPECTED, exception);
+  public static RetrofitError networkError(Response response, IOException exception) {
+    response = response.newBuilder().body(null).build(); // Remove any body.
+    return new RetrofitError(exception.getMessage(), response.request().urlString(), null, null,
+        null, Kind.NETWORK, exception);
   }
 
-  public static RetrofitError httpError(String url, Response response, Converter converter,
-      Type successType) {
-    String message = response.getStatus() + " " + response.getReason();
-    return new RetrofitError(message, url, response, converter, successType, Kind.HTTP, null);
+  public static RetrofitError httpError(Response response, Converter converter, Type successType) {
+    String message = response.code() + " " + response.message();
+    return new RetrofitError(message, response.request().urlString(), response, converter,
+        successType, Kind.HTTP, null);
+  }
+
+  public static RetrofitError unexpectedError(Response response, Throwable exception) {
+    response = response.newBuilder().body(null).build(); // Remove any body.
+    return new RetrofitError(exception.getMessage(), response.request().urlString(), response,
+        null, null, Kind.UNEXPECTED, exception);
   }
 
   public static RetrofitError unexpectedError(String url, Throwable exception) {
@@ -117,14 +123,14 @@ public class RetrofitError extends RuntimeException {
     if (response == null) {
       return null;
     }
-    TypedInput body = response.getBody();
+    ResponseBody body = response.body();
     if (body == null) {
       return null;
     }
     try {
       return converter.fromBody(body, type);
     } catch (IOException e) {
-      throw new RuntimeException(e); // Body is a byte[], can't be a real IO exception.
+      throw new RuntimeException(e); // Body is a Buffer, can't be a real IO exception.
     }
   }
 }

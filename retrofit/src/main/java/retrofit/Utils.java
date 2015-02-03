@@ -16,17 +16,16 @@
  */
 package retrofit;
 
-import java.io.ByteArrayOutputStream;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Executor;
-import retrofit.client.Response;
-import retrofit.mime.TypedByteArray;
-import retrofit.mime.TypedInput;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.Source;
 
 final class Utils {
-  private static final int BUFFER_SIZE = 0x1000;
-
   static <T> T checkNotNull(T object, String message, Object... args) {
     if (object == null) {
       throw new NullPointerException(String.format(message, args));
@@ -35,53 +34,35 @@ final class Utils {
   }
 
   /**
-   * Creates a {@code byte[]} from reading the entirety of an {@link InputStream}. May return an
-   * empty array but never {@code null}.
-   * <p>
-   * Copied from Guava's {@code ByteStreams} class.
-   */
-  static byte[] streamToBytes(InputStream stream) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    if (stream != null) {
-      byte[] buf = new byte[BUFFER_SIZE];
-      int r;
-      while ((r = stream.read(buf)) != -1) {
-        baos.write(buf, 0, r);
-      }
-    }
-    return baos.toByteArray();
-  }
-
-  /**
-   * Conditionally replace a {@link Response} with an identical copy whose body is backed by a
-   * byte[] rather than an input stream.
+   * Replace a {@link Response} with an identical copy whose body is backed by a
+   * {@link Buffer} rather than a {@link Source}.
    */
   static Response readBodyToBytesIfNecessary(Response response) throws IOException {
-    TypedInput body = response.getBody();
-    if (body == null || body instanceof TypedByteArray) {
+    final ResponseBody body = response.body();
+    if (body == null) {
       return response;
     }
 
-    String bodyMime = body.mimeType();
-    InputStream is = body.in();
-    try {
-      byte[] bodyBytes = Utils.streamToBytes(is);
-      body = new TypedByteArray(bodyMime, bodyBytes);
+    BufferedSource source = body.source();
+    final Buffer buffer = new Buffer();
+    buffer.writeAll(source);
+    source.close();
 
-      return replaceResponseBody(response, body);
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException ignored) {
-        }
-      }
-    }
-  }
+    return response.newBuilder()
+        .body(new ResponseBody() {
+          @Override public MediaType contentType() {
+            return body.contentType();
+          }
 
-  static Response replaceResponseBody(Response response, TypedInput body) {
-    return new Response(response.getUrl(), response.getStatus(), response.getReason(),
-        response.getHeaders(), body);
+          @Override public long contentLength() {
+            return buffer.size();
+          }
+
+          @Override public BufferedSource source() {
+            return buffer.clone();
+          }
+        })
+        .build();
   }
 
   static <T> void validateServiceClass(Class<T> service) {
