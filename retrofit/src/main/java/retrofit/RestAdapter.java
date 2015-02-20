@@ -415,8 +415,8 @@ public class RestAdapter {
     }
 
     /**
-     * The error handler allows you to customize the type of exception thrown for errors on
-     * synchronous requests.
+     * The error handler allows you to customize
+     * {@link retrofit.client.Response response} exceptions.
      */
     public Builder setErrorHandler(ErrorHandler errorHandler) {
       if (errorHandler == null) {
