@@ -36,6 +36,7 @@ import retrofit.http.QueryMap;
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private static final Headers NO_HEADERS = Headers.of();
 
+  private final DataPreprocessor dataPreprocessor;
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
@@ -49,9 +50,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private Headers.Builder headers;
   private String contentTypeHeader;
 
-  RequestBuilder(String apiUrl, MethodInfo methodInfo, Converter converter) {
+  RequestBuilder(String apiUrl, MethodInfo methodInfo, Converter converter,
+                 DataPreprocessor dataPreprocessor) {
     this.apiUrl = apiUrl;
     this.converter = converter;
+    this.dataPreprocessor = dataPreprocessor;
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
@@ -68,6 +71,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     if (requestQuery != null) {
       queryParams = new StringBuilder().append('?').append(requestQuery);
     }
+  }
+
+  RequestBuilder(String apiUrl, MethodInfo methodInfo, Converter converter) {
+    this(apiUrl, methodInfo, converter, null);
   }
 
   @Override public void addHeader(String name, String value) {
@@ -328,7 +335,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         if (value instanceof RequestBody) {
           body = (RequestBody) value;
         } else {
-          body = converter.toBody(value, value.getClass());
+          if (dataPreprocessor != null) {
+            Object data = dataPreprocessor.wrapRequest(value);
+            body = converter.toBody(data, data.getClass());
+          } else {
+            body = converter.toBody(value, value.getClass());
+          }
         }
       } else {
         throw new IllegalArgumentException(
