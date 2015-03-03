@@ -106,18 +106,21 @@ public class RestAdapter {
   final RequestInterceptor requestInterceptor;
   final Converter converter;
   final ErrorHandler errorHandler;
+  final DataPreprocessor dataPreprocessor;
 
   private final OkHttpClient client;
   private RxSupport rxSupport;
 
   private RestAdapter(Endpoint endpoint, OkHttpClient client, Executor callbackExecutor,
-      RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler) {
+      RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler,
+      DataPreprocessor dataPreprocessor) {
     this.endpoint = endpoint;
     this.client = client;
     this.callbackExecutor = callbackExecutor;
     this.requestInterceptor = requestInterceptor;
     this.converter = converter;
     this.errorHandler = errorHandler;
+    this.dataPreprocessor = dataPreprocessor;
   }
 
   /** Create an implementation of the API defined by the specified {@code service} interface. */
@@ -298,7 +301,11 @@ public class RestAdapter {
 
       ExceptionCatchingRequestBody wrapped = new ExceptionCatchingRequestBody(body);
       try {
-        return converter.fromBody(wrapped, type);
+        if (dataPreprocessor != null) {
+          return dataPreprocessor.unWrapResponse(wrapped, type);
+        } else {
+          return converter.fromBody(wrapped, type);
+        }
       } catch (RuntimeException e) {
         // If the underlying input stream threw an exception, propagate that rather than
         // indicating that it was a conversion exception.
@@ -338,7 +345,8 @@ public class RestAdapter {
 
     private Request createRequest(MethodInfo methodInfo, Object[] args) {
       String serverUrl = endpoint.url();
-      RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
+      RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter,
+              dataPreprocessor);
       requestBuilder.setArguments(args);
 
       requestInterceptor.intercept(requestBuilder);
@@ -360,6 +368,7 @@ public class RestAdapter {
     private RequestInterceptor requestInterceptor;
     private Converter converter;
     private ErrorHandler errorHandler;
+    private DataPreprocessor dataPreprocessor;
 
     /** API endpoint URL. */
     public Builder setEndpoint(String url) {
@@ -372,6 +381,14 @@ public class RestAdapter {
         throw new NullPointerException("Endpoint may not be null.");
       }
       this.endpoint = endpoint;
+      return this;
+    }
+
+    public Builder setDataPreprocessor(DataPreprocessor dataPreprocessor) {
+      if (dataPreprocessor == null) {
+        throw new NullPointerException("DataProcessor may not be null.");
+      }
+      this.dataPreprocessor = dataPreprocessor;
       return this;
     }
 
@@ -432,7 +449,7 @@ public class RestAdapter {
       }
       ensureSaneDefaults();
       return new RestAdapter(endpoint, client, callbackExecutor, requestInterceptor, converter,
-          errorHandler);
+          errorHandler, dataPreprocessor);
     }
 
     private void ensureSaneDefaults() {
