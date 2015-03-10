@@ -21,10 +21,18 @@ public final class ProtoConverterTest {
   private static final String ENCODED_PROTO = "Cg4oNTE5KSA4NjctNTMwOQ==";
 
   private final ProtoConverter converter = new ProtoConverter();
+  private final ProtoConverter converterOctetStream = new ProtoConverter
+      ("application/octet-stream");
 
   @Test public void serialize() throws Exception {
     RequestBody body = converter.toBody(PROTO, Phone.class);
     assertThat(body.contentType().toString()).isEqualTo("application/x-protobuf");
+    assertBody(body).isEqualTo(ENCODED_PROTO);
+  }
+
+  @Test public void serializeCustomContentType() throws Exception {
+    RequestBody body = converterOctetStream.toBody(PROTO, Phone.class);
+    assertThat(body.contentType().toString()).isEqualTo("application/octet-stream");
     assertBody(body).isEqualTo(ENCODED_PROTO);
   }
 
