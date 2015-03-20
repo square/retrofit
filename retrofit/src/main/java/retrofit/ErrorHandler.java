@@ -16,7 +16,7 @@
 package retrofit;
 
 /**
- * A hook allowing clients to customize {@link retrofit.client.Response response} exceptions.
+ * A hook allowing clients to customize {@link RetrofitError RetrofitError}.
  *
  * @author Sam Beran sberan@gmail.com
  */
