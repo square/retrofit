@@ -63,9 +63,8 @@ import retrofit.http.Header;
  * <p>
  * The body of a request is denoted by the {@link retrofit.http.Body @Body} annotation. The object
  * will be converted to request representation by a call to
- * {@link retrofit.converter.Converter#toBody(Object) toBody} on the supplied
- * {@link retrofit.converter.Converter Converter} for this instance. The body can also be a
- * {@link TypedOutput} where it will be used directly.
+ * {@link retrofit.converter.Converter#toBody(Object, java.lang.reflect.Type) toBody}
+ * on the supplied {@link retrofit.converter.Converter Converter} for this instance.
  * <p>
  * Alternative request body formats are supported by method annotations and corresponding parameter
  * annotations:
