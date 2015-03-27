@@ -247,4 +247,31 @@ public class RestAdapterTest {
     assertThat(subscriber.getOnNextEvents()).containsExactly("hello");
     assertThat(server.takeRequest().getHeader("Nyan")).isEqualTo("Cat");
   }
+
+  @Test public void observableInterceptionDefaultsToCurrentThread() throws Exception {
+    server.enqueue(new MockResponse().setBody("hello"));
+
+    final TestSubscriber subscriber = new TestSubscriber();
+    final Thread testThread = Thread.currentThread();
+
+    final Example interceptorExample = new RestAdapter.Builder()
+        .setEndpoint(server.getUrl("/").toString())
+        .setRequestInterceptor(new RequestInterceptor() {
+          @Override
+          public void intercept(RequestInterceptor.RequestFacade request) {
+            assertThat(Thread.currentThread()).isEqualTo(testThread);
+            request.addHeader("Nyan", "Cat");
+          }
+        })
+        .build()
+        .create(Example.class);
+
+    final Observable<String> observable = interceptorExample.observable("Howdy");
+
+    observable.subscribe(subscriber);
+    subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
+
+    assertThat(subscriber.getOnNextEvents()).containsExactly("hello");
+    assertThat(server.takeRequest().getHeader("Nyan")).isEqualTo("Cat");
+  }
 }
