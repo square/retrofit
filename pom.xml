@@ -25,7 +25,7 @@
 
   <groupId>com.squareup.retrofit</groupId>
   <artifactId>parent</artifactId>
-  <version>1.6.1-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Retrofit (Parent)</name>
@@ -36,7 +36,7 @@
     <module>retrofit</module>
     <module>retrofit-converters</module>
     <module>retrofit-mock</module>
-    <module>retrofit-samples</module>
+    <module>samples</module>
   </modules>
 
   <properties>
@@ -49,22 +49,21 @@
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
-    <gson.version>2.2.4</gson.version>
-    <okhttp.version>1.6.0</okhttp.version>
-    <rxjava.version>0.19.0</rxjava.version>
-    <appengine.version>1.8.9</appengine.version>
+    <gson.version>2.3.1</gson.version>
+    <okhttp.version>2.2.0</okhttp.version>
+    <rxjava.version>1.0.0</rxjava.version>
 
     <!-- Converter Dependencies -->
     <protobuf.version>2.5.0</protobuf.version>
-    <jackson.version>2.3.1</jackson.version>
-    <wire.version>1.2.0</wire.version>
+    <jackson.version>2.4.3</jackson.version>
+    <wire.version>1.5.2</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
 
     <!-- Test Dependencies -->
-    <junit.version>4.10</junit.version>
-    <assertj.version>1.5.0</assertj.version>
+    <junit.version>4.11</junit.version>
+    <assertj.version>1.7.0</assertj.version>
     <mockito.version>1.9.5</mockito.version>
-    <guava.version>16.0</guava.version>
+    <guava.version>18.0</guava.version>
   </properties>
 
   <scm>
@@ -104,24 +103,14 @@
         <version>${okhttp.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.squareup.okhttp</groupId>
-        <artifactId>okhttp-urlconnection</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.netflix.rxjava</groupId>
-        <artifactId>rxjava-core</artifactId>
+        <groupId>io.reactivex</groupId>
+        <artifactId>rxjava</artifactId>
         <version>${rxjava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.appengine</groupId>
-        <artifactId>appengine-api-1.0-sdk</artifactId>
-        <version>${appengine.version}</version>
       </dependency>
 
       <dependency>

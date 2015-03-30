@@ -15,7 +15,7 @@
  */
 package retrofit;
 
-import retrofit.client.Response;
+import com.squareup.okhttp.Response;
 
 /**
  * Communicates responses from a server or offline requests. One and only one method will be
@@ -29,7 +29,7 @@ import retrofit.client.Response;
  * </ul>
  *
  * @param <T> expected response type
- * @see RestAdapter.Builder#setExecutors
+ * @see RestAdapter.Builder#setCallbackExecutor
  */
 public interface Callback<T> {
 

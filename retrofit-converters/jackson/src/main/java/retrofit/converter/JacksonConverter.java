@@ -1,16 +1,14 @@
 package retrofit.converter;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
-import retrofit.mime.TypedByteArray;
-import retrofit.mime.TypedInput;
-import retrofit.mime.TypedOutput;
 
 /**
  * A {@link Converter} which uses Jackson for reading and writing entities.
@@ -18,7 +16,7 @@ import retrofit.mime.TypedOutput;
  * @author Kai Waldron (kaiwaldron@gmail.com)
  */
 public class JacksonConverter implements Converter {
-  private static final String MIME_TYPE = "application/json; charset=UTF-8";
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
 
   private final ObjectMapper objectMapper;
 
@@ -27,30 +25,30 @@ public class JacksonConverter implements Converter {
   }
 
   public JacksonConverter(ObjectMapper objectMapper) {
+    if (objectMapper == null) throw new NullPointerException("objectMapper == null");
     this.objectMapper = objectMapper;
   }
 
-  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
+    InputStream is = body.byteStream();
     try {
       JavaType javaType = objectMapper.getTypeFactory().constructType(type);
-      return objectMapper.readValue(body.in(), javaType);
-    } catch (JsonParseException e) {
-      throw new ConversionException(e);
-    } catch (JsonMappingException e) {
-      throw new ConversionException(e);
-    } catch (IOException e) {
-      throw new ConversionException(e);
+      return objectMapper.readValue(is, javaType);
+    } finally {
+      try {
+        is.close();
+      } catch (IOException ignored) {
+      }
     }
   }
 
-  @Override public TypedOutput toBody(Object object) {
+  @Override public RequestBody toBody(Object object, Type type) {
     try {
-      String json = objectMapper.writeValueAsString(object);
-      return new TypedByteArray(MIME_TYPE, json.getBytes("UTF-8"));
+      JavaType javaType = objectMapper.getTypeFactory().constructType(type);
+      String json = objectMapper.writerWithType(javaType).writeValueAsString(object);
+      return RequestBody.create(MEDIA_TYPE, json);
     } catch (JsonProcessingException e) {
-      throw new AssertionError(e);
-    } catch (UnsupportedEncodingException e) {
-      throw new AssertionError(e);
+      throw new RuntimeException(e);
     }
   }
 }

@@ -1,49 +1,57 @@
 package retrofit.converter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.ByteArrayOutputStream;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
+import java.io.IOException;
+import okio.Buffer;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.Test;
-import retrofit.mime.TypedByteArray;
-import retrofit.mime.TypedInput;
-import retrofit.mime.TypedOutput;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JacksonConverterTest {
-  private static final String MIME_TYPE = "application/json; charset=UTF-8";
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
   private static final MyObject OBJECT = new MyObject("hello world", 10);
   private final String JSON = "{\"message\":\"hello world\",\"count\":10}";
 
   private final JacksonConverter converter = new JacksonConverter();
 
   @Test public void serialize() throws Exception {
-    TypedOutput typedOutput = converter.toBody(OBJECT);
-    assertThat(typedOutput.mimeType()).isEqualTo(MIME_TYPE);
-    assertThat(asString(typedOutput)).isEqualTo(JSON);
+    RequestBody body = converter.toBody(OBJECT, MyObject.class);
+    assertThat(body.contentType()).isEqualTo(MEDIA_TYPE);
+    assertBody(body).isEqualTo(JSON);
   }
 
   @Test public void deserialize() throws Exception {
-    TypedInput input = new TypedByteArray(MIME_TYPE, JSON.getBytes());
-    MyObject result = (MyObject) converter.fromBody(input, MyObject.class);
+    ResponseBody body = ResponseBody.create(MEDIA_TYPE, JSON);
+    MyObject result = (MyObject) converter.fromBody(body, MyObject.class);
     assertThat(result).isEqualTo(OBJECT);
   }
 
-  @Test(expected = ConversionException.class)
-  public void deserializeWrongValue() throws Exception {
-    TypedInput input = new TypedByteArray(MIME_TYPE, "{\"foo\":\"bar\"}".getBytes());
-    converter.fromBody(input, MyObject.class);
+  @Test public void deserializeWrongValue() throws Exception {
+    ResponseBody body = ResponseBody.create(MEDIA_TYPE, "{\"foo\":\"bar\"}");
+    try {
+      converter.fromBody(body, MyObject.class);
+    } catch (UnrecognizedPropertyException ignored) {
+    }
   }
 
-  @Test(expected = ConversionException.class)
-  public void deserializeWrongClass() throws Exception {
-    TypedInput input = new TypedByteArray(MIME_TYPE, JSON.getBytes());
-    converter.fromBody(input, String.class);
+  @Test public void deserializeWrongClass() throws Exception {
+    ResponseBody body = ResponseBody.create(MEDIA_TYPE, JSON);
+    try {
+      converter.fromBody(body, String.class);
+    } catch (JsonMappingException ignored) {
+    }
   }
 
-  private String asString(TypedOutput typedOutput) throws Exception {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    typedOutput.writeTo(bytes);
-    return new String(bytes.toByteArray());
+  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body) throws IOException {
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    return assertThat(buffer.readUtf8());
   }
 
   static class MyObject {

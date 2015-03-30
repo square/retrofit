@@ -27,12 +27,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * The parameter type on which this annotation exists will be processed in one of three ways:
  * <ul>
- * <li>If the type implements {@link retrofit.mime.TypedOutput TypedOutput} the headers and
- * body will be used directly.</li>
  * <li>If the type is {@link String} the value will also be used directly with a {@code text/plain}
  * content type.</li>
  * <li>Other object types will be converted to an appropriate representation by calling {@link
- * retrofit.converter.Converter#toBody(Object)}.</li>
+ * retrofit.converter.Converter#toBody(Object, java.lang.reflect.Type)}.</li>
  * </ul>
  * <p>
  * Values may be {@code null} which will omit them from the request body.
@@ -53,4 +51,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Part {
   String value();
+  /** The {@code Content-Transfer-Encoding} of this part. */
+  String encoding() default "binary";
 }

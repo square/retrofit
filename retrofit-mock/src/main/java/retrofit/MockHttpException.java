@@ -1,10 +1,10 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import java.util.ArrayList;
-import java.util.List;
-import retrofit.client.Header;
-import retrofit.client.Response;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.Protocol;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import retrofit.converter.Converter;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -67,7 +67,7 @@ public class MockHttpException extends RuntimeException {
   final int code;
   final String reason;
   final Object responseBody;
-  final List<Header> headers = new ArrayList<Header>(2);
+  final Headers.Builder headers = new Headers.Builder();
 
   /**
    * Create a new HTTP exception.
@@ -97,11 +97,18 @@ public class MockHttpException extends RuntimeException {
     if (value == null || "".equals(value.trim())) {
       throw new IllegalArgumentException("Header value must not be blank.");
     }
-    headers.add(new Header(name, value));
+    headers.add(name, value);
     return this;
   }
 
-  Response toResponse(Converter converter) {
-    return new Response("", code, reason, headers, new MockTypedInput(converter, responseBody));
+  Response toResponse(Request request, Converter converter) {
+    return new Response.Builder()
+        .code(code)
+        .message(reason)
+        .headers(headers.build())
+        .body(new MockResponseBody(converter, responseBody))
+        .protocol(Protocol.HTTP_1_1)
+        .request(request)
+        .build();
   }
 }

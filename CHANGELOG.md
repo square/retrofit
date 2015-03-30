@@ -1,6 +1,62 @@
 Change Log
 ==========
 
+Version 1.9.0 *(2015-01-07)*
+----------------------------
+
+ * Update to OkHttp 2.x's native API. If you are using OkHttp you must use version 2.0 or newer (the latest
+   is 2.2 at time of writing) and you no longer need to use the `okhttp-urlconnection` shim.
+ * New: Allow disabling Simple XML Framework's strict parsing.
+ * New: `@Header` now accepts a `List` or array for a type.
+ * New: `@Field` and `@FieldMap` now have options for enabling or disabling URL encoding of names and values.
+ * Fix: Remove query parameters from thread name when running background requests for asynchronous use.
+
+
+Version 1.8.0 *(2014-11-18)*
+----------------------------
+
+ * Update to RxJava 1.0. This comes with the project's 'groupId' change from `com.netflix.rxjava` to
+   `io.reactivex` which is why the minor version was bumped.
+
+
+Version 1.7.1 *(2014-10-23)*
+----------------------------
+
+ * Fix: Correctly log `null` request arguments for `HEADERS_AND_ARGS` log level.
+
+
+Version 1.7.0 *(2014-10-08)*
+----------------------------
+
+ * New: `RetrofitError`'s `getKind()` now disambiguates the type of error represented.
+ * New: `HEADERS_AND_ARGS` log level displays parameters passed to method invocation along with normal
+   header list.
+ * New: `@Part` and `@PartMap` now support specifying the `Content-Transfer-Encoding` of their respective
+   values.
+ * New: `@Path`, `@Query`, and `@QueryMap` now have options for enabling or disabling URL encoding on
+   names (where appropriate) and values.
+ * `@Header` now accepts all object types, invoking `String.valueOf` when neccesary.
+ * Attempting to use a `@Path` replacement block (`{name}`) in a query parameter now suggested `@Query` in
+   the exception message.
+ * Fix: Correct NPE when `Content-Type` override is specified on requests without a body.
+ * Fix: `WireConverter` now correctly throws `ConversionException` on incorrect MIME types for parity with
+   `ProtoConverter`.
+ * Fix: Include `Content-Type` on AppEngine requests.
+ * Fix: Account for NPE on AppEngine when the response URL was not automatically populated in certain cases.
+ * Fix: `MockRestAdapter`'s RxJava support now correctly schedules work on the HTTP executor, specifically
+   when chaining multiple requests together.
+ * Experimental RxJava support updated for v0.20.
+
+
+Version 1.6.1 *(2014-07-02)*
+----------------------------
+
+ * Fix: Add any explicitly-specified 'Content-Type' header (via annotation or param) to the request even
+   if there is no request body (e.g., DELETE).
+ * Fix: Include trailing CRLF in multi-part uploads to work around a bug in .NET MVC 4 parsing.
+ * Fix: Allow `null` mock exception bodies and use the success type from the declared service interface.
+
+
 Version 1.6.0 *(2014-06-06)*
 ----------------------------
 

@@ -27,12 +27,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Values of the map on which this annotation exists will be processed in one of three ways:
  * <ul>
- * <li>If the type implements {@link retrofit.mime.TypedOutput TypedOutput} the headers and
- * body will be used directly.</li>
  * <li>If the type is {@link String} the value will also be used directly with a {@code text/plain}
  * content type.</li>
  * <li>Other object types will be converted to an appropriate representation by calling {@link
- * retrofit.converter.Converter#toBody(Object)}.</li>
+ * retrofit.converter.Converter#toBody(Object, java.lang.reflect.Type)}.</li>
  * </ul>
  * <p>
  * <pre>
@@ -40,7 +38,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;POST("/upload")
  * void upload(&#64;Part("file") TypedFile file, &#64;PartMap Map&lt;String, String&gt; params);
  * </pre>
- * <p>
  *
  * @see Multipart
  * @see Part
@@ -49,4 +46,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface PartMap {
+  /** The {@code Content-Transfer-Encoding} of this part. */
+  String encoding() default "binary";
 }

@@ -1,17 +1,24 @@
 package retrofit;
 
-/**
- * Represents an API endpoint URL and associated name. Callers should always consult the instance
- * for the latest values rather than caching the returned values.
- *
- * @author Matt Hickman (mhickman@palantir.com)
- */
-public interface Endpoint {
+import static retrofit.Utils.checkNotNull;
 
-  /** The base API URL. */
-  String getUrl();
+/** An API endpoint. */
+public abstract class Endpoint {
+  /** Create an endpoint with the provided {@code url}. */
+  public static Endpoint createFixed(final String url) {
+    checkNotNull(url, "url == null");
+    return new Endpoint() {
+      @Override public String url() {
+        return url;
+      }
+    };
+  }
 
-  /** A name for differentiating between multiple API URLs. */
-  String getName();
-
+  /**
+   * The base URL.
+   * <p>
+   * Consumers will call this method every time they need to create a request allowing values
+   * to change over time.
+   */
+  public abstract String url();
 }

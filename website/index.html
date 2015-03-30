@@ -114,7 +114,7 @@ List&lt;Widget> widgetList();</pre>
 @GET("/users/{username}")
 User getUser(@Path("username") String username);</pre>
             <p>Note that headers do not overwrite each other. All headers with the same name will be included in the request.</p>
-            <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding String parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted.</p>
+            <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted. Otherwise, <code>toString</code> will be called on the value, and the result used.</p>
             <pre class="prettyprint">@GET("/user")
 void getUser(@Header("Authorization") String authorization, Callback&lt;User> callback)</pre>
             <p>Headers that need to be added to every request can be specified using a <code>RequestInterceptor</code>. The following code creates a <code>RequestInterceptor</code> that will add a <code>User-Agent</code> header to every request.</p>
@@ -140,7 +140,7 @@ Photo getUserPhoto(@Path("id") int id);</pre>
 void getUserPhoto(@Path("id") int id, Callback&lt;Photo> cb);</pre>
             <p>On Android, callbacks will be executed on the main thread. For desktop applications callbacks will happen on the same thread that executed the HTTP request.</p>
 
-            <p>Retrofit also integrates <a href="https://github.com/Netflix/RxJava/wiki">RxJava</a> to support methods with a return type of <code>rx.Observable</code></p>
+            <p>Retrofit also integrates <a href="https://github.com/ReactiveX/RxJava/wiki">RxJava</a> to support methods with a return type of <code>rx.Observable</code></p>
             <pre class="prettyprint">@GET("/user/{id}/photo")
 Observable&lt;Photo> getUserPhoto(@Path("id") int id);</pre>
             <p>Observable requests are subscribed asynchronously and observed on the same thread that executed the HTTP request.  To observe on a different thread (e.g. Android's main thread) call <code>observeOn(Scheduler)</code> on the returned <code>Observable</code>.</p>
@@ -226,7 +226,7 @@ RestAdapter restAdapter = new RestAdapter.Builder()
             <p>This logging can be added or changed at any point in the <code>RestAdapter</code>'s lifecycle by calling the same <code>.setLogLevel()</code> method and supplying a different <code>LogLevel</code> value.</p>
 
             <h3 id="download">Download</h3>
-            <p><a href="http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
+            <p><a href="https://search.maven.org/remote_content?g=com.squareup.retrofit&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
             <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
             <h4>Maven</h4>
             <pre class="prettyprint">&lt;dependency>
@@ -234,7 +234,31 @@ RestAdapter restAdapter = new RestAdapter.Builder()
   &lt;artifactId>retrofit&lt;/artifactId>
   &lt;version><span class="version pln"><em>(insert latest version)</em></span>&lt;/version>
 &lt;/dependency></pre>
+            <h4>Gradle</h4>
+            <pre class="prettyprint">
+compile 'com.squareup.retrofit:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
+</pre>
+            <p>Retrofit requires at minimum Java 6 or Android 2.3.</p>
 
+            <h4>Integration with OkHttp</h4>
+            <p>When using Retrofit together with OkHttp, OkHttp (version 1.6.0 or newer) and OkHttp-UrlConnection are now required.</p>
+            <h4>Maven</h4>
+            <pre class="prettyprint">&lt;dependency>
+  &lt;groupId>com.squareup.okhttp&lt;/groupId>
+  &lt;artifactId>okhttp&lt;/artifactId>
+  &lt;version>2.0.0&lt;/version>
+&lt;/dependency>
+&lt;dependency>
+  &lt;groupId>com.squareup.okhttp&lt;/groupId>
+  &lt;artifactId>okhttp-urlconnection&lt;/artifactId>
+  &lt;version>2.0.0&lt;/version>
+&lt;/dependency>
+</pre>
+            <h4>Gradle</h4>
+<pre class="prettyprint">
+compile 'com.squareup.okhttp:okhttp-urlconnection:2.0.0'
+compile 'com.squareup.okhttp:okhttp:2.0.0'
+</pre>
             <h3 id="contributing">Contributing</h3>
             <p>If you would like to contribute code you can do so through GitHub by forking the repository and sending a pull request.</p>
             <p>When submitting code, please make every effort to follow existing conventions and style in order to keep the code as readable as possible. Please also make sure your code compiles by running <code>mvn clean verify</code>.</p>

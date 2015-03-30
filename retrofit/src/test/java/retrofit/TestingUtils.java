@@ -1,33 +1,14 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Map;
-import retrofit.mime.MultipartTypedOutput;
-import retrofit.mime.TypedOutput;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-public abstract class TestingUtils {
-  public static Method getMethod(Class c, String name) {
-    for (Method method : c.getDeclaredMethods()) {
-      if (method.getName().equals(name)) {
-        return method;
-      }
+public final class TestingUtils {
+  public static Method onlyMethod(Class c) {
+    Method[] declaredMethods = c.getDeclaredMethods();
+    if (declaredMethods.length == 1) {
+      return declaredMethods[0];
     }
-    throw new IllegalArgumentException("Unknown method '" + name + "' on " + c);
-  }
-
-  public static TypedOutput createMultipart(Map<String, TypedOutput> parts) {
-    MultipartTypedOutput typedOutput = new MultipartTypedOutput();
-    for (Map.Entry<String, TypedOutput> part : parts.entrySet()) {
-      typedOutput.addPart(part.getKey(), part.getValue());
-    }
-    return typedOutput;
-  }
-
-  public static void assertBytes(byte[] bytes, String expected) throws IOException {
-    assertThat(new String(bytes, "UTF-8")).isEqualTo(expected);
+    throw new IllegalArgumentException("More than one method declared.");
   }
 }

@@ -1,18 +1,18 @@
 // Copyright 2013 Square, Inc.
 package retrofit.converter;
 
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import retrofit.mime.TypedByteArray;
-import retrofit.mime.TypedInput;
-import retrofit.mime.TypedOutput;
 
 /** A {@link Converter} that reads and writes protocol buffers using Wire. */
 public class WireConverter implements Converter {
-  private static final String MIME_TYPE = "application/x-protobuf";
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
   private final Wire wire;
 
@@ -23,11 +23,12 @@ public class WireConverter implements Converter {
 
   /** Create a converter using the supplied {@link Wire} instance. */
   public WireConverter(Wire wire) {
+    if (wire == null) throw new NullPointerException("wire == null");
     this.wire = wire;
   }
 
   @SuppressWarnings("unchecked") //
-  @Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+  @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
     if (!(type instanceof Class<?>)) {
       throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
     }
@@ -36,33 +37,24 @@ public class WireConverter implements Converter {
       throw new IllegalArgumentException("Expected a proto message but was " + c.getName());
     }
 
-    if (!MIME_TYPE.equalsIgnoreCase(body.mimeType())) {
-      throw new IllegalArgumentException("Expected a proto but was: " + body.mimeType());
-    }
-
-    InputStream in = null;
+    InputStream in = body.byteStream();
     try {
-      in = body.in();
       return wire.parseFrom(in, (Class<Message>) c);
-    } catch (IOException e) {
-      throw new ConversionException(e);
     } finally {
-      if (in != null) {
-        try {
-          in.close();
-        } catch (IOException ignored) {
-        }
+      try {
+        in.close();
+      } catch (IOException ignored) {
       }
     }
   }
 
-  @Override public TypedOutput toBody(Object object) {
+  @Override public RequestBody toBody(Object object, Type type) {
     if (!(object instanceof Message)) {
       throw new IllegalArgumentException(
           "Expected a proto message but was " + (object != null ? object.getClass().getName()
               : "null"));
     }
     byte[] bytes = ((Message) object).toByteArray();
-    return new TypedByteArray(MIME_TYPE, bytes);
+    return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }

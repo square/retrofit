@@ -1,6 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -10,19 +11,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.client.Client;
-import retrofit.client.Request;
-import retrofit.client.Response;
 import retrofit.http.GET;
 import rx.Observable;
 import rx.functions.Action1;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -57,17 +54,12 @@ public class MockRestAdapterTest {
   private Throwable nextError;
 
   @Before public void setUp() throws IOException {
-    Client client = mock(Client.class);
-    doThrow(new AssertionError()).when(client).execute(any(Request.class));
-
     httpExecutor = spy(new SynchronousExecutor());
     callbackExecutor = spy(new SynchronousExecutor());
 
     RestAdapter restAdapter = new RestAdapter.Builder() //
-        .setClient(client)
-        .setExecutors(httpExecutor, callbackExecutor)
-        .setEndpoint("http://example.com")
-        .setLogLevel(RestAdapter.LogLevel.NONE)
+        .setCallbackExecutor(callbackExecutor)
+        .setEndpoint("none")
         .setErrorHandler(new ErrorHandler() {
           @Override public Throwable handleError(RetrofitError cause) {
             if (nextError != null) {
@@ -82,7 +74,7 @@ public class MockRestAdapterTest {
 
     valueChangeListener = mock(ValueChangeListener.class);
 
-    mockRestAdapter = MockRestAdapter.from(restAdapter);
+    mockRestAdapter = MockRestAdapter.from(restAdapter, httpExecutor);
     mockRestAdapter.setValueChangeListener(valueChangeListener);
 
     // Seed the random with a value so the tests are deterministic.
@@ -232,7 +224,7 @@ public class MockRestAdapterTest {
       mockService.doStuff();
       fail();
     } catch (RetrofitError e) {
-      assertThat(e.isNetworkError()).isTrue();
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
       assertThat(e.getCause()).hasMessage("Mock network error!");
     }
   }
@@ -264,7 +256,7 @@ public class MockRestAdapterTest {
     verify(callbackExecutor).execute(any(Runnable.class));
 
     RetrofitError error = errorRef.get();
-    assertThat(error.isNetworkError()).isTrue();
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.NETWORK);
     assertThat(error.getCause()).hasMessage("Mock network error!");
   }
 
@@ -340,7 +332,7 @@ public class MockRestAdapterTest {
 
     class MockObservableExample implements ObservableExample {
       @Override public Observable<String> doStuff() {
-        return Observable.from(expected);
+        return Observable.just(expected);
       }
     }
 
@@ -395,11 +387,11 @@ public class MockRestAdapterTest {
     } catch (RetrofitError e) {
       long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
       assertThat(tookMs).isGreaterThanOrEqualTo(100);
-      assertThat(e.isNetworkError()).isFalse();
-      assertThat(e.getResponse().getStatus()).isEqualTo(404);
-      assertThat(e.getResponse().getReason()).isEqualTo("Not Found");
+      assertThat(e.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
+      assertThat(e.getResponse().code()).isEqualTo(404);
+      assertThat(e.getResponse().message()).isEqualTo("Not Found");
       assertThat(e.getBody()).isSameAs(expected);
-      assertThat(e.getSuccessType()).isEqualTo(String.class);
+      assertThat(e.getSuccessType()).isEqualTo(Object.class);
     }
   }
 
@@ -438,9 +430,9 @@ public class MockRestAdapterTest {
 
     RetrofitError error = errorRef.get();
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-    assertThat(error.isNetworkError()).isFalse();
-    assertThat(error.getResponse().getStatus()).isEqualTo(404);
-    assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
+    assertThat(error.getResponse().code()).isEqualTo(404);
+    assertThat(error.getResponse().message()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
     assertThat(error.getSuccessType()).isEqualTo(String.class);
   }
@@ -477,15 +469,56 @@ public class MockRestAdapterTest {
       }
     });
 
-    verify(httpExecutor, atLeastOnce()).execute(any(Runnable.class));
+    verify(httpExecutor).execute(any(Runnable.class));
     verifyZeroInteractions(callbackExecutor);
 
     RetrofitError error = errorRef.get();
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-    assertThat(error.isNetworkError()).isFalse();
-    assertThat(error.getResponse().getStatus()).isEqualTo(404);
-    assertThat(error.getResponse().getReason()).isEqualTo("Not Found");
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
+    assertThat(error.getResponse().code()).isEqualTo(404);
+    assertThat(error.getResponse().message()).isEqualTo("Not Found");
     assertThat(error.getBody()).isSameAs(expected);
+    assertThat(error.getSuccessType()).isEqualTo(String.class);
+  }
+
+  @Test public void nullBodyIsAllowedOnHttpException() throws Exception {
+    mockRestAdapter.setDelay(100);
+    mockRestAdapter.setVariancePercentage(0);
+    mockRestAdapter.setErrorPercentage(0);
+
+    class MockObservableExample implements ObservableExample {
+      @Override public Observable<String> doStuff() {
+        throw MockHttpException.newBadRequest(null);
+      }
+    }
+
+    ObservableExample mockService =
+        mockRestAdapter.create(ObservableExample.class, new MockObservableExample());
+
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    mockService.doStuff().subscribe(new Action1<Object>() {
+      @Override public void call(Object o) {
+        throw new AssertionError();
+      }
+    }, new Action1<Throwable>() {
+      @Override public void call(Throwable error) {
+        assertThat(error).isInstanceOf(RetrofitError.class);
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        errorRef.set((RetrofitError) error);
+      }
+    });
+
+    verify(httpExecutor).execute(any(Runnable.class));
+    verifyZeroInteractions(callbackExecutor);
+
+    RetrofitError error = errorRef.get();
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+    assertThat(error.getKind()).isEqualTo(RetrofitError.Kind.HTTP);
+    assertThat(error.getResponse().code()).isEqualTo(400);
+    assertThat(error.getResponse().message()).isEqualTo("Bad Request");
+    assertThat(error.getBody()).isNull();
     assertThat(error.getSuccessType()).isEqualTo(String.class);
   }
 
@@ -536,7 +569,7 @@ public class MockRestAdapterTest {
         latch.countDown();
       }
     });
-    latch.await(5, SECONDS);
+    assertTrue(latch.await(1, TimeUnit.SECONDS));
   }
 
   @Test public void observableErrorUsesErrorHandler() throws InterruptedException {
@@ -555,7 +588,6 @@ public class MockRestAdapterTest {
     nextError = new IllegalArgumentException("Test");
 
     final CountDownLatch latch = new CountDownLatch(1);
-    final AtomicBoolean called = new AtomicBoolean();
     mockService.doStuff().subscribe(new Action1<Object>() {
       @Override public void call(Object o) {
         throw new AssertionError();
@@ -563,12 +595,10 @@ public class MockRestAdapterTest {
     }, new Action1<Throwable>() {
       @Override public void call(Throwable error) {
         assertThat(error).hasMessage("Test");
-        called.set(true);
         latch.countDown();
       }
     });
-    latch.await(5, SECONDS);
-    assertThat(called.get()).isTrue();
+    assertTrue(latch.await(1, TimeUnit.SECONDS));
   }
 
   @Test public void asyncCanUseCallbackSubtype() {
