@@ -6,6 +6,7 @@ import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -27,6 +28,7 @@ import retrofit.http.HEAD;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
 import retrofit.http.Headers;
+import retrofit.http.Multipart;
 import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
@@ -340,38 +342,38 @@ public class RequestBuilderTest {
     }
   }
 
-  //@Test public void multipartFailsOnNonBodyMethod() {
-  //  class Example {
-  //    @Multipart //
-  //    @GET("/") //
-  //    Response method() {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage(
-  //        "Example.method: Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
-  //  }
-  //}
-  //
-  //@Test public void multipartFailsWithNoParts() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/") //
-  //    Response method() {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Example.method: Multipart method must contain at least one @Part.");
-  //  }
-  //}
+  @Test public void multipartFailsOnNonBodyMethod() {
+    class Example {
+      @Multipart //
+      @GET("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
+    }
+  }
+
+  @Test public void multipartFailsWithNoParts() {
+    class Example {
+      @Multipart //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Multipart method must contain at least one @Part.");
+    }
+  }
 
   @Test public void implicitFormEncodingByFieldForbidden() {
     class Example {
@@ -1174,7 +1176,7 @@ public class RequestBuilderTest {
     assertBody(request.body(), "[\"quick\",\"brown\",\"fox\"]");
   }
 
-  @Test public void bodyTypedInput() {
+  @Test public void bodyResponseBody() {
     class Example {
       @POST("/foo/bar/") //
       Response method(@Body RequestBody body) {
@@ -1218,192 +1220,190 @@ public class RequestBuilderTest {
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertBody(request.body(), "[\"quick\",\"brown\",\"fox\"]");
   }
-  //
-  //@Test public void simpleMultipart() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@Part("ping") String ping, @Part("kit") TypedInput kit) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Request request = buildRequest(Example.class, "pong", new TypedString("kat"));
-  //  assertThat(request.method()).isEqualTo("POST");
-  //  assertThat(request.headers().size()).isZero();
-  //  assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-  //
-  //  MultipartTypedOutput body = (MultipartTypedOutput) request.body();
-  //  List<byte[]> bodyParts = MimeHelper.getParts(body);
-  //  assertThat(bodyParts).hasSize(2);
-  //
-  //  Iterator<byte[]> iterator = bodyParts.iterator();
-  //
-  //  String one = new String(iterator.next(), UTF_8);
-  //  assertThat(one).contains("name=\"ping\"\r\n").endsWith("\r\npong");
-  //
-  //  String two = new String(iterator.next(), UTF_8);
-  //  assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
-  //}
-  //
-  //@Test public void multipartWithEncoding() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@Part(value = "ping", encoding = "8-bit") String ping,
-  //        @Part(value = "kit", encoding = "7-bit") TypedInput kit) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Request request = buildRequest(Example.class, "pong", new TypedString("kat"));
-  //  assertThat(request.method()).isEqualTo("POST");
-  //  assertThat(request.headers().size()).isZero();
-  //  assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-  //
-  //  MultipartTypedOutput body = (MultipartTypedOutput) request.body();
-  //  List<byte[]> bodyParts = MimeHelper.getParts(body);
-  //  assertThat(bodyParts).hasSize(2);
-  //
-  //  Iterator<byte[]> iterator = bodyParts.iterator();
-  //
-  //  String one = new String(iterator.next(), UTF_8);
-  //  assertThat(one).contains("name=\"ping\"\r\n")
-  //      .contains("Content-Transfer-Encoding: 8-bit")
-  //      .endsWith("\r\npong");
-  //
-  //  String two = new String(iterator.next(), UTF_8);
-  //  assertThat(two).contains("name=\"kit\"")
-  //      .contains("Content-Transfer-Encoding: 7-bit")
-  //      .endsWith("\r\nkat");
-  //}
-  //
-  //@Test public void multipartPartMap() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@PartMap Map<String, Object> parts) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> params = new LinkedHashMap<String, Object>();
-  //  params.put("ping", "pong");
-  //  params.put("kit", new TypedString("kat"));
-  //
-  //  Request request = buildRequest(Example.class, params);
-  //  assertThat(request.method()).isEqualTo("POST");
-  //  assertThat(request.headers().size()).isZero();
-  //  assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-  //
-  //  MultipartTypedOutput body = (MultipartTypedOutput) request.body();
-  //  List<byte[]> bodyParts = MimeHelper.getParts(body);
-  //  assertThat(bodyParts).hasSize(2);
-  //
-  //  Iterator<byte[]> iterator = bodyParts.iterator();
-  //
-  //  String one = new String(iterator.next(), UTF_8);
-  //  assertThat(one).contains("name=\"ping\"\r\n").endsWith("\r\npong");
-  //
-  //  String two = new String(iterator.next(), UTF_8);
-  //  assertThat(two).contains("name=\"kit\"").endsWith("\r\nkat");
-  //}
-  //
-  //@Test public void multipartPartMapWithEncoding() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@PartMap(encoding = "8-bit") Map<String, Object> parts) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> params = new LinkedHashMap<String, Object>();
-  //  params.put("ping", "pong");
-  //  params.put("kit", new TypedString("kat"));
-  //
-  //  Request request = buildRequest(Example.class, params);
-  //  assertThat(request.method()).isEqualTo("POST");
-  //  assertThat(request.headers().size()).isZero();
-  //  assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-  //
-  //  MultipartTypedOutput body = (MultipartTypedOutput) request.body();
-  //  List<byte[]> bodyParts = MimeHelper.getParts(body);
-  //  assertThat(bodyParts).hasSize(2);
-  //
-  //  Iterator<byte[]> iterator = bodyParts.iterator();
-  //
-  //  String one = new String(iterator.next(), UTF_8);
-  //  assertThat(one).contains("name=\"ping\"\r\n")
-  //      .contains("Content-Transfer-Encoding: 8-bit")
-  //      .endsWith("\r\npong");
-  //
-  //  String two = new String(iterator.next(), UTF_8);
-  //  assertThat(two).contains("name=\"kit\"")
-  //      .contains("Content-Transfer-Encoding: 8-bit")
-  //      .endsWith("\r\nkat");
-  //}
-  //
-  //@Test public void multipartPartMapRejectsNullKeys() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@PartMap Map<String, Object> parts) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> params = new LinkedHashMap<String, Object>();
-  //  params.put("ping", "pong");
-  //  params.put(null, "kat");
-  //
-  //  try {
-  //    buildRequest(Example.class, params);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Parameter #1 part map contained null key.");
-  //  }
-  //}
-  //
-  //@Test public void multipartNullRemovesPart() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@Part("ping") String ping, @Part("fizz") String fizz) {
-  //      return null;
-  //    }
-  //  }
-  //  Request request = buildRequest(Example.class, "pong", null);
-  //  assertThat(request.method()).isEqualTo("POST");
-  //  assertThat(request.headers().size()).isZero();
-  //  assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-  //
-  //  MultipartTypedOutput body = (MultipartTypedOutput) request.body();
-  //  List<byte[]> bodyParts = MimeHelper.getParts(body);
-  //  assertThat(bodyParts).hasSize(1);
-  //
-  //  Iterator<byte[]> iterator = bodyParts.iterator();
-  //
-  //  String one = new String(iterator.next(), UTF_8);
-  //  assertThat(one).contains("name=\"ping\"").endsWith("\r\npong");
-  //}
-  //
-  //@Test public void multipartPartOptional() {
-  //  class Example {
-  //    @Multipart //
-  //    @POST("/foo/bar/") //
-  //    Response method(@Part("ping") RequestBody ping) {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class, new Object[] { null });
-  //    fail();
-  //  } catch (IllegalStateException e) {
-  //    assertThat(e.getMessage()).isEqualTo("Multipart requests must contain at least one part.");
-  //  }
-  //}
-  //
+
+  @Test public void simpleMultipart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part("ping") String ping, @Part("kit") ResponseBody kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", RequestBody.create(
+        MediaType.parse("text/plain"), "kat"));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString)
+        .contains("name=\"kit\"")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartWithEncoding() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part(value = "ping", encoding = "8-bit") String ping,
+          @Part(value = "kit", encoding = "7-bit") ResponseBody kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", RequestBody.create(
+        MediaType.parse("text/plain"), "kat"));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString).contains("name=\"ping\"\r\n")
+        .contains("Content-Transfer-Encoding: 8-bit")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString).contains("name=\"kit\"")
+        .contains("Content-Transfer-Encoding: 7-bit")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartPartMap() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@PartMap Map<String, Object> parts) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("ping", "pong");
+    params.put("kit", RequestBody.create(MediaType.parse("text/plain"), "kat"));
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString)
+        .contains("name=\"kit\"")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartPartMapWithEncoding() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@PartMap(encoding = "8-bit") Map<String, Object> parts) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("ping", "pong");
+    params.put("kit", RequestBody.create(MediaType.parse("text/plain"), "kat"));
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString).contains("name=\"ping\"\r\n")
+        .contains("Content-Transfer-Encoding: 8-bit")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString).contains("name=\"kit\"")
+        .contains("Content-Transfer-Encoding: 8-bit")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartPartMapRejectsNullKeys() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@PartMap Map<String, Object> parts) {
+        return null;
+      }
+    }
+
+    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    params.put("ping", "pong");
+    params.put(null, "kat");
+
+    try {
+      buildRequest(Example.class, params);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter #1 part map contained null key.");
+    }
+  }
+
+  @Test public void multipartNullRemovesPart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part("ping") String ping, @Part("fizz") String fizz) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong", null);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"ping\"")
+        .contains("\r\npong\r\n--");
+  }
+
+  @Test public void multipartPartOptional() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Response method(@Part("ping") RequestBody ping) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e.getMessage()).isEqualTo("Multipart body must have at least one part.");
+    }
+  }
+
   //@Test public void simpleFormEncoded() {
   //  class Example {
   //    @FormUrlEncoded //

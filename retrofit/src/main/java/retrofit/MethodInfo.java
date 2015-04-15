@@ -138,8 +138,7 @@ final class MethodInfo {
         if (requestType != RequestType.SIMPLE) {
           throw methodError("Only one encoding annotation is allowed.");
         }
-        throw new UnsupportedOperationException("Multipart shall return!");
-        //requestType = RequestType.MULTIPART;
+        requestType = RequestType.MULTIPART;
       } else if (annotationType == FormUrlEncoded.class) {
         if (requestType != RequestType.SIMPLE) {
           throw methodError("Only one encoding annotation is allowed.");
