@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import retrofit.RequestInterceptor;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Headers;
@@ -19,6 +20,8 @@ import retrofit.http.POST;
 import retrofit.http.Streaming;
 import rx.Observable;
 import rx.functions.Action1;
+import rx.observers.TestSubscriber;
+import rx.schedulers.Schedulers;
 
 import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -196,38 +199,80 @@ public class RestAdapterTest {
   @Test public void observableCallsOnNext() throws Exception {
     server.enqueue(new MockResponse().setBody("hello"));
 
-    final AtomicReference<String> bodyRef = new AtomicReference<String>();
-    final CountDownLatch latch = new CountDownLatch(1);
-    example.observable("Howdy").subscribe(new Action1<String>() {
-      @Override public void call(String body) {
-        bodyRef.set(body);
-        latch.countDown();
-      }
-    });
-    assertTrue(latch.await(1, TimeUnit.SECONDS));
+    final TestSubscriber subscriber = new TestSubscriber();
+    example.observable("Howdy").subscribe(subscriber);
 
-    assertThat(bodyRef.get()).isEqualTo("hello");
+    subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
+    assertThat(subscriber.getOnNextEvents()).containsExactly("hello");
+    subscriber.assertNoErrors();
   }
 
   @Test public void observableCallsOnError() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(500));
 
-    final AtomicReference<Throwable> errorRef = new AtomicReference<Throwable>();
-    final CountDownLatch latch = new CountDownLatch(1);
-    example.observable("Howdy").subscribe(new Action1<String>() {
-      @Override public void call(String s) {
-        throw new AssertionError();
-      }
-    }, new Action1<Throwable>() {
-      @Override public void call(Throwable throwable) {
-        errorRef.set(throwable);
-        latch.countDown();
-      }
-    });
-    assertTrue(latch.await(1, TimeUnit.SECONDS));
+    final TestSubscriber subscriber = new TestSubscriber();
+    example.observable("Howdy").subscribe(subscriber);
 
-    RetrofitError error = (RetrofitError) errorRef.get();
+    subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
+
+    RetrofitError error = (RetrofitError) subscriber.getOnErrorEvents().get(0);
     assertThat(error.getResponse().code()).isEqualTo(500);
     assertThat(error.getSuccessType()).isEqualTo(String.class);
+    assertThat(subscriber.getOnErrorEvents()).hasSize(1);
+  }
+
+  @Test public void observableDefersInterceptionUntilSubscription() throws Exception {
+    server.enqueue(new MockResponse().setBody("hello"));
+
+    final TestSubscriber subscriber = new TestSubscriber();
+    final Thread testThread = Thread.currentThread();
+
+    final Example interceptorExample = new RestAdapter.Builder()
+        .setEndpoint(server.getUrl("/").toString())
+        .setRequestInterceptor(new RequestInterceptor() {
+          @Override
+          public void intercept(RequestInterceptor.RequestFacade request) {
+            assertThat(Thread.currentThread()).isNotEqualTo(testThread);
+            request.addHeader("Nyan", "Cat");
+          }
+        })
+        .build()
+        .create(Example.class);
+
+    final Observable<String> observable = interceptorExample.observable("Howdy")
+        .subscribeOn(Schedulers.newThread());
+
+    observable.subscribe(subscriber);
+    subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
+
+    assertThat(subscriber.getOnNextEvents()).containsExactly("hello");
+    assertThat(server.takeRequest().getHeader("Nyan")).isEqualTo("Cat");
+  }
+
+  @Test public void observableInterceptionDefaultsToCurrentThread() throws Exception {
+    server.enqueue(new MockResponse().setBody("hello"));
+
+    final TestSubscriber subscriber = new TestSubscriber();
+    final Thread testThread = Thread.currentThread();
+
+    final Example interceptorExample = new RestAdapter.Builder()
+        .setEndpoint(server.getUrl("/").toString())
+        .setRequestInterceptor(new RequestInterceptor() {
+          @Override
+          public void intercept(RequestInterceptor.RequestFacade request) {
+            assertThat(Thread.currentThread()).isEqualTo(testThread);
+            request.addHeader("Nyan", "Cat");
+          }
+        })
+        .build()
+        .create(Example.class);
+
+    final Observable<String> observable = interceptorExample.observable("Howdy");
+
+    observable.subscribe(subscriber);
+    subscriber.awaitTerminalEvent(1, TimeUnit.SECONDS);
+
+    assertThat(subscriber.getOnNextEvents()).containsExactly("hello");
+    assertThat(server.takeRequest().getHeader("Nyan")).isEqualTo("Cat");
   }
 }

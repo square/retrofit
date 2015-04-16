@@ -165,15 +165,16 @@ public final class RestAdapter {
       }
 
       MethodInfo methodInfo = getMethodInfo(methodDetailsCache, method);
-      Request request = createRequest(methodInfo, args);
       switch (methodInfo.executionType) {
         case SYNC:
-          return invokeSync(methodInfo, request);
+          return invokeSync(methodInfo, createRequest(methodInfo, args));
         case ASYNC:
-          invokeAsync(methodInfo, request, (Callback) args[args.length - 1]);
+          invokeAsync(methodInfo, createRequest(methodInfo, args),
+              (Callback) args[args.length - 1]);
           return null; // Async has void return type.
         case RX:
-          return invokeRx(methodInfo, request);
+          // Request interception is deferred until subscription for Observables.
+          return invokeRx(methodInfo, createRequestBuilder(methodInfo, args), requestInterceptor);
         default:
           throw new IllegalStateException("Unknown response type: " + methodInfo.executionType);
       }
@@ -218,7 +219,8 @@ public final class RestAdapter {
       });
     }
 
-    private Object invokeRx(final MethodInfo methodInfo, final Request request) {
+    private Object invokeRx(final MethodInfo methodInfo, final RequestBuilder requestBuilder,
+        final RequestInterceptor requestInterceptor) {
       if (rxSupport == null) {
         if (Platform.HAS_RX_JAVA) {
           rxSupport = new RxSupport();
@@ -227,7 +229,7 @@ public final class RestAdapter {
         }
       }
       return rxSupport.createRequestObservable(new RxSupport.Invoker() {
-        @Override public void invoke(final Callback callback) {
+        @Override public void invoke(final Request request, final Callback callback) {
           Call call = client.newCall(request);
           call.enqueue(new com.squareup.okhttp.Callback() {
             @Override public void onFailure(Request request, IOException e) {
@@ -245,7 +247,7 @@ public final class RestAdapter {
           });
 
         }
-      });
+      }, requestBuilder, requestInterceptor);
     }
 
     /**
@@ -335,11 +337,16 @@ public final class RestAdapter {
       });
     }
 
-    private Request createRequest(MethodInfo methodInfo, Object[] args) {
+    private RequestBuilder createRequestBuilder(MethodInfo methodInfo, Object[] args) {
       String serverUrl = endpoint.url();
       RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
       requestBuilder.setArguments(args);
 
+      return requestBuilder;
+    }
+
+    private Request createRequest(MethodInfo methodInfo, Object[] args) {
+      RequestBuilder requestBuilder = createRequestBuilder(methodInfo, args);
       requestInterceptor.intercept(requestBuilder);
 
       return requestBuilder.build();

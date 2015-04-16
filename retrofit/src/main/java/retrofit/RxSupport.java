@@ -1,7 +1,10 @@
 package retrofit;
 
+import com.squareup.okhttp.Request;
+
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func0;
 
 /**
  * Utilities for supporting RxJava Observables.
@@ -10,7 +13,7 @@ import rx.Subscriber;
  */
 final class RxSupport {
   interface Invoker {
-    void invoke(Callback callback);
+    void invoke(Request request, Callback callback);
 
     interface Callback {
       void next(Object o);
@@ -21,24 +24,35 @@ final class RxSupport {
   RxSupport() {
   }
 
-  Observable createRequestObservable(final Invoker invoker) {
-    return Observable.create(new Observable.OnSubscribe<Object>() {
-      @Override public void call(final Subscriber<? super Object> subscriber) {
-        invoker.invoke(new Invoker.Callback() {
-          @Override public void next(Object o) {
-            if (!subscriber.isUnsubscribed()) {
-              subscriber.onNext(o);
-              subscriber.onCompleted();
-            }
-          }
+  Observable createRequestObservable(final Invoker invoker, final RequestBuilder requestBuilder,
+      final RequestInterceptor requestInterceptor) {
+    return Observable.defer(new Func0<Observable<Object>>() {
 
-          @Override public void error(Throwable t) {
-            if (!subscriber.isUnsubscribed()) {
-              subscriber.onError(t);
-            }
+      @Override public Observable<Object> call() {
+        // Run interceptor, which was deferred until subscription.
+        requestInterceptor.intercept(requestBuilder);
+
+        return Observable.create(new Observable.OnSubscribe<Object>() {
+          @Override public void call(final Subscriber<? super Object> subscriber) {
+            invoker.invoke(requestBuilder.build(), new Invoker.Callback() {
+              @Override public void next(Object o) {
+                if (!subscriber.isUnsubscribed()) {
+                  subscriber.onNext(o);
+                  subscriber.onCompleted();
+                }
+              }
+
+              @Override public void error(Throwable t) {
+                if (!subscriber.isUnsubscribed()) {
+                  subscriber.onError(t);
+                }
+              }
+            });
           }
         });
       }
+
     });
   }
+
 }
