@@ -17,18 +17,23 @@ package retrofit;
 
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.Map;
+
 import okio.BufferedSink;
 import retrofit.converter.Converter;
 import retrofit.http.Body;
 import retrofit.http.Header;
+import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
@@ -42,6 +47,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final boolean async;
   private final String apiUrl;
 
+  private MultipartBuilder multipartBody;
   private RequestBody body;
 
   private String relativeUrl;
@@ -67,6 +73,26 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     String requestQuery = methodInfo.requestQuery;
     if (requestQuery != null) {
       queryParams = new StringBuilder().append('?').append(requestQuery);
+    }
+
+    switch (methodInfo.requestType) {
+//      case FORM_URL_ENCODED:
+//        formBody = new FormUrlEncodedTypedOutput();
+//        multipartBody = null;
+//        body = formBody;
+//        break;
+      case MULTIPART:
+//        formBody = null;
+        multipartBody = new MultipartBuilder();
+//        body = multipartBody;
+        break;
+      case SIMPLE:
+//        formBody = null;
+        multipartBody = null;
+        // If present, 'body' will be set in 'setArguments' call.
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
     }
   }
 
@@ -282,45 +308,49 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       //      }
       //    }
       //  }
-      // TODO bring back multipart!
-      //} else if (annotationType == Part.class) {
-      //  if (value != null) { // Skip null values.
-      //    String name = ((Part) annotation).value();
-      //    String transferEncoding = ((Part) annotation).encoding();
-      //    if (value instanceof RequestBody) {
-      //      multipartBody.addPart((RequestBody) value);
-      //      multipartBody.addPart(name, transferEncoding, (TypedOutput) value);
-      //    } else if (value instanceof String) {
-      //      multipartBody.addPart(name, transferEncoding, new TypedString((String) value));
-      //    } else {
-      //      multipartBody.addPart(name, transferEncoding,
-      //          converter.toBody(value, value.getClass()));
-      //    }
-      //  }
-      //} else if (annotationType == PartMap.class) {
-      //  if (value != null) { // Skip null values.
-      //    String transferEncoding = ((PartMap) annotation).encoding();
-      //    for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-      //      Object entryKey = entry.getKey();
-      //      if (entryKey == null) {
-      //        throw new IllegalArgumentException(
-      //            "Parameter #" + (i + 1) + " part map contained null key.");
-      //      }
-      //      String entryName = entryKey.toString();
-      //      Object entryValue = entry.getValue();
-      //      if (entryValue != null) { // Skip null values.
-      //        if (entryValue instanceof TypedOutput) {
-      //          multipartBody.addPart(entryName, transferEncoding, (TypedOutput) entryValue);
-      //        } else if (entryValue instanceof String) {
-      //          multipartBody.addPart(entryName, transferEncoding,
-      //              new TypedString((String) entryValue));
-      //        } else {
-      //          multipartBody.addPart(entryName, transferEncoding,
-      //              converter.toBody(entryValue, entryValue.getClass()));
-      //        }
-      //      }
-      //    }
-      //  }
+      } else if (annotationType == Part.class) {
+        if (value != null) { // Skip null values.
+          String name = ((Part) annotation).value();
+          String transferEncoding = ((Part) annotation).encoding();
+          Headers headers = Headers.of(
+              "Content-Disposition", "name=\"" + name + "\"",
+              "Content-Transfer-Encoding", transferEncoding);
+          if (value instanceof RequestBody) {
+            multipartBody.addPart(headers, (RequestBody) value);
+          } else if (value instanceof String) {
+            multipartBody.addPart(headers, RequestBody.create(
+                MediaType.parse("text/plain"), (String) value));
+          } else {
+            multipartBody.addPart(headers,
+                converter.toBody(value, value.getClass()));
+          }
+        }
+      } else if (annotationType == PartMap.class) {
+        if (value != null) { // Skip null values.
+          String transferEncoding = ((PartMap) annotation).encoding();
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+            Object entryKey = entry.getKey();
+            if (entryKey == null) {
+              throw new IllegalArgumentException(
+                  "Parameter #" + (i + 1) + " part map contained null key.");
+            }
+            String entryName = entryKey.toString();
+            Object entryValue = entry.getValue();
+            Headers headers = Headers.of(
+                "Content-Disposition", "name=\"" + entryName + "\"",
+                "Content-Transfer-Encoding", transferEncoding);
+            if (entryValue != null) { // Skip null values.
+              if (entryValue instanceof RequestBody) {
+                multipartBody.addPart(headers, (RequestBody) entryValue);
+              } else if (entryValue instanceof String) {
+                multipartBody.addPart(headers, RequestBody.create(
+                    MediaType.parse("text/plain"), (String) entryValue));
+              } else {
+                multipartBody.addPart(headers, converter.toBody(entryValue, entryValue.getClass()));
+              }
+            }
+          }
+        }
       } else if (annotationType == Body.class) {
         if (value == null) {
           throw new IllegalArgumentException("Body parameter value must not be null.");
@@ -338,9 +368,9 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   Request build() {
-    //if (multipartBody != null && multipartBody.getPartCount() == 0) {
-    //  throw new IllegalStateException("Multipart requests must contain at least one part.");
-    //}
+    if (multipartBody != null) {
+      body = multipartBody.build();
+    }
 
     String apiUrl = this.apiUrl;
     StringBuilder url = new StringBuilder(apiUrl);
