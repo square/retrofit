@@ -424,6 +424,7 @@ public class RestAdapter {
       this.errorHandler = errorHandler;
       return this;
     }
+
     /** Create the {@link RestAdapter} instances. */
     public RestAdapter build() {
       if (endpoint == null) {
