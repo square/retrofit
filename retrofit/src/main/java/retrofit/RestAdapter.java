@@ -96,7 +96,7 @@ import retrofit.http.Header;
  * @author Bob Lee (bob@squareup.com)
  * @author Jake Wharton (jw@squareup.com)
  */
-public class RestAdapter {
+public final class RestAdapter {
   private final Map<Class<?>, Map<Method, MethodInfo>> serviceMethodInfoCache =
       new LinkedHashMap<Class<?>, Map<Method, MethodInfo>>();
 
