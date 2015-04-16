@@ -23,6 +23,7 @@ import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
+import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.HEAD;
 import retrofit.http.HTTP;
@@ -77,39 +78,39 @@ public class RequestBuilderTest {
     assertBody(request.body(), "hi");
   }
 
-  //@Test public void onlyOneEncodingIsAllowedMultipartFirst() {
-  //  class Example {
-  //    @Multipart //
-  //    @FormUrlEncoded //
-  //    @POST("/") //
-  //    Response method() {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
-  //  }
-  //}
-  //
-  //@Test public void onlyOneEncodingIsAllowedFormEncodingFirst() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @Multipart //
-  //    @POST("/") //
-  //    Response method() {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
-  //  }
-  //}
+  @Test public void onlyOneEncodingIsAllowedMultipartFirst() {
+    class Example {
+      @Multipart //
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
+    }
+  }
+
+  @Test public void onlyOneEncodingIsAllowedFormEncodingFirst() {
+    class Example {
+      @FormUrlEncoded //
+      @Multipart //
+      @POST("/") //
+      Response method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
+    }
+  }
 
   @Test public void invalidPathParam() throws Exception {
     class Example {
@@ -569,22 +570,22 @@ public class RequestBuilderTest {
     }
   }
 
-  //@Test public void bodyInNonBodyRequest() {
-  //  class Example {
-  //    @Multipart //
-  //    @PUT("/") //
-  //    Response method(@Part("one") int o1, @Body int o2) {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage(
-  //        "Example.method: @Body parameters cannot be used with form or multi-part encoding. (parameter #2)");
-  //  }
-  //}
+  @Test public void bodyInNonBodyRequest() {
+    class Example {
+      @Multipart //
+      @PUT("/") //
+      Response method(@Part("one") int o1, @Body int o2) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: @Body parameters cannot be used with form or multi-part encoding. (parameter #2)");
+    }
+  }
 
   @Test public void get() {
     class Example {
@@ -1404,186 +1405,186 @@ public class RequestBuilderTest {
     }
   }
 
-  //@Test public void simpleFormEncoded() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field("foo") String foo, @Field("ping") String ping) {
-  //      return null;
-  //    }
-  //  }
-  //  Request request = buildRequest(Example.class, "bar", "pong");
-  //  assertBody(request.body(), "foo=bar&ping=pong");
-  //}
-  //
-  //@Test public void formEncodedWithEncodedNameFieldParam() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field(value = "na+me", encodeName = false) String foo) {
-  //      return null;
-  //    }
-  //  }
-  //  Request request = buildRequest(Example.class, "ba r");
-  //  assertBody(request.body(), "na+me=ba+r");
-  //}
-  //
-  //@Test public void formEncodedWithEncodedValueFieldParam() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field(value = "na me", encodeValue = false) String foo) {
-  //      return null;
-  //    }
-  //  }
-  //  Request request = buildRequest(Example.class, "ba+r");
-  //  assertBody(request.body(), "na+me=ba+r");
-  //}
-  //
-  //@Test public void formEncodedFieldOptional() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field("foo") String foo, @Field("ping") String ping,
-  //        @Field("kit") String kit) {
-  //      return null;
-  //    }
-  //  }
-  //  Request request = buildRequest(Example.class, "bar", null, "kat");
-  //  assertBody(request.body(), "foo=bar&kit=kat");
-  //}
-  //
-  //@Test public void formEncodedFieldList() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field("foo") List<Object> fields, @Field("kit") String kit) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
-  //  Request request = buildRequest(Example.class, values, "kat");
-  //  assertBody(request.body(), "foo=foo&foo=bar&foo=3&kit=kat");
-  //}
-  //
-  //@Test public void formEncodedFieldArray() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field("foo") Object[] fields, @Field("kit") String kit) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Object[] values = { 1, 2, null, "three" };
-  //  Request request = buildRequest(Example.class, values, "kat");
-  //  assertBody(request.body(), "foo=1&foo=2&foo=three&kit=kat");
-  //}
-  //
-  //@Test public void formEncodedFieldPrimitiveArray() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@Field("foo") int[] fields, @Field("kit") String kit) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  int[] values = { 1, 2, 3 };
-  //  Request request = buildRequest(Example.class, values, "kat");
-  //  assertBody(request.body(), "foo=1&foo=2&foo=3&kit=kat");
-  //}
-  //
-  //@Test public void formEncodedWithEncodedNameFieldParamMap() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@FieldMap(encodeNames = false) Map<String, Object> fieldMap) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
-  //  fieldMap.put("k+it", "k at");
-  //  fieldMap.put("pin+g", "po ng");
-  //
-  //  Request request = buildRequest(Example.class, fieldMap);
-  //  assertBody(request.body(), "k+it=k+at&pin+g=po+ng");
-  //}
-  //
-  //@Test public void formEncodedWithEncodedValueFieldParamMap() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@FieldMap(encodeValues = false) Map<String, Object> fieldMap) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
-  //  fieldMap.put("k it", "k+at");
-  //  fieldMap.put("pin g", "po+ng");
-  //
-  //  Request request = buildRequest(Example.class, fieldMap);
-  //  assertBody(request.body(), "k+it=k+at&pin+g=po+ng");
-  //}
-  //
-  //@Test public void formEncodedFieldMap() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/foo") //
-  //    Response method(@FieldMap Map<String, Object> fieldMap) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
-  //  fieldMap.put("kit", "kat");
-  //  fieldMap.put("foo", null);
-  //  fieldMap.put("ping", "pong");
-  //
-  //  Request request = buildRequest(Example.class, fieldMap);
-  //  assertBody(request.body(), "kit=kat&ping=pong");
-  //}
-  //
-  //@Test public void fieldMapRejectsNullKeys() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/") //
-  //    Response method(@FieldMap Map<String, Object> a) {
-  //      return null;
-  //    }
-  //  }
-  //
-  //  Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
-  //  fieldMap.put("kit", "kat");
-  //  fieldMap.put("foo", null);
-  //  fieldMap.put(null, "pong");
-  //
-  //  try {
-  //    buildRequest(Example.class, fieldMap);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Parameter #1 field map contained null key.");
-  //  }
-  //}
-  //
-  //@Test public void fieldMapMustBeAMap() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/") //
-  //    Response method(@FieldMap List<String> a) {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Example.method: @FieldMap parameter type must be Map. (parameter #1)");
-  //  }
-  //}
+  @Test public void simpleFormEncoded() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") String foo, @Field("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", "pong");
+    assertBody(request.body(), "foo=bar&ping=pong");
+  }
+
+  @Test public void formEncodedWithEncodedNameFieldParam() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field(value = "na+me", encodeName = false) String foo) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "ba r");
+    assertBody(request.body(), "na+me=ba+r");
+  }
+
+  @Test public void formEncodedWithEncodedValueFieldParam() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field(value = "na me", encodeValue = false) String foo) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "ba+r");
+    assertBody(request.body(), "na+me=ba+r");
+  }
+
+  @Test public void formEncodedFieldOptional() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") String foo, @Field("ping") String ping,
+          @Field("kit") String kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", null, "kat");
+    assertBody(request.body(), "foo=bar&kit=kat");
+  }
+
+  @Test public void formEncodedFieldList() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") List<Object> fields, @Field("kit") String kit) {
+        return null;
+      }
+    }
+
+    List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
+    Request request = buildRequest(Example.class, values, "kat");
+    assertBody(request.body(), "foo=foo&foo=bar&foo=3&kit=kat");
+  }
+
+  @Test public void formEncodedFieldArray() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") Object[] fields, @Field("kit") String kit) {
+        return null;
+      }
+    }
+
+    Object[] values = { 1, 2, null, "three" };
+    Request request = buildRequest(Example.class, values, "kat");
+    assertBody(request.body(), "foo=1&foo=2&foo=three&kit=kat");
+  }
+
+  @Test public void formEncodedFieldPrimitiveArray() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@Field("foo") int[] fields, @Field("kit") String kit) {
+        return null;
+      }
+    }
+
+    int[] values = { 1, 2, 3 };
+    Request request = buildRequest(Example.class, values, "kat");
+    assertBody(request.body(), "foo=1&foo=2&foo=3&kit=kat");
+  }
+
+  @Test public void formEncodedWithEncodedNameFieldParamMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@FieldMap(encodeNames = false) Map<String, Object> fieldMap) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("k+it", "k at");
+    fieldMap.put("pin+g", "po ng");
+
+    Request request = buildRequest(Example.class, fieldMap);
+    assertBody(request.body(), "k+it=k+at&pin+g=po+ng");
+  }
+
+  @Test public void formEncodedWithEncodedValueFieldParamMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@FieldMap(encodeValues = false) Map<String, Object> fieldMap) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("k it", "k+at");
+    fieldMap.put("pin g", "po+ng");
+
+    Request request = buildRequest(Example.class, fieldMap);
+    assertBody(request.body(), "k+it=k+at&pin+g=po+ng");
+  }
+
+  @Test public void formEncodedFieldMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      Response method(@FieldMap Map<String, Object> fieldMap) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put("foo", null);
+    fieldMap.put("ping", "pong");
+
+    Request request = buildRequest(Example.class, fieldMap);
+    assertBody(request.body(), "kit=kat&ping=pong");
+  }
+
+  @Test public void fieldMapRejectsNullKeys() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put("foo", null);
+    fieldMap.put(null, "pong");
+
+    try {
+      buildRequest(Example.class, fieldMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter #1 field map contained null key.");
+    }
+  }
+
+  @Test public void fieldMapMustBeAMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Response method(@FieldMap List<String> a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: @FieldMap parameter type must be Map. (parameter #1)");
+    }
+  }
 
   @Test public void simpleHeaders() {
     class Example {

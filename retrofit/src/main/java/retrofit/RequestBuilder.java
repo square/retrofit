@@ -29,6 +29,8 @@ import java.util.Map;
 import okio.BufferedSink;
 import retrofit.converter.Converter;
 import retrofit.http.Body;
+import retrofit.http.Field;
+import retrofit.http.FieldMap;
 import retrofit.http.Header;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
@@ -45,7 +47,8 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final boolean async;
   private final String apiUrl;
 
-  private MultipartBuilder multipartBody;
+  private MultipartBuilder multipartBuilder;
+  private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
   private String relativeUrl;
@@ -74,13 +77,13 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     switch (methodInfo.requestType) {
-      //case FORM_URL_ENCODED:
-      //  // Will be set to 'body' in 'build'.
-      //  formBody = new FormUrlEncodedTypedOutput();
-      //  break;
+      case FORM_URL_ENCODED:
+        // Will be set to 'body' in 'build'.
+        formEncodingBuilder = new FormEncodingBuilder();
+        break;
       case MULTIPART:
         // Will be set to 'body' in 'build'.
-        multipartBody = new MultipartBuilder();
+        multipartBuilder = new MultipartBuilder();
         break;
       case SIMPLE:
         // If present, 'body' will be set in 'setArguments' call.
@@ -260,48 +263,47 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
             addHeader(name, value.toString());
           }
         }
-      // TODO bring back form url encoding!
-      //} else if (annotationType == Field.class) {
-      //  if (value != null) { // Skip null values.
-      //    Field field = (Field) annotation;
-      //    String name = field.value();
-      //    boolean encodeName = field.encodeName();
-      //    boolean encodeValue = field.encodeValue();
-      //    if (value instanceof Iterable) {
-      //      for (Object iterableValue : (Iterable<?>) value) {
-      //        if (iterableValue != null) { // Skip null values.
-      //          formBody.addField(name, encodeName, iterableValue.toString(), encodeValue);
-      //        }
-      //      }
-      //    } else if (value.getClass().isArray()) {
-      //      for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-      //        Object arrayValue = Array.get(value, x);
-      //        if (arrayValue != null) { // Skip null values.
-      //          formBody.addField(name, encodeName, arrayValue.toString(), encodeValue);
-      //        }
-      //      }
-      //    } else {
-      //      formBody.addField(name, encodeName, value.toString(), encodeValue);
-      //    }
-      //  }
-      //} else if (annotationType == FieldMap.class) {
-      //  if (value != null) { // Skip null values.
-      //    FieldMap fieldMap = (FieldMap) annotation;
-      //    boolean encodeNames = fieldMap.encodeNames();
-      //    boolean encodeValues = fieldMap.encodeValues();
-      //    for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-      //      Object entryKey = entry.getKey();
-      //      if (entryKey == null) {
-      //        throw new IllegalArgumentException(
-      //            "Parameter #" + (i + 1) + " field map contained null key.");
-      //      }
-      //      Object entryValue = entry.getValue();
-      //      if (entryValue != null) { // Skip null values.
-      //        formBody.addField(entryKey.toString(), encodeNames, entryValue.toString(),
-      //            encodeValues);
-      //      }
-      //    }
-      //  }
+      } else if (annotationType == Field.class) {
+        if (value != null) { // Skip null values.
+          Field field = (Field) annotation;
+          String name = field.value();
+          boolean encodeName = field.encodeName();
+          boolean encodeValue = field.encodeValue();
+          if (value instanceof Iterable) {
+            for (Object iterableValue : (Iterable<?>) value) {
+              if (iterableValue != null) { // Skip null values.
+                formEncodingBuilder.add(name, encodeName, iterableValue.toString(), encodeValue);
+              }
+            }
+          } else if (value.getClass().isArray()) {
+            for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+              Object arrayValue = Array.get(value, x);
+              if (arrayValue != null) { // Skip null values.
+                formEncodingBuilder.add(name, encodeName, arrayValue.toString(), encodeValue);
+              }
+            }
+          } else {
+            formEncodingBuilder.add(name, encodeName, value.toString(), encodeValue);
+          }
+        }
+      } else if (annotationType == FieldMap.class) {
+        if (value != null) { // Skip null values.
+          FieldMap fieldMap = (FieldMap) annotation;
+          boolean encodeNames = fieldMap.encodeNames();
+          boolean encodeValues = fieldMap.encodeValues();
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+            Object entryKey = entry.getKey();
+            if (entryKey == null) {
+              throw new IllegalArgumentException(
+                  "Parameter #" + (i + 1) + " field map contained null key.");
+            }
+            Object entryValue = entry.getValue();
+            if (entryValue != null) { // Skip null values.
+              formEncodingBuilder.add(entryKey.toString(), encodeNames, entryValue.toString(),
+                  encodeValues);
+            }
+          }
+        }
       } else if (annotationType == Part.class) {
         if (value != null) { // Skip null values.
           String name = ((Part) annotation).value();
@@ -310,13 +312,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
               "Content-Disposition", "name=\"" + name + "\"",
               "Content-Transfer-Encoding", transferEncoding);
           if (value instanceof RequestBody) {
-            multipartBody.addPart(headers, (RequestBody) value);
+            multipartBuilder.addPart(headers, (RequestBody) value);
           } else if (value instanceof String) {
-            multipartBody.addPart(headers, RequestBody.create(
-                MediaType.parse("text/plain"), (String) value));
+            multipartBuilder.addPart(headers,
+                RequestBody.create(MediaType.parse("text/plain"), (String) value));
           } else {
-            multipartBody.addPart(headers,
-                converter.toBody(value, value.getClass()));
+            multipartBuilder.addPart(headers, converter.toBody(value, value.getClass()));
           }
         }
       } else if (annotationType == PartMap.class) {
@@ -335,12 +336,13 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
                 "Content-Transfer-Encoding", transferEncoding);
             if (entryValue != null) { // Skip null values.
               if (entryValue instanceof RequestBody) {
-                multipartBody.addPart(headers, (RequestBody) entryValue);
+                multipartBuilder.addPart(headers, (RequestBody) entryValue);
               } else if (entryValue instanceof String) {
-                multipartBody.addPart(headers, RequestBody.create(
-                    MediaType.parse("text/plain"), (String) entryValue));
+                multipartBuilder.addPart(headers,
+                    RequestBody.create(MediaType.parse("text/plain"), (String) entryValue));
               } else {
-                multipartBody.addPart(headers, converter.toBody(entryValue, entryValue.getClass()));
+                multipartBuilder.addPart(headers,
+                    converter.toBody(entryValue, entryValue.getClass()));
               }
             }
           }
@@ -362,10 +364,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   }
 
   Request build() {
-    if (multipartBody != null) {
-      body = multipartBody.build();
-    }
-
     String apiUrl = this.apiUrl;
     StringBuilder url = new StringBuilder(apiUrl);
     if (apiUrl.endsWith("/")) {
@@ -381,6 +379,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     RequestBody body = this.body;
+    if (body == null) {
+      // Try to pull from one of the builders.
+      if (formEncodingBuilder != null) {
+        body = formEncodingBuilder.build();
+      } else if (multipartBuilder != null) {
+        body = multipartBuilder.build();
+      }
+    }
+
     Headers.Builder headerBuilder = this.headers;
     if (contentTypeHeader != null) {
       if (body != null) {
@@ -392,7 +399,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         headerBuilder.add("Content-Type", contentTypeHeader);
       }
     }
-
     Headers headers = headerBuilder != null ? headerBuilder.build() : NO_HEADERS;
 
     return new Request.Builder()
