@@ -21,6 +21,7 @@ import rx.Observable;
 import rx.functions.Action1;
 
 import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -120,7 +121,7 @@ public class RestAdapterTest {
   }
 
   @Test public void streamingResponse() throws Exception {
-    server.enqueue(new MockResponse().setBody("Hey").setBodyDelayTimeMs(500));
+    server.enqueue(new MockResponse().setBody("Hey").setBodyDelay(500, MILLISECONDS));
     Response response = example.streaming();
     long startNs = System.nanoTime();
     response.body().string();

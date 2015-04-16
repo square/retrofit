@@ -143,8 +143,7 @@ final class MethodInfo {
         if (requestType != RequestType.SIMPLE) {
           throw methodError("Only one encoding annotation is allowed.");
         }
-        throw new UnsupportedOperationException("Form URL encoding shall return!");
-        //requestType = RequestType.FORM_URL_ENCODED;
+        requestType = RequestType.FORM_URL_ENCODED;
       } else if (annotationType == Streaming.class) {
         if (responseObjectType != Response.class) {
           throw methodError(
