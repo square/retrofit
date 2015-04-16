@@ -26,9 +26,9 @@ import okio.BufferedSource;
 import okio.Source;
 
 final class Utils {
-  static <T> T checkNotNull(T object, String message, Object... args) {
+  static <T> T checkNotNull(T object, String message) {
     if (object == null) {
-      throw new NullPointerException(String.format(message, args));
+      throw new NullPointerException(message);
     }
     return object;
   }
