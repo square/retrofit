@@ -29,7 +29,7 @@ import com.squareup.okhttp.Response;
  * </ul>
  *
  * @param <T> expected response type
- * @see RestAdapter.Builder#setCallbackExecutor
+ * @see RestAdapter.Builder#callbackExecutor
  */
 public interface Callback<T> {
 

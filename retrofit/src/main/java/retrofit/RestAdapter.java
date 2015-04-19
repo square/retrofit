@@ -32,6 +32,8 @@ import retrofit.converter.Converter;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
 
+import static retrofit.Utils.checkNotNull;
+
 /**
  * Adapts a Java interface to a REST API.
  * <p>
@@ -354,7 +356,7 @@ public final class RestAdapter {
   /**
    * Build a new {@link RestAdapter}.
    * <p>
-   * Calling {@link #setEndpoint} is required before calling {@link #build()}. All other methods
+   * Calling {@link #endpoint} is required before calling {@link #build()}. All other methods
    * are optional.
    */
   public static class Builder {
@@ -366,25 +368,19 @@ public final class RestAdapter {
     private ErrorHandler errorHandler;
 
     /** API endpoint URL. */
-    public Builder setEndpoint(String url) {
-       return setEndpoint(Endpoint.createFixed(url));
+    public Builder endpoint(String url) {
+       return endpoint(Endpoint.createFixed(url));
     }
 
     /** API endpoint. */
-    public Builder setEndpoint(Endpoint endpoint) {
-      if (endpoint == null) {
-        throw new NullPointerException("Endpoint may not be null.");
-      }
-      this.endpoint = endpoint;
+    public Builder endpoint(Endpoint endpoint) {
+      this.endpoint = checkNotNull(endpoint, "endpoint == null");
       return this;
     }
 
     /** The HTTP client used for requests. */
-    public Builder setClient(OkHttpClient client) {
-      if (client == null) {
-        throw new NullPointerException("Client may not be null.");
-      }
-      this.client = client;
+    public Builder client(OkHttpClient client) {
+      this.client = checkNotNull(client, "client == null");
       return this;
     }
 
@@ -392,7 +388,7 @@ public final class RestAdapter {
      * Executor on which any {@link Callback} methods will be invoked. If this argument is
      * {@code null} then callback methods will be run on the same thread as the HTTP client.
      */
-    public Builder setCallbackExecutor(Executor callbackExecutor) {
+    public Builder callbackExecutor(Executor callbackExecutor) {
       if (callbackExecutor == null) {
         callbackExecutor = new Utils.SynchronousExecutor();
       }
@@ -401,20 +397,14 @@ public final class RestAdapter {
     }
 
     /** A request interceptor for adding data to every request. */
-    public Builder setRequestInterceptor(RequestInterceptor requestInterceptor) {
-      if (requestInterceptor == null) {
-        throw new NullPointerException("Request interceptor may not be null.");
-      }
-      this.requestInterceptor = requestInterceptor;
+    public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
+      this.requestInterceptor = checkNotNull(requestInterceptor, "requestInterceptor == null");
       return this;
     }
 
     /** The converter used for serialization and deserialization of objects. */
-    public Builder setConverter(Converter converter) {
-      if (converter == null) {
-        throw new NullPointerException("Converter may not be null.");
-      }
-      this.converter = converter;
+    public Builder converter(Converter converter) {
+      this.converter = checkNotNull(converter, "converter == null");
       return this;
     }
 
@@ -422,19 +412,14 @@ public final class RestAdapter {
      * The error handler allows you to customize the type of exception thrown for errors on
      * synchronous requests.
      */
-    public Builder setErrorHandler(ErrorHandler errorHandler) {
-      if (errorHandler == null) {
-        throw new NullPointerException("Error handler may not be null.");
-      }
-      this.errorHandler = errorHandler;
+    public Builder errorHandler(ErrorHandler errorHandler) {
+      this.errorHandler = checkNotNull(errorHandler, "errorHandler == null");
       return this;
     }
 
     /** Create the {@link RestAdapter} instances. */
     public RestAdapter build() {
-      if (endpoint == null) {
-        throw new IllegalArgumentException("Endpoint may not be null.");
-      }
+      checkNotNull(endpoint, "Endpoint required.");
       ensureSaneDefaults();
       return new RestAdapter(endpoint, client, callbackExecutor, requestInterceptor, converter,
           errorHandler);

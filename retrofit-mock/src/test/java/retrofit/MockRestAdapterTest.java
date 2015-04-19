@@ -58,9 +58,9 @@ public class MockRestAdapterTest {
     callbackExecutor = spy(new SynchronousExecutor());
 
     RestAdapter restAdapter = new RestAdapter.Builder() //
-        .setCallbackExecutor(callbackExecutor)
-        .setEndpoint("none")
-        .setErrorHandler(new ErrorHandler() {
+        .callbackExecutor(callbackExecutor)
+        .endpoint("none")
+        .errorHandler(new ErrorHandler() {
           @Override public Throwable handleError(RetrofitError cause) {
             if (nextError != null) {
               Throwable error = nextError;

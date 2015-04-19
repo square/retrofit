@@ -57,10 +57,10 @@ public class ErrorHandlerTest {
     });
 
     example = new RestAdapter.Builder() //
-        .setEndpoint("http://example.com")
-        .setClient(client)
-        .setErrorHandler(errorHandler)
-        .setCallbackExecutor(new Utils.SynchronousExecutor())
+        .endpoint("http://example.com")
+        .client(client)
+        .errorHandler(errorHandler)
+        .callbackExecutor(new Utils.SynchronousExecutor())
         .build()
         .create(ExampleClient.class);
   }

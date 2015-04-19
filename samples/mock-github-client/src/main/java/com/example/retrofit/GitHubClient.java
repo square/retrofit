@@ -75,7 +75,7 @@ public class GitHubClient {
   public static void main(String... args) {
     // Create a very simple REST adapter which points the GitHub API endpoint.
     RestAdapter restAdapter = new RestAdapter.Builder()
-        .setEndpoint(API_URL)
+        .endpoint(API_URL)
         .build();
 
     // Wrap our REST adapter to allow mock implementations and fake network delay.
