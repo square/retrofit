@@ -291,7 +291,12 @@ public final class RestAdapter {
       }
 
       ResponseBody body = response.body();
-      if (body == null) {
+      if (statusCode == 204 || statusCode == 205) {
+        // HTTP 204 No Content "...response MUST NOT include a message-body"
+        // HTTP 205 Reset Content "...response MUST NOT include an entity"
+        if (body.contentLength() > 0) {
+          throw new IllegalStateException(statusCode + " response must not include body.");
+        }
         return null;
       }
 
