@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import retrofit.converter.Converter;
+import retrofit.converter.GsonConverter;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Headers;
@@ -25,6 +27,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static retrofit.Utils.SynchronousExecutor;
 
 public class RestAdapterTest {
@@ -44,14 +48,18 @@ public class RestAdapterTest {
   @Rule public final MockWebServerRule server = new MockWebServerRule();
 
   private Example example;
+  private Converter converter;
 
   @Before public void setUp() {
     OkHttpClient client = new OkHttpClient();
+
+    converter = spy(new GsonConverter());
 
     example = new RestAdapter.Builder() //
         .setClient(client)
         .setCallbackExecutor(new SynchronousExecutor())
         .setEndpoint(server.getUrl("/").toString())
+        .setConverter(converter)
         .build()
         .create(Example.class);
   }
@@ -68,6 +76,56 @@ public class RestAdapterTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Interface definitions must not extend other interfaces.");
+    }
+  }
+
+  @Test public void http204SkipsConverter() {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 204 Nothin"));
+    assertThat(example.something()).isNull();
+    verifyNoMoreInteractions(converter);
+  }
+
+  @Test public void http204Response() {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 204 Nothin"));
+    Response response = example.direct();
+    assertThat(response.code()).isEqualTo(204);
+  }
+
+  @Test public void http204WithBodyThrows() {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 204 Nothin").setBody("Hey"));
+    try {
+      example.something();
+      fail();
+    } catch (RetrofitError e) {
+      assertThat(e).hasMessage("204 response must not include body.");
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(IllegalStateException.class);
+      assertThat(cause).hasMessage("204 response must not include body.");
+    }
+  }
+
+  @Test public void http205SkipsConverter() {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 205 Nothin"));
+    assertThat(example.something()).isNull();
+    verifyNoMoreInteractions(converter);
+  }
+
+  @Test public void http205Response() {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 205 Nothin"));
+    Response response = example.direct();
+    assertThat(response.code()).isEqualTo(205);
+  }
+
+  @Test public void http205WithBodyThrows() {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 205 Nothin").setBody("Hey"));
+    try {
+      example.something();
+      fail();
+    } catch (RetrofitError e) {
+      assertThat(e).hasMessage("205 response must not include body.");
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(IllegalStateException.class);
+      assertThat(cause).hasMessage("205 response must not include body.");
     }
   }
 
