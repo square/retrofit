@@ -274,8 +274,7 @@ public final class RestAdapter {
      * @throws IOException on network problems reading the response data.
      * @throws RuntimeException on malformed response data.
      */
-    private Object parseResult(MethodInfo methodInfo, Response response)
-        throws IOException {
+    private Object parseResult(MethodInfo methodInfo, Response response) throws IOException {
       Type type = methodInfo.responseObjectType;
 
       int statusCode = response.code();
