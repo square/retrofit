@@ -49,7 +49,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * void list(@Query("category") String... categories);
  * </pre>
  * Calling with {@code foo.list("bar", "baz")} yields
- * {@code /list?category=foo&category=bar}.
+ * {@code /list?category=bar&category=baz}.
  * <p>
  * Parameter names are not URL encoded. Specify {@link #encodeName() encodeName=true} to change
  * this behavior.
@@ -57,7 +57,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;GET("/search")
  * void list(@Query(value="foo+bar", encodeName=true) String foobar);
  * </pre>
- * Calling with {@code foo.list("baz")} yields {@code /search?foo%2Bbar=foo}.
+ * Calling with {@code foo.list("baz")} yields {@code /search?foo%2Bbar=baz}.
  * <p>
  * Parameter values are URL encoded by default. Specify {@link #encodeValue() encodeValue=false} to
  * change this behavior.
@@ -65,7 +65,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;GET("/search")
  * void list(@Query(value="foo", encodeValue=false) String foo);
  * </pre>
- * Calling with {@code foo.list("foo+foo"))} yields {@code /search?foo=foo+bar}.
+ * Calling with {@code foo.list("foo+bar"))} yields {@code /search?foo=foo+bar}.
  *
  * @see QueryMap
  */
