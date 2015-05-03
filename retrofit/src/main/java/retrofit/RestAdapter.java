@@ -15,11 +15,13 @@
  */
 package retrofit;
 
+import com.darylteo.rx.promises.java.Promise;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -28,10 +30,10 @@ import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
 import retrofit.converter.Converter;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
-
 import static retrofit.Utils.checkNotNull;
 
 /**
@@ -176,6 +178,8 @@ public final class RestAdapter {
           return null; // Async has void return type.
         case RX:
           return invokeRx(methodInfo, request);
+        case PROMISES:
+          return invokePromise(methodInfo, request);
         default:
           throw new IllegalStateException("Unknown response type: " + methodInfo.executionType);
       }
@@ -218,6 +222,27 @@ public final class RestAdapter {
           }
         }
       });
+    }
+
+    private Promise invokePromise(final MethodInfo methodInfo, final Request request) {
+      final RetrofitPromise<Object> promise = new RetrofitPromise<Object>();
+      Call call = client.newCall(request);
+      call.enqueue(new com.squareup.okhttp.Callback() {
+        @Override public void onFailure(Request request, IOException e) {
+          callFailure(promise, RetrofitError.networkFailure(request.urlString(), e));
+        }
+
+        @Override public void onResponse(Response response) {
+          try {
+            Object result = createResult(methodInfo, response);
+            callResponse(promise, result, response);
+          } catch (RetrofitError error) {
+            callFailure(promise, error);
+          }
+        }
+      });
+
+      return promise;
     }
 
     private Object invokeRx(final MethodInfo methodInfo, final Request request) {
