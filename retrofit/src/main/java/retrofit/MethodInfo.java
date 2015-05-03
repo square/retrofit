@@ -16,6 +16,7 @@
 package retrofit;
 
 import com.squareup.okhttp.Response;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -53,7 +55,8 @@ final class MethodInfo {
   enum ExecutionType {
     ASYNC,
     RX,
-    SYNC
+    SYNC,
+    PROMISES
   }
 
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
@@ -262,6 +265,13 @@ final class MethodInfo {
           returnType = RxSupport.getObservableType(returnType, rawReturnType);
           responseObjectType = getParameterUpperBound((ParameterizedType) returnType);
           return ExecutionType.RX;
+        } else if (rawReturnType == RetrofitPromise.class) {
+          lastArgType = Types.getSupertype(returnType, Types.getRawType(returnType),
+                    Callback.class);
+          if (lastArgType instanceof ParameterizedType) {
+            responseObjectType = getParameterUpperBound((ParameterizedType) lastArgType);
+            return ExecutionType.PROMISES;
+          }
         }
       }
       responseObjectType = returnType;

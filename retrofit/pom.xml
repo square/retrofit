@@ -33,6 +33,11 @@
       <artifactId>rxjava</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+  	  <groupId>com.darylteo</groupId>
+  	  <artifactId>rxjava-promises-java</artifactId>
+  	  <version>1.2.0</version>
+ 	</dependency>
 
     <dependency>
       <groupId>junit</groupId>
