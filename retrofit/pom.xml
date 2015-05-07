@@ -18,6 +18,11 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.bluelinelabs</groupId>
+      <artifactId>logansquare</artifactId>
+      <version>1.0.6</version>
+    </dependency>
 
     <dependency>
       <groupId>com.google.android</groupId>
