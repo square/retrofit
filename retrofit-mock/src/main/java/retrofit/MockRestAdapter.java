@@ -234,7 +234,7 @@ public final class MockRestAdapter {
 
       // Load or create the details cache for the current method.
       final MethodInfo methodInfo = RestAdapter.getMethodInfo(methodInfoCache, method);
-      final Request request = buildRequest(methodInfo, restAdapter.requestInterceptor, args);
+      final Request request = buildRequest(methodInfo, args);
 
       if (methodInfo.executionType == MethodInfo.ExecutionType.SYNC) {
         try {
@@ -268,16 +268,11 @@ public final class MockRestAdapter {
       return null; // Asynchronous methods should have return type of void.
     }
 
-    private Request buildRequest(MethodInfo methodInfo, RequestInterceptor interceptor,
-        Object[] args) throws Throwable {
+    private Request buildRequest(MethodInfo methodInfo, Object[] args) throws Throwable {
       // Begin building a normal request.
       String apiUrl = restAdapter.endpoint.url();
       RequestBuilder requestBuilder = new RequestBuilder(apiUrl, methodInfo, restAdapter.converter);
       requestBuilder.setArguments(args);
-
-      // Run it through the interceptor.
-      interceptor.intercept(requestBuilder);
-
       return requestBuilder.build();
     }
 
