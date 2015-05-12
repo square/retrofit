@@ -27,8 +27,6 @@ import retrofit.converter.GsonConverter;
 class Platform {
   private static final Platform PLATFORM = findPlatform();
 
-  static final boolean HAS_RX_JAVA = hasRxJavaOnClasspath();
-
   static Platform get() {
     return PLATFORM;
   }
@@ -72,14 +70,5 @@ class Platform {
         }
       };
     }
-  }
-
-  private static boolean hasRxJavaOnClasspath() {
-    try {
-      Class.forName("rx.Observable");
-      return true;
-    } catch (ClassNotFoundException ignored) {
-    }
-    return false;
   }
 }

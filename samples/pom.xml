@@ -19,10 +19,14 @@
       <artifactId>retrofit</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--<dependency>-->
+      <!--<groupId>com.squareup.retrofit</groupId>-->
+      <!--<artifactId>retrofit-mock</artifactId>-->
+      <!--<version>${project.version}</version>-->
+    <!--</dependency>-->
     <dependency>
-      <groupId>com.squareup.retrofit</groupId>
-      <artifactId>retrofit-mock</artifactId>
-      <version>${project.version}</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
   </dependencies>
 

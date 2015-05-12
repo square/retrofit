@@ -28,11 +28,6 @@
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>okhttp</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.reactivex</groupId>
-      <artifactId>rxjava</artifactId>
-      <optional>true</optional>
-    </dependency>
 
     <dependency>
       <groupId>junit</groupId>

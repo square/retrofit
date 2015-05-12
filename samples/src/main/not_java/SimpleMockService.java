@@ -22,7 +22,7 @@ public final class SimpleMockService {
     private final Map<String, Map<String, List<Contributor>>> ownerRepoContributors;
 
     public MockGitHub() {
-      ownerRepoContributors = new LinkedHashMap<String, Map<String, List<Contributor>>>();
+      ownerRepoContributors = new LinkedHashMap<>();
 
       // Seed some mock data.
       addContributor("square", "retrofit", "John Doe", 12);
@@ -47,12 +47,12 @@ public final class SimpleMockService {
     public void addContributor(String owner, String repo, String name, int contributions) {
       Map<String, List<Contributor>> repoContributors = ownerRepoContributors.get(owner);
       if (repoContributors == null) {
-        repoContributors = new LinkedHashMap<String, List<Contributor>>();
+        repoContributors = new LinkedHashMap<>();
         ownerRepoContributors.put(owner, repoContributors);
       }
       List<Contributor> contributors = repoContributors.get(repo);
       if (contributors == null) {
-        contributors = new ArrayList<Contributor>();
+        contributors = new ArrayList<>();
         repoContributors.put(repo, contributors);
       }
       contributors.add(new Contributor(name, contributions));

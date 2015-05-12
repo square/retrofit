@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,18 +40,17 @@ import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 import retrofit.http.Streaming;
-import rx.Observable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-@SuppressWarnings("UnusedParameters") // Parameters inspected reflectively.
-public class RequestBuilderTest {
-  @Test public void custom1Method() {
+@SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
+public final class RequestBuilderTest {
+  @Test public void customMethodNoBody() {
     class Example {
       @HTTP(method = "CUSTOM1", path = "/foo")
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -61,11 +61,11 @@ public class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
-  @Ignore // TODO https://github.com/square/okhttp/issues/229
-  @Test public void custom2Method() {
+  @Ignore("https://github.com/square/okhttp/issues/229")
+  @Test public void customMethodWithBody() {
     class Example {
       @HTTP(method = "CUSTOM2", path = "/foo", hasBody = true)
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -82,7 +82,7 @@ public class RequestBuilderTest {
       @Multipart //
       @FormUrlEncoded //
       @POST("/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -99,7 +99,7 @@ public class RequestBuilderTest {
       @FormUrlEncoded //
       @Multipart //
       @POST("/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -114,7 +114,7 @@ public class RequestBuilderTest {
   @Test public void invalidPathParam() throws Exception {
     class Example {
       @GET("/") //
-      Response method(@Path("hey!") String thing) {
+      Call<Object> method(@Path("hey!") String thing) {
         return null;
       }
     }
@@ -132,7 +132,7 @@ public class RequestBuilderTest {
   @Test public void pathParamNotAllowedInQuery() throws Exception {
     class Example {
       @GET("/foo?bar={bar}") //
-      Response method(@Path("bar") String thing) {
+      Call<Object> method(@Path("bar") String thing) {
         return null;
       }
     }
@@ -149,7 +149,7 @@ public class RequestBuilderTest {
   @Test public void multipleParameterAnnotationsNotAllowed() throws Exception {
     class Example {
       @GET("/") //
-      Response method(@Body @Query("nope") Object o) {
+      Call<Object> method(@Body @Query("nope") Object o) {
         return null;
       }
     }
@@ -167,7 +167,7 @@ public class RequestBuilderTest {
     class Example {
       @PATCH("/foo") //
       @POST("/foo") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -184,7 +184,7 @@ public class RequestBuilderTest {
   @Test public void pathMustBePrefixedWithSlash() {
     class Example {
       @GET("foo/bar") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -197,107 +197,9 @@ public class RequestBuilderTest {
     }
   }
 
-  @Test public void streamingResponseNotAllowed() {
-    class Example {
-      @GET("/foo") //
-      @Streaming //
-      String method() {
-        return null;
-      }
-    }
-
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Only methods having Response as data type are allowed to have @Streaming annotation.");
-    }
-  }
-
-  @Test public void streamingResponseWithCallbackNotAllowed() {
-    class Example {
-      @GET("/foo") //
-      @Streaming //
-      void method(Callback<String> callback) {
-      }
-    }
-
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Only methods having Response as data type are allowed to have @Streaming annotation.");
-    }
-  }
-
-  @Test public void observableWithCallback() {
-    class Example {
-      @GET("/foo") //
-      Observable<Response> method(Callback<Response> callback) {
-        return null;
-      }
-    }
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Must have return type or Callback as last argument, not both.");
-    }
-  }
-
-  @Test public void missingCallbackTypes() {
-    class Example {
-      @GET("/foo") //
-      void method(@Query("id") String id) {
-      }
-    }
-
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Must have either a return type or Callback as last argument.");
-    }
-  }
-
-  @Test public void nonParameterizedCallbackFails() {
-    class Example {
-      @GET("/foo") //
-      void method(Callback cb) {
-      }
-    }
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Last parameter must be of type Callback<X> or Callback<? super X>.");
-    }
-  }
-
-  @Test public void synchronousWithAsyncCallback() {
-    class Example {
-      @GET("/foo") //
-      Response method(Callback<Response> callback) {
-        return null;
-      }
-    }
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Must have return type or Callback as last argument, not both.");
-    }
-  }
-
   @Test public void lackingMethod() {
     class Example {
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -313,7 +215,7 @@ public class RequestBuilderTest {
   @Test public void implicitMultipartForbidden() {
     class Example {
       @POST("/") //
-      Response method(@Part("a") int a) {
+      Call<Object> method(@Part("a") int a) {
         return null;
       }
     }
@@ -329,7 +231,7 @@ public class RequestBuilderTest {
   @Test public void implicitMultipartWithPartMapForbidden() {
     class Example {
       @POST("/") //
-      Response method(@PartMap Map<String, String> params) {
+      Call<Object> method(@PartMap Map<String, String> params) {
         return null;
       }
     }
@@ -346,7 +248,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @GET("/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -363,7 +265,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -378,7 +280,7 @@ public class RequestBuilderTest {
   @Test public void implicitFormEncodingByFieldForbidden() {
     class Example {
       @POST("/") //
-      Response method(@Field("a") int a) {
+      Call<Object> method(@Field("a") int a) {
         return null;
       }
     }
@@ -394,7 +296,7 @@ public class RequestBuilderTest {
   @Test public void implicitFormEncodingByFieldMapForbidden() {
     class Example {
       @POST("/") //
-      Response method(@FieldMap Map<String, String> a) {
+      Call<Object> method(@FieldMap Map<String, String> a) {
         return null;
       }
     }
@@ -444,7 +346,7 @@ public class RequestBuilderTest {
     class Example {
       @GET("/") //
       @Headers({}) //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -460,7 +362,7 @@ public class RequestBuilderTest {
     class Example {
       @GET("/") //
       @Headers("Malformed") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -476,7 +378,7 @@ public class RequestBuilderTest {
   @Test public void pathParamNonPathParamAndTypedBytes() {
     class Example {
       @PUT("/{a}") //
-      Response method(@Path("a") int a, @Path("b") int b, @Body int c) {
+      Call<Object> method(@Path("a") int a, @Path("b") int b, @Body int c) {
         return null;
       }
     }
@@ -491,7 +393,7 @@ public class RequestBuilderTest {
   @Test public void parameterWithoutAnnotation() {
     class Example {
       @GET("/") //
-      Response method(String a) {
+      Call<Object> method(String a) {
         return null;
       }
     }
@@ -506,7 +408,7 @@ public class RequestBuilderTest {
   @Test public void nonBodyHttpMethodWithSingleEntity() {
     class Example {
       @GET("/") //
-      Response method(@Body Object o) {
+      Call<Object> method(@Body Object o) {
         return null;
       }
     }
@@ -522,7 +424,7 @@ public class RequestBuilderTest {
   @Test public void queryMapMustBeAMap() {
     class Example {
       @GET("/") //
-      Response method(@QueryMap List<String> a) {
+      Call<Object> method(@QueryMap List<String> a) {
         return null;
       }
     }
@@ -537,12 +439,12 @@ public class RequestBuilderTest {
   @Test public void queryMapRejectsNullKeys() {
     class Example {
       @GET("/") //
-      Response method(@QueryMap Map<String, String> a) {
+      Call<Object> method(@QueryMap Map<String, String> a) {
         return null;
       }
     }
 
-    Map<String, String> queryParams = new LinkedHashMap<String, String>();
+    Map<String, String> queryParams = new LinkedHashMap<>();
     queryParams.put("ping", "pong");
     queryParams.put(null, "kat");
 
@@ -557,7 +459,7 @@ public class RequestBuilderTest {
   @Test public void twoBodies() {
     class Example {
       @PUT("/") //
-      Response method(@Body int o1, @Body int o2) {
+      Call<Object> method(@Body int o1, @Body int o2) {
         return null;
       }
     }
@@ -573,7 +475,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @PUT("/") //
-      Response method(@Part("one") int o1, @Body int o2) {
+      Call<Object> method(@Part("one") int o1, @Body int o2) {
         return null;
       }
     }
@@ -589,7 +491,7 @@ public class RequestBuilderTest {
   @Test public void get() {
     class Example {
       @GET("/foo/bar/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -603,7 +505,7 @@ public class RequestBuilderTest {
   @Test public void delete() {
     class Example {
       @DELETE("/foo/bar/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -617,7 +519,7 @@ public class RequestBuilderTest {
   @Test public void head() {
     class Example {
       @HEAD("/foo/bar/") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -631,7 +533,7 @@ public class RequestBuilderTest {
   @Test public void post() {
     class Example {
       @POST("/foo/bar/") //
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -646,7 +548,7 @@ public class RequestBuilderTest {
   @Test public void put() {
     class Example {
       @PUT("/foo/bar/") //
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -661,7 +563,7 @@ public class RequestBuilderTest {
   @Test public void patch() {
     class Example {
       @PATCH("/foo/bar/") //
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -676,7 +578,7 @@ public class RequestBuilderTest {
   @Test public void getWithPathParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping) {
+      Call<Object> method(@Path("ping") String ping) {
         return null;
       }
     }
@@ -690,7 +592,7 @@ public class RequestBuilderTest {
   @Test public void getWithEncodedPathParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path(value = "ping", encoded = true) String ping) {
+      Call<Object> method(@Path(value = "ping", encoded = true) String ping) {
         return null;
       }
     }
@@ -704,7 +606,7 @@ public class RequestBuilderTest {
   @Test public void pathParamRequired() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping) {
+      Call<Object> method(@Path("ping") String ping) {
         return null;
       }
     }
@@ -719,7 +621,7 @@ public class RequestBuilderTest {
   @Test public void getWithQueryParam() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query("ping") String ping) {
+      Call<Object> method(@Query("ping") String ping) {
         return null;
       }
     }
@@ -733,7 +635,7 @@ public class RequestBuilderTest {
   @Test public void getWithEncodedQueryParam() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query(value = "pi%20ng", encoded = true) String ping) {
+      Call<Object> method(@Query(value = "pi%20ng", encoded = true) String ping) {
         return null;
       }
     }
@@ -747,7 +649,7 @@ public class RequestBuilderTest {
   @Test public void queryParamOptionalOmitsQuery() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query("ping") String ping) {
+      Call<Object> method(@Query("ping") String ping) {
         return null;
       }
     }
@@ -758,7 +660,7 @@ public class RequestBuilderTest {
   @Test public void queryParamOptional() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query("foo") String foo, @Query("ping") String ping,
+      Call<Object> method(@Query("foo") String foo, @Query("ping") String ping,
           @Query("kit") String kit) {
         return null;
       }
@@ -770,7 +672,7 @@ public class RequestBuilderTest {
   @Test public void getWithQueryUrlAndParam() {
     class Example {
       @GET("/foo/bar/?hi=mom") //
-      Response method(@Query("ping") String ping) {
+      Call<Object> method(@Query("ping") String ping) {
         return null;
       }
     }
@@ -784,7 +686,7 @@ public class RequestBuilderTest {
   @Test public void getWithQuery() {
     class Example {
       @GET("/foo/bar/?hi=mom") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -798,7 +700,7 @@ public class RequestBuilderTest {
   @Test public void getWithPathAndQueryParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping, @Query("kit") String kit,
+      Call<Object> method(@Path("ping") String ping, @Query("kit") String kit,
           @Query("riff") String riff) {
         return null;
       }
@@ -814,7 +716,7 @@ public class RequestBuilderTest {
   @Test public void getWithPathAndQueryQuestionMarkParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping, @Query("kit") String kit) {
+      Call<Object> method(@Path("ping") String ping, @Query("kit") String kit) {
         return null;
       }
     }
@@ -829,7 +731,7 @@ public class RequestBuilderTest {
   @Test public void getWithPathAndQueryAmpersandParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping, @Query("kit") String kit) {
+      Call<Object> method(@Path("ping") String ping, @Query("kit") String kit) {
         return null;
       }
     }
@@ -844,7 +746,7 @@ public class RequestBuilderTest {
   @Test public void getWithPathAndQueryHashParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping, @Query("kit") String kit) {
+      Call<Object> method(@Path("ping") String ping, @Query("kit") String kit) {
         return null;
       }
     }
@@ -859,7 +761,7 @@ public class RequestBuilderTest {
   @Test public void getWithQueryParamList() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query("key") List<Object> keys) {
+      Call<Object> method(@Query("key") List<Object> keys) {
         return null;
       }
     }
@@ -875,7 +777,7 @@ public class RequestBuilderTest {
   @Test public void getWithQueryParamArray() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query("key") Object[] keys) {
+      Call<Object> method(@Query("key") Object[] keys) {
         return null;
       }
     }
@@ -891,7 +793,7 @@ public class RequestBuilderTest {
   @Test public void getWithQueryParamPrimitiveArray() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query("key") int[] keys) {
+      Call<Object> method(@Query("key") int[] keys) {
         return null;
       }
     }
@@ -907,12 +809,12 @@ public class RequestBuilderTest {
   @Test public void getWithQueryParamMap() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@QueryMap Map<String, Object> query) {
+      Call<Object> method(@QueryMap Map<String, Object> query) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    Map<String, Object> params = new LinkedHashMap<>();
     params.put("kit", "kat");
     params.put("foo", null);
     params.put("ping", "pong");
@@ -927,12 +829,12 @@ public class RequestBuilderTest {
   @Test public void getWithEncodedQueryParamMap() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@QueryMap(encoded = true) Map<String, Object> query) {
+      Call<Object> method(@QueryMap(encoded = true) Map<String, Object> query) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    Map<String, Object> params = new LinkedHashMap<>();
     params.put("kit", "k%20t");
     params.put("foo", null);
     params.put("pi%20ng", "p%20g");
@@ -947,7 +849,7 @@ public class RequestBuilderTest {
   @Test public void normalPostWithPathParam() {
     class Example {
       @POST("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping, @Body Object body) {
+      Call<Object> method(@Path("ping") String ping, @Body Object body) {
         return null;
       }
     }
@@ -961,7 +863,7 @@ public class RequestBuilderTest {
   @Test public void bodyGson() {
     class Example {
       @POST("/foo/bar/") //
-      Response method(@Body Object body) {
+      Call<Object> method(@Body Object body) {
         return null;
       }
     }
@@ -975,7 +877,7 @@ public class RequestBuilderTest {
   @Test public void bodyResponseBody() {
     class Example {
       @POST("/foo/bar/") //
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -990,7 +892,7 @@ public class RequestBuilderTest {
   @Test public void bodyRequired() {
     class Example {
       @POST("/foo/bar/") //
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -1005,7 +907,7 @@ public class RequestBuilderTest {
   @Test public void bodyWithPathParams() {
     class Example {
       @POST("/foo/bar/{ping}/{kit}/") //
-      Response method(@Path("ping") String ping, @Body Object body, @Path("kit") String kit) {
+      Call<Object> method(@Path("ping") String ping, @Body Object body, @Path("kit") String kit) {
         return null;
       }
     }
@@ -1021,7 +923,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@Part("ping") String ping, @Part("kit") ResponseBody kit) {
+      Call<Object> method(@Part("ping") String ping, @Part("kit") ResponseBody kit) {
         return null;
       }
     }
@@ -1050,7 +952,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@Part(value = "ping", encoding = "8-bit") String ping,
+      Call<Object> method(@Part(value = "ping", encoding = "8-bit") String ping,
           @Part(value = "kit", encoding = "7-bit") ResponseBody kit) {
         return null;
       }
@@ -1080,12 +982,12 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@PartMap Map<String, Object> parts) {
+      Call<Object> method(@PartMap Map<String, Object> parts) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
     params.put("kit", RequestBody.create(MediaType.parse("text/plain"), "kat"));
 
@@ -1112,12 +1014,12 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@PartMap(encoding = "8-bit") Map<String, Object> parts) {
+      Call<Object> method(@PartMap(encoding = "8-bit") Map<String, Object> parts) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
     params.put("kit", RequestBody.create(MediaType.parse("text/plain"), "kat"));
 
@@ -1144,12 +1046,12 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@PartMap Map<String, Object> parts) {
+      Call<Object> method(@PartMap Map<String, Object> parts) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
+    Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
     params.put(null, "kat");
 
@@ -1165,7 +1067,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@Part("ping") String ping, @Part("fizz") String fizz) {
+      Call<Object> method(@Part("ping") String ping, @Part("fizz") String fizz) {
         return null;
       }
     }
@@ -1188,7 +1090,7 @@ public class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Response method(@Part("ping") RequestBody ping) {
+      Call<Object> method(@Part("ping") RequestBody ping) {
         return null;
       }
     }
@@ -1204,7 +1106,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field("foo") String foo, @Field("ping") String ping) {
+      Call<Object> method(@Field("foo") String foo, @Field("ping") String ping) {
         return null;
       }
     }
@@ -1216,7 +1118,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field(value = "na%20me", encoded = true) String foo) {
+      Call<Object> method(@Field(value = "na%20me", encoded = true) String foo) {
         return null;
       }
     }
@@ -1228,7 +1130,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field("foo") String foo, @Field("ping") String ping,
+      Call<Object> method(@Field("foo") String foo, @Field("ping") String ping,
           @Field("kit") String kit) {
         return null;
       }
@@ -1241,7 +1143,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field("foo") List<Object> fields, @Field("kit") String kit) {
+      Call<Object> method(@Field("foo") List<Object> fields, @Field("kit") String kit) {
         return null;
       }
     }
@@ -1255,7 +1157,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field("foo") Object[] fields, @Field("kit") String kit) {
+      Call<Object> method(@Field("foo") Object[] fields, @Field("kit") String kit) {
         return null;
       }
     }
@@ -1269,7 +1171,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field("foo") int[] fields, @Field("kit") String kit) {
+      Call<Object> method(@Field("foo") int[] fields, @Field("kit") String kit) {
         return null;
       }
     }
@@ -1283,12 +1185,12 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@FieldMap(encoded = true) Map<String, Object> fieldMap) {
+      Call<Object> method(@FieldMap(encoded = true) Map<String, Object> fieldMap) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("k%20it", "k%20at");
     fieldMap.put("pin%20g", "po%20ng");
 
@@ -1300,12 +1202,12 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@FieldMap Map<String, Object> fieldMap) {
+      Call<Object> method(@FieldMap Map<String, Object> fieldMap) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
     fieldMap.put("foo", null);
     fieldMap.put("ping", "pong");
@@ -1318,12 +1220,12 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/") //
-      Response method(@FieldMap Map<String, Object> a) {
+      Call<Object> method(@FieldMap Map<String, Object> a) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
     fieldMap.put("foo", null);
     fieldMap.put(null, "pong");
@@ -1340,7 +1242,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/") //
-      Response method(@FieldMap List<String> a) {
+      Call<Object> method(@FieldMap List<String> a) {
         return null;
       }
     }
@@ -1359,7 +1261,7 @@ public class RequestBuilderTest {
           "ping: pong",
           "kit: kat"
       })
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -1376,7 +1278,7 @@ public class RequestBuilderTest {
   @Test public void headerParamToString() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Header("kit") BigInteger kit) {
+      Call<Object> method(@Header("kit") BigInteger kit) {
         return null;
       }
     }
@@ -1393,7 +1295,7 @@ public class RequestBuilderTest {
     class Example {
       @GET("/foo/bar/") //
       @Headers("ping: pong") //
-      Response method(@Header("kit") String kit) {
+      Call<Object> method(@Header("kit") String kit) {
         return null;
       }
     }
@@ -1410,7 +1312,7 @@ public class RequestBuilderTest {
   @Test public void headerParamList() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Header("foo") List<String> kit) {
+      Call<Object> method(@Header("foo") List<String> kit) {
         return null;
       }
     }
@@ -1426,7 +1328,7 @@ public class RequestBuilderTest {
   @Test public void headerParamArray() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Header("foo") String[] kit) {
+      Call<Object> method(@Header("foo") String[] kit) {
         return null;
       }
     }
@@ -1443,7 +1345,7 @@ public class RequestBuilderTest {
     class Example {
       @POST("/") //
       @Headers("Content-Type: text/not-plain") //
-      Response method(@Body RequestBody body) {
+      Call<Object> method(@Body RequestBody body) {
         return null;
       }
     }
@@ -1456,7 +1358,7 @@ public class RequestBuilderTest {
     class Example {
       @DELETE("/") //
       @Headers("Content-Type: text/not-plain") //
-      Response method() {
+      Call<Object> method() {
         return null;
       }
     }
@@ -1467,7 +1369,7 @@ public class RequestBuilderTest {
   @Test public void contentTypeParameterHeaderOverrides() {
     class Example {
       @POST("/") //
-      Response method(@Header("Content-Type") String contentType, @Body RequestBody body) {
+      Call<Object> method(@Header("Content-Type") String contentType, @Body RequestBody body) {
         return null;
       }
     }
@@ -1491,7 +1393,8 @@ public class RequestBuilderTest {
 
   private Request buildRequest(Class<?> cls, Object... args) {
     Method method = TestingUtils.onlyMethod(cls);
-    MethodInfo methodInfo = new MethodInfo(method);
+    MethodInfo methodInfo = new MethodInfo(method, Collections.<CallAdapter.Factory>singletonList(
+        new DefaultCallAdapterFactory(new Utils.SynchronousExecutor())));
 
     RequestBuilder builder = new RequestBuilder("http://example.com/", methodInfo, GSON);
     builder.setArguments(args);

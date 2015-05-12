@@ -45,7 +45,6 @@ final class RequestBuilder {
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
-  private final boolean async;
   private final String apiUrl;
 
   private MultipartBuilder multipartBuilder;
@@ -63,7 +62,6 @@ final class RequestBuilder {
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
-    async = methodInfo.executionType == MethodInfo.ExecutionType.ASYNC;
 
     if (methodInfo.headers != null) {
       headers = methodInfo.headers.newBuilder();
@@ -77,7 +75,7 @@ final class RequestBuilder {
       queryParams = new StringBuilder().append('?').append(requestQuery);
     }
 
-    switch (methodInfo.requestType) {
+    switch (methodInfo.requestBody) {
       case FORM_URL_ENCODED:
         // Will be set to 'body' in 'build'.
         formEncodingBuilder = new FormEncodingBuilder();
@@ -90,7 +88,7 @@ final class RequestBuilder {
         // If present, 'body' will be set in 'setArguments' call.
         break;
       default:
-        throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
+        throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestBody);
     }
   }
 
@@ -206,11 +204,7 @@ final class RequestBuilder {
     if (args == null) {
       return;
     }
-    int count = args.length;
-    if (async) {
-      count -= 1;
-    }
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < args.length; i++) {
       Object value = args[i];
 
       Annotation annotation = paramAnnotations[i];
