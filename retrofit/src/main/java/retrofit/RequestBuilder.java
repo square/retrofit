@@ -38,7 +38,7 @@ import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 
-final class RequestBuilder implements RequestInterceptor.RequestFacade {
+final class RequestBuilder {
   private static final Headers NO_HEADERS = Headers.of();
 
   private final Converter converter;
@@ -93,7 +93,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
   }
 
-  @Override public void addHeader(String name, String value) {
+  public void addHeader(String name, String value) {
     if (name == null) {
       throw new IllegalArgumentException("Header name must not be null.");
     }
@@ -107,14 +107,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       this.headers = headers = new Headers.Builder();
     }
     headers.add(name, value);
-  }
-
-  @Override public void addPathParam(String name, String value) {
-    addPathParam(name, value, true);
-  }
-
-  @Override public void addEncodedPathParam(String name, String value) {
-    addPathParam(name, value, false);
   }
 
   private void addPathParam(String name, String value, boolean urlEncodeValue) {
@@ -140,14 +132,6 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       throw new RuntimeException(
           "Unable to convert path parameter \"" + name + "\" value to UTF-8:" + value, e);
     }
-  }
-
-  @Override public void addQueryParam(String name, String value) {
-    addQueryParam(name, value, false, true);
-  }
-
-  @Override public void addEncodedQueryParam(String name, String value) {
-    addQueryParam(name, value, false, false);
   }
 
   private void addQueryParam(String name, Object value, boolean encodeName, boolean encodeValue) {

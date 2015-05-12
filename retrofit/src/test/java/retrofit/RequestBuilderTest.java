@@ -46,8 +46,6 @@ import static org.junit.Assert.fail;
 
 @SuppressWarnings("UnusedParameters") // Parameters inspected reflectively.
 public class RequestBuilderTest {
-  private RequestInterceptor interceptor;
-
   @Test public void custom1Method() {
     class Example {
       @HTTP(method = "CUSTOM1", path = "/foo")
@@ -699,141 +697,6 @@ public class RequestBuilderTest {
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithInterceptorPathParam() {
-    class Example {
-      @GET("/foo/bar/{ping}/") //
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addPathParam("ping", "po ng");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithInterceptorEncodedPathParam() {
-    class Example {
-      @GET("/foo/bar/{ping}/") //
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addEncodedPathParam("ping", "po%20ng");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithPathParamAndInterceptorPathParam() {
-    class Example {
-      @GET("/foo/bar/{ping}/{kit}/") //
-      Response method(@Path("ping") String ping) {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addPathParam("kit", "kat");
-      }
-    };
-    Request request = buildRequest(Example.class, "pong");
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/kat/");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithInterceptorQueryParam() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addQueryParam("ping", "po ng");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?ping=po+ng");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithPathParamAndInterceptorQueryParam() {
-    class Example {
-      @GET("/foo/bar/{kit}/") //
-      Response method(@Path("kit") String kit) {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addQueryParam("ping", "pong");
-      }
-    };
-    Request request = buildRequest(Example.class, "kat");
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/kat/?ping=pong");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithInterceptorPathParamAndInterceptorQueryParam() {
-    class Example {
-      @GET("/foo/bar/{ping}/") //
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addPathParam("ping", "pong");
-        request.addQueryParam("butter", "finger");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/?butter=finger");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithPathParamAndInterceptorPathParamAndInterceptorQueryParam() {
-    class Example {
-      @GET("/foo/bar/{ping}/{kit}/") //
-      Response method(@Path("ping") String ping) {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addPathParam("kit", "kat");
-        request.addQueryParam("butter", "finger");
-      }
-    };
-    Request request = buildRequest(Example.class, "pong");
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/kat/?butter=finger");
     assertThat(request.body()).isNull();
   }
 
@@ -1607,76 +1470,6 @@ public class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
-  @Test public void simpleInterceptorHeaders() {
-    class Example {
-      @GET("/foo/bar/")
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addHeader("ping", "pong");
-        request.addHeader("kit", "kat");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
-    assertThat(headers.size()).isEqualTo(2);
-    assertThat(headers.get("ping")).isEqualTo("pong");
-    assertThat(headers.get("kit")).isEqualTo("kat");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void headersAndInterceptorHeaders() {
-    class Example {
-      @GET("/foo/bar/") //
-      @Headers("ping: pong") //
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addHeader("kit", "kat");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
-    assertThat(headers.size()).isEqualTo(2);
-    assertThat(headers.get("ping")).isEqualTo("pong");
-    assertThat(headers.get("kit")).isEqualTo("kat");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void allThreeHeaderTypes() {
-    class Example {
-      @GET("/foo/bar/") //
-      @Headers("ping: pong") //
-      Response method(@Header("fizz") String fizz) {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addHeader("kit", "kat");
-      }
-    };
-    Request request = buildRequest(Example.class, "buzz");
-    assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
-    assertThat(headers.size()).isEqualTo(3);
-    assertThat(headers.get("ping")).isEqualTo("pong");
-    assertThat(headers.get("kit")).isEqualTo("kat");
-    assertThat(headers.get("fizz")).isEqualTo("buzz");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.body()).isNull();
-  }
-
   @Test public void headerParamToString() {
     class Example {
       @GET("/foo/bar/") //
@@ -1768,22 +1561,6 @@ public class RequestBuilderTest {
     assertThat(request.headers().get("Content-Type")).isEqualTo("text/not-plain");
   }
 
-  @Test public void contentTypeInterceptorHeaderAddsHeaderWithNoBody() {
-    class Example {
-      @DELETE("/") //
-      Response method() {
-        return null;
-      }
-    }
-    interceptor = new RequestInterceptor() {
-      @Override public void intercept(RequestFacade request) {
-        request.addHeader("Content-Type", "text/not-plain");
-      }
-    };
-    Request request = buildRequest(Example.class);
-    assertThat(request.headers().get("Content-Type")).isEqualTo("text/not-plain");
-  }
-
   @Test public void contentTypeParameterHeaderOverrides() {
     class Example {
       @POST("/") //
@@ -1814,11 +1591,7 @@ public class RequestBuilderTest {
     MethodInfo methodInfo = new MethodInfo(method);
 
     RequestBuilder builder = new RequestBuilder("http://example.com/", methodInfo, GSON);
-    if (interceptor != null) {
-      interceptor.intercept(builder);
-    }
     builder.setArguments(args);
-
     return builder.build();
   }
 }

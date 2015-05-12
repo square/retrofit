@@ -104,7 +104,6 @@ public final class RestAdapter {
 
   final Endpoint endpoint;
   final Executor callbackExecutor;
-  final RequestInterceptor requestInterceptor;
   final Converter converter;
   final ErrorHandler errorHandler;
 
@@ -112,11 +111,10 @@ public final class RestAdapter {
   private RxSupport rxSupport;
 
   private RestAdapter(Endpoint endpoint, OkHttpClient client, Executor callbackExecutor,
-      RequestInterceptor requestInterceptor, Converter converter, ErrorHandler errorHandler) {
+      Converter converter, ErrorHandler errorHandler) {
     this.endpoint = endpoint;
     this.client = client;
     this.callbackExecutor = callbackExecutor;
-    this.requestInterceptor = requestInterceptor;
     this.converter = converter;
     this.errorHandler = errorHandler;
   }
@@ -345,9 +343,6 @@ public final class RestAdapter {
       String serverUrl = endpoint.url();
       RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
       requestBuilder.setArguments(args);
-
-      requestInterceptor.intercept(requestBuilder);
-
       return requestBuilder.build();
     }
   }
@@ -362,7 +357,6 @@ public final class RestAdapter {
     private Endpoint endpoint;
     private OkHttpClient client;
     private Executor callbackExecutor;
-    private RequestInterceptor requestInterceptor;
     private Converter converter;
     private ErrorHandler errorHandler;
 
@@ -395,12 +389,6 @@ public final class RestAdapter {
       return this;
     }
 
-    /** A request interceptor for adding data to every request. */
-    public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
-      this.requestInterceptor = checkNotNull(requestInterceptor, "requestInterceptor == null");
-      return this;
-    }
-
     /** The converter used for serialization and deserialization of objects. */
     public Builder converter(Converter converter) {
       this.converter = checkNotNull(converter, "converter == null");
@@ -420,8 +408,7 @@ public final class RestAdapter {
     public RestAdapter build() {
       checkNotNull(endpoint, "Endpoint required.");
       ensureSaneDefaults();
-      return new RestAdapter(endpoint, client, callbackExecutor, requestInterceptor, converter,
-          errorHandler);
+      return new RestAdapter(endpoint, client, callbackExecutor, converter, errorHandler);
     }
 
     private void ensureSaneDefaults() {
@@ -436,9 +423,6 @@ public final class RestAdapter {
       }
       if (errorHandler == null) {
         errorHandler = ErrorHandler.DEFAULT;
-      }
-      if (requestInterceptor == null) {
-        requestInterceptor = RequestInterceptor.NONE;
       }
     }
   }
