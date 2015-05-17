@@ -57,9 +57,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Field {
   String value();
 
-  /** Specifies whether {@link #value()} is URL encoded. */
-  boolean encodeName() default true;
-
-  /** Specifies whether the argument value to the annotated method parameter is URL encoded. */
-  boolean encodeValue() default true;
+  /** Specifies whether the {@linkplain #value() name} and value are URL encoded. */
+  boolean encode() default true;
 }

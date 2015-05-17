@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.MultipartBuilder;
@@ -196,6 +197,14 @@ final class RequestBuilder {
     }
   }
 
+  private void addFormField(String name, String value, boolean encode) {
+    if (encode) {
+      formEncodingBuilder.add(name, value);
+    } else {
+      formEncodingBuilder.addEncoded(name, value);
+    }
+  }
+
   void setArguments(Object[] args) {
     if (args == null) {
       return;
@@ -251,30 +260,28 @@ final class RequestBuilder {
         if (value != null) { // Skip null values.
           Field field = (Field) annotation;
           String name = field.value();
-          boolean encodeName = field.encodeName();
-          boolean encodeValue = field.encodeValue();
+          boolean encode = field.encode();
           if (value instanceof Iterable) {
             for (Object iterableValue : (Iterable<?>) value) {
               if (iterableValue != null) { // Skip null values.
-                formEncodingBuilder.add(name, encodeName, iterableValue.toString(), encodeValue);
+                addFormField(name, iterableValue.toString(), encode);
               }
             }
           } else if (value.getClass().isArray()) {
             for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
               Object arrayValue = Array.get(value, x);
               if (arrayValue != null) { // Skip null values.
-                formEncodingBuilder.add(name, encodeName, arrayValue.toString(), encodeValue);
+                addFormField(name, arrayValue.toString(), encode);
               }
             }
           } else {
-            formEncodingBuilder.add(name, encodeName, value.toString(), encodeValue);
+            addFormField(name, value.toString(), encode);
           }
         }
       } else if (annotationType == FieldMap.class) {
         if (value != null) { // Skip null values.
           FieldMap fieldMap = (FieldMap) annotation;
-          boolean encodeNames = fieldMap.encodeNames();
-          boolean encodeValues = fieldMap.encodeValues();
+          boolean encode = fieldMap.encode();
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
             Object entryKey = entry.getKey();
             if (entryKey == null) {
@@ -283,8 +290,7 @@ final class RequestBuilder {
             }
             Object entryValue = entry.getValue();
             if (entryValue != null) { // Skip null values.
-              formEncodingBuilder.add(entryKey.toString(), encodeNames, entryValue.toString(),
-                  encodeValues);
+              addFormField(entryKey.toString(), entryValue.toString(), encode);
             }
           }
         }
