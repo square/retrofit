@@ -110,7 +110,7 @@ final class RequestBuilder {
     headers.add(name, value);
   }
 
-  private void addPathParam(String name, String value, boolean urlEncodeValue) {
+  private void addPathParam(String name, String value, boolean encoded) {
     if (name == null) {
       throw new IllegalArgumentException("Path replacement name must not be null.");
     }
@@ -119,7 +119,7 @@ final class RequestBuilder {
           "Path replacement \"" + name + "\" value must not be null.");
     }
     try {
-      if (urlEncodeValue) {
+      if (!encoded) {
         String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
         // URLEncoder encodes for use as a query parameter. Path encoding uses %20 to
         // encode spaces rather than +. Query encoding difference specified in HTML spec.
@@ -135,26 +135,26 @@ final class RequestBuilder {
     }
   }
 
-  private void addQueryParam(String name, Object value, boolean encodeName, boolean encodeValue) {
+  private void addQueryParam(String name, Object value, boolean encoded) {
     if (value instanceof Iterable) {
       for (Object iterableValue : (Iterable<?>) value) {
         if (iterableValue != null) { // Skip null values
-          addQueryParam(name, iterableValue.toString(), encodeName, encodeValue);
+          addQueryParam(name, iterableValue.toString(), encoded);
         }
       }
     } else if (value.getClass().isArray()) {
       for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
         Object arrayValue = Array.get(value, x);
         if (arrayValue != null) { // Skip null values
-          addQueryParam(name, arrayValue.toString(), encodeName, encodeValue);
+          addQueryParam(name, arrayValue.toString(), encoded);
         }
       }
     } else {
-      addQueryParam(name, value.toString(), encodeName, encodeValue);
+      addQueryParam(name, value.toString(), encoded);
     }
   }
 
-  private void addQueryParam(String name, String value, boolean encodeName, boolean encodeValue) {
+  private void addQueryParam(String name, String value, boolean encoded) {
     if (name == null) {
       throw new IllegalArgumentException("Query param name must not be null.");
     }
@@ -169,10 +169,8 @@ final class RequestBuilder {
 
       queryParams.append(queryParams.length() > 0 ? '&' : '?');
 
-      if (encodeName) {
+      if (!encoded) {
         name = URLEncoder.encode(name, "UTF-8");
-      }
-      if (encodeValue) {
         value = URLEncoder.encode(value, "UTF-8");
       }
       queryParams.append(name).append('=').append(value);
@@ -182,8 +180,7 @@ final class RequestBuilder {
     }
   }
 
-  private void addQueryParamMap(int parameterNumber, Map<?, ?> map, boolean encodeNames,
-      boolean encodeValues) {
+  private void addQueryParamMap(int parameterNumber, Map<?, ?> map, boolean encoded) {
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       Object entryKey = entry.getKey();
       if (entryKey == null) {
@@ -192,16 +189,16 @@ final class RequestBuilder {
       }
       Object entryValue = entry.getValue();
       if (entryValue != null) { // Skip null values.
-        addQueryParam(entryKey.toString(), entryValue.toString(), encodeNames, encodeValues);
+        addQueryParam(entryKey.toString(), entryValue.toString(), encoded);
       }
     }
   }
 
-  private void addFormField(String name, String value, boolean encode) {
-    if (encode) {
-      formEncodingBuilder.add(name, value);
-    } else {
+  private void addFormField(String name, String value, boolean encoded) {
+    if (encoded) {
       formEncodingBuilder.addEncoded(name, value);
+    } else {
+      formEncodingBuilder.add(name, value);
     }
   }
 
@@ -225,16 +222,16 @@ final class RequestBuilder {
           throw new IllegalArgumentException(
               "Path parameter \"" + name + "\" value must not be null.");
         }
-        addPathParam(name, value.toString(), path.encode());
+        addPathParam(name, value.toString(), path.encoded());
       } else if (annotationType == Query.class) {
         if (value != null) { // Skip null values.
           Query query = (Query) annotation;
-          addQueryParam(query.value(), value, query.encodeName(), query.encodeValue());
+          addQueryParam(query.value(), value, query.encoded());
         }
       } else if (annotationType == QueryMap.class) {
         if (value != null) { // Skip null values.
           QueryMap queryMap = (QueryMap) annotation;
-          addQueryParamMap(i, (Map<?, ?>) value, queryMap.encodeNames(), queryMap.encodeValues());
+          addQueryParamMap(i, (Map<?, ?>) value, queryMap.encoded());
         }
       } else if (annotationType == Header.class) {
         if (value != null) { // Skip null values.
@@ -260,28 +257,28 @@ final class RequestBuilder {
         if (value != null) { // Skip null values.
           Field field = (Field) annotation;
           String name = field.value();
-          boolean encode = field.encode();
+          boolean encoded = field.encoded();
           if (value instanceof Iterable) {
             for (Object iterableValue : (Iterable<?>) value) {
               if (iterableValue != null) { // Skip null values.
-                addFormField(name, iterableValue.toString(), encode);
+                addFormField(name, iterableValue.toString(), encoded);
               }
             }
           } else if (value.getClass().isArray()) {
             for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
               Object arrayValue = Array.get(value, x);
               if (arrayValue != null) { // Skip null values.
-                addFormField(name, arrayValue.toString(), encode);
+                addFormField(name, arrayValue.toString(), encoded);
               }
             }
           } else {
-            addFormField(name, value.toString(), encode);
+            addFormField(name, value.toString(), encoded);
           }
         }
       } else if (annotationType == FieldMap.class) {
         if (value != null) { // Skip null values.
           FieldMap fieldMap = (FieldMap) annotation;
-          boolean encode = fieldMap.encode();
+          boolean encoded = fieldMap.encoded();
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
             Object entryKey = entry.getKey();
             if (entryKey == null) {
@@ -290,7 +287,7 @@ final class RequestBuilder {
             }
             Object entryValue = entry.getValue();
             if (entryValue != null) { // Skip null values.
-              addFormField(entryKey.toString(), entryValue.toString(), encode);
+              addFormField(entryKey.toString(), entryValue.toString(), encoded);
             }
           }
         }
