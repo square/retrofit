@@ -42,6 +42,7 @@ import retrofit.http.Streaming;
 import rx.Observable;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings("UnusedParameters") // Parameters inspected reflectively.
@@ -610,7 +611,7 @@ public class RequestBuilderTest {
     assertThat(request.method()).isEqualTo("DELETE");
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-    assertBody(request.body(), "");
+    assertNull(request.body());
   }
 
   @Test public void head() {
@@ -736,10 +737,10 @@ public class RequestBuilderTest {
         return null;
       }
     }
-    Request request = buildRequest(Example.class, "p+o+n+g");
+    Request request = buildRequest(Example.class, "p%20o%20n%20g");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?ping=p+o+n+g");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?ping=p%20o%20n%20g");
     assertThat(request.body()).isNull();
   }
 
@@ -753,7 +754,7 @@ public class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi+ng=pong");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=pong");
     assertThat(request.body()).isNull();
   }
 
@@ -764,10 +765,10 @@ public class RequestBuilderTest {
         return null;
       }
     }
-    Request request = buildRequest(Example.class, "po+ng");
+    Request request = buildRequest(Example.class, "po%20ng");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi+ng=po+ng");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=po%20ng");
     assertThat(request.body()).isNull();
   }
 
@@ -987,7 +988,7 @@ public class RequestBuilderTest {
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?k+it=k+t&pi+ng=p+g");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?k%20it=k%20t&pi%20ng=p%20g");
     assertThat(request.body()).isNull();
   }
 
@@ -1008,22 +1009,22 @@ public class RequestBuilderTest {
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?k+it=k%20t&pi+ng=p%20g");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?k%20it=k%20t&pi%20ng=p%20g");
     assertThat(request.body()).isNull();
   }
 
   @Test public void normalPostWithPathParam() {
     class Example {
       @POST("/foo/bar/{ping}/") //
-      Response method(@Path("ping") String ping) {
+      Response method(@Path("ping") String ping, @Body Object body) {
         return null;
       }
     }
-    Request request = buildRequest(Example.class, "pong");
+    Request request = buildRequest(Example.class, "pong", new Object());
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/");
-    assertBody(request.body(), "");
+    assertBody(request.body(), "{}");
   }
 
   @Test public void bodyGson() {
@@ -1284,24 +1285,12 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field(value = "na+me", encodeName = false) String foo) {
+      Response method(@Field(value = "na%20me", encode = false) String foo) {
         return null;
       }
     }
-    Request request = buildRequest(Example.class, "ba r");
-    assertBody(request.body(), "na+me=ba+r");
-  }
-
-  @Test public void formEncodedWithEncodedValueFieldParam() {
-    class Example {
-      @FormUrlEncoded //
-      @POST("/foo") //
-      Response method(@Field(value = "na me", encodeValue = false) String foo) {
-        return null;
-      }
-    }
-    Request request = buildRequest(Example.class, "ba+r");
-    assertBody(request.body(), "na+me=ba+r");
+    Request request = buildRequest(Example.class, "ba%20r");
+    assertBody(request.body(), "na%20me=ba%20r");
   }
 
   @Test public void formEncodedFieldOptional() {
@@ -1363,34 +1352,17 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@FieldMap(encodeNames = false) Map<String, Object> fieldMap) {
+      Response method(@FieldMap(encode = false) Map<String, Object> fieldMap) {
         return null;
       }
     }
 
     Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
-    fieldMap.put("k+it", "k at");
-    fieldMap.put("pin+g", "po ng");
+    fieldMap.put("k%20it", "k%20at");
+    fieldMap.put("pin%20g", "po%20ng");
 
     Request request = buildRequest(Example.class, fieldMap);
-    assertBody(request.body(), "k+it=k+at&pin+g=po+ng");
-  }
-
-  @Test public void formEncodedWithEncodedValueFieldParamMap() {
-    class Example {
-      @FormUrlEncoded //
-      @POST("/foo") //
-      Response method(@FieldMap(encodeValues = false) Map<String, Object> fieldMap) {
-        return null;
-      }
-    }
-
-    Map<String, Object> fieldMap = new LinkedHashMap<String, Object>();
-    fieldMap.put("k it", "k+at");
-    fieldMap.put("pin g", "po+ng");
-
-    Request request = buildRequest(Example.class, fieldMap);
-    assertBody(request.body(), "k+it=k+at&pin+g=po+ng");
+    assertBody(request.body(), "k%20it=k%20at&pin%20g=po%20ng");
   }
 
   @Test public void formEncodedFieldMap() {

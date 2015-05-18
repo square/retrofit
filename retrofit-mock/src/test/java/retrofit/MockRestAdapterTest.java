@@ -59,7 +59,7 @@ public class MockRestAdapterTest {
 
     RestAdapter restAdapter = new RestAdapter.Builder() //
         .callbackExecutor(callbackExecutor)
-        .endpoint("none")
+        .endpoint("http://example.com")
         .errorHandler(new ErrorHandler() {
           @Override public Throwable handleError(RetrofitError cause) {
             if (nextError != null) {
