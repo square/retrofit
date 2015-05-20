@@ -690,7 +690,7 @@ public class RequestBuilderTest {
   @Test public void getWithEncodedPathParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
-      Response method(@Path(value = "ping", encode = false) String ping) {
+      Response method(@Path(value = "ping", encoded = true) String ping) {
         return null;
       }
     }
@@ -733,42 +733,14 @@ public class RequestBuilderTest {
   @Test public void getWithEncodedQueryParam() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@Query(value = "ping", encodeValue = false) String ping) {
+      Response method(@Query(value = "pi%20ng", encoded = true) String ping) {
         return null;
       }
     }
     Request request = buildRequest(Example.class, "p%20o%20n%20g");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?ping=p%20o%20n%20g");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithEncodeNameQueryParam() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method(@Query(value = "pi ng", encodeName = true) String ping) {
-        return null;
-      }
-    }
-    Request request = buildRequest(Example.class, "pong");
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=pong");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithEncodeNameEncodedValueQueryParam() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method(@Query(value = "pi ng", encodeName = true, encodeValue = false) String ping) {
-        return null;
-      }
-    }
-    Request request = buildRequest(Example.class, "po%20ng");
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=po%20ng");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=p%20o%20n%20g");
     assertThat(request.body()).isNull();
   }
 
@@ -955,7 +927,7 @@ public class RequestBuilderTest {
   @Test public void getWithEncodedQueryParamMap() {
     class Example {
       @GET("/foo/bar/") //
-      Response method(@QueryMap(encodeValues = false) Map<String, Object> query) {
+      Response method(@QueryMap(encoded = true) Map<String, Object> query) {
         return null;
       }
     }
@@ -963,53 +935,12 @@ public class RequestBuilderTest {
     Map<String, Object> params = new LinkedHashMap<String, Object>();
     params.put("kit", "k%20t");
     params.put("foo", null);
-    params.put("ping", "p%20g");
+    params.put("pi%20ng", "p%20g");
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithEncodeNameQueryParamMap() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method(@QueryMap(encodeNames = true) Map<String, Object> query) {
-        return null;
-      }
-    }
-
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
-    params.put("k it", "k t");
-    params.put("fo o", null);
-    params.put("pi ng", "p g");
-
-    Request request = buildRequest(Example.class, params);
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?k%20it=k%20t&pi%20ng=p%20g");
-    assertThat(request.body()).isNull();
-  }
-
-  @Test public void getWithEncodeNameEncodedValueQueryParamMap() {
-    class Example {
-      @GET("/foo/bar/") //
-      Response method(
-          @QueryMap(encodeNames = true, encodeValues = false) Map<String, Object> query) {
-        return null;
-      }
-    }
-
-    Map<String, Object> params = new LinkedHashMap<String, Object>();
-    params.put("k it", "k%20t");
-    params.put("fo o", null);
-    params.put("pi ng", "p%20g");
-
-    Request request = buildRequest(Example.class, params);
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?k%20it=k%20t&pi%20ng=p%20g");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&pi%20ng=p%20g");
     assertThat(request.body()).isNull();
   }
 
@@ -1285,7 +1216,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@Field(value = "na%20me", encode = false) String foo) {
+      Response method(@Field(value = "na%20me", encoded = true) String foo) {
         return null;
       }
     }
@@ -1352,7 +1283,7 @@ public class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Response method(@FieldMap(encode = false) Map<String, Object> fieldMap) {
+      Response method(@FieldMap(encoded = true) Map<String, Object> fieldMap) {
         return null;
       }
     }
