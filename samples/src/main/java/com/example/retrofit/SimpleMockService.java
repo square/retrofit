@@ -1,6 +1,8 @@
 // Copyright 2013 Square, Inc.
 package com.example.retrofit;
 
+import com.example.retrofit.SimpleService.Contributor;
+import com.example.retrofit.SimpleService.GitHub;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -9,29 +11,14 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import retrofit.MockRestAdapter;
 import retrofit.RestAdapter;
-import retrofit.http.GET;
-import retrofit.http.Path;
 
-public class GitHubClient {
-  private static final String API_URL = "https://api.github.com";
-
-  static class Contributor {
-    public final String login;
-    public final int contributions;
-
-    Contributor(String login, int contributions) {
-      this.login = login;
-      this.contributions = contributions;
-    }
-  }
-
-  public interface GitHub {
-    @GET("/repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Path("owner") String owner, @Path("repo") String repo);
-  }
-
+/**
+ * An example of using {@link MockRestAdapter} to create a mock service implementation with
+ * fake data. This re-uses the GitHub service from {@link SimpleService} for its mocking.
+ */
+public final class SimpleMockService {
   /** A mock implementation of the {@link GitHub} API interface. */
-  static class MockGitHub implements GitHub {
+  static final class MockGitHub implements GitHub {
     private final Map<String, Map<String, List<Contributor>>> ownerRepoContributors;
 
     public MockGitHub() {
@@ -75,7 +62,7 @@ public class GitHubClient {
   public static void main(String... args) {
     // Create a very simple REST adapter which points the GitHub API endpoint.
     RestAdapter restAdapter = new RestAdapter.Builder()
-        .endpoint(API_URL)
+        .endpoint(SimpleService.API_URL)
         .build();
 
     // Wrap our REST adapter to allow mock implementations and fake network delay.

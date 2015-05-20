@@ -20,15 +20,20 @@ import retrofit.RestAdapter;
 import retrofit.http.GET;
 import retrofit.http.Path;
 
-public class GitHubClient {
-  private static final String API_URL = "https://api.github.com";
+public final class SimpleService {
+  public static final String API_URL = "https://api.github.com";
 
-  static class Contributor {
-    String login;
-    int contributions;
+  public static class Contributor {
+    public final String login;
+    public final int contributions;
+
+    public Contributor(String login, int contributions) {
+      this.login = login;
+      this.contributions = contributions;
+    }
   }
 
-  interface GitHub {
+  public interface GitHub {
     @GET("/repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(
         @Path("owner") String owner,
