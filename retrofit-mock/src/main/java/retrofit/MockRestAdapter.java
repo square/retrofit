@@ -494,15 +494,17 @@ public final class MockRestAdapter {
       });
     }
 
-    private Runnable getRunnable(final Subscriber<? super Object> subscriber, final MockHandler mockHandler,
-        final RestMethodInfo methodInfo, final RequestInterceptor interceptor, final Object[] args) {
+    private Runnable getRunnable(final Subscriber<? super Object> subscriber,
+        final MockHandler mockHandler, final RestMethodInfo methodInfo,
+        final RequestInterceptor interceptor, final Object[] args) {
       return new Runnable() {
         @Override public void run() {
           try {
             if (subscriber.isUnsubscribed()) {
               return;
             }
-            BlockingObservable o = ((Observable) mockHandler.invokeSync(methodInfo, interceptor, args)).toBlocking();
+            BlockingObservable o = ((Observable) mockHandler
+                .invokeSync(methodInfo, interceptor, args)).toBlocking();
             subscriber.onNext(o.single());
             subscriber.onCompleted();
           } catch (RetrofitError e) {
