@@ -8,11 +8,15 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import rx.Observable;
-import rx.functions.Func1;
+import rx.Subscriber;
+import rx.observables.BlockingObservable;
+import rx.subscriptions.Subscriptions;
 
 import static retrofit.RestAdapter.LogLevel;
 import static retrofit.RetrofitError.unexpectedError;
@@ -467,26 +471,47 @@ public final class MockRestAdapter {
 
   /** Indirection to avoid VerifyError if RxJava isn't present. */
   private static class MockRxSupport {
+    private final Executor httpExecutor;
     private final ErrorHandler errorHandler;
 
     MockRxSupport(RestAdapter restAdapter) {
+      httpExecutor = restAdapter.httpExecutor;
       errorHandler = restAdapter.errorHandler;
     }
 
     Observable createMockObservable(final MockHandler mockHandler, final RestMethodInfo methodInfo,
         final RequestInterceptor interceptor, final Object[] args) {
-      return Observable.just("nothing") //
-          .flatMap(new Func1<String, Observable<?>>() {
-            @Override public Observable<?> call(String s) {
-              try {
-                return (Observable) mockHandler.invokeSync(methodInfo, interceptor, args);
-              } catch (RetrofitError e) {
-                return Observable.error(errorHandler.handleError(e));
-              } catch (Throwable throwable) {
-                return Observable.error(throwable);
-              }
+      return Observable.create(new Observable.OnSubscribe<Object>() {
+        @Override
+        public void call(Subscriber<? super Object> subscriber) {
+          Runnable runnable = getRunnable(subscriber, mockHandler, methodInfo, interceptor, args);
+          FutureTask<Void> task = new FutureTask<Void>(runnable, null);
+
+          // Subscribe to the future task of the network call allowing unsubscription.
+          subscriber.add(Subscriptions.from(task));
+          httpExecutor.execute(task);
+        }
+      });
+    }
+
+    private Runnable getRunnable(final Subscriber<? super Object> subscriber, final MockHandler mockHandler,
+        final RestMethodInfo methodInfo, final RequestInterceptor interceptor, final Object[] args) {
+      return new Runnable() {
+        @Override public void run() {
+          try {
+            if (subscriber.isUnsubscribed()) {
+              return;
             }
-          });
+            BlockingObservable o = ((Observable) mockHandler.invokeSync(methodInfo, interceptor, args)).toBlocking();
+            subscriber.onNext(o.single());
+            subscriber.onCompleted();
+          } catch (RetrofitError e) {
+            subscriber.onError(errorHandler.handleError(e));
+          } catch (Throwable throwable) {
+            subscriber.onError(throwable);
+          }
+        }
+      };
     }
   }
 }
