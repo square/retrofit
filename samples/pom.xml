@@ -10,13 +10,32 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>com.squareup.retrofit.samples</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>samples</artifactId>
   <name>Samples</name>
-  <packaging>pom</packaging>
 
-  <modules>
-    <module>github-client</module>
-    <module>mock-github-client</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>com.squareup.retrofit</groupId>
+      <artifactId>retrofit</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.retrofit</groupId>
+      <artifactId>retrofit-mock</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Do not deploy this as an artifact to Maven central. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
