@@ -12,9 +12,7 @@ import java.util.concurrent.TimeUnit;
 import retrofit.client.Request;
 import retrofit.client.Response;
 import rx.Observable;
-import rx.Scheduler;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import static retrofit.RestAdapter.LogLevel;
 import static retrofit.RetrofitError.unexpectedError;
@@ -469,11 +467,9 @@ public final class MockRestAdapter {
 
   /** Indirection to avoid VerifyError if RxJava isn't present. */
   private static class MockRxSupport {
-    private final Scheduler httpScheduler;
     private final ErrorHandler errorHandler;
 
     MockRxSupport(RestAdapter restAdapter) {
-      httpScheduler = Schedulers.from(restAdapter.httpExecutor);
       errorHandler = restAdapter.errorHandler;
     }
 
@@ -490,7 +486,7 @@ public final class MockRestAdapter {
                 return Observable.error(throwable);
               }
             }
-          }).subscribeOn(httpScheduler);
+          });
     }
   }
 }
