@@ -33,10 +33,7 @@ public class LoganSquareConverter implements Converter {
     @Override
     public RequestBody toBody(Object object, Type type) {
         try {
-            System.out.println(type);
-            System.out.println(object);
             String json = LoganSquare.serialize(object);
-            System.out.println(json);
             return RequestBody.create(MEDIA_TYPE, json);
         } catch (Exception e) {
             System.err.print(e);
