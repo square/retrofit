@@ -19,12 +19,6 @@
       <artifactId>gson</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.bluelinelabs</groupId>
-      <artifactId>logansquare</artifactId>
-      <version>1.0.6</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android</artifactId>
       <optional>true</optional>
@@ -65,17 +59,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <!-- The AppEngine dependency has an annotation processor we don't want to run. -->
-          <compilerArgument>-proc:none</compilerArgument>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>
