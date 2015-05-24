@@ -13,28 +13,28 @@ import java.lang.reflect.Type;
  * A {@link Converter} which uses LoganSquare for serialization and deserialization of entities.
  */
 public class LoganSquareConverter implements Converter {
-    private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
 
-    @Override
-    public Object fromBody(ResponseBody body, Type type) throws IOException {
-        InputStream is = body.byteStream();
-        try {
-            return LoganSquare.parse(is, (Class) type);
-        } finally {
-            try {
-                is.close();
-            } catch (IOException ignored) {
-            }
-        }
+  @Override
+  public Object fromBody(ResponseBody body, Type type) throws IOException {
+    InputStream is = body.byteStream();
+    try {
+      return LoganSquare.parse(is, (Class) type);
+    } finally {
+      try {
+        is.close();
+      } catch (IOException ignored) {
+      }
     }
+  }
 
-    @Override
-    public RequestBody toBody(Object object, Type type) {
-        try {
-            String json = LoganSquare.serialize(object);
-            return RequestBody.create(MEDIA_TYPE, json);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  @Override
+  public RequestBody toBody(Object object, Type type) {
+    try {
+      String json = LoganSquare.serialize(object);
+      return RequestBody.create(MEDIA_TYPE, json);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 }
