@@ -6,10 +6,10 @@ import com.bluelinelabs.logansquare.annotation.JsonObject;
 @JsonObject
 public class MyObject {
   @JsonField
-  public String message;
+  String message;
 
   @JsonField
-  public int count;
+  int count;
 
   public MyObject() {
   }
