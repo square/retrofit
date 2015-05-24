@@ -1,6 +1,7 @@
 package retrofit.converter;
 
 import com.bluelinelabs.logansquare.LoganSquare;
+import com.bluelinelabs.logansquare.NoSuchMapperException;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
@@ -14,8 +15,6 @@ import java.lang.reflect.Type;
  */
 public class LoganSquareConverter implements Converter {
     private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
-
-    public LoganSquareConverter() {}
 
     @Override
     public Object fromBody(ResponseBody body, Type type) throws IOException {
@@ -35,10 +34,8 @@ public class LoganSquareConverter implements Converter {
         try {
             String json = LoganSquare.serialize(object);
             return RequestBody.create(MEDIA_TYPE, json);
-        } catch (Exception e) {
-            System.err.print(e);
-            e.printStackTrace();
-            return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

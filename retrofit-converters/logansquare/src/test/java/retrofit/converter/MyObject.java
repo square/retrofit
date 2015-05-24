@@ -3,13 +3,16 @@ package retrofit.converter;
 import com.bluelinelabs.logansquare.annotation.JsonField;
 import com.bluelinelabs.logansquare.annotation.JsonObject;
 
-@JsonObject
+@JsonObject()
 public class MyObject {
     @JsonField
-    public final String message;
+    public String message;
 
     @JsonField
-    public final int count;
+    public int count;
+
+    public MyObject() {
+    }
 
     public MyObject(String message, int count) {
         this.message = message;
