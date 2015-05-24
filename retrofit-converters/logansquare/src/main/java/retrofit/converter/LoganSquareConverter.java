@@ -1,7 +1,6 @@
 package retrofit.converter;
 
 import com.bluelinelabs.logansquare.LoganSquare;
-import com.bluelinelabs.logansquare.NoSuchMapperException;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
