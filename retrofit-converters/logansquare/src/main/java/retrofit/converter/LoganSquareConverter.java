@@ -33,8 +33,8 @@ public class LoganSquareConverter implements Converter {
     try {
       String json = LoganSquare.serialize(object);
       return RequestBody.create(MEDIA_TYPE, json);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      throw new AssertionError(e);
     }
   }
 }
