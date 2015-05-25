@@ -201,11 +201,6 @@ public final class PhoneProtos {
       return size;
     }
 
-    @Override
-    public boolean equals(Object other) {
-      return super.equals(other);
-    }
-
     private static final long serialVersionUID = 0L;
     @java.lang.Override
     protected java.lang.Object writeReplace()
