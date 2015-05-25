@@ -1,16 +1,18 @@
 package retrofit.converter;
 
 
-import com.bluelinelabs.logansquare.NoSuchMapperException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okio.Buffer;
 
@@ -19,9 +21,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LoganSquareConverterTest {
 
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
+  private LoganSquareConverter converter = new LoganSquareConverter();
+
+  //Simple JSON
   private static final MyObject OBJECT = new MyObject("hello world", 10);
   private final String JSON = "{\"message\":\"hello world\",\"count\":10}";
-  private LoganSquareConverter converter = new LoganSquareConverter();
+
+  //JSON data for testing List type
+  private Users USERS = new Users();
+  private final String LIST_JSON = "[{\"fullName\":\"sample\"}]";
+  private List<User> userList = new ArrayList<User>();
+  private final String USERS_JSON = "{\"users\":[{\"fullName\":\"sample\"}]}";
+
+  @Before
+  public void setUp() {
+    User user = new User("sample");
+    userList.add(user);
+    USERS.setUsers(userList);
+  }
 
   @Test
   public void serialize() throws Exception {
@@ -38,6 +55,19 @@ public class LoganSquareConverterTest {
   }
 
   @Test
+  public void serializeList() throws Exception {
+    RequestBody body = converter.toBody(userList, Users.class);
+    assertThat(body.contentType()).isEqualTo(MEDIA_TYPE);
+    assertForEquality(body, LIST_JSON);
+  }
+
+  @Test
+  public void deserializeList() throws Exception {
+    ResponseBody body = ResponseBody.create(MEDIA_TYPE, LIST_JSON);
+    List<User> result = (List<User>) converter.fromBody(body, ArrayList.class.getGenericSuperclass());
+  }
+
+  @Test
   public void deserializeWrongValue() throws Exception {
     ResponseBody body = ResponseBody.create(MEDIA_TYPE, "{\"foo\":\"bar\"}");
     try {
@@ -51,7 +81,7 @@ public class LoganSquareConverterTest {
     ResponseBody body = ResponseBody.create(MEDIA_TYPE, JSON);
     try {
       converter.fromBody(body, String.class);
-    } catch (NoSuchMapperException ignored) {
+    } catch (Exception ignored) {
     }
   }
 

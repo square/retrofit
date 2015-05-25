@@ -7,7 +7,9 @@ import com.squareup.okhttp.ResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * A {@link Converter} which uses LoganSquare for serialization and deserialization of entities.
@@ -19,7 +21,12 @@ public class LoganSquareConverter implements Converter {
   public Object fromBody(ResponseBody body, Type type) throws IOException {
     InputStream is = body.byteStream();
     try {
-      return LoganSquare.parse(is, (Class) type);
+      if (ParameterizedType.class.isAssignableFrom(type.getClass())) {
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        return LoganSquare.parseList(is, (Class) parameterizedType.getActualTypeArguments()[0]);
+      } else {
+        return LoganSquare.parse(is, (Class) type);
+      }
     } finally {
       try {
         is.close();
@@ -31,9 +38,20 @@ public class LoganSquareConverter implements Converter {
   @Override
   public RequestBody toBody(Object object, Type type) {
     try {
-      String json = LoganSquare.serialize(object);
+      String json;
+      if (List.class.isAssignableFrom(object.getClass())) {
+        List<Object> list = (List<Object>) object;
+        if (list.isEmpty()) {
+          json = "[]";
+        } else {
+          json = LoganSquare.serialize(list, (Class<Object>) list.get(0).getClass());
+        }
+      } else {
+        json = LoganSquare.serialize(object);
+      }
       return RequestBody.create(MEDIA_TYPE, json);
     } catch (Exception e) {
+      e.printStackTrace();
       throw new AssertionError(e);
     }
   }
