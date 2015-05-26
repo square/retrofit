@@ -27,6 +27,8 @@ public class LoganSquareConverter implements Converter {
       } else {
         return LoganSquare.parse(is, (Class) type);
       }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     } finally {
       try {
         is.close();
