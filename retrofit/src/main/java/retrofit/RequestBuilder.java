@@ -41,10 +41,12 @@ import retrofit.http.QueryMap;
 
 final class RequestBuilder {
   private static final Headers NO_HEADERS = Headers.of();
+  private static final byte[] NO_BODY = new byte[0];
 
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
+  private final boolean requestHasBody;
   private final String apiUrl;
 
   private MultipartBuilder multipartBuilder;
@@ -62,6 +64,7 @@ final class RequestBuilder {
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
+    requestHasBody = methodInfo.requestHasBody;
 
     if (methodInfo.headers != null) {
       headers = methodInfo.headers.newBuilder();
@@ -366,6 +369,9 @@ final class RequestBuilder {
         body = formEncodingBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
+      } else if (requestHasBody) {
+        // Body is absent, make an empty body.
+        body = RequestBody.create(null, NO_BODY);
       }
     }
 
