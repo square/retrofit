@@ -241,7 +241,7 @@ public class MockRestAdapterTest {
 
     AsyncExample mockService = mockRestAdapter.create(AsyncExample.class, new MockAsyncExample());
 
-    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<>();
     mockService.doStuff(new Callback<String>() {
       @Override public void success(String o, Response response) {
         throw new AssertionError();
@@ -303,7 +303,7 @@ public class MockRestAdapterTest {
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
-    final AtomicReference<Object> actual = new AtomicReference<Object>();
+    final AtomicReference<Object> actual = new AtomicReference<>();
     mockService.doStuff(new Callback<String>() {
       @Override public void success(String result, Response response) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
@@ -341,7 +341,7 @@ public class MockRestAdapterTest {
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
-    final AtomicReference<Object> actual = new AtomicReference<Object>();
+    final AtomicReference<Object> actual = new AtomicReference<>();
     Action1<Object> onSuccess = new Action1<Object>() {
       @Override public void call(Object o) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
@@ -413,7 +413,7 @@ public class MockRestAdapterTest {
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
-    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<>();
     mockService.doStuff(new Callback<String>() {
       @Override public void success(String o, Response response) {
         throw new AssertionError();
@@ -456,7 +456,7 @@ public class MockRestAdapterTest {
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
-    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<>();
     mockService.doStuff().subscribe(new Action1<Object>() {
       @Override public void call(Object o) {
         throw new AssertionError();
@@ -497,7 +497,7 @@ public class MockRestAdapterTest {
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
-    final AtomicReference<RetrofitError> errorRef = new AtomicReference<RetrofitError>();
+    final AtomicReference<RetrofitError> errorRef = new AtomicReference<>();
     mockService.doStuff().subscribe(new Action1<Object>() {
       @Override public void call(Object o) {
         throw new AssertionError();
@@ -616,7 +616,7 @@ public class MockRestAdapterTest {
         mockRestAdapter.create(AsyncCallbackSubtypeExample.class,
             new MockAsyncCallbackSubtypeExample());
 
-    final AtomicReference<String> actual = new AtomicReference<String>();
+    final AtomicReference<String> actual = new AtomicReference<>();
     mockService.doStuff(new AsyncCallbackSubtypeExample.Foo() {
       @Override public void success(String result, Response response) {
         actual.set(result);

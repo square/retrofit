@@ -15,8 +15,6 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.Response;
-
 /**
  * Communicates responses from a server or offline requests. One and only one method will be
  * invoked in response to a given request.
@@ -32,13 +30,9 @@ import com.squareup.okhttp.Response;
  * @see RestAdapter.Builder#callbackExecutor
  */
 public interface Callback<T> {
-
   /** Successful HTTP response. */
-  void success(T t, Response response);
+  void success(Response<T> response);
 
-  /**
-   * Unsuccessful HTTP response due to network failure, non-2XX status code, or unexpected
-   * exception.
-   */
-  void failure(RetrofitError error);
+  /** Invoked when a network or unexpected exception occurred during the HTTP request. */
+  void failure(Throwable t);
 }

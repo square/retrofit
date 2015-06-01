@@ -8,7 +8,7 @@ import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 
-class ExceptionCatchingRequestBody extends ResponseBody {
+final class ExceptionCatchingRequestBody extends ResponseBody {
   private final ResponseBody delegate;
   private IOException thrownException;
 
@@ -47,6 +47,10 @@ class ExceptionCatchingRequestBody extends ResponseBody {
         }
       }
     });
+  }
+
+  @Override public void close() throws IOException {
+    delegate.close();
   }
 
   IOException getThrownException() {
