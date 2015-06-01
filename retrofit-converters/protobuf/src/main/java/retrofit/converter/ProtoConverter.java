@@ -13,7 +13,26 @@ import java.lang.reflect.Type;
 
 /** A {@link Converter} that reads and writes protocol buffers. */
 public class ProtoConverter implements Converter {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
+
+  private final MediaType mediaType;
+
+  /**
+   * Default constructor for converter with default Content-Type - application/x-protobuf
+   */
+  public ProtoConverter() {
+    mediaType = MediaType.parse("application/x-protobuf");
+  }
+
+  /**
+   * Constructor allowing usage of custom Content-Type - e.g. application/octet-stream,
+   * application/x-google-protobuf
+   *
+   * @param contentType Custom Content-Type
+   */
+  public ProtoConverter(String contentType) {
+    mediaType = MediaType.parse(contentType);
+  }
+
 
   @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
     if (!(type instanceof Class<?>)) {
@@ -49,6 +68,6 @@ public class ProtoConverter implements Converter {
               : "null"));
     }
     byte[] bytes = ((AbstractMessageLite) object).toByteArray();
-    return RequestBody.create(MEDIA_TYPE, bytes);
+    return RequestBody.create(mediaType, bytes);
   }
 }
