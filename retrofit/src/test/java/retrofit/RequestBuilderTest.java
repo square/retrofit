@@ -860,6 +860,35 @@ public final class RequestBuilderTest {
     assertBody(request.body(), "{}");
   }
 
+  @Test public void emptyBody() {
+    class Example {
+      @POST("/foo/bar/") //
+      Call<Object> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertBody(request.body(), "");
+  }
+
+  @Ignore("https://github.com/square/okhttp/issues/229")
+  @Test public void customMethodEmptyBody() {
+    class Example {
+      @HTTP(method = "CUSTOM", path = "/foo/bar/", hasBody = true) //
+      Call<Object> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("CUSTOM");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertBody(request.body(), "");
+  }
+
   @Test public void bodyGson() {
     class Example {
       @POST("/foo/bar/") //
