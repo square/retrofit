@@ -30,7 +30,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>If the type is {@link String} the value will also be used directly with a {@code text/plain}
  * content type.</li>
  * <li>Other object types will be converted to an appropriate representation by calling {@link
- * retrofit.converter.Converter#toBody(Object, java.lang.reflect.Type)}.</li>
+ * retrofit.Converter#toBody(Object, java.lang.reflect.Type)}.</li>
  * </ul>
  * <p>
  * <pre>

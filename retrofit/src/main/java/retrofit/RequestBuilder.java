@@ -28,7 +28,6 @@ import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.Map;
 import okio.BufferedSink;
-import retrofit.converter.Converter;
 import retrofit.http.Body;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
@@ -78,7 +77,7 @@ final class RequestBuilder {
       queryParams = new StringBuilder().append('?').append(requestQuery);
     }
 
-    switch (methodInfo.requestBody) {
+    switch (methodInfo.bodyEncoding) {
       case FORM_URL_ENCODED:
         // Will be set to 'body' in 'build'.
         formEncodingBuilder = new FormEncodingBuilder();
@@ -87,11 +86,11 @@ final class RequestBuilder {
         // Will be set to 'body' in 'build'.
         multipartBuilder = new MultipartBuilder();
         break;
-      case SIMPLE:
+      case NONE:
         // If present, 'body' will be set in 'setArguments' call.
         break;
       default:
-        throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestBody);
+        throw new IllegalArgumentException("Unknown request type: " + methodInfo.bodyEncoding);
     }
   }
 

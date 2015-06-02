@@ -1,4 +1,4 @@
-package retrofit.converter;
+package retrofit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;

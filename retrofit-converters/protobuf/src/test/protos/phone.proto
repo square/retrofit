@@ -1,6 +1,6 @@
 package retrofit;
 
-option java_package = "retrofit.converter";
+option java_package = "retrofit";
 option java_outer_classname = "PhoneProtos";
 
 message Phone {

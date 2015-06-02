@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit.converter;
+package retrofit;
 
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;

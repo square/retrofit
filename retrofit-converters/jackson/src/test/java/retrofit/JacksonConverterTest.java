@@ -1,4 +1,4 @@
-package retrofit.converter;
+package retrofit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonMappingException;

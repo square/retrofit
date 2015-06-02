@@ -1,5 +1,5 @@
 // Copyright 2015 Square, Inc.
-package retrofit.converter;
+package retrofit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

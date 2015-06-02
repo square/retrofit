@@ -15,6 +15,8 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -52,23 +54,21 @@ final class MethodInfo {
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  enum RequestBody {
-    /** No content-specific logic required. */
-    SIMPLE,
-    /** Multi-part request body. */
+  enum BodyEncoding {
+    NONE,
     MULTIPART,
-    /** Form URL-encoded request body. */
     FORM_URL_ENCODED
   }
 
   final Method method;
   final List<CallAdapter.Factory> factories;
+  final Converter converter;
 
   // Method-level details
   CallAdapter<?> adapter;
 
   Type requestType;
-  RequestBody requestBody = RequestBody.SIMPLE;
+  BodyEncoding bodyEncoding = BodyEncoding.NONE;
   String requestMethod;
   boolean requestHasBody;
   String requestUrl;
@@ -81,9 +81,10 @@ final class MethodInfo {
   // Parameter-level details
   Annotation[] requestParamAnnotations;
 
-  MethodInfo(Method method, List<CallAdapter.Factory> factories) {
+  MethodInfo(Method method, List<CallAdapter.Factory> factories, Converter converter) {
     this.method = method;
     this.factories = factories;
+    this.converter = converter;
     parseResponseType();
     parseMethodAnnotations();
     parseParameters();
@@ -101,7 +102,7 @@ final class MethodInfo {
     return methodError(message + " (parameter #" + (index + 1) + ")", args);
   }
 
-  /** Loads {@link #requestMethod} and {@link #requestBody}. */
+  /** Loads {@link #requestMethod} and {@link #bodyEncoding}. */
   private void parseMethodAnnotations() {
     for (Annotation methodAnnotation : method.getAnnotations()) {
       Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
@@ -127,15 +128,15 @@ final class MethodInfo {
         }
         headers = parseHeaders(headersToParse);
       } else if (annotationType == Multipart.class) {
-        if (requestBody != RequestBody.SIMPLE) {
+        if (bodyEncoding != BodyEncoding.NONE) {
           throw methodError("Only one encoding annotation is allowed.");
         }
-        requestBody = RequestBody.MULTIPART;
+        bodyEncoding = BodyEncoding.MULTIPART;
       } else if (annotationType == FormUrlEncoded.class) {
-        if (requestBody != RequestBody.SIMPLE) {
+        if (bodyEncoding != BodyEncoding.NONE) {
           throw methodError("Only one encoding annotation is allowed.");
         }
-        requestBody = RequestBody.FORM_URL_ENCODED;
+        bodyEncoding = BodyEncoding.FORM_URL_ENCODED;
       } else if (annotationType == Streaming.class) {
         isStreaming = true;
       }
@@ -145,11 +146,11 @@ final class MethodInfo {
       throw methodError("HTTP method annotation is required (e.g., @GET, @POST, etc.).");
     }
     if (!requestHasBody) {
-      if (requestBody == RequestBody.MULTIPART) {
+      if (bodyEncoding == BodyEncoding.MULTIPART) {
         throw methodError(
             "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
       }
-      if (requestBody == RequestBody.FORM_URL_ENCODED) {
+      if (bodyEncoding == BodyEncoding.FORM_URL_ENCODED) {
         throw methodError("FormUrlEncoded can only be specified on HTTP methods with request body "
                 + "(e.g., @POST).");
       }
@@ -220,19 +221,29 @@ final class MethodInfo {
     }
 
     //noinspection ForLoopReplaceableByForEach
+    CallAdapter adapter = null;
     for (int i = 0, count = factories.size(); i < count; i++) {
       CallAdapter.Factory factory = factories.get(i);
-      CallAdapter adapter = factory.get(returnType);
+      adapter = factory.get(returnType);
       if (adapter != null) {
-        this.adapter = adapter;
-        return;
+        break;
       }
     }
+    if (adapter == null) {
+      throw methodError("No registered call adapters were able to handle return type "
+          + returnType
+          + ". Checked: "
+          + factories);
+    }
+    Type responseType = adapter.responseType();
+    if (converter == null && responseType != ResponseBody.class) {
+      throw methodError("Method response type is "
+          + responseType
+          + " but no converter registered. "
+          + "Either add a converter to the RestAdapter or use ResponseBody.");
+    }
 
-    throw methodError("No registered call adapters were able to handle return type "
-        + returnType
-        + ". Checked: "
-        + factories);
+    this.adapter = adapter;
   }
 
   /**
@@ -269,13 +280,13 @@ final class MethodInfo {
           } else if (methodAnnotationType == Header.class) {
             // Nothing to do.
           } else if (methodAnnotationType == Field.class) {
-            if (requestBody != RequestBody.FORM_URL_ENCODED) {
+            if (bodyEncoding != BodyEncoding.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
 
             gotField = true;
           } else if (methodAnnotationType == FieldMap.class) {
-            if (requestBody != RequestBody.FORM_URL_ENCODED) {
+            if (bodyEncoding != BodyEncoding.FORM_URL_ENCODED) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
             if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
@@ -284,13 +295,19 @@ final class MethodInfo {
 
             gotField = true;
           } else if (methodAnnotationType == Part.class) {
-            if (requestBody != RequestBody.MULTIPART) {
+            if (bodyEncoding != BodyEncoding.MULTIPART) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
+            }
+            if (converter == null && methodParameterType != BodyEncoding.class) {
+              throw parameterError(i, "@Part parameter is "
+                  + methodParameterType
+                  + " but no converter registered. "
+                  + "Either add a converter to the RestAdapter or use RequestBody.");
             }
 
             gotPart = true;
           } else if (methodAnnotationType == PartMap.class) {
-            if (requestBody != RequestBody.MULTIPART) {
+            if (bodyEncoding != BodyEncoding.MULTIPART) {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
             }
@@ -300,12 +317,18 @@ final class MethodInfo {
 
             gotPart = true;
           } else if (methodAnnotationType == Body.class) {
-            if (requestBody != RequestBody.SIMPLE) {
+            if (bodyEncoding != BodyEncoding.NONE) {
               throw parameterError(i,
                   "@Body parameters cannot be used with form or multi-part encoding.");
             }
             if (gotBody) {
               throw methodError("Multiple @Body method annotations found.");
+            }
+            if (converter == null && methodParameterType != RequestBody.class) {
+              throw parameterError(i, "@Body parameter is "
+                  + methodParameterType
+                  + " but no converter registered. "
+                  + "Either add a converter to the RestAdapter or use RequestBody.");
             }
 
             requestType = methodParameterType;
@@ -330,13 +353,13 @@ final class MethodInfo {
       }
     }
 
-    if (requestBody == RequestBody.SIMPLE && !requestHasBody && gotBody) {
+    if (bodyEncoding == BodyEncoding.NONE && !requestHasBody && gotBody) {
       throw methodError("Non-body HTTP method cannot contain @Body or @TypedOutput.");
     }
-    if (requestBody == RequestBody.FORM_URL_ENCODED && !gotField) {
+    if (bodyEncoding == BodyEncoding.FORM_URL_ENCODED && !gotField) {
       throw methodError("Form-encoded method must contain at least one @Field.");
     }
-    if (requestBody == RequestBody.MULTIPART && !gotPart) {
+    if (bodyEncoding == BodyEncoding.MULTIPART && !gotPart) {
       throw methodError("Multipart method must contain at least one @Part.");
     }
 

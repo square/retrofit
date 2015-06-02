@@ -1,8 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.Response;
+import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -17,6 +16,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unused") // Lots of unused parameters for example code.
 public final class MethodInfoTest {
+  private static List<CallAdapter.Factory> FACTORIES = Collections.<CallAdapter.Factory>singletonList(
+      new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor()));
+  private static Converter CONVERTER = new StringConverter();
+
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
@@ -55,8 +58,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, Collections.<CallAdapter.Factory>singletonList(
-        new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor())));
+    MethodInfo methodInfo = new MethodInfo(method, FACTORIES, CONVERTER);
     assertThat(methodInfo.requestType).isEqualTo(Dummy.class);
   }
 
@@ -68,8 +70,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, Collections.<CallAdapter.Factory>singletonList(
-        new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor())));
+    MethodInfo methodInfo = new MethodInfo(method, FACTORIES, CONVERTER);
     Type expected = new TypeToken<List<Dummy>>() {}.getType();
     assertThat(methodInfo.requestType).isEqualTo(expected);
   }
@@ -82,8 +83,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, Collections.<CallAdapter.Factory>singletonList(
-        new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor())));
+    MethodInfo methodInfo = new MethodInfo(method, FACTORIES, CONVERTER);
     Type expected = new TypeToken<List<? super String>>() {}.getType();
     assertThat(methodInfo.requestType).isEqualTo(expected);
   }
