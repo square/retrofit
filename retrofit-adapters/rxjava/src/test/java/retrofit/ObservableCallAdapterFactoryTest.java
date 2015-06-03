@@ -15,7 +15,7 @@
  */
 package retrofit;
 
-import com.google.gson.reflect.TypeToken;
+import com.google.common.reflect.TypeToken;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
@@ -27,7 +27,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import retrofit.converter.Converter;
 import retrofit.http.GET;
 import rx.Observable;
 import rx.observables.BlockingObservable;
@@ -202,7 +201,7 @@ public final class ObservableCallAdapterFactoryTest {
     }
 
     @Override public RequestBody toBody(Object object, Type type) {
-      return RequestBody.create(MediaType.parse("text/plain"), String.valueOf(type));
+      return RequestBody.create(MediaType.parse("text/plain"), String.valueOf(object));
     }
   }
 }

@@ -19,7 +19,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import retrofit.converter.Converter;
+import java.lang.reflect.Type;
 
 final class OkHttpCall<T> implements Call<T> {
   private final Endpoint endpoint;
@@ -129,18 +129,24 @@ final class OkHttpCall<T> implements Call<T> {
         // Buffer the entire body in the event of a non-2xx status to avoid future I/O.
         body = Utils.readBodyToBytesIfNecessary(rawBody);
       } else if (code != 204 && code != 205) {
-        ExceptionCatchingRequestBody wrapped = new ExceptionCatchingRequestBody(rawBody);
-        try {
+        Type responseType = methodInfo.adapter.responseType();
+        if (responseType == ResponseBody.class) {
           //noinspection unchecked
-          converted = (T) converter.fromBody(wrapped, methodInfo.adapter.responseType());
-        } catch (RuntimeException e) {
-          // If the underlying input stream threw an exception, propagate that rather than
-          // indicating that it was a conversion exception.
-          if (wrapped.threwException()) {
-            throw wrapped.getThrownException();
-          }
+          converted = (T) Utils.readBodyToBytesIfNecessary(rawBody);
+        } else {
+          ExceptionCatchingRequestBody wrapped = new ExceptionCatchingRequestBody(rawBody);
+          try {
+            //noinspection unchecked
+            converted = (T) converter.fromBody(wrapped, responseType);
+          } catch (RuntimeException e) {
+            // If the underlying input stream threw an exception, propagate that rather than
+            // indicating that it was a conversion exception.
+            if (wrapped.threwException()) {
+              throw wrapped.getThrownException();
+            }
 
-          throw e;
+            throw e;
+          }
         }
       }
     } finally {

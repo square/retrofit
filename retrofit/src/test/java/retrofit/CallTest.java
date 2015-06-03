@@ -26,8 +26,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
-import retrofit.converter.Converter;
-import retrofit.converter.GsonConverter;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
@@ -50,6 +48,7 @@ public final class CallTest {
   @Test public void http200Sync() throws IOException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -63,6 +62,7 @@ public final class CallTest {
   @Test public void http200Async() throws InterruptedException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -90,6 +90,7 @@ public final class CallTest {
   @Test public void http404Sync() throws IOException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -104,6 +105,7 @@ public final class CallTest {
   @Test public void http404Async() throws InterruptedException, IOException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -132,6 +134,7 @@ public final class CallTest {
   @Test public void transportProblemSync() {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -148,6 +151,7 @@ public final class CallTest {
   @Test public void transportProblemAsync() throws InterruptedException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -174,7 +178,7 @@ public final class CallTest {
   @Test public void conversionProblemOutgoingSync() throws IOException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new ForwardingConverter(new GsonConverter()) {
+        .converter(new StringConverter() {
           @Override public RequestBody toBody(Object object, Type type) {
             throw new UnsupportedOperationException("I am broken!");
           }
@@ -194,7 +198,7 @@ public final class CallTest {
   @Test public void conversionProblemOutgoingAsync() throws InterruptedException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new ForwardingConverter(new GsonConverter()) {
+        .converter(new StringConverter() {
           @Override public RequestBody toBody(Object object, Type type) {
             throw new UnsupportedOperationException("I am broken!");
           }
@@ -223,7 +227,7 @@ public final class CallTest {
   @Test public void conversionProblemIncomingSync() throws IOException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new ForwardingConverter(new GsonConverter()) {
+        .converter(new StringConverter() {
           @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
             throw new UnsupportedOperationException("I am broken!");
           }
@@ -245,7 +249,7 @@ public final class CallTest {
   @Test public void conversionProblemIncomingAsync() throws InterruptedException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new ForwardingConverter(new GsonConverter()) {
+        .converter(new StringConverter() {
           @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
             throw new UnsupportedOperationException("I am broken!");
           }
@@ -274,7 +278,7 @@ public final class CallTest {
   }
 
   @Test public void http204SkipsConverter() throws IOException {
-    Converter converter = spy(new GsonConverter());
+    Converter converter = spy(new StringConverter());
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(converter)
@@ -290,7 +294,7 @@ public final class CallTest {
   }
 
   @Test public void http205SkipsConverter() throws IOException {
-    Converter converter = spy(new GsonConverter());
+    Converter converter = spy(new StringConverter());
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(converter)
@@ -308,6 +312,7 @@ public final class CallTest {
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
 
@@ -315,21 +320,5 @@ public final class CallTest {
 
     Response<String> response = example.getMethod().execute();
     assertThat(response.body()).isEqualTo("Hi");
-  }
-
-  static abstract class ForwardingConverter implements Converter {
-    private final Converter delegate;
-
-    protected ForwardingConverter(Converter delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
-      return delegate.fromBody(body, type);
-    }
-
-    @Override public RequestBody toBody(Object object, Type type) {
-      return delegate.toBody(object, type);
-    }
   }
 }

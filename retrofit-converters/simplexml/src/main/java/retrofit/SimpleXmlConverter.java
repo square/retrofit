@@ -1,4 +1,4 @@
-package retrofit.converter;
+package retrofit;
 
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;

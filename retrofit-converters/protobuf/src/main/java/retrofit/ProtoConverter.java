@@ -1,5 +1,5 @@
 // Copyright 2013 Square, Inc.
-package retrofit.converter;
+package retrofit;
 
 import com.google.protobuf.AbstractMessageLite;
 import com.squareup.okhttp.MediaType;

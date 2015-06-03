@@ -1,11 +1,9 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import com.google.gson.Gson;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -18,8 +16,6 @@ import java.util.Map;
 import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Test;
-import retrofit.converter.Converter;
-import retrofit.converter.GsonConverter;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -39,7 +35,6 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.Streaming;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -47,6 +42,8 @@ import static org.junit.Assert.fail;
 
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
 public final class RequestBuilderTest {
+  private static final MediaType TEXT_PLAIN = MediaType.parse("text/plain");
+
   @Test public void customMethodNoBody() {
     class Example {
       @HTTP(method = "CUSTOM1", path = "/foo")
@@ -853,11 +850,12 @@ public final class RequestBuilderTest {
         return null;
       }
     }
-    Request request = buildRequest(Example.class, "pong", new Object());
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "Hi!");
+    Request request = buildRequest(Example.class, "pong", body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/");
-    assertBody(request.body(), "{}");
+    assertBody(request.body(), "Hi!");
   }
 
   @Test public void emptyBody() {
@@ -889,20 +887,6 @@ public final class RequestBuilderTest {
     assertBody(request.body(), "");
   }
 
-  @Test public void bodyGson() {
-    class Example {
-      @POST("/foo/bar/") //
-      Call<Object> method(@Body Object body) {
-        return null;
-      }
-    }
-    Request request = buildRequest(Example.class, Arrays.asList("quick", "brown", "fox"));
-    assertThat(request.method()).isEqualTo("POST");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
-    assertBody(request.body(), "[\"quick\",\"brown\",\"fox\"]");
-  }
-
   @Test public void bodyResponseBody() {
     class Example {
       @POST("/foo/bar/") //
@@ -910,7 +894,7 @@ public final class RequestBuilderTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
@@ -940,12 +924,12 @@ public final class RequestBuilderTest {
         return null;
       }
     }
-    Request request =
-        buildRequest(Example.class, "pong", Arrays.asList("quick", "brown", "fox"), "kat");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "Hi!");
+    Request request = buildRequest(Example.class, "pong", body, "kat");
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/kat/");
-    assertBody(request.body(), "[\"quick\",\"brown\",\"fox\"]");
+    assertBody(request.body(), "Hi!");
   }
 
   @Test public void simpleMultipart() throws IOException {
@@ -1418,14 +1402,15 @@ public final class RequestBuilderTest {
     }
   }
 
-  private static final Converter GSON = new GsonConverter(new Gson());
-
   private Request buildRequest(Class<?> cls, Object... args) {
+    Converter converter = new StringConverter();
+
     Method method = TestingUtils.onlyMethod(cls);
     MethodInfo methodInfo = new MethodInfo(method, Collections.<CallAdapter.Factory>singletonList(
-        new DefaultCallAdapterFactory(new Utils.SynchronousExecutor())));
+        new DefaultCallAdapterFactory(new Utils.SynchronousExecutor())), converter);
 
-    RequestBuilder builder = new RequestBuilder("http://example.com/", methodInfo, GSON);
+    RequestBuilder builder =
+        new RequestBuilder("http://example.com/", methodInfo, converter);
     builder.setArguments(args);
     return builder.build();
   }
