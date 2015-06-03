@@ -147,7 +147,7 @@ final class OkHttpCall<T> implements Call<T> {
       rawBody.close();
     }
 
-    return new Response<>(rawResponse, converted, body, converter);
+    return new Response<>(rawResponse, converted, body);
   }
 
   public void cancel() {

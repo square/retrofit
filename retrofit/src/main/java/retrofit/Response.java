@@ -19,9 +19,6 @@ import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.ResponseBody;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import retrofit.converter.Converter;
 
 import static retrofit.Utils.checkNotNull;
 
@@ -46,44 +43,40 @@ public final class Response<T> {
    */
   public static <T, B extends T> Response<T> fromBody(B body,
       com.squareup.okhttp.Response rawResponse) {
-    return new Response<T>(rawResponse, body, null, null);
+    return new Response<T>(rawResponse, body, null);
   }
 
   /**
    * TODO
    */
-  public static Response<Object> fromError(int code, ResponseBody body, Converter converter) {
+  public static Response<Object> fromError(int code, ResponseBody body) {
     return fromError(new com.squareup.okhttp.Response.Builder() //
         .code(code)
         .protocol(Protocol.HTTP_1_1)
         .body(body)
         .request(new com.squareup.okhttp.Request.Builder().url(HttpUrl.parse("http://localhost"))
             .build())
-        .build(), converter);
+        .build());
   }
 
   /**
    * TODO
    */
-  public static Response<Object> fromError(com.squareup.okhttp.Response rawResponse,
-      Converter converter) {
+  public static Response<Object> fromError(com.squareup.okhttp.Response rawResponse) {
     ResponseBody errorBody = rawResponse.body();
     if (errorBody == null) throw new IllegalArgumentException("Raw response must have body.");
     rawResponse = rawResponse.newBuilder().body(null).build();
-    return new Response<>(rawResponse, null, errorBody, converter);
+    return new Response<>(rawResponse, null, errorBody);
   }
 
   private final com.squareup.okhttp.Response rawResponse;
   private final T body;
   private final ResponseBody errorBody;
-  private final Converter converter;
 
-  Response(com.squareup.okhttp.Response rawResponse, T body, ResponseBody errorBody,
-      Converter converter) {
+  Response(com.squareup.okhttp.Response rawResponse, T body, ResponseBody errorBody) {
     this.rawResponse = checkNotNull(rawResponse, "rawResponse == null");
     this.body = body;
     this.errorBody = errorBody;
-    this.converter = converter;
   }
 
   /** The raw response from the HTTP client. */
@@ -113,19 +106,5 @@ public final class Response<T> {
   /** The raw response body of an {@linkplain #isSuccess() unsuccessful} response. */
   public ResponseBody errorBody() {
     return errorBody;
-  }
-
-  /**
-   * The deserialize the response body of an {@linkplain #isSuccess() unsuccessful} response to
-   * {@code errorType}.
-   * TODO warning about generics
-   */
-  @SuppressWarnings("unchecked") // Caller assumes responsibility for correct cast.
-  public <E> E errorBodyAs(Type errorType) {
-    try {
-      return (E) converter.fromBody(errorBody, errorType);
-    } catch (IOException e) {
-      throw new AssertionError(e); // Body is buffered.
-    }
   }
 }
