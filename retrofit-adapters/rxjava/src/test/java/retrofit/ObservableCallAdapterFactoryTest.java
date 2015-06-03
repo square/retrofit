@@ -17,42 +17,58 @@ package retrofit;
 
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import retrofit.converter.Converter;
+import retrofit.http.GET;
 import rx.Observable;
+import rx.observables.BlockingObservable;
 
+import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class ObservableCallAdapterFactoryTest {
-  private final ObservableCallAdapterFactory factory = ObservableCallAdapterFactory.create();
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
+
+  interface Service {
+    @GET("/") Observable<String> body();
+    @GET("/") Observable<Response<String>> response();
+    @GET("/") Observable<Result<String>> result();
+  }
+
+  private Service service;
+
+  @Before public void setUp() {
+    RestAdapter ra = new RestAdapter.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .addCallAdapterFactory(ObservableCallAdapterFactory.create())
+        .build();
+    service = ra.create(Service.class);
+  }
 
   @Test public void bodySuccess200() {
-    Type type = new TypeToken<Observable<String>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    Observable<String> observable = (Observable<String>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.success(Response.fromBody("Hi"));
-      }
-    });
-    String body = observable.toBlocking().first();
-    assertThat(body).isEqualTo("Hi");
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    BlockingObservable<String> o = service.body().toBlocking();
+    assertThat(o.first()).isEqualTo("Hi");
   }
 
   @Test public void bodySuccess404() {
-    Type type = new TypeToken<Observable<String>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    Observable<String> observable = (Observable<String>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.success(
-            Response.fromError(404, ResponseBody.create(MediaType.parse("application/json"), "Hi")));
-      }
-    });
+    server.enqueue(new MockResponse().setResponseCode(404));
+
+    BlockingObservable<String> o = service.body().toBlocking();
     try {
-      observable.toBlocking().first();
+      o.first();
       fail();
     } catch (RuntimeException e) {
       // TODO assert on some indicator of 404.
@@ -60,81 +76,80 @@ public final class ObservableCallAdapterFactoryTest {
   }
 
   @Test public void bodyFailure() {
-    Type type = new TypeToken<Observable<String>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    final Throwable throwable = new IOException();
-    Observable<String> observable = (Observable<String>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.failure(throwable);
-      }
-    });
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    BlockingObservable<String> o = service.body().toBlocking();
     try {
-      observable.toBlocking().first();
+      o.first();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause()).isSameAs(throwable);
+      assertThat(e.getCause()).isInstanceOf(IOException.class);
     }
   }
 
-  @Test public void responseSuccess() {
-    Type type = new TypeToken<Observable<Response<String>>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    final Response<Object> response = Response.fromBody("Hi");
-    Observable<Response<String>> observable = (Observable<Response<String>>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.success(response);
-      }
-    });
-    Response<String> body = observable.toBlocking().first();
-    assertThat(body).isSameAs(response);
+  @Test public void responseSuccess200() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    Response<String> response = o.first();
+    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.body()).isEqualTo("Hi");
+  }
+
+  @Test public void responseSuccess404() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    Response<String> response = o.first();
+    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
   @Test public void responseFailure() {
-    Type type = new TypeToken<Observable<Response<String>>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    final Throwable throwable = new IOException();
-    Observable<Response<String>> observable = (Observable<Response<String>>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.failure(throwable);
-      }
-    });
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    BlockingObservable<Response<String>> o = service.response().toBlocking();
     try {
-      observable.toBlocking().first();
+      o.first();
       fail();
     } catch (RuntimeException t) {
-      assertThat(t.getCause()).isSameAs(throwable);
+      assertThat(t.getCause()).isInstanceOf(IOException.class);
     }
   }
 
-  @Test public void resultSuccess() {
-    Type type = new TypeToken<Observable<Result<String>>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    final Response<Object> response = Response.fromBody("Hi");
-    Observable<Result<String>> observable = (Observable<Result<String>>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.success(response);
-      }
-    });
-    Result<String> result = observable.toBlocking().first();
+  @Test public void resultSuccess200() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
-    assertThat(result.response()).isSameAs(response);
+    Response<String> response = result.response();
+    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.body()).isEqualTo("Hi");
+  }
+
+  @Test public void resultSuccess404() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    Result<String> result = o.first();
+    assertThat(result.isError()).isFalse();
+    Response<String> response = result.response();
+    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
   @Test public void resultFailure() {
-    Type type = new TypeToken<Observable<Result<String>>>() {}.getType();
-    CallAdapter adapter = factory.get(type);
-    final Throwable throwable = new IOException();
-    Observable<Result<String>> observable = (Observable<Result<String>>) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
-        callback.failure(throwable);
-      }
-    });
-    Result<String> result = observable.toBlocking().first();
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    Result<String> result = o.first();
     assertThat(result.isError()).isTrue();
-    assertThat(result.error()).isSameAs(throwable);
+    assertThat(result.error()).isInstanceOf(IOException.class);
   }
 
   @Test public void responseType() {
+    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
     Type classType = new TypeToken<Observable<String>>() {}.getType();
     assertThat(factory.get(classType).responseType()).isEqualTo(String.class);
     Type wilcardType = new TypeToken<Observable<? extends String>>() {}.getType();
@@ -150,6 +165,7 @@ public final class ObservableCallAdapterFactoryTest {
 
   @Test public void rawTypeThrows() {
     Type type = new TypeToken<Observable>() {}.getType();
+    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
     try {
       factory.get(type);
       fail();
@@ -160,6 +176,7 @@ public final class ObservableCallAdapterFactoryTest {
 
   @Test public void rawResponseTypeThrows() {
     Type type = new TypeToken<Observable<Response>>() {}.getType();
+    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
     try {
       factory.get(type);
       fail();
@@ -170,6 +187,7 @@ public final class ObservableCallAdapterFactoryTest {
 
   @Test public void rawResultTypeThrows() {
     Type type = new TypeToken<Observable<Result>>() {}.getType();
+    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
     try {
       factory.get(type);
       fail();
@@ -178,20 +196,13 @@ public final class ObservableCallAdapterFactoryTest {
     }
   }
 
-  static abstract class EmptyCall implements Call<Object> {
-    @Override public Response<Object> execute() throws IOException {
-      throw new UnsupportedOperationException();
+  static class StringConverter implements Converter {
+    @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
+      return body.string();
     }
 
-    @Override public void cancel() {
-    }
-
-    @Override public Call<Object> clone() {
-      try {
-        return (Call<Object>) super.clone();
-      } catch (CloneNotSupportedException e) {
-        throw new AssertionError(e);
-      }
+    @Override public RequestBody toBody(Object object, Type type) {
+      return RequestBody.create(MediaType.parse("text/plain"), String.valueOf(type));
     }
   }
 }
