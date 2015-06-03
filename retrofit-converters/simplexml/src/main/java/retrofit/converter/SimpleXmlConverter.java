@@ -16,7 +16,7 @@ import org.simpleframework.xml.core.Persister;
  *
  * @author Fabien Ric (fabien.ric@gmail.com)
  */
-public class SimpleXMLConverter implements Converter {
+public class SimpleXmlConverter implements Converter {
   private static final boolean DEFAULT_STRICT = true;
   private static final String CHARSET = "UTF-8";
   private static final MediaType MEDIA_TYPE =
@@ -26,19 +26,19 @@ public class SimpleXMLConverter implements Converter {
 
   private final boolean strict;
 
-  public SimpleXMLConverter() {
+  public SimpleXmlConverter() {
     this(DEFAULT_STRICT);
   }
 
-  public SimpleXMLConverter(boolean strict) {
+  public SimpleXmlConverter(boolean strict) {
     this(new Persister(), strict);
   }
 
-  public SimpleXMLConverter(Serializer serializer) {
+  public SimpleXmlConverter(Serializer serializer) {
     this(serializer, DEFAULT_STRICT);
   }
 
-  public SimpleXMLConverter(Serializer serializer, boolean strict) {
+  public SimpleXmlConverter(Serializer serializer, boolean strict) {
     this.serializer = serializer;
     this.strict = strict;
   }
