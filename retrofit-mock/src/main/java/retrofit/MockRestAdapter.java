@@ -69,21 +69,10 @@ public final class MockRestAdapter {
     return new MockRestAdapter(restAdapter, executor);
   }
 
-  /** A listener invoked when the network behavior values for a {@link MockRestAdapter} change. */
-  public interface ValueChangeListener {
-    void onMockValuesChanged(long delayMs, int variancePct, int errorPct);
-
-    ValueChangeListener EMPTY = new ValueChangeListener() {
-      @Override public void onMockValuesChanged(long delayMs, int variancePct, int errorPct) {
-      }
-    };
-  }
-
   private final RestAdapter restAdapter;
   private final Executor executor;
   final Random random = new Random();
 
-  private ValueChangeListener listener = ValueChangeListener.EMPTY;
   private int delayMs = DEFAULT_DELAY_MS;
   private int variancePct = DEFAULT_VARIANCE_PCT;
   private int errorPct = DEFAULT_ERROR_PCT;
@@ -91,15 +80,6 @@ public final class MockRestAdapter {
   private MockRestAdapter(RestAdapter restAdapter, Executor executor) {
     this.restAdapter = restAdapter;
     this.executor = executor;
-  }
-
-  /** Set a listener to be notified when any mock value changes. */
-  public void setValueChangeListener(ValueChangeListener listener) {
-    this.listener = listener;
-  }
-
-  private void notifyValueChangeListener() {
-    listener.onMockValuesChanged(delayMs, variancePct, errorPct);
   }
 
   /** Set the network round trip delay, in milliseconds. */
@@ -110,10 +90,7 @@ public final class MockRestAdapter {
     if (delayMs > Integer.MAX_VALUE) {
       throw new IllegalArgumentException("Delay value too large. Max: " + Integer.MAX_VALUE);
     }
-    if (this.delayMs != delayMs) {
-      this.delayMs = (int) delayMs;
-      notifyValueChangeListener();
-    }
+    this.delayMs = (int) delayMs;
   }
 
   /** The network round trip delay, in milliseconds */
@@ -126,10 +103,7 @@ public final class MockRestAdapter {
     if (variancePct < 0 || variancePct > 100) {
       throw new IllegalArgumentException("Variance percentage must be between 0 and 100.");
     }
-    if (this.variancePct != variancePct) {
-      this.variancePct = variancePct;
-      notifyValueChangeListener();
-    }
+    this.variancePct = variancePct;
   }
 
   /** The plus-or-minus variance percentage of the network round trip delay. */
@@ -142,10 +116,7 @@ public final class MockRestAdapter {
     if (errorPct < 0 || errorPct > 100) {
       throw new IllegalArgumentException("Error percentage must be between 0 and 100.");
     }
-    if (this.errorPct != errorPct) {
-      this.errorPct = errorPct;
-      notifyValueChangeListener();
-    }
+    this.errorPct = errorPct;
   }
 
   /** The percentage of calls to {@link #calculateIsFailure()} that return {@code true}. */
