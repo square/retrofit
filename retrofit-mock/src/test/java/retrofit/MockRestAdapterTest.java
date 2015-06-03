@@ -25,7 +25,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static retrofit.MockRestAdapter.ValueChangeListener;
 import static retrofit.Utils.SynchronousExecutor;
 
 public class MockRestAdapterTest {
@@ -50,7 +49,6 @@ public class MockRestAdapterTest {
   private Executor httpExecutor;
   private Executor callbackExecutor;
   private MockRestAdapter mockRestAdapter;
-  private ValueChangeListener valueChangeListener;
   private Throwable nextError;
 
   @Before public void setUp() throws IOException {
@@ -72,10 +70,7 @@ public class MockRestAdapterTest {
         })
         .build();
 
-    valueChangeListener = mock(ValueChangeListener.class);
-
     mockRestAdapter = MockRestAdapter.from(restAdapter, httpExecutor);
-    mockRestAdapter.setValueChangeListener(valueChangeListener);
 
     // Seed the random with a value so the tests are deterministic.
     mockRestAdapter.random.setSeed(2847);
@@ -182,30 +177,6 @@ public class MockRestAdapterTest {
     }
     assertThat(upperBound).isEqualTo(5999); // 3 * 2000
     assertThat(lowerBound).isEqualTo(0);
-  }
-
-  @Test public void changeListenerOnlyInvokedWhenValueHasChanged() {
-    long delay = mockRestAdapter.getDelay();
-    int variance = mockRestAdapter.getVariancePercentage();
-    int error = mockRestAdapter.getErrorPercentage();
-
-    long newDelay = delay + 1;
-    mockRestAdapter.setDelay(newDelay);
-    verify(valueChangeListener).onMockValuesChanged(newDelay, variance, error);
-
-    int newError = error + 1;
-    mockRestAdapter.setErrorPercentage(newError);
-    verify(valueChangeListener).onMockValuesChanged(newDelay, variance, newError);
-
-    int newVariance = variance + 1;
-    mockRestAdapter.setVariancePercentage(newVariance);
-    verify(valueChangeListener).onMockValuesChanged(newDelay, newVariance, newError);
-
-    // Now try setting the same values and ensure the listener was never called.
-    mockRestAdapter.setDelay(newDelay);
-    mockRestAdapter.setVariancePercentage(newVariance);
-    mockRestAdapter.setErrorPercentage(newError);
-    verifyNoMoreInteractions(valueChangeListener);
   }
 
   @Test public void syncFailureTriggersNetworkError() {
