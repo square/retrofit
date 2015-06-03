@@ -4,7 +4,6 @@ package retrofit;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -16,8 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unused") // Lots of unused parameters for example code.
 public final class MethodInfoTest {
-  private static List<CallAdapter.Factory> FACTORIES = Collections.<CallAdapter.Factory>singletonList(
-      new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor()));
+  private static CallAdapter.Factory FACTORY =
+      new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor());
   private static Converter CONVERTER = new StringConverter();
 
   @Test public void pathParameterParsing() throws Exception {
@@ -58,7 +57,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, FACTORIES, CONVERTER);
+    MethodInfo methodInfo = new MethodInfo(method, FACTORY, CONVERTER);
     assertThat(methodInfo.requestType).isEqualTo(Dummy.class);
   }
 
@@ -70,7 +69,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, FACTORIES, CONVERTER);
+    MethodInfo methodInfo = new MethodInfo(method, FACTORY, CONVERTER);
     Type expected = new TypeToken<List<Dummy>>() {}.getType();
     assertThat(methodInfo.requestType).isEqualTo(expected);
   }
@@ -83,7 +82,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, FACTORIES, CONVERTER);
+    MethodInfo methodInfo = new MethodInfo(method, FACTORY, CONVERTER);
     Type expected = new TypeToken<List<? super String>>() {}.getType();
     assertThat(methodInfo.requestType).isEqualTo(expected);
   }

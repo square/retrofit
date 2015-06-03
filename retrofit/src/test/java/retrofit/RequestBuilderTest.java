@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1404,10 +1403,10 @@ public final class RequestBuilderTest {
 
   private Request buildRequest(Class<?> cls, Object... args) {
     Converter converter = new StringConverter();
+    CallAdapter.Factory factory = new DefaultCallAdapterFactory(new Utils.SynchronousExecutor());
 
     Method method = TestingUtils.onlyMethod(cls);
-    MethodInfo methodInfo = new MethodInfo(method, Collections.<CallAdapter.Factory>singletonList(
-        new DefaultCallAdapterFactory(new Utils.SynchronousExecutor())), converter);
+    MethodInfo methodInfo = new MethodInfo(method, factory, converter);
 
     RequestBuilder builder =
         new RequestBuilder("http://example.com/", methodInfo, converter);

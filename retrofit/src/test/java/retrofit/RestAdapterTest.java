@@ -91,7 +91,7 @@ public final class RestAdapterTest {
 
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
-        .addCallAdapterFactory(new MyCallAdapterFactory())
+        .callAdapterFactory(new MyCallAdapterFactory())
         .build();
     CallMethod example = ra.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
@@ -124,7 +124,7 @@ public final class RestAdapterTest {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
-        .addCallAdapterFactory(new GreetingCallAdapterFactory())
+        .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
     StringService example = ra.create(StringService.class);
     assertThat(example.get()).isEqualTo("Hi!");
@@ -139,9 +139,7 @@ public final class RestAdapterTest {
       example.method();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("FutureMethod.method: No registered call adapters were able to "
-          + "handle return type java.util.concurrent.Future<java.lang.String>. "
-          + "Checked: [Built-in CallAdapterFactory]");
+      assertThat(e).hasMessage("FutureMethod.method: Registered call adapter factory was unable to handle return type java.util.concurrent.Future<java.lang.String>");
     }
   }
 
