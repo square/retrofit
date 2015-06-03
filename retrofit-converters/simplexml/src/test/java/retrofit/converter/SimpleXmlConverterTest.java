@@ -18,7 +18,7 @@ import org.simpleframework.xml.stream.Verbosity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SimpleXMLConverterTest {
+public class SimpleXmlConverterTest {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/xml; charset=UTF-8");
   private static final MyObject OBJ = new MyObject("hello world", 10);
   private static final String XML =
@@ -29,7 +29,7 @@ public class SimpleXMLConverterTest {
   @Before public void setUp() {
     Format format = new Format(0, null, new HyphenStyle(), Verbosity.HIGH);
     Persister persister = new Persister(format);
-    converter = new SimpleXMLConverter(persister);
+    converter = new SimpleXmlConverter(persister);
   }
 
   @Test public void serialize() throws Exception {
