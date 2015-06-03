@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import org.junit.Test;
-import retrofit.converter.GsonConverter;
 import rx.Observable;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,8 +48,7 @@ public final class ObservableCallAdapterFactoryTest {
     Observable<String> observable = (Observable<String>) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<Object> callback) {
         callback.success(
-            Response.fromError(404, ResponseBody.create(MediaType.parse("application/json"), "Hi"),
-                new GsonConverter()));
+            Response.fromError(404, ResponseBody.create(MediaType.parse("application/json"), "Hi")));
       }
     });
     try {

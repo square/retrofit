@@ -98,10 +98,10 @@ public final class CallTest {
     Response<String> response = example.getMethod().execute();
     assertThat(response.isSuccess()).isFalse();
     assertThat(response.code()).isEqualTo(404);
-    assertThat(response.errorBodyAs(String.class)).isEqualTo("Hi");
+    assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
-  @Test public void http404Async() throws InterruptedException {
+  @Test public void http404Async() throws InterruptedException, IOException {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
@@ -126,7 +126,7 @@ public final class CallTest {
     Response<String> response = responseRef.get();
     assertThat(response.isSuccess()).isFalse();
     assertThat(response.code()).isEqualTo(404);
-    assertThat(response.errorBodyAs(String.class)).isEqualTo("Hi");
+    assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
   @Test public void transportProblemSync() {
