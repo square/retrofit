@@ -97,7 +97,7 @@ public final class CustomCallAdapter {
   public static void main(String... args) {
     RestAdapter restAdapter = new RestAdapter.Builder()
         .endpoint("http://httpbin.org")
-        .addCallAdapterFactory(new ListenableFutureCallAdapterFactory())
+        .callAdapterFactory(new ListenableFutureCallAdapterFactory())
         .build();
 
     HttpBinService service = restAdapter.create(HttpBinService.class);

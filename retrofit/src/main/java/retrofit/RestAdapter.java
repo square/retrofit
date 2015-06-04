@@ -19,15 +19,12 @@ import com.squareup.okhttp.OkHttpClient;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
 
-import static java.util.Collections.unmodifiableList;
 import static retrofit.Utils.checkNotNull;
 
 /**
@@ -96,14 +93,14 @@ public final class RestAdapter {
   private final OkHttpClient client;
   private final Endpoint endpoint;
   private final Converter converter;
-  private final List<CallAdapter.Factory> factories;
+  private final CallAdapter.Factory adapterFactory;
 
   private RestAdapter(OkHttpClient client, Endpoint endpoint, Converter converter,
-      List<CallAdapter.Factory> factories) {
+      CallAdapter.Factory adapterFactory) {
     this.client = client;
     this.endpoint = endpoint;
     this.converter = converter;
-    this.factories = unmodifiableList(new ArrayList<>(factories));
+    this.adapterFactory = adapterFactory;
   }
 
   /** Create an implementation of the API defined by the {@code service} interface. */
@@ -137,7 +134,7 @@ public final class RestAdapter {
       synchronized (methodInfoCache) {
         methodInfo = methodInfoCache.get(method);
         if (methodInfo == null) {
-          methodInfo = new MethodInfo(method, factories, converter);
+          methodInfo = new MethodInfo(method, adapterFactory, converter);
           methodInfoCache.put(method, methodInfo);
         }
       }
@@ -162,8 +159,8 @@ public final class RestAdapter {
     return converter;
   }
 
-  public List<CallAdapter.Factory> callAdapterFactories() {
-    return factories;
+  public CallAdapter.Factory callAdapterFactory() {
+    return adapterFactory;
   }
 
   /**
@@ -176,8 +173,7 @@ public final class RestAdapter {
     private OkHttpClient client;
     private Endpoint endpoint;
     private Converter converter;
-    private Executor callbackExecutor;
-    private final List<CallAdapter.Factory> factories = new ArrayList<>();
+    private CallAdapter.Factory adapterFactory;
 
     /** The HTTP client used for requests. */
     public Builder client(OkHttpClient client) {
@@ -202,17 +198,11 @@ public final class RestAdapter {
       return this;
     }
 
-    /** Executor on which {@link Callback} methods will be invoked if {@link Call} is used. */
-    public Builder callbackExecutor(Executor callbackExecutor) {
-      this.callbackExecutor = checkNotNull(callbackExecutor, "callbackExecutor == null");
-      return this;
-    }
-
     /**
      * TODO
      */
-    public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
-      factories.add(checkNotNull(factory, "factory == null"));
+    public Builder callAdapterFactory(CallAdapter.Factory adapterFactory) {
+      this.adapterFactory = checkNotNull(adapterFactory, "adapterFactory == null");
       return this;
     }
 
@@ -224,14 +214,11 @@ public final class RestAdapter {
       if (client == null) {
         client = Platform.get().defaultClient();
       }
-      if (callbackExecutor == null) {
-        callbackExecutor = Platform.get().defaultCallbackExecutor();
+      if (adapterFactory == null) {
+        adapterFactory = Platform.get().defaultCallAdapterFactory();
       }
 
-      // Add the built-in Call<?> return type handler last, with the provided callback executor.
-      factories.add(new DefaultCallAdapterFactory(callbackExecutor));
-
-      return new RestAdapter(client, endpoint, converter, factories);
+      return new RestAdapter(client, endpoint, converter, adapterFactory);
     }
   }
 }

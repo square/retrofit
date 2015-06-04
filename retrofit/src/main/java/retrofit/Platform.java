@@ -41,8 +41,8 @@ class Platform {
     return new Platform();
   }
 
-  Executor defaultCallbackExecutor() {
-    return new Utils.SynchronousExecutor();
+  CallAdapter.Factory defaultCallAdapterFactory() {
+    return new DefaultCallAdapterFactory(new Utils.SynchronousExecutor());
   }
 
   OkHttpClient defaultClient() {
@@ -54,15 +54,17 @@ class Platform {
   }
 
   /** Provides sane defaults for operation on Android. */
-  private static class Android extends Platform {
-    @Override Executor defaultCallbackExecutor() {
-      return new Executor() {
-        private final Handler handler = new Handler(Looper.getMainLooper());
+  static class Android extends Platform {
+    CallAdapter.Factory defaultCallAdapterFactory() {
+      return new DefaultCallAdapterFactory(new MainThreadExecutor());
+    }
 
-        @Override public void execute(Runnable r) {
-          handler.post(r);
-        }
-      };
+    static class MainThreadExecutor implements Executor {
+      private final Handler handler = new Handler(Looper.getMainLooper());
+
+      @Override public void execute(Runnable r) {
+        handler.post(r);
+      }
     }
   }
 }

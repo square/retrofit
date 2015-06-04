@@ -21,7 +21,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -61,7 +60,7 @@ final class MethodInfo {
   }
 
   final Method method;
-  final List<CallAdapter.Factory> factories;
+  final CallAdapter.Factory adapterFactory;
   final Converter converter;
 
   // Method-level details
@@ -81,9 +80,9 @@ final class MethodInfo {
   // Parameter-level details
   Annotation[] requestParamAnnotations;
 
-  MethodInfo(Method method, List<CallAdapter.Factory> factories, Converter converter) {
+  MethodInfo(Method method, CallAdapter.Factory adapterFactory, Converter converter) {
     this.method = method;
-    this.factories = factories;
+    this.adapterFactory = adapterFactory;
     this.converter = converter;
     parseResponseType();
     parseMethodAnnotations();
@@ -221,19 +220,10 @@ final class MethodInfo {
     }
 
     //noinspection ForLoopReplaceableByForEach
-    CallAdapter adapter = null;
-    for (int i = 0, count = factories.size(); i < count; i++) {
-      CallAdapter.Factory factory = factories.get(i);
-      adapter = factory.get(returnType);
-      if (adapter != null) {
-        break;
-      }
-    }
+    CallAdapter adapter = adapterFactory.get(returnType);
     if (adapter == null) {
-      throw methodError("No registered call adapters were able to handle return type "
-          + returnType
-          + ". Checked: "
-          + factories);
+      throw methodError(
+          "Registered call adapter factory was unable to handle return type " + returnType);
     }
     Type responseType = adapter.responseType();
     if (converter == null && responseType != ResponseBody.class) {
