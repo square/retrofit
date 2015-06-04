@@ -81,6 +81,33 @@ final class Utils {
     return paramType;
   }
 
+  public static boolean hasTypeVariable(Type type) {
+    if (type instanceof Class<?>) {
+      return false;
+    }
+    if (type instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      for (Type typeArgument : parameterizedType.getActualTypeArguments()) {
+        if (hasTypeVariable(typeArgument)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (type instanceof GenericArrayType) {
+      return hasTypeVariable(((GenericArrayType) type).getGenericComponentType());
+    }
+    if (type instanceof TypeVariable) {
+      return true;
+    }
+    if (type instanceof WildcardType) {
+      return true;
+    }
+    String className = type == null ? "null" : type.getClass().getName();
+    throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
+        + "GenericArrayType, but <" + type + "> is of type " + className);
+  }
+
   // This method is copyright 2008 Google Inc. and is taken from Gson under the Apache 2.0 license.
   public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {

@@ -9,6 +9,9 @@ import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Rule;
@@ -33,6 +36,14 @@ public final class RestAdapterTest {
     @GET("/") Future<String> method();
   }
   interface Extending extends CallMethod {
+  }
+  interface StringService {
+    @GET("/") String get();
+  }
+  interface BoundsService {
+    @GET("/") <T> Call<T> none();
+    @GET("/") <T extends ResponseBody> Call<T> upper();
+    @GET("/") <T> Call<List<Map<String, Set<T[]>>>> crazy();
   }
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
@@ -99,10 +110,6 @@ public final class RestAdapterTest {
     assertThat(adapterCalled.get()).isTrue();
   }
 
-  interface StringService {
-    @GET("/") String get();
-  }
-
   @Test public void customReturnTypeAdapter() {
     class GreetingCallAdapterFactory implements CallAdapter.Factory {
       @Override public CallAdapter<?> get(Type returnType) {
@@ -154,7 +161,9 @@ public final class RestAdapterTest {
       example.disallowed("Hi!");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("CallMethod.disallowed: @Body parameter is class java.lang.String but no converter registered. Either add a converter to the RestAdapter or use RequestBody. (parameter #1)");
+      assertThat(e).hasMessage(
+          "CallMethod.disallowed: @Body parameter is class java.lang.String but no converter registered. "
+              + "Either add a converter to the RestAdapter or use RequestBody. (parameter #1)");
     }
   }
 
@@ -170,7 +179,9 @@ public final class RestAdapterTest {
       example.disallowed();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("CallMethod.disallowed: Method response type is class java.lang.String but no converter registered. Either add a converter to the RestAdapter or use ResponseBody.");
+      assertThat(e).hasMessage(
+          "CallMethod.disallowed: Method response type is class java.lang.String but no converter registered. "
+              + "Either add a converter to the RestAdapter or use ResponseBody.");
     }
   }
 
@@ -199,5 +210,53 @@ public final class RestAdapterTest {
     assertThat(response.body().string()).isEqualTo("Hi");
 
     assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("Hey");
+  }
+
+  @Test public void typeVariableNoBoundThrows() {
+    RestAdapter ra = new RestAdapter.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    BoundsService example = ra.create(BoundsService.class);
+
+    try {
+      example.none();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "BoundsService.none: Method response type must not include a type variable.");
+    }
+  }
+
+  @Test public void typeVariableUpperBoundThrows() {
+    RestAdapter ra = new RestAdapter.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    BoundsService example = ra.create(BoundsService.class);
+
+    try {
+      example.upper();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "BoundsService.upper: Method response type must not include a type variable.");
+    }
+  }
+
+  @Test public void typeVariableNestedThrows() {
+    RestAdapter ra = new RestAdapter.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    BoundsService example = ra.create(BoundsService.class);
+
+    try {
+      example.crazy();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "BoundsService.crazy: Method response type must not include a type variable.");
+    }
   }
 }
