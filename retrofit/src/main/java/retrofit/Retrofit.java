@@ -20,16 +20,13 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
+
 import retrofit.http.HTTP;
 import retrofit.http.Header;
 
@@ -89,14 +86,13 @@ import static retrofit.Utils.checkNotNull;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, MethodHandler<?>> methodHandlerCache = new LinkedHashMap<>();
 
   private final OkHttpClient client;
   private final BaseUrl baseUrl;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
-  private final boolean validateEagerly;
+  private final RestAdapter restAdapter;
 
   private Retrofit(OkHttpClient client, BaseUrl baseUrl, List<Converter.Factory> converterFactories,
       List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor,
@@ -106,53 +102,7 @@ public final class Retrofit {
     this.converterFactories = converterFactories;
     this.adapterFactories = adapterFactories;
     this.callbackExecutor = callbackExecutor;
-    this.validateEagerly = validateEagerly;
-  }
-
-  /** Create an implementation of the API defined by the {@code service} interface. */
-  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
-  public <T> T create(final Class<T> service) {
-    Utils.validateServiceInterface(service);
-    if (validateEagerly) {
-      eagerlyValidateMethods(service);
-    }
-    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
-        new InvocationHandler() {
-          private final Platform platform = Platform.get();
-
-          @Override public Object invoke(Object proxy, Method method, Object... args)
-              throws Throwable {
-            // If the method is a method from Object then defer to normal invocation.
-            if (method.getDeclaringClass() == Object.class) {
-              return method.invoke(this, args);
-            }
-            if (platform.isDefaultMethod(method)) {
-              return platform.invokeDefaultMethod(method, service, proxy, args);
-            }
-            return loadMethodHandler(method).invoke(args);
-          }
-        });
-  }
-
-  private void eagerlyValidateMethods(Class<?> service) {
-    Platform platform = Platform.get();
-    for (Method method : service.getDeclaredMethods()) {
-      if (!platform.isDefaultMethod(method)) {
-        loadMethodHandler(method);
-      }
-    }
-  }
-
-  MethodHandler<?> loadMethodHandler(Method method) {
-    MethodHandler<?> handler;
-    synchronized (methodHandlerCache) {
-      handler = methodHandlerCache.get(method);
-      if (handler == null) {
-        handler = MethodHandler.create(this, method);
-        methodHandlerCache.put(method, handler);
-      }
-    }
-    return handler;
+    this.restAdapter = new RestAdapter(this, validateEagerly);
   }
 
   public OkHttpClient client() {
@@ -165,6 +115,10 @@ public final class Retrofit {
 
   public List<CallAdapter.Factory> callAdapterFactories() {
     return Collections.unmodifiableList(adapterFactories);
+  }
+
+  public <T> T create(Class<T> service) {
+    return restAdapter.create(service);
   }
 
   /**
