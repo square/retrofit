@@ -15,6 +15,9 @@
  */
 package retrofit2;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -26,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -33,8 +37,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okio.Buffer;
-import org.junit.Ignore;
-import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -2512,9 +2514,11 @@ public final class RequestBuilderTest {
         .callFactory(callFactory)
         .build();
 
+    RestAdapter restAdapter = new RestAdapter(retrofit, false);
     Method method = TestingUtils.onlyMethod(cls);
-    ServiceMethod<?> serviceMethod = retrofit.loadServiceMethod(method);
-    OkHttpCall<?> okHttpCall = new OkHttpCall<>(serviceMethod, args);
+    ServiceMethod<?> serviceMethod = restAdapter.loadServiceMethod(method);
+    DefaultCallFactory<?> factory = new DefaultCallFactory<>(serviceMethod);
+    OkHttpCall<?> okHttpCall = new OkHttpCall<>(factory, args);
     Call<?> call = (Call<?>) serviceMethod.callAdapter.adapt(okHttpCall);
     try {
       call.execute();
