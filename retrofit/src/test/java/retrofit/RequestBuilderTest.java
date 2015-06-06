@@ -305,38 +305,38 @@ public final class RequestBuilderTest {
     }
   }
 
-  //@Test public void formEncodingFailsOnNonBodyMethod() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @GET("/") //
-  //    Response method() {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage(
-  //        "Example.method: FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).");
-  //  }
-  //}
-  //
-  //@Test public void formEncodingFailsWithNoParts() {
-  //  class Example {
-  //    @FormUrlEncoded //
-  //    @POST("/") //
-  //    Response method() {
-  //      return null;
-  //    }
-  //  }
-  //  try {
-  //    buildRequest(Example.class);
-  //    fail();
-  //  } catch (IllegalArgumentException e) {
-  //    assertThat(e).hasMessage("Example.method: Form-encoded method must contain at least one @Field.");
-  //  }
-  //}
+  @Test public void formEncodingFailsOnNonBodyMethod() {
+    class Example {
+      @FormUrlEncoded //
+      @GET("/") //
+      Call<Object> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Example.method: FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).");
+    }
+  }
+
+  @Test public void formEncodingFailsWithNoParts() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Call<Object> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Example.method: Form-encoded method must contain at least one @Field.");
+    }
+  }
 
   @Test public void headersFailWhenEmptyOnMethod() {
     class Example {
