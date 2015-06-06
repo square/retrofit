@@ -585,6 +585,20 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
+  @Test public void getWithUnusedAndInvalidNamedPathParam() {
+    class Example {
+      @GET("/foo/bar/{ping}/{kit,kat}/") //
+      Call<Object> method(@Path("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/%7Bkit,kat%7D/");
+    assertThat(request.body()).isNull();
+  }
+
   @Test public void getWithEncodedPathParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
