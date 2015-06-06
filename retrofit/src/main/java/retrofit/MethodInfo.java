@@ -213,6 +213,9 @@ final class MethodInfo {
   /** Loads {@link #adapter}. */
   private void parseResponseType() {
     Type returnType = method.getGenericReturnType();
+    if (Utils.hasUnresolvableType(returnType)) {
+      throw methodError("Method return type must not include a type variable or wildcard.");
+    }
 
     // Check for invalid configurations.
     if (returnType == void.class) {
@@ -226,9 +229,6 @@ final class MethodInfo {
           "Registered call adapter factory was unable to handle return type " + returnType);
     }
     Type responseType = adapter.responseType();
-    if (Utils.hasTypeVariable(responseType)) {
-      throw methodError("Method response type must not include a type variable.");
-    }
     if (converter == null && responseType != ResponseBody.class) {
       throw methodError("Method response type is "
           + responseType

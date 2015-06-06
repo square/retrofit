@@ -40,10 +40,12 @@ public final class RestAdapterTest {
   interface StringService {
     @GET("/") String get();
   }
-  interface BoundsService {
-    @GET("/") <T> Call<T> none();
-    @GET("/") <T extends ResponseBody> Call<T> upper();
+  interface Unresolvable {
+    @GET("/") <T> Call<T> typeVariable();
+    @GET("/") <T extends ResponseBody> Call<T> typeVariableUpperBound();
     @GET("/") <T> Call<List<Map<String, Set<T[]>>>> crazy();
+    @GET("/") Call<?> wildcard();
+    @GET("/") Call<? extends ResponseBody> wildcardUpperBound();
   }
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
@@ -210,51 +212,47 @@ public final class RestAdapterTest {
     assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("Hey");
   }
 
-  @Test public void typeVariableNoBoundThrows() {
+  @Test public void unresolvableTypeThrows() {
     RestAdapter ra = new RestAdapter.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    BoundsService example = ra.create(BoundsService.class);
+    Unresolvable example = ra.create(Unresolvable.class);
 
     try {
-      example.none();
+      example.typeVariable();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "BoundsService.none: Method response type must not include a type variable.");
+          "Unresolvable.typeVariable: Method return type must not include a type variable or wildcard.");
     }
-  }
-
-  @Test public void typeVariableUpperBoundThrows() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
-        .converter(new StringConverter())
-        .build();
-    BoundsService example = ra.create(BoundsService.class);
-
     try {
-      example.upper();
+      example.typeVariableUpperBound();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "BoundsService.upper: Method response type must not include a type variable.");
+          "Unresolvable.typeVariableUpperBound: Method return type must not include a type variable or wildcard.");
     }
-  }
-
-  @Test public void typeVariableNestedThrows() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
-        .converter(new StringConverter())
-        .build();
-    BoundsService example = ra.create(BoundsService.class);
-
     try {
       example.crazy();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "BoundsService.crazy: Method response type must not include a type variable.");
+          "Unresolvable.crazy: Method return type must not include a type variable or wildcard.");
+    }
+    try {
+      example.wildcard();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Unresolvable.wildcard: Method return type must not include a type variable or wildcard.");
+    }
+    try {
+      example.wildcardUpperBound();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Unresolvable.wildcardUpperBound: Method return type must not include a type variable or wildcard.");
     }
   }
 }
