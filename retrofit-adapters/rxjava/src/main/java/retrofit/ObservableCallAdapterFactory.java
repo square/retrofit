@@ -75,10 +75,10 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
     return new SimpleCallAdapter(observableType);
   }
 
-  static final class CallOnSubcribe<T> implements Observable.OnSubscribe<Response<T>> {
+  static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
     private final Call<T> originalCall;
 
-    private CallOnSubcribe(Call<T> originalCall) {
+    private CallOnSubscribe(Call<T> originalCall) {
       this.originalCall = originalCall;
     }
 
@@ -129,7 +129,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public Observable<Response<T>> adapt(Call<T> call) {
-      return Observable.create(new CallOnSubcribe<>(call));
+      return Observable.create(new CallOnSubscribe<>(call));
     }
   }
 
@@ -145,7 +145,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public Observable<T> adapt(Call<T> call) {
-      return Observable.create(new CallOnSubcribe<>(call)) //
+      return Observable.create(new CallOnSubscribe<>(call)) //
           .flatMap(new Func1<Response<T>, Observable<T>>() {
             @Override public Observable<T> call(Response<T> response) {
               if (response.isSuccess()) {
@@ -169,7 +169,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public Observable<Result<T>> adapt(Call<T> call) {
-      return Observable.create(new CallOnSubcribe<>(call)) //
+      return Observable.create(new CallOnSubscribe<>(call)) //
           .map(new Func1<Response<T>, Result<T>>() {
             @Override public Result<T> call(Response<T> response) {
               return Result.fromResponse(response);
