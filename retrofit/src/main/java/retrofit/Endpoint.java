@@ -9,6 +9,9 @@ public abstract class Endpoint {
   /** Create an endpoint with the provided {@code url}. */
   public static Endpoint createFixed(String url) {
     checkNotNull(url, "url == null");
+    if (url.trim().length() == 0) {
+      throw new IllegalArgumentException("Empty URL");
+    }
     final HttpUrl httpUrl = HttpUrl.parse(url);
     if (httpUrl == null) {
       throw new IllegalArgumentException("Invalid URL: " + url);

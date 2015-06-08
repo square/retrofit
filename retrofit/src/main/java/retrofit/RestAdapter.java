@@ -91,6 +91,15 @@ public final class RestAdapter {
   private final Converter converter;
   private final CallAdapter.Factory adapterFactory;
 
+  public static Builder builder(Endpoint endpoint) {
+    checkNotNull(endpoint, "endpoint == null");
+    return new Builder(endpoint);
+  }
+
+  public static Builder builder(String url) {
+    return new Builder(Endpoint.createFixed(url));
+  }
+
   private RestAdapter(OkHttpClient client, Endpoint endpoint, Converter converter,
       CallAdapter.Factory adapterFactory) {
     this.client = client;
@@ -159,32 +168,20 @@ public final class RestAdapter {
     return adapterFactory;
   }
 
-  /**
-   * Build a new {@link RestAdapter}.
-   * <p>
-   * Calling {@link #endpoint} is required before calling {@link #build()}. All other methods
-   * are optional.
-   */
+  /** Build a new {@link RestAdapter}. */
   public static class Builder {
+    private final Endpoint endpoint;
     private OkHttpClient client;
-    private Endpoint endpoint;
     private Converter converter;
     private CallAdapter.Factory adapterFactory;
+
+    private Builder(Endpoint endpoint) {
+      this.endpoint = endpoint;
+    }
 
     /** The HTTP client used for requests. */
     public Builder client(OkHttpClient client) {
       this.client = checkNotNull(client, "client == null");
-      return this;
-    }
-
-    /** API endpoint URL. */
-    public Builder endpoint(String url) {
-      return endpoint(Endpoint.createFixed(url));
-    }
-
-    /** API endpoint. */
-    public Builder endpoint(Endpoint endpoint) {
-      this.endpoint = checkNotNull(endpoint, "endpoint == null");
       return this;
     }
 
