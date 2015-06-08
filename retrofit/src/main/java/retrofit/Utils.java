@@ -81,21 +81,21 @@ final class Utils {
     return paramType;
   }
 
-  public static boolean hasTypeVariable(Type type) {
+  public static boolean hasUnresolvableType(Type type) {
     if (type instanceof Class<?>) {
       return false;
     }
     if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
       for (Type typeArgument : parameterizedType.getActualTypeArguments()) {
-        if (hasTypeVariable(typeArgument)) {
+        if (hasUnresolvableType(typeArgument)) {
           return true;
         }
       }
       return false;
     }
     if (type instanceof GenericArrayType) {
-      return hasTypeVariable(((GenericArrayType) type).getGenericComponentType());
+      return hasUnresolvableType(((GenericArrayType) type).getGenericComponentType());
     }
     if (type instanceof TypeVariable) {
       return true;
