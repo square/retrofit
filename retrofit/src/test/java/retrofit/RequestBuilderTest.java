@@ -1,6 +1,7 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -734,7 +735,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong?", "kat?");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat%3F");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat?");
     assertThat(request.body()).isNull();
   }
 
@@ -1416,14 +1417,14 @@ public final class RequestBuilderTest {
   }
 
   private Request buildRequest(Class<?> cls, Object... args) {
+    HttpUrl url = HttpUrl.parse("http://example.com/");
     Converter converter = new StringConverter();
     CallAdapter.Factory factory = new DefaultCallAdapterFactory(new Utils.SynchronousExecutor());
 
     Method method = TestingUtils.onlyMethod(cls);
     MethodInfo methodInfo = new MethodInfo(method, factory, converter);
 
-    RequestBuilder builder =
-        new RequestBuilder("http://example.com/", methodInfo, converter);
+    RequestBuilder builder = new RequestBuilder(url, methodInfo, converter);
     builder.setArguments(args);
     return builder.build();
   }

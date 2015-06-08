@@ -17,6 +17,7 @@ package retrofit;
 
 import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Request;
@@ -46,19 +47,17 @@ final class RequestBuilder {
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
   private final boolean requestHasBody;
-  private final String apiUrl;
+  private final HttpUrl.Builder urlBuilder;
 
   private MultipartBuilder multipartBuilder;
   private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
   private String relativeUrl;
-  private StringBuilder queryParams;
   private Headers.Builder headers;
   private String contentTypeHeader;
 
-  RequestBuilder(String apiUrl, MethodInfo methodInfo, Converter converter) {
-    this.apiUrl = apiUrl;
+  RequestBuilder(HttpUrl url, MethodInfo methodInfo, Converter converter) {
     this.converter = converter;
 
     paramAnnotations = methodInfo.requestParamAnnotations;
@@ -72,9 +71,11 @@ final class RequestBuilder {
 
     relativeUrl = methodInfo.requestUrl;
 
+    urlBuilder = url.newBuilder();
+
     String requestQuery = methodInfo.requestQuery;
     if (requestQuery != null) {
-      queryParams = new StringBuilder().append('?').append(requestQuery);
+      urlBuilder.query(requestQuery);
     }
 
     switch (methodInfo.bodyEncoding) {
@@ -155,28 +156,10 @@ final class RequestBuilder {
   }
 
   private void addQueryParam(String name, String value, boolean encoded) {
-    if (name == null) {
-      throw new IllegalArgumentException("Query param name must not be null.");
-    }
-    if (value == null) {
-      throw new IllegalArgumentException("Query param \"" + name + "\" value must not be null.");
-    }
-    try {
-      StringBuilder queryParams = this.queryParams;
-      if (queryParams == null) {
-        this.queryParams = queryParams = new StringBuilder();
-      }
-
-      queryParams.append(queryParams.length() > 0 ? '&' : '?');
-
-      if (!encoded) {
-        name = URLEncoder.encode(name, "UTF-8");
-        value = URLEncoder.encode(value, "UTF-8");
-      }
-      queryParams.append(name).append('=').append(value);
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(
-          "Unable to convert query parameter \"" + name + "\" value to UTF-8: " + value, e);
+    if (encoded) {
+      urlBuilder.addEncodedQueryParameter(name, value);
+    } else {
+      urlBuilder.addQueryParameter(name, value);
     }
   }
 
@@ -347,19 +330,7 @@ final class RequestBuilder {
   }
 
   Request build() {
-    String apiUrl = this.apiUrl;
-    StringBuilder url = new StringBuilder(apiUrl);
-    if (apiUrl.endsWith("/")) {
-      // We require relative paths to start with '/'. Prevent a double-slash.
-      url.deleteCharAt(url.length() - 1);
-    }
-
-    url.append(relativeUrl);
-
-    StringBuilder queryParams = this.queryParams;
-    if (queryParams != null) {
-      url.append(queryParams);
-    }
+    urlBuilder.encodedPath(relativeUrl);
 
     RequestBody body = this.body;
     if (body == null) {
@@ -388,7 +359,7 @@ final class RequestBuilder {
     Headers headers = headerBuilder != null ? headerBuilder.build() : NO_HEADERS;
 
     return new Request.Builder()
-        .url(url.toString())
+        .url(urlBuilder.build())
         .method(requestMethod, body)
         .headers(headers)
         .build();

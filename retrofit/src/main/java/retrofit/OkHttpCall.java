@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
@@ -107,8 +108,8 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private com.squareup.okhttp.Call createRawCall() {
-    String serverUrl = endpoint.url();
-    RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
+    HttpUrl url = endpoint.url();
+    RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, converter);
     requestBuilder.setArguments(args);
     Request request = requestBuilder.build();
 
