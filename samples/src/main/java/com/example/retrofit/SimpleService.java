@@ -44,8 +44,7 @@ public final class SimpleService {
 
   public static void main(String... args) throws IOException {
     // Create a very simple REST adapter which points the GitHub API endpoint.
-    RestAdapter restAdapter = new RestAdapter.Builder()
-        .endpoint(API_URL)
+    RestAdapter restAdapter = RestAdapter.builder(API_URL)
         .build();
 
     // Create an instance of our GitHub API interface.

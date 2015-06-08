@@ -47,8 +47,7 @@ public final class ObservableCallAdapterFactoryTest {
   private Service service;
 
   @Before public void setUp() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .callAdapterFactory(ObservableCallAdapterFactory.create())
         .build();

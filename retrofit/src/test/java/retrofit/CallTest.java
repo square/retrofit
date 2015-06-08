@@ -46,8 +46,7 @@ public final class CallTest {
   }
 
   @Test public void http200Sync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
@@ -60,8 +59,7 @@ public final class CallTest {
   }
 
   @Test public void http200Async() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
@@ -88,8 +86,7 @@ public final class CallTest {
   }
 
   @Test public void http404Sync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
@@ -103,8 +100,7 @@ public final class CallTest {
   }
 
   @Test public void http404Async() throws InterruptedException, IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
@@ -132,8 +128,7 @@ public final class CallTest {
   }
 
   @Test public void transportProblemSync() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
@@ -149,8 +144,7 @@ public final class CallTest {
   }
 
   @Test public void transportProblemAsync() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);
@@ -176,8 +170,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemOutgoingSync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public RequestBody toBody(Object object, Type type) {
             throw new UnsupportedOperationException("I am broken!");
@@ -196,8 +189,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemOutgoingAsync() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public RequestBody toBody(Object object, Type type) {
             throw new UnsupportedOperationException("I am broken!");
@@ -225,8 +217,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemIncomingSync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
             throw new UnsupportedOperationException("I am broken!");
@@ -247,8 +238,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemIncomingAsync() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
             throw new UnsupportedOperationException("I am broken!");
@@ -279,8 +269,7 @@ public final class CallTest {
 
   @Test public void http204SkipsConverter() throws IOException {
     Converter converter = spy(new StringConverter());
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(converter)
         .build();
     Service example = ra.create(Service.class);
@@ -295,8 +284,7 @@ public final class CallTest {
 
   @Test public void http205SkipsConverter() throws IOException {
     Converter converter = spy(new StringConverter());
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(converter)
         .build();
     Service example = ra.create(Service.class);
@@ -310,8 +298,7 @@ public final class CallTest {
   }
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Service example = ra.create(Service.class);

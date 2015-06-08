@@ -21,4 +21,22 @@ public final class EndpointsTest {
       assertThat(e).hasMessage("Invalid URL: ftp://foo");
     }
   }
+
+  @Test public void nullUrlThrows() {
+    try {
+      Endpoint.createFixed(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("url == null");
+    }
+  }
+
+  @Test public void emptyUrlThrows() {
+    try {
+      Endpoint.createFixed(" ");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Empty URL");
+    }
+  }
 }

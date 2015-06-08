@@ -61,7 +61,7 @@ public final class SimpleMockService {
 
   public static void main(String... args) {
     // Create a very simple REST adapter which points the GitHub API endpoint.
-    RestAdapter restAdapter = new RestAdapter.Builder()
+    RestAdapter restAdapter = new RestAdapter.Builder(endpoint)
         .endpoint(SimpleService.API_URL)
         .build();
 

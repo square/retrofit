@@ -50,8 +50,7 @@ public final class RestAdapterTest {
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
   @Test public void objectMethodsStillWork() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     CallMethod example = ra.create(CallMethod.class);
 
@@ -61,8 +60,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void interfaceWithExtendIsNotSupported() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     try {
       ra.create(Extending.class);
@@ -73,8 +71,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void callReturnTypeAdapterAddedByDefault() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     CallMethod example = ra.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
@@ -102,8 +99,7 @@ public final class RestAdapterTest {
       }
     }
 
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .callAdapterFactory(new MyCallAdapterFactory())
         .build();
     CallMethod example = ra.create(CallMethod.class);
@@ -130,8 +126,7 @@ public final class RestAdapterTest {
       }
     }
 
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
@@ -140,8 +135,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void customReturnTypeAdapterMissingThrows() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     FutureMethod example = ra.create(FutureMethod.class);
     try {
@@ -153,8 +147,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void missingConverterThrowsOnNonRequestBody() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     CallMethod example = ra.create(CallMethod.class);
     try {
@@ -168,8 +161,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void missingConverterThrowsOnNonResponseBody() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     CallMethod example = ra.create(CallMethod.class);
 
@@ -186,8 +178,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void requestBodyOutgoingAllowed() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     CallMethod example = ra.create(CallMethod.class);
 
@@ -198,8 +189,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void responseBodyIncomingAllowed() throws IOException, InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .build();
     CallMethod example = ra.create(CallMethod.class);
 
@@ -213,8 +203,7 @@ public final class RestAdapterTest {
   }
 
   @Test public void unresolvableTypeThrows() {
-    RestAdapter ra = new RestAdapter.Builder()
-        .endpoint(server.getUrl("/").toString())
+    RestAdapter ra = RestAdapter.builder(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
     Unresolvable example = ra.create(Unresolvable.class);
