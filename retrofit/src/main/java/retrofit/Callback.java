@@ -27,7 +27,6 @@ package retrofit;
  * </ul>
  *
  * @param <T> expected response type
- * @see RestAdapter.Builder#callbackExecutor
  */
 public interface Callback<T> {
   /** Successful HTTP response. */
