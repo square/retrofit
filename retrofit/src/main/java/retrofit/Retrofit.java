@@ -84,14 +84,14 @@ import static retrofit.Utils.checkNotNull;
  * @author Bob Lee (bob@squareup.com)
  * @author Jake Wharton (jw@squareup.com)
  */
-public final class RestAdapter {
+public final class Retrofit {
   private final Map<Method, MethodInfo> methodInfoCache = new LinkedHashMap<>();
   private final OkHttpClient client;
   private final Endpoint endpoint;
   private final Converter converter;
   private final CallAdapter.Factory adapterFactory;
 
-  private RestAdapter(OkHttpClient client, Endpoint endpoint, Converter converter,
+  private Retrofit(OkHttpClient client, Endpoint endpoint, Converter converter,
       CallAdapter.Factory adapterFactory) {
     this.client = client;
     this.endpoint = endpoint;
@@ -160,7 +160,7 @@ public final class RestAdapter {
   }
 
   /**
-   * Build a new {@link RestAdapter}.
+   * Build a new {@link Retrofit}.
    * <p>
    * Calling {@link #endpoint} is required before calling {@link #build()}. All other methods
    * are optional.
@@ -202,8 +202,8 @@ public final class RestAdapter {
       return this;
     }
 
-    /** Create the {@link RestAdapter} instances. */
-    public RestAdapter build() {
+    /** Create the {@link Retrofit} instances. */
+    public Retrofit build() {
       checkNotNull(endpoint, "Endpoint required.");
 
       // Set any platform-appropriate defaults for unspecified components.
@@ -214,7 +214,7 @@ public final class RestAdapter {
         adapterFactory = Platform.get().defaultCallAdapterFactory();
       }
 
-      return new RestAdapter(client, endpoint, converter, adapterFactory);
+      return new Retrofit(client, endpoint, converter, adapterFactory);
     }
   }
 }

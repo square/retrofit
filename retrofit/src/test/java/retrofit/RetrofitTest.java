@@ -23,7 +23,7 @@ import retrofit.http.POST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class RestAdapterTest {
+public final class RetrofitTest {
   @Rule public final MockWebServerRule server = new MockWebServerRule();
 
   interface CallMethod {
@@ -50,10 +50,10 @@ public final class RestAdapterTest {
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
   @Test public void objectMethodsStillWork() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
 
     assertThat(example.hashCode()).isNotZero();
     assertThat(example.equals(this)).isFalse();
@@ -61,11 +61,11 @@ public final class RestAdapterTest {
   }
 
   @Test public void interfaceWithExtendIsNotSupported() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
     try {
-      ra.create(Extending.class);
+      retrofit.create(Extending.class);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Interface definitions must not extend other interfaces.");
@@ -73,10 +73,10 @@ public final class RestAdapterTest {
   }
 
   @Test public void callReturnTypeAdapterAddedByDefault() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
   }
 
@@ -102,11 +102,11 @@ public final class RestAdapterTest {
       }
     }
 
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .callAdapterFactory(new MyCallAdapterFactory())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
     assertThat(factoryCalled.get()).isTrue();
     assertThat(adapterCalled.get()).isTrue();
@@ -130,20 +130,20 @@ public final class RestAdapterTest {
       }
     }
 
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
-    StringService example = ra.create(StringService.class);
+    StringService example = retrofit.create(StringService.class);
     assertThat(example.get()).isEqualTo("Hi!");
   }
 
   @Test public void customReturnTypeAdapterMissingThrows() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    FutureMethod example = ra.create(FutureMethod.class);
+    FutureMethod example = retrofit.create(FutureMethod.class);
     try {
       example.method();
       fail();
@@ -153,25 +153,25 @@ public final class RestAdapterTest {
   }
 
   @Test public void missingConverterThrowsOnNonRequestBody() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
     try {
       example.disallowed("Hi!");
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "CallMethod.disallowed: @Body parameter is class java.lang.String but no converter registered. "
-              + "Either add a converter to the RestAdapter or use RequestBody. (parameter #1)");
+              + "Either add a converter to the Retrofit instance or use RequestBody. (parameter #1)");
     }
   }
 
   @Test public void missingConverterThrowsOnNonResponseBody() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -181,15 +181,15 @@ public final class RestAdapterTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "CallMethod.disallowed: Method response type is class java.lang.String but no converter registered. "
-              + "Either add a converter to the RestAdapter or use ResponseBody.");
+              + "Either add a converter to the Retrofit instance or use ResponseBody.");
     }
   }
 
   @Test public void requestBodyOutgoingAllowed() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -198,10 +198,10 @@ public final class RestAdapterTest {
   }
 
   @Test public void responseBodyIncomingAllowed() throws IOException, InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .build();
-    CallMethod example = ra.create(CallMethod.class);
+    CallMethod example = retrofit.create(CallMethod.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -213,11 +213,11 @@ public final class RestAdapterTest {
   }
 
   @Test public void unresolvableTypeThrows() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Unresolvable example = ra.create(Unresolvable.class);
+    Unresolvable example = retrofit.create(Unresolvable.class);
 
     try {
       example.typeVariable();

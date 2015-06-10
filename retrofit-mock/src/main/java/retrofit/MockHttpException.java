@@ -18,7 +18,7 @@ import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 /**
  * An exception used to trigger the simulation of an HTTP error for mock services.
  *
- * @see MockRestAdapter
+ * @see MockRetrofit
  */
 public class MockHttpException extends RuntimeException {
   /** Create a new {@link MockHttpException} for HTTP 301 Moved Permanently. */

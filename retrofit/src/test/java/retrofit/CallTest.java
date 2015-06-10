@@ -46,11 +46,11 @@ public final class CallTest {
   }
 
   @Test public void http200Sync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -60,11 +60,11 @@ public final class CallTest {
   }
 
   @Test public void http200Async() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -88,11 +88,11 @@ public final class CallTest {
   }
 
   @Test public void http404Sync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
@@ -103,11 +103,11 @@ public final class CallTest {
   }
 
   @Test public void http404Async() throws InterruptedException, IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
@@ -132,11 +132,11 @@ public final class CallTest {
   }
 
   @Test public void transportProblemSync() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
@@ -149,11 +149,11 @@ public final class CallTest {
   }
 
   @Test public void transportProblemAsync() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
@@ -176,7 +176,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemOutgoingSync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public RequestBody toBody(Object object, Type type) {
@@ -184,7 +184,7 @@ public final class CallTest {
           }
         })
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     Call<String> call = example.postMethod("Hi");
     try {
@@ -196,7 +196,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemOutgoingAsync() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public RequestBody toBody(Object object, Type type) {
@@ -204,7 +204,7 @@ public final class CallTest {
           }
         })
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
@@ -225,7 +225,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemIncomingSync() throws IOException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
@@ -233,7 +233,7 @@ public final class CallTest {
           }
         })
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -247,7 +247,7 @@ public final class CallTest {
   }
 
   @Test public void conversionProblemIncomingAsync() throws InterruptedException {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter() {
           @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
@@ -255,7 +255,7 @@ public final class CallTest {
           }
         })
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -279,11 +279,11 @@ public final class CallTest {
 
   @Test public void http204SkipsConverter() throws IOException {
     Converter converter = spy(new StringConverter());
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(converter)
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setStatus("HTTP/1.1 204 Nothin"));
 
@@ -295,11 +295,11 @@ public final class CallTest {
 
   @Test public void http205SkipsConverter() throws IOException {
     Converter converter = spy(new StringConverter());
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(converter)
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setStatus("HTTP/1.1 205 Nothin"));
 
@@ -310,11 +310,11 @@ public final class CallTest {
   }
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .build();
-    Service example = ra.create(Service.class);
+    Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi").removeHeader("Content-Type"));
 

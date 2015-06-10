@@ -233,7 +233,7 @@ final class MethodInfo {
       throw methodError("Method response type is "
           + responseType
           + " but no converter registered. "
-          + "Either add a converter to the RestAdapter or use ResponseBody.");
+          + "Either add a converter to the Retrofit instance or use ResponseBody.");
     }
 
     this.adapter = adapter;
@@ -295,7 +295,7 @@ final class MethodInfo {
               throw parameterError(i, "@Part parameter is "
                   + methodParameterType
                   + " but no converter registered. "
-                  + "Either add a converter to the RestAdapter or use RequestBody.");
+                  + "Either add a converter to the Retrofit instance or use RequestBody.");
             }
 
             gotPart = true;
@@ -321,7 +321,7 @@ final class MethodInfo {
               throw parameterError(i, "@Body parameter is "
                   + methodParameterType
                   + " but no converter registered. "
-                  + "Either add a converter to the RestAdapter or use RequestBody.");
+                  + "Either add a converter to the Retrofit instance or use RequestBody.");
             }
 
             requestType = methodParameterType;

@@ -47,12 +47,12 @@ public final class ObservableCallAdapterFactoryTest {
   private Service service;
 
   @Before public void setUp() {
-    RestAdapter ra = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
         .converter(new StringConverter())
         .callAdapterFactory(ObservableCallAdapterFactory.create())
         .build();
-    service = ra.create(Service.class);
+    service = retrofit.create(Service.class);
   }
 
   @Test public void bodySuccess200() {

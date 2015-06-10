@@ -9,11 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import retrofit.MockRestAdapter;
-import retrofit.RestAdapter;
+import retrofit.MockRetrofit;
+import retrofit.Retrofit;
 
 /**
- * An example of using {@link MockRestAdapter} to create a mock service implementation with
+ * An example of using {@link MockRetrofit} to create a mock service implementation with
  * fake data. This re-uses the GitHub service from {@link SimpleService} for its mocking.
  */
 public final class SimpleMockService {
@@ -61,18 +61,17 @@ public final class SimpleMockService {
 
   public static void main(String... args) {
     // Create a very simple REST adapter which points the GitHub API endpoint.
-    RestAdapter restAdapter = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(SimpleService.API_URL)
         .build();
 
     // Wrap our REST adapter to allow mock implementations and fake network delay.
-    MockRestAdapter mockRestAdapter =
-        MockRestAdapter.from(restAdapter, Executors.newSingleThreadExecutor());
+    MockRetrofit mockRetrofit = MockRetrofit.from(retrofit, Executors.newSingleThreadExecutor());
 
     // Instantiate a mock object so we can interact with it later.
     MockGitHub mockGitHub = new MockGitHub();
     // Use the mock REST adapter and our mock object to create the API interface.
-    GitHub gitHub = mockRestAdapter.create(GitHub.class, mockGitHub);
+    GitHub gitHub = mockRetrofit.create(GitHub.class, mockGitHub);
 
     // Query for some contributors for a few repositories.
     printContributors(gitHub, "square", "retrofit");

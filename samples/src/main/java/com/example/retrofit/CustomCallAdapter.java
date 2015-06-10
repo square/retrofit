@@ -26,7 +26,7 @@ import retrofit.Call;
 import retrofit.CallAdapter;
 import retrofit.Callback;
 import retrofit.Response;
-import retrofit.RestAdapter;
+import retrofit.Retrofit;
 import retrofit.http.GET;
 
 /**
@@ -95,12 +95,12 @@ public final class CustomCallAdapter {
   }
 
   public static void main(String... args) {
-    RestAdapter restAdapter = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint("http://httpbin.org")
         .callAdapterFactory(new ListenableFutureCallAdapterFactory())
         .build();
 
-    HttpBinService service = restAdapter.create(HttpBinService.class);
+    HttpBinService service = retrofit.create(HttpBinService.class);
     final ListenableFuture<Ip> ip = service.getIp();
     ip.addListener(new Runnable() {
       @Override public void run() {

@@ -18,7 +18,7 @@ package com.example.retrofit;
 import java.io.IOException;
 import java.util.List;
 import retrofit.Call;
-import retrofit.RestAdapter;
+import retrofit.Retrofit;
 import retrofit.http.GET;
 import retrofit.http.Path;
 
@@ -44,12 +44,12 @@ public final class SimpleService {
 
   public static void main(String... args) throws IOException {
     // Create a very simple REST adapter which points the GitHub API endpoint.
-    RestAdapter restAdapter = new RestAdapter.Builder()
+    Retrofit retrofit = new Retrofit.Builder()
         .endpoint(API_URL)
         .build();
 
     // Create an instance of our GitHub API interface.
-    GitHub github = restAdapter.create(GitHub.class);
+    GitHub github = retrofit.create(GitHub.class);
 
     // Create a call instance for looking up Retrofit contributors.
     Call<List<Contributor>> call = github.contributors("square", "retrofit");
