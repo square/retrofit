@@ -19,7 +19,7 @@ package retrofit;
  * Communicates responses from a server or offline requests. One and only one method will be
  * invoked in response to a given request.
  * <p>
- * Callback methods are executed using the {@link RestAdapter} callback executor. When none is
+ * Callback methods are executed using the {@link Retrofit} callback executor. When none is
  * specified, the following defaults are used:
  * <ul>
  * <li>Android: Callbacks are executed on the application's main (UI) thread.</li>

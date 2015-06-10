@@ -38,7 +38,7 @@ import static retrofit.RetrofitError.unexpectedError;
  * </pre>
  * Given a {@link RestAdapter} an instance of this class can be created by calling {@link #from}.
  * <pre>
- *   MockRestAdapter mockRestAdapter = MockRestAdapter.from(restAdapter);
+ *   MockRetrofit mockRetrofit = MockRetrofit.from(restAdapter);
  * </pre>
  * Instances of this class should be used as a singleton so that the behavior of every mock service
  * is consistent.
@@ -46,7 +46,7 @@ import static retrofit.RetrofitError.unexpectedError;
  * Rather than using the {@code MockUserService} directly, pass it through
  * {@link #create(Class, Object) the create method}.
  * <pre>
- *   UserService service = mockRestAdapter.create(UserService.class, new MockUserService());
+ *   UserService service = mockRetrofit.create(UserService.class, new MockUserService());
  * </pre>
  * The returned {@code UserService} instance will now behave like it is happening over the network
  * while allowing the mock implementation to be written synchronously.
@@ -55,18 +55,18 @@ import static retrofit.RetrofitError.unexpectedError;
  * {@link MockHttpException}. This should be done for both synchronous and asynchronous methods.
  * Do not call the {@link Callback#failure(RetrofitError) failure()} method of a callback.
  */
-public final class MockRestAdapter {
+public final class MockRetrofit {
   private static final int DEFAULT_DELAY_MS = 2000; // Network calls will take 2 seconds.
   private static final int DEFAULT_VARIANCE_PCT = 40; // Network delay varies by ±40%.
   private static final int DEFAULT_ERROR_PCT = 3; // 3% of network calls will fail.
   private static final int ERROR_DELAY_FACTOR = 3; // Network errors will be scaled by this value.
 
   /**
-   * Create a new {@link MockRestAdapter} which will act as a factory for mock services. Some of
+   * Create a new {@link MockRetrofit} which will act as a factory for mock services. Some of
    * the configuration of the supplied {@link RestAdapter} will be used generating mock behavior.
    */
-  public static MockRestAdapter from(RestAdapter restAdapter, Executor executor) {
-    return new MockRestAdapter(restAdapter, executor);
+  public static MockRetrofit from(RestAdapter restAdapter, Executor executor) {
+    return new MockRetrofit(restAdapter, executor);
   }
 
   private final RestAdapter restAdapter;
@@ -77,7 +77,7 @@ public final class MockRestAdapter {
   private int variancePct = DEFAULT_VARIANCE_PCT;
   private int errorPct = DEFAULT_ERROR_PCT;
 
-  private MockRestAdapter(RestAdapter restAdapter, Executor executor) {
+  private MockRetrofit(RestAdapter restAdapter, Executor executor) {
     this.restAdapter = restAdapter;
     this.executor = executor;
   }
