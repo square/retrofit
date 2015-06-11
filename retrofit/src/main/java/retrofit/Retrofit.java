@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
@@ -179,7 +180,22 @@ public final class Retrofit {
 
     /** API endpoint URL. */
     public Builder endpoint(String url) {
-      return endpoint(Endpoint.createFixed(url));
+      checkNotNull(url, "url == null");
+      HttpUrl httpUrl = HttpUrl.parse(url);
+      if (httpUrl == null) {
+        throw new IllegalArgumentException("Illegal URL: " + url);
+      }
+      return endpoint(httpUrl);
+    }
+
+    /** API endpoint URL. */
+    public Builder endpoint(final HttpUrl url) {
+      checkNotNull(url, "url == null");
+      return endpoint(new Endpoint() {
+        @Override public HttpUrl url() {
+          return url;
+        }
+      });
     }
 
     /** API endpoint. */
@@ -197,14 +213,16 @@ public final class Retrofit {
     /**
      * TODO
      */
-    public Builder callAdapterFactory(CallAdapter.Factory adapterFactory) {
-      this.adapterFactory = checkNotNull(adapterFactory, "adapterFactory == null");
+    public Builder callAdapterFactory(CallAdapter.Factory factory) {
+      this.adapterFactory = checkNotNull(factory, "factory == null");
       return this;
     }
 
     /** Create the {@link Retrofit} instances. */
     public Retrofit build() {
-      checkNotNull(endpoint, "Endpoint required.");
+      if (endpoint == null) {
+        throw new IllegalStateException("Endpoint required.");
+      }
 
       // Set any platform-appropriate defaults for unspecified components.
       if (client == null) {
