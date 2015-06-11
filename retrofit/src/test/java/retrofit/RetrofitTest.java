@@ -1,7 +1,9 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -22,6 +24,7 @@ import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 public final class RetrofitTest {
   @Rule public final MockWebServerRule server = new MockWebServerRule();
@@ -254,5 +257,146 @@ public final class RetrofitTest {
       assertThat(e).hasMessage(
           "Unresolvable.wildcardUpperBound: Method return type must not include a type variable or wildcard.");
     }
+  }
+
+  @Test public void endpointRequired() {
+    try {
+      new Retrofit.Builder().build();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Endpoint required.");
+    }
+  }
+
+  @Test public void endpointNullThrows() {
+    try {
+      new Retrofit.Builder().endpoint((String) null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("url == null");
+    }
+    try {
+      new Retrofit.Builder().endpoint((HttpUrl) null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("url == null");
+    }
+    try {
+      new Retrofit.Builder().endpoint((Endpoint) null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("endpoint == null");
+    }
+  }
+
+  @Test public void endpointInvalidThrows() {
+    try {
+      new Retrofit.Builder().endpoint("ftp://foo/bar");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Illegal URL: ftp://foo/bar");
+    }
+  }
+
+  @Test public void endpointStringPropagated() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .build();
+    Endpoint endpoint = retrofit.endpoint();
+    assertThat(endpoint).isNotNull();
+    assertThat(endpoint.url().toString()).isEqualTo("http://example.com/");
+  }
+
+  @Test public void endpointHttpUrlPropagated() {
+    HttpUrl url = HttpUrl.parse("http://example.com/");
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(url)
+        .build();
+    Endpoint endpoint = retrofit.endpoint();
+    assertThat(endpoint).isNotNull();
+    assertThat(endpoint.url()).isSameAs(url);
+  }
+
+  @Test public void endpointPropagated() {
+    Endpoint endpoint = mock(Endpoint.class);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(endpoint)
+        .build();
+    assertThat(retrofit.endpoint()).isSameAs(endpoint);
+  }
+
+  @Test public void clientNullThrows() {
+    try {
+      new Retrofit.Builder().client(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("client == null");
+    }
+  }
+
+  @Test public void clientDefault() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com")
+        .build();
+      assertThat(retrofit.client()).isNotNull();
+  }
+
+  @Test public void clientPropagated() {
+    OkHttpClient client = new OkHttpClient();
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .client(client)
+        .build();
+    assertThat(retrofit.client()).isSameAs(client);
+  }
+
+  @Test public void converterNullThrows() {
+    try {
+      new Retrofit.Builder().converter(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("converter == null");
+    }
+  }
+
+  @Test public void converterNoDefault() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .build();
+    assertThat(retrofit.converter()).isNull();
+  }
+
+  @Test public void converterPropagated() {
+    Converter converter = mock(Converter.class);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .converter(converter)
+        .build();
+    assertThat(retrofit.converter()).isSameAs(converter);
+  }
+
+  @Test public void callAdapterFactoryNullThrows() {
+    try {
+      new Retrofit.Builder().callAdapterFactory(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("factory == null");
+    }
+  }
+
+  @Test public void callAdapterFactoryDefault() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .build();
+    assertThat(retrofit.callAdapterFactory()).isInstanceOf(DefaultCallAdapterFactory.class);
+  }
+
+  @Test public void callAdapterFactoryPropagated() {
+    CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .callAdapterFactory(factory)
+        .build();
+    assertThat(retrofit.callAdapterFactory()).isSameAs(factory);
   }
 }
