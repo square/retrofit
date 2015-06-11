@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 
 public final class ResultTest {
   @Test public void response() {
-    Response<String> response = Response.fromBody("Hi");
+    Response<String> response = Response.fakeSuccess("Hi");
     Result<String> result = Result.fromResponse(response);
     assertThat(result.isError()).isFalse();
     assertThat(result.error()).isNull();

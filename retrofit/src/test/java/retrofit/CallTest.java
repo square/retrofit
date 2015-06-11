@@ -15,6 +15,8 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -24,12 +26,18 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.ForwardingSource;
+import okio.Okio;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
+import retrofit.http.Streaming;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -41,8 +49,10 @@ public final class CallTest {
   @Rule public final MockWebServerRule server = new MockWebServerRule();
 
   interface Service {
-    @GET("/") Call<String> getMethod();
-    @POST("/") Call<String> postMethod(@Body Object body);
+    @GET("/") Call<String> getString();
+    @GET("/") Call<ResponseBody> getBody();
+    @GET("/") @Streaming Call<ResponseBody> getStreamingBody();
+    @POST("/") Call<String> postString(@Body String body);
   }
 
   @Test public void http200Sync() throws IOException {
@@ -54,7 +64,7 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    Response<String> response = example.getMethod().execute();
+    Response<String> response = example.getString().execute();
     assertThat(response.isSuccess()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
@@ -70,7 +80,7 @@ public final class CallTest {
 
     final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    example.getMethod().enqueue(new Callback<String>() {
+    example.getString().enqueue(new Callback<String>() {
       @Override public void success(Response<String> response) {
         responseRef.set(response);
         latch.countDown();
@@ -96,7 +106,7 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    Response<String> response = example.getMethod().execute();
+    Response<String> response = example.getString().execute();
     assertThat(response.isSuccess()).isFalse();
     assertThat(response.code()).isEqualTo(404);
     assertThat(response.errorBody().string()).isEqualTo("Hi");
@@ -113,7 +123,7 @@ public final class CallTest {
 
     final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    example.getMethod().enqueue(new Callback<String>() {
+    example.getString().enqueue(new Callback<String>() {
       @Override public void success(Response<String> response) {
         responseRef.set(response);
         latch.countDown();
@@ -140,7 +150,7 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
-    Call<String> call = example.getMethod();
+    Call<String> call = example.getString();
     try {
       call.execute();
       fail();
@@ -159,7 +169,7 @@ public final class CallTest {
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    example.getMethod().enqueue(new Callback<String>() {
+    example.getString().enqueue(new Callback<String>() {
       @Override public void success(Response<String> response) {
         throw new AssertionError();
       }
@@ -186,7 +196,7 @@ public final class CallTest {
         .build();
     Service example = retrofit.create(Service.class);
 
-    Call<String> call = example.postMethod("Hi");
+    Call<String> call = example.postString("Hi");
     try {
       call.execute();
       fail();
@@ -208,7 +218,7 @@ public final class CallTest {
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    example.postMethod("Hi").enqueue(new Callback<String>() {
+    example.postString("Hi").enqueue(new Callback<String>() {
       @Override public void success(Response<String> response) {
         throw new AssertionError();
       }
@@ -237,12 +247,56 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    Call<String> call = example.postMethod("Hi");
+    Call<String> call = example.postString("Hi");
     try {
       call.execute();
       fail();
     } catch (UnsupportedOperationException e) {
       assertThat(e).hasMessage("I am broken!");
+    }
+  }
+
+  @Test public void conversionProblemIncomingMaskedByConverterIsUnwrapped() throws IOException {
+    // MWS has no way to trigger IOExceptions during the response body so use an interceptor.
+    OkHttpClient client = new OkHttpClient();
+    client.interceptors().add(new Interceptor() {
+      @Override public com.squareup.okhttp.Response intercept(Chain chain) throws IOException {
+        com.squareup.okhttp.Response response = chain.proceed(chain.request());
+        ResponseBody body = response.body();
+        BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {
+          @Override public long read(Buffer sink, long byteCount) throws IOException {
+            throw new IOException("cause");
+          }
+        });
+        body = ResponseBody.create(body.contentType(), body.contentLength(), source);
+        return response.newBuilder().body(body).build();
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .client(client)
+        .converter(new StringConverter() {
+          @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
+            try {
+              return super.fromBody(body, type);
+            } catch (IOException e) {
+              // Some serialization libraries mask transport problems in runtime exceptions. Bad!
+              throw new RuntimeException("wrapper", e);
+            }
+          }
+        })
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Call<String> call = example.getString();
+    try {
+      call.execute();
+      fail();
+    } catch (IOException e) {
+      assertThat(e).hasMessage("cause");
     }
   }
 
@@ -261,7 +315,7 @@ public final class CallTest {
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    example.postMethod("Hi").enqueue(new Callback<String>() {
+    example.postString("Hi").enqueue(new Callback<String>() {
       @Override public void success(Response<String> response) {
         throw new AssertionError();
       }
@@ -287,7 +341,7 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setStatus("HTTP/1.1 204 Nothin"));
 
-    Response<String> response = example.getMethod().execute();
+    Response<String> response = example.getString().execute();
     assertThat(response.code()).isEqualTo(204);
     assertThat(response.body()).isNull();
     verifyNoMoreInteractions(converter);
@@ -303,7 +357,7 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setStatus("HTTP/1.1 205 Nothin"));
 
-    Response<String> response = example.getMethod().execute();
+    Response<String> response = example.getString().execute();
     assertThat(response.code()).isEqualTo(205);
     assertThat(response.body()).isNull();
     verifyNoMoreInteractions(converter);
@@ -318,7 +372,62 @@ public final class CallTest {
 
     server.enqueue(new MockResponse().setBody("Hi").removeHeader("Content-Type"));
 
-    Response<String> response = example.getMethod().execute();
+    Response<String> response = example.getString().execute();
     assertThat(response.body()).isEqualTo("Hi");
+  }
+
+  @Test public void responseBody() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("1234"));
+
+    Response<ResponseBody> response = example.getBody().execute();
+    assertThat(response.body().string()).isEqualTo("1234");
+  }
+
+  @Test public void responseBodyBuffers() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("1234").throttleBody(1, 500, MILLISECONDS));
+
+    long exeuteStart = System.nanoTime();
+    Response<ResponseBody> response = example.getBody().execute();
+    long executeTook = System.nanoTime() - exeuteStart;
+    assertThat(executeTook).isGreaterThan(MILLISECONDS.toNanos(1000));
+
+    long readStart = System.nanoTime();
+    String body = response.body().string();
+    long readTook = System.nanoTime() - readStart;
+    assertThat(readTook).isLessThan(MILLISECONDS.toNanos(500));
+    assertThat(body).isEqualTo("1234");
+  }
+
+  @Test public void responseBodyStreams() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("1234").throttleBody(1, 500, MILLISECONDS));
+
+    long exeuteStart = System.nanoTime();
+    Response<ResponseBody> response = example.getStreamingBody().execute();
+    long executeTook = System.nanoTime() - exeuteStart;
+    assertThat(executeTook).isLessThan(MILLISECONDS.toNanos(500));
+
+    long readStart = System.nanoTime();
+    String body = response.body().string();
+    long readTook = System.nanoTime() - readStart;
+    assertThat(readTook).isGreaterThan(MILLISECONDS.toNanos(1000));
+    assertThat(body).isEqualTo("1234");
   }
 }

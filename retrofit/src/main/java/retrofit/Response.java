@@ -29,8 +29,8 @@ public final class Response<T> {
   /**
    * TODO
    */
-  public static <T, B extends T> Response<T> fromBody(B body) {
-    return fromBody(body, new com.squareup.okhttp.Response.Builder() //
+  public static <T, B extends T> Response<T> fakeSuccess(B body) {
+    return success(body, new com.squareup.okhttp.Response.Builder() //
         .code(200)
         .protocol(Protocol.HTTP_1_1)
         .request(new com.squareup.okhttp.Request.Builder().url(HttpUrl.parse("http://localhost"))
@@ -41,7 +41,7 @@ public final class Response<T> {
   /**
    * TODO
    */
-  public static <T, B extends T> Response<T> fromBody(B body,
+  public static <T, B extends T> Response<T> success(B body,
       com.squareup.okhttp.Response rawResponse) {
     return new Response<T>(rawResponse, body, null);
   }
@@ -49,11 +49,10 @@ public final class Response<T> {
   /**
    * TODO
    */
-  public static Response<Object> fromError(int code, ResponseBody body) {
-    return fromError(new com.squareup.okhttp.Response.Builder() //
+  public static <T> Response<T> fakeError(int code, ResponseBody body) {
+    return error(body, new com.squareup.okhttp.Response.Builder() //
         .code(code)
         .protocol(Protocol.HTTP_1_1)
-        .body(body)
         .request(new com.squareup.okhttp.Request.Builder().url(HttpUrl.parse("http://localhost"))
             .build())
         .build());
@@ -62,18 +61,18 @@ public final class Response<T> {
   /**
    * TODO
    */
-  public static Response<Object> fromError(com.squareup.okhttp.Response rawResponse) {
-    ResponseBody errorBody = rawResponse.body();
-    if (errorBody == null) throw new IllegalArgumentException("Raw response must have body.");
-    rawResponse = rawResponse.newBuilder().body(null).build();
-    return new Response<>(rawResponse, null, errorBody);
+  public static <T> Response<T> error(ResponseBody body, com.squareup.okhttp.Response rawResponse) {
+    if (rawResponse.body() != null) {
+      throw new IllegalArgumentException("Raw response must not have body.");
+    }
+    return new Response<>(rawResponse, null, body);
   }
 
   private final com.squareup.okhttp.Response rawResponse;
   private final T body;
   private final ResponseBody errorBody;
 
-  Response(com.squareup.okhttp.Response rawResponse, T body, ResponseBody errorBody) {
+  private Response(com.squareup.okhttp.Response rawResponse, T body, ResponseBody errorBody) {
     this.rawResponse = checkNotNull(rawResponse, "rawResponse == null");
     this.body = body;
     this.errorBody = errorBody;
