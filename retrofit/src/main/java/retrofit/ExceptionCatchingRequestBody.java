@@ -53,11 +53,9 @@ final class ExceptionCatchingRequestBody extends ResponseBody {
     delegate.close();
   }
 
-  IOException getThrownException() {
-    return thrownException;
-  }
-
-  boolean threwException() {
-    return thrownException != null;
+  void throwIfCaught() throws IOException {
+    if (thrownException != null) {
+      throw thrownException;
+    }
   }
 }

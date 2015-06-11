@@ -18,6 +18,7 @@ package retrofit;
 
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
@@ -37,6 +38,14 @@ final class Utils {
       throw new NullPointerException(message);
     }
     return object;
+  }
+
+  static void closeQueitly(Closeable closeable) {
+    if (closeable == null) return;
+    try {
+      closeable.close();
+    } catch (IOException ignored) {
+    }
   }
 
   /**

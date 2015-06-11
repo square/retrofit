@@ -69,7 +69,7 @@ public final class DefaultCallAdapterFactoryTest {
   @Test public void adaptedCallExecute() throws IOException {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
     CallAdapter adapter = factory.get(returnType);
-    final Response<Object> response = Response.fromBody("Hi");
+    final Response<Object> response = Response.fakeSuccess("Hi");
     Call call = (Call) adapter.adapt(new EmptyCall() {
       @Override public Response<Object> execute() throws IOException {
         return response;
@@ -81,7 +81,7 @@ public final class DefaultCallAdapterFactoryTest {
   @Test public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
     CallAdapter adapter = factory.get(returnType);
-    final Response<Object> response = Response.fromBody("Hi");
+    final Response<Object> response = Response.fakeSuccess("Hi");
     Call call = (Call) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<Object> callback) {
         callback.success(response);

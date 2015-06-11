@@ -22,6 +22,8 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
+import static retrofit.Utils.closeQueitly;
+
 final class OkHttpCall<T> implements Call<T> {
   private final Endpoint endpoint;
   private final Converter converter;
@@ -118,43 +120,55 @@ final class OkHttpCall<T> implements Call<T> {
 
   private Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
     ResponseBody rawBody = rawResponse.body();
-    // Remove the body (the only stateful object) from the raw response so we can pass it along.
+    // Remove the body (the only stateful object) so we can pass the response along.
     rawResponse = rawResponse.newBuilder().body(null).build();
 
-    T converted = null;
-    ResponseBody body = null;
-
-    try {
-      int code = rawResponse.code();
-      if (code < 200 || code >= 300) {
-        // Buffer the entire body in the event of a non-2xx status to avoid future I/O.
-        body = Utils.readBodyToBytesIfNecessary(rawBody);
-      } else if (code != 204 && code != 205) {
-        Type responseType = methodInfo.adapter.responseType();
-        if (responseType == ResponseBody.class) {
-          //noinspection unchecked
-          converted = (T) Utils.readBodyToBytesIfNecessary(rawBody);
-        } else {
-          ExceptionCatchingRequestBody wrapped = new ExceptionCatchingRequestBody(rawBody);
-          try {
-            //noinspection unchecked
-            converted = (T) converter.fromBody(wrapped, responseType);
-          } catch (RuntimeException e) {
-            // If the underlying input stream threw an exception, propagate that rather than
-            // indicating that it was a conversion exception.
-            if (wrapped.threwException()) {
-              throw wrapped.getThrownException();
-            }
-
-            throw e;
-          }
-        }
+    int code = rawResponse.code();
+    if (code < 200 || code >= 300) {
+      try {
+        // Buffer the entire body to avoid future I/O.
+        ResponseBody bufferedBody = Utils.readBodyToBytesIfNecessary(rawBody);
+        return Response.error(bufferedBody, rawResponse);
+      } finally {
+        closeQueitly(rawBody);
       }
-    } finally {
-      rawBody.close();
     }
 
-    return new Response<>(rawResponse, converted, body);
+    if (code == 204 || code == 205) {
+      return Response.success(null, rawResponse);
+    }
+
+    Type responseType = methodInfo.adapter.responseType();
+    if (responseType == ResponseBody.class) {
+      if (methodInfo.isStreaming) {
+        // Use the raw body from the request. The caller is responsible for closing.
+        //noinspection unchecked
+        return Response.success((T) rawBody, rawResponse);
+      }
+
+      try {
+        // Buffer the entire body to avoid future I/O.
+        ResponseBody bufferedBody = Utils.readBodyToBytesIfNecessary(rawBody);
+        //noinspection unchecked
+        return Response.success((T) bufferedBody, rawResponse);
+      } finally {
+        closeQueitly(rawBody);
+      }
+    }
+
+    ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
+    try {
+      //noinspection unchecked
+      T body = (T) converter.fromBody(catchingBody, responseType);
+      return Response.success(body, rawResponse);
+    } catch (RuntimeException e) {
+      // If the underlying source threw an exception, propagate that rather than indicating it was
+      // a runtime exception.
+      catchingBody.throwIfCaught();
+      throw e;
+    } finally {
+      closeQueitly(rawBody);
+    }
   }
 
   public void cancel() {
