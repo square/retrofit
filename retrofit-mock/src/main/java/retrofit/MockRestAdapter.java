@@ -90,6 +90,16 @@ public final class MockRetrofit {
     if (delayMs > Integer.MAX_VALUE) {
       throw new IllegalArgumentException("Delay value too large. Max: " + Integer.MAX_VALUE);
     }
+    if (delayMs == 0) {
+      /**
+       * It seems reasonable to want to set the delay to 0, but this could cause problems when
+       * calls to random.nextInt are called. random.nextInt 0 would throw a
+       * {@link IllegalArgException).
+       *
+       * Settings it internally to 1ms should avoid this, but shouldn't be noticable for the user.
+       */
+      delayMs = 1;
+    }
     this.delayMs = (int) delayMs;
   }
 
