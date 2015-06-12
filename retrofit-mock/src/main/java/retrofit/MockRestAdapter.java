@@ -147,6 +147,8 @@ public final class MockRetrofit {
    * using {@link #create(Class, Object)}.
    */
   public int calculateDelayForError() {
+    if (delayMs == 0) return 0;
+
     return random.nextInt(delayMs * ERROR_DELAY_FACTOR);
   }
 
