@@ -60,15 +60,6 @@ public class LoganSquareConverterTest {
   }
 
   @Test
-  public void deserializeWrongValue() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, "{\"foo\":\"bar\"}");
-    try {
-      converter.fromBody(body, MyObject.class);
-    } catch (Exception ignored) {
-    }
-  }
-
-  @Test
   public void deserializeWrongClass() throws Exception {
     ResponseBody body = ResponseBody.create(MEDIA_TYPE, JSON);
     try {
