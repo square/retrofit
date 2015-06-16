@@ -120,8 +120,11 @@ final class OkHttpCall<T> implements Call<T> {
 
   private Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
     ResponseBody rawBody = rawResponse.body();
-    // Remove the body (the only stateful object) so we can pass the response along.
-    rawResponse = rawResponse.newBuilder().body(null).build();
+
+    // Remove the body's source (the only stateful object) so we can pass the response along.
+    rawResponse = rawResponse.newBuilder()
+        .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
+        .build();
 
     int code = rawResponse.code();
     if (code < 200 || code >= 300) {

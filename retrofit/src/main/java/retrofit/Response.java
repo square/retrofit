@@ -62,9 +62,6 @@ public final class Response<T> {
    * TODO
    */
   public static <T> Response<T> error(ResponseBody body, com.squareup.okhttp.Response rawResponse) {
-    if (rawResponse.body() != null) {
-      throw new IllegalArgumentException("Raw response must not have body.");
-    }
     return new Response<>(rawResponse, null, body);
   }
 
