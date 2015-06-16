@@ -430,4 +430,26 @@ public final class CallTest {
     assertThat(readTook).isGreaterThan(MILLISECONDS.toNanos(1000));
     assertThat(body).isEqualTo("1234");
   }
+
+  @Test public void rawResponseContentTypeAndLengthButNoSource() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new StringConverter())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("Hi").addHeader("Content-Type", "text/greeting"));
+
+    Response<String> response = example.getString().execute();
+    assertThat(response.body()).isEqualTo("Hi");
+    ResponseBody rawBody = response.raw().body();
+    assertThat(rawBody.contentLength()).isEqualTo(2);
+    assertThat(rawBody.contentType().toString()).isEqualTo("text/greeting");
+    try {
+      rawBody.source();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Cannot read raw response body of a converted body.");
+    }
+  }
 }
