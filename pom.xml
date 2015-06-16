@@ -59,6 +59,7 @@
     <jackson.version>2.4.3</jackson.version>
     <wire.version>1.5.2</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
+    <logansquare.version>1.0.6</logansquare.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.11</junit.version>
@@ -114,6 +115,11 @@
         <version>${rxjava.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>com.bluelinelabs</groupId>
+        <artifactId>logansquare</artifactId>
+        <version>${logansquare.version}</version>
+      </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>

@@ -20,5 +20,6 @@
     <module>jackson</module>
     <module>wire</module>
     <module>simplexml</module>
+    <module>logansquare</module>
   </modules>
 </project>
