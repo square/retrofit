@@ -48,6 +48,24 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     this.fileName=fileName;
   }
 
+  /**
+   * Constructs a new typed byte array.  Sets mimeType to {@code application/unknown} if absent.
+   * Sets fileName to null
+   *
+   * @throws NullPointerException if bytes are null
+   */
+  public TypedByteArray(String mimeType, byte[] bytes) {
+    if (mimeType == null) {
+      mimeType = "application/unknown";
+    }
+    if (bytes == null) {
+      throw new NullPointerException("bytes");
+    }
+    this.mimeType = mimeType;
+    this.bytes = bytes;
+    this.fileName=null;
+  }
+
   public byte[] getBytes() {
     return bytes;
   }
