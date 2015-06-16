@@ -45,7 +45,7 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     }
     this.mimeType = mimeType;
     this.bytes = bytes;
-    this.fileName=fileName;
+    this.fileName = fileName;
   }
 
   /**
@@ -63,7 +63,7 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     }
     this.mimeType = mimeType;
     this.bytes = bytes;
-    this.fileName=null;
+    this.fileName = null;
   }
 
   public byte[] getBytes() {
