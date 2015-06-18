@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.net.URLEncoder;
 import java.util.Map;
 import okio.BufferedSink;
@@ -47,6 +48,7 @@ final class RequestBuilder {
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
   private final boolean requestHasBody;
+  private final Type requestType;
   private final HttpUrl.Builder urlBuilder;
 
   private MultipartBuilder multipartBuilder;
@@ -63,6 +65,7 @@ final class RequestBuilder {
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
     requestHasBody = methodInfo.requestHasBody;
+    requestType = methodInfo.requestType;
 
     if (methodInfo.headers != null) {
       headers = methodInfo.headers.newBuilder();
@@ -317,10 +320,11 @@ final class RequestBuilder {
         if (value == null) {
           throw new IllegalArgumentException("Body parameter value must not be null.");
         }
-        if (value instanceof RequestBody) {
+        if (requestType == RequestBody.class
+            || (requestType == Object.class && value instanceof RequestBody)) {
           body = (RequestBody) value;
         } else {
-          body = converter.toBody(value, value.getClass());
+          body = converter.toBody(value, requestType);
         }
       } else {
         throw new IllegalArgumentException(

@@ -20,29 +20,27 @@ import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.ToJson;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import java.io.IOException;
-import okio.Buffer;
-import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import retrofit.http.Body;
+import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 public final class MoshiConverterTest {
-  private Converter converter;
-
-  interface Example {
+  interface AnInterface {
     String getName();
   }
 
-  static class Impl implements Example {
+  static class AnImplementation implements AnInterface {
     private final String theName;
 
-    Impl(String name) {
+    AnImplementation(String name) {
       theName = name;
     }
 
@@ -51,45 +49,75 @@ public final class MoshiConverterTest {
     }
   }
 
-  static class ExampleAdapter {
-    @ToJson public void to(JsonWriter writer, Example example) throws IOException {
-      writer.beginObject();
-      writer.name("name").value(example.getName());
-      writer.endObject();
+  static class AnInterfaceAdapter {
+    @ToJson public void write(JsonWriter jsonWriter, AnInterface anInterface) throws IOException {
+      System.out.println("TO JSON: " + anInterface);
+      jsonWriter.beginObject();
+      jsonWriter.name("name").value(anInterface.getName());
+      jsonWriter.endObject();
     }
 
-    @FromJson public Example from(JsonReader reader) throws IOException {
-      throw new UnsupportedOperationException(); // Moshi requires this method to exist.
+    @FromJson public AnInterface read(JsonReader jsonReader) throws IOException {
+      jsonReader.beginObject();
+
+      String name = null;
+      while (jsonReader.hasNext()) {
+        switch (jsonReader.nextName()) {
+          case "name":
+            name = jsonReader.nextString();
+            break;
+        }
+      }
+
+      jsonReader.endObject();
+      return new AnImplementation(name);
     }
   }
+
+  interface Service {
+    @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+    @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+  }
+
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
+
+  private Service service;
 
   @Before public void setUp() {
-    Moshi gson = new Moshi.Builder()
-        .add(new ExampleAdapter())
+    Moshi moshi = new Moshi.Builder()
+        .add(new AnInterfaceAdapter())
         .build();
-    converter = new MoshiConverter(gson);
+    Converter converter = new MoshiConverter(moshi);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(converter)
+        .build();
+    service = retrofit.create(Service.class);
   }
 
-  @Test public void serialization() throws IOException {
-    RequestBody body = converter.toBody(new Impl("value"), Impl.class);
-    assertBody(body).isEqualTo("{\"theName\":\"value\"}");
+  @Test public void anInterface() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"name\":\"value\"}"));
+
+    Call<AnInterface> call = service.anInterface(new AnImplementation("value"));
+    Response<AnInterface> response = call.execute();
+    AnInterface body = response.body();
+    assertThat(body.getName()).isEqualTo("value");
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 
-  @Test public void serializationTypeUsed() throws IOException {
-    RequestBody body = converter.toBody(new Impl("value"), Example.class);
-    assertBody(body).isEqualTo("{\"name\":\"value\"}");
-  }
+  @Test public void anImplementation() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
 
-  @Test public void deserialization() throws IOException {
-    ResponseBody body =
-        ResponseBody.create(MediaType.parse("text/plain"), "{\"theName\":\"value\"}");
-    Impl impl = (Impl) converter.fromBody(body, Impl.class);
-    assertEquals("value", impl.getName());
-  }
+    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+    Response<AnImplementation> response = call.execute();
+    AnImplementation body = response.body();
+    assertThat(body.theName).isEqualTo("value");
 
-  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body) throws IOException {
-    Buffer buffer = new Buffer();
-    body.writeTo(buffer);
-    return assertThat(buffer.readUtf8());
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{\"theName\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 }

@@ -1,89 +1,156 @@
+/*
+ * Copyright (C) 2013 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import java.io.IOException;
-import okio.Buffer;
-import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import retrofit.http.Body;
+import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JacksonConverterTest {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
-  private static final MyObject OBJECT = new MyObject("hello world", 10);
-  private final String JSON = "{\"message\":\"hello world\",\"count\":10}";
-
-  private final JacksonConverter converter = new JacksonConverter();
-
-  @Test public void serialize() throws Exception {
-    RequestBody body = converter.toBody(OBJECT, MyObject.class);
-    assertThat(body.contentType()).isEqualTo(MEDIA_TYPE);
-    assertBody(body).isEqualTo(JSON);
+  interface AnInterface {
+    String getName();
   }
 
-  @Test public void deserialize() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, JSON);
-    MyObject result = (MyObject) converter.fromBody(body, MyObject.class);
-    assertThat(result).isEqualTo(OBJECT);
-  }
+  static class AnImplementation implements AnInterface {
+    private String theName;
 
-  @Test public void deserializeWrongValue() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, "{\"foo\":\"bar\"}");
-    try {
-      converter.fromBody(body, MyObject.class);
-    } catch (UnrecognizedPropertyException ignored) {
+    AnImplementation() {
+    }
+
+    AnImplementation(String name) {
+      theName = name;
+    }
+
+    @Override public String getName() {
+      return theName;
     }
   }
 
-  @Test public void deserializeWrongClass() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, JSON);
-    try {
-      converter.fromBody(body, String.class);
-    } catch (JsonMappingException ignored) {
+  static class AnInterfaceSerializer extends StdSerializer<AnInterface> {
+    AnInterfaceSerializer() {
+      super(AnInterface.class);
+    }
+
+    @Override public void serialize(AnInterface anInterface, JsonGenerator jsonGenerator,
+        SerializerProvider serializerProvider) throws IOException {
+      jsonGenerator.writeStartObject();
+      jsonGenerator.writeFieldName("name");
+      jsonGenerator.writeString(anInterface.getName());
+      jsonGenerator.writeEndObject();
     }
   }
 
-  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body) throws IOException {
-    Buffer buffer = new Buffer();
-    body.writeTo(buffer);
-    return assertThat(buffer.readUtf8());
+  static class AnInterfaceDeserializer extends StdDeserializer<AnInterface> {
+    AnInterfaceDeserializer() {
+      super(AnInterface.class);
+    }
+
+    @Override public AnInterface deserialize(JsonParser jp, DeserializationContext ctxt)
+        throws IOException {
+      if (jp.getCurrentToken() != JsonToken.START_OBJECT) {
+        throw new AssertionError("Expected start object.");
+      }
+
+      String name = null;
+
+      while (jp.nextToken() != JsonToken.END_OBJECT) {
+        switch (jp.getCurrentName()) {
+          case "name":
+            name = jp.getValueAsString();
+            break;
+        }
+      }
+
+      return new AnImplementation(name);
+    }
   }
 
-  static class MyObject {
-    private final String message;
-    private final int count;
+  interface Service {
+    @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+    @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+  }
 
-    public MyObject(@JsonProperty("message") String message, @JsonProperty("count") int count) {
-      this.message = message;
-      this.count = count;
-    }
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
 
-    public String getMessage() {
-      return message;
-    }
+  private Service service;
 
-    public int getCount() {
-      return count;
-    }
+  @Before public void setUp() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(AnInterface.class, new AnInterfaceSerializer());
+    module.addDeserializer(AnInterface.class, new AnInterfaceDeserializer());
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(module);
+    mapper.configure(MapperFeature.AUTO_DETECT_GETTERS, false);
+    mapper.configure(MapperFeature.AUTO_DETECT_SETTERS, false);
+    mapper.configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false);
+    mapper.setVisibilityChecker(mapper.getSerializationConfig()
+        .getDefaultVisibilityChecker()
+        .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
 
-    @Override public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+    Converter converter = new JacksonConverter(mapper);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(converter)
+        .build();
+    service = retrofit.create(Service.class);
+  }
 
-      MyObject myObject = (MyObject) o;
-      return count == myObject.count
-          && !(message != null ? !message.equals(myObject.message) : myObject.message != null);
-    }
+  @Test public void anInterface() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"name\":\"value\"}"));
 
-    @Override public int hashCode() {
-      int result = message != null ? message.hashCode() : 0;
-      result = 31 * result + count;
-      return result;
-    }
+    Call<AnInterface> call = service.anInterface(new AnImplementation("value"));
+    Response<AnInterface> response = call.execute();
+    AnInterface body = response.body();
+    assertThat(body.getName()).isEqualTo("value");
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
+
+  @Test public void anImplementation() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
+
+    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+    Response<AnImplementation> response = call.execute();
+    AnImplementation body = response.body();
+    assertThat(body.theName).isEqualTo("value");
+
+    RecordedRequest request = server.takeRequest();
+    // TODO figure out how to get Jackson to stop using AnInterface's serializer here.
+    assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 }
