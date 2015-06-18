@@ -38,7 +38,7 @@ public final class MoshiConverter implements Converter {
   public MoshiConverter(Moshi moshi) {
     if (moshi == null) throw new NullPointerException("moshi == null");
     this.moshi = moshi;
-    this.mediaType = MediaType.parse("application/json; charset=utf-8");
+    this.mediaType = MediaType.parse("application/json; charset=UTF-8");
   }
 
   @Override public Object fromBody(ResponseBody body, Type type) throws IOException {

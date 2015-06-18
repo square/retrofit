@@ -1,128 +1,100 @@
+/*
+ * Copyright (C) 2013 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import java.io.IOException;
-import okio.Buffer;
-import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.simpleframework.xml.Default;
-import org.simpleframework.xml.DefaultType;
-import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.ElementException;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Verbosity;
+import retrofit.http.Body;
+import retrofit.http.GET;
+import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 public class SimpleXmlConverterTest {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("application/xml; charset=UTF-8");
-  private static final MyObject OBJ = new MyObject("hello world", 10);
-  private static final String XML =
-      "<my-object><message>hello world</message><count>10</count></my-object>";
+  interface Service {
+    @GET("/") Call<MyObject> get();
+    @POST("/") Call<MyObject> post(@Body MyObject impl);
+    @GET("/") Call<String> wrongClass();
+  }
 
-  private Converter converter;
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
+
+  private Service service;
 
   @Before public void setUp() {
     Format format = new Format(0, null, new HyphenStyle(), Verbosity.HIGH);
     Persister persister = new Persister(format);
-    converter = new SimpleXmlConverter(persister);
+    Converter converter = new SimpleXmlConverter(persister);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(converter)
+        .build();
+    service = retrofit.create(Service.class);
   }
 
-  @Test public void serialize() throws Exception {
-    RequestBody body = converter.toBody(OBJ, MyObject.class);
-    assertThat(body.contentType()).isEqualTo(MEDIA_TYPE);
-    assertBody(body).isEqualTo(XML);
+  @Test public void bodyWays() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody(
+        "<my-object><message>hello world</message><count>10</count></my-object>"));
+
+    Call<MyObject> call = service.post(new MyObject("hello world", 10));
+    Response<MyObject> response = call.execute();
+    MyObject body = response.body();
+    assertThat(body.getMessage()).isEqualTo("hello world");
+    assertThat(body.getCount()).isEqualTo(10);
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo(
+        "<my-object><message>hello world</message><count>10</count></my-object>");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=UTF-8");
   }
 
-  @Test public void deserialize() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, XML);
-    MyObject result = (MyObject) converter.fromBody(body, MyObject.class);
-    assertThat(result).isEqualTo(OBJ);
-  }
+  @Test public void deserializeWrongValue() throws IOException {
+    server.enqueue(new MockResponse().setBody("<myObject><foo/><bar/></myObject>"));
 
-  @Test public void deserializeWrongValue() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, "<myObject><foo/><bar/></myObject>");
+    Call<?> call = service.get();
     try {
-      converter.fromBody(body, MyObject.class);
-    } catch (RuntimeException ignored) {
+      call.execute();
+      fail();
+    } catch (RuntimeException e) {
+      assertThat(e.getCause()).isInstanceOf(ElementException.class)
+          .hasMessageStartingWith("Element 'foo' does not have a match in class retrofit.MyObject");
     }
   }
 
-  @Test public void deserializeWrongClass() throws Exception {
-    ResponseBody body = ResponseBody.create(MEDIA_TYPE, XML);
-    Object result = converter.fromBody(body, String.class);
-    assertThat(result).isNull();
-  }
+  @Test public void deserializeWrongClass() throws IOException {
+    server.enqueue(new MockResponse().setBody(
+        "<my-object><message>hello world</message><count>10</count></my-object>"));
 
-  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body)
-      throws IOException {
-    Buffer buffer = new Buffer();
-    body.writeTo(buffer);
-    return assertThat(buffer.readUtf8());
-  }
-
-  @Default(value = DefaultType.FIELD) static class MyObject {
-    @Element private String message;
-    @Element private int count;
-
-    public MyObject() {
-    }
-
-    public MyObject(String message, int count) {
-      this.message = message;
-      this.count = count;
-    }
-
-    public void setMessage(String message) {
-      this.message = message;
-    }
-
-    public String getMessage() {
-      return message;
-    }
-
-    public void setCount(int count) {
-      this.count = count;
-    }
-
-    public int getCount() {
-      return count;
-    }
-
-    @Override public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + count;
-      result = prime * result + ((message == null) ? 0 : message.hashCode());
-      return result;
-    }
-
-    @Override public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      MyObject other = (MyObject) obj;
-      if (count != other.count) {
-        return false;
-      }
-      if (message == null) {
-        if (other.message != null) {
-          return false;
-        }
-      } else if (!message.equals(other.message)) {
-        return false;
-      }
-      return true;
+    Call<?> call = service.wrongClass();
+    try {
+      call.execute();
+      fail();
+    } catch (RuntimeException e) {
+      assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
     }
   }
 }

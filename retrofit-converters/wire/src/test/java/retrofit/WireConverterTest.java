@@ -1,72 +1,116 @@
-// Copyright 2013 Square, Inc.
+/*
+ * Copyright (C) 2013 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import java.io.EOFException;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import okio.Buffer;
 import okio.ByteString;
-import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import retrofit.http.Body;
+import retrofit.http.GET;
+import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class WireConverterTest {
-  private static final Person PROTO =
-      new Person.Builder().id(42).name("Omar Little").email("omar@theking.org").build();
-  private static final String ENCODED_PROTO = "CgtPbWFyIExpdHRsZRAqGhBvbWFyQHRoZWtpbmcub3Jn";
-
-  private final WireConverter converter = new WireConverter();
-
-  @Test public void serialize() throws Exception {
-    RequestBody body = converter.toBody(PROTO, Person.class);
-    assertThat(body.contentType().toString()).isEqualTo("application/x-protobuf");
-    assertBody(body).isEqualTo(ENCODED_PROTO);
+  interface Service {
+    @GET("/") Call<Phone> get();
+    @POST("/") Call<Phone> post(@Body Phone impl);
+    @GET("/") Call<String> wrongClass();
+    @GET("/") Call<List<String>> wrongType();
   }
 
-  @Test public void deserialize() throws Exception {
-    Object proto = converter.fromBody(protoResponse(ENCODED_PROTO), Person.class);
-    assertThat(proto).isEqualTo(PROTO);
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
+
+  private Service service;
+
+  @Before public void setUp() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converter(new WireConverter())
+        .build();
+    service = retrofit.create(Service.class);
   }
 
-  @Test public void deserializeWrongClass() throws Exception {
+  @Test public void serializeAndDeserialize() throws IOException, InterruptedException {
+    ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwOQ==");
+    server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
+
+    Call<Phone> call = service.post(new Phone("(519) 867-5309"));
+    Response<Phone> response = call.execute();
+    Phone body = response.body();
+    assertThat(body.number).isEqualTo("(519) 867-5309");
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readByteString()).isEqualTo(encoded);
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/x-protobuf");
+  }
+
+  @Test public void deserializeEmpty() throws IOException {
+    server.enqueue(new MockResponse());
+
+    Call<Phone> call = service.get();
+    Response<Phone> response = call.execute();
+    Phone body = response.body();
+    assertThat(body.number).isNull();
+  }
+
+  @Test public void deserializeWrongClass() throws IOException {
+    ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwOQ==");
+    server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
+
+    Call<?> call = service.wrongClass();
     try {
-      converter.fromBody(protoResponse(ENCODED_PROTO), String.class);
+      call.execute();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Expected a proto message but was java.lang.String");
     }
   }
 
-  @Test public void deserializeWrongType() throws Exception {
+  @Test public void deserializeWrongType() throws IOException {
+    ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwOQ==");
+    server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
+
+    Call<?> call = service.wrongType();
     try {
-      converter.fromBody(protoResponse(ENCODED_PROTO),
-          ArrayList.class.getGenericSuperclass());
+      call.execute();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Expected a raw Class<?> but was java.util.AbstractList<E>");
+      assertThat(e).hasMessage("Expected a raw Class<?> but was java.util.List<java.lang.String>");
     }
   }
 
-  @Test public void deserializeWrongValue() throws Exception {
+  @Test public void deserializeWrongValue() throws IOException {
+    ByteString encoded = ByteString.decodeBase64("////");
+    server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
+
+    Call<?> call = service.get();
     try {
-      converter.fromBody(protoResponse("////"), Person.class);
+      call.execute();
       fail();
-    } catch (IOException ignored) {
+    } catch (EOFException ignored) {
     }
-  }
-
-  private static ResponseBody protoResponse(String encodedProto) {
-    return ResponseBody.create(MediaType.parse("application/x-protobuf"),
-        ByteString.decodeBase64(encodedProto).toByteArray());
-  }
-
-  private static AbstractCharSequenceAssert<?, String> assertBody(RequestBody body) throws IOException {
-    Buffer buffer = new Buffer();
-    body.writeTo(buffer);
-    return assertThat(buffer.readByteString().base64());
   }
 }
