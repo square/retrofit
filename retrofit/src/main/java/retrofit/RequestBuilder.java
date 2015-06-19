@@ -44,7 +44,7 @@ final class RequestBuilder {
   private static final Headers NO_HEADERS = Headers.of();
   private static final byte[] NO_BODY = new byte[0];
 
-  private final Converter converter;
+  private final Converter.Factory converterFactory;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
   private final boolean requestHasBody;
@@ -59,8 +59,8 @@ final class RequestBuilder {
   private Headers.Builder headers;
   private String contentTypeHeader;
 
-  RequestBuilder(HttpUrl url, MethodInfo methodInfo, Converter converter) {
-    this.converter = converter;
+  RequestBuilder(HttpUrl url, MethodInfo methodInfo, Converter.Factory converterFactory) {
+    this.converterFactory = converterFactory;
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
@@ -286,7 +286,10 @@ final class RequestBuilder {
             multipartBuilder.addPart(headers,
                 RequestBody.create(MediaType.parse("text/plain"), (String) value));
           } else {
-            multipartBuilder.addPart(headers, converter.toBody(value, value.getClass()));
+            //noinspection unchecked
+            Converter<Object> converter =
+                (Converter<Object>) converterFactory.get(value.getClass());
+            multipartBuilder.addPart(headers, converter.toBody(value));
           }
         }
       } else if (annotationType == PartMap.class) {
@@ -310,8 +313,10 @@ final class RequestBuilder {
                 multipartBuilder.addPart(headers,
                     RequestBody.create(MediaType.parse("text/plain"), (String) entryValue));
               } else {
-                multipartBuilder.addPart(headers,
-                    converter.toBody(entryValue, entryValue.getClass()));
+                //noinspection unchecked
+                Converter<Object> converter =
+                    (Converter<Object>) converterFactory.get(entryValue.getClass());
+                multipartBuilder.addPart(headers, converter.toBody(entryValue));
               }
             }
           }
@@ -324,7 +329,9 @@ final class RequestBuilder {
             || (requestType == Object.class && value instanceof RequestBody)) {
           body = (RequestBody) value;
         } else {
-          body = converter.toBody(value, requestType);
+          //noinspection unchecked
+          Converter<Object> converter = (Converter<Object>) converterFactory.get(requestType);
+          body = converter.toBody(value);
         }
       } else {
         throw new IllegalArgumentException(

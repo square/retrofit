@@ -15,9 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unused") // Lots of unused parameters for example code.
 public final class MethodInfoTest {
-  private static CallAdapter.Factory FACTORY =
+  private static CallAdapter.Factory CALL_ADAPTER_FACTORY =
       new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor());
-  private static Converter CONVERTER = new StringConverter();
+  private static Converter.Factory CONVERTER_FACTORY = new StringConverterFactory();
 
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
@@ -57,7 +57,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, FACTORY, CONVERTER);
+    MethodInfo methodInfo = new MethodInfo(method, CALL_ADAPTER_FACTORY, CONVERTER_FACTORY);
     assertThat(methodInfo.requestType).isEqualTo(Dummy.class);
   }
 
@@ -69,7 +69,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, FACTORY, CONVERTER);
+    MethodInfo methodInfo = new MethodInfo(method, CALL_ADAPTER_FACTORY, CONVERTER_FACTORY);
     Type expected = new TypeToken<List<Dummy>>() {}.getType();
     assertThat(methodInfo.requestType).isEqualTo(expected);
   }
@@ -82,7 +82,7 @@ public final class MethodInfoTest {
     }
 
     Method method = TestingUtils.onlyMethod(Example.class);
-    MethodInfo methodInfo = new MethodInfo(method, FACTORY, CONVERTER);
+    MethodInfo methodInfo = new MethodInfo(method, CALL_ADAPTER_FACTORY, CONVERTER_FACTORY);
     Type expected = new TypeToken<List<? super String>>() {}.getType();
     assertThat(methodInfo.requestType).isEqualTo(expected);
   }

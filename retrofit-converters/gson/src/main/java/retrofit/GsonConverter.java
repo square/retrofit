@@ -15,71 +15,48 @@
  */
 package retrofit;
 
-import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
+import okio.Buffer;
 
-/**
- * A {@link Converter} which uses GSON for serialization and deserialization of entities.
- */
-public class GsonConverter implements Converter {
-  private final Gson gson;
-  private final Charset charset;
-  private final MediaType mediaType;
+final class GsonConverter<T> implements Converter<T> {
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
+  private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-  /**
-   * Create an instance using a default {@link Gson} instance for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-   */
-  public GsonConverter() {
-    this(new Gson());
+  private final TypeAdapter<T> typeAdapter;
+
+  GsonConverter(TypeAdapter<T> typeAdapter) {
+    this.typeAdapter = typeAdapter;
   }
 
-  /**
-   * Create an instance using the supplied {@link Gson} object for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-   */
-  public GsonConverter(Gson gson) {
-    this(gson, Charset.forName("UTF-8"));
-  }
-
-  /**
-   * Create an instance using the supplied {@link Gson} object for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use the specified charset.
-   */
-  public GsonConverter(Gson gson, Charset charset) {
-    if (gson == null) throw new NullPointerException("gson == null");
-    if (charset == null) throw new NullPointerException("charset == null");
-    this.gson = gson;
-    this.charset = charset;
-    this.mediaType = MediaType.parse("application/json; charset=" + charset.name());
-  }
-
-  @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
-    Charset charset = this.charset;
-    if (body.contentType() != null) {
-      charset = body.contentType().charset(charset);
-    }
-
-    InputStream is = body.byteStream();
+  @Override public T fromBody(ResponseBody body) throws IOException {
+    Reader in = body.charStream();
     try {
-      return gson.fromJson(new InputStreamReader(is, charset), type);
+      return typeAdapter.fromJson(in);
     } finally {
       try {
-        is.close();
+        in.close();
       } catch (IOException ignored) {
       }
     }
   }
 
-  @Override public RequestBody toBody(Object object, Type type) {
-    String json = gson.toJson(object, type);
-    return RequestBody.create(mediaType, json);
+  @Override public RequestBody toBody(T value) {
+    Buffer buffer = new Buffer();
+    Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
+    try {
+      typeAdapter.toJson(writer, value);
+      writer.flush();
+    } catch (IOException e) {
+      throw new AssertionError(e); // Writing to Buffer does no I/O.
+    }
+    return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
 }

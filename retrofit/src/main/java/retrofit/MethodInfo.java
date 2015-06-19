@@ -61,7 +61,7 @@ final class MethodInfo {
 
   final Method method;
   final CallAdapter.Factory adapterFactory;
-  final Converter converter;
+  final Converter.Factory converterFactory;
 
   // Method-level details
   CallAdapter<?> adapter;
@@ -80,10 +80,11 @@ final class MethodInfo {
   // Parameter-level details
   Annotation[] requestParamAnnotations;
 
-  MethodInfo(Method method, CallAdapter.Factory adapterFactory, Converter converter) {
+  MethodInfo(Method method, CallAdapter.Factory adapterFactory,
+      Converter.Factory converterFactory) {
     this.method = method;
     this.adapterFactory = adapterFactory;
-    this.converter = converter;
+    this.converterFactory = converterFactory;
     parseResponseType();
     parseMethodAnnotations();
     parseParameters();
@@ -229,7 +230,7 @@ final class MethodInfo {
           "Registered call adapter factory was unable to handle return type " + returnType);
     }
     Type responseType = adapter.responseType();
-    if (converter == null && responseType != ResponseBody.class) {
+    if (converterFactory == null && responseType != ResponseBody.class) {
       throw methodError("Method response type is "
           + responseType
           + " but no converter registered. "
@@ -291,7 +292,7 @@ final class MethodInfo {
             if (bodyEncoding != BodyEncoding.MULTIPART) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
-            if (converter == null && methodParameterType != BodyEncoding.class) {
+            if (converterFactory == null && methodParameterType != BodyEncoding.class) {
               throw parameterError(i, "@Part parameter is "
                   + methodParameterType
                   + " but no converter registered. "
@@ -317,7 +318,7 @@ final class MethodInfo {
             if (gotBody) {
               throw methodError("Multiple @Body method annotations found.");
             }
-            if (converter == null && methodParameterType != RequestBody.class) {
+            if (converterFactory == null && methodParameterType != RequestBody.class) {
               throw parameterError(i, "@Body parameter is "
                   + methodParameterType
                   + " but no converter registered. "

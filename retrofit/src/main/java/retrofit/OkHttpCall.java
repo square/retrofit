@@ -26,7 +26,7 @@ import static retrofit.Utils.closeQueitly;
 
 final class OkHttpCall<T> implements Call<T> {
   private final Endpoint endpoint;
-  private final Converter converter;
+  private final Converter.Factory converterFactory;
   private final OkHttpClient client;
   private final MethodInfo methodInfo;
   private final Object[] args;
@@ -34,10 +34,10 @@ final class OkHttpCall<T> implements Call<T> {
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
 
-  OkHttpCall(Endpoint endpoint, Converter converter, OkHttpClient client, MethodInfo methodInfo,
-      Object[] args) {
+  OkHttpCall(Endpoint endpoint, Converter.Factory converterFactory, OkHttpClient client,
+      MethodInfo methodInfo, Object[] args) {
     this.endpoint = endpoint;
-    this.converter = converter;
+    this.converterFactory = converterFactory;
     this.client = client;
     this.methodInfo = methodInfo;
     this.args = args;
@@ -45,7 +45,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(endpoint, converter, client, methodInfo, args);
+    return new OkHttpCall<>(endpoint, converterFactory, client, methodInfo, args);
   }
 
   public void enqueue(final Callback<T> callback) {
@@ -111,7 +111,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   private com.squareup.okhttp.Call createRawCall() {
     HttpUrl url = endpoint.url();
-    RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, converter);
+    RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, converterFactory);
     requestBuilder.setArguments(args);
     Request request = requestBuilder.build();
 
@@ -162,7 +162,7 @@ final class OkHttpCall<T> implements Call<T> {
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
       //noinspection unchecked
-      T body = (T) converter.fromBody(catchingBody, responseType);
+      T body = (T) converterFactory.get(responseType).fromBody(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was

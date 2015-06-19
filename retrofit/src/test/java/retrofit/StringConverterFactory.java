@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Square, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,29 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-/** Convert objects to and from their representation as HTTP bodies. */
-public interface Converter<T> {
-  /** Convert an HTTP response body to a concrete object of the specified type. */
-  T fromBody(ResponseBody body) throws IOException;
+class StringConverterFactory implements Converter.Factory {
+  private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
 
-  /** Convert an object to an appropriate representation for HTTP transport. */
-  RequestBody toBody(T value);
+  @Override public Converter get(Type type) {
+    if (type != String.class) {
+      throw new IllegalArgumentException("Type was not " + String.class);
+    }
+    return new StringConverter();
+  }
 
-  interface Factory {
-    Converter<?> get(Type type);
+  static class StringConverter implements Converter<String> {
+    @Override public String fromBody(ResponseBody body) throws IOException {
+      return body.string();
+    }
+
+    @Override public RequestBody toBody(String value) {
+      return RequestBody.create(MEDIA_TYPE, value);
+    }
   }
 }

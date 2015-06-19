@@ -48,10 +48,9 @@ public class SimpleXmlConverterTest {
   @Before public void setUp() {
     Format format = new Format(0, null, new HyphenStyle(), Verbosity.HIGH);
     Persister persister = new Persister(format);
-    Converter converter = new SimpleXmlConverter(persister);
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(converter)
+        .converterFactory(SimpleXmlConverterFactory.create(persister))
         .build();
     service = retrofit.create(Service.class);
   }

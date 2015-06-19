@@ -1,4 +1,18 @@
-// Copyright 2013 Square, Inc.
+/*
+ * Copyright (C) 2013 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit;
 
 import com.squareup.okhttp.MediaType;
@@ -8,38 +22,22 @@ import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 
-/** A {@link Converter} that reads and writes protocol buffers using Wire. */
-public class WireConverter implements Converter {
+final class WireConverter<T extends Message> implements Converter<T> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
   private final Wire wire;
+  private final Class<T> cls;
 
-  /** Create a converter with a default {@link Wire} instance. */
-  public WireConverter() {
-    this(new Wire());
-  }
-
-  /** Create a converter using the supplied {@link Wire} instance. */
-  public WireConverter(Wire wire) {
-    if (wire == null) throw new NullPointerException("wire == null");
+  public WireConverter(Wire wire, Class<T> cls) {
     this.wire = wire;
+    this.cls = cls;
   }
 
-  @SuppressWarnings("unchecked") //
-  @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
-    if (!(type instanceof Class<?>)) {
-      throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
-    }
-    Class<?> c = (Class<?>) type;
-    if (!Message.class.isAssignableFrom(c)) {
-      throw new IllegalArgumentException("Expected a proto message but was " + c.getName());
-    }
-
+  @Override public T fromBody(ResponseBody body) throws IOException {
     InputStream in = body.byteStream();
     try {
-      return wire.parseFrom(in, (Class<Message>) c);
+      return wire.parseFrom(in, cls);
     } finally {
       try {
         in.close();
@@ -48,13 +46,8 @@ public class WireConverter implements Converter {
     }
   }
 
-  @Override public RequestBody toBody(Object object, Type type) {
-    if (!(object instanceof Message)) {
-      throw new IllegalArgumentException(
-          "Expected a proto message but was " + (object != null ? object.getClass().getName()
-              : "null"));
-    }
-    byte[] bytes = ((Message) object).toByteArray();
+  @Override public RequestBody toBody(T value) {
+    byte[] bytes = value.toByteArray();
     return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }

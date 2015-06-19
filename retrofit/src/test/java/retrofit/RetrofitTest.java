@@ -135,7 +135,7 @@ public final class RetrofitTest {
 
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new StringConverter())
+        .converterFactory(new StringConverterFactory())
         .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
     StringService example = retrofit.create(StringService.class);
@@ -218,7 +218,7 @@ public final class RetrofitTest {
   @Test public void unresolvableTypeThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new StringConverter())
+        .converterFactory(new StringConverterFactory())
         .build();
     Unresolvable example = retrofit.create(Unresolvable.class);
 
@@ -352,10 +352,10 @@ public final class RetrofitTest {
 
   @Test public void converterNullThrows() {
     try {
-      new Retrofit.Builder().converter(null);
+      new Retrofit.Builder().converterFactory(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("converter == null");
+      assertThat(e).hasMessage("converterFactory == null");
     }
   }
 
@@ -363,16 +363,16 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint("http://example.com/")
         .build();
-    assertThat(retrofit.converter()).isNull();
+    assertThat(retrofit.converterFactory()).isNull();
   }
 
-  @Test public void converterPropagated() {
-    Converter converter = mock(Converter.class);
+  @Test public void converterFactoryPropagated() {
+    Converter.Factory factory = mock(Converter.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint("http://example.com/")
-        .converter(converter)
+        .converterFactory(factory)
         .build();
-    assertThat(retrofit.converter()).isSameAs(converter);
+    assertThat(retrofit.converterFactory()).isSameAs(factory);
   }
 
   @Test public void callAdapterFactoryNullThrows() {

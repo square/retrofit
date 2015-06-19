@@ -1,39 +1,44 @@
-// Copyright 2013 Square, Inc.
+/*
+ * Copyright (C) 2015 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit;
 
-import com.google.protobuf.AbstractMessageLite;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
-/** A {@link Converter} that reads and writes protocol buffers. */
-public class ProtoConverter implements Converter {
+final class ProtoConverter<T extends MessageLite> implements Converter<T> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
-  @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
-    if (!(type instanceof Class<?>)) {
-      throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
-    }
-    Class<?> c = (Class<?>) type;
-    if (!AbstractMessageLite.class.isAssignableFrom(c)) {
-      throw new IllegalArgumentException("Expected a protobuf message but was " + c.getName());
-    }
+  private Parser<T> parser;
 
+  ProtoConverter(Parser<T> parser) {
+    this.parser = parser;
+  }
+
+  @Override public T fromBody(ResponseBody body) throws IOException {
     InputStream is = body.byteStream();
     try {
-      Method parseFrom = c.getMethod("parseFrom", InputStream.class);
-      return parseFrom.invoke(null, is);
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException(c.getName() + ".parseFrom() failed", e.getCause());
-    } catch (NoSuchMethodException e) {
-      throw new IllegalArgumentException("Expected a protobuf message but was " + c.getName());
-    } catch (IllegalAccessException e) {
-      throw new AssertionError();
+      return parser.parseFrom(is);
+    } catch (InvalidProtocolBufferException e) {
+      throw new RuntimeException(e);
     } finally {
       try {
         is.close();
@@ -42,13 +47,8 @@ public class ProtoConverter implements Converter {
     }
   }
 
-  @Override public RequestBody toBody(Object object, Type type) {
-    if (!(object instanceof AbstractMessageLite)) {
-      throw new IllegalArgumentException(
-          "Expected a protobuf message but was " + (object != null ? object.getClass().getName()
-              : "null"));
-    }
-    byte[] bytes = ((AbstractMessageLite) object).toByteArray();
+  @Override public RequestBody toBody(T value) {
+    byte[] bytes = value.toByteArray();
     return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }
