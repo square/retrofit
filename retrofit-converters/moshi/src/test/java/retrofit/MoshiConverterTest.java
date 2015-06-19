@@ -51,7 +51,6 @@ public final class MoshiConverterTest {
 
   static class AnInterfaceAdapter {
     @ToJson public void write(JsonWriter jsonWriter, AnInterface anInterface) throws IOException {
-      System.out.println("TO JSON: " + anInterface);
       jsonWriter.beginObject();
       jsonWriter.name("name").value(anInterface.getName());
       jsonWriter.endObject();
@@ -87,10 +86,9 @@ public final class MoshiConverterTest {
     Moshi moshi = new Moshi.Builder()
         .add(new AnInterfaceAdapter())
         .build();
-    Converter converter = new MoshiConverter(moshi);
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(converter)
+        .converterFactory(MoshiConverterFactory.create(moshi))
         .build();
     service = retrofit.create(Service.class);
   }

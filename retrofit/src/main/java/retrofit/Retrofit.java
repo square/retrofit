@@ -22,7 +22,6 @@ import com.squareup.okhttp.ResponseBody;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import retrofit.http.HTTP;
@@ -49,7 +48,7 @@ import static retrofit.Utils.checkNotNull;
  * <p>
  * The body of a request is denoted by the {@link retrofit.http.Body @Body} annotation. The object
  * will be converted to request representation by a call to
- * {@link Converter#toBody(Object, java.lang.reflect.Type) toBody}
+ * {@link Converter#toBody(Object) toBody}
  * on the supplied {@link Converter} for this instance. A {@link RequestBody} can also be used
  * which will not use the {@code Converter}.
  * <p>
@@ -68,7 +67,7 @@ import static retrofit.Utils.checkNotNull;
  * <p>
  * By default, methods return a {@link Call} which represents the HTTP request. The generic
  * parameter of the call is the response body type and will be converted by a call to
- * {@link Converter#fromBody(ResponseBody, Type) fromBody} on the supplied {@link Converter} for
+ * {@link Converter#fromBody(ResponseBody) fromBody} on the supplied {@link Converter} for
  * this instance. {@link ResponseBody} can also be used which will not use the {@code Converter}.
  * <p>
  * For example:
@@ -89,14 +88,14 @@ public final class Retrofit {
   private final Map<Method, MethodInfo> methodInfoCache = new LinkedHashMap<>();
   private final OkHttpClient client;
   private final Endpoint endpoint;
-  private final Converter converter;
+  private final Converter.Factory converterFactory;
   private final CallAdapter.Factory adapterFactory;
 
-  private Retrofit(OkHttpClient client, Endpoint endpoint, Converter converter,
+  private Retrofit(OkHttpClient client, Endpoint endpoint, Converter.Factory converterFactory,
       CallAdapter.Factory adapterFactory) {
     this.client = client;
     this.endpoint = endpoint;
-    this.converter = converter;
+    this.converterFactory = converterFactory;
     this.adapterFactory = adapterFactory;
   }
 
@@ -121,7 +120,7 @@ public final class Retrofit {
   // Package-private avoids synthetic accessor method from InvocationHandler. Also for testing.
   Object invokeMethod(Method method, Object... args) {
     MethodInfo methodInfo = loadMethodInfo(method);
-    Call call = new OkHttpCall(endpoint, converter, client, methodInfo, args);
+    Call call = new OkHttpCall(endpoint, converterFactory, client, methodInfo, args);
     return methodInfo.adapter.adapt(call);
   }
 
@@ -131,7 +130,7 @@ public final class Retrofit {
       synchronized (methodInfoCache) {
         methodInfo = methodInfoCache.get(method);
         if (methodInfo == null) {
-          methodInfo = new MethodInfo(method, adapterFactory, converter);
+          methodInfo = new MethodInfo(method, adapterFactory, converterFactory);
           methodInfoCache.put(method, methodInfo);
         }
       }
@@ -152,8 +151,8 @@ public final class Retrofit {
    * <p>
    * May be null.
    */
-  public Converter converter() {
-    return converter;
+  public Converter.Factory converterFactory() {
+    return converterFactory;
   }
 
   public CallAdapter.Factory callAdapterFactory() {
@@ -169,7 +168,7 @@ public final class Retrofit {
   public static class Builder {
     private OkHttpClient client;
     private Endpoint endpoint;
-    private Converter converter;
+    private Converter.Factory converterFactory;
     private CallAdapter.Factory adapterFactory;
 
     /** The HTTP client used for requests. */
@@ -205,8 +204,8 @@ public final class Retrofit {
     }
 
     /** The converter used for serialization and deserialization of objects. */
-    public Builder converter(Converter converter) {
-      this.converter = checkNotNull(converter, "converter == null");
+    public Builder converterFactory(Converter.Factory converterFactory) {
+      this.converterFactory = checkNotNull(converterFactory, "converterFactory == null");
       return this;
     }
 
@@ -232,7 +231,7 @@ public final class Retrofit {
         adapterFactory = Platform.get().defaultCallAdapterFactory();
       }
 
-      return new Retrofit(client, endpoint, converter, adapterFactory);
+      return new Retrofit(client, endpoint, converterFactory, adapterFactory);
     }
   }
 }

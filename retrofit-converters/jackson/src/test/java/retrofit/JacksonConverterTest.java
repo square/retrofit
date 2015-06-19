@@ -119,10 +119,9 @@ public class JacksonConverterTest {
         .getDefaultVisibilityChecker()
         .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
 
-    Converter converter = new JacksonConverter(mapper);
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(converter)
+        .converterFactory(JacksonConverterFactory.create(mapper))
         .build();
     service = retrofit.create(Service.class);
   }

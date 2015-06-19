@@ -1418,13 +1418,14 @@ public final class RequestBuilderTest {
 
   private Request buildRequest(Class<?> cls, Object... args) {
     HttpUrl url = HttpUrl.parse("http://example.com/");
-    Converter converter = new StringConverter();
-    CallAdapter.Factory factory = new DefaultCallAdapterFactory(new Utils.SynchronousExecutor());
+    Converter.Factory converterFactory = new StringConverterFactory();
+    CallAdapter.Factory callAdapterFactory =
+        new DefaultCallAdapterFactory(new Utils.SynchronousExecutor());
 
     Method method = TestingUtils.onlyMethod(cls);
-    MethodInfo methodInfo = new MethodInfo(method, factory, converter);
+    MethodInfo methodInfo = new MethodInfo(method, callAdapterFactory, converterFactory);
 
-    RequestBuilder builder = new RequestBuilder(url, methodInfo, converter);
+    RequestBuilder builder = new RequestBuilder(url, methodInfo, converterFactory);
     builder.setArguments(args);
     return builder.build();
   }

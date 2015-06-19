@@ -49,7 +49,7 @@ public final class ProtoConverterTest {
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new ProtoConverter())
+        .converterFactory(ProtoConverterFactory.create())
         .build();
     service = retrofit.create(Service.class);
   }

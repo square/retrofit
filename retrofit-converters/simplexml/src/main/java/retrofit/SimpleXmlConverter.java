@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,49 +21,30 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Type;
 import okio.Buffer;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
-/**
- * A {@link Converter} which uses SimpleXML for reading and writing entities.
- *
- * @author Fabien Ric (fabien.ric@gmail.com)
- */
-public class SimpleXmlConverter implements Converter {
-  private static final boolean DEFAULT_STRICT = true;
+final class SimpleXmlConverter<T> implements Converter<T> {
   private static final String CHARSET = "UTF-8";
   private static final MediaType MEDIA_TYPE =
       MediaType.parse("application/xml; charset=" + CHARSET);
 
+  private final Class<T> cls;
   private final Serializer serializer;
-
   private final boolean strict;
 
-  public SimpleXmlConverter() {
-    this(DEFAULT_STRICT);
-  }
-
-  public SimpleXmlConverter(boolean strict) {
-    this(new Persister(), strict);
-  }
-
-  public SimpleXmlConverter(Serializer serializer) {
-    this(serializer, DEFAULT_STRICT);
-  }
-
-  public SimpleXmlConverter(Serializer serializer, boolean strict) {
+  SimpleXmlConverter(Class<T> cls, Serializer serializer, boolean strict) {
+    this.cls = cls;
     this.serializer = serializer;
     this.strict = strict;
   }
 
-  @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
+  @Override public T fromBody(ResponseBody body) throws IOException {
     InputStream is = body.byteStream();
     try {
-      Object read = serializer.read((Class<?>) type, is, strict);
+      T read = serializer.read(cls, is, strict);
       if (read == null) {
-        throw new IllegalStateException("Could not deserialize body as " + type);
+        throw new IllegalStateException("Could not deserialize body as " + cls);
       }
       return read;
     } catch (RuntimeException | IOException e) {
@@ -78,19 +59,15 @@ public class SimpleXmlConverter implements Converter {
     }
   }
 
-  @Override public RequestBody toBody(Object source, Type type) {
+  @Override public RequestBody toBody(T value) {
     Buffer buffer = new Buffer();
     try {
       OutputStreamWriter osw = new OutputStreamWriter(buffer.outputStream(), CHARSET);
-      serializer.write(source, osw);
+      serializer.write(value, osw);
       osw.flush();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
     return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
-  }
-
-  public boolean isStrict() {
-    return strict;
   }
 }

@@ -49,7 +49,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(new StringConverter())
+        .converterFactory(new StringConverterFactory())
         .callAdapterFactory(ObservableCallAdapterFactory.create())
         .build();
     service = retrofit.create(Service.class);
@@ -195,13 +195,17 @@ public final class ObservableCallAdapterFactoryTest {
     }
   }
 
-  static class StringConverter implements Converter {
-    @Override public Object fromBody(ResponseBody body, Type type) throws IOException {
-      return body.string();
-    }
+  static class StringConverterFactory implements Converter.Factory {
+    @Override public Converter<?> get(Type type) {
+      return new Converter<String>() {
+        @Override public String fromBody(ResponseBody body) throws IOException {
+          return body.string();
+        }
 
-    @Override public RequestBody toBody(Object object, Type type) {
-      return RequestBody.create(MediaType.parse("text/plain"), String.valueOf(object));
+        @Override public RequestBody toBody(String value) {
+          return RequestBody.create(MediaType.parse("text/plain"), value);
+        }
+      };
     }
   }
 }

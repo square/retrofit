@@ -33,7 +33,7 @@ import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class GsonConverterTest {
+public final class GsonConverterFactoryTest {
   interface AnInterface {
     String getName();
   }
@@ -87,10 +87,9 @@ public final class GsonConverterTest {
     Gson gson = new GsonBuilder()
         .registerTypeAdapter(AnInterface.class, new AnInterfaceAdapter())
         .create();
-    Converter converter = new GsonConverter(gson);
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converter(converter)
+        .converterFactory(GsonConverterFactory.create(gson))
         .build();
     service = retrofit.create(Service.class);
   }
