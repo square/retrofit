@@ -65,6 +65,7 @@ final class MethodInfo {
 
   // Method-level details
   CallAdapter<?> adapter;
+  Converter<?> responseConverter;
 
   Type requestType;
   BodyEncoding bodyEncoding = BodyEncoding.NONE;
@@ -85,8 +86,8 @@ final class MethodInfo {
     this.method = method;
     this.adapterFactory = adapterFactory;
     this.converterFactory = converterFactory;
-    parseResponseType();
     parseMethodAnnotations();
+    parseResponseType();
     parseParameters();
   }
 
@@ -211,7 +212,7 @@ final class MethodInfo {
     return builder.build();
   }
 
-  /** Loads {@link #adapter}. */
+  /** Loads {@link #adapter} and {@link #responseConverter}. */
   private void parseResponseType() {
     Type returnType = method.getGenericReturnType();
     if (Utils.hasUnresolvableType(returnType)) {
@@ -223,21 +224,26 @@ final class MethodInfo {
       throw methodError("Service methods cannot return void.");
     }
 
-    //noinspection ForLoopReplaceableByForEach
     CallAdapter adapter = adapterFactory.get(returnType);
     if (adapter == null) {
       throw methodError(
           "Registered call adapter factory was unable to handle return type " + returnType);
     }
-    Type responseType = adapter.responseType();
-    if (converterFactory == null && responseType != ResponseBody.class) {
-      throw methodError("Method response type is "
-          + responseType
-          + " but no converter registered. "
-          + "Either add a converter to the Retrofit instance or use ResponseBody.");
-    }
-
     this.adapter = adapter;
+
+    Type responseType = adapter.responseType();
+    if (responseType == ResponseBody.class) {
+      responseConverter = new OkHttpResponseBodyConverter(isStreaming);
+    } else {
+      if (converterFactory == null) {
+        throw methodError("Method response type is "
+            + responseType
+            + " but no converter registered. "
+            + "Either add a converter to the Retrofit instance or use ResponseBody.");
+      }
+
+      responseConverter = converterFactory.get(responseType);
+    }
   }
 
   /**

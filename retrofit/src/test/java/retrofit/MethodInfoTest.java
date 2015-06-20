@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public final class MethodInfoTest {
   private static CallAdapter.Factory CALL_ADAPTER_FACTORY =
       new DefaultCallAdapterFactory(Executors.newSingleThreadExecutor());
-  private static Converter.Factory CONVERTER_FACTORY = new StringConverterFactory();
+  private static Converter.Factory CONVERTER_FACTORY = new ToStringConverterFactory();
 
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");

@@ -15,29 +15,33 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.lang.reflect.Type;
 
-class StringConverterFactory implements Converter.Factory {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
+import static retrofit.Utils.closeQueitly;
 
-  @Override public Converter get(Type type) {
-    if (type != String.class) {
-      throw new IllegalArgumentException("Type was not " + String.class);
-    }
-    return new StringConverter();
+final class OkHttpResponseBodyConverter implements Converter<ResponseBody> {
+  private final boolean isStreaming;
+
+  OkHttpResponseBodyConverter(boolean isStreaming) {
+    this.isStreaming = isStreaming;
   }
 
-  static class StringConverter implements Converter<String> {
-    @Override public String fromBody(ResponseBody body) throws IOException {
-      return body.string();
+  @Override public ResponseBody fromBody(ResponseBody body) throws IOException {
+    if (isStreaming) {
+      return body;
     }
 
-    @Override public RequestBody toBody(String value) {
-      return RequestBody.create(MEDIA_TYPE, value);
+    // Buffer the entire body to avoid future I/O.
+    try {
+      return Utils.readBodyToBytesIfNecessary(body);
+    } finally {
+      closeQueitly(body);
     }
+  }
+
+  @Override public RequestBody toBody(ResponseBody value) {
+    throw new UnsupportedOperationException();
   }
 }
