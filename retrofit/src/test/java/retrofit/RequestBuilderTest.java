@@ -5,7 +5,6 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -155,8 +154,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: Multiple Retrofit annotations found, only one allowed:"
-              + " @Body, @Query. (parameter #1)");
+          "Example.method: Multiple Retrofit annotations found, only one allowed. (parameter #1)");
     }
   }
 
@@ -413,8 +411,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Example.method: Non-body HTTP method cannot contain @Body or @TypedOutput.");
+      assertThat(e).hasMessage("Example.method: Non-body HTTP method cannot contain @Body.");
     }
   }
 
@@ -449,7 +446,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class, queryParams);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Parameter #1 query map contained null key.");
+      assertThat(e).hasMessage("Query map contained null key.");
     }
   }
 
@@ -860,7 +857,7 @@ public final class RequestBuilderTest {
   @Test public void normalPostWithPathParam() {
     class Example {
       @POST("/foo/bar/{ping}/") //
-      Call<Object> method(@Path("ping") String ping, @Body Object body) {
+      Call<Object> method(@Path("ping") String ping, @Body RequestBody body) {
         return null;
       }
     }
@@ -934,7 +931,7 @@ public final class RequestBuilderTest {
   @Test public void bodyWithPathParams() {
     class Example {
       @POST("/foo/bar/{ping}/{kit}/") //
-      Call<Object> method(@Path("ping") String ping, @Body Object body, @Path("kit") String kit) {
+      Call<Object> method(@Path("ping") String ping, @Body RequestBody body, @Path("kit") String kit) {
         return null;
       }
     }
@@ -950,7 +947,7 @@ public final class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Call<Object> method(@Part("ping") String ping, @Part("kit") ResponseBody kit) {
+      Call<Object> method(@Part("ping") String ping, @Part("kit") RequestBody kit) {
         return null;
       }
     }
@@ -980,7 +977,7 @@ public final class RequestBuilderTest {
       @Multipart //
       @POST("/foo/bar/") //
       Call<Object> method(@Part(value = "ping", encoding = "8-bit") String ping,
-          @Part(value = "kit", encoding = "7-bit") ResponseBody kit) {
+          @Part(value = "kit", encoding = "7-bit") RequestBody kit) {
         return null;
       }
     }
@@ -1016,7 +1013,7 @@ public final class RequestBuilderTest {
 
     Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
-    params.put("kit", RequestBody.create(MediaType.parse("text/plain"), "kat"));
+    params.put("kit", "kat");
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("POST");
@@ -1048,7 +1045,7 @@ public final class RequestBuilderTest {
 
     Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
-    params.put("kit", RequestBody.create(MediaType.parse("text/plain"), "kat"));
+    params.put("kit", "kat");
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("POST");
@@ -1086,7 +1083,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class, params);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Parameter #1 part map contained null key.");
+      assertThat(e).hasMessage("Part map contained null key.");
     }
   }
 
@@ -1261,7 +1258,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class, fieldMap);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Parameter #1 field map contained null key.");
+      assertThat(e).hasMessage("Field map contained null key.");
     }
   }
 
@@ -1426,7 +1423,15 @@ public final class RequestBuilderTest {
     MethodInfo methodInfo = new MethodInfo(method, callAdapterFactory, converterFactory);
 
     RequestBuilder builder = new RequestBuilder(url, methodInfo);
-    builder.setArguments(args);
+
+    RequestBuilderAction[] actions = methodInfo.requestBuilderActions;
+    if (args.length != actions.length) {
+      throw new IllegalStateException("Wrong number of arguments.");
+    }
+    for (int i = 0, count = args.length; i < count; i++) {
+      actions[i].perform(builder, args[i]);
+    }
+
     return builder.build();
   }
 }

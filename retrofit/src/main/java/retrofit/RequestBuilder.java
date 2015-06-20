@@ -24,57 +24,35 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.net.URLEncoder;
-import java.util.Map;
 import okio.BufferedSink;
-import retrofit.http.Body;
-import retrofit.http.Field;
-import retrofit.http.FieldMap;
-import retrofit.http.Header;
-import retrofit.http.Part;
-import retrofit.http.PartMap;
-import retrofit.http.Path;
-import retrofit.http.Query;
-import retrofit.http.QueryMap;
 
 final class RequestBuilder {
-  private static final Headers NO_HEADERS = Headers.of();
-  private static final byte[] NO_BODY = new byte[0];
-
-  private final Converter.Factory converterFactory;
-  private final Annotation[] paramAnnotations;
   private final String requestMethod;
   private final boolean requestHasBody;
-  private final Type requestType;
   private final HttpUrl.Builder urlBuilder;
+  private final Request.Builder requestBuilder;
 
   private MultipartBuilder multipartBuilder;
   private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
   private String relativeUrl;
-  private Headers.Builder headers;
-  private String contentTypeHeader;
+  private MediaType mediaType;
 
   RequestBuilder(HttpUrl url, MethodInfo methodInfo) {
-    converterFactory = methodInfo.converterFactory;
-
-    paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
     requestHasBody = methodInfo.requestHasBody;
-    requestType = methodInfo.requestType;
-
-    if (methodInfo.headers != null) {
-      headers = methodInfo.headers.newBuilder();
-    }
-    contentTypeHeader = methodInfo.contentTypeHeader;
-
+    mediaType = methodInfo.mediaType;
     relativeUrl = methodInfo.requestUrl;
 
     urlBuilder = url.newBuilder();
+    requestBuilder = new Request.Builder();
+
+    Headers headers = methodInfo.headers;
+    if (headers != null) {
+      requestBuilder.headers(headers);
+    }
 
     String requestQuery = methodInfo.requestQuery;
     if (requestQuery != null) {
@@ -98,30 +76,15 @@ final class RequestBuilder {
     }
   }
 
-  public void addHeader(String name, String value) {
-    if (name == null) {
-      throw new IllegalArgumentException("Header name must not be null.");
-    }
+  void addHeader(String name, String value) {
     if ("Content-Type".equalsIgnoreCase(name)) {
-      contentTypeHeader = value;
-      return;
+      mediaType = MediaType.parse(value);
+    } else {
+      requestBuilder.addHeader(name, value);
     }
-
-    Headers.Builder headers = this.headers;
-    if (headers == null) {
-      this.headers = headers = new Headers.Builder();
-    }
-    headers.add(name, value);
   }
 
-  private void addPathParam(String name, String value, boolean encoded) {
-    if (name == null) {
-      throw new IllegalArgumentException("Path replacement name must not be null.");
-    }
-    if (value == null) {
-      throw new IllegalArgumentException(
-          "Path replacement \"" + name + "\" value must not be null.");
-    }
+  void addPathParam(String name, String value, boolean encoded) {
     try {
       if (!encoded) {
         String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
@@ -139,26 +102,7 @@ final class RequestBuilder {
     }
   }
 
-  private void addQueryParam(String name, Object value, boolean encoded) {
-    if (value instanceof Iterable) {
-      for (Object iterableValue : (Iterable<?>) value) {
-        if (iterableValue != null) { // Skip null values
-          addQueryParam(name, iterableValue.toString(), encoded);
-        }
-      }
-    } else if (value.getClass().isArray()) {
-      for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-        Object arrayValue = Array.get(value, x);
-        if (arrayValue != null) { // Skip null values
-          addQueryParam(name, arrayValue.toString(), encoded);
-        }
-      }
-    } else {
-      addQueryParam(name, value.toString(), encoded);
-    }
-  }
-
-  private void addQueryParam(String name, String value, boolean encoded) {
+  void addQueryParam(String name, String value, boolean encoded) {
     if (encoded) {
       urlBuilder.addEncodedQueryParameter(name, value);
     } else {
@@ -166,21 +110,7 @@ final class RequestBuilder {
     }
   }
 
-  private void addQueryParamMap(int parameterNumber, Map<?, ?> map, boolean encoded) {
-    for (Map.Entry<?, ?> entry : map.entrySet()) {
-      Object entryKey = entry.getKey();
-      if (entryKey == null) {
-        throw new IllegalArgumentException(
-            "Parameter #" + (parameterNumber + 1) + " query map contained null key.");
-      }
-      Object entryValue = entry.getValue();
-      if (entryValue != null) { // Skip null values.
-        addQueryParam(entryKey.toString(), entryValue.toString(), encoded);
-      }
-    }
-  }
-
-  private void addFormField(String name, String value, boolean encoded) {
+  void addFormField(String name, String value, boolean encoded) {
     if (encoded) {
       formEncodingBuilder.addEncoded(name, value);
     } else {
@@ -188,156 +118,12 @@ final class RequestBuilder {
     }
   }
 
-  void setArguments(Object[] args) {
-    if (args == null) {
-      return;
-    }
-    for (int i = 0; i < args.length; i++) {
-      Object value = args[i];
+  void addPart(Headers headers, RequestBody body) {
+    multipartBuilder.addPart(headers, body);
+  }
 
-      Annotation annotation = paramAnnotations[i];
-      Class<? extends Annotation> annotationType = annotation.annotationType();
-      if (annotationType == Path.class) {
-        Path path = (Path) annotation;
-        String name = path.value();
-        if (value == null) {
-          throw new IllegalArgumentException(
-              "Path parameter \"" + name + "\" value must not be null.");
-        }
-        addPathParam(name, value.toString(), path.encoded());
-      } else if (annotationType == Query.class) {
-        if (value != null) { // Skip null values.
-          Query query = (Query) annotation;
-          addQueryParam(query.value(), value, query.encoded());
-        }
-      } else if (annotationType == QueryMap.class) {
-        if (value != null) { // Skip null values.
-          QueryMap queryMap = (QueryMap) annotation;
-          addQueryParamMap(i, (Map<?, ?>) value, queryMap.encoded());
-        }
-      } else if (annotationType == Header.class) {
-        if (value != null) { // Skip null values.
-          String name = ((Header) annotation).value();
-          if (value instanceof Iterable) {
-            for (Object iterableValue : (Iterable<?>) value) {
-              if (iterableValue != null) { // Skip null values.
-                addHeader(name, iterableValue.toString());
-              }
-            }
-          } else if (value.getClass().isArray()) {
-            for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-              Object arrayValue = Array.get(value, x);
-              if (arrayValue != null) { // Skip null values.
-                addHeader(name, arrayValue.toString());
-              }
-            }
-          } else {
-            addHeader(name, value.toString());
-          }
-        }
-      } else if (annotationType == Field.class) {
-        if (value != null) { // Skip null values.
-          Field field = (Field) annotation;
-          String name = field.value();
-          boolean encoded = field.encoded();
-          if (value instanceof Iterable) {
-            for (Object iterableValue : (Iterable<?>) value) {
-              if (iterableValue != null) { // Skip null values.
-                addFormField(name, iterableValue.toString(), encoded);
-              }
-            }
-          } else if (value.getClass().isArray()) {
-            for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-              Object arrayValue = Array.get(value, x);
-              if (arrayValue != null) { // Skip null values.
-                addFormField(name, arrayValue.toString(), encoded);
-              }
-            }
-          } else {
-            addFormField(name, value.toString(), encoded);
-          }
-        }
-      } else if (annotationType == FieldMap.class) {
-        if (value != null) { // Skip null values.
-          FieldMap fieldMap = (FieldMap) annotation;
-          boolean encoded = fieldMap.encoded();
-          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-            Object entryKey = entry.getKey();
-            if (entryKey == null) {
-              throw new IllegalArgumentException(
-                  "Parameter #" + (i + 1) + " field map contained null key.");
-            }
-            Object entryValue = entry.getValue();
-            if (entryValue != null) { // Skip null values.
-              addFormField(entryKey.toString(), entryValue.toString(), encoded);
-            }
-          }
-        }
-      } else if (annotationType == Part.class) {
-        if (value != null) { // Skip null values.
-          String name = ((Part) annotation).value();
-          String transferEncoding = ((Part) annotation).encoding();
-          Headers headers = Headers.of(
-              "Content-Disposition", "name=\"" + name + "\"",
-              "Content-Transfer-Encoding", transferEncoding);
-          if (value instanceof RequestBody) {
-            multipartBuilder.addPart(headers, (RequestBody) value);
-          } else if (value instanceof String) {
-            multipartBuilder.addPart(headers,
-                RequestBody.create(MediaType.parse("text/plain"), (String) value));
-          } else {
-            //noinspection unchecked
-            Converter<Object> converter =
-                (Converter<Object>) converterFactory.get(value.getClass());
-            multipartBuilder.addPart(headers, converter.toBody(value));
-          }
-        }
-      } else if (annotationType == PartMap.class) {
-        if (value != null) { // Skip null values.
-          String transferEncoding = ((PartMap) annotation).encoding();
-          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-            Object entryKey = entry.getKey();
-            if (entryKey == null) {
-              throw new IllegalArgumentException(
-                  "Parameter #" + (i + 1) + " part map contained null key.");
-            }
-            String entryName = entryKey.toString();
-            Object entryValue = entry.getValue();
-            Headers headers = Headers.of(
-                "Content-Disposition", "name=\"" + entryName + "\"",
-                "Content-Transfer-Encoding", transferEncoding);
-            if (entryValue != null) { // Skip null values.
-              if (entryValue instanceof RequestBody) {
-                multipartBuilder.addPart(headers, (RequestBody) entryValue);
-              } else if (entryValue instanceof String) {
-                multipartBuilder.addPart(headers,
-                    RequestBody.create(MediaType.parse("text/plain"), (String) entryValue));
-              } else {
-                //noinspection unchecked
-                Converter<Object> converter =
-                    (Converter<Object>) converterFactory.get(entryValue.getClass());
-                multipartBuilder.addPart(headers, converter.toBody(entryValue));
-              }
-            }
-          }
-        }
-      } else if (annotationType == Body.class) {
-        if (value == null) {
-          throw new IllegalArgumentException("Body parameter value must not be null.");
-        }
-        if (requestType == RequestBody.class
-            || (requestType == Object.class && value instanceof RequestBody)) {
-          body = (RequestBody) value;
-        } else {
-          //noinspection unchecked
-          Converter<Object> converter = (Converter<Object>) converterFactory.get(requestType);
-          body = converter.toBody(value);
-        }
-      } else {
-        throw new IllegalArgumentException(
-            "Unknown annotation: " + annotationType.getCanonicalName());
-      }
-    }
+  void setBody(RequestBody body) {
+    this.body = body;
   }
 
   Request build() {
@@ -352,27 +138,22 @@ final class RequestBuilder {
         body = multipartBuilder.build();
       } else if (requestHasBody) {
         // Body is absent, make an empty body.
-        body = RequestBody.create(null, NO_BODY);
+        body = RequestBody.create(null, new byte[0]);
       }
     }
 
-    Headers.Builder headerBuilder = this.headers;
-    if (contentTypeHeader != null) {
+    MediaType mediaType = this.mediaType;
+    if (mediaType != null) {
       if (body != null) {
-        body = new MediaTypeOverridingRequestBody(body, contentTypeHeader);
+        body = new MediaTypeOverridingRequestBody(body, mediaType);
       } else {
-        if (headerBuilder == null) {
-          headerBuilder = new Headers.Builder();
-        }
-        headerBuilder.add("Content-Type", contentTypeHeader);
+        requestBuilder.addHeader("Content-Type", mediaType.toString());
       }
     }
-    Headers headers = headerBuilder != null ? headerBuilder.build() : NO_HEADERS;
 
-    return new Request.Builder()
+    return requestBuilder
         .url(urlBuilder.build())
         .method(requestMethod, body)
-        .headers(headers)
         .build();
   }
 
@@ -380,9 +161,9 @@ final class RequestBuilder {
     private final RequestBody delegate;
     private final MediaType mediaType;
 
-    MediaTypeOverridingRequestBody(RequestBody delegate, String mediaType) {
+    MediaTypeOverridingRequestBody(RequestBody delegate, MediaType mediaType) {
       this.delegate = delegate;
-      this.mediaType = MediaType.parse(mediaType);
+      this.mediaType = mediaType;
     }
 
     @Override public MediaType contentType() {

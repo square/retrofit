@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
@@ -59,27 +60,22 @@ final class MethodInfo {
     FORM_URL_ENCODED
   }
 
-  final Method method;
-  final CallAdapter.Factory adapterFactory;
-  final Converter.Factory converterFactory;
+  private final Method method;
+  private final CallAdapter.Factory adapterFactory;
+  private final Converter.Factory converterFactory;
 
-  // Method-level details
   CallAdapter<?> adapter;
   Converter<?> responseConverter;
-
-  Type requestType;
   BodyEncoding bodyEncoding = BodyEncoding.NONE;
   String requestMethod;
   boolean requestHasBody;
   String requestUrl;
-  Set<String> requestUrlParamNames;
   String requestQuery;
   com.squareup.okhttp.Headers headers;
-  String contentTypeHeader;
-  boolean isStreaming;
+  MediaType mediaType;
+  RequestBuilderAction[] requestBuilderActions;
 
-  // Parameter-level details
-  Annotation[] requestParamAnnotations;
+  private Set<String> requestUrlParamNames;
 
   MethodInfo(Method method, CallAdapter.Factory adapterFactory,
       Converter.Factory converterFactory) {
@@ -138,8 +134,6 @@ final class MethodInfo {
           throw methodError("Only one encoding annotation is allowed.");
         }
         bodyEncoding = BodyEncoding.FORM_URL_ENCODED;
-      } else if (annotationType == Streaming.class) {
-        isStreaming = true;
       }
     }
 
@@ -204,7 +198,7 @@ final class MethodInfo {
       String headerName = header.substring(0, colon);
       String headerValue = header.substring(colon + 1).trim();
       if ("Content-Type".equalsIgnoreCase(headerName)) {
-        contentTypeHeader = headerValue;
+        mediaType = MediaType.parse(headerValue);
       } else {
         builder.add(headerName, headerValue);
       }
@@ -233,6 +227,7 @@ final class MethodInfo {
 
     Type responseType = adapter.responseType();
     if (responseType == ResponseBody.class) {
+      boolean isStreaming = method.isAnnotationPresent(Streaming.class);
       responseConverter = new OkHttpResponseBodyConverter(isStreaming);
     } else {
       if (converterFactory == null) {
@@ -247,66 +242,93 @@ final class MethodInfo {
   }
 
   /**
-   * Loads {@link #requestParamAnnotations}. Must be called after {@link #parseMethodAnnotations()}.
+   * Loads {@link #requestBuilderActions}. Must be called after {@link #parseMethodAnnotations()}.
    */
   private void parseParameters() {
     Type[] methodParameterTypes = method.getGenericParameterTypes();
-
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
-    int count = methodParameterAnnotationArrays.length;
-    Annotation[] requestParamAnnotations = new Annotation[count];
 
     boolean gotField = false;
     boolean gotPart = false;
     boolean gotBody = false;
 
+    int count = methodParameterAnnotationArrays.length;
+    RequestBuilderAction[] requestBuilderActions = new RequestBuilderAction[count];
     for (int i = 0; i < count; i++) {
       Type methodParameterType = methodParameterTypes[i];
       Annotation[] methodParameterAnnotations = methodParameterAnnotationArrays[i];
       if (methodParameterAnnotations != null) {
         for (Annotation methodParameterAnnotation : methodParameterAnnotations) {
-          Class<? extends Annotation> methodAnnotationType =
-              methodParameterAnnotation.annotationType();
+          if (requestBuilderActions[i] != null) {
+            throw parameterError(i, "Multiple Retrofit annotations found, only one allowed.");
+          }
 
-          if (methodAnnotationType == Path.class) {
-            String name = ((Path) methodParameterAnnotation).value();
+          if (methodParameterAnnotation instanceof Path) {
+            Path path = (Path) methodParameterAnnotation;
+            String name = path.value();
             validatePathName(i, name);
-          } else if (methodAnnotationType == Query.class) {
-            // Nothing to do.
-          } else if (methodAnnotationType == QueryMap.class) {
+            requestBuilderActions[i] = new RequestBuilderAction.Path(name, path.encoded());
+
+          } else if (methodParameterAnnotation instanceof Query) {
+            Query query = (Query) methodParameterAnnotation;
+            requestBuilderActions[i] =
+                new RequestBuilderAction.Query(query.value(), query.encoded());
+
+          } else if (methodParameterAnnotation instanceof QueryMap) {
             if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
-          } else if (methodAnnotationType == Header.class) {
-            // Nothing to do.
-          } else if (methodAnnotationType == Field.class) {
+            QueryMap queryMap = (QueryMap) methodParameterAnnotation;
+            requestBuilderActions[i] = new RequestBuilderAction.QueryMap(queryMap.encoded());
+
+          } else if (methodParameterAnnotation instanceof Header) {
+            Header header = (Header) methodParameterAnnotation;
+            requestBuilderActions[i] = new RequestBuilderAction.Header(header.value());
+
+          } else if (methodParameterAnnotation instanceof Field) {
             if (bodyEncoding != BodyEncoding.FORM_URL_ENCODED) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
-
+            Field field = (Field) methodParameterAnnotation;
+            requestBuilderActions[i] =
+                new RequestBuilderAction.Field(field.value(), field.encoded());
             gotField = true;
-          } else if (methodAnnotationType == FieldMap.class) {
+
+          } else if (methodParameterAnnotation instanceof FieldMap) {
             if (bodyEncoding != BodyEncoding.FORM_URL_ENCODED) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
             if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
-
+            FieldMap fieldMap = (FieldMap) methodParameterAnnotation;
+            requestBuilderActions[i] = new RequestBuilderAction.FieldMap(fieldMap.encoded());
             gotField = true;
-          } else if (methodAnnotationType == Part.class) {
+
+          } else if (methodParameterAnnotation instanceof Part) {
             if (bodyEncoding != BodyEncoding.MULTIPART) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
-            if (converterFactory == null && methodParameterType != BodyEncoding.class) {
-              throw parameterError(i, "@Part parameter is "
-                  + methodParameterType
-                  + " but no converter registered. "
-                  + "Either add a converter to the Retrofit instance or use RequestBody.");
+            Part part = (Part) methodParameterAnnotation;
+            com.squareup.okhttp.Headers headers = com.squareup.okhttp.Headers.of(
+                "Content-Disposition", "name=\"" + part.value() + "\"",
+                "Content-Transfer-Encoding", part.encoding());
+            Converter<?> converter;
+            if (methodParameterType == RequestBody.class) {
+              converter = new OkHttpRequestBodyConverter();
+            } else {
+              if (converterFactory == null) {
+                throw parameterError(i, "@Part parameter is "
+                    + methodParameterType
+                    + " but no converter registered. "
+                    + "Either add a converter to the Retrofit instance or use RequestBody.");
+              }
+              converter = converterFactory.get(methodParameterType);
             }
-
+            requestBuilderActions[i] = new RequestBuilderAction.Part<>(headers, converter);
             gotPart = true;
-          } else if (methodAnnotationType == PartMap.class) {
+
+          } else if (methodParameterAnnotation instanceof PartMap) {
             if (bodyEncoding != BodyEncoding.MULTIPART) {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
@@ -314,9 +336,12 @@ final class MethodInfo {
             if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
-
+            PartMap partMap = (PartMap) methodParameterAnnotation;
+            requestBuilderActions[i] =
+                new RequestBuilderAction.PartMap(converterFactory, partMap.encoding());
             gotPart = true;
-          } else if (methodAnnotationType == Body.class) {
+
+          } else if (methodParameterAnnotation instanceof Body) {
             if (bodyEncoding != BodyEncoding.NONE) {
               throw parameterError(i,
                   "@Body parameters cannot be used with form or multi-part encoding.");
@@ -324,37 +349,33 @@ final class MethodInfo {
             if (gotBody) {
               throw methodError("Multiple @Body method annotations found.");
             }
-            if (converterFactory == null && methodParameterType != RequestBody.class) {
-              throw parameterError(i, "@Body parameter is "
-                  + methodParameterType
-                  + " but no converter registered. "
-                  + "Either add a converter to the Retrofit instance or use RequestBody.");
+
+            Converter<?> converter;
+            if (methodParameterType == RequestBody.class) {
+              converter = new OkHttpRequestBodyConverter();
+            } else {
+              if (converterFactory == null) {
+                throw parameterError(i, "@Body parameter is "
+                    + methodParameterType
+                    + " but no converter registered. "
+                    + "Either add a converter to the Retrofit instance or use RequestBody.");
+              }
+              converter = converterFactory.get(methodParameterType);
             }
 
-            requestType = methodParameterType;
+            requestBuilderActions[i] = new RequestBuilderAction.Body<>(converter);
             gotBody = true;
-          } else {
-            // This is a non-Retrofit annotation. Skip to the next one.
-            continue;
           }
-
-          if (requestParamAnnotations[i] != null) {
-            throw parameterError(i,
-                "Multiple Retrofit annotations found, only one allowed: @%s, @%s.",
-                requestParamAnnotations[i].annotationType().getSimpleName(),
-                methodAnnotationType.getSimpleName());
-          }
-          requestParamAnnotations[i] = methodParameterAnnotation;
         }
       }
 
-      if (requestParamAnnotations[i] == null) {
+      if (requestBuilderActions[i] == null) {
         throw parameterError(i, "No Retrofit annotation found.");
       }
     }
 
     if (bodyEncoding == BodyEncoding.NONE && !requestHasBody && gotBody) {
-      throw methodError("Non-body HTTP method cannot contain @Body or @TypedOutput.");
+      throw methodError("Non-body HTTP method cannot contain @Body.");
     }
     if (bodyEncoding == BodyEncoding.FORM_URL_ENCODED && !gotField) {
       throw methodError("Form-encoded method must contain at least one @Field.");
@@ -363,7 +384,7 @@ final class MethodInfo {
       throw methodError("Multipart method must contain at least one @Part.");
     }
 
-    this.requestParamAnnotations = requestParamAnnotations;
+    this.requestBuilderActions = requestBuilderActions;
   }
 
   private void validatePathName(int index, String name) {

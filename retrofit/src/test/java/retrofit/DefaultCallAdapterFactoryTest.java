@@ -70,7 +70,7 @@ public final class DefaultCallAdapterFactoryTest {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
     CallAdapter adapter = factory.get(returnType);
     final Response<Object> response = Response.fakeSuccess("Hi");
-    Call call = (Call) adapter.adapt(new EmptyCall() {
+    Call<Object> call = (Call<Object>) adapter.adapt(new EmptyCall() {
       @Override public Response<Object> execute() throws IOException {
         return response;
       }
