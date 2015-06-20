@@ -81,9 +81,8 @@ public final class ProtoConverterTest {
     ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwOQ==");
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
-    Call<?> call = service.wrongClass();
     try {
-      call.execute();
+      service.wrongClass();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Expected a protobuf message but was java.lang.String");
@@ -94,9 +93,8 @@ public final class ProtoConverterTest {
     ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwOQ==");
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
-    Call<?> call = service.wrongType();
     try {
-      call.execute();
+      service.wrongType();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Expected a raw Class<?> but was java.util.List<java.lang.String>");

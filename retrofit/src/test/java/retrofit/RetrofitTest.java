@@ -135,7 +135,7 @@ public final class RetrofitTest {
 
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converterFactory(new StringConverterFactory())
+        .converterFactory(new ToStringConverterFactory())
         .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
     StringService example = retrofit.create(StringService.class);
@@ -218,7 +218,7 @@ public final class RetrofitTest {
   @Test public void unresolvableTypeThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint(server.getUrl("/").toString())
-        .converterFactory(new StringConverterFactory())
+        .converterFactory(new ToStringConverterFactory())
         .build();
     Unresolvable example = retrofit.create(Unresolvable.class);
 

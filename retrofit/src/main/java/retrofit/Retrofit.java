@@ -120,7 +120,8 @@ public final class Retrofit {
   // Package-private avoids synthetic accessor method from InvocationHandler. Also for testing.
   Object invokeMethod(Method method, Object... args) {
     MethodInfo methodInfo = loadMethodInfo(method);
-    Call call = new OkHttpCall(endpoint, converterFactory, client, methodInfo, args);
+    Converter<?> responseConverter = methodInfo.responseConverter;
+    Call call = new OkHttpCall<>(client, endpoint, responseConverter, methodInfo, args);
     return methodInfo.adapter.adapt(call);
   }
 

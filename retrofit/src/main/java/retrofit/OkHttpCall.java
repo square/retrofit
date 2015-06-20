@@ -20,32 +20,31 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import java.lang.reflect.Type;
 
 import static retrofit.Utils.closeQueitly;
 
 final class OkHttpCall<T> implements Call<T> {
-  private final Endpoint endpoint;
-  private final Converter.Factory converterFactory;
   private final OkHttpClient client;
+  private final Endpoint endpoint;
+  private final Converter<T> responseConverter;
   private final MethodInfo methodInfo;
   private final Object[] args;
 
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
 
-  OkHttpCall(Endpoint endpoint, Converter.Factory converterFactory, OkHttpClient client,
+  OkHttpCall(OkHttpClient client, Endpoint endpoint, Converter<T> responseConverter,
       MethodInfo methodInfo, Object[] args) {
-    this.endpoint = endpoint;
-    this.converterFactory = converterFactory;
     this.client = client;
+    this.endpoint = endpoint;
+    this.responseConverter = responseConverter;
     this.methodInfo = methodInfo;
     this.args = args;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(endpoint, converterFactory, client, methodInfo, args);
+    return new OkHttpCall<>(client, endpoint, responseConverter, methodInfo, args);
   }
 
   public void enqueue(final Callback<T> callback) {
@@ -111,7 +110,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   private com.squareup.okhttp.Call createRawCall() {
     HttpUrl url = endpoint.url();
-    RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo, converterFactory);
+    RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo);
     requestBuilder.setArguments(args);
     Request request = requestBuilder.build();
 
@@ -141,36 +140,15 @@ final class OkHttpCall<T> implements Call<T> {
       return Response.success(null, rawResponse);
     }
 
-    Type responseType = methodInfo.adapter.responseType();
-    if (responseType == ResponseBody.class) {
-      if (methodInfo.isStreaming) {
-        // Use the raw body from the request. The caller is responsible for closing.
-        //noinspection unchecked
-        return Response.success((T) rawBody, rawResponse);
-      }
-
-      try {
-        // Buffer the entire body to avoid future I/O.
-        ResponseBody bufferedBody = Utils.readBodyToBytesIfNecessary(rawBody);
-        //noinspection unchecked
-        return Response.success((T) bufferedBody, rawResponse);
-      } finally {
-        closeQueitly(rawBody);
-      }
-    }
-
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      //noinspection unchecked
-      T body = (T) converterFactory.get(responseType).fromBody(catchingBody);
+      T body = responseConverter.fromBody(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was
       // a runtime exception.
       catchingBody.throwIfCaught();
       throw e;
-    } finally {
-      closeQueitly(rawBody);
     }
   }
 

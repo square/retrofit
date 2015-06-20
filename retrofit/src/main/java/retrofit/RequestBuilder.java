@@ -59,8 +59,8 @@ final class RequestBuilder {
   private Headers.Builder headers;
   private String contentTypeHeader;
 
-  RequestBuilder(HttpUrl url, MethodInfo methodInfo, Converter.Factory converterFactory) {
-    this.converterFactory = converterFactory;
+  RequestBuilder(HttpUrl url, MethodInfo methodInfo) {
+    converterFactory = methodInfo.converterFactory;
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
