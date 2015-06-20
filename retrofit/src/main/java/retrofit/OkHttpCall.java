@@ -111,7 +111,15 @@ final class OkHttpCall<T> implements Call<T> {
   private com.squareup.okhttp.Call createRawCall() {
     HttpUrl url = endpoint.url();
     RequestBuilder requestBuilder = new RequestBuilder(url, methodInfo);
-    requestBuilder.setArguments(args);
+
+    Object[] args = this.args;
+    if (args != null) {
+      RequestBuilderAction[] actions = methodInfo.requestBuilderActions;
+      for (int i = 0, count = args.length; i < count; i++) {
+        actions[i].perform(requestBuilder, args[i]);
+      }
+    }
+
     Request request = requestBuilder.build();
 
     return client.newCall(request);
