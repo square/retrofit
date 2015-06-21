@@ -32,7 +32,7 @@ import retrofit.client.Request;
 import retrofit.converter.Converter;
 import retrofit.http.Body;
 import retrofit.http.Cookie;
-import retrofit.http.Cookies;
+import retrofit.http.CookieMap;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
@@ -412,10 +412,10 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         }
       } else if (annotationType == Cookie.class) {
         if (value != null) { // Skip null values.
-            String name = ((retrofit.http.Cookie) annotation).name();
+            String name = ((retrofit.http.Cookie) annotation).value();
             addCookie(name, value.toString());
         }
-      } else if (annotationType == Cookies.class) {
+      } else if (annotationType == CookieMap.class) {
         if (value != null) { // Skip null values.
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
             Object entryKey = entry.getKey();

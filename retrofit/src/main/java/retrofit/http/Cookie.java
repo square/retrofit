@@ -43,5 +43,5 @@ import java.lang.annotation.Target;
 @Target(PARAMETER)
 public @interface Cookie {
   /** The cookie name */
-  String name();
+  String value();
 }

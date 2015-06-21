@@ -24,14 +24,17 @@ import java.lang.annotation.Target;
 
 /**
  * Add to the cookie header a list of cookies with the the key-value of its
- * target.
+ * target Map.
  * <p>
+ * Both keys (cookie name) and values (cookie value) are converted to strings
+ * using {@link String#valueOf(Object)}. {@code null} keys are not allowed.
+ *
  * <pre>
  * &#064;GET(&quot;/&quot;)
- * void fooBar(@Cookies Map&lt;String, String&gt; cookies);
+ * void fooBar(@CookieMap Map&lt;String, String&gt; cookies);
  * </pre>
  * <p>
- * Cookies parameters may be {@code null} which will omit them from the request.
+ * CookieMap values may be {@code null} which will omit them from the request.
  * Passing a {@link java.util.Map Map} will result in a cookie for each not-
  * {@code null} item.
  * <p>
@@ -44,6 +47,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RUNTIME)
 @Target(PARAMETER)
-public @interface Cookies {
+public @interface CookieMap {
 
 }
