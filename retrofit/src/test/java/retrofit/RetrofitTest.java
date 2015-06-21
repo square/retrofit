@@ -50,6 +50,9 @@ public final class RetrofitTest {
     @GET("/") Call<?> wildcard();
     @GET("/") Call<? extends ResponseBody> wildcardUpperBound();
   }
+  interface VoidService {
+    @GET("/") void nope();
+  }
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
   @Test public void objectMethodsStillWork() {
@@ -72,6 +75,21 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Interface definitions must not extend other interfaces.");
+    }
+  }
+
+  @Test public void voidReturnTypeNotAllowed() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .build();
+    VoidService service = retrofit.create(VoidService.class);
+
+    try {
+      service.nope();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Service methods cannot return void.\n    for method VoidService.nope");
     }
   }
 
@@ -151,8 +169,9 @@ public final class RetrofitTest {
       example.method();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Call adapter factory 'Default CallAdapterFactory' was unable to handle return type java.util.concurrent.Future<java.lang.String>\n    for method FutureMethod.method");
+      assertThat(e).hasMessage("Call adapter factory 'Default CallAdapterFactory' was unable to"
+              + " handle return type java.util.concurrent.Future<java.lang.String>\n"
+              + "    for method FutureMethod.method");
     }
   }
 
@@ -166,8 +185,9 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "@Body parameter is class java.lang.String but no converter factory registered. "
-              + "Either add a converter factory to the Retrofit instance or use RequestBody. (parameter #1)\n    for method CallMethod.disallowed");
+          "@Body parameter is class java.lang.String but no converter factory registered. Either"
+              + " add a converter factory to the Retrofit instance or use RequestBody. (parameter #1)\n"
+              + "    for method CallMethod.disallowed");
     }
   }
 
@@ -185,7 +205,33 @@ public final class RetrofitTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "Method response type is class java.lang.String but no converter factory registered. "
-              + "Either add a converter factory to the Retrofit instance or use ResponseBody.\n    for method CallMethod.disallowed");
+              + "Either add a converter factory to the Retrofit instance or use ResponseBody.\n"
+              + "    for method CallMethod.disallowed");
+    }
+  }
+
+  @Test public void converterReturningNullThrows() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converterFactory(new Converter.Factory() {
+          @Override public Converter<?> get(Type type) {
+            return null;
+          }
+
+          @Override public String toString() {
+            return "Nully";
+          }
+        })
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+
+    try {
+      service.disallowed();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Converter factory 'Nully' was unable to handle response type class java.lang.String\n"
+              + "    for method CallMethod.disallowed");
     }
   }
 
@@ -242,7 +288,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
-          + "retrofit.Call<java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>>>\n    for method Unresolvable.crazy");
+          + "retrofit.Call<java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>>>\n"
+          + "    for method Unresolvable.crazy");
     }
     try {
       example.wildcard();
@@ -256,7 +303,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
-          + "retrofit.Call<? extends com.squareup.okhttp.ResponseBody>\n    for method Unresolvable.wildcardUpperBound");
+          + "retrofit.Call<? extends com.squareup.okhttp.ResponseBody>\n"
+          + "    for method Unresolvable.wildcardUpperBound");
     }
   }
 

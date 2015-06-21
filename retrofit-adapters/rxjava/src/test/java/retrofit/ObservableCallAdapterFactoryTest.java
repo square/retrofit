@@ -162,6 +162,12 @@ public final class ObservableCallAdapterFactoryTest {
     assertThat(factory.get(resultType).responseType()).isEqualTo(String.class);
   }
 
+  @Test public void nonObservableTypeReturnsNull() {
+    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
+    CallAdapter<?> adapter = factory.get(String.class);
+    assertThat(adapter).isNull();
+  }
+
   @Test public void rawTypeThrows() {
     Type type = new TypeToken<Observable>() {}.getType();
     CallAdapter.Factory factory = ObservableCallAdapterFactory.create();

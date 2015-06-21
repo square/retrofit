@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1022,6 +1023,7 @@ public final class RequestBuilderTest {
 
     Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
+    params.put("foo", null); // Should be skipped.
     params.put("kit", "kat");
 
     Request request = buildRequest(Example.class, params);
@@ -1041,6 +1043,8 @@ public final class RequestBuilderTest {
     assertThat(bodyString)
         .contains("name=\"kit\"")
         .contains("\r\nkat\r\n--");
+
+    assertThat(bodyString).doesNotContain("name=\"foo\"\r\n");
   }
 
   @Test public void multipartPartMapWithEncoding() throws IOException {
@@ -1054,6 +1058,7 @@ public final class RequestBuilderTest {
 
     Map<String, Object> params = new LinkedHashMap<>();
     params.put("ping", "pong");
+    params.put("foo", null); // Should be skipped.
     params.put("kit", "kat");
 
     Request request = buildRequest(Example.class, params);
@@ -1073,6 +1078,8 @@ public final class RequestBuilderTest {
     assertThat(bodyString).contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 8-bit")
         .contains("\r\nkat\r\n--");
+
+    assertThat(bodyString).doesNotContain("name=\"foo\"\r\n");
   }
 
   @Test public void multipartPartMapRejectsNullKeys() {
@@ -1093,6 +1100,24 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Part map contained null key.");
+    }
+  }
+
+  @Test public void multipartPartMapMustBeMap() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<Object> method(@PartMap List<Object> parts) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, Collections.emptyList());
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@PartMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
   }
 
