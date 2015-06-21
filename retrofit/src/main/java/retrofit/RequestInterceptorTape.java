@@ -10,7 +10,7 @@ import java.util.List;
 final class RequestInterceptorTape implements RequestInterceptor.RequestFacade, RequestInterceptor {
 
   private final List<CommandWithParams> tape = new ArrayList<CommandWithParams>();
-  
+
   @Override public void addCookie(String name, String value) {
     tape.add(new CommandWithParams(Command.ADD_COOKIE, name, value));
   }

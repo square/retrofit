@@ -106,16 +106,16 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
     }
   }
-  
+
   private static final String COOKIE_HEADER = "Cookie";
-  
+
   @Override public void addCookie(String name, String value) {
     if (name == null) {
       throw new IllegalArgumentException("Cookie name must not be null.");
     }
     StringBuilder newCookie = new StringBuilder(name).append("=");
     if (value != null) {
-    	newCookie.append(value);
+      newCookie.append(value);
     }
     List<Header> headers = this.headers;
     if (headers == null) {
@@ -126,12 +126,12 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     while (headersIterator.hasNext()) {
       final Header header = headersIterator.next();
       if (header != null && COOKIE_HEADER.equalsIgnoreCase(header.getName())) {
-      	// Append to existing header
-      	StringBuilder cookies = new StringBuilder(header.getValue());
-      	cookies.append("; ").append(newCookie);
-      	headers.set(headersIterator.previousIndex(), new Header(COOKIE_HEADER, cookies.toString()));
-      	cookieHeaderPresent = true;
-      	break;
+        // Append to existing header
+        StringBuilder cookies = new StringBuilder(header.getValue());
+        cookies.append("; ").append(newCookie);
+        headers.set(headersIterator.previousIndex(), new Header(COOKIE_HEADER, cookies.toString()));
+        cookieHeaderPresent = true;
+        break;
       }
     }
     if (!cookieHeaderPresent) {
