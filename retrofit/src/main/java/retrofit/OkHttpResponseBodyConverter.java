@@ -19,7 +19,7 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 
-import static retrofit.Utils.closeQueitly;
+import static retrofit.Utils.closeQuietly;
 
 final class OkHttpResponseBodyConverter implements Converter<ResponseBody> {
   private final boolean isStreaming;
@@ -37,7 +37,7 @@ final class OkHttpResponseBodyConverter implements Converter<ResponseBody> {
     try {
       return Utils.readBodyToBytesIfNecessary(body);
     } finally {
-      closeQueitly(body);
+      closeQuietly(body);
     }
   }
 

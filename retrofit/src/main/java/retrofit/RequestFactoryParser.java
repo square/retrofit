@@ -17,7 +17,6 @@ package retrofit;
 
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -45,155 +44,143 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
-import retrofit.http.Streaming;
+
+import static retrofit.Utils.methodError;
 
 /** Request metadata about a service interface declaration. */
-final class MethodInfo {
+final class RequestFactoryParser {
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  enum BodyEncoding {
-    NONE,
-    MULTIPART,
-    FORM_URL_ENCODED
+  static RequestFactory parse(Method method, Endpoint endpoint,
+      Converter.Factory converterFactory) {
+    RequestFactoryParser parser = new RequestFactoryParser(method);
+    parser.parseMethodAnnotations();
+    parser.parseParameters(converterFactory);
+    return parser.toRequestFactory(endpoint);
   }
 
   private final Method method;
-  private final CallAdapter.Factory adapterFactory;
-  private final Converter.Factory converterFactory;
 
-  CallAdapter<?> adapter;
-  Converter<?> responseConverter;
-  BodyEncoding bodyEncoding = BodyEncoding.NONE;
-  String requestMethod;
-  boolean requestHasBody;
-  String requestUrl;
-  String requestQuery;
-  com.squareup.okhttp.Headers headers;
-  MediaType mediaType;
-  RequestBuilderAction[] requestBuilderActions;
+  private String httpMethod;
+  private boolean hasBody;
+  private boolean isFormEncoded;
+  private boolean isMultipart;
+  private String pathUrl;
+  private String queryParams;
+  private com.squareup.okhttp.Headers headers;
+  private MediaType mediaType;
+  private RequestBuilderAction[] requestBuilderActions;
 
-  private Set<String> requestUrlParamNames;
+  private Set<String> pathUrlParamNames;
 
-  MethodInfo(Method method, CallAdapter.Factory adapterFactory,
-      Converter.Factory converterFactory) {
+  private RequestFactoryParser(Method method) {
     this.method = method;
-    this.adapterFactory = adapterFactory;
-    this.converterFactory = converterFactory;
-    parseMethodAnnotations();
-    parseResponseType();
-    parseParameters();
   }
 
-  private RuntimeException methodError(String message, Object... args) {
-    if (args.length > 0) {
-      message = String.format(message, args);
-    }
-    return new IllegalArgumentException(
-        method.getDeclaringClass().getSimpleName() + "." + method.getName() + ": " + message);
+  private RequestFactory toRequestFactory(Endpoint endpoint) {
+    return new RequestFactory(httpMethod, endpoint, pathUrl, queryParams, headers, mediaType,
+        hasBody, isFormEncoded, isMultipart, requestBuilderActions);
   }
 
   private RuntimeException parameterError(int index, String message, Object... args) {
-    return methodError(message + " (parameter #" + (index + 1) + ")", args);
+    return methodError(method, message + " (parameter #" + (index + 1) + ")", args);
   }
 
-  /** Loads {@link #requestMethod} and {@link #bodyEncoding}. */
   private void parseMethodAnnotations() {
-    for (Annotation methodAnnotation : method.getAnnotations()) {
-      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-      if (annotationType == DELETE.class) {
-        parseHttpMethodAndPath("DELETE", ((DELETE) methodAnnotation).value(), false);
-      } else if (annotationType == GET.class) {
-        parseHttpMethodAndPath("GET", ((GET) methodAnnotation).value(), false);
-      } else if (annotationType == HEAD.class) {
-        parseHttpMethodAndPath("HEAD", ((HEAD) methodAnnotation).value(), false);
-      } else if (annotationType == PATCH.class) {
-        parseHttpMethodAndPath("PATCH", ((PATCH) methodAnnotation).value(), true);
-      } else if (annotationType == POST.class) {
-        parseHttpMethodAndPath("POST", ((POST) methodAnnotation).value(), true);
-      } else if (annotationType == PUT.class) {
-        parseHttpMethodAndPath("PUT", ((PUT) methodAnnotation).value(), true);
-      } else if (annotationType == HTTP.class) {
-        HTTP http = (HTTP) methodAnnotation;
+    for (Annotation annotation : method.getAnnotations()) {
+      if (annotation instanceof DELETE) {
+        parseHttpMethodAndPath("DELETE", ((DELETE) annotation).value(), false);
+      } else if (annotation instanceof GET) {
+        parseHttpMethodAndPath("GET", ((GET) annotation).value(), false);
+      } else if (annotation instanceof HEAD) {
+        parseHttpMethodAndPath("HEAD", ((HEAD) annotation).value(), false);
+      } else if (annotation instanceof PATCH) {
+        parseHttpMethodAndPath("PATCH", ((PATCH) annotation).value(), true);
+      } else if (annotation instanceof POST) {
+        parseHttpMethodAndPath("POST", ((POST) annotation).value(), true);
+      } else if (annotation instanceof PUT) {
+        parseHttpMethodAndPath("PUT", ((PUT) annotation).value(), true);
+      } else if (annotation instanceof HTTP) {
+        HTTP http = (HTTP) annotation;
         parseHttpMethodAndPath(http.method(), http.path(), http.hasBody());
-      } else if (annotationType == Headers.class) {
-        String[] headersToParse = ((Headers) methodAnnotation).value();
+      } else if (annotation instanceof Headers) {
+        String[] headersToParse = ((Headers) annotation).value();
         if (headersToParse.length == 0) {
-          throw methodError("@Headers annotation is empty.");
+          throw methodError(method, "@Headers annotation is empty.");
         }
         headers = parseHeaders(headersToParse);
-      } else if (annotationType == Multipart.class) {
-        if (bodyEncoding != BodyEncoding.NONE) {
-          throw methodError("Only one encoding annotation is allowed.");
+      } else if (annotation instanceof Multipart) {
+        if (isFormEncoded) {
+          throw methodError(method, "Only one encoding annotation is allowed.");
         }
-        bodyEncoding = BodyEncoding.MULTIPART;
-      } else if (annotationType == FormUrlEncoded.class) {
-        if (bodyEncoding != BodyEncoding.NONE) {
-          throw methodError("Only one encoding annotation is allowed.");
+        isMultipart = true;
+      } else if (annotation instanceof FormUrlEncoded) {
+        if (isMultipart) {
+          throw methodError(method, "Only one encoding annotation is allowed.");
         }
-        bodyEncoding = BodyEncoding.FORM_URL_ENCODED;
+        isFormEncoded = true;
       }
     }
 
-    if (requestMethod == null) {
-      throw methodError("HTTP method annotation is required (e.g., @GET, @POST, etc.).");
+    if (httpMethod == null) {
+      throw methodError(method, "HTTP method annotation is required (e.g., @GET, @POST, etc.).");
     }
-    if (!requestHasBody) {
-      if (bodyEncoding == BodyEncoding.MULTIPART) {
-        throw methodError(
+    if (!hasBody) {
+      if (isMultipart) {
+        throw methodError(method,
             "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
       }
-      if (bodyEncoding == BodyEncoding.FORM_URL_ENCODED) {
-        throw methodError("FormUrlEncoded can only be specified on HTTP methods with request body "
+      if (isFormEncoded) {
+        throw methodError(method,
+            "FormUrlEncoded can only be specified on HTTP methods with request body "
                 + "(e.g., @POST).");
       }
     }
   }
 
-  /** Loads {@link #requestUrl}, {@link #requestUrlParamNames}, and {@link #requestQuery}. */
-  private void parseHttpMethodAndPath(String method, String path, boolean hasBody) {
-    if (requestMethod != null) {
-      throw methodError("Only one HTTP method is allowed. Found: %s and %s.", requestMethod,
-          method);
+  private void parseHttpMethodAndPath(String httpMethod, String value, boolean hasBody) {
+    if (this.httpMethod != null) {
+      throw methodError(method, "Only one HTTP method is allowed. Found: %s and %s.",
+          this.httpMethod, httpMethod);
     }
-    if (path == null || path.length() == 0 || path.charAt(0) != '/') {
-      throw methodError("URL path \"%s\" must start with '/'.", path);
+    if (value == null || value.length() == 0 || value.charAt(0) != '/') {
+      throw methodError(method, "URL path \"%s\" must start with '/'.", value);
     }
 
     // Get the relative URL path and existing query string, if present.
-    String url = path;
-    String query = null;
-    int question = path.indexOf('?');
-    if (question != -1 && question < path.length() - 1) {
-      url = path.substring(0, question);
-      query = path.substring(question + 1);
+    String pathUrl = value;
+    String queryParams = null;
+    int question = value.indexOf('?');
+    if (question != -1 && question < value.length() - 1) {
+      pathUrl = value.substring(0, question);
+      queryParams = value.substring(question + 1);
 
       // Ensure the query string does not have any named parameters.
-      Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(query);
+      Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(queryParams);
       if (queryParamMatcher.find()) {
-        throw methodError("URL query string \"%s\" must not have replace block. For dynamic query"
-            + " parameters use @Query.", query);
+        throw methodError(method,
+            "URL query string \"%s\" must not have replace block. For dynamic query"
+                + " parameters use @Query.", queryParams);
       }
     }
 
-    Set<String> urlParams = parsePathParameters(path);
-
-    requestMethod = method;
-    requestHasBody = hasBody;
-    requestUrl = url;
-    requestUrlParamNames = urlParams;
-    requestQuery = query;
+    this.httpMethod = httpMethod;
+    this.hasBody = hasBody;
+    this.pathUrl = pathUrl;
+    this.pathUrlParamNames = parsePathParameters(pathUrl);
+    this.queryParams = queryParams;
   }
 
-  com.squareup.okhttp.Headers parseHeaders(String[] headers) {
+  private com.squareup.okhttp.Headers parseHeaders(String[] headers) {
     com.squareup.okhttp.Headers.Builder builder = new com.squareup.okhttp.Headers.Builder();
     for (String header : headers) {
       int colon = header.indexOf(':');
       if (colon == -1 || colon == 0 || colon == header.length() - 1) {
-        throw methodError("@Headers value must be in the form \"Name: Value\". Found: \"%s\"",
-            header);
+        throw methodError(method,
+            "@Headers value must be in the form \"Name: Value\". Found: \"%s\"", header);
       }
       String headerName = header.substring(0, colon);
       String headerValue = header.substring(colon + 1).trim();
@@ -206,45 +193,7 @@ final class MethodInfo {
     return builder.build();
   }
 
-  /** Loads {@link #adapter} and {@link #responseConverter}. */
-  private void parseResponseType() {
-    Type returnType = method.getGenericReturnType();
-    if (Utils.hasUnresolvableType(returnType)) {
-      throw methodError("Method return type must not include a type variable or wildcard.");
-    }
-
-    // Check for invalid configurations.
-    if (returnType == void.class) {
-      throw methodError("Service methods cannot return void.");
-    }
-
-    CallAdapter adapter = adapterFactory.get(returnType);
-    if (adapter == null) {
-      throw methodError(
-          "Registered call adapter factory was unable to handle return type " + returnType);
-    }
-    this.adapter = adapter;
-
-    Type responseType = adapter.responseType();
-    if (responseType == ResponseBody.class) {
-      boolean isStreaming = method.isAnnotationPresent(Streaming.class);
-      responseConverter = new OkHttpResponseBodyConverter(isStreaming);
-    } else {
-      if (converterFactory == null) {
-        throw methodError("Method response type is "
-            + responseType
-            + " but no converter registered. "
-            + "Either add a converter to the Retrofit instance or use ResponseBody.");
-      }
-
-      responseConverter = converterFactory.get(responseType);
-    }
-  }
-
-  /**
-   * Loads {@link #requestBuilderActions}. Must be called after {@link #parseMethodAnnotations()}.
-   */
-  private void parseParameters() {
+  private void parseParameters(Converter.Factory converterFactory) {
     Type[] methodParameterTypes = method.getGenericParameterTypes();
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
 
@@ -286,7 +235,7 @@ final class MethodInfo {
             requestBuilderActions[i] = new RequestBuilderAction.Header(header.value());
 
           } else if (methodParameterAnnotation instanceof Field) {
-            if (bodyEncoding != BodyEncoding.FORM_URL_ENCODED) {
+            if (!isFormEncoded) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
             Field field = (Field) methodParameterAnnotation;
@@ -295,7 +244,7 @@ final class MethodInfo {
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof FieldMap) {
-            if (bodyEncoding != BodyEncoding.FORM_URL_ENCODED) {
+            if (!isFormEncoded) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
             if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
@@ -306,7 +255,7 @@ final class MethodInfo {
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof Part) {
-            if (bodyEncoding != BodyEncoding.MULTIPART) {
+            if (!isMultipart) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
             Part part = (Part) methodParameterAnnotation;
@@ -318,10 +267,10 @@ final class MethodInfo {
               converter = new OkHttpRequestBodyConverter();
             } else {
               if (converterFactory == null) {
-                throw parameterError(i, "@Part parameter is "
-                    + methodParameterType
-                    + " but no converter registered. "
-                    + "Either add a converter to the Retrofit instance or use RequestBody.");
+                throw parameterError(i, "@Part parameter is %s"
+                    + " but no converter factory registered. Either add a converter factory"
+                    + " to the Retrofit instance or use RequestBody.",
+                    methodParameterType);
               }
               converter = converterFactory.get(methodParameterType);
             }
@@ -329,7 +278,7 @@ final class MethodInfo {
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof PartMap) {
-            if (bodyEncoding != BodyEncoding.MULTIPART) {
+            if (!isMultipart) {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
             }
@@ -342,12 +291,12 @@ final class MethodInfo {
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {
-            if (bodyEncoding != BodyEncoding.NONE) {
+            if (isFormEncoded || isMultipart) {
               throw parameterError(i,
                   "@Body parameters cannot be used with form or multi-part encoding.");
             }
             if (gotBody) {
-              throw methodError("Multiple @Body method annotations found.");
+              throw methodError(method, "Multiple @Body method annotations found.");
             }
 
             Converter<?> converter;
@@ -355,10 +304,10 @@ final class MethodInfo {
               converter = new OkHttpRequestBodyConverter();
             } else {
               if (converterFactory == null) {
-                throw parameterError(i, "@Body parameter is "
-                    + methodParameterType
-                    + " but no converter registered. "
-                    + "Either add a converter to the Retrofit instance or use RequestBody.");
+                throw parameterError(i, "@Body parameter is %s"
+                        + " but no converter factory registered. Either add a converter factory"
+                        + " to the Retrofit instance or use RequestBody.",
+                    methodParameterType);
               }
               converter = converterFactory.get(methodParameterType);
             }
@@ -374,14 +323,14 @@ final class MethodInfo {
       }
     }
 
-    if (bodyEncoding == BodyEncoding.NONE && !requestHasBody && gotBody) {
-      throw methodError("Non-body HTTP method cannot contain @Body.");
+    if (!isFormEncoded && !isMultipart && !hasBody && gotBody) {
+      throw methodError(method, "Non-body HTTP method cannot contain @Body.");
     }
-    if (bodyEncoding == BodyEncoding.FORM_URL_ENCODED && !gotField) {
-      throw methodError("Form-encoded method must contain at least one @Field.");
+    if (isFormEncoded && !gotField) {
+      throw methodError(method, "Form-encoded method must contain at least one @Field.");
     }
-    if (bodyEncoding == BodyEncoding.MULTIPART && !gotPart) {
-      throw methodError("Multipart method must contain at least one @Part.");
+    if (isMultipart && !gotPart) {
+      throw methodError(method, "Multipart method must contain at least one @Part.");
     }
 
     this.requestBuilderActions = requestBuilderActions;
@@ -393,8 +342,8 @@ final class MethodInfo {
           PARAM_URL_REGEX.pattern(), name);
     }
     // Verify URL replacement name is actually present in the URL path.
-    if (!requestUrlParamNames.contains(name)) {
-      throw parameterError(index, "URL \"%s\" does not contain \"{%s}\".", requestUrl, name);
+    if (!pathUrlParamNames.contains(name)) {
+      throw parameterError(index, "URL \"%s\" does not contain \"{%s}\".", pathUrl, name);
     }
   }
 

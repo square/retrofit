@@ -29,7 +29,7 @@ public final class Response<T> {
   /**
    * TODO
    */
-  public static <T, B extends T> Response<T> fakeSuccess(B body) {
+  public static <T> Response<T> fakeSuccess(T body) {
     return success(body, new com.squareup.okhttp.Response.Builder() //
         .code(200)
         .protocol(Protocol.HTTP_1_1)
@@ -41,9 +41,8 @@ public final class Response<T> {
   /**
    * TODO
    */
-  public static <T, B extends T> Response<T> success(B body,
-      com.squareup.okhttp.Response rawResponse) {
-    return new Response<T>(rawResponse, body, null);
+  public static <T> Response<T> success(T body, com.squareup.okhttp.Response rawResponse) {
+    return new Response<>(rawResponse, body, null);
   }
 
   /**

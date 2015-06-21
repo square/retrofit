@@ -30,9 +30,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+@SuppressWarnings("unchecked")
 public final class DefaultCallAdapterFactoryTest {
-  @SuppressWarnings("unchecked")
-  private final Callback<Object> callback = mock(Callback.class);
+  private final Callback<String> callback = mock(Callback.class);
   private final Executor callbackExecutor = spy(new Utils.SynchronousExecutor());
   private final CallAdapter.Factory factory = new DefaultCallAdapterFactory(callbackExecutor);
 
@@ -68,10 +68,10 @@ public final class DefaultCallAdapterFactoryTest {
 
   @Test public void adaptedCallExecute() throws IOException {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter adapter = factory.get(returnType);
-    final Response<Object> response = Response.fakeSuccess("Hi");
-    Call<Object> call = (Call<Object>) adapter.adapt(new EmptyCall() {
-      @Override public Response<Object> execute() throws IOException {
+    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    final Response<String> response = Response.fakeSuccess("Hi");
+    Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
+      @Override public Response<String> execute() throws IOException {
         return response;
       }
     });
@@ -80,10 +80,10 @@ public final class DefaultCallAdapterFactoryTest {
 
   @Test public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter adapter = factory.get(returnType);
-    final Response<Object> response = Response.fakeSuccess("Hi");
-    Call call = (Call) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
+    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    final Response<String> response = Response.fakeSuccess("Hi");
+    Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
+      @Override public void enqueue(Callback<String> callback) {
         callback.success(response);
       }
     });
@@ -94,10 +94,10 @@ public final class DefaultCallAdapterFactoryTest {
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter adapter = factory.get(returnType);
+    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
     final Throwable throwable = new IOException();
-    Call call = (Call) adapter.adapt(new EmptyCall() {
-      @Override public void enqueue(Callback<Object> callback) {
+    Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
+      @Override public void enqueue(Callback<String> callback) {
         callback.failure(throwable);
       }
     });
@@ -110,10 +110,10 @@ public final class DefaultCallAdapterFactoryTest {
 
   @Test public void adaptedCallCloneDeepCopy() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter adapter = factory.get(returnType);
-    Call delegate = mock(Call.class);
-    Call call = (Call) adapter.adapt(delegate);
-    Call cloned = call.clone();
+    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    Call<String> delegate = mock(Call.class);
+    Call<String> call = (Call<String>) adapter.adapt(delegate);
+    Call<String> cloned = call.clone();
     assertThat(cloned).isNotSameAs(call);
     verify(delegate).clone();
     verifyNoMoreInteractions(delegate);
@@ -121,20 +121,20 @@ public final class DefaultCallAdapterFactoryTest {
 
   @Test public void adaptedCallCancel() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter adapter = factory.get(returnType);
-    Call delegate = mock(Call.class);
-    Call call = (Call) adapter.adapt(delegate);
+    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    Call<String> delegate = mock(Call.class);
+    Call<String> call = (Call<String>) adapter.adapt(delegate);
     call.cancel();
     verify(delegate).cancel();
     verifyNoMoreInteractions(delegate);
   }
 
-  static class EmptyCall implements Call<Object> {
-    @Override public void enqueue(Callback<Object> callback) {
+  static class EmptyCall implements Call<String> {
+    @Override public void enqueue(Callback<String> callback) {
       throw new UnsupportedOperationException();
     }
 
-    @Override public Response<Object> execute() throws IOException {
+    @Override public Response<String> execute() throws IOException {
       throw new UnsupportedOperationException();
     }
 
@@ -142,7 +142,7 @@ public final class DefaultCallAdapterFactoryTest {
       throw new UnsupportedOperationException();
     }
 
-    @Override public Call<Object> clone() {
+    @Override public Call<String> clone() {
       throw new UnsupportedOperationException();
     }
   }
