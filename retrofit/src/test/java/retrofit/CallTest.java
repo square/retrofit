@@ -496,4 +496,71 @@ public final class CallTest {
     assertThat(rawBody.contentLength()).isEqualTo(0);
     assertThat(rawBody.contentType().toString()).isEqualTo("text/stringy");
   }
+
+  @Test public void cancelThrowsBeforeExecute() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+    Call<String> call = service.getString();
+
+    try {
+      call.cancel();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("enqueue or execute must be called first");
+    }
+  }
+
+  @Test public void cloningExecutedRequestDoesNotCopyState() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Call<String> call = service.getString();
+    assertThat(call.execute().body()).isEqualTo("Hi");
+
+    Call<String> cloned = call.clone();
+    try {
+      cloned.cancel();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("enqueue or execute must be called first");
+    }
+  }
+
+  @Test public void cancelRequest() throws InterruptedException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .converterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+
+    Call<String> call = service.getString();
+
+    final AtomicReference<Throwable> failureRef = new AtomicReference<>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<String>() {
+      @Override public void success(Response<String> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(Throwable t) {
+        failureRef.set(t);
+        latch.countDown();
+      }
+    });
+
+    call.cancel();
+
+    assertTrue(latch.await(2, SECONDS));
+    assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
+  }
 }
