@@ -151,7 +151,8 @@ public final class RetrofitTest {
       example.method();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("FutureMethod.method: Registered call adapter factory was unable to handle return type java.util.concurrent.Future<java.lang.String>");
+      assertThat(e).hasMessage(
+          "Call adapter factory 'Default CallAdapterFactory' was unable to handle return type java.util.concurrent.Future<java.lang.String>\n    for method FutureMethod.method");
     }
   }
 
@@ -165,8 +166,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "CallMethod.disallowed: @Body parameter is class java.lang.String but no converter registered. "
-              + "Either add a converter to the Retrofit instance or use RequestBody. (parameter #1)");
+          "@Body parameter is class java.lang.String but no converter factory registered. "
+              + "Either add a converter factory to the Retrofit instance or use RequestBody. (parameter #1)\n    for method CallMethod.disallowed");
     }
   }
 
@@ -183,8 +184,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "CallMethod.disallowed: Method response type is class java.lang.String but no converter registered. "
-              + "Either add a converter to the Retrofit instance or use ResponseBody.");
+          "Method response type is class java.lang.String but no converter factory registered. "
+              + "Either add a converter factory to the Retrofit instance or use ResponseBody.\n    for method CallMethod.disallowed");
     }
   }
 
@@ -226,36 +227,36 @@ public final class RetrofitTest {
       example.typeVariable();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unresolvable.typeVariable: Method return type must not include a type variable or wildcard.");
+      assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
+          + "retrofit.Call<T>\n    for method Unresolvable.typeVariable");
     }
     try {
       example.typeVariableUpperBound();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unresolvable.typeVariableUpperBound: Method return type must not include a type variable or wildcard.");
+      assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
+          + "retrofit.Call<T>\n    for method Unresolvable.typeVariableUpperBound");
     }
     try {
       example.crazy();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unresolvable.crazy: Method return type must not include a type variable or wildcard.");
+      assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
+          + "retrofit.Call<java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>>>\n    for method Unresolvable.crazy");
     }
     try {
       example.wildcard();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unresolvable.wildcard: Method return type must not include a type variable or wildcard.");
+      assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
+          + "retrofit.Call<?>\n    for method Unresolvable.wildcard");
     }
     try {
       example.wildcardUpperBound();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unresolvable.wildcardUpperBound: Method return type must not include a type variable or wildcard.");
+      assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
+          + "retrofit.Call<? extends com.squareup.okhttp.ResponseBody>\n    for method Unresolvable.wildcardUpperBound");
     }
   }
 

@@ -28,7 +28,7 @@ final class DefaultCallAdapterFactory implements CallAdapter.Factory {
   }
 
   @Override public String toString() {
-    return "Built-in CallAdapterFactory";
+    return "Default CallAdapterFactory";
   }
 
   @Override public CallAdapter<?> get(Type returnType) {

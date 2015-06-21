@@ -22,6 +22,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -40,7 +41,7 @@ final class Utils {
     return object;
   }
 
-  static void closeQueitly(Closeable closeable) {
+  static void closeQuietly(Closeable closeable) {
     if (closeable == null) return;
     try {
       closeable.close();
@@ -149,6 +150,15 @@ final class Utils {
       throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
           + "GenericArrayType, but <" + type + "> is of type " + className);
     }
+  }
+
+  static RuntimeException methodError(Method method, String message, Object... args) {
+    message = String.format(message, args);
+    return new IllegalArgumentException(message
+        + "\n    for method "
+        + method.getDeclaringClass().getSimpleName()
+        + "."
+        + method.getName());
   }
 
   static class SynchronousExecutor implements Executor {

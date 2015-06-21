@@ -85,7 +85,8 @@ import static retrofit.Utils.checkNotNull;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, MethodInfo> methodInfoCache = new LinkedHashMap<>();
+  private final Map<Method, MethodHandler<?>> methodHandlerCache = new LinkedHashMap<>();
+
   private final OkHttpClient client;
   private final Endpoint endpoint;
   private final Converter.Factory converterFactory;
@@ -108,35 +109,27 @@ public final class Retrofit {
   }
 
   private final InvocationHandler handler = new InvocationHandler() {
-    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    @Override public Object invoke(Object proxy, Method method, Object... args) throws Throwable {
       // If the method is a method from Object then defer to normal invocation.
       if (method.getDeclaringClass() == Object.class) {
         return method.invoke(this, args);
       }
-      return invokeMethod(method, args);
+      return loadMethodHandler(method).invoke(args);
     }
   };
 
-  // Package-private avoids synthetic accessor method from InvocationHandler. Also for testing.
-  Object invokeMethod(Method method, Object... args) {
-    MethodInfo methodInfo = loadMethodInfo(method);
-    Converter<?> responseConverter = methodInfo.responseConverter;
-    Call call = new OkHttpCall<>(client, endpoint, responseConverter, methodInfo, args);
-    return methodInfo.adapter.adapt(call);
-  }
+  MethodHandler<?> loadMethodHandler(Method method) {
+    Map<Method, MethodHandler<?>> cache = methodHandlerCache;
 
-  private MethodInfo loadMethodInfo(Method method) {
-    MethodInfo methodInfo = methodInfoCache.get(method);
-    if (methodInfo == null) {
-      synchronized (methodInfoCache) {
-        methodInfo = methodInfoCache.get(method);
-        if (methodInfo == null) {
-          methodInfo = new MethodInfo(method, adapterFactory, converterFactory);
-          methodInfoCache.put(method, methodInfo);
-        }
+    MethodHandler<?> handler;
+    synchronized (cache) {
+      handler = cache.get(method);
+      if (handler == null) {
+        handler = MethodHandler.create(method, client, endpoint, adapterFactory, converterFactory);
+        cache.put(method, handler);
       }
     }
-    return methodInfo;
+    return handler;
   }
 
   public OkHttpClient client() {

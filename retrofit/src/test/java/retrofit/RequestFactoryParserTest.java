@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class MethodInfoTest {
+public final class RequestFactoryParserTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
@@ -27,10 +27,7 @@ public final class MethodInfoTest {
   }
 
   private static void expectParams(String path, String... expected) {
-    Set<String> calculated = MethodInfo.parsePathParameters(path);
-    assertThat(calculated).hasSize(expected.length);
-    if (expected.length > 0) {
-      assertThat(calculated).containsExactly(expected);
-    }
+    Set<String> calculated = RequestFactoryParser.parsePathParameters(path);
+    assertThat(calculated).containsExactly(expected);
   }
 }

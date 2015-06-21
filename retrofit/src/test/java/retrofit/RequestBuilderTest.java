@@ -86,7 +86,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
+      assertThat(e).hasMessage(
+          "Only one encoding annotation is allowed.\n    for method Example.method");
     }
   }
 
@@ -103,7 +104,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: Only one encoding annotation is allowed.");
+      assertThat(e).hasMessage(
+          "Only one encoding annotation is allowed.\n    for method Example.method");
     }
   }
 
@@ -120,8 +122,8 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}."
-              + " Found: hey! (parameter #1)");
+          "@Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}."
+              + " Found: hey! (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -137,8 +139,8 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: URL query string \"bar={bar}\" must not have replace block."
-              + " For dynamic query parameters use @Query.");
+          "URL query string \"bar={bar}\" must not have replace block."
+              + " For dynamic query parameters use @Query.\n    for method Example.method");
     }
   }
 
@@ -154,7 +156,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: Multiple Retrofit annotations found, only one allowed. (parameter #1)");
+          "Multiple Retrofit annotations found, only one allowed. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -172,7 +174,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: Only one HTTP method is allowed. Found: PATCH and POST.");
+          "Only one HTTP method is allowed. Found: PATCH and POST.\n    for method Example.method");
     }
   }
 
@@ -188,7 +190,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: URL path \"foo/bar\" must start with '/'.");
+      assertThat(e).hasMessage(
+          "URL path \"foo/bar\" must start with '/'.\n    for method Example.method");
     }
   }
 
@@ -203,7 +206,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: HTTP method annotation is required (e.g., @GET, @POST, etc.).");
+          "HTTP method annotation is required (e.g., @GET, @POST, etc.).\n    for method Example.method");
     }
   }
 
@@ -219,7 +222,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @Part parameters can only be used with multipart encoding. (parameter #1)");
+          "@Part parameters can only be used with multipart encoding. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -235,7 +238,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @PartMap parameters can only be used with multipart encoding. (parameter #1)");
+          "@PartMap parameters can only be used with multipart encoding. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -252,7 +255,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
+          "Multipart can only be specified on HTTP methods with request body (e.g., @POST).\n    for method Example.method");
     }
   }
 
@@ -268,7 +271,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: Multipart method must contain at least one @Part.");
+      assertThat(e).hasMessage(
+          "Multipart method must contain at least one @Part.\n    for method Example.method");
     }
   }
 
@@ -284,7 +288,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @Field parameters can only be used with form encoding. (parameter #1)");
+          "@Field parameters can only be used with form encoding. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -300,7 +304,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @FieldMap parameters can only be used with form encoding. (parameter #1)");
+          "@FieldMap parameters can only be used with form encoding. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -317,7 +321,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).");
+          "FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).\n    for method Example.method");
     }
   }
 
@@ -333,7 +337,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: Form-encoded method must contain at least one @Field.");
+      assertThat(e).hasMessage("Form-encoded method must contain at least one @Field.\n    for method Example.method");
     }
   }
 
@@ -349,7 +353,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: @Headers annotation is empty.");
+      assertThat(e).hasMessage("@Headers annotation is empty.\n    for method Example.method");
     }
   }
 
@@ -366,7 +370,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @Headers value must be in the form \"Name: Value\". Found: \"Malformed\"");
+          "@Headers value must be in the form \"Name: Value\". Found: \"Malformed\"\n    for method Example.method");
     }
   }
 
@@ -381,7 +385,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: URL \"/{a}\" does not contain \"{b}\". (parameter #2)");
+      assertThat(e).hasMessage(
+          "URL \"/{a}\" does not contain \"{b}\". (parameter #2)\n    for method Example.method");
     }
   }
 
@@ -396,7 +401,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: No Retrofit annotation found. (parameter #1)");
+      assertThat(e).hasMessage(
+          "No Retrofit annotation found. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -411,7 +417,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: Non-body HTTP method cannot contain @Body.");
+      assertThat(e).hasMessage(
+          "Non-body HTTP method cannot contain @Body.\n    for method Example.method");
     }
   }
 
@@ -426,7 +433,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: @QueryMap parameter type must be Map. (parameter #1)");
+      assertThat(e).hasMessage(
+          "@QueryMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -461,7 +469,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: Multiple @Body method annotations found.");
+      assertThat(e).hasMessage(
+          "Multiple @Body method annotations found.\n    for method Example.method");
     }
   }
 
@@ -478,7 +487,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Example.method: @Body parameters cannot be used with form or multi-part encoding. (parameter #2)");
+          "@Body parameters cannot be used with form or multi-part encoding. (parameter #2)\n    for method Example.method");
     }
   }
 
@@ -1274,7 +1283,8 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Example.method: @FieldMap parameter type must be Map. (parameter #1)");
+      assertThat(e).hasMessage(
+          "@FieldMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
   }
 
@@ -1414,24 +1424,16 @@ public final class RequestBuilderTest {
   }
 
   private Request buildRequest(Class<?> cls, Object... args) {
-    HttpUrl url = HttpUrl.parse("http://example.com/");
-    Converter.Factory converterFactory = new ToStringConverterFactory();
-    CallAdapter.Factory callAdapterFactory =
-        new DefaultCallAdapterFactory(new Utils.SynchronousExecutor());
-
     Method method = TestingUtils.onlyMethod(cls);
-    MethodInfo methodInfo = new MethodInfo(method, callAdapterFactory, converterFactory);
 
-    RequestBuilder builder = new RequestBuilder(url, methodInfo);
+    Endpoint endpoint = new Endpoint() {
+      @Override public HttpUrl url() {
+        return HttpUrl.parse("http://example.com/");
+      }
+    };
+    Converter.Factory converterFactory = new ToStringConverterFactory();
 
-    RequestBuilderAction[] actions = methodInfo.requestBuilderActions;
-    if (args.length != actions.length) {
-      throw new IllegalStateException("Wrong number of arguments.");
-    }
-    for (int i = 0, count = args.length; i < count; i++) {
-      actions[i].perform(builder, args[i]);
-    }
-
-    return builder.build();
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, endpoint, converterFactory);
+    return requestFactory.create(args);
   }
 }

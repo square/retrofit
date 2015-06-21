@@ -28,51 +28,44 @@ import java.net.URLEncoder;
 import okio.BufferedSink;
 
 final class RequestBuilder {
-  private final String requestMethod;
-  private final boolean requestHasBody;
+  private final String method;
   private final HttpUrl.Builder urlBuilder;
-  private final Request.Builder requestBuilder;
+  private String pathUrl;
 
+  private final Request.Builder requestBuilder;
+  private MediaType mediaType;
+
+  private final boolean hasBody;
   private MultipartBuilder multipartBuilder;
   private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
-  private String relativeUrl;
-  private MediaType mediaType;
+  RequestBuilder(String method, HttpUrl url, String pathUrl, String queryParams, Headers headers,
+      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+    this.method = method;
 
-  RequestBuilder(HttpUrl url, MethodInfo methodInfo) {
-    requestMethod = methodInfo.requestMethod;
-    requestHasBody = methodInfo.requestHasBody;
-    mediaType = methodInfo.mediaType;
-    relativeUrl = methodInfo.requestUrl;
+    HttpUrl.Builder urlBuilder = url.newBuilder();
+    if (queryParams != null) {
+      urlBuilder.query(queryParams);
+    }
+    this.urlBuilder = urlBuilder;
+    this.pathUrl = pathUrl;
 
-    urlBuilder = url.newBuilder();
-    requestBuilder = new Request.Builder();
-
-    Headers headers = methodInfo.headers;
+    Request.Builder requestBuilder = new Request.Builder();
     if (headers != null) {
       requestBuilder.headers(headers);
     }
+    this.requestBuilder = requestBuilder;
+    this.mediaType = mediaType;
 
-    String requestQuery = methodInfo.requestQuery;
-    if (requestQuery != null) {
-      urlBuilder.query(requestQuery);
-    }
+    this.hasBody = hasBody;
 
-    switch (methodInfo.bodyEncoding) {
-      case FORM_URL_ENCODED:
-        // Will be set to 'body' in 'build'.
-        formEncodingBuilder = new FormEncodingBuilder();
-        break;
-      case MULTIPART:
-        // Will be set to 'body' in 'build'.
-        multipartBuilder = new MultipartBuilder();
-        break;
-      case NONE:
-        // If present, 'body' will be set in 'setArguments' call.
-        break;
-      default:
-        throw new IllegalArgumentException("Unknown request type: " + methodInfo.bodyEncoding);
+    if (isFormEncoded) {
+      // Will be set to 'body' in 'build'.
+      formEncodingBuilder = new FormEncodingBuilder();
+    } else if (isMultipart) {
+      // Will be set to 'body' in 'build'.
+      multipartBuilder = new MultipartBuilder();
     }
   }
 
@@ -92,9 +85,9 @@ final class RequestBuilder {
         // encode spaces rather than +. Query encoding difference specified in HTML spec.
         // Any remaining plus signs represent spaces as already URLEncoded.
         encodedValue = encodedValue.replace("+", "%20");
-        relativeUrl = relativeUrl.replace("{" + name + "}", encodedValue);
+        pathUrl = pathUrl.replace("{" + name + "}", encodedValue);
       } else {
-        relativeUrl = relativeUrl.replace("{" + name + "}", String.valueOf(value));
+        pathUrl = pathUrl.replace("{" + name + "}", String.valueOf(value));
       }
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(
@@ -127,7 +120,8 @@ final class RequestBuilder {
   }
 
   Request build() {
-    urlBuilder.encodedPath(relativeUrl);
+    // TODO this should append, not replace.
+    HttpUrl url = urlBuilder.encodedPath(pathUrl).build();
 
     RequestBody body = this.body;
     if (body == null) {
@@ -136,7 +130,7 @@ final class RequestBuilder {
         body = formEncodingBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
-      } else if (requestHasBody) {
+      } else if (hasBody) {
         // Body is absent, make an empty body.
         body = RequestBody.create(null, new byte[0]);
       }
@@ -152,8 +146,8 @@ final class RequestBuilder {
     }
 
     return requestBuilder
-        .url(urlBuilder.build())
-        .method(requestMethod, body)
+        .url(url)
+        .method(method, body)
         .build();
   }
 
