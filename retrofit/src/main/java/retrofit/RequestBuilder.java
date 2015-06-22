@@ -113,10 +113,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     if (name == null) {
       throw new IllegalArgumentException("Cookie name must not be null.");
     }
-    StringBuilder newCookie = new StringBuilder(name).append("=");
-    if (value != null) {
-      newCookie.append(value);
-    }
+    StringBuilder newCookie = new StringBuilder(name).append("=").append(value);
     List<Header> headers = this.headers;
     if (headers == null) {
       this.headers = headers = new ArrayList<Header>(2);
@@ -127,8 +124,15 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       final Header header = headersIterator.next();
       if (header != null && COOKIE_HEADER.equalsIgnoreCase(header.getName())) {
         // Append to existing header
-        StringBuilder cookies = new StringBuilder(header.getValue());
-        cookies.append("; ").append(newCookie);
+        final String previousCookie = header.getValue();
+        StringBuilder cookies;
+        if (previousCookie == null || previousCookie.isEmpty() || previousCookie.trim().isEmpty()) {
+          cookies = new StringBuilder();
+        } else {
+          cookies = new StringBuilder(previousCookie);
+          cookies.append("; ");
+        }
+        cookies.append(newCookie);
         headers.set(headersIterator.previousIndex(), new Header(COOKIE_HEADER, cookies.toString()));
         cookieHeaderPresent = true;
         break;
