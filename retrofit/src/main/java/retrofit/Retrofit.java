@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
 
@@ -91,13 +92,15 @@ public final class Retrofit {
   private final Endpoint endpoint;
   private final Converter.Factory converterFactory;
   private final CallAdapter.Factory adapterFactory;
+  private final Executor callbackExecutor;
 
   private Retrofit(OkHttpClient client, Endpoint endpoint, Converter.Factory converterFactory,
-      CallAdapter.Factory adapterFactory) {
+      CallAdapter.Factory adapterFactory, Executor callbackExecutor) {
     this.client = client;
     this.endpoint = endpoint;
     this.converterFactory = converterFactory;
     this.adapterFactory = adapterFactory;
+    this.callbackExecutor = callbackExecutor;
   }
 
   /** Create an implementation of the API defined by the {@code service} interface. */
@@ -119,14 +122,12 @@ public final class Retrofit {
   };
 
   MethodHandler<?> loadMethodHandler(Method method) {
-    Map<Method, MethodHandler<?>> cache = methodHandlerCache;
-
     MethodHandler<?> handler;
-    synchronized (cache) {
-      handler = cache.get(method);
+    synchronized (methodHandlerCache) {
+      handler = methodHandlerCache.get(method);
       if (handler == null) {
         handler = MethodHandler.create(method, client, endpoint, adapterFactory, converterFactory);
-        cache.put(method, handler);
+        methodHandlerCache.put(method, handler);
       }
     }
     return handler;
@@ -153,6 +154,10 @@ public final class Retrofit {
     return adapterFactory;
   }
 
+  public Executor callbackExecutor() {
+    return callbackExecutor;
+  }
+
   /**
    * Build a new {@link Retrofit}.
    * <p>
@@ -164,6 +169,7 @@ public final class Retrofit {
     private Endpoint endpoint;
     private Converter.Factory converterFactory;
     private CallAdapter.Factory adapterFactory;
+    private Executor callbackExecutor;
 
     /** The HTTP client used for requests. */
     public Builder client(OkHttpClient client) {
@@ -211,6 +217,15 @@ public final class Retrofit {
       return this;
     }
 
+    /**
+     * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
+     * your service method.
+     */
+    public Builder callbackExecutor(Executor callbackExecutor) {
+      this.callbackExecutor = checkNotNull(callbackExecutor, "callbackExecutor == null");
+      return this;
+    }
+
     /** Create the {@link Retrofit} instances. */
     public Retrofit build() {
       if (endpoint == null) {
@@ -222,10 +237,10 @@ public final class Retrofit {
         client = Platform.get().defaultClient();
       }
       if (adapterFactory == null) {
-        adapterFactory = Platform.get().defaultCallAdapterFactory();
+        adapterFactory = Platform.get().defaultCallAdapterFactory(callbackExecutor);
       }
 
-      return new Retrofit(client, endpoint, converterFactory, adapterFactory);
+      return new Retrofit(client, endpoint, converterFactory, adapterFactory, callbackExecutor);
     }
   }
 }

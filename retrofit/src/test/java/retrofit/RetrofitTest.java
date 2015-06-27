@@ -14,7 +14,10 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,9 +25,15 @@ import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
 
+import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public final class RetrofitTest {
   @Rule public final MockWebServerRule server = new MockWebServerRule();
@@ -169,7 +178,7 @@ public final class RetrofitTest {
       example.method();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Call adapter factory 'Default CallAdapterFactory' was unable to"
+      assertThat(e).hasMessage("Call adapter factory 'Default' was unable to"
               + " handle return type java.util.concurrent.Future<java.lang.String>\n"
               + "    for method FutureMethod.method");
     }
@@ -437,7 +446,7 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder()
         .endpoint("http://example.com/")
         .build();
-    assertThat(retrofit.callAdapterFactory()).isInstanceOf(DefaultCallAdapterFactory.class);
+    assertThat(retrofit.callAdapterFactory()).isNotNull();
   }
 
   @Test public void callAdapterFactoryPropagated() {
@@ -447,5 +456,92 @@ public final class RetrofitTest {
         .callAdapterFactory(factory)
         .build();
     assertThat(retrofit.callAdapterFactory()).isSameAs(factory);
+  }
+
+  @Test public void callbackExecutorNullThrows() {
+    try {
+      new Retrofit.Builder().callbackExecutor(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("callbackExecutor == null");
+    }
+  }
+
+  @Test public void callbackExecutorNoDefault() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .build();
+    assertThat(retrofit.callbackExecutor()).isNull();
+  }
+
+  @Test public void callbackExecutorPropagated() {
+    Executor executor = mock(Executor.class);
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint("http://example.com/")
+        .callbackExecutor(executor)
+        .build();
+    assertThat(retrofit.callbackExecutor()).isSameAs(executor);
+  }
+
+  @Test public void callbackExecutorUsedForSuccess() throws InterruptedException {
+    Executor executor = spy(new Executor() {
+      @Override public void execute(Runnable command) {
+        command.run();
+      }
+    });
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .callbackExecutor(executor)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.allowed();
+
+    server.enqueue(new MockResponse());
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<ResponseBody>() {
+      @Override public void success(Response<ResponseBody> response) {
+        latch.countDown();
+      }
+
+      @Override public void failure(Throwable t) {
+        t.printStackTrace();
+      }
+    });
+    assertTrue(latch.await(2, TimeUnit.SECONDS));
+
+    verify(executor).execute(any(Runnable.class));
+    verifyNoMoreInteractions(executor);
+  }
+
+  @Test public void callbackExecutorUsedForFailure() throws InterruptedException {
+    Executor executor = spy(new Executor() {
+      @Override public void execute(Runnable command) {
+        command.run();
+      }
+    });
+    Retrofit retrofit = new Retrofit.Builder()
+        .endpoint(server.getUrl("/").toString())
+        .callbackExecutor(executor)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.allowed();
+
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AT_START));
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<ResponseBody>() {
+      @Override public void success(Response<ResponseBody> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(Throwable t) {
+        latch.countDown();
+      }
+    });
+    assertTrue(latch.await(2, TimeUnit.SECONDS));
+
+    verify(executor).execute(any(Runnable.class));
+    verifyNoMoreInteractions(executor);
   }
 }

@@ -31,10 +31,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SuppressWarnings("unchecked")
-public final class DefaultCallAdapterFactoryTest {
+public final class ExecutorCallAdapterFactoryTest {
   private final Callback<String> callback = mock(Callback.class);
-  private final Executor callbackExecutor = spy(new Utils.SynchronousExecutor());
-  private final CallAdapter.Factory factory = new DefaultCallAdapterFactory(callbackExecutor);
+  private final Executor callbackExecutor = spy(new Executor() {
+    @Override public void execute(Runnable runnable) {
+      runnable.run();
+    }
+  });
+  private final CallAdapter.Factory factory = new ExecutorCallAdapterFactory(callbackExecutor);
 
   @Test public void rawTypeThrows() {
     try {

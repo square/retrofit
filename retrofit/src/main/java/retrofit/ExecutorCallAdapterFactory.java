@@ -16,38 +16,25 @@
 package retrofit;
 
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
-final class DefaultCallAdapterFactory implements CallAdapter.Factory {
+final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
   private final Executor callbackExecutor;
 
-  DefaultCallAdapterFactory(Executor callbackExecutor) {
+  ExecutorCallAdapterFactory(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
   }
 
   @Override public String toString() {
-    return "Default CallAdapterFactory";
+    return "ExecutorCallAdapterFactory[" + callbackExecutor + ']';
   }
 
   @Override public CallAdapter<?> get(Type returnType) {
     if (Utils.getRawType(returnType) != Call.class) {
       return null;
     }
-    if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-    final Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
-
-    // Ensure the Call response type is not Response, we automatically deliver the Response object.
-    if (Utils.getRawType(responseType) == Response.class) {
-      throw new IllegalArgumentException(
-          "Call<T> cannot use Response as its generic parameter. "
-              + "Specify the response body type only (e.g., Call<TweetResponse>).");
-    }
-
+    final Type responseType = Utils.getCallResponseType(returnType);
     return new CallAdapter<Object>() {
       @Override public Type responseType() {
         return responseType;
@@ -80,6 +67,7 @@ final class DefaultCallAdapterFactory implements CallAdapter.Factory {
       delegate.cancel();
     }
 
+    @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
     @Override public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
     }
