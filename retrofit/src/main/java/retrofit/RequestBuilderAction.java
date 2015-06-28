@@ -24,6 +24,12 @@ import static retrofit.Utils.checkNotNull;
 abstract class RequestBuilderAction {
   abstract void perform(RequestBuilder builder, Object value);
 
+  static final class Url extends RequestBuilderAction {
+    @Override void perform(RequestBuilder builder, Object value) {
+      builder.setRelativeUrl((String) value);
+    }
+  }
+
   static final class Header extends RequestBuilderAction {
     private final String name;
 

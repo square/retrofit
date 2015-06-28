@@ -27,6 +27,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface HTTP {
   String method();
-  String path();
+  String path() default "";
   boolean hasBody() default false;
 }

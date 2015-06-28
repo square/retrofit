@@ -44,6 +44,7 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
+import retrofit.http.Url;
 
 import static retrofit.Utils.methodError;
 
@@ -67,21 +68,20 @@ final class RequestFactoryParser {
   private boolean hasBody;
   private boolean isFormEncoded;
   private boolean isMultipart;
-  private String pathUrl;
-  private String queryParams;
+  private String relativeUrl;
   private com.squareup.okhttp.Headers headers;
   private MediaType mediaType;
   private RequestBuilderAction[] requestBuilderActions;
 
-  private Set<String> pathUrlParamNames;
+  private Set<String> relativeUrlParamNames;
 
   private RequestFactoryParser(Method method) {
     this.method = method;
   }
 
   private RequestFactory toRequestFactory(BaseUrl baseUrl) {
-    return new RequestFactory(httpMethod, baseUrl, pathUrl, queryParams, headers, mediaType,
-        hasBody, isFormEncoded, isMultipart, requestBuilderActions);
+    return new RequestFactory(httpMethod, baseUrl, relativeUrl, headers, mediaType, hasBody,
+        isFormEncoded, isMultipart, requestBuilderActions);
   }
 
   private RuntimeException parameterError(int index, String message, Object... args) {
@@ -145,32 +145,27 @@ final class RequestFactoryParser {
       throw methodError(method, "Only one HTTP method is allowed. Found: %s and %s.",
           this.httpMethod, httpMethod);
     }
-    if (value == null || value.length() == 0 || value.charAt(0) != '/') {
-      throw methodError(method, "URL path \"%s\" must start with '/'.", value);
+    this.httpMethod = httpMethod;
+    this.hasBody = hasBody;
+
+    if (value.isEmpty()) {
+      return;
     }
 
     // Get the relative URL path and existing query string, if present.
-    String pathUrl = value;
-    String queryParams = null;
     int question = value.indexOf('?');
     if (question != -1 && question < value.length() - 1) {
-      pathUrl = value.substring(0, question);
-      queryParams = value.substring(question + 1);
-
       // Ensure the query string does not have any named parameters.
+      String queryParams = value.substring(question + 1);
       Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(queryParams);
       if (queryParamMatcher.find()) {
-        throw methodError(method,
-            "URL query string \"%s\" must not have replace block. For dynamic query"
-                + " parameters use @Query.", queryParams);
+        throw methodError(method, "URL query string \"%s\" must not have replace block. "
+            + "For dynamic query parameters use @Query.", queryParams);
       }
     }
 
-    this.httpMethod = httpMethod;
-    this.hasBody = hasBody;
-    this.pathUrl = pathUrl;
-    this.pathUrlParamNames = parsePathParameters(pathUrl);
-    this.queryParams = queryParams;
+    this.relativeUrl = value;
+    this.relativeUrlParamNames = parsePathParameters(value);
   }
 
   private com.squareup.okhttp.Headers parseHeaders(String[] headers) {
@@ -199,6 +194,9 @@ final class RequestFactoryParser {
     boolean gotField = false;
     boolean gotPart = false;
     boolean gotBody = false;
+    boolean gotPath = false;
+    boolean gotQuery = false;
+    boolean gotUrl = false;
 
     int count = methodParameterAnnotationArrays.length;
     RequestBuilderAction[] requestBuilderActions = new RequestBuilderAction[count];
@@ -211,7 +209,38 @@ final class RequestFactoryParser {
             throw parameterError(i, "Multiple Retrofit annotations found, only one allowed.");
           }
 
-          if (methodParameterAnnotation instanceof Path) {
+          if (methodParameterAnnotation instanceof Url) {
+            if (gotUrl) {
+              throw parameterError(i, "Multiple @Url method annotations found.");
+            }
+            if (gotPath) {
+              throw parameterError(i, "@Path parameters may not be used with @Url.");
+            }
+            if (gotQuery) {
+              throw parameterError(i, "A @Url parameter must not come after a @Query");
+            }
+            if (methodParameterType != String.class) {
+              throw parameterError(i, "@Url must be String type.");
+            }
+            if (relativeUrl != null) {
+              throw parameterError(i, "@Url cannot be used with @%s URL", httpMethod);
+            }
+            gotUrl = true;
+            requestBuilderActions[i] = new RequestBuilderAction.Url();
+
+          } else if (methodParameterAnnotation instanceof Path) {
+            if (gotQuery) {
+              throw parameterError(i, "A @Path parameter must not come after a @Query.");
+            }
+            if (gotUrl) {
+              throw parameterError(i, "@Path parameters may not be used with @Url.");
+            }
+            if (relativeUrl == null) {
+              throw parameterError(i, "@Path can only be used with relative url on @%s",
+                  httpMethod);
+            }
+            gotPath = true;
+
             Path path = (Path) methodParameterAnnotation;
             String name = path.value();
             validatePathName(i, name);
@@ -221,6 +250,7 @@ final class RequestFactoryParser {
             Query query = (Query) methodParameterAnnotation;
             requestBuilderActions[i] =
                 new RequestBuilderAction.Query(query.value(), query.encoded());
+            gotQuery = true;
 
           } else if (methodParameterAnnotation instanceof QueryMap) {
             if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
@@ -295,7 +325,7 @@ final class RequestFactoryParser {
                   "@Body parameters cannot be used with form or multi-part encoding.");
             }
             if (gotBody) {
-              throw methodError(method, "Multiple @Body method annotations found.");
+              throw parameterError(i, "Multiple @Body method annotations found.");
             }
 
             Converter<?> converter;
@@ -322,6 +352,9 @@ final class RequestFactoryParser {
       }
     }
 
+    if (relativeUrl == null && !gotUrl) {
+      throw methodError(method, "Missing either @%s URL or @Url parameter.", httpMethod);
+    }
     if (!isFormEncoded && !isMultipart && !hasBody && gotBody) {
       throw methodError(method, "Non-body HTTP method cannot contain @Body.");
     }
@@ -341,8 +374,8 @@ final class RequestFactoryParser {
           PARAM_URL_REGEX.pattern(), name);
     }
     // Verify URL replacement name is actually present in the URL path.
-    if (!pathUrlParamNames.contains(name)) {
-      throw parameterError(index, "URL \"%s\" does not contain \"{%s}\".", pathUrl, name);
+    if (!relativeUrlParamNames.contains(name)) {
+      throw parameterError(index, "URL \"%s\" does not contain \"{%s}\".", relativeUrl, name);
     }
   }
 
