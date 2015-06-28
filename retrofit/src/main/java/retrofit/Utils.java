@@ -28,7 +28,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
-import java.util.concurrent.Executor;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.Source;
@@ -161,10 +160,20 @@ final class Utils {
         + method.getName());
   }
 
-  static class SynchronousExecutor implements Executor {
-    @Override public void execute(Runnable runnable) {
-      runnable.run();
+  static Type getCallResponseType(Type returnType) {
+    if (!(returnType instanceof ParameterizedType)) {
+      throw new IllegalArgumentException(
+          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
     }
+    final Type responseType = getSingleParameterUpperBound((ParameterizedType) returnType);
+
+    // Ensure the Call response type is not Response, we automatically deliver the Response object.
+    if (getRawType(responseType) == retrofit.Response.class) {
+      throw new IllegalArgumentException(
+          "Call<T> cannot use Response as its generic parameter. "
+              + "Specify the response body type only (e.g., Call<TweetResponse>).");
+    }
+    return responseType;
   }
 
   private Utils() {
