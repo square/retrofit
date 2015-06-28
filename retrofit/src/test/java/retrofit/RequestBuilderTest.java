@@ -1451,14 +1451,14 @@ public final class RequestBuilderTest {
   private Request buildRequest(Class<?> cls, Object... args) {
     Method method = TestingUtils.onlyMethod(cls);
 
-    Endpoint endpoint = new Endpoint() {
+    BaseUrl baseUrl = new BaseUrl() {
       @Override public HttpUrl url() {
         return HttpUrl.parse("http://example.com/");
       }
     };
     Converter.Factory converterFactory = new ToStringConverterFactory();
 
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, endpoint, converterFactory);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactory);
     return requestFactory.create(args);
   }
 }

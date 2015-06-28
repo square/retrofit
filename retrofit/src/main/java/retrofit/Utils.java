@@ -67,7 +67,7 @@ final class Utils {
 
   static <T> void validateServiceClass(Class<T> service) {
     if (!service.isInterface()) {
-      throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
+      throw new IllegalArgumentException("Only interface baseUrl definitions are supported.");
     }
     // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
     // Android (http://b.android.com/58753) but it forces composition of API declarations which is

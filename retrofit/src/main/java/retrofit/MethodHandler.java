@@ -25,14 +25,14 @@ import static retrofit.Utils.methodError;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
-  static MethodHandler<?> create(Method method, OkHttpClient client, Endpoint endpoint,
+  static MethodHandler<?> create(Method method, OkHttpClient client, BaseUrl baseUrl,
       CallAdapter.Factory callAdapterFactory, Converter.Factory converterFactory) {
     CallAdapter<Object> callAdapter =
         (CallAdapter<Object>) createCallAdapter(method, callAdapterFactory);
     Converter<Object> responseConverter =
         (Converter<Object>) createResponseConverter(method, callAdapter.responseType(),
             converterFactory);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, endpoint, converterFactory);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactory);
     return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter);
   }
 

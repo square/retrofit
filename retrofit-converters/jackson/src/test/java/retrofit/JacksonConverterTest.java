@@ -120,7 +120,7 @@ public class JacksonConverterTest {
         .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
 
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .converterFactory(JacksonConverterFactory.create(mapper))
         .build();
     service = retrofit.create(Service.class);

@@ -89,15 +89,15 @@ public final class Retrofit {
   private final Map<Method, MethodHandler<?>> methodHandlerCache = new LinkedHashMap<>();
 
   private final OkHttpClient client;
-  private final Endpoint endpoint;
+  private final BaseUrl baseUrl;
   private final Converter.Factory converterFactory;
   private final CallAdapter.Factory adapterFactory;
   private final Executor callbackExecutor;
 
-  private Retrofit(OkHttpClient client, Endpoint endpoint, Converter.Factory converterFactory,
+  private Retrofit(OkHttpClient client, BaseUrl baseUrl, Converter.Factory converterFactory,
       CallAdapter.Factory adapterFactory, Executor callbackExecutor) {
     this.client = client;
-    this.endpoint = endpoint;
+    this.baseUrl = baseUrl;
     this.converterFactory = converterFactory;
     this.adapterFactory = adapterFactory;
     this.callbackExecutor = callbackExecutor;
@@ -126,7 +126,7 @@ public final class Retrofit {
     synchronized (methodHandlerCache) {
       handler = methodHandlerCache.get(method);
       if (handler == null) {
-        handler = MethodHandler.create(method, client, endpoint, adapterFactory, converterFactory);
+        handler = MethodHandler.create(method, client, baseUrl, adapterFactory, converterFactory);
         methodHandlerCache.put(method, handler);
       }
     }
@@ -137,8 +137,8 @@ public final class Retrofit {
     return client;
   }
 
-  public Endpoint endpoint() {
-    return endpoint;
+  public BaseUrl baseUrl() {
+    return baseUrl;
   }
 
   /**
@@ -161,12 +161,12 @@ public final class Retrofit {
   /**
    * Build a new {@link Retrofit}.
    * <p>
-   * Calling {@link #endpoint} is required before calling {@link #build()}. All other methods
+   * Calling {@link #baseUrl} is required before calling {@link #build()}. All other methods
    * are optional.
    */
   public static class Builder {
     private OkHttpClient client;
-    private Endpoint endpoint;
+    private BaseUrl baseUrl;
     private Converter.Factory converterFactory;
     private CallAdapter.Factory adapterFactory;
     private Executor callbackExecutor;
@@ -177,29 +177,29 @@ public final class Retrofit {
       return this;
     }
 
-    /** API endpoint URL. */
-    public Builder endpoint(String url) {
-      checkNotNull(url, "url == null");
-      HttpUrl httpUrl = HttpUrl.parse(url);
+    /** API base URL. */
+    public Builder baseUrl(String baseUrl) {
+      checkNotNull(baseUrl, "baseUrl == null");
+      HttpUrl httpUrl = HttpUrl.parse(baseUrl);
       if (httpUrl == null) {
-        throw new IllegalArgumentException("Illegal URL: " + url);
+        throw new IllegalArgumentException("Illegal URL: " + baseUrl);
       }
-      return endpoint(httpUrl);
+      return baseUrl(httpUrl);
     }
 
-    /** API endpoint URL. */
-    public Builder endpoint(final HttpUrl url) {
-      checkNotNull(url, "url == null");
-      return endpoint(new Endpoint() {
+    /** API base URL. */
+    public Builder baseUrl(final HttpUrl baseUrl) {
+      checkNotNull(baseUrl, "baseUrl == null");
+      return baseUrl(new BaseUrl() {
         @Override public HttpUrl url() {
-          return url;
+          return baseUrl;
         }
       });
     }
 
-    /** API endpoint. */
-    public Builder endpoint(Endpoint endpoint) {
-      this.endpoint = checkNotNull(endpoint, "endpoint == null");
+    /** API base URL. */
+    public Builder baseUrl(BaseUrl baseUrl) {
+      this.baseUrl = checkNotNull(baseUrl, "baseUrl == null");
       return this;
     }
 
@@ -228,8 +228,8 @@ public final class Retrofit {
 
     /** Create the {@link Retrofit} instances. */
     public Retrofit build() {
-      if (endpoint == null) {
-        throw new IllegalStateException("Endpoint required.");
+      if (baseUrl == null) {
+        throw new IllegalStateException("Base URL required.");
       }
 
       // Set any platform-appropriate defaults for unspecified components.
@@ -240,7 +240,7 @@ public final class Retrofit {
         adapterFactory = Platform.get().defaultCallAdapterFactory(callbackExecutor);
       }
 
-      return new Retrofit(client, endpoint, converterFactory, adapterFactory, callbackExecutor);
+      return new Retrofit(client, baseUrl, converterFactory, adapterFactory, callbackExecutor);
     }
   }
 }

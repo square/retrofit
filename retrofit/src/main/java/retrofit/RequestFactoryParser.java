@@ -54,12 +54,11 @@ final class RequestFactoryParser {
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  static RequestFactory parse(Method method, Endpoint endpoint,
-      Converter.Factory converterFactory) {
+  static RequestFactory parse(Method method, BaseUrl baseUrl, Converter.Factory converterFactory) {
     RequestFactoryParser parser = new RequestFactoryParser(method);
     parser.parseMethodAnnotations();
     parser.parseParameters(converterFactory);
-    return parser.toRequestFactory(endpoint);
+    return parser.toRequestFactory(baseUrl);
   }
 
   private final Method method;
@@ -80,8 +79,8 @@ final class RequestFactoryParser {
     this.method = method;
   }
 
-  private RequestFactory toRequestFactory(Endpoint endpoint) {
-    return new RequestFactory(httpMethod, endpoint, pathUrl, queryParams, headers, mediaType,
+  private RequestFactory toRequestFactory(BaseUrl baseUrl) {
+    return new RequestFactory(httpMethod, baseUrl, pathUrl, queryParams, headers, mediaType,
         hasBody, isFormEncoded, isMultipart, requestBuilderActions);
   }
 

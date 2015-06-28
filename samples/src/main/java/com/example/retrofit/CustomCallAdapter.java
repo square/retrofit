@@ -96,7 +96,7 @@ public final class CustomCallAdapter {
 
   public static void main(String... args) {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://httpbin.org")
+        .baseUrl("http://httpbin.org")
         .callAdapterFactory(new ListenableFutureCallAdapterFactory())
         .build();
 

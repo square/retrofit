@@ -88,7 +88,7 @@ public final class GsonConverterFactoryTest {
         .registerTypeAdapter(AnInterface.class, new AnInterfaceAdapter())
         .create();
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .converterFactory(GsonConverterFactory.create(gson))
         .build();
     service = retrofit.create(Service.class);

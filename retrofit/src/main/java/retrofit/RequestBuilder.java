@@ -40,11 +40,12 @@ final class RequestBuilder {
   private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
-  RequestBuilder(String method, HttpUrl url, String pathUrl, String queryParams, Headers headers,
-      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+  RequestBuilder(String method, HttpUrl baseUrl, String pathUrl, String queryParams,
+      Headers headers, MediaType mediaType, boolean hasBody, boolean isFormEncoded,
+      boolean isMultipart) {
     this.method = method;
 
-    HttpUrl.Builder urlBuilder = url.newBuilder();
+    HttpUrl.Builder urlBuilder = baseUrl.newBuilder();
     if (queryParams != null) {
       urlBuilder.query(queryParams);
     }

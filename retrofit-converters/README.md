@@ -8,7 +8,7 @@ To use, supply an instance of your desired converter when building your `Retrofi
 
 ```java
 Retrofit retrofit = new Retrofit.Builder()
-    .endpoint("https://api.example.com")
+    .baseUrl("https://api.example.com")
     .converter(new ProtoConverter())
     .build();
 ```
