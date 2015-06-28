@@ -48,7 +48,7 @@ public final class ProtoConverterTest {
 
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .converterFactory(ProtoConverterFactory.create())
         .build();
     service = retrofit.create(Service.class);

@@ -224,7 +224,7 @@ public final class MockRetrofit {
 
     private Request buildRequest(MethodInfo methodInfo, Object[] args) throws Throwable {
       // Begin building a normal request.
-      String apiUrl = restAdapter.endpoint.url();
+      String apiUrl = restAdapter.baseUrl.url();
       RequestBuilder requestBuilder = new RequestBuilder(apiUrl, methodInfo, restAdapter.converter);
       requestBuilder.setArguments(args);
       return requestBuilder.build();

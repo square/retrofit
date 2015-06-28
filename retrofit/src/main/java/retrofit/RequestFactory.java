@@ -16,13 +16,12 @@
 package retrofit;
 
 import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 
 final class RequestFactory {
   private final String method;
-  private final Endpoint endpoint;
+  private final BaseUrl baseUrl;
   private final String pathUrl;
   private final String queryParams;
   private final Headers headers;
@@ -32,11 +31,11 @@ final class RequestFactory {
   private final boolean isMultipart;
   private final RequestBuilderAction[] requestBuilderActions;
 
-  RequestFactory(String method, Endpoint endpoint, String pathUrl, String queryParams,
+  RequestFactory(String method, BaseUrl baseUrl, String pathUrl, String queryParams,
       Headers headers, MediaType mediaType, boolean hasBody, boolean isFormEncoded,
       boolean isMultipart, RequestBuilderAction[] requestBuilderActions) {
     this.method = method;
-    this.endpoint = endpoint;
+    this.baseUrl = baseUrl;
     this.pathUrl = pathUrl;
     this.queryParams = queryParams;
     this.headers = headers;
@@ -48,9 +47,8 @@ final class RequestFactory {
   }
 
   Request create(Object... args) {
-    HttpUrl url = endpoint.url();
     RequestBuilder requestBuilder =
-        new RequestBuilder(method, url, pathUrl, queryParams, headers, mediaType, hasBody,
+        new RequestBuilder(method, baseUrl.url(), pathUrl, queryParams, headers, mediaType, hasBody,
             isFormEncoded, isMultipart);
 
     if (args != null) {

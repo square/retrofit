@@ -2,8 +2,8 @@ package retrofit;
 
 import com.squareup.okhttp.HttpUrl;
 
-/** An API endpoint. */
-public interface Endpoint {
+/** The base URL of the remote service. */
+public interface BaseUrl {
   /**
    * The base URL.
    * <p>

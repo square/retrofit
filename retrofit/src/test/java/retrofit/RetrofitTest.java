@@ -66,7 +66,7 @@ public final class RetrofitTest {
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
   @Test public void objectMethodsStillWork() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -77,7 +77,7 @@ public final class RetrofitTest {
 
   @Test public void interfaceWithExtendIsNotSupported() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     try {
       retrofit.create(Extending.class);
@@ -89,7 +89,7 @@ public final class RetrofitTest {
 
   @Test public void voidReturnTypeNotAllowed() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     VoidService service = retrofit.create(VoidService.class);
 
@@ -104,7 +104,7 @@ public final class RetrofitTest {
 
   @Test public void callReturnTypeAdapterAddedByDefault() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
@@ -133,7 +133,7 @@ public final class RetrofitTest {
     }
 
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .callAdapterFactory(new MyCallAdapterFactory())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
@@ -161,7 +161,7 @@ public final class RetrofitTest {
     }
 
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .converterFactory(new ToStringConverterFactory())
         .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
@@ -171,7 +171,7 @@ public final class RetrofitTest {
 
   @Test public void customReturnTypeAdapterMissingThrows() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     FutureMethod example = retrofit.create(FutureMethod.class);
     try {
@@ -186,7 +186,7 @@ public final class RetrofitTest {
 
   @Test public void missingConverterThrowsOnNonRequestBody() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
     try {
@@ -202,7 +202,7 @@ public final class RetrofitTest {
 
   @Test public void missingConverterThrowsOnNonResponseBody() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -221,7 +221,7 @@ public final class RetrofitTest {
 
   @Test public void converterReturningNullThrows() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .converterFactory(new Converter.Factory() {
           @Override public Converter<?> get(Type type) {
             return null;
@@ -246,7 +246,7 @@ public final class RetrofitTest {
 
   @Test public void requestBodyOutgoingAllowed() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -258,7 +258,7 @@ public final class RetrofitTest {
 
   @Test public void responseBodyIncomingAllowed() throws IOException, InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -273,7 +273,7 @@ public final class RetrofitTest {
 
   @Test public void unresolvableTypeThrows() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .converterFactory(new ToStringConverterFactory())
         .build();
     Unresolvable example = retrofit.create(Unresolvable.class);
@@ -317,70 +317,70 @@ public final class RetrofitTest {
     }
   }
 
-  @Test public void endpointRequired() {
+  @Test public void baseUrlRequired() {
     try {
       new Retrofit.Builder().build();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Endpoint required.");
+      assertThat(e).hasMessage("Base URL required.");
     }
   }
 
-  @Test public void endpointNullThrows() {
+  @Test public void baseUrlNullThrows() {
     try {
-      new Retrofit.Builder().endpoint((String) null);
+      new Retrofit.Builder().baseUrl((String) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("url == null");
+      assertThat(e).hasMessage("baseUrl == null");
     }
     try {
-      new Retrofit.Builder().endpoint((HttpUrl) null);
+      new Retrofit.Builder().baseUrl((HttpUrl) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("url == null");
+      assertThat(e).hasMessage("baseUrl == null");
     }
     try {
-      new Retrofit.Builder().endpoint((Endpoint) null);
+      new Retrofit.Builder().baseUrl((BaseUrl) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("endpoint == null");
+      assertThat(e).hasMessage("baseUrl == null");
     }
   }
 
-  @Test public void endpointInvalidThrows() {
+  @Test public void baseUrlInvalidThrows() {
     try {
-      new Retrofit.Builder().endpoint("ftp://foo/bar");
+      new Retrofit.Builder().baseUrl("ftp://foo/bar");
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Illegal URL: ftp://foo/bar");
     }
   }
 
-  @Test public void endpointStringPropagated() {
+  @Test public void baseUrlStringPropagated() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .build();
-    Endpoint endpoint = retrofit.endpoint();
-    assertThat(endpoint).isNotNull();
-    assertThat(endpoint.url().toString()).isEqualTo("http://example.com/");
+    BaseUrl baseUrl = retrofit.baseUrl();
+    assertThat(baseUrl).isNotNull();
+    assertThat(baseUrl.url().toString()).isEqualTo("http://example.com/");
   }
 
-  @Test public void endpointHttpUrlPropagated() {
+  @Test public void baseHttpUrlPropagated() {
     HttpUrl url = HttpUrl.parse("http://example.com/");
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(url)
+        .baseUrl(url)
         .build();
-    Endpoint endpoint = retrofit.endpoint();
-    assertThat(endpoint).isNotNull();
-    assertThat(endpoint.url()).isSameAs(url);
+    BaseUrl baseUrl = retrofit.baseUrl();
+    assertThat(baseUrl).isNotNull();
+    assertThat(baseUrl.url()).isSameAs(url);
   }
 
-  @Test public void endpointPropagated() {
-    Endpoint endpoint = mock(Endpoint.class);
+  @Test public void baseUrlPropagated() {
+    BaseUrl baseUrl = mock(BaseUrl.class);
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(endpoint)
+        .baseUrl(baseUrl)
         .build();
-    assertThat(retrofit.endpoint()).isSameAs(endpoint);
+    assertThat(retrofit.baseUrl()).isSameAs(baseUrl);
   }
 
   @Test public void clientNullThrows() {
@@ -394,7 +394,7 @@ public final class RetrofitTest {
 
   @Test public void clientDefault() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com")
+        .baseUrl("http://example.com")
         .build();
       assertThat(retrofit.client()).isNotNull();
   }
@@ -402,7 +402,7 @@ public final class RetrofitTest {
   @Test public void clientPropagated() {
     OkHttpClient client = new OkHttpClient();
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .client(client)
         .build();
     assertThat(retrofit.client()).isSameAs(client);
@@ -419,7 +419,7 @@ public final class RetrofitTest {
 
   @Test public void converterNoDefault() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .build();
     assertThat(retrofit.converterFactory()).isNull();
   }
@@ -427,7 +427,7 @@ public final class RetrofitTest {
   @Test public void converterFactoryPropagated() {
     Converter.Factory factory = mock(Converter.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .converterFactory(factory)
         .build();
     assertThat(retrofit.converterFactory()).isSameAs(factory);
@@ -444,7 +444,7 @@ public final class RetrofitTest {
 
   @Test public void callAdapterFactoryDefault() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .build();
     assertThat(retrofit.callAdapterFactory()).isNotNull();
   }
@@ -452,7 +452,7 @@ public final class RetrofitTest {
   @Test public void callAdapterFactoryPropagated() {
     CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .callAdapterFactory(factory)
         .build();
     assertThat(retrofit.callAdapterFactory()).isSameAs(factory);
@@ -469,7 +469,7 @@ public final class RetrofitTest {
 
   @Test public void callbackExecutorNoDefault() {
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .build();
     assertThat(retrofit.callbackExecutor()).isNull();
   }
@@ -477,7 +477,7 @@ public final class RetrofitTest {
   @Test public void callbackExecutorPropagated() {
     Executor executor = mock(Executor.class);
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint("http://example.com/")
+        .baseUrl("http://example.com/")
         .callbackExecutor(executor)
         .build();
     assertThat(retrofit.callbackExecutor()).isSameAs(executor);
@@ -490,7 +490,7 @@ public final class RetrofitTest {
       }
     });
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
@@ -521,7 +521,7 @@ public final class RetrofitTest {
       }
     });
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(server.getUrl("/").toString())
+        .baseUrl(server.getUrl("/").toString())
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);

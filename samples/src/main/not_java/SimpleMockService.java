@@ -60,9 +60,9 @@ public final class SimpleMockService {
   }
 
   public static void main(String... args) {
-    // Create a very simple REST adapter which points the GitHub API endpoint.
+    // Create a very simple REST adapter which points the GitHub API.
     Retrofit retrofit = new Retrofit.Builder()
-        .endpoint(SimpleService.API_URL)
+        .baseUrl(SimpleService.API_URL)
         .build();
 
     // Wrap our REST adapter to allow mock implementations and fake network delay.
