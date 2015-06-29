@@ -35,6 +35,7 @@ import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
+import retrofit.http.Url;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -176,23 +177,6 @@ public final class RequestBuilderTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "Only one HTTP method is allowed. Found: PATCH and POST.\n    for method Example.method");
-    }
-  }
-
-  @Test public void pathMustBePrefixedWithSlash() {
-    class Example {
-      @GET("foo/bar") //
-      Call<Object> method() {
-        return null;
-      }
-    }
-
-    try {
-      buildRequest(Example.class);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "URL path \"foo/bar\" must start with '/'.\n    for method Example.method");
     }
   }
 
@@ -471,7 +455,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Multiple @Body method annotations found.\n    for method Example.method");
+          "Multiple @Body method annotations found. (parameter #2)\n    for method Example.method");
     }
   }
 
@@ -731,6 +715,23 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
+  @Test public void getWithQueryThenPathThrows() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Call<Object> method(@Query("kit") String kit, @Path("ping") String ping) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "kat", "pong");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("A @Path parameter must not come after a @Query. (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
   @Test public void getWithPathAndQueryQuestionMarkParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
@@ -862,6 +863,167 @@ public final class RequestBuilderTest {
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&pi%20ng=p%20g");
     assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithUrl() {
+    class Example {
+      @GET
+      Call<Object> method(@Url String url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "foo/bar/");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getAbsoluteUrl() {
+    class Example {
+      @GET("http://example.org/foo/bar/")
+      Call<Object> method() {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.org/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithUrlAbsolute() {
+    class Example {
+      @GET
+      Call<Object> method(@Url String url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "http://example.org/foo/bar/");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.org/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithNonStringUrlThrows() {
+    class Example {
+      @GET
+      Call<Object> method(@Url Object url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "foo/bar");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@Url must be String type. (parameter #1)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getUrlAndUrlParamThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<Object> method(@Url Object url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "foo/bar");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@Url must be String type. (parameter #1)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithoutUrlThrows() {
+    class Example {
+      @GET
+      Call<Object> method() {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Missing either @GET URL or @Url parameter.\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithUrlThenPathThrows() {
+    class Example {
+      @GET
+      Call<Object> method(@Url String url, @Path("hey") String hey) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "foo/bar");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@Path parameters may not be used with @Url. (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithPathThenUrlThrows() {
+    class Example {
+      @GET
+      Call<Object> method(@Path("hey") String hey, @Url Object url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "foo/bar");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@Path can only be used with relative url on @GET (parameter #1)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithQueryThenUrlThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<Object> method(@Query("hey") String hey, @Url Object url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "hey", "foo/bar/");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("A @Url parameter must not come after a @Query (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithUrlThenQuery() {
+    class Example {
+      @GET
+      Call<Object> method(@Url String url, @Query("hey") String hey) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "foo/bar/", "hey!");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?hey=hey!");
   }
 
   @Test public void normalPostWithPathParam() {

@@ -29,8 +29,10 @@ import okio.BufferedSink;
 
 final class RequestBuilder {
   private final String method;
-  private final HttpUrl.Builder urlBuilder;
-  private String pathUrl;
+
+  private final HttpUrl baseUrl;
+  private String relativeUrl;
+  private HttpUrl.Builder urlBuilder;
 
   private final Request.Builder requestBuilder;
   private MediaType mediaType;
@@ -40,17 +42,12 @@ final class RequestBuilder {
   private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
-  RequestBuilder(String method, HttpUrl baseUrl, String pathUrl, String queryParams,
-      Headers headers, MediaType mediaType, boolean hasBody, boolean isFormEncoded,
-      boolean isMultipart) {
+  RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
+      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
 
-    HttpUrl.Builder urlBuilder = baseUrl.newBuilder();
-    if (queryParams != null) {
-      urlBuilder.query(queryParams);
-    }
-    this.urlBuilder = urlBuilder;
-    this.pathUrl = pathUrl;
+    this.baseUrl = baseUrl;
+    this.relativeUrl = relativeUrl;
 
     Request.Builder requestBuilder = new Request.Builder();
     if (headers != null) {
@@ -70,6 +67,10 @@ final class RequestBuilder {
     }
   }
 
+  void setRelativeUrl(String relativeUrl) {
+    this.relativeUrl = relativeUrl;
+  }
+
   void addHeader(String name, String value) {
     if ("Content-Type".equalsIgnoreCase(name)) {
       mediaType = MediaType.parse(value);
@@ -79,6 +80,10 @@ final class RequestBuilder {
   }
 
   void addPathParam(String name, String value, boolean encoded) {
+    if (relativeUrl == null) {
+      // The relative URL is cleared when the first query parameter is set.
+      throw new AssertionError();
+    }
     try {
       if (!encoded) {
         String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
@@ -86,9 +91,9 @@ final class RequestBuilder {
         // encode spaces rather than +. Query encoding difference specified in HTML spec.
         // Any remaining plus signs represent spaces as already URLEncoded.
         encodedValue = encodedValue.replace("+", "%20");
-        pathUrl = pathUrl.replace("{" + name + "}", encodedValue);
+        relativeUrl = relativeUrl.replace("{" + name + "}", encodedValue);
       } else {
-        pathUrl = pathUrl.replace("{" + name + "}", String.valueOf(value));
+        relativeUrl = relativeUrl.replace("{" + name + "}", String.valueOf(value));
       }
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(
@@ -97,6 +102,12 @@ final class RequestBuilder {
   }
 
   void addQueryParam(String name, String value, boolean encoded) {
+    if (relativeUrl != null) {
+      // Do a one-time combination of the built relative URL and the base URL.
+      urlBuilder = baseUrl.resolve(relativeUrl).newBuilder();
+      relativeUrl = null;
+    }
+
     if (encoded) {
       urlBuilder.addEncodedQueryParameter(name, value);
     } else {
@@ -121,8 +132,14 @@ final class RequestBuilder {
   }
 
   Request build() {
-    // TODO this should append, not replace.
-    HttpUrl url = urlBuilder.encodedPath(pathUrl).build();
+    HttpUrl url;
+    HttpUrl.Builder urlBuilder = this.urlBuilder;
+    if (urlBuilder != null) {
+      url = urlBuilder.build();
+    } else {
+      // No query parameters triggered builder creation, just combine the relative URL and base URL.
+      url = baseUrl.resolve(relativeUrl);
+    }
 
     RequestBody body = this.body;
     if (body == null) {

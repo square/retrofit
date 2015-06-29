@@ -22,8 +22,7 @@ import com.squareup.okhttp.Request;
 final class RequestFactory {
   private final String method;
   private final BaseUrl baseUrl;
-  private final String pathUrl;
-  private final String queryParams;
+  private final String relativeUrl;
   private final Headers headers;
   private final MediaType mediaType;
   private final boolean hasBody;
@@ -31,13 +30,12 @@ final class RequestFactory {
   private final boolean isMultipart;
   private final RequestBuilderAction[] requestBuilderActions;
 
-  RequestFactory(String method, BaseUrl baseUrl, String pathUrl, String queryParams,
-      Headers headers, MediaType mediaType, boolean hasBody, boolean isFormEncoded,
-      boolean isMultipart, RequestBuilderAction[] requestBuilderActions) {
+  RequestFactory(String method, BaseUrl baseUrl, String relativeUrl, Headers headers,
+      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
+      RequestBuilderAction[] requestBuilderActions) {
     this.method = method;
     this.baseUrl = baseUrl;
-    this.pathUrl = pathUrl;
-    this.queryParams = queryParams;
+    this.relativeUrl = relativeUrl;
     this.headers = headers;
     this.mediaType = mediaType;
     this.hasBody = hasBody;
@@ -48,7 +46,7 @@ final class RequestFactory {
 
   Request create(Object... args) {
     RequestBuilder requestBuilder =
-        new RequestBuilder(method, baseUrl.url(), pathUrl, queryParams, headers, mediaType, hasBody,
+        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, mediaType, hasBody,
             isFormEncoded, isMultipart);
 
     if (args != null) {
