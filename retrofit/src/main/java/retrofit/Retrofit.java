@@ -164,7 +164,7 @@ public final class Retrofit {
    * Calling {@link #baseUrl} is required before calling {@link #build()}. All other methods
    * are optional.
    */
-  public static class Builder {
+  public static final class Builder {
     private OkHttpClient client;
     private BaseUrl baseUrl;
     private Converter.Factory converterFactory;
