@@ -246,12 +246,12 @@ compile 'com.squareup.retrofit:retrofit:<span class="version pln"><em>(insert la
             <pre class="prettyprint">&lt;dependency>
   &lt;groupId>com.squareup.okhttp&lt;/groupId>
   &lt;artifactId>okhttp&lt;/artifactId>
-  &lt;version>2.0.0&lt;/version>
+  &lt;version><span class="okhttpversion pln"><em>(insert latest version)</em></span>&lt;/version>
 &lt;/dependency>
 </pre>
             <h4>Gradle</h4>
 <pre class="prettyprint">
-compile 'com.squareup.okhttp:okhttp:2.0.0'
+compile 'com.squareup.okhttp:okhttp:<span class="okhttpversion pln"><em>(insert latest version)</em></span>'
 </pre>
             <h4>ProGuard</h4>
             <p>If you are using Proguard in your project add the following lines to your configuration:</p>
@@ -337,6 +337,9 @@ limitations under the License.</pre>
           $('.version').text(version);
           $('.version-tag').text('v' + version);
           $('.version-href').attr('href', url);
+        });
+        $.fn.artifactVersion('com.squareup.okhttp', 'okhttp', function(version, url) {
+          $('.okhttpversion').text(version);
         });
       });
 
