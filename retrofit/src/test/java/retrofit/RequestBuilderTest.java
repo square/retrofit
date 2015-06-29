@@ -882,7 +882,7 @@ public final class RequestBuilderTest {
 
   @Test public void getAbsoluteUrl() {
     class Example {
-      @GET("http://example.org/foo/bar/")
+      @GET("http://example2.com/foo/bar/")
       Call<Object> method() {
         return null;
       }
@@ -891,7 +891,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.org/foo/bar/");
+    assertThat(request.urlString()).isEqualTo("http://example2.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -903,10 +903,25 @@ public final class RequestBuilderTest {
       }
     }
 
-    Request request = buildRequest(Example.class, "http://example.org/foo/bar/");
+    Request request = buildRequest(Example.class, "https://example2.com/foo/bar/");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.org/foo/bar/");
+    assertThat(request.urlString()).isEqualTo("https://example2.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithUrlAbsoluteSameHost() {
+    class Example {
+      @GET
+      Call<Object> method(@Url String url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "http://example.com/foo/bar/");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -1024,6 +1039,21 @@ public final class RequestBuilderTest {
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?hey=hey!");
+  }
+
+  @Test public void postWithUrl() {
+    class Example {
+      @POST
+      Call<Object> method(@Url String url, @Body RequestBody body) {
+        return null;
+      }
+    }
+    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    Request request = buildRequest(Example.class, "http://example.com/foo/bar", body);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar");
+    assertBody(request.body(), "hi");
   }
 
   @Test public void normalPostWithPathParam() {
