@@ -121,7 +121,7 @@ public final class RetrofitTest {
         }
         return new CallAdapter<Object>() {
           @Override public Type responseType() {
-            return Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
+            return Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
           }
 
           @Override public Object adapt(Call<Object> call) {

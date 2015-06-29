@@ -51,7 +51,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
           + " as Observable<Foo> or Observable<? extends Foo>");
     }
 
-    Type observableType = Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
+    Type observableType = Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
     Class<?> rawObservableType = Utils.getRawType(observableType);
 
     if (rawObservableType == Response.class) {
@@ -59,7 +59,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
         throw new IllegalStateException("Response must be parameterized"
             + " as Response<Foo> or Response<? extends Foo>");
       }
-      Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) observableType);
+      Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) observableType);
       return new ResponseCallAdapter<>(responseType);
     }
 
@@ -68,7 +68,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
         throw new IllegalStateException("Result must be parameterized"
             + " as Result<Foo> or Result<? extends Foo>");
       }
-      Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) observableType);
+      Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) observableType);
       return new ResultCallAdapter<>(responseType);
     }
 
