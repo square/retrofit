@@ -1336,6 +1336,58 @@ public final class RequestBuilderTest {
         .contains("\r\npong\r\n--");
   }
 
+  @Test public void multipartPartArray() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<Object> method(@Part("ping") String[] ping) {
+        return null;
+      }
+    }
+    Object args = new String[] { "pong", "pang" };
+    Request request = buildRequest(Example.class, args);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"ping\"")
+        .contains("pong")
+        .contains("name=\"ping\"")
+        .contains("pang");
+  }
+
+  @Test public void multipartPartList() throws IOException {
+
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<Object> method(@Part("ping") List<String> ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, Arrays.asList("pong", "pang"));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"ping\"")
+        .contains("pong")
+        .contains("name=\"ping\"")
+        .contains("pang");
+  }
+
   @Test public void multipartPartOptional() {
     class Example {
       @Multipart //

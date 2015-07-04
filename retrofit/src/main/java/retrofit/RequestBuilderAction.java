@@ -199,8 +199,25 @@ abstract class RequestBuilderAction {
     @Override void perform(RequestBuilder builder, Object value) {
       if (value == null) return; // Skip null values.
 
-      //noinspection unchecked
-      builder.addPart(headers, converter.toBody((T) value));
+      if (value instanceof Iterable) {
+        for (Object iterableValue : (Iterable<?>) value) {
+          if (iterableValue != null) { // Skip null values.
+            //noinspection unchecked
+            builder.addPart(headers, converter.toBody((T) iterableValue));
+          }
+        }
+      } else if (value.getClass().isArray()) {
+        for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
+          Object arrayValue = Array.get(value, x);
+          if (arrayValue != null) { // Skip null values.
+            //noinspection unchecked
+            builder.addPart(headers, converter.toBody((T) arrayValue));
+          }
+        }
+      } else {
+        //noinspection unchecked
+        builder.addPart(headers, converter.toBody((T) value));
+      }
     }
   }
 
