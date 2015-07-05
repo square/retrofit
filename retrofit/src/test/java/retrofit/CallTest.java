@@ -37,7 +37,7 @@ import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.Streaming;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -424,18 +424,18 @@ public final class CallTest {
         .build();
     Service example = retrofit.create(Service.class);
 
-    server.enqueue(new MockResponse().setBody("1234").throttleBody(1, 500, MILLISECONDS));
+    server.enqueue(new MockResponse()
+        .setBody("1234")
+        .setSocketPolicy(DISCONNECT_DURING_RESPONSE_BODY));
 
-    long exeuteStart = System.nanoTime();
-    Response<ResponseBody> response = example.getBody().execute();
-    long executeTook = System.nanoTime() - exeuteStart;
-    assertThat(executeTook).isGreaterThan(MILLISECONDS.toNanos(1000));
-
-    long readStart = System.nanoTime();
-    String body = response.body().string();
-    long readTook = System.nanoTime() - readStart;
-    assertThat(readTook).isLessThan(MILLISECONDS.toNanos(500));
-    assertThat(body).isEqualTo("1234");
+    Call<ResponseBody> buffered = example.getBody();
+    // When buffering we will detect all socket problems before returning the Response.
+    try {
+      buffered.execute();
+      fail();
+    } catch (IOException e) {
+      assertThat(e).hasMessage("unexpected end of stream");
+    }
   }
 
   @Test public void responseBodyStreams() throws IOException {
@@ -445,18 +445,20 @@ public final class CallTest {
         .build();
     Service example = retrofit.create(Service.class);
 
-    server.enqueue(new MockResponse().setBody("1234").throttleBody(1, 500, MILLISECONDS));
+    server.enqueue(new MockResponse()
+        .setBody("1234")
+        .setSocketPolicy(DISCONNECT_DURING_RESPONSE_BODY));
 
-    long exeuteStart = System.nanoTime();
     Response<ResponseBody> response = example.getStreamingBody().execute();
-    long executeTook = System.nanoTime() - exeuteStart;
-    assertThat(executeTook).isLessThan(MILLISECONDS.toNanos(500));
 
-    long readStart = System.nanoTime();
-    String body = response.body().string();
-    long readTook = System.nanoTime() - readStart;
-    assertThat(readTook).isGreaterThan(MILLISECONDS.toNanos(1000));
-    assertThat(body).isEqualTo("1234");
+    ResponseBody streamedBody = response.body();
+    // When streaming we only detect socket problems as the ResponseBody is read.
+    try {
+      streamedBody.string();
+      fail();
+    } catch (IOException e) {
+      assertThat(e).hasMessage("unexpected end of stream");
+    }
   }
 
   @Test public void rawResponseContentTypeAndLengthButNoSource() throws IOException {
