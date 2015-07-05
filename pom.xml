@@ -50,7 +50,7 @@
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
-    <okhttp.version>2.4.0</okhttp.version>
+    <okhttp.version>2.5.0-SNAPSHOT</okhttp.version>
 
     <!-- Adapter Dependencies -->
     <rxjava.version>1.0.10</rxjava.version>
