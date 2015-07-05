@@ -49,7 +49,7 @@ public class SimpleXmlConverterTest {
     Format format = new Format(0, null, new HyphenStyle(), Verbosity.HIGH);
     Persister persister = new Persister(format);
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(SimpleXmlConverterFactory.create(persister))
         .build();
     service = retrofit.create(Service.class);

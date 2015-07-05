@@ -66,7 +66,7 @@ public final class RetrofitTest {
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
   @Test public void objectMethodsStillWork() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -77,7 +77,7 @@ public final class RetrofitTest {
 
   @Test public void interfaceWithExtendIsNotSupported() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     try {
       retrofit.create(Extending.class);
@@ -89,7 +89,7 @@ public final class RetrofitTest {
 
   @Test public void voidReturnTypeNotAllowed() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     VoidService service = retrofit.create(VoidService.class);
 
@@ -104,7 +104,7 @@ public final class RetrofitTest {
 
   @Test public void callReturnTypeAdapterAddedByDefault() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
@@ -133,7 +133,7 @@ public final class RetrofitTest {
     }
 
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .callAdapterFactory(new MyCallAdapterFactory())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
@@ -161,7 +161,7 @@ public final class RetrofitTest {
     }
 
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .callAdapterFactory(new GreetingCallAdapterFactory())
         .build();
@@ -171,7 +171,7 @@ public final class RetrofitTest {
 
   @Test public void customReturnTypeAdapterMissingThrows() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     FutureMethod example = retrofit.create(FutureMethod.class);
     try {
@@ -186,7 +186,7 @@ public final class RetrofitTest {
 
   @Test public void missingConverterThrowsOnNonRequestBody() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
     try {
@@ -202,7 +202,7 @@ public final class RetrofitTest {
 
   @Test public void missingConverterThrowsOnNonResponseBody() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -221,7 +221,7 @@ public final class RetrofitTest {
 
   @Test public void converterReturningNullThrows() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new Converter.Factory() {
           @Override public Converter<?> get(Type type) {
             return null;
@@ -246,7 +246,7 @@ public final class RetrofitTest {
 
   @Test public void requestBodyOutgoingAllowed() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -258,7 +258,7 @@ public final class RetrofitTest {
 
   @Test public void responseBodyIncomingAllowed() throws IOException, InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
 
@@ -273,7 +273,7 @@ public final class RetrofitTest {
 
   @Test public void unresolvableTypeThrows() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Unresolvable example = retrofit.create(Unresolvable.class);
@@ -490,7 +490,7 @@ public final class RetrofitTest {
       }
     });
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
@@ -521,7 +521,7 @@ public final class RetrofitTest {
       }
     });
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);

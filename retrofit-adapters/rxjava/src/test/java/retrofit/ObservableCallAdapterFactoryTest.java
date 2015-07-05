@@ -48,7 +48,7 @@ public final class ObservableCallAdapterFactoryTest {
 
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new StringConverterFactory())
         .callAdapterFactory(ObservableCallAdapterFactory.create())
         .build();

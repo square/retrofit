@@ -57,7 +57,7 @@ public final class CallTest {
 
   @Test public void http200Sync() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -71,7 +71,7 @@ public final class CallTest {
 
   @Test public void http200Async() throws InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -99,7 +99,7 @@ public final class CallTest {
 
   @Test public void http404Sync() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -114,7 +114,7 @@ public final class CallTest {
 
   @Test public void http404Async() throws InterruptedException, IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -143,7 +143,7 @@ public final class CallTest {
 
   @Test public void transportProblemSync() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -160,7 +160,7 @@ public final class CallTest {
 
   @Test public void transportProblemAsync() throws InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -187,7 +187,7 @@ public final class CallTest {
 
   @Test public void conversionProblemOutgoingSync() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter<?> get(Type type) {
             return new StringConverter() {
@@ -211,7 +211,7 @@ public final class CallTest {
 
   @Test public void conversionProblemOutgoingAsync() throws InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter<?> get(Type type) {
             return new StringConverter() {
@@ -244,7 +244,7 @@ public final class CallTest {
 
   @Test public void conversionProblemIncomingSync() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter<?> get(Type type) {
             return new StringConverter() {
@@ -286,7 +286,7 @@ public final class CallTest {
     });
 
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .client(client)
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter<?> get(Type type) {
@@ -318,7 +318,7 @@ public final class CallTest {
 
   @Test public void conversionProblemIncomingAsync() throws InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter<?> get(Type type) {
             return new StringConverter() {
@@ -354,7 +354,7 @@ public final class CallTest {
   @Test public void http204SkipsConverter() throws IOException {
     final Converter converter = spy(new ToStringConverterFactory.StringConverter());
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter get(Type type) {
             return converter;
@@ -374,7 +374,7 @@ public final class CallTest {
   @Test public void http205SkipsConverter() throws IOException {
     final Converter converter = spy(new ToStringConverterFactory.StringConverter());
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory() {
           @Override public Converter get(Type type) {
             return converter;
@@ -393,7 +393,7 @@ public final class CallTest {
 
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -406,7 +406,7 @@ public final class CallTest {
 
   @Test public void responseBody() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -419,7 +419,7 @@ public final class CallTest {
 
   @Test public void responseBodyBuffers() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -440,7 +440,7 @@ public final class CallTest {
 
   @Test public void responseBodyStreams() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -463,7 +463,7 @@ public final class CallTest {
 
   @Test public void rawResponseContentTypeAndLengthButNoSource() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -485,7 +485,7 @@ public final class CallTest {
 
   @Test public void emptyResponse() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service example = retrofit.create(Service.class);
@@ -501,7 +501,7 @@ public final class CallTest {
 
   @Test public void cancelThrowsBeforeExecute() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service service = retrofit.create(Service.class);
@@ -517,7 +517,7 @@ public final class CallTest {
 
   @Test public void cloningExecutedRequestDoesNotCopyState() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service service = retrofit.create(Service.class);
@@ -538,7 +538,7 @@ public final class CallTest {
 
   @Test public void cancelRequest() throws InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
         .build();
     Service service = retrofit.create(Service.class);
