@@ -47,7 +47,7 @@ public final class WireConverterTest {
 
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(WireConverterFactory.create())
         .build();
     service = retrofit.create(Service.class);

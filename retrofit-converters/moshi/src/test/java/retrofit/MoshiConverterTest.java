@@ -87,7 +87,7 @@ public final class MoshiConverterTest {
         .add(new AnInterfaceAdapter())
         .build();
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.getUrl("/").toString())
+        .baseUrl(server.url("/"))
         .converterFactory(MoshiConverterFactory.create(moshi))
         .build();
     service = retrofit.create(Service.class);
