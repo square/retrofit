@@ -18,6 +18,7 @@ package retrofit.http;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import retrofit.Retrofit;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -29,8 +30,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <ul>
  * <li>If the type is {@link String} the value will also be used directly with a {@code text/plain}
  * content type.</li>
- * <li>Other object types will be converted to an appropriate representation by calling {@link
- * retrofit.Converter#toBody(Object, java.lang.reflect.Type)}.</li>
+ * <li>Other object types will be converted to an appropriate representation by using
+ * {@linkplain Retrofit#converterFactory() a converter}.</li>
  * </ul>
  * <p>
  * Values may be {@code null} which will omit them from the request body.
