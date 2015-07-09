@@ -88,12 +88,12 @@ public final class ExecutorCallAdapterFactoryTest {
     final Response<String> response = Response.fakeSuccess("Hi");
     Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
-        callback.success(response);
+        callback.onResponse(response);
       }
     });
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
-    verify(callback).success(response);
+    verify(callback).onResponse(response);
   }
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
@@ -102,13 +102,13 @@ public final class ExecutorCallAdapterFactoryTest {
     final Throwable throwable = new IOException();
     Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
-        callback.failure(throwable);
+        callback.onFailure(throwable);
       }
     });
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verifyNoMoreInteractions(callbackExecutor);
-    verify(callback).failure(throwable);
+    verify(callback).onFailure(throwable);
     verifyNoMoreInteractions(callback);
   }
 

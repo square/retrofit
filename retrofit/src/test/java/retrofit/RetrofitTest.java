@@ -500,11 +500,11 @@ public final class RetrofitTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<ResponseBody>() {
-      @Override public void success(Response<ResponseBody> response) {
+      @Override public void onResponse(Response<ResponseBody> response) {
         latch.countDown();
       }
 
-      @Override public void failure(Throwable t) {
+      @Override public void onFailure(Throwable t) {
         t.printStackTrace();
       }
     });
@@ -531,11 +531,11 @@ public final class RetrofitTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<ResponseBody>() {
-      @Override public void success(Response<ResponseBody> response) {
+      @Override public void onResponse(Response<ResponseBody> response) {
         throw new AssertionError();
       }
 
-      @Override public void failure(Throwable t) {
+      @Override public void onFailure(Throwable t) {
         latch.countDown();
       }
     });
