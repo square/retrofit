@@ -499,7 +499,7 @@ public final class CallTest {
     assertThat(rawBody.contentType().toString()).isEqualTo("text/stringy");
   }
 
-  @Test public void cancelThrowsBeforeExecute() {
+  @Test public void cancelBeforeExecute() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .converterFactory(new ToStringConverterFactory())
@@ -507,12 +507,40 @@ public final class CallTest {
     Service service = retrofit.create(Service.class);
     Call<String> call = service.getString();
 
+    call.cancel();
+
     try {
-      call.cancel();
+      call.execute();
       fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("enqueue or execute must be called first");
+    } catch (IOException e) {
+      assertThat(e).hasMessage("Canceled");
     }
+  }
+
+  @Test public void cancelBeforeEnqueue() throws Exception {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .converterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+    Call<String> call = service.getString();
+
+    call.cancel();
+
+    final AtomicReference<Throwable> failureRef = new AtomicReference<>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<String>() {
+      @Override public void success(Response<String> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void failure(Throwable t) {
+        failureRef.set(t);
+        latch.countDown();
+      }
+    });
+    latch.await();
+    assertThat(failureRef.get()).hasMessage("Canceled");
   }
 
   @Test public void cloningExecutedRequestDoesNotCopyState() throws IOException {
@@ -523,17 +551,13 @@ public final class CallTest {
     Service service = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hello"));
 
     Call<String> call = service.getString();
     assertThat(call.execute().body()).isEqualTo("Hi");
 
     Call<String> cloned = call.clone();
-    try {
-      cloned.cancel();
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("enqueue or execute must be called first");
-    }
+    assertThat(cloned.execute().body()).isEqualTo("Hello");
   }
 
   @Test public void cancelRequest() throws InterruptedException {

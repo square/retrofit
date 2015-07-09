@@ -30,6 +30,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
+  private volatile boolean canceled;
 
   OkHttpCall(OkHttpClient client, RequestFactory requestFactory, Converter<T> responseConverter,
       Object[] args) {
@@ -57,6 +58,9 @@ final class OkHttpCall<T> implements Call<T> {
       callback.failure(t);
       return;
     }
+    if (canceled) {
+      rawCall.cancel();
+    }
     this.rawCall = rawCall;
 
     rawCall.enqueue(new com.squareup.okhttp.Callback() {
@@ -81,10 +85,10 @@ final class OkHttpCall<T> implements Call<T> {
       }
 
       @Override public void onResponse(com.squareup.okhttp.Response rawResponse) {
-        final Response<T> response;
+        Response<T> response;
         try {
           response = parseResponse(rawResponse);
-        } catch (final Throwable e) {
+        } catch (Throwable e) {
           callFailure(e);
           return;
         }
@@ -99,7 +103,10 @@ final class OkHttpCall<T> implements Call<T> {
       executed = true;
     }
 
-    final com.squareup.okhttp.Call rawCall = createRawCall();
+    com.squareup.okhttp.Call rawCall = createRawCall();
+    if (canceled) {
+      rawCall.cancel();
+    }
     this.rawCall = rawCall;
 
     return parseResponse(rawCall.execute());
@@ -145,10 +152,10 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   public void cancel() {
+    canceled = true;
     com.squareup.okhttp.Call rawCall = this.rawCall;
-    if (rawCall == null) {
-      throw new IllegalStateException("enqueue or execute must be called first");
+    if (rawCall != null) {
+      rawCall.cancel();
     }
-    rawCall.cancel();
   }
 }
