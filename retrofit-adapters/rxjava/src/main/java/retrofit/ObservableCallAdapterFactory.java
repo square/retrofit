@@ -94,7 +94,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
       }));
 
       call.enqueue(new Callback<T>() {
-        @Override public void success(Response<T> response) {
+        @Override public void onResponse(Response<T> response) {
           if (subscriber.isUnsubscribed()) {
             return;
           }
@@ -107,7 +107,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
           subscriber.onCompleted();
         }
 
-        @Override public void failure(Throwable t) {
+        @Override public void onFailure(Throwable t) {
           if (subscriber.isUnsubscribed()) {
             return;
           }

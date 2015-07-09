@@ -55,7 +55,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       rawCall = createRawCall();
     } catch (Throwable t) {
-      callback.failure(t);
+      callback.onFailure(t);
       return;
     }
     if (canceled) {
@@ -66,7 +66,7 @@ final class OkHttpCall<T> implements Call<T> {
     rawCall.enqueue(new com.squareup.okhttp.Callback() {
       private void callFailure(Throwable e) {
         try {
-          callback.failure(e);
+          callback.onFailure(e);
         } catch (Throwable t) {
           t.printStackTrace();
         }
@@ -74,7 +74,7 @@ final class OkHttpCall<T> implements Call<T> {
 
       private void callSuccess(Response<T> response) {
         try {
-          callback.success(response);
+          callback.onResponse(response);
         } catch (Throwable t) {
           t.printStackTrace();
         }

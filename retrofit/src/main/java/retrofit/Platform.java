@@ -19,7 +19,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import com.squareup.okhttp.OkHttpClient;
-import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +45,7 @@ class Platform {
     if (callbackExecutor != null) {
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
-    return new NothingCallAdapterFactory();
+    return DefaultCallAdapter.FACTORY;
   }
 
   OkHttpClient defaultClient() {
@@ -59,7 +58,7 @@ class Platform {
 
   /** Provides sane defaults for operation on Android. */
   static class Android extends Platform {
-    CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
+    @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
       if (callbackExecutor == null) {
         callbackExecutor = new MainThreadExecutor();
       }
@@ -75,36 +74,6 @@ class Platform {
 
       @Override public String toString() {
         return "MainThreadExecutor";
-      }
-    }
-  }
-
-  static final class NothingCallAdapterFactory implements CallAdapter.Factory {
-    @Override public CallAdapter<?> get(Type returnType) {
-      if (Utils.getRawType(returnType) != Call.class) {
-        return null;
-      }
-      Type responseType = Utils.getCallResponseType(returnType);
-      return new NothingCallAdapter<>(responseType);
-    }
-
-    @Override public String toString() {
-      return "Default";
-    }
-
-    static final class NothingCallAdapter<T> implements CallAdapter<T> {
-      private final Type responseType;
-
-      NothingCallAdapter(Type responseType) {
-        this.responseType = responseType;
-      }
-
-      @Override public Type responseType() {
-        return responseType;
-      }
-
-      @Override public Call<T> adapt(Call<T> call) {
-        return call;
       }
     }
   }
