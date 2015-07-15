@@ -162,6 +162,19 @@ public final class RequestBuilderTest {
     }
   }
 
+  @interface NonNull {}
+
+  @Test public void multipleParameterAnnotationsOnlyOneRetrofitAllowed() throws Exception {
+    class Example {
+      @GET("/") //
+      Call<Object> method(@Query("maybe") @NonNull Object o) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "yep");
+    assertThat(request.urlString()).isEqualTo("http://example.com/?maybe=yep");
+  }
+
   @Test public void twoMethodsFail() {
     class Example {
       @PATCH("/foo") //

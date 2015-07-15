@@ -48,7 +48,6 @@ import retrofit.http.Url;
 
 import static retrofit.Utils.methodError;
 
-/** Request metadata about a service interface declaration. */
 final class RequestFactoryParser {
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
@@ -205,10 +204,7 @@ final class RequestFactoryParser {
       Annotation[] methodParameterAnnotations = methodParameterAnnotationArrays[i];
       if (methodParameterAnnotations != null) {
         for (Annotation methodParameterAnnotation : methodParameterAnnotations) {
-          if (requestBuilderActions[i] != null) {
-            throw parameterError(i, "Multiple Retrofit annotations found, only one allowed.");
-          }
-
+          RequestBuilderAction action = null;
           if (methodParameterAnnotation instanceof Url) {
             if (gotUrl) {
               throw parameterError(i, "Multiple @Url method annotations found.");
@@ -226,7 +222,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@Url cannot be used with @%s URL", httpMethod);
             }
             gotUrl = true;
-            requestBuilderActions[i] = new RequestBuilderAction.Url();
+            action = new RequestBuilderAction.Url();
 
           } else if (methodParameterAnnotation instanceof Path) {
             if (gotQuery) {
@@ -244,12 +240,11 @@ final class RequestFactoryParser {
             Path path = (Path) methodParameterAnnotation;
             String name = path.value();
             validatePathName(i, name);
-            requestBuilderActions[i] = new RequestBuilderAction.Path(name, path.encoded());
+            action = new RequestBuilderAction.Path(name, path.encoded());
 
           } else if (methodParameterAnnotation instanceof Query) {
             Query query = (Query) methodParameterAnnotation;
-            requestBuilderActions[i] =
-                new RequestBuilderAction.Query(query.value(), query.encoded());
+            action = new RequestBuilderAction.Query(query.value(), query.encoded());
             gotQuery = true;
 
           } else if (methodParameterAnnotation instanceof QueryMap) {
@@ -257,19 +252,18 @@ final class RequestFactoryParser {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
             QueryMap queryMap = (QueryMap) methodParameterAnnotation;
-            requestBuilderActions[i] = new RequestBuilderAction.QueryMap(queryMap.encoded());
+            action = new RequestBuilderAction.QueryMap(queryMap.encoded());
 
           } else if (methodParameterAnnotation instanceof Header) {
             Header header = (Header) methodParameterAnnotation;
-            requestBuilderActions[i] = new RequestBuilderAction.Header(header.value());
+            action = new RequestBuilderAction.Header(header.value());
 
           } else if (methodParameterAnnotation instanceof Field) {
             if (!isFormEncoded) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
             Field field = (Field) methodParameterAnnotation;
-            requestBuilderActions[i] =
-                new RequestBuilderAction.Field(field.value(), field.encoded());
+            action = new RequestBuilderAction.Field(field.value(), field.encoded());
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof FieldMap) {
@@ -280,7 +274,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
             FieldMap fieldMap = (FieldMap) methodParameterAnnotation;
-            requestBuilderActions[i] = new RequestBuilderAction.FieldMap(fieldMap.encoded());
+            action = new RequestBuilderAction.FieldMap(fieldMap.encoded());
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof Part) {
@@ -303,7 +297,7 @@ final class RequestFactoryParser {
               }
               converter = converterFactory.get(methodParameterType);
             }
-            requestBuilderActions[i] = new RequestBuilderAction.Part<>(headers, converter);
+            action = new RequestBuilderAction.Part<>(headers, converter);
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof PartMap) {
@@ -315,8 +309,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
             PartMap partMap = (PartMap) methodParameterAnnotation;
-            requestBuilderActions[i] =
-                new RequestBuilderAction.PartMap(converterFactory, partMap.encoding());
+            action = new RequestBuilderAction.PartMap(converterFactory, partMap.encoding());
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {
@@ -341,8 +334,15 @@ final class RequestFactoryParser {
               converter = converterFactory.get(methodParameterType);
             }
 
-            requestBuilderActions[i] = new RequestBuilderAction.Body<>(converter);
+            action = new RequestBuilderAction.Body<>(converter);
             gotBody = true;
+          }
+
+          if (action != null) {
+            if (requestBuilderActions[i] != null) {
+              throw parameterError(i, "Multiple Retrofit annotations found, only one allowed.");
+            }
+            requestBuilderActions[i] = action;
           }
         }
       }

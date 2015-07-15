@@ -51,6 +51,13 @@ final class RequestFactory {
 
     if (args != null) {
       RequestBuilderAction[] actions = requestBuilderActions;
+      if (actions.length != args.length) {
+        throw new IllegalArgumentException("Argument count ("
+            + args.length
+            + ") doesn't match action count ("
+            + actions.length
+            + ")");
+      }
       for (int i = 0, count = args.length; i < count; i++) {
         actions[i].perform(requestBuilder, args[i]);
       }
