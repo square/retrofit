@@ -53,7 +53,7 @@
     <okhttp.version>2.5.0-SNAPSHOT</okhttp.version>
 
     <!-- Adapter Dependencies -->
-    <rxjava.version>1.0.10</rxjava.version>
+    <rxjava.version>1.0.13</rxjava.version>
 
     <!-- Converter Dependencies -->
     <gson.version>2.3.1</gson.version>

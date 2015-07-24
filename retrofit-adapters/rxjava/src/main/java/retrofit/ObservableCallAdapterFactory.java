@@ -18,11 +18,12 @@ package retrofit;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import rx.Observable;
-import rx.Subscriber;
+import rx.Single;
+import rx.SingleSubscriber;
 import rx.functions.Action0;
 import rx.functions.Func1;
 import rx.subscriptions.Subscriptions;
+
 
 /**
  * TODO docs
@@ -43,7 +44,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
   }
 
   @Override public CallAdapter<?> get(Type returnType) {
-    if (Utils.getRawType(returnType) != Observable.class) {
+    if (Utils.getRawType(returnType) != Single.class) {
       return null;
     }
     if (!(returnType instanceof ParameterizedType)) {
@@ -75,14 +76,14 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
     return new SimpleCallAdapter(observableType);
   }
 
-  static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
+  static final class CallOnSubscribe<T> implements Single.OnSubscribe<Response<T>> {
     private final Call<T> originalCall;
 
     private CallOnSubscribe(Call<T> originalCall) {
       this.originalCall = originalCall;
     }
 
-    @Override public void call(final Subscriber<? super Response<T>> subscriber) {
+    @Override public void call(final SingleSubscriber<? super Response<T>> subscriber) {
       // Since Call is a one-shot type, clone it for each new subscriber.
       final Call<T> call = originalCall.clone();
 
@@ -99,12 +100,10 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
             return;
           }
           try {
-            subscriber.onNext(response);
+            subscriber.onSuccess(response);
           } catch (Throwable t) {
             subscriber.onError(t);
-            return;
           }
-          subscriber.onCompleted();
         }
 
         @Override public void onFailure(Throwable t) {
@@ -128,8 +127,8 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public Observable<Response<T>> adapt(Call<T> call) {
-      return Observable.create(new CallOnSubscribe<>(call));
+    @Override public Single<Response<T>> adapt(Call<T> call) {
+      return Single.create(new CallOnSubscribe<>(call));
     }
   }
 
@@ -144,14 +143,14 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public Observable<T> adapt(Call<T> call) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
-          .flatMap(new Func1<Response<T>, Observable<T>>() {
-            @Override public Observable<T> call(Response<T> response) {
+    @Override public Single<T> adapt(Call<T> call) {
+      return Single.create(new CallOnSubscribe<>(call)) //
+          .flatMap(new Func1<Response<T>, Single<T>>() {
+            @Override public Single<T> call(Response<T> response) {
               if (response.isSuccess()) {
-                return Observable.just(response.body());
+                return Single.just(response.body());
               }
-              return Observable.error(new IOException()); // TODO non-suck message.
+              return Single.error(new IOException()); // TODO non-suck message.
             }
           });
     }
@@ -168,8 +167,8 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public Observable<Result<T>> adapt(Call<T> call) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
+    @Override public Single<Result<T>> adapt(Call<T> call) {
+      return Single.create(new CallOnSubscribe<>(call)) //
           .map(new Func1<Response<T>, Result<T>>() {
             @Override public Result<T> call(Response<T> response) {
               return Result.fromResponse(response);
