@@ -17,8 +17,8 @@ package retrofit;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import java.io.IOException;
 import java.util.List;
 import okio.Buffer;
@@ -42,7 +42,7 @@ public final class ProtoConverterTest {
     @GET("/") Call<List<String>> wrongType();
   }
 
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
 
