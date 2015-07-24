@@ -13,8 +13,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import retrofit.Call;
-import retrofit.MockRetrofit;
 import retrofit.Retrofit;
+import retrofit.mock.Behavior;
+import retrofit.mock.CallBehaviorAdapter;
+import retrofit.mock.Calls;
+import retrofit.mock.MockRetrofit;
 
 /**
  * An example of using {@link MockRetrofit} to create a mock service implementation with
@@ -23,12 +26,9 @@ import retrofit.Retrofit;
 public final class SimpleMockService {
   /** A mock implementation of the {@link GitHub} API interface. */
   static final class MockGitHub implements GitHub {
-    private final MockRetrofit mockRetrofit;
     private final Map<String, Map<String, List<Contributor>>> ownerRepoContributors;
 
-    public MockGitHub(MockRetrofit mockRetrofit) {
-      this.mockRetrofit = mockRetrofit;
-
+    public MockGitHub() {
       ownerRepoContributors = new LinkedHashMap<>();
 
       // Seed some mock data.
@@ -48,7 +48,7 @@ public final class SimpleMockService {
           response = contributors;
         }
       }
-      return mockRetrofit.newSuccessCall(response);
+      return Calls.response(response);
     }
 
     public void addContributor(String owner, String repo, String name, int contributions) {
@@ -72,15 +72,17 @@ public final class SimpleMockService {
         .baseUrl(SimpleService.API_URL)
         .build();
 
-    // Wrap the Retrofit instance to allow creating mock calls which fake network delay.
+    // Create the Behavior object which manages the fake behavior and the background executor.
+    Behavior behavior = Behavior.create();
     ExecutorService bg = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
         .setNameFormat("mock-retrofit-%d")
         .setDaemon(true)
         .build());
-    MockRetrofit mockRetrofit = MockRetrofit.from(retrofit, bg);
 
-    // Create the mock implementation passing in the MockRetrofit to use.
-    MockGitHub gitHub = new MockGitHub(mockRetrofit);
+    // Create the mock implementation and use MockRetrofit to apply the behavior to it.
+    MockRetrofit mockRetrofit = new MockRetrofit(new CallBehaviorAdapter(retrofit, bg), behavior);
+    MockGitHub mockGitHub = new MockGitHub();
+    GitHub gitHub = mockRetrofit.create(GitHub.class, mockGitHub);
 
     // Query for some contributors for a few repositories.
     printContributors(gitHub, "square", "retrofit");
@@ -88,8 +90,8 @@ public final class SimpleMockService {
 
     // Using the mock object, add some additional mock data.
     System.out.println("Adding more mock data...\n");
-    gitHub.addContributor("square", "retrofit", "Foo Bar", 61);
-    gitHub.addContributor("square", "picasso", "Kit Kat", 53);
+    mockGitHub.addContributor("square", "retrofit", "Foo Bar", 61);
+    mockGitHub.addContributor("square", "picasso", "Kit Kat", 53);
 
     // Query for the contributors again so we can see the mock data that was added.
     printContributors(gitHub, "square", "retrofit");

@@ -104,7 +104,7 @@ public final class Retrofit {
   }
 
   /** Create an implementation of the API defined by the {@code service} interface. */
-  @SuppressWarnings("unchecked") // Single interface proxy creation guarded by parameter safety.
+  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(Class<T> service) {
     Utils.validateServiceClass(service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
