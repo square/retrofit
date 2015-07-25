@@ -172,12 +172,12 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
       return Observable.create(new CallOnSubscribe<>(call)) //
           .map(new Func1<Response<T>, Result<T>>() {
             @Override public Result<T> call(Response<T> response) {
-              return Result.fromResponse(response);
+              return Result.response(response);
             }
           })
           .onErrorReturn(new Func1<Throwable, Result<T>>() {
             @Override public Result<T> call(Throwable throwable) {
-              return Result.fromError(throwable);
+              return Result.error(throwable);
             }
           });
     }
