@@ -29,19 +29,24 @@ import org.junit.Rule;
 import org.junit.Test;
 import retrofit.http.GET;
 import rx.Observable;
+import rx.Single;
 import rx.observables.BlockingObservable;
 
 import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-public final class ObservableCallAdapterFactoryTest {
+public final class RxJavaCallAdapterFactoryTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") Observable<String> body();
-    @GET("/") Observable<Response<String>> response();
-    @GET("/") Observable<Result<String>> result();
+    @GET("/") Observable<String> observableBody();
+    @GET("/") Observable<Response<String>> observableResponse();
+    @GET("/") Observable<Result<String>> observableResult();
+    @GET("/") Single<String> singleBody();
+    @GET("/") Single<Response<String>> singleResponse();
+    @GET("/") Single<Result<String>> singleResult();
   }
 
   private Service service;
@@ -50,7 +55,7 @@ public final class ObservableCallAdapterFactoryTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(ObservableCallAdapterFactory.create())
+        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
         .build();
     service = retrofit.create(Service.class);
   }
@@ -58,14 +63,14 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void bodySuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingObservable<String> o = service.body().toBlocking();
+    BlockingObservable<String> o = service.observableBody().toBlocking();
     assertThat(o.first()).isEqualTo("Hi");
   }
 
   @Test public void bodySuccess404() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
-    BlockingObservable<String> o = service.body().toBlocking();
+    BlockingObservable<String> o = service.observableBody().toBlocking();
     try {
       o.first();
       fail();
@@ -78,7 +83,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void bodyFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingObservable<String> o = service.body().toBlocking();
+    BlockingObservable<String> o = service.observableBody().toBlocking();
     try {
       o.first();
       fail();
@@ -90,7 +95,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void responseSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    BlockingObservable<Response<String>> o = service.observableResponse().toBlocking();
     Response<String> response = o.first();
     assertThat(response.isSuccess()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
@@ -99,7 +104,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void responseSuccess404() throws IOException {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    BlockingObservable<Response<String>> o = service.observableResponse().toBlocking();
     Response<String> response = o.first();
     assertThat(response.isSuccess()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
@@ -108,7 +113,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void responseFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    BlockingObservable<Response<String>> o = service.observableResponse().toBlocking();
     try {
       o.first();
       fail();
@@ -120,7 +125,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void resultSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    BlockingObservable<Result<String>> o = service.observableResult().toBlocking();
     Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
@@ -131,7 +136,7 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void resultSuccess404() throws IOException {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    BlockingObservable<Result<String>> o = service.observableResult().toBlocking();
     Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
@@ -142,14 +147,14 @@ public final class ObservableCallAdapterFactoryTest {
   @Test public void resultFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    BlockingObservable<Result<String>> o = service.observableResult().toBlocking();
     Result<String> result = o.first();
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
   }
 
   @Test public void responseType() {
-    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
+    CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
     Type classType = new TypeToken<Observable<String>>() {}.getType();
     assertThat(factory.get(classType).responseType()).isEqualTo(String.class);
     Type wilcardType = new TypeToken<Observable<? extends String>>() {}.getType();
@@ -164,27 +169,41 @@ public final class ObservableCallAdapterFactoryTest {
   }
 
   @Test public void nonObservableTypeReturnsNull() {
-    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
+    CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
     CallAdapter<?> adapter = factory.get(String.class);
     assertThat(adapter).isNull();
   }
 
   @Test public void rawTypeThrows() {
-    Type type = new TypeToken<Observable>() {}.getType();
-    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
+    CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
+    Type observableType = new TypeToken<Observable>() {}.getType();
     try {
-      factory.get(type);
+      factory.get(observableType);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
     }
+    Type singleType = new TypeToken<Single>() {}.getType();
+    try {
+      factory.get(singleType);
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Single return type must be parameterized as Single<Foo> or Single<? extends Foo>");
+    }
   }
 
-  @Test public void rawResponseTypeThrows() {
-    Type type = new TypeToken<Observable<Response>>() {}.getType();
-    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
+  @Test public void rawObservableResponseTypeThrows() {
+    CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
+    Type observableType = new TypeToken<Observable<Response>>() {}.getType();
     try {
-      factory.get(type);
+      factory.get(observableType);
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+    }
+    Type singleType = new TypeToken<Single<Response>>() {}.getType();
+    try {
+      factory.get(singleType);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
@@ -192,14 +211,28 @@ public final class ObservableCallAdapterFactoryTest {
   }
 
   @Test public void rawResultTypeThrows() {
-    Type type = new TypeToken<Observable<Result>>() {}.getType();
-    CallAdapter.Factory factory = ObservableCallAdapterFactory.create();
+    CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
+    Type observableType = new TypeToken<Observable<Result>>() {}.getType();
     try {
-      factory.get(type);
+      factory.get(observableType);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
+    Type singleType = new TypeToken<Single<Result>>() {}.getType();
+    try {
+      factory.get(singleType);
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+    }
+  }
+
+  @Test public void single() {
+    // TODO Better tests here. Why is there no toBlocking() on Single?
+    assertNotNull(service.singleBody());
+    assertNotNull(service.singleResponse());
+    assertNotNull(service.singleResult());
   }
 
   static class StringConverterFactory implements Converter.Factory {
