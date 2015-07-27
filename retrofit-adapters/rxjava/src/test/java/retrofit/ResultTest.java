@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 public final class ResultTest {
   @Test public void response() {
     Response<String> response = Response.success("Hi");
-    Result<String> result = Result.fromResponse(response);
+    Result<String> result = Result.response(response);
     assertThat(result.isError()).isFalse();
     assertThat(result.error()).isNull();
     assertThat(result.response()).isSameAs(response);
@@ -32,7 +32,7 @@ public final class ResultTest {
 
   @Test public void nullResponseThrows() {
     try {
-      Result.fromResponse(null);
+      Result.response(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("response == null");
@@ -41,7 +41,7 @@ public final class ResultTest {
 
   @Test public void error() {
     Throwable error = new IOException();
-    Result<Object> result = Result.fromError(error);
+    Result<Object> result = Result.error(error);
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isSameAs(error);
     assertThat(result.response()).isNull();
@@ -49,7 +49,7 @@ public final class ResultTest {
 
   @Test public void nullErrorThrows() {
     try {
-      Result.fromError(null);
+      Result.error(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("error == null");

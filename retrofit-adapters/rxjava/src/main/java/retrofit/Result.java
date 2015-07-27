@@ -21,11 +21,11 @@ import static retrofit.Utils.checkNotNull;
 
 /** The result of executing an HTTP request. */
 public final class Result<T> {
-  static <T> Result<T> fromError(Throwable error) {
+  public static <T> Result<T> error(Throwable error) {
     return new Result<>(null, checkNotNull(error, "error == null"));
   }
 
-  static <T> Result<T> fromResponse(Response<T> response) {
+  public static <T> Result<T> response(Response<T> response) {
     return new Result<>(checkNotNull(response, "response == null"), null);
   }
 
