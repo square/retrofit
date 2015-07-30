@@ -24,7 +24,7 @@ compile 'com.squareup.retrofit:retrofit:1.9.0'
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
-Retrofit requires at minimum Java 6 or Android 2.3.
+Retrofit requires at minimum Java 7 or Android 2.3.
 
 
 
