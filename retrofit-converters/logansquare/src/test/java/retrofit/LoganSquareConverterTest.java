@@ -9,13 +9,16 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.http.Body;
 import retrofit.http.POST;
@@ -23,10 +26,9 @@ import retrofit.http.POST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for the {@linkplain LoganSquareConverter}.
+ * Tests for the {@linkplain LoganSquareObjectConverter}.
  *
- * @author Marcel Schnelle (aurae)
- * @see <a>https://github.com/bluelinelabs/LoganSquare</a>
+ * @author marcel
  */
 public class LoganSquareConverterTest {
 
@@ -105,6 +107,12 @@ public class LoganSquareConverterTest {
 
 	interface Service {
 		@POST("/") Call<Implementation> callImplementation(@Body Implementation body);
+		@POST("/") Call<List<Implementation>> callList(@Body List<Implementation> body);
+		@POST("/") Call<Implementation> callListWrongType(@Body List<List<Implementation>> body);
+		@POST("/") Call<Map<String, Implementation>> callMap(@Body Map<String, Implementation> body);
+		@POST("/") Call<Map<Integer, Implementation>> callMapWrongKey(@Body Map<Integer, Implementation> body);
+		@POST("/") Call<Map<String, List<Implementation>>> callMapWrongValue(@Body Map<String, List<Implementation>> body);
+		@POST("/") Call<Implementation[]> callArray(@Body Implementation[] body);
 	}
 
 	@Rule public final MockWebServer mockWebServer = new MockWebServer();
@@ -114,12 +122,12 @@ public class LoganSquareConverterTest {
 	@Before public void setUp() {
 		service = new Retrofit.Builder()
 				.baseUrl(mockWebServer.url("/"))
-				.converterFactory(new LoganSquareConverterFactory())
+				.converterFactory(LoganSquareConverterFactory.create())
 				.build()
 				.create(Service.class);
 	}
 
-	@Test public void testImplementation() throws IOException, InterruptedException {
+	@Test public void testObject() throws IOException, InterruptedException {
 		// Enqueue a mock response
 		mockWebServer.enqueue(new MockResponse().setBody("{\"customType\":2,\"name\":\"LOGAN SQUARE IS COOL\",\"list\":[\"value1\",\"value2\"]}"));
 
@@ -148,5 +156,131 @@ public class LoganSquareConverterTest {
 		RecordedRequest request = mockWebServer.takeRequest();
 		assertThat(request.getBody().readUtf8()).isEqualTo("{\"customType\":2,\"name\":\"LOGAN SQUARE IS COOL\",\"list\":[\"value1\",\"value2\"]}");
 		assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+	}
+
+	@Test public void testList() throws IOException, InterruptedException {
+		// Enqueue a mock response
+		mockWebServer.enqueue(new MockResponse().setBody("[{\"customType\":2,\"name\":\"LOGAN SQUARE IS COOL\",\"list\":[\"value1\",\"value2\"]},{\"customType\":1,\"name\":\"LOGAN SQUARE IS COOL2\",\"list\":[\"value1\",\"value2\"]}]"));
+
+		// Setup the mock object
+		List<String> values = new ArrayList<>();
+		values.add("value1");
+		values.add("value2");
+		List<Implementation> requestBody = new ArrayList<>();
+		requestBody.add(new Implementation("LOGAN SQUARE IS COOL", "Not serialized", CustomType.VAL_2, values));
+		requestBody.add(new Implementation("LOGAN SQUARE IS COOL2", "Not serialized", CustomType.VAL_1, values));
+
+		// Call the API and execute it
+		Call<List<Implementation>> call = service.callList(requestBody);
+		Response<List<Implementation>> response = call.execute();
+		List<Implementation> responseBody = response.body();
+
+		// Assert that conversions worked
+		// Number of objects
+		assertThat(responseBody).hasSize(2);
+		// Member values of first object
+		Implementation o1 = responseBody.get(0);
+		assertThat(o1.getName()).isEqualTo("LOGAN SQUARE IS COOL");
+		assertThat(o1.getValues()).containsExactly("value1", "value2");
+		assertThat(o1.getCustomType()).isEqualTo(CustomType.VAL_2);
+		assertThat(o1.getNotSerialized()).isNull();
+		// Member values of second object
+		Implementation o2 = responseBody.get(1);
+		assertThat(o2.getName()).isEqualTo("LOGAN SQUARE IS COOL2");
+		assertThat(o2.getValues()).containsExactly("value1", "value2");
+		assertThat(o2.getCustomType()).isEqualTo(CustomType.VAL_1);
+		assertThat(o2.getNotSerialized()).isNull();
+
+		// Check request body and the received header
+		RecordedRequest request = mockWebServer.takeRequest();
+		assertThat(request.getBody().readUtf8()).isEqualTo("[{\"customType\":2,\"name\":\"LOGAN SQUARE IS COOL\",\"list\":[\"value1\",\"value2\"]},{\"customType\":1,\"name\":\"LOGAN SQUARE IS COOL2\",\"list\":[\"value1\",\"value2\"]}]");
+		assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+	}
+
+	@Test public void testListWrongType() throws IOException {
+		// Setup the mock object with an incompatible type argument
+		List<List<Implementation>> body = new ArrayList<>();
+
+		// Setup the API call and fire it
+		try {
+			service.callListWrongType(body);
+			Assertions.failBecauseExceptionWasNotThrown(RuntimeException.class);
+		} catch (RuntimeException ex) {
+		}
+	}
+
+	@Test public void testMap() throws IOException, InterruptedException {
+		// Enqueue a mock response
+		mockWebServer.enqueue(new MockResponse().setBody("{\"item1\":{\"customType\":2,\"name\":\"LOGAN SQUARE IS COOL\",\"list\":[\"value1\",\"value2\"]},\"item2\":{\"customType\":1,\"name\":\"LOGAN SQUARE IS COOL2\",\"list\":[\"value1\",\"value2\"]}}"));
+
+		// Setup the mock object
+		List<String> values = new ArrayList<>();
+		values.add("value1");
+		values.add("value2");
+		Map<String, Implementation> requestBody = new HashMap<>();
+		requestBody.put("item1", new Implementation("LOGAN SQUARE IS COOL", "Not serialized", CustomType.VAL_2, values));
+		requestBody.put("item2", new Implementation("LOGAN SQUARE IS COOL2", "Not serialized", CustomType.VAL_1, values));
+
+		// Call the API and execute it
+		Call<Map<String, Implementation>> call = service.callMap(requestBody);
+		Response<Map<String, Implementation>> response = call.execute();
+		Map<String, Implementation> responseBody = response.body();
+
+		// Assert that conversions worked
+		// Number of objects
+		assertThat(responseBody).hasSize(2);
+		// Member values of first object
+		Implementation o1 = responseBody.get("item1");
+		assertThat(o1.getName()).isEqualTo("LOGAN SQUARE IS COOL");
+		assertThat(o1.getValues()).containsExactly("value1", "value2");
+		assertThat(o1.getCustomType()).isEqualTo(CustomType.VAL_2);
+		assertThat(o1.getNotSerialized()).isNull();
+		// Member values of second object
+		Implementation o2 = responseBody.get("item2");
+		assertThat(o2.getName()).isEqualTo("LOGAN SQUARE IS COOL2");
+		assertThat(o2.getValues()).containsExactly("value1", "value2");
+		assertThat(o2.getCustomType()).isEqualTo(CustomType.VAL_1);
+		assertThat(o2.getNotSerialized()).isNull();
+
+		// Check request body and the received header
+		RecordedRequest request = mockWebServer.takeRequest();
+		assertThat(request.getBody().readUtf8()).isEqualTo("{\"item2\":{\"customType\":1,\"name\":\"LOGAN SQUARE IS COOL2\",\"list\":[\"value1\",\"value2\"]},\"item1\":{\"customType\":2,\"name\":\"LOGAN SQUARE IS COOL\",\"list\":[\"value1\",\"value2\"]}}");
+		assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+	}
+
+	@Test public void testMapWrongKeyType() throws IOException {
+		// Setup the mock object with an incompatible type argument
+		Map<Integer, Implementation> body = new HashMap<>();
+
+		// Setup the API call and fire it
+		try {
+			service.callMapWrongKey(body);
+			Assertions.failBecauseExceptionWasNotThrown(RuntimeException.class);
+		} catch (RuntimeException ex) {
+		}
+	}
+
+	@Test public void testMapWrongValueType() throws IOException {
+		// Setup the mock object with an incompatible type argument
+		Map<String, List<Implementation>> body = new HashMap<>();
+
+		// Setup the API call and fire it
+		try {
+			service.callMapWrongValue(body);
+			Assertions.failBecauseExceptionWasNotThrown(RuntimeException.class);
+		} catch (RuntimeException ex) {
+		}
+	}
+
+	@Test public void testFailWhenArray() throws IOException {
+		// Setup the mock object with an incompatible type argument
+		Implementation[] body = new Implementation[0];
+
+		// Setup the API call and fire it
+		try {
+			service.callArray(body);
+			Assertions.failBecauseExceptionWasNotThrown(RuntimeException.class);
+		} catch (RuntimeException ex) {
+		}
 	}
 }
