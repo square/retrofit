@@ -84,6 +84,11 @@ public final class Response<T> {
     return rawResponse.code();
   }
 
+  /** HTTP status message. */
+  public String message() {
+    return rawResponse.message();
+  }
+
   public Headers headers() {
     return rawResponse.headers();
   }

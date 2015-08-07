@@ -70,7 +70,8 @@ public final class ObservableCallAdapterFactoryTest {
       o.first();
       fail();
     } catch (RuntimeException e) {
-      // TODO assert on some indicator of 404.
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 OK");
     }
   }
 

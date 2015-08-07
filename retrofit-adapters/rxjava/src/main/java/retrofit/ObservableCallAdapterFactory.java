@@ -15,7 +15,6 @@
  */
 package retrofit;
 
-import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import rx.Observable;
@@ -151,7 +150,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
               if (response.isSuccess()) {
                 return Observable.just(response.body());
               }
-              return Observable.error(new IOException()); // TODO non-suck message.
+              return Observable.error(new HttpException(response));
             }
           });
     }
