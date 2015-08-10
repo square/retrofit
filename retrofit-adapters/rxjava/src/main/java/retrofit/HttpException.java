@@ -1,9 +1,7 @@
 package retrofit;
 
-import java.io.IOException;
-
 /** Exception for an unexpected, non-2xx HTTP response. */
-public final class HttpException extends IOException {
+public final class HttpException extends Exception {
   private final int code;
   private final String message;
   private final transient Response<?> response;
