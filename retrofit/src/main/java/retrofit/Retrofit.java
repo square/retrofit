@@ -109,21 +109,25 @@ public final class Retrofit {
 
   /** Create an implementation of the API defined by the {@code service} interface. */
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
-  public <T> T create(Class<T> service) {
+  public <T> T create(final Class<T> service) {
     Utils.validateServiceInterface(service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
-        handler);
-  }
+        new InvocationHandler() {
+          private final Platform platform = Platform.get();
 
-  private final InvocationHandler handler = new InvocationHandler() {
-    @Override public Object invoke(Object proxy, Method method, Object... args) throws Throwable {
-      // If the method is a method from Object then defer to normal invocation.
-      if (method.getDeclaringClass() == Object.class) {
-        return method.invoke(this, args);
-      }
-      return loadMethodHandler(method).invoke(args);
-    }
-  };
+          @Override public Object invoke(Object proxy, Method method, Object... args)
+              throws Throwable {
+            // If the method is a method from Object then defer to normal invocation.
+            if (method.getDeclaringClass() == Object.class) {
+              return method.invoke(this, args);
+            }
+            if (platform.isDefaultMethod(method)) {
+              return platform.invokeDefaultMethod(method, service, proxy, args);
+            }
+            return loadMethodHandler(method).invoke(args);
+          }
+        });
+  }
 
   MethodHandler<?> loadMethodHandler(Method method) {
     MethodHandler<?> handler;
