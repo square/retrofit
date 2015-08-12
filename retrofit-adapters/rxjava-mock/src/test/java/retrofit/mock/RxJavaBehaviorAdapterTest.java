@@ -37,7 +37,7 @@ public final class RxJavaBehaviorAdapterTest {
     Single<String> singleResponse();
   }
 
-  private final Behavior behavior = Behavior.create(new Random(2847));
+  private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
   private DoWorkService service;
 
   @Before public void setUp() {
@@ -51,8 +51,8 @@ public final class RxJavaBehaviorAdapterTest {
       }
     };
 
-    BehaviorAdapter<?> adapter = RxJavaBehaviorAdapter.create();
-    MockRetrofit mockRetrofit = new MockRetrofit(adapter, behavior);
+    NetworkBehavior.Adapter<?> adapter = RxJavaBehaviorAdapter.create();
+    MockRetrofit mockRetrofit = new MockRetrofit(behavior, adapter);
     service = mockRetrofit.create(DoWorkService.class, mockService);
   }
 
