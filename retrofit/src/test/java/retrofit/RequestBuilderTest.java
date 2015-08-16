@@ -149,7 +149,7 @@ public final class RequestBuilderTest {
   @Test public void multipleParameterAnnotationsNotAllowed() throws Exception {
     class Example {
       @GET("/") //
-      Call<Object> method(@Body @Query("nope") Object o) {
+      Call<Object> method(@Body @Query("nope") String o) {
         return null;
       }
     }
@@ -407,7 +407,7 @@ public final class RequestBuilderTest {
   @Test public void nonBodyHttpMethodWithSingleEntity() {
     class Example {
       @GET("/") //
-      Call<Object> method(@Body Object o) {
+      Call<Object> method(@Body String o) {
         return null;
       }
     }
@@ -459,7 +459,7 @@ public final class RequestBuilderTest {
   @Test public void twoBodies() {
     class Example {
       @PUT("/") //
-      Call<Object> method(@Body int o1, @Body int o2) {
+      Call<Object> method(@Body String o1, @Body String o2) {
         return null;
       }
     }
@@ -476,7 +476,7 @@ public final class RequestBuilderTest {
     class Example {
       @Multipart //
       @PUT("/") //
-      Call<Object> method(@Part("one") int o1, @Body int o2) {
+      Call<Object> method(@Part("one") String o1, @Body String o2) {
         return null;
       }
     }
@@ -1661,9 +1661,10 @@ public final class RequestBuilderTest {
         return HttpUrl.parse("http://example.com/");
       }
     };
-    Converter.Factory converterFactory = new ToStringConverterFactory();
+    List<Converter.Factory> converterFactories =
+        Arrays.asList(new ToStringConverterFactory(), new OkHttpBodyConverterFactory());
 
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactory);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
     return requestFactory.create(args);
   }
 }

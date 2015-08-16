@@ -16,11 +16,11 @@
 package retrofit;
 
 import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -54,10 +54,11 @@ final class RequestFactoryParser {
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  static RequestFactory parse(Method method, BaseUrl baseUrl, Converter.Factory converterFactory) {
+  static RequestFactory parse(Method method, BaseUrl baseUrl,
+      List<Converter.Factory> converterFactories) {
     RequestFactoryParser parser = new RequestFactoryParser(method);
     parser.parseMethodAnnotations();
-    parser.parseParameters(converterFactory);
+    parser.parseParameters(converterFactories);
     return parser.toRequestFactory(baseUrl);
   }
 
@@ -81,6 +82,11 @@ final class RequestFactoryParser {
   private RequestFactory toRequestFactory(BaseUrl baseUrl) {
     return new RequestFactory(httpMethod, baseUrl, relativeUrl, headers, mediaType, hasBody,
         isFormEncoded, isMultipart, requestBuilderActions);
+  }
+
+  private RuntimeException parameterError(Throwable cause, int index, String message,
+      Object... args) {
+    return methodError(cause, method, message + " (parameter #" + (index + 1) + ")", args);
   }
 
   private RuntimeException parameterError(int index, String message, Object... args) {
@@ -186,7 +192,7 @@ final class RequestFactoryParser {
     return builder.build();
   }
 
-  private void parseParameters(Converter.Factory converterFactory) {
+  private void parseParameters(List<Converter.Factory> converterFactories) {
     Type[] methodParameterTypes = method.getGenericParameterTypes();
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
 
@@ -286,16 +292,11 @@ final class RequestFactoryParser {
                 "Content-Disposition", "name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
             Converter<?> converter;
-            if (methodParameterType == RequestBody.class) {
-              converter = new OkHttpRequestBodyConverter();
-            } else {
-              if (converterFactory == null) {
-                throw parameterError(i, "@Part parameter is %s"
-                    + " but no converter factory registered. Either add a converter factory"
-                    + " to the Retrofit instance or use RequestBody.",
-                    methodParameterType);
-              }
-              converter = converterFactory.get(methodParameterType);
+            try {
+              converter = Utils.resolveConverter(converterFactories, methodParameterType);
+            } catch (RuntimeException e) { // Wide exception range because factories are user code.
+              throw parameterError(e, i, "Unable to create @Part converter for %s",
+                  methodParameterType);
             }
             action = new RequestBuilderAction.Part<>(headers, converter);
             gotPart = true;
@@ -309,7 +310,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
             PartMap partMap = (PartMap) methodParameterAnnotation;
-            action = new RequestBuilderAction.PartMap(converterFactory, partMap.encoding());
+            action = new RequestBuilderAction.PartMap(converterFactories, partMap.encoding());
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {
@@ -322,18 +323,12 @@ final class RequestFactoryParser {
             }
 
             Converter<?> converter;
-            if (methodParameterType == RequestBody.class) {
-              converter = new OkHttpRequestBodyConverter();
-            } else {
-              if (converterFactory == null) {
-                throw parameterError(i, "@Body parameter is %s"
-                        + " but no converter factory registered. Either add a converter factory"
-                        + " to the Retrofit instance or use RequestBody.",
-                    methodParameterType);
-              }
-              converter = converterFactory.get(methodParameterType);
+            try {
+              converter = Utils.resolveConverter(converterFactories, methodParameterType);
+            } catch (RuntimeException e) { // Wide exception range because factories are user code.
+              throw parameterError(e, i, "Unable to create @Body converter for %s",
+                  methodParameterType);
             }
-
             action = new RequestBuilderAction.Body<>(converter);
             gotBody = true;
           }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Square, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,20 @@ package retrofit;
 
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
-import java.io.IOException;
 import java.lang.reflect.Type;
 
-/** Convert objects to and from their representation as HTTP bodies. */
-public interface Converter<T> {
-  /** Convert an HTTP response body to a concrete object of the specified type. */
-  T fromBody(ResponseBody body) throws IOException;
-
-  /** Convert an object to an appropriate representation for HTTP transport. */
-  RequestBody toBody(T value);
-
-  interface Factory {
-    /** Create a converter for {@code type}. Returns null if the type cannot be handled. */
-    Converter<?> get(Type type);
+final class OkHttpBodyConverterFactory implements Converter.Factory {
+  @Override public Converter<?> get(Type type) {
+    if (!(type instanceof Class)) {
+      return null;
+    }
+    Class<?> cls = (Class<?>) type;
+    if (RequestBody.class.isAssignableFrom(cls)) {
+      return new OkHttpRequestBodyConverter();
+    }
+    if (ResponseBody.class.isAssignableFrom(cls)) {
+      return new OkHttpResponseBodyConverter(false);
+    }
+    return null;
   }
 }

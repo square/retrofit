@@ -28,6 +28,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.List;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.Source;
@@ -46,6 +47,41 @@ final class Utils {
       closeable.close();
     } catch (IOException ignored) {
     }
+  }
+
+
+  static CallAdapter<?> resolveCallAdapter(List<CallAdapter.Factory> adapterFactories, Type type) {
+    for (int i = 0, count = adapterFactories.size(); i < count; i++) {
+      CallAdapter<?> adapter = adapterFactories.get(i).get(type);
+      if (adapter != null) {
+        return adapter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
+        .append(type)
+        .append(". Tried:");
+    for (CallAdapter.Factory adapterFactory : adapterFactories) {
+      builder.append("\n * ").append(adapterFactory.getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
+  }
+
+  static Converter<?> resolveConverter(List<Converter.Factory> converterFactories, Type type) {
+    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+      Converter<?> converter = converterFactories.get(i).get(type);
+      if (converter != null) {
+        return converter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate converter for ")
+        .append(type)
+        .append(". Tried:");
+    for (Converter.Factory converterFactory : converterFactories) {
+      builder.append("\n * ").append(converterFactory.getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
   }
 
   /**
@@ -152,12 +188,20 @@ final class Utils {
   }
 
   static RuntimeException methodError(Method method, String message, Object... args) {
+    return methodError(null, method, message, args);
+  }
+
+  static RuntimeException methodError(Throwable cause, Method method, String message,
+      Object... args) {
     message = String.format(message, args);
-    return new IllegalArgumentException(message
+    IllegalArgumentException e = new IllegalArgumentException(message
         + "\n    for method "
         + method.getDeclaringClass().getSimpleName()
         + "."
         + method.getName());
+    e.initCause(cause);
+    return e;
+
   }
 
   static Type getCallResponseType(Type returnType) {

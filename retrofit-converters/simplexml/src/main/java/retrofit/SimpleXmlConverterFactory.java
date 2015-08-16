@@ -54,9 +54,10 @@ public final class SimpleXmlConverterFactory implements Converter.Factory {
     return strict;
   }
 
+  /** Create a converter for {@code type} provided it is a class. Returns null otherwise. */
   @Override public Converter<?> get(Type type) {
     if (!(type instanceof Class)) {
-      throw new IllegalArgumentException("Expected a raw class but was " + type);
+      return null;
     }
     Class<?> cls = (Class<?>) type;
     return new SimpleXmlConverter<>(cls, serializer, strict);

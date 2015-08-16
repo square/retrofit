@@ -38,6 +38,7 @@ public final class MoshiConverterFactory implements Converter.Factory {
     this.moshi = moshi;
   }
 
+  /** Create a converter for {@code type}. */
   @Override public Converter<?> get(Type type) {
     JsonAdapter<Object> adapter = moshi.adapter(type);
     return new MoshiConverter<>(adapter);

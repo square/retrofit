@@ -45,6 +45,7 @@ public final class GsonConverterFactory implements Converter.Factory {
     this.gson = gson;
   }
 
+  /** Create a converter for {@code type}. */
   @Override public Converter<?> get(Type type) {
     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
     return new GsonConverter<>(adapter);

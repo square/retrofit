@@ -31,10 +31,6 @@ final class DefaultCallAdapter<T> implements CallAdapter<T> {
       Type responseType = Utils.getCallResponseType(returnType);
       return new DefaultCallAdapter<>(responseType);
     }
-
-    @Override public String toString() {
-      return "Default";
-    }
   };
 
   private final Type responseType;
