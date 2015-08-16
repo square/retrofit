@@ -39,13 +39,17 @@ public final class WireConverterFactory implements Converter.Factory {
     this.wire = wire;
   }
 
+  /**
+   * Create a converter for {@code type} provided it is a {@link Message} type. Returns null
+   * otherwise.
+   */
   @Override public Converter<?> get(Type type) {
     if (!(type instanceof Class<?>)) {
-      throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
+      return null;
     }
     Class<?> c = (Class<?>) type;
     if (!Message.class.isAssignableFrom(c)) {
-      throw new IllegalArgumentException("Expected a proto message but was " + c.getName());
+      return null;
     }
     //noinspection unchecked
     return new WireConverter<>(wire, (Class<Message>) c);

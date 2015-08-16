@@ -25,6 +25,9 @@ class ToStringConverterFactory implements Converter.Factory {
   private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
 
   @Override public Converter get(Type type) {
+    if (type != String.class) {
+      return null;
+    }
     return new StringConverter();
   }
 

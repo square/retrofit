@@ -134,7 +134,7 @@ public final class RetrofitTest {
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .callAdapterFactory(new MyCallAdapterFactory())
+        .addCallAdapterFactory(new MyCallAdapterFactory())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
     assertThat(example.allowed()).isNotNull();
@@ -162,8 +162,8 @@ public final class RetrofitTest {
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(new ToStringConverterFactory())
-        .callAdapterFactory(new GreetingCallAdapterFactory())
+        .addConverterFactory(new ToStringConverterFactory())
+        .addCallAdapterFactory(new GreetingCallAdapterFactory())
         .build();
     StringService example = retrofit.create(StringService.class);
     assertThat(example.get()).isEqualTo("Hi!");
@@ -178,9 +178,12 @@ public final class RetrofitTest {
       example.method();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Call adapter factory 'Default' was unable to"
-              + " handle return type java.util.concurrent.Future<java.lang.String>\n"
+      assertThat(e).hasMessage(
+          "Unable to create call adapter for java.util.concurrent.Future<java.lang.String>\n"
               + "    for method FutureMethod.method");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate call adapter for java.util.concurrent.Future<java.lang.String>. Tried:\n"
+              + " * retrofit.DefaultCallAdapter$1");
     }
   }
 
@@ -194,9 +197,11 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "@Body parameter is class java.lang.String but no converter factory registered. Either"
-              + " add a converter factory to the Retrofit instance or use RequestBody. (parameter #1)\n"
+          "Unable to create @Body converter for class java.lang.String (parameter #1)\n"
               + "    for method CallMethod.disallowed");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate converter for class java.lang.String. Tried:\n"
+              + " * retrofit.OkHttpBodyConverterFactory");
     }
   }
 
@@ -212,23 +217,20 @@ public final class RetrofitTest {
       example.disallowed();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Method response type is class java.lang.String but no converter factory registered. "
-              + "Either add a converter factory to the Retrofit instance or use ResponseBody.\n"
-              + "    for method CallMethod.disallowed");
+      assertThat(e).hasMessage("Unable to create converter for class java.lang.String\n"
+          + "    for method CallMethod.disallowed");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate converter for class java.lang.String. Tried:\n"
+              + " * retrofit.OkHttpBodyConverterFactory");
     }
   }
 
   @Test public void converterReturningNullThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(new Converter.Factory() {
+        .addConverterFactory(new Converter.Factory() {
           @Override public Converter<?> get(Type type) {
             return null;
-          }
-
-          @Override public String toString() {
-            return "Nully";
           }
         })
         .build();
@@ -238,9 +240,12 @@ public final class RetrofitTest {
       service.disallowed();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Converter factory 'Nully' was unable to handle response type class java.lang.String\n"
-              + "    for method CallMethod.disallowed");
+      assertThat(e).hasMessage("Unable to create converter for class java.lang.String\n"
+          + "    for method CallMethod.disallowed");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate converter for class java.lang.String. Tried:\n"
+              + " * retrofit.RetrofitTest$1\n"
+              + " * retrofit.OkHttpBodyConverterFactory");
     }
   }
 
@@ -274,7 +279,7 @@ public final class RetrofitTest {
   @Test public void unresolvableTypeThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(new ToStringConverterFactory())
+        .addConverterFactory(new ToStringConverterFactory())
         .build();
     Unresolvable example = retrofit.create(Unresolvable.class);
 
@@ -410,32 +415,34 @@ public final class RetrofitTest {
 
   @Test public void converterNullThrows() {
     try {
-      new Retrofit.Builder().converterFactory(null);
+      new Retrofit.Builder().addConverterFactory(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("converterFactory == null");
     }
   }
 
-  @Test public void converterNoDefault() {
+  @Test public void converterFactoryDefault() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .build();
-    assertThat(retrofit.converterFactory()).isNull();
+    List<Converter.Factory> converterFactories = retrofit.converterFactories();
+    assertThat(converterFactories).hasSize(1);
+    assertThat(converterFactories.get(0)).isInstanceOf(OkHttpBodyConverterFactory.class);
   }
 
   @Test public void converterFactoryPropagated() {
     Converter.Factory factory = mock(Converter.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
-        .converterFactory(factory)
+        .addConverterFactory(factory)
         .build();
-    assertThat(retrofit.converterFactory()).isSameAs(factory);
+    assertThat(retrofit.converterFactories()).contains(factory);
   }
 
   @Test public void callAdapterFactoryNullThrows() {
     try {
-      new Retrofit.Builder().callAdapterFactory(null);
+      new Retrofit.Builder().addCallAdapterFactory(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("factory == null");
@@ -446,16 +453,16 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .build();
-    assertThat(retrofit.callAdapterFactory()).isNotNull();
+    assertThat(retrofit.callAdapterFactories()).isNotEmpty();
   }
 
   @Test public void callAdapterFactoryPropagated() {
     CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
-        .callAdapterFactory(factory)
+        .addCallAdapterFactory(factory)
         .build();
-    assertThat(retrofit.callAdapterFactory()).isSameAs(factory);
+    assertThat(retrofit.callAdapterFactories()).contains(factory);
   }
 
   @Test public void callbackExecutorNullThrows() {

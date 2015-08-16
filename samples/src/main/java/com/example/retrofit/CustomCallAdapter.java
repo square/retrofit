@@ -97,7 +97,7 @@ public final class CustomCallAdapter {
   public static void main(String... args) {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://httpbin.org")
-        .callAdapterFactory(new ListenableFutureCallAdapterFactory())
+        .addCallAdapterFactory(new ListenableFutureCallAdapterFactory())
         .build();
 
     HttpBinService service = retrofit.create(HttpBinService.class);

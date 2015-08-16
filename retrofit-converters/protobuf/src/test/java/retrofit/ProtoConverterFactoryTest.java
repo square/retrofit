@@ -15,10 +15,10 @@
  */
 package retrofit;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.List;
 import okio.Buffer;
@@ -32,8 +32,9 @@ import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
+import static retrofit.PhoneProtos.Phone;
 
-public final class WireConverterTest {
+public final class ProtoConverterFactoryTest {
   interface Service {
     @GET("/") Call<Phone> get();
     @POST("/") Call<Phone> post(@Body Phone impl);
@@ -48,7 +49,7 @@ public final class WireConverterTest {
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(WireConverterFactory.create())
+        .addConverterFactory(ProtoConverterFactory.create())
         .build();
     service = retrofit.create(Service.class);
   }
@@ -57,10 +58,10 @@ public final class WireConverterTest {
     ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwOQ==");
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
-    Call<Phone> call = service.post(new Phone("(519) 867-5309"));
+    Call<Phone> call = service.post(Phone.newBuilder().setNumber("(519) 867-5309").build());
     Response<Phone> response = call.execute();
     Phone body = response.body();
-    assertThat(body.number).isEqualTo("(519) 867-5309");
+    assertThat(body.getNumber()).isEqualTo("(519) 867-5309");
 
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readByteString()).isEqualTo(encoded);
@@ -73,7 +74,7 @@ public final class WireConverterTest {
     Call<Phone> call = service.get();
     Response<Phone> response = call.execute();
     Phone body = response.body();
-    assertThat(body.number).isNull();
+    assertThat(body.hasNumber()).isFalse();
   }
 
   @Test public void deserializeWrongClass() throws IOException {
@@ -84,7 +85,12 @@ public final class WireConverterTest {
       service.wrongClass();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Expected a proto message but was java.lang.String");
+      assertThat(e).hasMessage("Unable to create converter for class java.lang.String\n"
+          + "    for method Service.wrongClass");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate converter for class java.lang.String. Tried:\n"
+              + " * retrofit.ProtoConverterFactory\n"
+              + " * retrofit.OkHttpBodyConverterFactory");
     }
   }
 
@@ -96,7 +102,12 @@ public final class WireConverterTest {
       service.wrongType();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Expected a raw Class<?> but was java.util.List<java.lang.String>");
+      assertThat(e).hasMessage("Unable to create converter for java.util.List<java.lang.String>\n"
+          + "    for method Service.wrongType");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate converter for java.util.List<java.lang.String>. Tried:\n"
+              + " * retrofit.ProtoConverterFactory\n"
+              + " * retrofit.OkHttpBodyConverterFactory");
     }
   }
 
@@ -108,7 +119,9 @@ public final class WireConverterTest {
     try {
       call.execute();
       fail();
-    } catch (EOFException ignored) {
+    } catch (RuntimeException e) {
+      assertThat(e.getCause()).isInstanceOf(InvalidProtocolBufferException.class)
+          .hasMessageContaining("input ended unexpectedly");
     }
   }
 }

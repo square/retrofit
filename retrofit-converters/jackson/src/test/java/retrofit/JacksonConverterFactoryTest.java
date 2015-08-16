@@ -38,7 +38,7 @@ import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class JacksonConverterTest {
+public class JacksonConverterFactoryTest {
   interface AnInterface {
     String getName();
   }
@@ -121,7 +121,7 @@ public class JacksonConverterTest {
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(JacksonConverterFactory.create(mapper))
+        .addConverterFactory(JacksonConverterFactory.create(mapper))
         .build();
     service = retrofit.create(Service.class);
   }

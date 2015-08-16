@@ -34,7 +34,7 @@ import retrofit.http.POST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public class SimpleXmlConverterTest {
+public class SimpleXmlConverterFactoryTest {
   interface Service {
     @GET("/") Call<MyObject> get();
     @POST("/") Call<MyObject> post(@Body MyObject impl);
@@ -50,7 +50,7 @@ public class SimpleXmlConverterTest {
     Persister persister = new Persister(format);
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(SimpleXmlConverterFactory.create(persister))
+        .addConverterFactory(SimpleXmlConverterFactory.create(persister))
         .build();
     service = retrofit.create(Service.class);
   }

@@ -26,13 +26,18 @@ public final class ProtoConverterFactory implements Converter.Factory {
     return new ProtoConverterFactory();
   }
 
+
+  /**
+   * Create a converter for {@code type} provided it is a {@link MessageLite} type. Returns null
+   * otherwise.
+   */
   @Override public Converter<?> get(Type type) {
     if (!(type instanceof Class<?>)) {
-      throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
+      return null;
     }
     Class<?> c = (Class<?>) type;
     if (!MessageLite.class.isAssignableFrom(c)) {
-      throw new IllegalArgumentException("Expected a protobuf message but was " + c.getName());
+      return null;
     }
 
     Parser<MessageLite> parser;
@@ -42,7 +47,7 @@ public final class ProtoConverterFactory implements Converter.Factory {
       parser = (Parser<MessageLite>) field.get(null);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new IllegalArgumentException(
-          "Expected a protobuf message but " + c.getName() + " had no PARSER field.");
+          "Found a protobuf message but " + c.getName() + " had no PARSER field.");
     }
 
     return new ProtoConverter<>(parser);

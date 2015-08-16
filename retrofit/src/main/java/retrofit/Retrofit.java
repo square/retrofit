@@ -22,7 +22,10 @@ import com.squareup.okhttp.ResponseBody;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import retrofit.http.HTTP;
@@ -90,16 +93,16 @@ public final class Retrofit {
 
   private final OkHttpClient client;
   private final BaseUrl baseUrl;
-  private final Converter.Factory converterFactory;
-  private final CallAdapter.Factory adapterFactory;
+  private final List<Converter.Factory> converterFactories;
+  private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
 
-  private Retrofit(OkHttpClient client, BaseUrl baseUrl, Converter.Factory converterFactory,
-      CallAdapter.Factory adapterFactory, Executor callbackExecutor) {
+  private Retrofit(OkHttpClient client, BaseUrl baseUrl, List<Converter.Factory> converterFactories,
+      List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor) {
     this.client = client;
     this.baseUrl = baseUrl;
-    this.converterFactory = converterFactory;
-    this.adapterFactory = adapterFactory;
+    this.converterFactories = converterFactories;
+    this.adapterFactories = adapterFactories;
     this.callbackExecutor = callbackExecutor;
   }
 
@@ -126,7 +129,8 @@ public final class Retrofit {
     synchronized (methodHandlerCache) {
       handler = methodHandlerCache.get(method);
       if (handler == null) {
-        handler = MethodHandler.create(method, client, baseUrl, adapterFactory, converterFactory);
+        handler =
+            MethodHandler.create(method, client, baseUrl, adapterFactories, converterFactories);
         methodHandlerCache.put(method, handler);
       }
     }
@@ -143,15 +147,13 @@ public final class Retrofit {
 
   /**
    * TODO
-   * <p>
-   * May be null.
    */
-  public Converter.Factory converterFactory() {
-    return converterFactory;
+  public List<Converter.Factory> converterFactories() {
+    return Collections.unmodifiableList(converterFactories);
   }
 
-  public CallAdapter.Factory callAdapterFactory() {
-    return adapterFactory;
+  public List<CallAdapter.Factory> callAdapterFactories() {
+    return Collections.unmodifiableList(adapterFactories);
   }
 
   public Executor callbackExecutor() {
@@ -167,8 +169,8 @@ public final class Retrofit {
   public static final class Builder {
     private OkHttpClient client;
     private BaseUrl baseUrl;
-    private Converter.Factory converterFactory;
-    private CallAdapter.Factory adapterFactory;
+    private List<Converter.Factory> converterFactories = new ArrayList<>();
+    private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
 
     /** The HTTP client used for requests. */
@@ -203,17 +205,17 @@ public final class Retrofit {
       return this;
     }
 
-    /** The converter used for serialization and deserialization of objects. */
-    public Builder converterFactory(Converter.Factory converterFactory) {
-      this.converterFactory = checkNotNull(converterFactory, "converterFactory == null");
+    /** Add converter factory for serialization and deserialization of objects. */
+    public Builder addConverterFactory(Converter.Factory converterFactory) {
+      converterFactories.add(checkNotNull(converterFactory, "converterFactory == null"));
       return this;
     }
 
     /**
      * TODO
      */
-    public Builder callAdapterFactory(CallAdapter.Factory factory) {
-      this.adapterFactory = checkNotNull(factory, "factory == null");
+    public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
+      adapterFactories.add(checkNotNull(factory, "factory == null"));
       return this;
     }
 
@@ -232,15 +234,20 @@ public final class Retrofit {
         throw new IllegalStateException("Base URL required.");
       }
 
-      // Set any platform-appropriate defaults for unspecified components.
+      OkHttpClient client = this.client;
       if (client == null) {
         client = Platform.get().defaultClient();
       }
-      if (adapterFactory == null) {
-        adapterFactory = Platform.get().defaultCallAdapterFactory(callbackExecutor);
-      }
 
-      return new Retrofit(client, baseUrl, converterFactory, adapterFactory, callbackExecutor);
+      // Make a defensive copy of the adapters and add the default Call adapter.
+      List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
+      adapterFactories.add(Platform.get().defaultCallAdapterFactory(callbackExecutor));
+
+      // Make a defensive copy of the converters and add the default OkHttp body converter.
+      List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
+      converterFactories.add(new OkHttpBodyConverterFactory());
+
+      return new Retrofit(client, baseUrl, converterFactories, adapterFactories, callbackExecutor);
     }
   }
 }

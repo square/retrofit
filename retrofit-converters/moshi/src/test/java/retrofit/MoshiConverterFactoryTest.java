@@ -32,7 +32,7 @@ import retrofit.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class MoshiConverterTest {
+public final class MoshiConverterFactoryTest {
   interface AnInterface {
     String getName();
   }
@@ -88,7 +88,7 @@ public final class MoshiConverterTest {
         .build();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(MoshiConverterFactory.create(moshi))
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build();
     service = retrofit.create(Service.class);
   }

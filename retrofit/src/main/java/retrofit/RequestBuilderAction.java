@@ -17,6 +17,7 @@ package retrofit;
 
 import com.squareup.okhttp.Headers;
 import java.lang.reflect.Array;
+import java.util.List;
 import java.util.Map;
 
 import static retrofit.Utils.checkNotNull;
@@ -205,11 +206,11 @@ abstract class RequestBuilderAction {
   }
 
   static final class PartMap extends RequestBuilderAction {
-    private final Converter.Factory converterFactory;
+    private final List<Converter.Factory> converterFactories;
     private final String transferEncoding;
 
-    PartMap(Converter.Factory converterFactory, String transferEncoding) {
-      this.converterFactory = converterFactory;
+    PartMap(List<Converter.Factory> converterFactories, String transferEncoding) {
+      this.converterFactories = converterFactories;
       this.transferEncoding = transferEncoding;
     }
 
@@ -230,9 +231,11 @@ abstract class RequestBuilderAction {
         Headers headers = Headers.of(
             "Content-Disposition", "name=\"" + entryKey + "\"",
             "Content-Transfer-Encoding", transferEncoding);
+
+        Class<?> entryClass = entryValue.getClass();
         //noinspection unchecked
         Converter<Object> converter =
-            (Converter<Object>) converterFactory.get(entryValue.getClass());
+            (Converter<Object>) Utils.resolveConverter(converterFactories, entryClass);
         builder.addPart(headers, converter.toBody(entryValue));
       }
     }

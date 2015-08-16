@@ -19,63 +19,53 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.ResponseBody;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.List;
 import retrofit.http.Streaming;
-
-import static retrofit.Utils.methodError;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
   static MethodHandler<?> create(Method method, OkHttpClient client, BaseUrl baseUrl,
-      CallAdapter.Factory callAdapterFactory, Converter.Factory converterFactory) {
+      List<CallAdapter.Factory> callAdapterFactories, List<Converter.Factory> converterFactories) {
     CallAdapter<Object> callAdapter =
-        (CallAdapter<Object>) createCallAdapter(method, callAdapterFactory);
+        (CallAdapter<Object>) createCallAdapter(method, callAdapterFactories);
     Converter<Object> responseConverter =
         (Converter<Object>) createResponseConverter(method, callAdapter.responseType(),
-            converterFactory);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactory);
+            converterFactories);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
     return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter);
   }
 
   private static CallAdapter<?> createCallAdapter(Method method,
-      CallAdapter.Factory adapterFactory) {
+      List<CallAdapter.Factory> adapterFactories) {
     Type returnType = method.getGenericReturnType();
     if (Utils.hasUnresolvableType(returnType)) {
-      throw methodError(method,
+      throw Utils.methodError(method,
           "Method return type must not include a type variable or wildcard: %s", returnType);
     }
-
     if (returnType == void.class) {
-      throw methodError(method, "Service methods cannot return void.");
+      throw Utils.methodError(method, "Service methods cannot return void.");
+    }
+    try {
+      return Utils.resolveCallAdapter(adapterFactories, returnType);
+    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+      throw Utils.methodError(e, method, "Unable to create call adapter for %s", returnType);
     }
 
-    CallAdapter<?> adapter = adapterFactory.get(returnType);
-    if (adapter == null) {
-      throw methodError(method, "Call adapter factory '%s' was unable to handle return type %s",
-          adapterFactory, returnType);
-    }
-    return adapter;
   }
 
   private static Converter<?> createResponseConverter(Method method, Type responseType,
-      Converter.Factory converterFactory) {
+      List<Converter.Factory> converterFactories) {
+    // TODO how can we not special case this? See TODO below, maybe...
     if (responseType == ResponseBody.class) {
       boolean isStreaming = method.isAnnotationPresent(Streaming.class);
       return new OkHttpResponseBodyConverter(isStreaming);
     }
 
-    if (converterFactory == null) {
-      throw methodError(method, "Method response type is "
-          + responseType
-          + " but no converter factory registered. "
-          + "Either add a converter factory to the Retrofit instance or use ResponseBody.");
+    try {
+      return Utils.resolveConverter(converterFactories, responseType);
+    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+      throw Utils.methodError(e, method, "Unable to create converter for %s", responseType);
     }
-
-    Converter<?> converter = converterFactory.get(responseType);
-    if (converter == null) {
-      throw methodError(method, "Converter factory '%s' was unable to handle response type %s",
-          converterFactory, responseType);
-    }
-    return converter;
   }
 
   private final OkHttpClient client;

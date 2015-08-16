@@ -40,6 +40,7 @@ public final class JacksonConverterFactory implements Converter.Factory {
     this.mapper = mapper;
   }
 
+  /** Create a converter for {@code type}. */
   @Override public Converter<?> get(Type type) {
     JavaType javaType = mapper.getTypeFactory().constructType(type);
     ObjectWriter writer = mapper.writerWithType(javaType);
