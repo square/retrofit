@@ -71,10 +71,6 @@ class Platform {
       @Override public void execute(Runnable r) {
         handler.post(r);
       }
-
-      @Override public String toString() {
-        return "MainThreadExecutor";
-      }
     }
   }
 }

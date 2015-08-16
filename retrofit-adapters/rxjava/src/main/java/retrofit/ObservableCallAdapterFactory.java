@@ -37,10 +37,6 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
   private ObservableCallAdapterFactory() {
   }
 
-  @Override public String toString() {
-    return getClass().getSimpleName();
-  }
-
   @Override public CallAdapter<?> get(Type returnType) {
     if (Utils.getRawType(returnType) != Observable.class) {
       return null;
