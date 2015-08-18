@@ -38,6 +38,7 @@ import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
+import retrofit2.http.DefaultFieldMap;
 import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
@@ -327,6 +328,22 @@ public final class RequestBuilderTest {
     }
   }
 
+  @Test public void implicitFormEncodingByDefaultFieldMapForbidden() {
+    class Example {
+      @POST("/") //
+      @DefaultFieldMap("name=tom") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@DefaultFieldMap parameters can only be used with form encoding.\n    for method Example.method");
+    }
+  }
+
   @Test public void formEncodingFailsOnNonBodyMethod() {
     class Example {
       @FormUrlEncoded //
@@ -357,6 +374,39 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Form-encoded method must contain at least one @Field.\n    for method Example.method");
+    }
+  }
+
+  @Test public void defaultFieldMapFailWhenEmpty() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      @DefaultFieldMap({}) //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@DefaultFieldMap annotation is empty.\n    for method Example.method");
+    }
+  }
+
+  @Test public void defaultFieldMapFailWhenInvalid() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      @DefaultFieldMap("name") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@DefaultFieldMap value must be in the form \"name=value. Found: \"name\"\n    for method Example.method");
     }
   }
 
@@ -1842,6 +1892,19 @@ public final class RequestBuilderTest {
     assertBody(request.body(), "foo=bar&ping=pong");
   }
 
+  @Test public void mixedFormEncodedWithDefaultFieldMap() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      @DefaultFieldMap("foo=bar") //
+      Call<ResponseBody> method(@Field("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
+    assertBody(request.body(), "foo=bar&ping=pong");
+  }
+
   @Test public void formEncodedWithEncodedNameFieldParam() {
     class Example {
       @FormUrlEncoded //
@@ -1879,6 +1942,19 @@ public final class RequestBuilderTest {
     List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
     Request request = buildRequest(Example.class, values, "kat");
     assertBody(request.body(), "foo=foo&foo=bar&foo=3&kit=kat");
+  }
+
+  @Test public void formEncodedWithOnlyDefaultFieldList() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      @DefaultFieldMap({"foo=bar", "foo=foo", "foo=3"}) //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertBody(request.body(), "foo=bar&foo=foo&foo=3");
   }
 
   @Test public void formEncodedFieldArray() {
