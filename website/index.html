@@ -195,7 +195,7 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
 
 SoundCloudService service = retrofit.create(SoundCloudService.class);</pre>
             <h4>Custom Converters</h4>
-            <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that implements the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/converter/Converter.java"><code>Converter</code> interface</a> and pass in an instance when building your adapter.</p>
+            <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that implements the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/Converter.java"><code>Converter</code> interface</a> and pass in an instance when building your adapter.</p>
             <h4>Custom Error Handling</h4>
             <p>If you need custom error handling for requests, you may provide your own <code>ErrorHandler</code>. The following code shows how to throw a custom exception when a response returns a HTTP 401 status code</p>
             <pre class="prettyprint">
