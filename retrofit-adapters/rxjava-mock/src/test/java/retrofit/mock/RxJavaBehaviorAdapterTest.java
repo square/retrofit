@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
 import rx.Observable;
+import rx.Single;
 import rx.Subscriber;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -30,9 +31,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public final class ObservableBehaviorAdapterTest {
+public final class RxJavaBehaviorAdapterTest {
   interface DoWorkService {
-    Observable<String> response();
+    Observable<String> observableResponse();
+    Single<String> singleResponse();
   }
 
   private final Behavior behavior = Behavior.create(new Random(2847));
@@ -40,22 +42,26 @@ public final class ObservableBehaviorAdapterTest {
 
   @Before public void setUp() {
     DoWorkService mockService = new DoWorkService() {
-      @Override public Observable<String> response() {
+      @Override public Observable<String> observableResponse() {
         return Observable.just("Hi!");
+      }
+
+      @Override public Single<String> singleResponse() {
+        return Single.just("Hi!");
       }
     };
 
-    BehaviorAdapter<?> adapter = ObservableBehaviorAdapter.create();
+    BehaviorAdapter<?> adapter = RxJavaBehaviorAdapter.create();
     MockRetrofit mockRetrofit = new MockRetrofit(adapter, behavior);
     service = mockRetrofit.create(DoWorkService.class, mockService);
   }
 
-  @Test public void failureAfterDelay() throws InterruptedException {
+  @Test public void observableFailureAfterDelay() throws InterruptedException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(100);
 
-    Observable<String> observable = service.response();
+    Observable<String> observable = service.observableResponse();
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();
@@ -81,12 +87,74 @@ public final class ObservableBehaviorAdapterTest {
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
   }
 
-  @Test public void successAfterDelay() throws InterruptedException {
+  @Test public void observableSuccessAfterDelay() throws InterruptedException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
 
-    Observable<String> observable = service.response();
+    Observable<String> observable = service.observableResponse();
+
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<String> actual = new AtomicReference<>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    observable.subscribe(new Subscriber<String>() {
+      @Override public void onNext(String value) {
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        actual.set(value);
+        latch.countDown();
+      }
+
+      @Override public void onError(Throwable throwable) {
+        throw new AssertionError();
+      }
+
+      @Override public void onCompleted() {
+      }
+    });
+    assertTrue(latch.await(1, SECONDS));
+
+    assertThat(actual.get()).isEqualTo("Hi!");
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+  }
+
+  @Test public void singleFailureAfterDelay() throws InterruptedException {
+    behavior.setDelay(100, MILLISECONDS);
+    behavior.setVariancePercent(0);
+    behavior.setFailurePercent(100);
+
+    Single<String> observable = service.singleResponse();
+
+    final long startNanos = System.nanoTime();
+    final AtomicLong tookMs = new AtomicLong();
+    final AtomicReference<Throwable> failureRef = new AtomicReference<>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    observable.subscribe(new Subscriber<String>() {
+      @Override public void onNext(String s) {
+        throw new AssertionError();
+      }
+
+      @Override public void onError(Throwable throwable) {
+        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+        failureRef.set(throwable);
+        latch.countDown();
+      }
+
+      @Override public void onCompleted() {
+      }
+    });
+    assertTrue(latch.await(1, SECONDS));
+
+    assertThat(failureRef.get()).isSameAs(behavior.failureException());
+    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+  }
+
+  @Test public void singleSuccessAfterDelay() throws InterruptedException {
+    behavior.setDelay(100, MILLISECONDS);
+    behavior.setVariancePercent(0);
+    behavior.setFailurePercent(0);
+
+    Single<String> observable = service.singleResponse();
 
     final long startNanos = System.nanoTime();
     final AtomicLong tookMs = new AtomicLong();

@@ -26,29 +26,41 @@ import rx.subscriptions.Subscriptions;
 /**
  * TODO docs
  */
-public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
+public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
   /**
    * TODO
    */
-  public static ObservableCallAdapterFactory create() {
-    return new ObservableCallAdapterFactory();
+  public static RxJavaCallAdapterFactory create() {
+    return new RxJavaCallAdapterFactory();
   }
 
-  private ObservableCallAdapterFactory() {
+  private RxJavaCallAdapterFactory() {
   }
 
   @Override public CallAdapter<?> get(Type returnType) {
-    if (Utils.getRawType(returnType) != Observable.class) {
+    Class<?> rawType = Utils.getRawType(returnType);
+    boolean isSingle = "rx.Single".equals(rawType.getCanonicalName());
+    if (rawType != Observable.class && !isSingle) {
       return null;
     }
     if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalStateException("Observable return type must be parameterized"
-          + " as Observable<Foo> or Observable<? extends Foo>");
+      String name = isSingle ? "Single" : "Observable";
+      throw new IllegalStateException(name + " return type must be parameterized"
+          + " as " + name + "<Foo> or " + name + "<? extends Foo>");
     }
 
+    CallAdapter<Object> callAdapter = getCallAdapter(returnType);
+    if (isSingle) {
+      // Add Single-converter wrapper from a separate class. This defers classloading such that
+      // regular Observable operation can be leveraged without relying on this unstable RxJava API.
+      callAdapter = SingleHelper.makeSingle(callAdapter);
+    }
+    return callAdapter;
+  }
+
+  private CallAdapter<Object> getCallAdapter(Type returnType) {
     Type observableType = Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
     Class<?> rawObservableType = Utils.getRawType(observableType);
-
     if (rawObservableType == Response.class) {
       if (!(observableType instanceof ParameterizedType)) {
         throw new IllegalStateException("Response must be parameterized"
@@ -67,7 +79,7 @@ public final class ObservableCallAdapterFactory implements CallAdapter.Factory {
       return new ResultCallAdapter<>(responseType);
     }
 
-    return new SimpleCallAdapter(observableType);
+    return new SimpleCallAdapter<>(observableType);
   }
 
   static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {

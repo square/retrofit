@@ -20,15 +20,28 @@ import rx.functions.Func1;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public final class ObservableBehaviorAdapter implements BehaviorAdapter<Observable<?>> {
-  public static ObservableBehaviorAdapter create() {
-    return new ObservableBehaviorAdapter();
+public final class RxJavaBehaviorAdapter implements BehaviorAdapter<Object> {
+  public static RxJavaBehaviorAdapter create() {
+    return new RxJavaBehaviorAdapter();
   }
 
-  private ObservableBehaviorAdapter() {
+  private RxJavaBehaviorAdapter() {
   }
 
-  @Override public Observable<?> applyBehavior(final Behavior behavior, final Observable<?> value) {
+  @Override public Object applyBehavior(Behavior behavior, Object value) {
+    if (value instanceof Observable) {
+      return applyObservableBehavior(behavior, (Observable<?>) value);
+    }
+    String name = value.getClass().getCanonicalName();
+    if ("rx.Single".equals(name)) {
+      // Apply behavior to the Single from a separate class. This defers classloading such that
+      // regular Observable operation can be leveraged without relying on this unstable RxJava API.
+      return SingleHelper.applySingleBehavior(behavior, value);
+    }
+    throw new IllegalStateException("Unsupported type " + name);
+  }
+
+  public Observable<?> applyObservableBehavior(final Behavior behavior, final Observable<?> value) {
     return Observable.timer(behavior.calculateDelay(MILLISECONDS), MILLISECONDS)
         .flatMap(new Func1<Long, Observable<?>>() {
           @Override public Observable<?> call(Long ignored) {
