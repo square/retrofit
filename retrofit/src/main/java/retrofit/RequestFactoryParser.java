@@ -70,7 +70,7 @@ final class RequestFactoryParser {
   private boolean isMultipart;
   private String relativeUrl;
   private com.squareup.okhttp.Headers headers;
-  private MediaType mediaType;
+  private MediaType contentType;
   private RequestBuilderAction[] requestBuilderActions;
 
   private Set<String> relativeUrlParamNames;
@@ -80,7 +80,7 @@ final class RequestFactoryParser {
   }
 
   private RequestFactory toRequestFactory(BaseUrl baseUrl) {
-    return new RequestFactory(httpMethod, baseUrl, relativeUrl, headers, mediaType, hasBody,
+    return new RequestFactory(httpMethod, baseUrl, relativeUrl, headers, contentType, hasBody,
         isFormEncoded, isMultipart, requestBuilderActions);
   }
 
@@ -184,7 +184,7 @@ final class RequestFactoryParser {
       String headerName = header.substring(0, colon);
       String headerValue = header.substring(colon + 1).trim();
       if ("Content-Type".equalsIgnoreCase(headerName)) {
-        mediaType = MediaType.parse(headerValue);
+        contentType = MediaType.parse(headerValue);
       } else {
         builder.add(headerName, headerValue);
       }

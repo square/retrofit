@@ -83,7 +83,7 @@ public final class RetrofitTest {
       retrofit.create(Extending.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Interface definitions must not extend other interfaces.");
+      assertThat(e).hasMessage("API interfaces must not extend other interfaces.");
     }
   }
 

@@ -24,20 +24,20 @@ final class RequestFactory {
   private final BaseUrl baseUrl;
   private final String relativeUrl;
   private final Headers headers;
-  private final MediaType mediaType;
+  private final MediaType contentType;
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
   private final RequestBuilderAction[] requestBuilderActions;
 
   RequestFactory(String method, BaseUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
+      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
       RequestBuilderAction[] requestBuilderActions) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
     this.headers = headers;
-    this.mediaType = mediaType;
+    this.contentType = contentType;
     this.hasBody = hasBody;
     this.isFormEncoded = isFormEncoded;
     this.isMultipart = isMultipart;
@@ -46,7 +46,7 @@ final class RequestFactory {
 
   Request create(Object... args) {
     RequestBuilder requestBuilder =
-        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, mediaType, hasBody,
+        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
             isFormEncoded, isMultipart);
 
     if (args != null) {

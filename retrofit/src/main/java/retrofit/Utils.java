@@ -94,22 +94,22 @@ final class Utils {
     }
 
     BufferedSource source = body.source();
-    final Buffer buffer = new Buffer();
+    Buffer buffer = new Buffer();
     buffer.writeAll(source);
     source.close();
 
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);
   }
 
-  static <T> void validateServiceClass(Class<T> service) {
+  static <T> void validateServiceInterface(Class<T> service) {
     if (!service.isInterface()) {
-      throw new IllegalArgumentException("Only interface baseUrl definitions are supported.");
+      throw new IllegalArgumentException("API declarations must be interfaces.");
     }
     // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
     // Android (http://b.android.com/58753) but it forces composition of API declarations which is
     // the recommended pattern.
     if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("Interface definitions must not extend other interfaces.");
+      throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
     }
   }
 

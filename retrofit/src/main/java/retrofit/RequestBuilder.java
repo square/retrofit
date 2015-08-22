@@ -35,7 +35,7 @@ final class RequestBuilder {
   private HttpUrl.Builder urlBuilder;
 
   private final Request.Builder requestBuilder;
-  private MediaType mediaType;
+  private MediaType contentType;
 
   private final boolean hasBody;
   private MultipartBuilder multipartBuilder;
@@ -43,20 +43,17 @@ final class RequestBuilder {
   private RequestBody body;
 
   RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
-
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
+    this.requestBuilder = new Request.Builder();
+    this.contentType = contentType;
+    this.hasBody = hasBody;
 
-    Request.Builder requestBuilder = new Request.Builder();
     if (headers != null) {
       requestBuilder.headers(headers);
     }
-    this.requestBuilder = requestBuilder;
-    this.mediaType = mediaType;
-
-    this.hasBody = hasBody;
 
     if (isFormEncoded) {
       // Will be set to 'body' in 'build'.
@@ -73,7 +70,7 @@ final class RequestBuilder {
 
   void addHeader(String name, String value) {
     if ("Content-Type".equalsIgnoreCase(name)) {
-      mediaType = MediaType.parse(value);
+      contentType = MediaType.parse(value);
     } else {
       requestBuilder.addHeader(name, value);
     }
@@ -154,12 +151,12 @@ final class RequestBuilder {
       }
     }
 
-    MediaType mediaType = this.mediaType;
-    if (mediaType != null) {
+    MediaType contentType = this.contentType;
+    if (contentType != null) {
       if (body != null) {
-        body = new MediaTypeOverridingRequestBody(body, mediaType);
+        body = new ContentTypeOverridingRequestBody(body, contentType);
       } else {
-        requestBuilder.addHeader("Content-Type", mediaType.toString());
+        requestBuilder.addHeader("Content-Type", contentType.toString());
       }
     }
 
@@ -169,17 +166,17 @@ final class RequestBuilder {
         .build();
   }
 
-  private static class MediaTypeOverridingRequestBody extends RequestBody {
+  private static class ContentTypeOverridingRequestBody extends RequestBody {
     private final RequestBody delegate;
-    private final MediaType mediaType;
+    private final MediaType contentType;
 
-    MediaTypeOverridingRequestBody(RequestBody delegate, MediaType mediaType) {
+    ContentTypeOverridingRequestBody(RequestBody delegate, MediaType contentType) {
       this.delegate = delegate;
-      this.mediaType = mediaType;
+      this.contentType = contentType;
     }
 
     @Override public MediaType contentType() {
-      return mediaType;
+      return contentType;
     }
 
     @Override public long contentLength() throws IOException {
