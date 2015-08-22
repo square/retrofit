@@ -20,7 +20,11 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-/** Convert objects to and from their representation as HTTP bodies. */
+/**
+ * Convert objects to and from their representation as HTTP bodies. Register a converter with
+ * Retrofit using {@link Retrofit.Builder#addConverter(Type, Converter)} or {@link
+ * Retrofit.Builder#addConverterFactory(Factory)}.
+ */
 public interface Converter<T> {
   /** Convert an HTTP response body to a concrete object of the specified type. */
   T fromBody(ResponseBody body) throws IOException;

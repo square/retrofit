@@ -11,6 +11,7 @@ import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +39,24 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 public final class RetrofitTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
+  static final Converter<BigInteger> bigIntegerConverter = new Converter<BigInteger>() {
+    @Override public BigInteger fromBody(ResponseBody body) throws IOException {
+      return new BigInteger(body.string());
+    }
+    @Override public RequestBody toBody(BigInteger value) {
+      return RequestBody.create(MediaType.parse("text/plain"), value.toString());
+    }
+  };
+  static final Converter<CharSequence> charSequenceConverter = new Converter<CharSequence>() {
+    @Override public CharSequence fromBody(ResponseBody body) throws IOException {
+      return new StringBuilder().append(body.string());
+    }
+
+    @Override public RequestBody toBody(CharSequence value) {
+      return RequestBody.create(MediaType.parse("text/plain"), value.toString());
+    }
+  };
+
   interface CallMethod {
     @GET("/") Call<String> disallowed();
     @POST("/") Call<ResponseBody> disallowed(@Body String body);
@@ -61,6 +80,10 @@ public final class RetrofitTest {
   }
   interface VoidService {
     @GET("/") void nope();
+  }
+  interface CustomConverter {
+    @POST("/a") Call<BigInteger> call(@Body BigInteger bigInteger);
+    @POST("/b") Call<CharSequence> call(@Body CharSequence charSequence);
   }
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
@@ -244,7 +267,7 @@ public final class RetrofitTest {
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate converter for class java.lang.String. Tried:\n"
-              + " * retrofit.RetrofitTest$1\n"
+              + " * retrofit.RetrofitTest$3\n"
               + " * retrofit.OkHttpBodyConverterFactory");
     }
   }
@@ -454,6 +477,43 @@ public final class RetrofitTest {
         .baseUrl("http://example.com/")
         .build();
     assertThat(retrofit.callAdapterFactories()).isNotEmpty();
+  }
+
+  @Test public void addConverter() throws Exception {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverter(BigInteger.class, bigIntegerConverter)
+        .addConverter(CharSequence.class, charSequenceConverter)
+        .build();
+    CustomConverter api = retrofit.create(CustomConverter.class);
+
+    server.enqueue(new MockResponse().setBody("456"));
+    assertThat(api.call(new BigInteger("123")).execute().body())
+        .isEqualTo(new BigInteger("456"));
+    assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("123");
+
+    server.enqueue(new MockResponse().setBody("DEF"));
+    assertThat(api.call(new StringBuilder("ABC")).execute().body())
+        .matches("DEF");
+    assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("ABC");
+  }
+
+  @Test public void addConverterNullType() throws Exception {
+    try {
+      new Retrofit.Builder().addConverter(null, bigIntegerConverter);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("type == null");
+    }
+  }
+
+  @Test public void addConverterNullConverter() throws Exception {
+    try {
+      new Retrofit.Builder().addConverter(BigInteger.class, null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("converter == null");
+    }
   }
 
   @Test public void callAdapterFactoryPropagated() {

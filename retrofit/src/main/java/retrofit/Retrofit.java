@@ -22,6 +22,7 @@ import com.squareup.okhttp.ResponseBody;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -202,6 +203,21 @@ public final class Retrofit {
     /** API base URL. */
     public Builder baseUrl(BaseUrl baseUrl) {
       this.baseUrl = checkNotNull(baseUrl, "baseUrl == null");
+      return this;
+    }
+
+    /** Add converter for serialization and deserialization of {@code type}. */
+    public <T> Builder addConverter(final Type type, final Converter<T> converter) {
+      checkNotNull(type, "type == null");
+      checkNotNull(converter, "converter == null");
+      converterFactories.add(new Converter.Factory() {
+        @Override public Converter<?> get(Type candidate) {
+          return candidate.equals(type) ? converter : null;
+        }
+        @Override public String toString() {
+          return "ConverterFactory(type=" + type + ",converter=" + converter + ")";
+        }
+      });
       return this;
     }
 
