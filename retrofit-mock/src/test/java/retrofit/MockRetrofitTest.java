@@ -25,11 +25,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
-import retrofit.mock.Behavior;
-import retrofit.mock.BehaviorAdapter;
 import retrofit.mock.CallBehaviorAdapter;
 import retrofit.mock.Calls;
 import retrofit.mock.MockRetrofit;
+import retrofit.mock.NetworkBehavior;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -45,7 +44,7 @@ public final class MockRetrofitTest {
   }
 
   private final IOException mockFailure = new IOException("Timeout!");
-  private final Behavior behavior = Behavior.create(new Random(2847));
+  private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
   private DoWorkService service;
 
   @Before public void setUp() {
@@ -63,8 +62,9 @@ public final class MockRetrofitTest {
       }
     };
 
-    BehaviorAdapter<?> adapter = new CallBehaviorAdapter(retrofit, newSingleThreadExecutor());
-    MockRetrofit mockRetrofit = new MockRetrofit(adapter, behavior);
+    NetworkBehavior.Adapter<?> adapter =
+        new CallBehaviorAdapter(retrofit, newSingleThreadExecutor());
+    MockRetrofit mockRetrofit = new MockRetrofit(behavior, adapter);
     service = mockRetrofit.create(DoWorkService.class, mockService);
   }
 

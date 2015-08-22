@@ -20,7 +20,7 @@ import rx.functions.Func1;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public final class RxJavaBehaviorAdapter implements BehaviorAdapter<Object> {
+public final class RxJavaBehaviorAdapter implements NetworkBehavior.Adapter<Object> {
   public static RxJavaBehaviorAdapter create() {
     return new RxJavaBehaviorAdapter();
   }
@@ -28,7 +28,7 @@ public final class RxJavaBehaviorAdapter implements BehaviorAdapter<Object> {
   private RxJavaBehaviorAdapter() {
   }
 
-  @Override public Object applyBehavior(Behavior behavior, Object value) {
+  @Override public Object applyBehavior(NetworkBehavior behavior, Object value) {
     if (value instanceof Observable) {
       return applyObservableBehavior(behavior, (Observable<?>) value);
     }
@@ -41,7 +41,8 @@ public final class RxJavaBehaviorAdapter implements BehaviorAdapter<Object> {
     throw new IllegalStateException("Unsupported type " + name);
   }
 
-  public Observable<?> applyObservableBehavior(final Behavior behavior, final Observable<?> value) {
+  public Observable<?> applyObservableBehavior(final NetworkBehavior behavior,
+      final Observable<?> value) {
     return Observable.timer(behavior.calculateDelay(MILLISECONDS), MILLISECONDS)
         .flatMap(new Func1<Long, Observable<?>>() {
           @Override public Observable<?> call(Long ignored) {

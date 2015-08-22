@@ -17,15 +17,15 @@ package retrofit;
 
 import java.util.Random;
 import org.junit.Test;
-import retrofit.mock.Behavior;
+import retrofit.mock.NetworkBehavior;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class BehaviorTest {
-  private final Behavior behavior = Behavior.create(new Random(2847));
+public final class NetworkBehaviorTest {
+  private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
 
   @Test public void delayMustBePositive() {
     try {

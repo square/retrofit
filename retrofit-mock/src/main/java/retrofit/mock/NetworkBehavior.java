@@ -21,17 +21,47 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public final class Behavior {
+/**
+ * A simple emulation of the behavior of network calls.
+ * <p>
+ * This class models three properties of a network:
+ * <ul>
+ * <li>Delay – the time it takes before a response is received (successful or otherwise).</li>
+ * <li>Variance – the amount of fluctuation of the delay to be faster or slower.</li>
+ * <li>Failure - the percentage of operations which fail (such as {@link IOException}).</li>
+ * </ul>
+ * Behavior can be applied to a Retrofit interface with {@link MockRetrofit}. Behavior can also
+ * be applied elsewhere using {@link #calculateDelay(TimeUnit)} and {@link #calculateIsFailure()}.
+ * <p>
+ * By default, instances of this class will use a 2 second delay with 40% variance and failures
+ * will occur 3% of the time.
+ */
+public final class NetworkBehavior {
   private static final int DEFAULT_DELAY_MS = 2000; // Network calls will take 2 seconds.
   private static final int DEFAULT_VARIANCE_PERCENT = 40; // Network delay varies by ±40%.
   private static final int DEFAULT_FAILURE_PERCENT = 3; // 3% of network calls will fail.
 
-  public static Behavior create() {
-    return new Behavior(new Random());
+  /** Applies {@link NetworkBehavior} to instances of {@code T}. */
+  public interface Adapter<T> {
+    /**
+     * Apply {@code behavior} to {@code value} so that it exhibits the configured network behavior
+     * traits when interacted with.
+     */
+    T applyBehavior(NetworkBehavior behavior, T value);
   }
 
-  public static Behavior create(Random random) {
-    return new Behavior(random);
+  /** Create an instance with default behavior. */
+  public static NetworkBehavior create() {
+    return new NetworkBehavior(new Random());
+  }
+
+  /**
+   * Create an instance with default behavior which uses {@code random} to control variance and
+   * failure calculation.
+   */
+  public static NetworkBehavior create(Random random) {
+    if (random == null) throw new NullPointerException("random == null");
+    return new NetworkBehavior(random);
   }
 
   private final Random random;
@@ -39,9 +69,9 @@ public final class Behavior {
   private volatile long delayMs = DEFAULT_DELAY_MS;
   private volatile int variancePercent = DEFAULT_VARIANCE_PERCENT;
   private volatile int failurePercent = DEFAULT_FAILURE_PERCENT;
-  private volatile IOException failureException = new IOException("Mock failure!");
+  private volatile Throwable failureException = new IOException("Mock failure!");
 
-  private Behavior(Random random) {
+  private NetworkBehavior(Random random) {
     this.random = random;
   }
 
@@ -85,15 +115,15 @@ public final class Behavior {
   }
 
   /** Set the exception to be used when a failure is triggered. */
-  public void setFailureException(IOException exception) {
-    if (exception == null) {
-      throw new NullPointerException("exception == null");
+  public void setFailureException(Throwable t) {
+    if (t == null) {
+      throw new NullPointerException("t == null");
     }
-    this.failureException = exception;
+    this.failureException = t;
   }
 
   /** The exception to be used when a failure is triggered. */
-  public IOException failureException() {
+  public Throwable failureException() {
     return failureException;
   }
 

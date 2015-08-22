@@ -14,10 +14,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import retrofit.Call;
 import retrofit.Retrofit;
-import retrofit.mock.Behavior;
 import retrofit.mock.CallBehaviorAdapter;
 import retrofit.mock.Calls;
 import retrofit.mock.MockRetrofit;
+import retrofit.mock.NetworkBehavior;
 
 /**
  * An example of using {@link MockRetrofit} to create a mock service implementation with
@@ -73,14 +73,14 @@ public final class SimpleMockService {
         .build();
 
     // Create the Behavior object which manages the fake behavior and the background executor.
-    Behavior behavior = Behavior.create();
+    NetworkBehavior behavior = NetworkBehavior.create();
     ExecutorService bg = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
         .setNameFormat("mock-retrofit-%d")
         .setDaemon(true)
         .build());
 
     // Create the mock implementation and use MockRetrofit to apply the behavior to it.
-    MockRetrofit mockRetrofit = new MockRetrofit(new CallBehaviorAdapter(retrofit, bg), behavior);
+    MockRetrofit mockRetrofit = new MockRetrofit(behavior, new CallBehaviorAdapter(retrofit, bg));
     MockGitHub mockGitHub = new MockGitHub();
     GitHub gitHub = mockRetrofit.create(GitHub.class, mockGitHub);
 

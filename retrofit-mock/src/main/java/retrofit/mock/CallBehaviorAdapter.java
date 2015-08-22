@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutorService;
 import retrofit.Call;
 import retrofit.Retrofit;
 
-public final class CallBehaviorAdapter implements BehaviorAdapter<Call<?>> {
+public final class CallBehaviorAdapter implements NetworkBehavior.Adapter<Call<?>> {
   private final Executor callbackExecutor;
   private final ExecutorService backgroundExecutor;
 
@@ -34,7 +34,7 @@ public final class CallBehaviorAdapter implements BehaviorAdapter<Call<?>> {
     this.backgroundExecutor = backgroundExecutor;
   }
 
-  @Override public Call<?> applyBehavior(Behavior behavior, Call<?> value) {
+  @Override public Call<?> applyBehavior(NetworkBehavior behavior, Call<?> value) {
     return new BehaviorCall<>(behavior, backgroundExecutor, callbackExecutor, value);
   }
 }

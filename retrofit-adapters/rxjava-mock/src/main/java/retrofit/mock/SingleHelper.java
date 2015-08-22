@@ -23,7 +23,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class SingleHelper {
   @SuppressWarnings("unchecked") // Caller must instanceof / getClass() verify 'value' is Single.
-  public static Object applySingleBehavior(final Behavior behavior, Object value) {
+  public static Object applySingleBehavior(final NetworkBehavior behavior, Object value) {
     final Single<Object> single = (Single<Object>) value;
     return Observable.timer(behavior.calculateDelay(MILLISECONDS), MILLISECONDS)
         .flatMap(new Func1<Long, Observable<?>>() {
