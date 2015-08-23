@@ -51,6 +51,7 @@
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
     <okhttp.version>2.5.0-SNAPSHOT</okhttp.version>
+    <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
     <rxjava.version>1.0.13</rxjava.version>
@@ -100,6 +101,11 @@
         <groupId>com.google.android</groupId>
         <artifactId>android</artifactId>
         <version>${android.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-annotations</artifactId>
+        <version>${animal.sniffer.version}</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp</groupId>
@@ -213,6 +219,27 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>${animal.sniffer.version}</version>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>java16</artifactId>
+            <version>1.1</version>
+          </signature>
+        </configuration>
       </plugin>
     </plugins>
   </build>
