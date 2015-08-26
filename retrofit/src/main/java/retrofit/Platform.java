@@ -18,11 +18,9 @@ package retrofit;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import com.squareup.okhttp.OkHttpClient;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
@@ -53,14 +51,6 @@ class Platform {
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
     return DefaultCallAdapter.FACTORY;
-  }
-
-  OkHttpClient defaultClient() {
-    OkHttpClient client = new OkHttpClient();
-    client.setConnectTimeout(15, TimeUnit.SECONDS);
-    client.setReadTimeout(15, TimeUnit.SECONDS);
-    client.setWriteTimeout(15, TimeUnit.SECONDS);
-    return client;
   }
 
   boolean isDefaultMethod(Method method) {
