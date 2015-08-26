@@ -256,7 +256,7 @@ public final class Retrofit {
 
       OkHttpClient client = this.client;
       if (client == null) {
-        client = Platform.get().defaultClient();
+        client = new OkHttpClient();
       }
 
       // Make a defensive copy of the adapters and add the default Call adapter.
