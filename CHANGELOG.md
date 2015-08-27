@@ -1,6 +1,25 @@
 Change Log
 ==========
 
+Version 2.0.0-beta1 *(2015-08-27)*
+----------------------------------
+
+ * New: `Call` encapsulates a single request/response HTTP call. A call can by run synchronously
+   via `execute()` or asynchronously via `enqueue()` and can be canceled with `cancel()`.
+ * New: `Response` is now parameterized and includes the deserialized body object.
+ * New: `@Url` parameter annotation allows passing a complete URL for an endpoint.
+ * New: OkHttp is now required as a dependency. Types like `TypedInput` and `TypedOutput` (and its
+   implementations), `Request`, and `Header` have been replaced with OkHttp types like `RequestBody`,
+   `ResponseBody`, and `Headers`.
+ * New: `CallAdapter` (and `Factory`) provides extension point for supporting multiple execution
+   mechanisms. An RxJava implementation is provided by a sibling module.
+ * New: `Converter` (and `Factory`) provides extension point for supporting multiple serialization
+   mechanisms. Gson, Jackson, Moshi, Protobuf, Wire, and SimpleXml implementations are provided by sibling
+   modules.
+ * Fix: A lot of things.
+ * Hello Droidcon NYC 2015!
+
+
 Version 1.9.0 *(2015-01-07)*
 ----------------------------
 
