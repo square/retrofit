@@ -49,16 +49,16 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
           + " as " + name + "<Foo> or " + name + "<? extends Foo>");
     }
 
-    CallAdapter<Object> callAdapter = getCallAdapter(returnType);
+    CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType);
     if (isSingle) {
       // Add Single-converter wrapper from a separate class. This defers classloading such that
       // regular Observable operation can be leveraged without relying on this unstable RxJava API.
-      callAdapter = SingleHelper.makeSingle(callAdapter);
+      return SingleHelper.makeSingle(callAdapter);
     }
     return callAdapter;
   }
 
-  private CallAdapter<Object> getCallAdapter(Type returnType) {
+  private CallAdapter<Observable<?>> getCallAdapter(Type returnType) {
     Type observableType = Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
     Class<?> rawObservableType = Utils.getRawType(observableType);
     if (rawObservableType == Response.class) {
@@ -67,7 +67,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
             + " as Response<Foo> or Response<? extends Foo>");
       }
       Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) observableType);
-      return new ResponseCallAdapter<>(responseType);
+      return new ResponseCallAdapter(responseType);
     }
 
     if (rawObservableType == Result.class) {
@@ -76,10 +76,10 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
             + " as Result<Foo> or Result<? extends Foo>");
       }
       Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) observableType);
-      return new ResultCallAdapter<>(responseType);
+      return new ResultCallAdapter(responseType);
     }
 
-    return new SimpleCallAdapter<>(observableType);
+    return new SimpleCallAdapter(observableType);
   }
 
   static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
@@ -124,7 +124,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
   }
 
-  static final class ResponseCallAdapter<T> implements CallAdapter<T> {
+  static final class ResponseCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
 
     ResponseCallAdapter(Type responseType) {
@@ -135,12 +135,12 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public Observable<Response<T>> adapt(Call<T> call) {
+    @Override public <R> Observable<Response<R>> adapt(Call<R> call) {
       return Observable.create(new CallOnSubscribe<>(call));
     }
   }
 
-  static final class SimpleCallAdapter<T> implements CallAdapter<T> {
+  static final class SimpleCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
 
     SimpleCallAdapter(Type responseType) {
@@ -151,10 +151,10 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public Observable<T> adapt(Call<T> call) {
+    @Override public <R> Observable<R> adapt(Call<R> call) {
       return Observable.create(new CallOnSubscribe<>(call)) //
-          .flatMap(new Func1<Response<T>, Observable<T>>() {
-            @Override public Observable<T> call(Response<T> response) {
+          .flatMap(new Func1<Response<R>, Observable<R>>() {
+            @Override public Observable<R> call(Response<R> response) {
               if (response.isSuccess()) {
                 return Observable.just(response.body());
               }
@@ -164,7 +164,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
   }
 
-  static final class ResultCallAdapter<T> implements CallAdapter<T> {
+  static final class ResultCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
 
     ResultCallAdapter(Type responseType) {
@@ -175,15 +175,15 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public Observable<Result<T>> adapt(Call<T> call) {
+    @Override public <R> Observable<Result<R>> adapt(Call<R> call) {
       return Observable.create(new CallOnSubscribe<>(call)) //
-          .map(new Func1<Response<T>, Result<T>>() {
-            @Override public Result<T> call(Response<T> response) {
+          .map(new Func1<Response<R>, Result<R>>() {
+            @Override public Result<R> call(Response<R> response) {
               return Result.response(response);
             }
           })
-          .onErrorReturn(new Func1<Throwable, Result<T>>() {
-            @Override public Result<T> call(Throwable throwable) {
+          .onErrorReturn(new Func1<Throwable, Result<R>>() {
+            @Override public Result<R> call(Throwable throwable) {
               return Result.error(throwable);
             }
           });

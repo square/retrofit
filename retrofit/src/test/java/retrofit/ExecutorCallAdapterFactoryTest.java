@@ -72,7 +72,7 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallExecute() throws IOException {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    CallAdapter<Call<?>> adapter = (CallAdapter<Call<?>>) factory.get(returnType);
     final Response<String> response = Response.success("Hi");
     Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
       @Override public Response<String> execute() throws IOException {
@@ -84,7 +84,7 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    CallAdapter<Call<?>> adapter = (CallAdapter<Call<?>>) factory.get(returnType);
     final Response<String> response = Response.success("Hi");
     Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
@@ -98,7 +98,7 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    CallAdapter<Call<?>> adapter = (CallAdapter<Call<?>>) factory.get(returnType);
     final Throwable throwable = new IOException();
     Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
@@ -114,7 +114,7 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallCloneDeepCopy() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    CallAdapter<Call<?>> adapter = (CallAdapter<Call<?>>) factory.get(returnType);
     Call<String> delegate = mock(Call.class);
     Call<String> call = (Call<String>) adapter.adapt(delegate);
     Call<String> cloned = call.clone();
@@ -125,7 +125,7 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallCancel() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String> adapter = (CallAdapter<String>) factory.get(returnType);
+    CallAdapter<Call<?>> adapter = (CallAdapter<Call<?>>) factory.get(returnType);
     Call<String> delegate = mock(Call.class);
     Call<String> call = (Call<String>) adapter.adapt(delegate);
     call.cancel();

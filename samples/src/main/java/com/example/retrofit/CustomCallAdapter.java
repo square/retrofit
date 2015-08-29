@@ -35,7 +35,7 @@ import retrofit.http.GET;
  */
 public final class CustomCallAdapter {
   public static class ListenableFutureCallAdapterFactory implements CallAdapter.Factory {
-    @Override public CallAdapter<?> get(Type returnType) {
+    @Override public CallAdapter<ListenableFuture<?>> get(Type returnType) {
       TypeToken<?> token = TypeToken.of(returnType);
       if (token.getRawType() != ListenableFuture.class) {
         return null;
@@ -47,13 +47,13 @@ public final class CustomCallAdapter {
       }
       final Type responseType = componentType.getType();
 
-      return new CallAdapter<Object>() {
+      return new CallAdapter<ListenableFuture<?>>() {
         @Override public Type responseType() {
           return responseType;
         }
 
-        @Override public ListenableFuture<?> adapt(Call<Object> call) {
-          CallFuture<Object> future = new CallFuture<>(call);
+        @Override public <R> ListenableFuture<R> adapt(Call<R> call) {
+          CallFuture<R> future = new CallFuture<>(call);
           call.enqueue(future);
           return future;
         }
