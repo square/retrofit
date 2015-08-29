@@ -142,12 +142,12 @@ public final class RetrofitTest {
         if (Utils.getRawType(returnType) != Call.class) {
           return null;
         }
-        return new CallAdapter<Object>() {
+        return new CallAdapter<Call<?>>() {
           @Override public Type responseType() {
             return Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
           }
 
-          @Override public Object adapt(Call<Object> call) {
+          @Override public <R> Call<R> adapt(Call<R> call) {
             adapterCalled.set(true);
             return call;
           }
@@ -167,16 +167,16 @@ public final class RetrofitTest {
 
   @Test public void customReturnTypeAdapter() {
     class GreetingCallAdapterFactory implements CallAdapter.Factory {
-      @Override public CallAdapter<?> get(Type returnType) {
+      @Override public CallAdapter<String> get(Type returnType) {
         if (Utils.getRawType(returnType) != String.class) {
           return null;
         }
-        return new CallAdapter<Object>() {
+        return new CallAdapter<String>() {
           @Override public Type responseType() {
             return String.class;
           }
 
-          @Override public String adapt(Call<Object> call) {
+          @Override public <R> String adapt(Call<R> call) {
             return "Hi!";
           }
         };

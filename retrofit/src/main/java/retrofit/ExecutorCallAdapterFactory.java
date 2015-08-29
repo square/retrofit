@@ -26,17 +26,17 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @Override public CallAdapter<?> get(Type returnType) {
+  @Override public CallAdapter<Call<?>> get(Type returnType) {
     if (Utils.getRawType(returnType) != Call.class) {
       return null;
     }
     final Type responseType = Utils.getCallResponseType(returnType);
-    return new CallAdapter<Object>() {
+    return new CallAdapter<Call<?>>() {
       @Override public Type responseType() {
         return responseType;
       }
 
-      @Override public Call<Object> adapt(Call<Object> call) {
+      @Override public <R> Call<R> adapt(Call<R> call) {
         return new ExecutorCallbackCall<>(callbackExecutor, call);
       }
     };

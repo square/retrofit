@@ -20,14 +20,14 @@ import rx.Observable;
 import rx.Single;
 
 final class SingleHelper {
-  static CallAdapter<Object> makeSingle(final CallAdapter<Object> callAdapter) {
-    return new CallAdapter<Object>() {
+  static CallAdapter<Single<?>> makeSingle(final CallAdapter<Observable<?>> callAdapter) {
+    return new CallAdapter<Single<?>>() {
       @Override public Type responseType() {
         return callAdapter.responseType();
       }
 
-      @Override public Single<?> adapt(Call<Object> call) {
-        Observable<?> observable = (Observable<?>) callAdapter.adapt(call);
+      @Override public <R> Single<?> adapt(Call<R> call) {
+        Observable<?> observable = callAdapter.adapt(call);
         return observable.toSingle();
       }
     };
