@@ -17,10 +17,12 @@ package retrofit;
 
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import retrofit.http.Streaming;
 
 final class OkHttpBodyConverterFactory implements Converter.Factory {
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     if (!(type instanceof Class)) {
       return null;
     }
@@ -28,8 +30,9 @@ final class OkHttpBodyConverterFactory implements Converter.Factory {
     if (RequestBody.class.isAssignableFrom(cls)) {
       return new OkHttpRequestBodyConverter();
     }
-    if (ResponseBody.class.isAssignableFrom(cls)) {
-      return new OkHttpResponseBodyConverter(false);
+    if (cls == ResponseBody.class) {
+      boolean streaming = Utils.isAnnotationPresent(annotations, Streaming.class);
+      return new OkHttpResponseBodyConverter(streaming);
     }
     return null;
   }

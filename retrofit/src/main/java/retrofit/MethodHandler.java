@@ -16,11 +16,10 @@
 package retrofit;
 
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
-import retrofit.http.Streaming;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
@@ -45,8 +44,9 @@ final class MethodHandler<T> {
     if (returnType == void.class) {
       throw Utils.methodError(method, "Service methods cannot return void.");
     }
+    Annotation[] annotations = method.getAnnotations();
     try {
-      return Utils.resolveCallAdapter(adapterFactories, returnType);
+      return Utils.resolveCallAdapter(adapterFactories, returnType, annotations);
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create call adapter for %s", returnType);
     }
@@ -55,14 +55,9 @@ final class MethodHandler<T> {
 
   private static Converter<?> createResponseConverter(Method method, Type responseType,
       List<Converter.Factory> converterFactories) {
-    // TODO how can we not special case this? See TODO below, maybe...
-    if (responseType == ResponseBody.class) {
-      boolean isStreaming = method.isAnnotationPresent(Streaming.class);
-      return new OkHttpResponseBodyConverter(isStreaming);
-    }
-
+    Annotation[] annotations = method.getAnnotations();
     try {
-      return Utils.resolveConverter(converterFactories, responseType);
+      return Utils.resolveConverter(converterFactories, responseType, annotations);
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create converter for %s", responseType);
     }

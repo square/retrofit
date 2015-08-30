@@ -17,6 +17,7 @@ package retrofit;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
@@ -31,7 +32,7 @@ public final class ProtoConverterFactory implements Converter.Factory {
    * Create a converter for {@code type} provided it is a {@link MessageLite} type. Returns null
    * otherwise.
    */
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     if (!(type instanceof Class<?>)) {
       return null;
     }

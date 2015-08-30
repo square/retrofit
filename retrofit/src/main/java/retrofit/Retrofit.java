@@ -19,6 +19,7 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -215,7 +216,7 @@ public final class Retrofit {
       checkNotNull(type, "type == null");
       checkNotNull(converter, "converter == null");
       converterFactories.add(new Converter.Factory() {
-        @Override public Converter<?> get(Type candidate) {
+        @Override public Converter<?> get(Type candidate, Annotation[] annotations) {
           return candidate.equals(type) ? converter : null;
         }
         @Override public String toString() {

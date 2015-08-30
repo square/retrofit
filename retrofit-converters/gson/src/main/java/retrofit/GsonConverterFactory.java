@@ -18,6 +18,7 @@ package retrofit;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /** A {@linkplain Converter.Factory converter} which uses Gson for JSON. */
@@ -46,7 +47,7 @@ public final class GsonConverterFactory implements Converter.Factory {
   }
 
   /** Create a converter for {@code type}. */
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
     return new GsonConverter<>(adapter);
   }

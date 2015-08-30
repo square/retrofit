@@ -293,7 +293,8 @@ final class RequestFactoryParser {
                 "Content-Transfer-Encoding", part.encoding());
             Converter<?> converter;
             try {
-              converter = Utils.resolveConverter(converterFactories, methodParameterType);
+              converter = Utils.resolveConverter(converterFactories, methodParameterType,
+                  methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Part converter for %s",
                   methodParameterType);
@@ -310,7 +311,8 @@ final class RequestFactoryParser {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
             PartMap partMap = (PartMap) methodParameterAnnotation;
-            action = new RequestBuilderAction.PartMap(converterFactories, partMap.encoding());
+            action = new RequestBuilderAction.PartMap(converterFactories, partMap.encoding(),
+                methodParameterAnnotations);
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {
@@ -324,7 +326,8 @@ final class RequestFactoryParser {
 
             Converter<?> converter;
             try {
-              converter = Utils.resolveConverter(converterFactories, methodParameterType);
+              converter = Utils.resolveConverter(converterFactories, methodParameterType,
+                  methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Body converter for %s",
                   methodParameterType);

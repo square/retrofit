@@ -16,6 +16,7 @@
 package retrofit;
 
 import com.squareup.okhttp.Headers;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
@@ -208,10 +209,13 @@ abstract class RequestBuilderAction {
   static final class PartMap extends RequestBuilderAction {
     private final List<Converter.Factory> converterFactories;
     private final String transferEncoding;
+    private final Annotation[] annotations;
 
-    PartMap(List<Converter.Factory> converterFactories, String transferEncoding) {
+    PartMap(List<Converter.Factory> converterFactories, String transferEncoding,
+        Annotation[] annotations) {
       this.converterFactories = converterFactories;
       this.transferEncoding = transferEncoding;
+      this.annotations = annotations;
     }
 
     @Override void perform(RequestBuilder builder, Object value) {
@@ -235,7 +239,7 @@ abstract class RequestBuilderAction {
         Class<?> entryClass = entryValue.getClass();
         //noinspection unchecked
         Converter<Object> converter =
-            (Converter<Object>) Utils.resolveConverter(converterFactories, entryClass);
+            (Converter<Object>) Utils.resolveConverter(converterFactories, entryClass, annotations);
         builder.addPart(headers, converter.toBody(entryValue));
       }
     }

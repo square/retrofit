@@ -9,6 +9,8 @@ import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
@@ -20,6 +22,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit.http.Body;
@@ -27,6 +30,7 @@ import retrofit.http.GET;
 import retrofit.http.POST;
 
 import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -85,6 +89,13 @@ public final class RetrofitTest {
     @POST("/a") Call<BigInteger> call(@Body BigInteger bigInteger);
     @POST("/b") Call<CharSequence> call(@Body CharSequence charSequence);
   }
+  interface Annotated {
+    @GET("/") @Foo Call<ResponseBody> method();
+    @POST("/") Call<ResponseBody> parameter(@Foo @Body RequestBody param);
+
+    @Retention(RUNTIME)
+    @interface Foo {}
+  }
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
   @Test public void objectMethodsStillWork() {
@@ -125,7 +136,7 @@ public final class RetrofitTest {
     }
   }
 
-  @Test public void callReturnTypeAdapterAddedByDefault() {
+  @Test public void callCallAdapterAddedByDefault() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .build();
@@ -133,11 +144,11 @@ public final class RetrofitTest {
     assertThat(example.allowed()).isNotNull();
   }
 
-  @Test public void callReturnTypeCustomAdapter() {
+  @Test public void callCallCustomAdapter() {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     final AtomicBoolean adapterCalled = new AtomicBoolean();
     class MyCallAdapterFactory implements CallAdapter.Factory {
-      @Override public CallAdapter<?> get(final Type returnType) {
+      @Override public CallAdapter<?> get(final Type returnType, Annotation[] annotations) {
         factoryCalled.set(true);
         if (Utils.getRawType(returnType) != Call.class) {
           return null;
@@ -165,9 +176,9 @@ public final class RetrofitTest {
     assertThat(adapterCalled.get()).isTrue();
   }
 
-  @Test public void customReturnTypeAdapter() {
+  @Test public void customCallAdapter() {
     class GreetingCallAdapterFactory implements CallAdapter.Factory {
-      @Override public CallAdapter<String> get(Type returnType) {
+      @Override public CallAdapter<String> get(Type returnType, Annotation[] annotations) {
         if (Utils.getRawType(returnType) != String.class) {
           return null;
         }
@@ -192,7 +203,26 @@ public final class RetrofitTest {
     assertThat(example.get()).isEqualTo("Hi!");
   }
 
-  @Test public void customReturnTypeAdapterMissingThrows() {
+  @Test public void methodAnnotationsPassedToCallAdapter() {
+    final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
+    class MyCallAdapterFactory implements CallAdapter.Factory {
+      @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations) {
+        annotationsRef.set(annotations);
+        return null;
+      }
+    }
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addCallAdapterFactory(new MyCallAdapterFactory())
+        .build();
+    Annotated annotated = retrofit.create(Annotated.class);
+    annotated.method(); // Trigger internal setup.
+
+    Annotation[] annotations = annotationsRef.get();
+    assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
+  }
+
+  @Test public void customCallAdapterMissingThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .build();
@@ -208,6 +238,46 @@ public final class RetrofitTest {
           "Could not locate call adapter for java.util.concurrent.Future<java.lang.String>. Tried:\n"
               + " * retrofit.DefaultCallAdapter$1");
     }
+  }
+
+  @Test public void methodAnnotationsPassedToConverter() {
+    final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
+    class MyConverterFactory implements Converter.Factory {
+      @Override public Converter<?> get(Type type, Annotation[] annotations) {
+        annotationsRef.set(annotations);
+        return null;
+      }
+    }
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new MyConverterFactory())
+        .build();
+    Annotated annotated = retrofit.create(Annotated.class);
+    annotated.method(); // Trigger internal setup.
+
+    Annotation[] annotations = annotationsRef.get();
+    assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
+  }
+
+  @Test public void parameterAnnotationsPassedToConverter() {
+    final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
+    class MyConverterFactory implements Converter.Factory {
+      @Override public Converter<?> get(Type type, Annotation[] annotations) {
+        if (type == RequestBody.class) {
+          annotationsRef.set(annotations);
+        }
+        return null;
+      }
+    }
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new MyConverterFactory())
+        .build();
+    Annotated annotated = retrofit.create(Annotated.class);
+    annotated.parameter(null); // Trigger internal setup.
+
+    Annotation[] annotations = annotationsRef.get();
+    assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
   }
 
   @Test public void missingConverterThrowsOnNonRequestBody() throws IOException {
@@ -252,7 +322,7 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new Converter.Factory() {
-          @Override public Converter<?> get(Type type) {
+          @Override public Converter<?> get(Type type, Annotation[] annotations) {
             return null;
           }
         })

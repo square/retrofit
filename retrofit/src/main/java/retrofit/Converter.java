@@ -18,6 +18,7 @@ package retrofit;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /**
@@ -34,6 +35,6 @@ public interface Converter<T> {
 
   interface Factory {
     /** Create a converter for {@code type}. Returns null if the type cannot be handled. */
-    Converter<?> get(Type type);
+    Converter<?> get(Type type, Annotation[] annotations);
   }
 }

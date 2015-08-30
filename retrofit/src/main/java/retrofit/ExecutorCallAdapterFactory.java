@@ -16,6 +16,7 @@
 package retrofit;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
@@ -26,7 +27,7 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @Override public CallAdapter<Call<?>> get(Type returnType) {
+  @Override public CallAdapter<Call<?>> get(Type returnType, Annotation[] annotations) {
     if (Utils.getRawType(returnType) != Call.class) {
       return null;
     }

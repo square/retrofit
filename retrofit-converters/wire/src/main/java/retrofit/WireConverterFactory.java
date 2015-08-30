@@ -17,6 +17,7 @@ package retrofit;
 
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /** A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers. */
@@ -43,7 +44,7 @@ public final class WireConverterFactory implements Converter.Factory {
    * Create a converter for {@code type} provided it is a {@link Message} type. Returns null
    * otherwise.
    */
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     if (!(type instanceof Class<?>)) {
       return null;
     }

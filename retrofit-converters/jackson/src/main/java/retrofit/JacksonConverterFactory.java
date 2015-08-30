@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /** A {@linkplain Converter.Factory converter} which uses Jackson. */
@@ -41,7 +42,7 @@ public final class JacksonConverterFactory implements Converter.Factory {
   }
 
   /** Create a converter for {@code type}. */
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     JavaType javaType = mapper.getTypeFactory().constructType(type);
     ObjectWriter writer = mapper.writerWithType(javaType);
     ObjectReader reader = mapper.reader(javaType);

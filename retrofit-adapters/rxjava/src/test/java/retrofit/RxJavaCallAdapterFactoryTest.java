@@ -22,6 +22,7 @@ import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import org.junit.Before;
@@ -38,6 +39,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 public final class RxJavaCallAdapterFactoryTest {
+  private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
+
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
@@ -156,21 +159,21 @@ public final class RxJavaCallAdapterFactoryTest {
   @Test public void responseType() {
     CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
     Type classType = new TypeToken<Observable<String>>() {}.getType();
-    assertThat(factory.get(classType).responseType()).isEqualTo(String.class);
+    assertThat(factory.get(classType, NO_ANNOTATIONS).responseType()).isEqualTo(String.class);
     Type wilcardType = new TypeToken<Observable<? extends String>>() {}.getType();
-    assertThat(factory.get(wilcardType).responseType()).isEqualTo(String.class);
+    assertThat(factory.get(wilcardType, NO_ANNOTATIONS).responseType()).isEqualTo(String.class);
     Type genericType = new TypeToken<Observable<List<String>>>() {}.getType();
-    assertThat(factory.get(genericType).responseType()) //
+    assertThat(factory.get(genericType, NO_ANNOTATIONS).responseType()) //
         .isEqualTo(new TypeToken<List<String>>() {}.getType());
     Type responseType = new TypeToken<Observable<Response<String>>>() {}.getType();
-    assertThat(factory.get(responseType).responseType()).isEqualTo(String.class);
+    assertThat(factory.get(responseType, NO_ANNOTATIONS).responseType()).isEqualTo(String.class);
     Type resultType = new TypeToken<Observable<Response<String>>>() {}.getType();
-    assertThat(factory.get(resultType).responseType()).isEqualTo(String.class);
+    assertThat(factory.get(resultType, NO_ANNOTATIONS).responseType()).isEqualTo(String.class);
   }
 
   @Test public void nonObservableTypeReturnsNull() {
     CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
-    CallAdapter<?> adapter = factory.get(String.class);
+    CallAdapter<?> adapter = factory.get(String.class, NO_ANNOTATIONS);
     assertThat(adapter).isNull();
   }
 
@@ -178,14 +181,14 @@ public final class RxJavaCallAdapterFactoryTest {
     CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
     Type observableType = new TypeToken<Observable>() {}.getType();
     try {
-      factory.get(observableType);
+      factory.get(observableType, NO_ANNOTATIONS);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
     }
     Type singleType = new TypeToken<Single>() {}.getType();
     try {
-      factory.get(singleType);
+      factory.get(singleType, NO_ANNOTATIONS);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Single return type must be parameterized as Single<Foo> or Single<? extends Foo>");
@@ -196,14 +199,14 @@ public final class RxJavaCallAdapterFactoryTest {
     CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
     Type observableType = new TypeToken<Observable<Response>>() {}.getType();
     try {
-      factory.get(observableType);
+      factory.get(observableType, NO_ANNOTATIONS);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
     Type singleType = new TypeToken<Single<Response>>() {}.getType();
     try {
-      factory.get(singleType);
+      factory.get(singleType, NO_ANNOTATIONS);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
@@ -214,14 +217,14 @@ public final class RxJavaCallAdapterFactoryTest {
     CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
     Type observableType = new TypeToken<Observable<Result>>() {}.getType();
     try {
-      factory.get(observableType);
+      factory.get(observableType, NO_ANNOTATIONS);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
     Type singleType = new TypeToken<Single<Result>>() {}.getType();
     try {
-      factory.get(singleType);
+      factory.get(singleType, NO_ANNOTATIONS);
       fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
@@ -236,7 +239,7 @@ public final class RxJavaCallAdapterFactoryTest {
   }
 
   static class StringConverterFactory implements Converter.Factory {
-    @Override public Converter<?> get(Type type) {
+    @Override public Converter<?> get(Type type, Annotation[] annotations) {
       return new Converter<String>() {
         @Override public String fromBody(ResponseBody body) throws IOException {
           return body.string();
