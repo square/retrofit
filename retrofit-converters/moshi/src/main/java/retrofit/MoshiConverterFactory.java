@@ -17,6 +17,7 @@ package retrofit;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /** A {@linkplain Converter.Factory converter} which uses Moshi for JSON. */
@@ -39,7 +40,7 @@ public final class MoshiConverterFactory implements Converter.Factory {
   }
 
   /** Create a converter for {@code type}. */
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     JsonAdapter<Object> adapter = moshi.adapter(type);
     return new MoshiConverter<>(adapter);
   }

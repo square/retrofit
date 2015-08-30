@@ -19,12 +19,13 @@ import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 class ToStringConverterFactory implements Converter.Factory {
   private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
 
-  @Override public Converter get(Type type) {
+  @Override public Converter get(Type type, Annotation[] annotations) {
     if (type != String.class) {
       return null;
     }

@@ -20,6 +20,7 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -49,10 +50,21 @@ final class Utils {
     }
   }
 
+  /** Returns true if {@code annotations} contains an instance of {@code cls}. */
+  static boolean isAnnotationPresent(Annotation[] annotations,
+      Class<? extends Annotation> cls) {
+    for (Annotation annotation : annotations) {
+      if (cls.isInstance(annotation)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-  static CallAdapter<?> resolveCallAdapter(List<CallAdapter.Factory> adapterFactories, Type type) {
+  static CallAdapter<?> resolveCallAdapter(List<CallAdapter.Factory> adapterFactories, Type type,
+      Annotation[] annotations) {
     for (int i = 0, count = adapterFactories.size(); i < count; i++) {
-      CallAdapter<?> adapter = adapterFactories.get(i).get(type);
+      CallAdapter<?> adapter = adapterFactories.get(i).get(type, annotations);
       if (adapter != null) {
         return adapter;
       }
@@ -67,9 +79,10 @@ final class Utils {
     throw new IllegalArgumentException(builder.toString());
   }
 
-  static Converter<?> resolveConverter(List<Converter.Factory> converterFactories, Type type) {
+  static Converter<?> resolveConverter(List<Converter.Factory> converterFactories, Type type,
+      Annotation[] annotations) {
     for (int i = 0, count = converterFactories.size(); i < count; i++) {
-      Converter<?> converter = converterFactories.get(i).get(type);
+      Converter<?> converter = converterFactories.get(i).get(type, annotations);
       if (converter != null) {
         return converter;
       }

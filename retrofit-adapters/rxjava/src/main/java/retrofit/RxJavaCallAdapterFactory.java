@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import rx.Observable;
@@ -37,7 +38,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
   private RxJavaCallAdapterFactory() {
   }
 
-  @Override public CallAdapter<?> get(Type returnType) {
+  @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations) {
     Class<?> rawType = Utils.getRawType(returnType);
     boolean isSingle = "rx.Single".equals(rawType.getCanonicalName());
     if (rawType != Observable.class && !isSingle) {

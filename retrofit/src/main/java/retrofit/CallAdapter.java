@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /** Adapts a {@link Call} into the type of {@code T}. */
@@ -37,6 +38,6 @@ public interface CallAdapter<T> {
      * Returns a call adapter for interface methods that return {@code returnType}, or null if this
      * factory doesn't adapt that type.
      */
-    CallAdapter<?> get(Type returnType);
+    CallAdapter<?> get(Type returnType, Annotation[] annotations);
   }
 }

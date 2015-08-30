@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -55,7 +56,7 @@ public final class SimpleXmlConverterFactory implements Converter.Factory {
   }
 
   /** Create a converter for {@code type} provided it is a class. Returns null otherwise. */
-  @Override public Converter<?> get(Type type) {
+  @Override public Converter<?> get(Type type, Annotation[] annotations) {
     if (!(type instanceof Class)) {
       return null;
     }

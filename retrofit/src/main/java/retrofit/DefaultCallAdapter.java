@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /**
@@ -24,7 +25,7 @@ import java.lang.reflect.Type;
  */
 final class DefaultCallAdapter implements CallAdapter<Call<?>> {
   public static final Factory FACTORY = new Factory() {
-    @Override public CallAdapter<?> get(Type returnType) {
+    @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations) {
       if (Utils.getRawType(returnType) != Call.class) {
         return null;
       }

@@ -19,6 +19,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -35,7 +36,8 @@ import retrofit.http.GET;
  */
 public final class CustomCallAdapter {
   public static class ListenableFutureCallAdapterFactory implements CallAdapter.Factory {
-    @Override public CallAdapter<ListenableFuture<?>> get(Type returnType) {
+    @Override
+    public CallAdapter<ListenableFuture<?>> get(Type returnType, Annotation[] annotations) {
       TypeToken<?> token = TypeToken.of(returnType);
       if (token.getRawType() != ListenableFuture.class) {
         return null;
