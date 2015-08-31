@@ -18,6 +18,7 @@ package com.example.retrofit;
 import java.io.IOException;
 import java.util.List;
 import retrofit.Call;
+import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
 import retrofit.http.GET;
 import retrofit.http.Path;
@@ -46,6 +47,7 @@ public final class SimpleService {
     // Create a very simple REST adapter which points the GitHub API.
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(API_URL)
+        .addConverterFactory(GsonConverterFactory.create())
         .build();
 
     // Create an instance of our GitHub API interface.
