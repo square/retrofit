@@ -64,8 +64,9 @@ public final class RetrofitTest {
   interface CallMethod {
     @GET("/") Call<String> disallowed();
     @POST("/") Call<ResponseBody> disallowed(@Body String body);
-    @GET("/") Call<ResponseBody> allowed();
-    @POST("/") Call<ResponseBody> allowed(@Body RequestBody body);
+    @GET("/") Call<ResponseBody> getResponseBody();
+    @GET("/") Call<Void> getVoid();
+    @POST("/") Call<ResponseBody> postRequestBody(@Body RequestBody body);
   }
   interface FutureMethod {
     @GET("/") Future<String> method();
@@ -90,8 +91,8 @@ public final class RetrofitTest {
     @POST("/b") Call<CharSequence> call(@Body CharSequence charSequence);
   }
   interface Annotated {
-    @GET("/") @Foo Call<ResponseBody> method();
-    @POST("/") Call<ResponseBody> parameter(@Foo @Body RequestBody param);
+    @GET("/") @Foo Call<String> method();
+    @POST("/") Call<ResponseBody> parameter(@Foo @Body String param);
 
     @Retention(RUNTIME)
     @interface Foo {}
@@ -141,7 +142,7 @@ public final class RetrofitTest {
         .baseUrl(server.url("/"))
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
-    assertThat(example.allowed()).isNotNull();
+    assertThat(example.getResponseBody()).isNotNull();
   }
 
   @Test public void callCallCustomAdapter() {
@@ -171,7 +172,7 @@ public final class RetrofitTest {
         .addCallAdapterFactory(new MyCallAdapterFactory())
         .build();
     CallMethod example = retrofit.create(CallMethod.class);
-    assertThat(example.allowed()).isNotNull();
+    assertThat(example.getResponseBody()).isNotNull();
     assertThat(factoryCalled.get()).isTrue();
     assertThat(adapterCalled.get()).isTrue();
   }
@@ -213,6 +214,7 @@ public final class RetrofitTest {
     }
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
         .addCallAdapterFactory(new MyCallAdapterFactory())
         .build();
     Annotated annotated = retrofit.create(Annotated.class);
@@ -245,7 +247,7 @@ public final class RetrofitTest {
     class MyConverterFactory implements Converter.Factory {
       @Override public Converter<?> get(Type type, Annotation[] annotations) {
         annotationsRef.set(annotations);
-        return null;
+        return new ToStringConverterFactory.StringConverter();
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -263,10 +265,10 @@ public final class RetrofitTest {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory implements Converter.Factory {
       @Override public Converter<?> get(Type type, Annotation[] annotations) {
-        if (type == RequestBody.class) {
+        if (type == String.class) {
           annotationsRef.set(annotations);
         }
-        return null;
+        return new ToStringConverterFactory.StringConverter();
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -294,7 +296,7 @@ public final class RetrofitTest {
               + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate converter for class java.lang.String. Tried:\n"
-              + " * retrofit.OkHttpBodyConverterFactory");
+              + " * retrofit.BuiltInConverterFactory");
     }
   }
 
@@ -314,7 +316,7 @@ public final class RetrofitTest {
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate converter for class java.lang.String. Tried:\n"
-              + " * retrofit.OkHttpBodyConverterFactory");
+              + " * retrofit.BuiltInConverterFactory");
     }
   }
 
@@ -337,8 +339,8 @@ public final class RetrofitTest {
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate converter for class java.lang.String. Tried:\n"
-              + " * retrofit.RetrofitTest$3\n"
-              + " * retrofit.OkHttpBodyConverterFactory");
+              + " * retrofit.BuiltInConverterFactory\n"
+              + " * retrofit.RetrofitTest$3");
     }
   }
 
@@ -350,8 +352,20 @@ public final class RetrofitTest {
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    Response<ResponseBody> response = example.allowed().execute();
+    Response<ResponseBody> response = example.getResponseBody().execute();
     assertThat(response.body().string()).isEqualTo("Hi");
+  }
+
+  @Test public void voidOutgoingAllowed() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+    CallMethod example = retrofit.create(CallMethod.class);
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Response<Void> response = example.getVoid().execute();
+    assertThat(response.body()).isNull();
   }
 
   @Test public void responseBodyIncomingAllowed() throws IOException, InterruptedException {
@@ -363,7 +377,7 @@ public final class RetrofitTest {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "Hey");
-    Response<ResponseBody> response = example.allowed(body).execute();
+    Response<ResponseBody> response = example.postRequestBody(body).execute();
     assertThat(response.body().string()).isEqualTo("Hi");
 
     assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("Hey");
@@ -521,7 +535,7 @@ public final class RetrofitTest {
         .build();
     List<Converter.Factory> converterFactories = retrofit.converterFactories();
     assertThat(converterFactories).hasSize(1);
-    assertThat(converterFactories.get(0)).isInstanceOf(OkHttpBodyConverterFactory.class);
+    assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverterFactory.class);
   }
 
   @Test public void converterFactoryPropagated() {
@@ -631,7 +645,7 @@ public final class RetrofitTest {
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
-    Call<ResponseBody> call = service.allowed();
+    Call<ResponseBody> call = service.getResponseBody();
 
     server.enqueue(new MockResponse());
 
@@ -662,7 +676,7 @@ public final class RetrofitTest {
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
-    Call<ResponseBody> call = service.allowed();
+    Call<ResponseBody> call = service.getResponseBody();
 
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AT_START));
 

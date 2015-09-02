@@ -179,6 +179,12 @@ public final class Retrofit {
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
 
+    public Builder() {
+      // Add the built-in converter factory first. This prevents overriding its behavior but also
+      // ensures correct behavior when using converters that consume all types.
+      converterFactories.add(new BuiltInConverterFactory());
+    }
+
     /** The HTTP client used for requests. */
     public Builder client(OkHttpClient client) {
       this.client = checkNotNull(client, "client == null");
@@ -264,9 +270,8 @@ public final class Retrofit {
       List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
       adapterFactories.add(Platform.get().defaultCallAdapterFactory(callbackExecutor));
 
-      // Make a defensive copy of the converters and add the default OkHttp body converter.
+      // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
-      converterFactories.add(new OkHttpBodyConverterFactory());
 
       return new Retrofit(client, baseUrl, converterFactories, adapterFactories, callbackExecutor);
     }

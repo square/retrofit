@@ -1662,7 +1662,7 @@ public final class RequestBuilderTest {
       }
     };
     List<Converter.Factory> converterFactories =
-        Arrays.asList(new ToStringConverterFactory(), new OkHttpBodyConverterFactory());
+        Arrays.asList(new BuiltInConverterFactory(), new ToStringConverterFactory());
 
     RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
     return requestFactory.create(args);
