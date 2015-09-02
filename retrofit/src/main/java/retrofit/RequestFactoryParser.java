@@ -16,6 +16,7 @@
 package retrofit;
 
 import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -291,9 +292,9 @@ final class RequestFactoryParser {
             com.squareup.okhttp.Headers headers = com.squareup.okhttp.Headers.of(
                 "Content-Disposition", "name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
-            Converter<?> converter;
+            Converter<?, RequestBody> converter;
             try {
-              converter = Utils.resolveConverter(converterFactories, methodParameterType,
+              converter = Utils.resolveRequestBodyConverter(converterFactories, methodParameterType,
                   methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Part converter for %s",
@@ -324,9 +325,9 @@ final class RequestFactoryParser {
               throw parameterError(i, "Multiple @Body method annotations found.");
             }
 
-            Converter<?> converter;
+            Converter<?, RequestBody> converter;
             try {
-              converter = Utils.resolveConverter(converterFactories, methodParameterType,
+              converter = Utils.resolveRequestBodyConverter(converterFactories, methodParameterType,
                   methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Body converter for %s",

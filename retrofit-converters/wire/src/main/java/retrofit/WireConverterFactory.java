@@ -15,13 +15,20 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-/** A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers. */
-public final class WireConverterFactory implements Converter.Factory {
+/**
+ * A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers.
+ * <p>
+ * This converter only applies for types which extend from {@link Message} (or one of its
+ * subclasses).
+ */
+public final class WireConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link Wire} instance for conversion. */
   public static WireConverterFactory create() {
     return create(new Wire());
@@ -40,11 +47,8 @@ public final class WireConverterFactory implements Converter.Factory {
     this.wire = wire;
   }
 
-  /**
-   * Create a converter for {@code type} provided it is a {@link Message} type. Returns null
-   * otherwise.
-   */
-  @Override public Converter<?> get(Type type, Annotation[] annotations) {
+  @Override
+  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
     if (!(type instanceof Class<?>)) {
       return null;
     }
@@ -53,6 +57,16 @@ public final class WireConverterFactory implements Converter.Factory {
       return null;
     }
     //noinspection unchecked
-    return new WireConverter<>(wire, (Class<Message>) c);
+    return new WireResponseBodyConverter<>(wire, (Class<? extends Message>) c);
+  }
+
+  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    if (!(type instanceof Class<?>)) {
+      return null;
+    }
+    if (!Message.class.isAssignableFrom((Class<?>) type)) {
+      return null;
+    }
+    return new WireRequestBodyConverter<>();
   }
 }

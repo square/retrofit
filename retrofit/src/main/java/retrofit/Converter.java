@@ -26,15 +26,24 @@ import java.lang.reflect.Type;
  * Retrofit using {@link Retrofit.Builder#addConverter(Type, Converter)} or {@link
  * Retrofit.Builder#addConverterFactory(Factory)}.
  */
-public interface Converter<T> {
-  /** Convert an HTTP response body to a concrete object of the specified type. */
-  T fromBody(ResponseBody body) throws IOException;
+public interface Converter<F, T> {
+  T convert(F value) throws IOException;
 
-  /** Convert an object to an appropriate representation for HTTP transport. */
-  RequestBody toBody(T value);
+  abstract class Factory {
+    /**
+     * Create a {@link Converter} for converting an HTTP response body to {@code type} or null if it
+     * cannot be handled by this factory.
+     */
+    public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+      return null;
+    }
 
-  interface Factory {
-    /** Create a converter for {@code type}. Returns null if the type cannot be handled. */
-    Converter<?> get(Type type, Annotation[] annotations);
+    /**
+     * Create a {@link Converter} for converting {@code type} to an HTTP request body or null if it
+     * cannot be handled by this factory.
+     */
+    public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+      return null;
+    }
   }
 }

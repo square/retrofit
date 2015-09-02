@@ -17,22 +17,25 @@ package retrofit;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
-/** A {@linkplain Converter.Factory converter} which uses Protocol Buffers. */
-public final class ProtoConverterFactory implements Converter.Factory {
+/**
+ * A {@linkplain Converter.Factory converter} which uses Protocol Buffers.
+ * <p>
+ * This converter only applies for types which extend from {@link MessageLite} (or one of its
+ * subclasses).
+ */
+public final class ProtoConverterFactory extends Converter.Factory {
   public static ProtoConverterFactory create() {
     return new ProtoConverterFactory();
   }
 
-
-  /**
-   * Create a converter for {@code type} provided it is a {@link MessageLite} type. Returns null
-   * otherwise.
-   */
-  @Override public Converter<?> get(Type type, Annotation[] annotations) {
+  @Override
+  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
     if (!(type instanceof Class<?>)) {
       return null;
     }
@@ -50,7 +53,16 @@ public final class ProtoConverterFactory implements Converter.Factory {
       throw new IllegalArgumentException(
           "Found a protobuf message but " + c.getName() + " had no PARSER field.");
     }
+    return new ProtoResponseBodyConverter<>(parser);
+  }
 
-    return new ProtoConverter<>(parser);
+  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    if (!(type instanceof Class<?>)) {
+      return null;
+    }
+    if (!MessageLite.class.isAssignableFrom((Class<?>) type)) {
+      return null;
+    }
+    return new ProtoRequestBodyConverter<>();
   }
 }

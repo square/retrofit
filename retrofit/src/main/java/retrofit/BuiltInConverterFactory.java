@@ -21,21 +21,22 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import retrofit.http.Streaming;
 
-final class BuiltInConverterFactory implements Converter.Factory {
-  @Override public Converter<?> get(Type type, Annotation[] annotations) {
-    if (!(type instanceof Class)) {
-      return null;
+final class BuiltInConverterFactory extends Converter.Factory {
+  @Override
+  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+    if (ResponseBody.class.equals(type)) {
+      boolean isStreaming = Utils.isAnnotationPresent(annotations, Streaming.class);
+      return new OkHttpResponseBodyConverter(isStreaming);
     }
-    Class<?> cls = (Class<?>) type;
-    if (RequestBody.class.isAssignableFrom(cls)) {
-      return new OkHttpRequestBodyConverter();
-    }
-    if (cls == ResponseBody.class) {
-      boolean streaming = Utils.isAnnotationPresent(annotations, Streaming.class);
-      return new OkHttpResponseBodyConverter(streaming);
-    }
-    if (cls == Void.class) {
+    if (Void.class.equals(type)) {
       return new VoidConverter();
+    }
+    return null;
+  }
+
+  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    if (type instanceof Class && RequestBody.class.isAssignableFrom((Class<?>) type)) {
+      return new OkHttpRequestBodyConverter();
     }
     return null;
   }

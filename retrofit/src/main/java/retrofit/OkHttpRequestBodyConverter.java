@@ -16,15 +16,10 @@
 package retrofit;
 
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 
-final class OkHttpRequestBodyConverter implements Converter<RequestBody> {
-  @Override public RequestBody fromBody(ResponseBody body) throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override public RequestBody toBody(RequestBody value) {
+final class OkHttpRequestBodyConverter implements Converter<RequestBody, RequestBody> {
+  @Override public RequestBody convert(RequestBody value) throws IOException {
     return value;
   }
 }

@@ -15,33 +15,28 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 
 import static retrofit.Utils.closeQuietly;
 
-final class OkHttpResponseBodyConverter implements Converter<ResponseBody> {
+final class OkHttpResponseBodyConverter implements Converter<ResponseBody, ResponseBody> {
   private final boolean isStreaming;
 
   OkHttpResponseBodyConverter(boolean isStreaming) {
     this.isStreaming = isStreaming;
   }
 
-  @Override public ResponseBody fromBody(ResponseBody body) throws IOException {
+  @Override public ResponseBody convert(ResponseBody value) throws IOException {
     if (isStreaming) {
-      return body;
+      return value;
     }
 
     // Buffer the entire body to avoid future I/O.
     try {
-      return Utils.readBodyToBytesIfNecessary(body);
+      return Utils.readBodyToBytesIfNecessary(value);
     } finally {
-      closeQuietly(body);
+      closeQuietly(value);
     }
-  }
-
-  @Override public RequestBody toBody(ResponseBody value) {
-    throw new UnsupportedOperationException();
   }
 }

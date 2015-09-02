@@ -22,23 +22,29 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-class ToStringConverterFactory implements Converter.Factory {
+class ToStringConverterFactory extends Converter.Factory {
   private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
 
-  @Override public Converter get(Type type, Annotation[] annotations) {
-    if (type != String.class) {
-      return null;
+  @Override
+  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+    if (String.class.equals(type)) {
+      return new Converter<ResponseBody, String>() {
+        @Override public String convert(ResponseBody value) throws IOException {
+          return value.string();
+        }
+      };
     }
-    return new StringConverter();
+    return null;
   }
 
-  static class StringConverter implements Converter<Object> {
-    @Override public String fromBody(ResponseBody body) throws IOException {
-      return body.string();
+  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    if (String.class.equals(type)) {
+      return new Converter<String, RequestBody>() {
+        @Override public RequestBody convert(String value) throws IOException {
+          return RequestBody.create(MEDIA_TYPE, value);
+        }
+      };
     }
-
-    @Override public RequestBody toBody(Object value) {
-      return RequestBody.create(MEDIA_TYPE, String.valueOf(value));
-    }
+    return null;
   }
 }

@@ -25,15 +25,15 @@ import static retrofit.Utils.closeQuietly;
 final class OkHttpCall<T> implements Call<T> {
   private final OkHttpClient client;
   private final RequestFactory requestFactory;
-  private final Converter<T> responseConverter;
+  private final Converter<ResponseBody, T> responseConverter;
   private final Object[] args;
 
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
-  OkHttpCall(OkHttpClient client, RequestFactory requestFactory, Converter<T> responseConverter,
-      Object[] args) {
+  OkHttpCall(OkHttpClient client, RequestFactory requestFactory,
+      Converter<ResponseBody, T> responseConverter, Object[] args) {
     this.client = client;
     this.requestFactory = requestFactory;
     this.responseConverter = responseConverter;
@@ -141,7 +141,7 @@ final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      T body = responseConverter.fromBody(catchingBody);
+      T body = responseConverter.convert(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was

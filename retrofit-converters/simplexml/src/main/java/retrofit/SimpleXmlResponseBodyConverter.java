@@ -15,32 +15,24 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import okio.Buffer;
 import org.simpleframework.xml.Serializer;
 
-final class SimpleXmlConverter<T> implements Converter<T> {
-  private static final String CHARSET = "UTF-8";
-  private static final MediaType MEDIA_TYPE =
-      MediaType.parse("application/xml; charset=" + CHARSET);
-
+final class SimpleXmlResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   private final Class<T> cls;
   private final Serializer serializer;
   private final boolean strict;
 
-  SimpleXmlConverter(Class<T> cls, Serializer serializer, boolean strict) {
+  SimpleXmlResponseBodyConverter(Class<T> cls, Serializer serializer, boolean strict) {
     this.cls = cls;
     this.serializer = serializer;
     this.strict = strict;
   }
 
-  @Override public T fromBody(ResponseBody body) throws IOException {
-    InputStream is = body.byteStream();
+  @Override public T convert(ResponseBody value) throws IOException {
+    InputStream is = value.byteStream();
     try {
       T read = serializer.read(cls, is, strict);
       if (read == null) {
@@ -57,17 +49,5 @@ final class SimpleXmlConverter<T> implements Converter<T> {
       } catch (IOException ignored) {
       }
     }
-  }
-
-  @Override public RequestBody toBody(T value) {
-    Buffer buffer = new Buffer();
-    try {
-      OutputStreamWriter osw = new OutputStreamWriter(buffer.outputStream(), CHARSET);
-      serializer.write(value, osw);
-      osw.flush();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
 }

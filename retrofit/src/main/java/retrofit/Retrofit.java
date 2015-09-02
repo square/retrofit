@@ -19,11 +19,9 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -53,10 +51,8 @@ import static retrofit.Utils.checkNotNull;
  * {@link retrofit.http.Query @Query}.
  * <p>
  * The body of a request is denoted by the {@link retrofit.http.Body @Body} annotation. The object
- * will be converted to request representation by a call to
- * {@link Converter#toBody(Object) toBody}
- * on the supplied {@link Converter} for this instance. A {@link RequestBody} can also be used
- * which will not use the {@code Converter}.
+ * will be converted to request representation by one of the {@link Converter.Factory} instances.
+ * A {@link RequestBody} can also be used for a raw representation.
  * <p>
  * Alternative request body formats are supported by method annotations and corresponding parameter
  * annotations:
@@ -72,9 +68,9 @@ import static retrofit.Utils.checkNotNull;
  * annotate a parameter with {@link Header @Header}.
  * <p>
  * By default, methods return a {@link Call} which represents the HTTP request. The generic
- * parameter of the call is the response body type and will be converted by a call to
- * {@link Converter#fromBody(ResponseBody) fromBody} on the supplied {@link Converter} for
- * this instance. {@link ResponseBody} can also be used which will not use the {@code Converter}.
+ * parameter of the call is the response body type and will be converted by one of the
+ * {@link Converter.Factory} instances. {@link ResponseBody} can also be used for a raw
+ * representation. {@link Void} can be used if you do not care about the body contents.
  * <p>
  * For example:
  * <pre>
@@ -214,21 +210,6 @@ public final class Retrofit {
     /** API base URL. */
     public Builder baseUrl(BaseUrl baseUrl) {
       this.baseUrl = checkNotNull(baseUrl, "baseUrl == null");
-      return this;
-    }
-
-    /** Add converter for serialization and deserialization of {@code type}. */
-    public <T> Builder addConverter(final Type type, final Converter<T> converter) {
-      checkNotNull(type, "type == null");
-      checkNotNull(converter, "converter == null");
-      converterFactories.add(new Converter.Factory() {
-        @Override public Converter<?> get(Type candidate, Annotation[] annotations) {
-          return candidate.equals(type) ? converter : null;
-        }
-        @Override public String toString() {
-          return "ConverterFactory(type=" + type + ",converter=" + converter + ")";
-        }
-      });
       return this;
     }
 

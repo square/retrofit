@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Square, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,41 +18,27 @@ package retrofit;
 import com.google.gson.TypeAdapter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import okio.Buffer;
 
-final class GsonConverter<T> implements Converter<T> {
+final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
   private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-  private final TypeAdapter<T> typeAdapter;
+  private final TypeAdapter<T> adapter;
 
-  GsonConverter(TypeAdapter<T> typeAdapter) {
-    this.typeAdapter = typeAdapter;
+  GsonRequestBodyConverter(TypeAdapter<T> adapter) {
+    this.adapter = adapter;
   }
 
-  @Override public T fromBody(ResponseBody body) throws IOException {
-    Reader in = body.charStream();
-    try {
-      return typeAdapter.fromJson(in);
-    } finally {
-      try {
-        in.close();
-      } catch (IOException ignored) {
-      }
-    }
-  }
-
-  @Override public RequestBody toBody(T value) {
+  @Override public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
     Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
     try {
-      typeAdapter.toJson(writer, value);
+      adapter.toJson(writer, value);
       writer.flush();
     } catch (IOException e) {
       throw new AssertionError(e); // Writing to Buffer does no I/O.
