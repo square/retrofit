@@ -190,9 +190,10 @@ public final class CallTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter<?> get(Type type, Annotation[] annotations) {
-            return new StringConverter() {
-              @Override public RequestBody toBody(Object value) {
+          @Override
+          public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+            return new Converter<String, RequestBody>() {
+              @Override public RequestBody convert(String value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
               }
             };
@@ -214,9 +215,10 @@ public final class CallTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter<?> get(Type type, Annotation[] annotations) {
-            return new StringConverter() {
-              @Override public RequestBody toBody(Object value) {
+          @Override
+          public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+            return new Converter<String, RequestBody>() {
+              @Override public RequestBody convert(String value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
               }
             };
@@ -247,9 +249,10 @@ public final class CallTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter<?> get(Type type, Annotation[] annotations) {
-            return new StringConverter() {
-              @Override public String fromBody(ResponseBody body) throws IOException {
+          @Override
+          public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+            return new Converter<ResponseBody, String>() {
+              @Override public String convert(ResponseBody value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
               }
             };
@@ -290,11 +293,12 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .client(client)
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter<?> get(Type type, Annotation[] annotations) {
-            return new StringConverter() {
-              @Override public String fromBody(ResponseBody body) throws IOException {
+          @Override
+          public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+            return new Converter<ResponseBody, String>() {
+              @Override public String convert(ResponseBody value) throws IOException {
                 try {
-                  return super.fromBody(body);
+                  return value.string();
                 } catch (IOException e) {
                   // Some serialization libraries mask transport problems in runtime exceptions. Bad!
                   throw new RuntimeException("wrapper", e);
@@ -321,9 +325,10 @@ public final class CallTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter<?> get(Type type, Annotation[] annotations) {
-            return new StringConverter() {
-              @Override public String fromBody(ResponseBody body) throws IOException {
+          @Override
+          public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+            return new Converter<ResponseBody, String>() {
+              @Override public String convert(ResponseBody value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
               }
             };
@@ -353,11 +358,16 @@ public final class CallTest {
   }
 
   @Test public void http204SkipsConverter() throws IOException {
-    final Converter converter = spy(new ToStringConverterFactory.StringConverter());
+    final Converter<ResponseBody, String> converter = spy(new Converter<ResponseBody, String>() {
+      @Override public String convert(ResponseBody value) throws IOException {
+        return value.string();
+      }
+    });
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter get(Type type, Annotation[] annotations) {
+          @Override
+          public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
             return converter;
           }
         })
@@ -373,11 +383,16 @@ public final class CallTest {
   }
 
   @Test public void http205SkipsConverter() throws IOException {
-    final Converter converter = spy(new ToStringConverterFactory.StringConverter());
+    final Converter<ResponseBody, String> converter = spy(new Converter<ResponseBody, String>() {
+      @Override public String convert(ResponseBody value) throws IOException {
+        return value.string();
+      }
+    });
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
-          @Override public Converter get(Type type, Annotation[] annotations) {
+          @Override
+          public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
             return converter;
           }
         })

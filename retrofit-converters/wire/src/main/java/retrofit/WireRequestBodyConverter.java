@@ -15,12 +15,16 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.wire.Message;
 import java.io.IOException;
 
-final class VoidConverter implements Converter<ResponseBody, Void> {
-  @Override public Void convert(ResponseBody value) throws IOException {
-    value.close();
-    return null;
+final class WireRequestBodyConverter<T extends Message> implements Converter<T, RequestBody> {
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
+
+  @Override public RequestBody convert(T value) throws IOException {
+    byte[] bytes = value.toByteArray();
+    return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }

@@ -13,7 +13,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,24 +42,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 public final class RetrofitTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
-  static final Converter<BigInteger> bigIntegerConverter = new Converter<BigInteger>() {
-    @Override public BigInteger fromBody(ResponseBody body) throws IOException {
-      return new BigInteger(body.string());
-    }
-    @Override public RequestBody toBody(BigInteger value) {
-      return RequestBody.create(MediaType.parse("text/plain"), value.toString());
-    }
-  };
-  static final Converter<CharSequence> charSequenceConverter = new Converter<CharSequence>() {
-    @Override public CharSequence fromBody(ResponseBody body) throws IOException {
-      return new StringBuilder().append(body.string());
-    }
-
-    @Override public RequestBody toBody(CharSequence value) {
-      return RequestBody.create(MediaType.parse("text/plain"), value.toString());
-    }
-  };
-
   interface CallMethod {
     @GET("/") Call<String> disallowed();
     @POST("/") Call<ResponseBody> disallowed(@Body String body);
@@ -85,10 +66,6 @@ public final class RetrofitTest {
   }
   interface VoidService {
     @GET("/") void nope();
-  }
-  interface CustomConverter {
-    @POST("/a") Call<BigInteger> call(@Body BigInteger bigInteger);
-    @POST("/b") Call<CharSequence> call(@Body CharSequence charSequence);
   }
   interface Annotated {
     @GET("/") @Foo Call<String> method();
@@ -244,10 +221,11 @@ public final class RetrofitTest {
 
   @Test public void methodAnnotationsPassedToConverter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
-    class MyConverterFactory implements Converter.Factory {
-      @Override public Converter<?> get(Type type, Annotation[] annotations) {
+    class MyConverterFactory extends Converter.Factory {
+      @Override
+      public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
         annotationsRef.set(annotations);
-        return new ToStringConverterFactory.StringConverter();
+        return new ToStringConverterFactory().fromResponseBody(type, annotations);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -263,12 +241,11 @@ public final class RetrofitTest {
 
   @Test public void parameterAnnotationsPassedToConverter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
-    class MyConverterFactory implements Converter.Factory {
-      @Override public Converter<?> get(Type type, Annotation[] annotations) {
-        if (type == String.class) {
-          annotationsRef.set(annotations);
-        }
-        return new ToStringConverterFactory.StringConverter();
+    class MyConverterFactory extends Converter.Factory {
+      @Override
+      public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+        annotationsRef.set(annotations);
+        return new ToStringConverterFactory().toRequestBody(type, annotations);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -295,7 +272,7 @@ public final class RetrofitTest {
           "Unable to create @Body converter for class java.lang.String (parameter #1)\n"
               + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
-          "Could not locate converter for class java.lang.String. Tried:\n"
+          "Could not locate RequestBody converter for class java.lang.String. Tried:\n"
               + " * retrofit.BuiltInConverterFactory");
     }
   }
@@ -315,7 +292,7 @@ public final class RetrofitTest {
       assertThat(e).hasMessage("Unable to create converter for class java.lang.String\n"
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
-          "Could not locate converter for class java.lang.String. Tried:\n"
+          "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
               + " * retrofit.BuiltInConverterFactory");
     }
   }
@@ -323,11 +300,7 @@ public final class RetrofitTest {
   @Test public void converterReturningNullThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .addConverterFactory(new Converter.Factory() {
-          @Override public Converter<?> get(Type type, Annotation[] annotations) {
-            return null;
-          }
-        })
+        .addConverterFactory(new Converter.Factory() {})
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
 
@@ -338,9 +311,9 @@ public final class RetrofitTest {
       assertThat(e).hasMessage("Unable to create converter for class java.lang.String\n"
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
-          "Could not locate converter for class java.lang.String. Tried:\n"
+          "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
               + " * retrofit.BuiltInConverterFactory\n"
-              + " * retrofit.RetrofitTest$3");
+              + " * retrofit.RetrofitTest$1");
     }
   }
 
@@ -561,43 +534,6 @@ public final class RetrofitTest {
         .baseUrl("http://example.com/")
         .build();
     assertThat(retrofit.callAdapterFactories()).isNotEmpty();
-  }
-
-  @Test public void addConverter() throws Exception {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverter(BigInteger.class, bigIntegerConverter)
-        .addConverter(CharSequence.class, charSequenceConverter)
-        .build();
-    CustomConverter api = retrofit.create(CustomConverter.class);
-
-    server.enqueue(new MockResponse().setBody("456"));
-    assertThat(api.call(new BigInteger("123")).execute().body())
-        .isEqualTo(new BigInteger("456"));
-    assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("123");
-
-    server.enqueue(new MockResponse().setBody("DEF"));
-    assertThat(api.call(new StringBuilder("ABC")).execute().body())
-        .matches("DEF");
-    assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("ABC");
-  }
-
-  @Test public void addConverterNullType() throws Exception {
-    try {
-      new Retrofit.Builder().addConverter(null, bigIntegerConverter);
-      fail();
-    } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("type == null");
-    }
-  }
-
-  @Test public void addConverterNullConverter() throws Exception {
-    try {
-      new Retrofit.Builder().addConverter(BigInteger.class, null);
-      fail();
-    } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("converter == null");
-    }
   }
 
   @Test public void callAdapterFactoryPropagated() {

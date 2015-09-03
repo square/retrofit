@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,39 +15,27 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 import java.io.IOException;
-import java.io.InputStream;
+import okio.BufferedSource;
 
-final class WireConverter<T extends Message> implements Converter<T> {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
-
+final class WireResponseBodyConverter<T extends Message> implements Converter<ResponseBody, T> {
   private final Wire wire;
   private final Class<T> cls;
 
-  public WireConverter(Wire wire, Class<T> cls) {
+  WireResponseBodyConverter(Wire wire, Class<T> cls) {
     this.wire = wire;
     this.cls = cls;
   }
 
-  @Override public T fromBody(ResponseBody body) throws IOException {
-    InputStream in = body.byteStream();
+  @Override public T convert(ResponseBody value) throws IOException {
+    BufferedSource source = value.source();
     try {
-      return wire.parseFrom(in, cls);
+      return wire.parseFrom(source, cls);
     } finally {
-      try {
-        in.close();
-      } catch (IOException ignored) {
-      }
+      Utils.closeQuietly(source);
     }
-  }
-
-  @Override public RequestBody toBody(T value) {
-    byte[] bytes = value.toByteArray();
-    return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }

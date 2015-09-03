@@ -18,37 +18,26 @@ package retrofit;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 
-final class ProtoConverter<T extends MessageLite> implements Converter<T> {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
+final class ProtoResponseBodyConverter<T extends MessageLite>
+    implements Converter<ResponseBody, T> {
+  private final Parser<T> parser;
 
-  private Parser<T> parser;
-
-  ProtoConverter(Parser<T> parser) {
+  ProtoResponseBodyConverter(Parser<T> parser) {
     this.parser = parser;
   }
 
-  @Override public T fromBody(ResponseBody body) throws IOException {
-    InputStream is = body.byteStream();
+  @Override public T convert(ResponseBody value) throws IOException {
+    InputStream is = value.byteStream();
     try {
       return parser.parseFrom(is);
     } catch (InvalidProtocolBufferException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); // Despite extending IOException, this is data mismatch.
     } finally {
-      try {
-        is.close();
-      } catch (IOException ignored) {
-      }
+      Utils.closeQuietly(is);
     }
-  }
-
-  @Override public RequestBody toBody(T value) {
-    byte[] bytes = value.toByteArray();
-    return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }

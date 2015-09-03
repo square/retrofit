@@ -15,13 +15,20 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
-/** A {@linkplain Converter.Factory converter} which uses Simple Framework for XML. */
-public final class SimpleXmlConverterFactory implements Converter.Factory {
+/**
+ * A {@linkplain Converter.Factory converter} which uses Simple Framework for XML.
+ * <p>
+ * This converter only applies for class types. Parameterized types (e.g., {@code List<Foo>}) are
+ * not handled.
+ */
+public final class SimpleXmlConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link Persister} instance for conversion. */
   public static SimpleXmlConverterFactory create() {
     return create(new Persister());
@@ -55,12 +62,19 @@ public final class SimpleXmlConverterFactory implements Converter.Factory {
     return strict;
   }
 
-  /** Create a converter for {@code type} provided it is a class. Returns null otherwise. */
-  @Override public Converter<?> get(Type type, Annotation[] annotations) {
+  @Override
+  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
     if (!(type instanceof Class)) {
       return null;
     }
     Class<?> cls = (Class<?>) type;
-    return new SimpleXmlConverter<>(cls, serializer, strict);
+    return new SimpleXmlResponseBodyConverter<>(cls, serializer, strict);
+  }
+
+  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    if (!(type instanceof Class)) {
+      return null;
+    }
+    return new SimpleXmlRequestBodyConverter<>(serializer);
   }
 }

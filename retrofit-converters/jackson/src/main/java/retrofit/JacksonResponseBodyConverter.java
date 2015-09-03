@@ -15,12 +15,24 @@
  */
 package retrofit;
 
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import java.io.Reader;
 
-final class VoidConverter implements Converter<ResponseBody, Void> {
-  @Override public Void convert(ResponseBody value) throws IOException {
-    value.close();
-    return null;
+final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
+  private final ObjectReader adapter;
+
+  JacksonResponseBodyConverter(ObjectReader adapter) {
+    this.adapter = adapter;
+  }
+
+  @Override public T convert(ResponseBody value) throws IOException {
+    Reader reader = value.charStream();
+    try {
+      return adapter.readValue(reader);
+    } finally {
+      Utils.closeQuietly(reader);
+    }
   }
 }

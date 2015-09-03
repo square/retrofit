@@ -238,14 +238,19 @@ public final class RxJavaCallAdapterFactoryTest {
     assertNotNull(service.singleResult());
   }
 
-  static class StringConverterFactory implements Converter.Factory {
-    @Override public Converter<?> get(Type type, Annotation[] annotations) {
-      return new Converter<String>() {
-        @Override public String fromBody(ResponseBody body) throws IOException {
-          return body.string();
+  static class StringConverterFactory extends Converter.Factory {
+    @Override
+    public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+      return new Converter<ResponseBody, String>() {
+        @Override public String convert(ResponseBody value) throws IOException {
+          return value.string();
         }
+      };
+    }
 
-        @Override public RequestBody toBody(String value) {
+    @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+      return new Converter<String, RequestBody>() {
+        @Override public RequestBody convert(String value) throws IOException {
           return RequestBody.create(MediaType.parse("text/plain"), value);
         }
       };

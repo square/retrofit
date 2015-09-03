@@ -16,6 +16,7 @@
 package retrofit;
 
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -27,9 +28,9 @@ final class MethodHandler<T> {
       List<CallAdapter.Factory> callAdapterFactories, List<Converter.Factory> converterFactories) {
     CallAdapter<Object> callAdapter =
         (CallAdapter<Object>) createCallAdapter(method, callAdapterFactories);
-    Converter<Object> responseConverter =
-        (Converter<Object>) createResponseConverter(method, callAdapter.responseType(),
-            converterFactories);
+    Converter<ResponseBody, Object> responseConverter =
+        (Converter<ResponseBody, Object>) createResponseConverter(method,
+            callAdapter.responseType(), converterFactories);
     RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
     return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter);
   }
@@ -50,14 +51,13 @@ final class MethodHandler<T> {
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create call adapter for %s", returnType);
     }
-
   }
 
-  private static Converter<?> createResponseConverter(Method method, Type responseType,
-      List<Converter.Factory> converterFactories) {
+  private static Converter<ResponseBody, ?> createResponseConverter(Method method,
+      Type responseType, List<Converter.Factory> converterFactories) {
     Annotation[] annotations = method.getAnnotations();
     try {
-      return Utils.resolveConverter(converterFactories, responseType, annotations);
+      return Utils.resolveResponseBodyConverter(converterFactories, responseType, annotations);
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create converter for %s", responseType);
     }
@@ -66,10 +66,10 @@ final class MethodHandler<T> {
   private final OkHttpClient client;
   private final RequestFactory requestFactory;
   private final CallAdapter<T> callAdapter;
-  private final Converter<T> responseConverter;
+  private final Converter<ResponseBody, T> responseConverter;
 
   private MethodHandler(OkHttpClient client, RequestFactory requestFactory,
-      CallAdapter<T> callAdapter, Converter<T> responseConverter) {
+      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter) {
     this.client = client;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;

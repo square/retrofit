@@ -16,41 +16,23 @@
 package retrofit;
 
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
-import okio.Buffer;
 import okio.BufferedSource;
 
-final class MoshiConverter<T> implements Converter<T> {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
+final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> {
+  private final JsonAdapter<T> adapter;
 
-  private JsonAdapter<T> adapter;
-
-  MoshiConverter(JsonAdapter<T> adapter) {
+  MoshiResponseBodyConverter(JsonAdapter<T> adapter) {
     this.adapter = adapter;
   }
 
-  @Override public T fromBody(ResponseBody body) throws IOException {
-    BufferedSource source = body.source();
+  @Override public T convert(ResponseBody value) throws IOException {
+    BufferedSource source = value.source();
     try {
       return adapter.fromJson(source);
     } finally {
-      try {
-        source.close();
-      } catch (IOException ignored) {
-      }
+      Utils.closeQuietly(source);
     }
-  }
-
-  @Override public RequestBody toBody(T value) {
-    Buffer buffer = new Buffer();
-    try {
-      adapter.toJson(buffer, value);
-    } catch (IOException e) {
-      throw new AssertionError(e);
-    }
-    return RequestBody.create(MEDIA_TYPE, buffer.snapshot());
   }
 }
