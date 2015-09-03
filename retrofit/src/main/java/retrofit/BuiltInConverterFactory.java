@@ -21,7 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import retrofit.http.Streaming;
 
-final class OkHttpBodyConverterFactory implements Converter.Factory {
+final class BuiltInConverterFactory implements Converter.Factory {
   @Override public Converter<?> get(Type type, Annotation[] annotations) {
     if (!(type instanceof Class)) {
       return null;
@@ -33,6 +33,9 @@ final class OkHttpBodyConverterFactory implements Converter.Factory {
     if (cls == ResponseBody.class) {
       boolean streaming = Utils.isAnnotationPresent(annotations, Streaming.class);
       return new OkHttpResponseBodyConverter(streaming);
+    }
+    if (cls == Void.class) {
+      return new VoidConverter();
     }
     return null;
   }
