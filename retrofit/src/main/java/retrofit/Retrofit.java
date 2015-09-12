@@ -94,20 +94,26 @@ public final class Retrofit {
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
+  private final boolean validateEagerly;
 
   private Retrofit(OkHttpClient client, BaseUrl baseUrl, List<Converter.Factory> converterFactories,
-      List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor) {
+      List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor,
+      boolean validateEagerly) {
     this.client = client;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories;
     this.adapterFactories = adapterFactories;
     this.callbackExecutor = callbackExecutor;
+    this.validateEagerly = validateEagerly;
   }
 
   /** Create an implementation of the API defined by the {@code service} interface. */
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(final Class<T> service) {
     Utils.validateServiceInterface(service);
+    if (validateEagerly) {
+      eagerlyValidateMethods(service);
+    }
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new InvocationHandler() {
           private final Platform platform = Platform.get();
@@ -124,6 +130,15 @@ public final class Retrofit {
             return loadMethodHandler(method).invoke(args);
           }
         });
+  }
+
+  private void eagerlyValidateMethods(Class<?> service) {
+    Platform platform = Platform.get();
+    for (Method method : service.getDeclaredMethods()) {
+      if (!platform.isDefaultMethod(method)) {
+        loadMethodHandler(method);
+      }
+    }
   }
 
   MethodHandler<?> loadMethodHandler(Method method) {
@@ -174,6 +189,7 @@ public final class Retrofit {
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
+    private boolean validateEagerly;
 
     public Builder() {
       // Add the built-in converter factory first. This prevents overriding its behavior but also
@@ -236,6 +252,15 @@ public final class Retrofit {
       return this;
     }
 
+    /**
+     * When calling {@link #create} on the resulting {@link Retrofit} instance, eagerly validate
+     * the configuration of all methods in the supplied interface.
+     */
+    public Builder validateEagerly() {
+      validateEagerly = true;
+      return this;
+    }
+
     /** Create the {@link Retrofit} instances. */
     public Retrofit build() {
       if (baseUrl == null) {
@@ -254,7 +279,8 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-      return new Retrofit(client, baseUrl, converterFactories, adapterFactories, callbackExecutor);
+      return new Retrofit(client, baseUrl, converterFactories, adapterFactories, callbackExecutor,
+          validateEagerly);
     }
   }
 }

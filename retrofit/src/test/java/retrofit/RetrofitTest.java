@@ -114,6 +114,21 @@ public final class RetrofitTest {
     }
   }
 
+  @Test public void validateEagerlyFailsAtCreation() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .validateEagerly()
+        .build();
+
+    try {
+      retrofit.create(VoidService.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Service methods cannot return void.\n    for method VoidService.nope");
+    }
+  }
+
   @Test public void callCallAdapterAddedByDefault() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
