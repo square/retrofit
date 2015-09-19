@@ -47,6 +47,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface PartMap {
-  /** The {@code Content-Transfer-Encoding} of this part. */
+  /** The {@code Content-Transfer-Encoding} of the parts. */
   String encoding() default "binary";
 }

@@ -290,7 +290,7 @@ final class RequestFactoryParser {
             }
             Part part = (Part) methodParameterAnnotation;
             com.squareup.okhttp.Headers headers = com.squareup.okhttp.Headers.of(
-                "Content-Disposition", "name=\"" + part.value() + "\"",
+                "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
             Converter<?, RequestBody> converter;
             try {

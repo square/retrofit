@@ -1179,10 +1179,12 @@ public final class RequestBuilderTest {
     String bodyString = buffer.readUtf8();
 
     assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
         .contains("name=\"ping\"\r\n")
         .contains("\r\npong\r\n--");
 
     assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
         .contains("name=\"kit\"")
         .contains("\r\nkat\r\n--");
   }
@@ -1208,11 +1210,15 @@ public final class RequestBuilderTest {
     body.writeTo(buffer);
     String bodyString = buffer.readUtf8();
 
-    assertThat(bodyString).contains("name=\"ping\"\r\n")
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
         .contains("Content-Transfer-Encoding: 8-bit")
         .contains("\r\npong\r\n--");
 
-    assertThat(bodyString).contains("name=\"kit\"")
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 7-bit")
         .contains("\r\nkat\r\n--");
   }
@@ -1242,10 +1248,12 @@ public final class RequestBuilderTest {
     String bodyString = buffer.readUtf8();
 
     assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
         .contains("name=\"ping\"\r\n")
         .contains("\r\npong\r\n--");
 
     assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
         .contains("name=\"kit\"")
         .contains("\r\nkat\r\n--");
 
@@ -1276,11 +1284,15 @@ public final class RequestBuilderTest {
     body.writeTo(buffer);
     String bodyString = buffer.readUtf8();
 
-    assertThat(bodyString).contains("name=\"ping\"\r\n")
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
         .contains("Content-Transfer-Encoding: 8-bit")
         .contains("\r\npong\r\n--");
 
-    assertThat(bodyString).contains("name=\"kit\"")
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 8-bit")
         .contains("\r\nkat\r\n--");
 
@@ -1345,6 +1357,7 @@ public final class RequestBuilderTest {
     String bodyString = buffer.readUtf8();
 
     assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
         .contains("name=\"ping\"")
         .contains("\r\npong\r\n--");
   }

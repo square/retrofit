@@ -241,7 +241,7 @@ abstract class RequestBuilderAction {
         }
 
         Headers headers = Headers.of(
-            "Content-Disposition", "name=\"" + entryKey + "\"",
+            "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
             "Content-Transfer-Encoding", transferEncoding);
 
         Class<?> entryClass = entryValue.getClass();
