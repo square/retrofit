@@ -95,16 +95,18 @@ public final class Retrofit {
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
+  private Logger logger;
 
   private Retrofit(OkHttpClient client, BaseUrl baseUrl, List<Converter.Factory> converterFactories,
       List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor,
-      boolean validateEagerly) {
+      boolean validateEagerly, Logger logger) {
     this.client = client;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories;
     this.adapterFactories = adapterFactories;
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
+    this.logger = logger;
   }
 
   /** Create an implementation of the API defined by the {@code service} interface. */
@@ -147,7 +149,8 @@ public final class Retrofit {
       handler = methodHandlerCache.get(method);
       if (handler == null) {
         handler =
-            MethodHandler.create(method, client, baseUrl, adapterFactories, converterFactories);
+            MethodHandler.create(method, client, baseUrl, adapterFactories, converterFactories,
+                logger);
         methodHandlerCache.put(method, handler);
       }
     }
@@ -190,6 +193,7 @@ public final class Retrofit {
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
     private boolean validateEagerly;
+    private Logger logger = Logger.NONE;
 
     public Builder() {
       // Add the built-in converter factory first. This prevents overriding its behavior but also
@@ -261,6 +265,12 @@ public final class Retrofit {
       return this;
     }
 
+    /** Configure debug logging mechanism. */
+    public Builder setLogger(Logger logger) {
+      this.logger = checkNotNull(logger, "logger == null");
+      return this;
+    }
+
     /** Create the {@link Retrofit} instances. */
     public Retrofit build() {
       if (baseUrl == null) {
@@ -280,7 +290,7 @@ public final class Retrofit {
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
       return new Retrofit(client, baseUrl, converterFactories, adapterFactories, callbackExecutor,
-          validateEagerly);
+          validateEagerly, logger);
     }
   }
 }

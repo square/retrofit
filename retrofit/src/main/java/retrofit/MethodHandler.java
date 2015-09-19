@@ -25,14 +25,15 @@ import java.util.List;
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
   static MethodHandler<?> create(Method method, OkHttpClient client, BaseUrl baseUrl,
-      List<CallAdapter.Factory> callAdapterFactories, List<Converter.Factory> converterFactories) {
+      List<CallAdapter.Factory> callAdapterFactories, List<Converter.Factory> converterFactories,
+      Logger logger) {
     CallAdapter<Object> callAdapter =
         (CallAdapter<Object>) createCallAdapter(method, callAdapterFactories);
     Converter<ResponseBody, Object> responseConverter =
         (Converter<ResponseBody, Object>) createResponseConverter(method,
             callAdapter.responseType(), converterFactories);
     RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
-    return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter);
+    return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter, logger);
   }
 
   private static CallAdapter<?> createCallAdapter(Method method,
@@ -67,16 +68,19 @@ final class MethodHandler<T> {
   private final RequestFactory requestFactory;
   private final CallAdapter<T> callAdapter;
   private final Converter<ResponseBody, T> responseConverter;
+  private final Logger logger;
 
   private MethodHandler(OkHttpClient client, RequestFactory requestFactory,
-      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter) {
+      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter, Logger logger) {
     this.client = client;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;
     this.responseConverter = responseConverter;
+    this.logger = logger;
   }
 
   Object invoke(Object... args) {
-    return callAdapter.adapt(new OkHttpCall<>(client, requestFactory, responseConverter, args));
+    return callAdapter.adapt(new OkHttpCall<>(client, requestFactory, responseConverter, logger,
+        args));
   }
 }
