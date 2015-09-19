@@ -23,8 +23,7 @@ import java.lang.reflect.Type;
 
 /**
  * Convert objects to and from their representation as HTTP bodies. Register a converter with
- * Retrofit using {@link Retrofit.Builder#addConverter(Type, Converter)} or {@link
- * Retrofit.Builder#addConverterFactory(Factory)}.
+ * Retrofit using {@link Retrofit.Builder#addConverterFactory(Factory)}.
  */
 public interface Converter<F, T> {
   T convert(F value) throws IOException;
