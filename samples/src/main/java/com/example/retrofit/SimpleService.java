@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.List;
 import retrofit.Call;
 import retrofit.GsonConverterFactory;
+import retrofit.LogLevel;
+import retrofit.Logger;
 import retrofit.Retrofit;
 import retrofit.http.GET;
 import retrofit.http.Path;
@@ -48,6 +50,15 @@ public final class SimpleService {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(API_URL)
         .addConverterFactory(GsonConverterFactory.create())
+        .setLogger(new Logger() {
+          @Override public void log(String message) {
+            System.out.println(message);
+          }
+
+          @Override public LogLevel level() {
+            return LogLevel.BASIC;
+          }
+        })
         .build();
 
     // Create an instance of our GitHub API interface.
