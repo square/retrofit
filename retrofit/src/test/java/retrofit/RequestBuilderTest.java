@@ -27,6 +27,7 @@ import retrofit.http.HTTP;
 import retrofit.http.Header;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
+import retrofit.http.OPTIONS;
 import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
@@ -44,6 +45,20 @@ import static org.junit.Assert.fail;
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
 public final class RequestBuilderTest {
   private static final MediaType TEXT_PLAIN = MediaType.parse("text/plain");
+
+    @Test public void optionsMethodNoBody() {
+        class Example {
+            @OPTIONS("/foobar")
+            Call<Object> method() {
+                return null;
+            }
+        }
+
+        Request request = buildRequest(Example.class);
+        assertThat(request.method()).isEqualTo("OPTIONS");
+        assertThat(request.urlString()).isEqualTo("http://example.com/foobar");
+        assertThat(request.body()).isNull();
+    }
 
   @Test public void customMethodNoBody() {
     class Example {
