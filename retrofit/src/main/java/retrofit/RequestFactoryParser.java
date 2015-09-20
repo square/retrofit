@@ -37,6 +37,7 @@ import retrofit.http.HTTP;
 import retrofit.http.Header;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
+import retrofit.http.OPTIONS;
 import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
@@ -107,7 +108,9 @@ final class RequestFactoryParser {
       } else if (annotation instanceof POST) {
         parseHttpMethodAndPath("POST", ((POST) annotation).value(), true);
       } else if (annotation instanceof PUT) {
-        parseHttpMethodAndPath("PUT", ((PUT) annotation).value(), true);
+          parseHttpMethodAndPath("PUT", ((PUT) annotation).value(), true);
+      } else if (annotation instanceof OPTIONS) {
+        parseHttpMethodAndPath("OPTIONS", ((OPTIONS) annotation).value(), false);
       } else if (annotation instanceof HTTP) {
         HTTP http = (HTTP) annotation;
         parseHttpMethodAndPath(http.method(), http.path(), http.hasBody());

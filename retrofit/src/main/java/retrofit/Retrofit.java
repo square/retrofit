@@ -42,8 +42,8 @@ import static retrofit.Utils.checkNotNull;
  * The relative path for a given method is obtained from an annotation on the method describing
  * the request type. The built-in methods are {@link retrofit.http.GET GET},
  * {@link retrofit.http.PUT PUT}, {@link retrofit.http.POST POST}, {@link retrofit.http.PATCH
- * PATCH}, {@link retrofit.http.HEAD HEAD}, and {@link retrofit.http.DELETE DELETE}. You can use a
- * custom HTTP method with {@link HTTP @HTTP}.
+ * PATCH}, {@link retrofit.http.HEAD HEAD}, {@link retrofit.http.DELETE DELETE} and
+ * {@link retrofit.http.OPTIONS OPTIONS}. You can use a custom HTTP method with {@link HTTP @HTTP}.
  * <p>
  * Method parameters can be used to replace parts of the URL by annotating them with
  * {@link retrofit.http.Path @Path}. Replacement sections are denoted by an identifier surrounded
