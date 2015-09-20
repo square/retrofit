@@ -31,6 +31,7 @@ import retrofit.http.HTTP;
 import retrofit.http.Header;
 import retrofit.http.Headers;
 import retrofit.http.Multipart;
+import retrofit.http.OPTIONS;
 import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
@@ -593,6 +594,20 @@ public final class RequestBuilderTest {
     assertThat(request.headers().size()).isZero();
     assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "hi");
+  }
+
+  @Test public void options() {
+    class Example {
+      @OPTIONS("/foo/bar/") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("OPTIONS");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
   }
 
   @Test public void getWithPathParam() {
