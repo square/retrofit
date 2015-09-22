@@ -1149,11 +1149,12 @@ public class RequestBuilderTest {
     params.put("kit", "kat");
     params.put("foo", null);
     params.put("ping", "pong");
+    params.put("key", Arrays.<Object>asList(1, 2, null, "three"));
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong&key=1&key=2&key=three");
     assertThat(request.getBody()).isNull();
   }
 
@@ -1189,11 +1190,12 @@ public class RequestBuilderTest {
     params.put("kit", "k%20t");
     params.put("foo", null);
     params.put("ping", "p%20g");
+    params.put("key", Arrays.<Object>asList(1, 2, null, "t%20e"));
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&ping=p%20g&key=1&key=2&key=t%20e");
     assertThat(request.getBody()).isNull();
   }
 
@@ -1209,11 +1211,12 @@ public class RequestBuilderTest {
     params.put("k it", "k t");
     params.put("fo o", null);
     params.put("pi ng", "p g");
+    params.put("k y", Arrays.<Object>asList(1, 2, null, "t e"));
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k+t&pi+ng=p+g");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k+t&pi+ng=p+g&k+y=1&k+y=2&k+y=t+e");
     assertThat(request.getBody()).isNull();
   }
 
@@ -1230,11 +1233,12 @@ public class RequestBuilderTest {
     params.put("k it", "k%20t");
     params.put("fo o", null);
     params.put("pi ng", "p%20g");
+    params.put("k y", Arrays.<Object>asList(1, 2, null, "t%20e"));
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.getMethod()).isEqualTo("GET");
     assertThat(request.getHeaders()).isEmpty();
-    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k%20t&pi+ng=p%20g");
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/?k+it=k%20t&pi+ng=p%20g&k+y=1&k+y=2&k+y=t%20e");
     assertThat(request.getBody()).isNull();
   }
 
