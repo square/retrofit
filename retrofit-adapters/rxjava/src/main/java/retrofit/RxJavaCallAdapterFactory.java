@@ -109,10 +109,14 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
           try {
             subscriber.onNext(response);
           } catch (Throwable t) {
-            subscriber.onError(t);
+            if (!subscriber.isUnsubscribed()) {
+              subscriber.onError(t);
+            }
             return;
           }
-          subscriber.onCompleted();
+          if (!subscriber.isUnsubscribed()) {
+            subscriber.onCompleted();
+          }
         }
 
         @Override public void onFailure(Throwable t) {
