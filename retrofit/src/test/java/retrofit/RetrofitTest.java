@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -141,7 +142,8 @@ public final class RetrofitTest {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     final AtomicBoolean adapterCalled = new AtomicBoolean();
     class MyCallAdapterFactory implements CallAdapter.Factory {
-      @Override public CallAdapter<?> get(final Type returnType, Annotation[] annotations) {
+      @Override public CallAdapter<?> get(final Type returnType, Annotation[] annotations,
+          Retrofit retrofit) {
         factoryCalled.set(true);
         if (Utils.getRawType(returnType) != Call.class) {
           return null;
@@ -171,7 +173,8 @@ public final class RetrofitTest {
 
   @Test public void customCallAdapter() {
     class GreetingCallAdapterFactory implements CallAdapter.Factory {
-      @Override public CallAdapter<String> get(Type returnType, Annotation[] annotations) {
+      @Override public CallAdapter<String> get(Type returnType, Annotation[] annotations,
+          Retrofit retrofit) {
         if (Utils.getRawType(returnType) != String.class) {
           return null;
         }
@@ -199,7 +202,8 @@ public final class RetrofitTest {
   @Test public void methodAnnotationsPassedToCallAdapter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyCallAdapterFactory implements CallAdapter.Factory {
-      @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations) {
+      @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations,
+          Retrofit retrofit) {
         annotationsRef.set(annotations);
         return null;
       }
@@ -558,6 +562,149 @@ public final class RetrofitTest {
         .addCallAdapterFactory(factory)
         .build();
     assertThat(retrofit.callAdapterFactories()).contains(factory);
+  }
+
+  @Test public void callAdapterFactoryQueried() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    CallAdapter<?> expectedAdapter = mock(CallAdapter.class);
+    CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addCallAdapterFactory(factory)
+        .build();
+
+    doReturn(expectedAdapter).when(factory).get(type, annotations, retrofit);
+
+    CallAdapter<?> actualAdapter = retrofit.callAdapter(type, annotations);
+    assertThat(actualAdapter).isSameAs(expectedAdapter);
+
+    verify(factory).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory);
+  }
+
+  @Test public void callAdapterFactoryQueriedCanDelegate() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    CallAdapter<?> expectedAdapter = mock(CallAdapter.class);
+    CallAdapter.Factory factory2 = mock(CallAdapter.Factory.class);
+    CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
+      @Override
+      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        return retrofit.nextCallAdapter(this, returnType, annotations);
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addCallAdapterFactory(factory1)
+        .addCallAdapterFactory(factory2)
+        .build();
+
+    doReturn(expectedAdapter).when(factory2).get(type, annotations, retrofit);
+
+    CallAdapter<?> actualAdapter = retrofit.callAdapter(type, annotations);
+    assertThat(actualAdapter).isSameAs(expectedAdapter);
+
+    verify(factory1).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory1);
+    verify(factory2).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory2);
+  }
+
+  @Test public void callAdapterFactoryQueriedCanDelegateTwiceWithoutRecursion() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    CallAdapter<?> expectedAdapter = mock(CallAdapter.class);
+    CallAdapter.Factory factory3 = mock(CallAdapter.Factory.class);
+    CallAdapter.Factory factory2 = spy(new CallAdapter.Factory() {
+      @Override
+      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        return retrofit.nextCallAdapter(this, returnType, annotations);
+      }
+    });
+    CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
+      @Override
+      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        return retrofit.nextCallAdapter(this, returnType, annotations);
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addCallAdapterFactory(factory1)
+        .addCallAdapterFactory(factory2)
+        .addCallAdapterFactory(factory3)
+        .build();
+
+    doReturn(expectedAdapter).when(factory3).get(type, annotations, retrofit);
+
+    CallAdapter<?> actualAdapter = retrofit.callAdapter(type, annotations);
+    assertThat(actualAdapter).isSameAs(expectedAdapter);
+
+    verify(factory1).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory1);
+    verify(factory2).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory2);
+    verify(factory3).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory3);
+  }
+
+  @Test public void callAdapterFactoryNoMatchThrows() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addCallAdapterFactory(factory)
+        .build();
+
+    doReturn(null).when(factory).get(type, annotations, retrofit);
+
+    try {
+      retrofit.callAdapter(type, annotations);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Could not locate call adapter for class java.lang.String. Tried:");
+    }
+
+    verify(factory).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory);
+  }
+
+  @Test public void callAdapterFactoryDelegateNoMatchThrows() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
+      @Override
+      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        return retrofit.nextCallAdapter(this, returnType, annotations);
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addCallAdapterFactory(factory1)
+        .build();
+
+    try {
+      retrofit.callAdapter(type, annotations);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining("Skipped:")
+          .hasMessageStartingWith(
+              "Could not locate call adapter for class java.lang.String. Tried:");
+    }
+
+
+    verify(factory1).get(type, annotations, retrofit);
+    verifyNoMoreInteractions(factory1);
   }
 
   @Test public void callbackExecutorNullThrows() {

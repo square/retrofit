@@ -19,9 +19,11 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -146,8 +148,7 @@ public final class Retrofit {
     synchronized (methodHandlerCache) {
       handler = methodHandlerCache.get(method);
       if (handler == null) {
-        handler =
-            MethodHandler.create(method, client, baseUrl, adapterFactories, converterFactories);
+        handler = MethodHandler.create(this, method);
         methodHandlerCache.put(method, handler);
       }
     }
@@ -162,15 +163,55 @@ public final class Retrofit {
     return baseUrl;
   }
 
+  public List<CallAdapter.Factory> callAdapterFactories() {
+    return Collections.unmodifiableList(adapterFactories);
+  }
+
+  /**
+   * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
+   * #callAdapterFactories() factories}.
+   */
+  public CallAdapter<?> callAdapter(Type returnType, Annotation[] annotations) {
+    return nextCallAdapter(null, returnType, annotations);
+  }
+
+  /**
+   * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
+   * #callAdapterFactories() factories} except {@code skipPast}.
+   */
+  public CallAdapter<?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
+      Annotation[] annotations) {
+    checkNotNull(returnType, "returnType == null");
+    checkNotNull(annotations, "annotations == null");
+
+    int start = adapterFactories.indexOf(skipPast) + 1;
+    for (int i = start, count = adapterFactories.size(); i < count; i++) {
+      CallAdapter<?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
+      if (adapter != null) {
+        return adapter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
+        .append(returnType)
+        .append(". Tried:");
+    for (int i = start, count = adapterFactories.size(); i < count; i++) {
+      builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+    }
+    if (skipPast != null) {
+      builder.append("\nSkipped:");
+      for (int i = 0; i < start; i++) {
+        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+      }
+    }
+    throw new IllegalArgumentException(builder.toString());
+  }
+
   /**
    * TODO
    */
   public List<Converter.Factory> converterFactories() {
     return Collections.unmodifiableList(converterFactories);
-  }
-
-  public List<CallAdapter.Factory> callAdapterFactories() {
-    return Collections.unmodifiableList(adapterFactories);
   }
 
   public Executor callbackExecutor() {

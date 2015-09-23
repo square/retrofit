@@ -62,24 +62,6 @@ final class Utils {
     return false;
   }
 
-  static CallAdapter<?> resolveCallAdapter(List<CallAdapter.Factory> adapterFactories, Type type,
-      Annotation[] annotations) {
-    for (int i = 0, count = adapterFactories.size(); i < count; i++) {
-      CallAdapter<?> adapter = adapterFactories.get(i).get(type, annotations);
-      if (adapter != null) {
-        return adapter;
-      }
-    }
-
-    StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
-        .append(type)
-        .append(". Tried:");
-    for (CallAdapter.Factory adapterFactory : adapterFactories) {
-      builder.append("\n * ").append(adapterFactory.getClass().getName());
-    }
-    throw new IllegalArgumentException(builder.toString());
-  }
-
   static Converter<?, RequestBody> resolveRequestBodyConverter(
       List<Converter.Factory> converterFactories, Type type, Annotation[] annotations) {
     for (int i = 0, count = converterFactories.size(); i < count; i++) {

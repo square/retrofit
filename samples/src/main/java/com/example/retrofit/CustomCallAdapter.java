@@ -36,8 +36,8 @@ import retrofit.http.GET;
  */
 public final class CustomCallAdapter {
   public static class ListenableFutureCallAdapterFactory implements CallAdapter.Factory {
-    @Override
-    public CallAdapter<ListenableFuture<?>> get(Type returnType, Annotation[] annotations) {
+    @Override public CallAdapter<ListenableFuture<?>> get(Type returnType, Annotation[] annotations,
+        Retrofit retrofit) {
       TypeToken<?> token = TypeToken.of(returnType);
       if (token.getRawType() != ListenableFuture.class) {
         return null;

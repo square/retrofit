@@ -24,19 +24,17 @@ import java.util.List;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
-  static MethodHandler<?> create(Method method, OkHttpClient client, BaseUrl baseUrl,
-      List<CallAdapter.Factory> callAdapterFactories, List<Converter.Factory> converterFactories) {
-    CallAdapter<Object> callAdapter =
-        (CallAdapter<Object>) createCallAdapter(method, callAdapterFactories);
+  static MethodHandler<?> create(Retrofit retrofit, Method method) {
+    CallAdapter<Object> callAdapter = (CallAdapter<Object>) createCallAdapter(method, retrofit);
     Converter<ResponseBody, Object> responseConverter =
         (Converter<ResponseBody, Object>) createResponseConverter(method,
-            callAdapter.responseType(), converterFactories);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
-    return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter);
+            callAdapter.responseType(), retrofit.converterFactories());
+    RequestFactory requestFactory =
+        RequestFactoryParser.parse(method, retrofit.baseUrl(), retrofit.converterFactories());
+    return new MethodHandler<>(retrofit.client(), requestFactory, callAdapter, responseConverter);
   }
 
-  private static CallAdapter<?> createCallAdapter(Method method,
-      List<CallAdapter.Factory> adapterFactories) {
+  private static CallAdapter<?> createCallAdapter(Method method, Retrofit retrofit) {
     Type returnType = method.getGenericReturnType();
     if (Utils.hasUnresolvableType(returnType)) {
       throw Utils.methodError(method,
@@ -47,7 +45,7 @@ final class MethodHandler<T> {
     }
     Annotation[] annotations = method.getAnnotations();
     try {
-      return Utils.resolveCallAdapter(adapterFactories, returnType, annotations);
+      return retrofit.callAdapter(returnType, annotations);
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create call adapter for %s", returnType);
     }
