@@ -61,6 +61,7 @@ final class RequestBuilder {
     } else if (isMultipart) {
       // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBuilder();
+      multipartBuilder.type(MultipartBuilder.FORM);
     }
   }
 
