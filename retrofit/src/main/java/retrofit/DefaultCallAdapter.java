@@ -24,8 +24,9 @@ import java.lang.reflect.Type;
  * is a thread provided by OkHttp's dispatcher.
  */
 final class DefaultCallAdapter implements CallAdapter<Call<?>> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations) {
+  static final Factory FACTORY = new Factory() {
+    @Override
+    public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
       if (Utils.getRawType(returnType) != Call.class) {
         return null;
       }

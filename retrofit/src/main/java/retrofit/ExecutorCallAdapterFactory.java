@@ -27,7 +27,8 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @Override public CallAdapter<Call<?>> get(Type returnType, Annotation[] annotations) {
+  @Override
+  public CallAdapter<Call<?>> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (Utils.getRawType(returnType) != Call.class) {
       return null;
     }

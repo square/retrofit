@@ -38,7 +38,8 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
   private RxJavaCallAdapterFactory() {
   }
 
-  @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations) {
+  @Override
+  public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     Class<?> rawType = Utils.getRawType(returnType);
     boolean isSingle = "rx.Single".equals(rawType.getCanonicalName());
     if (rawType != Observable.class && !isSingle) {

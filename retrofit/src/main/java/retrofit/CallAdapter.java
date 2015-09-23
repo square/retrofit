@@ -38,6 +38,6 @@ public interface CallAdapter<T> {
      * Returns a call adapter for interface methods that return {@code returnType}, or null if this
      * factory doesn't adapt that type.
      */
-    CallAdapter<?> get(Type returnType, Annotation[] annotations);
+    CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit);
   }
 }
