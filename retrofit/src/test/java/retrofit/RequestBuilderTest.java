@@ -1,7 +1,6 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
-import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -1666,18 +1665,13 @@ public final class RequestBuilderTest {
     }
   }
 
+  private final Retrofit retrofit = new Retrofit.Builder()
+      .baseUrl("http://example.com/")
+      .addConverterFactory(new ToStringConverterFactory())
+      .build();
+
   private Request buildRequest(Class<?> cls, Object... args) {
     Method method = TestingUtils.onlyMethod(cls);
-
-    BaseUrl baseUrl = new BaseUrl() {
-      @Override public HttpUrl url() {
-        return HttpUrl.parse("http://example.com/");
-      }
-    };
-    List<Converter.Factory> converterFactories =
-        Arrays.asList(new BuiltInConverterFactory(), new ToStringConverterFactory());
-
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactories);
-    return requestFactory.create(args);
+    return RequestFactoryParser.parse(method, retrofit).create(args);
   }
 }

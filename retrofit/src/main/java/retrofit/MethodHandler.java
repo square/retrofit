@@ -20,17 +20,15 @@ import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.List;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
   static MethodHandler<?> create(Retrofit retrofit, Method method) {
     CallAdapter<Object> callAdapter = (CallAdapter<Object>) createCallAdapter(method, retrofit);
+    Type responseType = callAdapter.responseType();
     Converter<ResponseBody, Object> responseConverter =
-        (Converter<ResponseBody, Object>) createResponseConverter(method,
-            callAdapter.responseType(), retrofit.converterFactories());
-    RequestFactory requestFactory =
-        RequestFactoryParser.parse(method, retrofit.baseUrl(), retrofit.converterFactories());
+        (Converter<ResponseBody, Object>) createResponseConverter(method, retrofit, responseType);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, retrofit);
     return new MethodHandler<>(retrofit.client(), requestFactory, callAdapter, responseConverter);
   }
 
@@ -52,10 +50,10 @@ final class MethodHandler<T> {
   }
 
   private static Converter<ResponseBody, ?> createResponseConverter(Method method,
-      Type responseType, List<Converter.Factory> converterFactories) {
+      Retrofit retrofit, Type responseType) {
     Annotation[] annotations = method.getAnnotations();
     try {
-      return Utils.resolveResponseBodyConverter(converterFactories, responseType, annotations);
+      return retrofit.responseConverter(responseType, annotations);
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create converter for %s", responseType);
     }

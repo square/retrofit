@@ -21,7 +21,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -55,12 +54,11 @@ final class RequestFactoryParser {
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  static RequestFactory parse(Method method, BaseUrl baseUrl,
-      List<Converter.Factory> converterFactories) {
+  static RequestFactory parse(Method method, Retrofit retrofit) {
     RequestFactoryParser parser = new RequestFactoryParser(method);
     parser.parseMethodAnnotations();
-    parser.parseParameters(converterFactories);
-    return parser.toRequestFactory(baseUrl);
+    parser.parseParameters(retrofit);
+    return parser.toRequestFactory(retrofit.baseUrl());
   }
 
   private final Method method;
@@ -193,7 +191,7 @@ final class RequestFactoryParser {
     return builder.build();
   }
 
-  private void parseParameters(List<Converter.Factory> converterFactories) {
+  private void parseParameters(Retrofit retrofit) {
     Type[] methodParameterTypes = method.getGenericParameterTypes();
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
 
@@ -294,8 +292,8 @@ final class RequestFactoryParser {
                 "Content-Transfer-Encoding", part.encoding());
             Converter<?, RequestBody> converter;
             try {
-              converter = Utils.resolveRequestBodyConverter(converterFactories, methodParameterType,
-                  methodParameterAnnotations);
+              converter =
+                  retrofit.requestConverter(methodParameterType, methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Part converter for %s",
                   methodParameterType);
@@ -312,7 +310,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
             PartMap partMap = (PartMap) methodParameterAnnotation;
-            action = new RequestBuilderAction.PartMap(converterFactories, partMap.encoding(),
+            action = new RequestBuilderAction.PartMap(retrofit, partMap.encoding(),
                 methodParameterAnnotations);
             gotPart = true;
 
@@ -327,8 +325,8 @@ final class RequestFactoryParser {
 
             Converter<?, RequestBody> converter;
             try {
-              converter = Utils.resolveRequestBodyConverter(converterFactories, methodParameterType,
-                  methodParameterAnnotations);
+              converter =
+                  retrofit.requestConverter(methodParameterType, methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Body converter for %s",
                   methodParameterType);
