@@ -18,6 +18,7 @@ package retrofit;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
@@ -44,6 +45,10 @@ class Platform {
     } catch (ClassNotFoundException ignored) {
     }
     return new Platform();
+  }
+
+  void log(String message) {
+    System.out.println(message);
   }
 
   CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
@@ -79,6 +84,21 @@ class Platform {
   }
 
   static class Android extends Platform {
+    private static final int MAX_LOG_LENGTH = 4000;
+
+    @Override void log(String message) {
+      // Split by line, then ensure each line can fit into Log's maximum length.
+      for (int i = 0, length = message.length(); i < length; i++) {
+        int newline = message.indexOf('\n', i);
+        newline = newline != -1 ? newline : length;
+        do {
+          int end = Math.min(newline, i + MAX_LOG_LENGTH);
+          Log.d("Retrofit", message.substring(i, end));
+          i = end;
+        } while (i < newline);
+      }
+    }
+
     @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
       if (callbackExecutor == null) {
         callbackExecutor = new MainThreadExecutor();
