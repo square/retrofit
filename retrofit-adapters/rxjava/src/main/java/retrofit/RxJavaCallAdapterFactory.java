@@ -103,7 +103,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       }));
 
       call.enqueue(new Callback<T>() {
-        @Override public void onResponse(Response<T> response) {
+        @Override public void onResponse(Response<T> response, Retrofit retrofit) {
           if (subscriber.isUnsubscribed()) {
             return;
           }

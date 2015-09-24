@@ -80,10 +80,10 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
       this.delegate = delegate;
     }
 
-    @Override public void onResponse(final Response<T> response) {
+    @Override public void onResponse(final Response<T> response, final Retrofit retrofit) {
       callbackExecutor.execute(new Runnable() {
         @Override public void run() {
-          delegate.onResponse(response);
+          delegate.onResponse(response, retrofit);
         }
       });
     }

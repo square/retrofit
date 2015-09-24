@@ -25,10 +25,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
+import retrofit.Retrofit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class BehaviorCall<T> implements Call<T> {
+  private final Retrofit retrofit;
   private final NetworkBehavior behavior;
   private final ExecutorService backgroundExecutor;
   private final Executor callbackExecutor;
@@ -38,8 +40,14 @@ final class BehaviorCall<T> implements Call<T> {
   private volatile boolean canceled;
   private volatile boolean executed;
 
-  BehaviorCall(NetworkBehavior behavior, ExecutorService backgroundExecutor,
-      Executor callbackExecutor, Call<T> delegate) {
+  BehaviorCall(Retrofit retrofit, NetworkBehavior behavior, ExecutorService backgroundExecutor,
+      Call<T> delegate) {
+    this.retrofit = retrofit;
+    this.behavior = behavior;
+    this.backgroundExecutor = backgroundExecutor;
+    this.delegate = delegate;
+
+    Executor callbackExecutor = retrofit.callbackExecutor();
     if (callbackExecutor == null) {
       callbackExecutor = new Executor() {
         @Override public void execute(Runnable command) {
@@ -47,15 +55,12 @@ final class BehaviorCall<T> implements Call<T> {
         }
       };
     }
-    this.behavior = behavior;
-    this.backgroundExecutor = backgroundExecutor;
     this.callbackExecutor = callbackExecutor;
-    this.delegate = delegate;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public Call<T> clone() {
-    return new BehaviorCall<>(behavior, backgroundExecutor, callbackExecutor, delegate.clone());
+    return new BehaviorCall<>(retrofit, behavior, backgroundExecutor, delegate.clone());
   }
 
   @Override public void enqueue(final Callback<T> callback) {
@@ -80,7 +85,7 @@ final class BehaviorCall<T> implements Call<T> {
       private void callResponse(final Response<T> response) {
         callbackExecutor.execute(new Runnable() {
           @Override public void run() {
-            callback.onResponse(response);
+            callback.onResponse(response, retrofit);
           }
         });
       }
@@ -102,7 +107,7 @@ final class BehaviorCall<T> implements Call<T> {
           }
         } else {
           delegate.enqueue(new Callback<T>() {
-            @Override public void onResponse(final Response<T> response) {
+            @Override public void onResponse(final Response<T> response, Retrofit retrofit) {
               if (delaySleep()) {
                 callResponse(response);
               }
@@ -124,7 +129,7 @@ final class BehaviorCall<T> implements Call<T> {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     enqueue(new Callback<T>() {
-      @Override public void onResponse(Response<T> response) {
+      @Override public void onResponse(Response<T> response, Retrofit retrofit) {
         responseRef.set(response);
         latch.countDown();
       }

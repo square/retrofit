@@ -48,13 +48,13 @@ public final class MockRetrofitTest {
   private DoWorkService service;
 
   @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
+    final Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com")
         .build();
 
     DoWorkService mockService = new DoWorkService() {
       @Override public Call<String> response() {
-        return Calls.response("Response!");
+        return Calls.response("Response!", retrofit);
       }
 
       @Override public Call<String> failure() {
@@ -98,7 +98,7 @@ public final class MockRetrofitTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 
@@ -141,7 +141,7 @@ public final class MockRetrofitTest {
     final AtomicReference<String> actual = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
         actual.set(response.body());
         latch.countDown();
@@ -187,7 +187,7 @@ public final class MockRetrofitTest {
     final CountDownLatch latch = new CountDownLatch(1);
     final long startNanos = System.nanoTime();
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 
@@ -238,7 +238,7 @@ public final class MockRetrofitTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         latch.countDown();
       }
 
@@ -283,7 +283,7 @@ public final class MockRetrofitTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         latch.countDown();
       }
 

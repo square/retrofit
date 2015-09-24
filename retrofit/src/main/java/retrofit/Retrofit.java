@@ -218,7 +218,7 @@ public final class Retrofit {
    * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
    * {@linkplain #converterFactories() factories}.
    */
-  public Converter<?, RequestBody> requestConverter(Type type, Annotation[] annotations) {
+  public <T> Converter<T, RequestBody> requestConverter(Type type, Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -226,7 +226,8 @@ public final class Retrofit {
       Converter<?, RequestBody> converter =
           converterFactories.get(i).toRequestBody(type, annotations);
       if (converter != null) {
-        return converter;
+        //noinspection unchecked
+        return (Converter<T, RequestBody>) converter;
       }
     }
 
@@ -243,7 +244,7 @@ public final class Retrofit {
    * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
    * {@linkplain #converterFactories() factories}.
    */
-  public Converter<ResponseBody, ?> responseConverter(Type type, Annotation[] annotations) {
+  public <T> Converter<ResponseBody, T> responseConverter(Type type, Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -251,7 +252,8 @@ public final class Retrofit {
       Converter<ResponseBody, ?> converter =
           converterFactories.get(i).fromResponseBody(type, annotations);
       if (converter != null) {
-        return converter;
+        //noinspection unchecked
+        return (Converter<ResponseBody, T>) converter;
       }
     }
 
