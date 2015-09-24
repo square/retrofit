@@ -19,21 +19,22 @@ import java.io.IOException;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
+import retrofit.Retrofit;
 
 /** Factory methods for creating {@link Call} instances which immediately respond or fail. */
 public final class Calls {
-  public static <T> Call<T> response(T successValue) {
-    return response(Response.success(successValue));
+  public static <T> Call<T> response(T successValue, Retrofit retrofit) {
+    return response(Response.success(successValue), retrofit);
   }
 
-  public static <T> Call<T> response(final Response<T> response) {
+  public static <T> Call<T> response(final Response<T> response, final Retrofit retrofit) {
     return new Call<T>() {
       @Override public Response<T> execute() throws IOException {
         return response;
       }
 
       @Override public void enqueue(Callback<T> callback) {
-        callback.onResponse(response);
+        callback.onResponse(response, retrofit);
       }
 
       @Override public void cancel() {

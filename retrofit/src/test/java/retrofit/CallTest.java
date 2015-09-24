@@ -80,10 +80,12 @@ public final class CallTest {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
+    final AtomicReference<Retrofit> retrofitRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.getString().enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         responseRef.set(response);
+        retrofitRef.set(retrofit);
         latch.countDown();
       }
 
@@ -96,6 +98,8 @@ public final class CallTest {
     Response<String> response = responseRef.get();
     assertThat(response.isSuccess()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
+
+    assertThat(retrofitRef.get()).isSameAs(retrofit);
   }
 
   @Test public void http404Sync() throws IOException {
@@ -125,7 +129,7 @@ public final class CallTest {
     final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.getString().enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         responseRef.set(response);
         latch.countDown();
       }
@@ -171,7 +175,7 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.getString().enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 
@@ -230,7 +234,7 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.postString("Hi").enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 
@@ -342,7 +346,7 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.postString("Hi").enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 
@@ -546,7 +550,7 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 
@@ -590,7 +594,7 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Response<String> response, Retrofit retrofit) {
         throw new AssertionError();
       }
 

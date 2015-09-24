@@ -30,7 +30,7 @@ package retrofit;
  */
 public interface Callback<T> {
   /** Successful HTTP response. */
-  void onResponse(Response<T> response);
+  void onResponse(Response<T> response, Retrofit retrofit);
 
   /** Invoked when a network or unexpected exception occurred during the HTTP request. */
   void onFailure(Throwable t);

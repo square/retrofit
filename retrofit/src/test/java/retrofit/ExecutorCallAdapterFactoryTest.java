@@ -98,12 +98,12 @@ public final class ExecutorCallAdapterFactoryTest {
     final Response<String> response = Response.success("Hi");
     Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
-        callback.onResponse(response);
+        callback.onResponse(response, retrofit);
       }
     });
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
-    verify(callback).onResponse(response);
+    verify(callback).onResponse(response, retrofit);
   }
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {

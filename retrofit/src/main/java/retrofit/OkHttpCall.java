@@ -15,7 +15,6 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
@@ -23,7 +22,7 @@ import java.io.IOException;
 import static retrofit.Utils.closeQuietly;
 
 final class OkHttpCall<T> implements Call<T> {
-  private final OkHttpClient client;
+  private final Retrofit retrofit;
   private final RequestFactory requestFactory;
   private final Converter<ResponseBody, T> responseConverter;
   private final Object[] args;
@@ -32,9 +31,9 @@ final class OkHttpCall<T> implements Call<T> {
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
-  OkHttpCall(OkHttpClient client, RequestFactory requestFactory,
+  OkHttpCall(Retrofit retrofit, RequestFactory requestFactory,
       Converter<ResponseBody, T> responseConverter, Object[] args) {
-    this.client = client;
+    this.retrofit = retrofit;
     this.requestFactory = requestFactory;
     this.responseConverter = responseConverter;
     this.args = args;
@@ -42,7 +41,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(client, requestFactory, responseConverter, args);
+    return new OkHttpCall<>(retrofit, requestFactory, responseConverter, args);
   }
 
   @Override public void enqueue(final Callback<T> callback) {
@@ -74,7 +73,7 @@ final class OkHttpCall<T> implements Call<T> {
 
       private void callSuccess(Response<T> response) {
         try {
-          callback.onResponse(response);
+          callback.onResponse(response, retrofit);
         } catch (Throwable t) {
           t.printStackTrace();
         }
@@ -113,7 +112,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private com.squareup.okhttp.Call createRawCall() {
-    return client.newCall(requestFactory.create(args));
+    return retrofit.client().newCall(requestFactory.create(args));
   }
 
   private Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
