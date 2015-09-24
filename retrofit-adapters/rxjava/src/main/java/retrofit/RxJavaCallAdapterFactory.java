@@ -102,31 +102,25 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
         }
       }));
 
-      call.enqueue(new Callback<T>() {
-        @Override public void onResponse(Response<T> response, Retrofit retrofit) {
-          if (subscriber.isUnsubscribed()) {
-            return;
-          }
-          try {
-            subscriber.onNext(response);
-          } catch (Throwable t) {
-            if (!subscriber.isUnsubscribed()) {
-              subscriber.onError(t);
-            }
-            return;
-          }
-          if (!subscriber.isUnsubscribed()) {
-            subscriber.onCompleted();
-          }
-        }
+      if (subscriber.isUnsubscribed()) {
+        return;
+      }
 
-        @Override public void onFailure(Throwable t) {
-          if (subscriber.isUnsubscribed()) {
-            return;
-          }
+      try {
+        Response<T> response = call.execute();
+        if (!subscriber.isUnsubscribed()) {
+          subscriber.onNext(response);
+        }
+      } catch (Throwable t) {
+        if (!subscriber.isUnsubscribed()) {
           subscriber.onError(t);
         }
-      });
+        return;
+      }
+
+      if (!subscriber.isUnsubscribed()) {
+        subscriber.onCompleted();
+      }
     }
   }
 
