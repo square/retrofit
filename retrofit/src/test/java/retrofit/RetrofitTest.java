@@ -530,6 +530,102 @@ public final class RetrofitTest {
     assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverterFactory.class);
   }
 
+  @Test public void requestConverterFactoryQueried() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter<?, RequestBody> expectedAdapter = mock(Converter.class);
+    Converter.Factory factory = mock(Converter.Factory.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory)
+        .build();
+
+    doReturn(expectedAdapter).when(factory).toRequestBody(type, annotations);
+
+    Converter<?, RequestBody> actualAdapter = retrofit.requestConverter(type, annotations);
+    assertThat(actualAdapter).isSameAs(expectedAdapter);
+
+    verify(factory).toRequestBody(type, annotations);
+    verifyNoMoreInteractions(factory);
+  }
+
+  @Test public void requestConverterFactoryNoMatchThrows() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter.Factory factory1 = spy(new Converter.Factory() {
+      @Override
+      public Converter<?, RequestBody> toRequestBody(Type returnType, Annotation[] annotations) {
+        return null;
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory1)
+        .build();
+
+    try {
+      retrofit.requestConverter(type, annotations);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Could not locate RequestBody converter for class java.lang.String. Tried:");
+    }
+
+    verify(factory1).toRequestBody(type, annotations);
+    verifyNoMoreInteractions(factory1);
+  }
+
+  @Test public void responseConverterFactoryQueried() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter<ResponseBody, ?> expectedAdapter = mock(Converter.class);
+    Converter.Factory factory = mock(Converter.Factory.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory)
+        .build();
+
+    doReturn(expectedAdapter).when(factory).fromResponseBody(type, annotations);
+
+    Converter<ResponseBody, ?> actualAdapter = retrofit.responseConverter(type, annotations);
+    assertThat(actualAdapter).isSameAs(expectedAdapter);
+
+    verify(factory).fromResponseBody(type, annotations);
+    verifyNoMoreInteractions(factory);
+  }
+
+  @Test public void responseConverterFactoryNoMatchThrows() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter.Factory factory1 = spy(new Converter.Factory() {
+      @Override
+      public Converter<ResponseBody, ?> fromResponseBody(Type returnType, Annotation[] annotations) {
+        return null;
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory1)
+        .build();
+
+    try {
+      retrofit.responseConverter(type, annotations);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Could not locate ResponseBody converter for class java.lang.String. Tried:");
+    }
+
+    verify(factory1).fromResponseBody(type, annotations);
+    verifyNoMoreInteractions(factory1);
+  }
+
   @Test public void converterFactoryPropagated() {
     Converter.Factory factory = mock(Converter.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
@@ -701,7 +797,6 @@ public final class RetrofitTest {
           .hasMessageStartingWith(
               "Could not locate call adapter for class java.lang.String. Tried:");
     }
-
 
     verify(factory1).get(type, annotations, retrofit);
     verifyNoMoreInteractions(factory1);

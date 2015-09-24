@@ -16,7 +16,6 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 import java.io.Closeable;
@@ -30,7 +29,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
-import java.util.List;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.Source;
@@ -60,44 +58,6 @@ final class Utils {
       }
     }
     return false;
-  }
-
-  static Converter<?, RequestBody> resolveRequestBodyConverter(
-      List<Converter.Factory> converterFactories, Type type, Annotation[] annotations) {
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
-      Converter<?, RequestBody> converter =
-          converterFactories.get(i).toRequestBody(type, annotations);
-      if (converter != null) {
-        return converter;
-      }
-    }
-
-    StringBuilder builder =
-        new StringBuilder("Could not locate RequestBody converter for ").append(type)
-            .append(". Tried:");
-    for (Converter.Factory converterFactory : converterFactories) {
-      builder.append("\n * ").append(converterFactory.getClass().getName());
-    }
-    throw new IllegalArgumentException(builder.toString());
-  }
-
-  static Converter<ResponseBody, ?> resolveResponseBodyConverter(
-      List<Converter.Factory> converterFactories, Type type, Annotation[] annotations) {
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
-      Converter<ResponseBody, ?> converter =
-          converterFactories.get(i).fromResponseBody(type, annotations);
-      if (converter != null) {
-        return converter;
-      }
-    }
-
-    StringBuilder builder =
-        new StringBuilder("Could not locate ResponseBody converter for ").append(type)
-            .append(". Tried:");
-    for (Converter.Factory converterFactory : converterFactories) {
-      builder.append("\n * ").append(converterFactory.getClass().getName());
-    }
-    throw new IllegalArgumentException(builder.toString());
   }
 
   /**

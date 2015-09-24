@@ -214,6 +214,56 @@ public final class Retrofit {
     return Collections.unmodifiableList(converterFactories);
   }
 
+  /**
+   * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
+   * {@linkplain #converterFactories() factories}.
+   */
+  public Converter<?, RequestBody> requestConverter(Type type, Annotation[] annotations) {
+    checkNotNull(type, "type == null");
+    checkNotNull(annotations, "annotations == null");
+
+    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+      Converter<?, RequestBody> converter =
+          converterFactories.get(i).toRequestBody(type, annotations);
+      if (converter != null) {
+        return converter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate RequestBody converter for ")
+        .append(type)
+        .append(". Tried:");
+    for (Converter.Factory converterFactory : converterFactories) {
+      builder.append("\n * ").append(converterFactory.getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
+  }
+
+  /**
+   * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
+   * {@linkplain #converterFactories() factories}.
+   */
+  public Converter<ResponseBody, ?> responseConverter(Type type, Annotation[] annotations) {
+    checkNotNull(type, "type == null");
+    checkNotNull(annotations, "annotations == null");
+
+    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+      Converter<ResponseBody, ?> converter =
+          converterFactories.get(i).fromResponseBody(type, annotations);
+      if (converter != null) {
+        return converter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate ResponseBody converter for ")
+        .append(type)
+        .append(". Tried:");
+    for (Converter.Factory converterFactory : converterFactories) {
+      builder.append("\n * ").append(converterFactory.getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
+  }
+
   public Executor callbackExecutor() {
     return callbackExecutor;
   }

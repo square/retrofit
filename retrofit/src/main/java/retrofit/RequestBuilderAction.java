@@ -20,7 +20,6 @@ import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.util.List;
 import java.util.Map;
 
 import static retrofit.Utils.checkNotNull;
@@ -215,13 +214,12 @@ abstract class RequestBuilderAction {
   }
 
   static final class PartMap extends RequestBuilderAction {
-    private final List<Converter.Factory> converterFactories;
+    private final Retrofit retrofit;
     private final String transferEncoding;
     private final Annotation[] annotations;
 
-    PartMap(List<Converter.Factory> converterFactories, String transferEncoding,
-        Annotation[] annotations) {
-      this.converterFactories = converterFactories;
+    PartMap(Retrofit retrofit, String transferEncoding, Annotation[] annotations) {
+      this.retrofit = retrofit;
       this.transferEncoding = transferEncoding;
       this.annotations = annotations;
     }
@@ -247,8 +245,7 @@ abstract class RequestBuilderAction {
         Class<?> entryClass = entryValue.getClass();
         //noinspection unchecked
         Converter<Object, RequestBody> converter =
-            (Converter<Object, RequestBody>) Utils.resolveRequestBodyConverter(converterFactories,
-                entryClass, annotations);
+            (Converter<Object, RequestBody>) retrofit.requestConverter(entryClass, annotations);
         RequestBody body;
         try {
           body = converter.convert(entryValue);
