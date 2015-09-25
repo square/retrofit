@@ -27,7 +27,7 @@ final class MethodHandler<T> {
     Type responseType = callAdapter.responseType();
     Converter<ResponseBody, Object> responseConverter =
         (Converter<ResponseBody, Object>) createResponseConverter(method, retrofit, responseType);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, retrofit);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
     return new MethodHandler<>(retrofit, requestFactory, callAdapter, responseConverter);
   }
 

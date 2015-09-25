@@ -54,9 +54,9 @@ final class RequestFactoryParser {
   private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
   private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
 
-  static RequestFactory parse(Method method, Retrofit retrofit) {
+  static RequestFactory parse(Method method, Type responseType, Retrofit retrofit) {
     RequestFactoryParser parser = new RequestFactoryParser(method);
-    parser.parseMethodAnnotations();
+    parser.parseMethodAnnotations(responseType);
     parser.parseParameters(retrofit);
     return parser.toRequestFactory(retrofit.baseUrl());
   }
@@ -92,7 +92,7 @@ final class RequestFactoryParser {
     return methodError(method, message + " (parameter #" + (index + 1) + ")", args);
   }
 
-  private void parseMethodAnnotations() {
+  private void parseMethodAnnotations(Type responseType) {
     for (Annotation annotation : method.getAnnotations()) {
       if (annotation instanceof DELETE) {
         parseHttpMethodAndPath("DELETE", ((DELETE) annotation).value(), false);
@@ -100,6 +100,9 @@ final class RequestFactoryParser {
         parseHttpMethodAndPath("GET", ((GET) annotation).value(), false);
       } else if (annotation instanceof HEAD) {
         parseHttpMethodAndPath("HEAD", ((HEAD) annotation).value(), false);
+        if (!Void.class.equals(responseType)) {
+          throw methodError(method, "HEAD method must use Void as response type.");
+        }
       } else if (annotation instanceof PATCH) {
         parseHttpMethodAndPath("PATCH", ((PATCH) annotation).value(), true);
       } else if (annotation instanceof POST) {

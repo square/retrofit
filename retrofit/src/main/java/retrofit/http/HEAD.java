@@ -22,7 +22,11 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/** Make a HEAD request to a REST path relative to base URL. */
+/**
+ * Make a HEAD request to a REST path relative to base URL.
+ * <p>
+ * Note: HEAD requests must use {@link Void} as the response type since there is no body content.
+ */
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
