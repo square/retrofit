@@ -770,7 +770,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong&", "kat&");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong%26/?kit=kat%26");
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong&/?kit=kat%26");
     assertThat(request.body()).isNull();
   }
 
