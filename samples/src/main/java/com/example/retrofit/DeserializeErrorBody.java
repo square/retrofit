@@ -67,5 +67,7 @@ public final class DeserializeErrorBody {
     // Convert the error body into our Error type.
     Error error = errorConverter.convert(response.errorBody());
     System.out.println("ERROR: " + error.message);
+
+    server.shutdown();
   }
 }
