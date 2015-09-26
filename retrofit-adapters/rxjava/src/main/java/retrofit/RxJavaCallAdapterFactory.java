@@ -20,6 +20,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import rx.Observable;
 import rx.Subscriber;
+import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.functions.Func1;
 import rx.subscriptions.Subscriptions;
@@ -112,6 +113,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
           subscriber.onNext(response);
         }
       } catch (Throwable t) {
+        Exceptions.throwIfFatal(t);
         if (!subscriber.isUnsubscribed()) {
           subscriber.onError(t);
         }
