@@ -15,9 +15,14 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.ForwardingSource;
+import okio.Okio;
 
 import static retrofit.Utils.closeQuietly;
 
@@ -155,6 +160,80 @@ final class OkHttpCall<T> implements Call<T> {
     com.squareup.okhttp.Call rawCall = this.rawCall;
     if (rawCall != null) {
       rawCall.cancel();
+    }
+  }
+
+  static final class NoContentResponseBody extends ResponseBody {
+    private final MediaType contentType;
+    private final long contentLength;
+
+    NoContentResponseBody(MediaType contentType, long contentLength) {
+      this.contentType = contentType;
+      this.contentLength = contentLength;
+    }
+
+    @Override public MediaType contentType() {
+      return contentType;
+    }
+
+    @Override public long contentLength() throws IOException {
+      return contentLength;
+    }
+
+    @Override public BufferedSource source() throws IOException {
+      throw new IllegalStateException("Cannot read raw response body of a converted body.");
+    }
+  }
+
+  static final class ExceptionCatchingRequestBody extends ResponseBody {
+    private final ResponseBody delegate;
+    private IOException thrownException;
+
+    ExceptionCatchingRequestBody(ResponseBody delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override public MediaType contentType() {
+      return delegate.contentType();
+    }
+
+    @Override public long contentLength() throws IOException {
+      try {
+        return delegate.contentLength();
+      } catch (IOException e) {
+        thrownException = e;
+        throw e;
+      }
+    }
+
+    @Override public BufferedSource source() throws IOException {
+      BufferedSource delegateSource;
+      try {
+        delegateSource = delegate.source();
+      } catch (IOException e) {
+        thrownException = e;
+        throw e;
+      }
+      return Okio.buffer(new ForwardingSource(delegateSource) {
+        @Override public long read(Buffer sink, long byteCount) throws IOException {
+          try {
+            return super.read(sink, byteCount);
+          } catch (IOException e) {
+            thrownException = e;
+            throw e;
+          }
+        }
+      });
+    }
+
+    @Override public void close() throws IOException {
+      delegate.close();
+    }
+
+    void throwIfCaught() throws IOException {
+      if (thrownException != null) {
+        throw thrownException;
+      }
     }
   }
 }
