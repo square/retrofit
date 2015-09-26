@@ -287,7 +287,7 @@ public final class Retrofit {
     public Builder() {
       // Add the built-in converter factory first. This prevents overriding its behavior but also
       // ensures correct behavior when using converters that consume all types.
-      converterFactories.add(new BuiltInConverterFactory());
+      converterFactories.add(new BuiltInConverters());
     }
 
     /** The HTTP client used for requests. */

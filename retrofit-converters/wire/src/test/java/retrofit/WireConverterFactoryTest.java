@@ -88,7 +88,7 @@ public final class WireConverterFactoryTest {
           + "    for method Service.wrongClass");
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory\n"
+              + " * retrofit.BuiltInConverters\n"
               + " * retrofit.WireConverterFactory");
     }
   }
@@ -105,7 +105,7 @@ public final class WireConverterFactoryTest {
           + "    for method Service.wrongType");
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for java.util.List<java.lang.String>. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory\n"
+              + " * retrofit.BuiltInConverters\n"
               + " * retrofit.WireConverterFactory");
     }
   }

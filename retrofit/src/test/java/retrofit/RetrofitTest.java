@@ -292,7 +292,7 @@ public final class RetrofitTest {
               + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate RequestBody converter for class java.lang.String. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory");
+              + " * retrofit.BuiltInConverters");
     }
   }
 
@@ -312,7 +312,7 @@ public final class RetrofitTest {
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory");
+              + " * retrofit.BuiltInConverters");
     }
   }
 
@@ -331,7 +331,7 @@ public final class RetrofitTest {
           + "    for method CallMethod.disallowed");
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory\n"
+              + " * retrofit.BuiltInConverters\n"
               + " * retrofit.RetrofitTest$1");
     }
   }
@@ -527,7 +527,7 @@ public final class RetrofitTest {
         .build();
     List<Converter.Factory> converterFactories = retrofit.converterFactories();
     assertThat(converterFactories).hasSize(1);
-    assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverterFactory.class);
+    assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverters.class);
   }
 
   @Test public void requestConverterFactoryQueried() {
