@@ -1,6 +1,38 @@
 Change Log
 ==========
 
+Version 2.0.0-beta2 *(2015-09-28)*
+----------------------------------
+
+ * New: Using a response type of `Void` (e.g., `Call<Void>`) will ignore and discard the response body. This
+   can be used when there will be no response body (such as in a 201 response) or whenever the body is not
+   needed. `@Head` requests are now forced to use this as their response type.
+ * New: `validateEagerly()` method on `Retrofit.Builder` will verify the correctness of all service methods
+   on calls to `create()` instead of lazily validating on first use.
+ * New: `Converter` is now parameterized over both 'from' and 'to' types with a single `convert` method.
+   `Converter.Factory` is now an abstract class and has factory methods for both request body and response
+   body.
+ * New: `Converter.Factory` and `CallAdapter.Factory` now receive the method annotations when being created
+   for a return/response type and the parameter annotations when being created for a parameter type.
+ * New: `callAdapter()` method on `Retrofit` allows querying a `CallAdapter` for a given type. The
+   `nextCallAdapter()` method allows delegating to another `CallAdapter` from within a `CallAdapter.Factory`.
+   This is useful for composing call adapters to incrementally build up behavior.
+ * New: `requestConverter()` and `responseConverter()` methods on `Retrofit` allow querying a `Converter` for
+   a given type.
+ * New: `onResponse` method in `Callback` now receives the `Retrofit` instance. Combined with the
+   `responseConverter()` method on `Retrofit`, this provides a way of deserializing an error body on `Response`.
+   See the `DeserializeErrorBody` sample for an example.
+ * New: The `MoshiConverterFactory` has been updated for its v1.0.0.
+ * Fix: Using `ResponseBody` for the response type or `RequestBody` for a parameter type is now correctly
+   identified. Previously these types would erroneously be passed to the supplied converter.
+ * Fix: The encoding of `@Path` values has been corrected to conform to OkHttp's `HttpUrl`.
+ * Fix: Use form-data content disposition subtype for `@Multipart`.
+ * Fix: `Observable` and `Single`-based execution of requests now behave synchronously (and thus requires
+   `subscribeOn()` for running in the background).
+ * Fix: Correct `GsonConverterFactory` to honor the configuration of the `Gson` instances (such as not
+   serializing null values, the default).
+
+
 Version 2.0.0-beta1 *(2015-08-27)*
 ----------------------------------
 
