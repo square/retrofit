@@ -16,8 +16,6 @@
 package retrofit;
 
 import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
@@ -57,12 +55,10 @@ public final class GsonConverterFactory extends Converter.Factory {
 
   @Override
   public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new GsonResponseBodyConverter<>(adapter);
+    return new GsonResponseBodyConverter<>(gson, type);
   }
 
   @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new GsonRequestBodyConverter<>(adapter);
+    return new GsonRequestBodyConverter<>(gson, type);
   }
 }
