@@ -88,6 +88,21 @@ List&lt;User> groupList(@Path("id") int groupId, @Query("sort") String sort);</p
               <pre class="prettyprint">@GET("/group/{id}/users")
 List&lt;User> groupList(@Path("id") int groupId, @QueryMap Map&lt;String, String&gt; options);</pre>
 
+              <h4>Path Prefix</h4>
+              <p>An interface can be annotated with <code>@PathPrefix</code> in order to set a prefix for all URLs in this interface:</p>
+              <pre class="prettyprint">@PathPrefix("/cats")
+public interface CatService {
+  @GET              // -> /cats
+  Call&lt;List&lt;Cat>> getCats();
+
+  @GET("/{catId}")  // -> /cats/{catId}
+  Call&lt;Cat> getCat(@Path("catId") int catId);
+
+  @POST("AndDogs")  // -> /catsAndDogs
+  Call&lt;ResponseBody> postCatsAndDogs();
+}</pre>
+              <p>If the prefix contains an replacement block for path parameters, every method in the interface must have an corresponding parameter annotated with <code>@Path</code></p>
+
               <h4>Request Body</h4>
               <p>An object can be specified for use as an HTTP request body with the <code>@Body</code> annotation.</p>
               <pre class="prettyprint">@POST("/users/new")
