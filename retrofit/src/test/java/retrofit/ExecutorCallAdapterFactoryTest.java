@@ -87,7 +87,7 @@ public final class ExecutorCallAdapterFactoryTest {
       @Override public Response<String> execute() throws IOException {
         return response;
       }
-    });
+    }, retrofit);
     assertThat(call.execute()).isSameAs(response);
   }
 
@@ -100,7 +100,7 @@ public final class ExecutorCallAdapterFactoryTest {
       @Override public void enqueue(Callback<String> callback) {
         callback.onResponse(response, retrofit);
       }
-    });
+    }, retrofit);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verify(callback).onResponse(response, retrofit);
@@ -115,7 +115,7 @@ public final class ExecutorCallAdapterFactoryTest {
       @Override public void enqueue(Callback<String> callback) {
         callback.onFailure(throwable);
       }
-    });
+    }, retrofit);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verifyNoMoreInteractions(callbackExecutor);
@@ -128,7 +128,7 @@ public final class ExecutorCallAdapterFactoryTest {
     CallAdapter<Call<?>> adapter =
         (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     Call<String> delegate = mock(Call.class);
-    Call<String> call = (Call<String>) adapter.adapt(delegate);
+    Call<String> call = (Call<String>) adapter.adapt(delegate, retrofit);
     Call<String> cloned = call.clone();
     assertThat(cloned).isNotSameAs(call);
     verify(delegate).clone();
@@ -140,7 +140,7 @@ public final class ExecutorCallAdapterFactoryTest {
     CallAdapter<Call<?>> adapter =
         (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     Call<String> delegate = mock(Call.class);
-    Call<String> call = (Call<String>) adapter.adapt(delegate);
+    Call<String> call = (Call<String>) adapter.adapt(delegate, retrofit);
     call.cancel();
     verify(delegate).cancel();
     verifyNoMoreInteractions(delegate);

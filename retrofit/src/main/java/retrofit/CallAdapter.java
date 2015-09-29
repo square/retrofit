@@ -31,7 +31,7 @@ public interface CallAdapter<T> {
   Type responseType();
 
   /** Returns an instance of the {@code T} which adapts the execution of {@code call}. */
-  <R> T adapt(Call<R> call);
+  <R> T adapt(Call<R> call, Retrofit retrofit);
 
   interface Factory {
     /**

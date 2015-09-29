@@ -54,7 +54,7 @@ public final class CustomCallAdapter {
           return responseType;
         }
 
-        @Override public <R> ListenableFuture<R> adapt(Call<R> call) {
+        @Override public <R> ListenableFuture<R> adapt(Call<R> call, Retrofit retrofit) {
           CallFuture<R> future = new CallFuture<>(call);
           call.enqueue(future);
           return future;

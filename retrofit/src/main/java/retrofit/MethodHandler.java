@@ -72,6 +72,7 @@ final class MethodHandler<T> {
   }
 
   Object invoke(Object... args) {
-    return callAdapter.adapt(new OkHttpCall<>(retrofit, requestFactory, responseConverter, args));
+    return callAdapter.adapt(new OkHttpCall<>(retrofit, requestFactory, responseConverter, args),
+      retrofit);
   }
 }

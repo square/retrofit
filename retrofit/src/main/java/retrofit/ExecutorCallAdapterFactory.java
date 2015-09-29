@@ -38,7 +38,7 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
         return responseType;
       }
 
-      @Override public <R> Call<R> adapt(Call<R> call) {
+      @Override public <R> Call<R> adapt(Call<R> call, Retrofit retrofit) {
         return new ExecutorCallbackCall<>(callbackExecutor, call);
       }
     };

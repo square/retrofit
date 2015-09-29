@@ -133,7 +133,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> Observable<Response<R>> adapt(Call<R> call) {
+    @Override public <R> Observable<Response<R>> adapt(Call<R> call, Retrofit retrofit) {
       return Observable.create(new CallOnSubscribe<>(call));
     }
   }
@@ -149,7 +149,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> Observable<R> adapt(Call<R> call) {
+    @Override public <R> Observable<R> adapt(Call<R> call, Retrofit retrofit) {
       return Observable.create(new CallOnSubscribe<>(call)) //
           .flatMap(new Func1<Response<R>, Observable<R>>() {
             @Override public Observable<R> call(Response<R> response) {
@@ -173,7 +173,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> Observable<Result<R>> adapt(Call<R> call) {
+    @Override public <R> Observable<Result<R>> adapt(Call<R> call, Retrofit retrofit) {
       return Observable.create(new CallOnSubscribe<>(call)) //
           .map(new Func1<Response<R>, Result<R>>() {
             @Override public Result<R> call(Response<R> response) {

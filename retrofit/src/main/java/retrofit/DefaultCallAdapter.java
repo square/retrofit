@@ -45,7 +45,7 @@ final class DefaultCallAdapter implements CallAdapter<Call<?>> {
     return responseType;
   }
 
-  @Override public <R> Call<R> adapt(Call<R> call) {
+  @Override public <R> Call<R> adapt(Call<R> call, Retrofit retrofit) {
     return call;
   }
 }
