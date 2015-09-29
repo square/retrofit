@@ -103,10 +103,6 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
         }
       }));
 
-      if (subscriber.isUnsubscribed()) {
-        return;
-      }
-
       try {
         Response<T> response = call.execute();
         if (!subscriber.isUnsubscribed()) {
