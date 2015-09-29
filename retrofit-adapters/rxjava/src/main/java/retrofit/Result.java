@@ -22,18 +22,21 @@ import static retrofit.Utils.checkNotNull;
 /** The result of executing an HTTP request. */
 public final class Result<T> {
   public static <T> Result<T> error(Throwable error) {
-    return new Result<>(null, checkNotNull(error, "error == null"));
+    return new Result<>(null, null, checkNotNull(error, "error == null"));
   }
 
-  public static <T> Result<T> response(Response<T> response) {
-    return new Result<>(checkNotNull(response, "response == null"), null);
+  public static <T> Result<T> response(Response<T> response, Retrofit retrofit) {
+    return new Result<>(checkNotNull(response, "response == null"),
+      checkNotNull(retrofit, "retrofit == null"), null);
   }
 
   private final Response<T> response;
+  private final Retrofit retrofit;
   private final Throwable error;
 
-  Result(Response<T> response, Throwable error) {
+  Result(Response<T> response, Retrofit retrofit, Throwable error) {
     this.response = response;
+    this.retrofit = retrofit;
     this.error = error;
   }
 
@@ -43,6 +46,14 @@ public final class Result<T> {
    */
   public Response<T> response() {
     return response;
+  }
+
+  /**
+   * The Retrofit used to make this request. Only present when {@link #isError()} is
+   * false, null otherwise.
+   */
+  public Retrofit retrofit() {
+    return retrofit;
   }
 
   /**

@@ -85,14 +85,16 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     return new SimpleCallAdapter(observableType);
   }
 
-  static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
+  static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Result<T>> {
     private final Call<T> originalCall;
+    private final Retrofit retrofit;
 
-    private CallOnSubscribe(Call<T> originalCall) {
+    private CallOnSubscribe(Call<T> originalCall, Retrofit retrofit) {
       this.originalCall = originalCall;
+      this.retrofit = retrofit;
     }
 
-    @Override public void call(final Subscriber<? super Response<T>> subscriber) {
+    @Override public void call(final Subscriber<? super Result<T>> subscriber) {
       // Since Call is a one-shot type, clone it for each new subscriber.
       final Call<T> call = originalCall.clone();
 
@@ -106,7 +108,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       try {
         Response<T> response = call.execute();
         if (!subscriber.isUnsubscribed()) {
-          subscriber.onNext(response);
+          subscriber.onNext(Result.response(response, retrofit));
         }
       } catch (Throwable t) {
         Exceptions.throwIfFatal(t);
@@ -134,7 +136,13 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public <R> Observable<Response<R>> adapt(Call<R> call, Retrofit retrofit) {
-      return Observable.create(new CallOnSubscribe<>(call));
+      return Observable.create(new CallOnSubscribe<>(call, retrofit))
+          .map(new Func1<Result<R>, Response<R>>() {
+            @Override
+            public Response<R> call(Result<R> result) {
+              return result.response();
+            }
+          });
     }
   }
 
@@ -150,9 +158,10 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public <R> Observable<R> adapt(Call<R> call, Retrofit retrofit) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
-          .flatMap(new Func1<Response<R>, Observable<R>>() {
-            @Override public Observable<R> call(Response<R> response) {
+      return Observable.create(new CallOnSubscribe<>(call, retrofit)) //
+          .flatMap(new Func1<Result<R>, Observable<R>>() {
+            @Override public Observable<R> call(Result<R> result) {
+              Response<R> response = result.response();
               if (response.isSuccess()) {
                 return Observable.just(response.body());
               }
@@ -174,12 +183,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public <R> Observable<Result<R>> adapt(Call<R> call, Retrofit retrofit) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
-          .map(new Func1<Response<R>, Result<R>>() {
-            @Override public Result<R> call(Response<R> response) {
-              return Result.response(response);
-            }
-          })
+      return Observable.create(new CallOnSubscribe<>(call, retrofit)) //
           .onErrorReturn(new Func1<Throwable, Result<R>>() {
             @Override public Result<R> call(Throwable throwable) {
               return Result.error(throwable);
