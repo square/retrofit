@@ -47,14 +47,36 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
   static final class ExecutorCallbackCall<T> implements Call<T> {
     private final Executor callbackExecutor;
     private final Call<T> delegate;
+    private volatile boolean canceled;
 
     ExecutorCallbackCall(Executor callbackExecutor, Call<T> delegate) {
       this.callbackExecutor = callbackExecutor;
       this.delegate = delegate;
     }
 
-    @Override public void enqueue(Callback<T> callback) {
-      delegate.enqueue(new ExecutorCallback<>(callbackExecutor, callback));
+    @Override public void enqueue(final Callback<T> callback) {
+      delegate.enqueue(new Callback<T>() {
+        @Override public void onResponse(final Response<T> response, final Retrofit retrofit) {
+          callbackExecutor.execute(new Runnable() {
+            @Override public void run() {
+              if (canceled) {
+                // Emulate OkHttp's behavior of throwing/delivering an IOException on cancelation
+                callback.onFailure(new IOException("Canceled"));
+              } else {
+                callback.onResponse(response, retrofit);
+              }
+            }
+          });
+        }
+
+        @Override public void onFailure(final Throwable t) {
+          callbackExecutor.execute(new Runnable() {
+            @Override public void run() {
+              callback.onFailure(t);
+            }
+          });
+        }
+      });
     }
 
     @Override public Response<T> execute() throws IOException {
@@ -63,37 +85,12 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
 
     @Override public void cancel() {
       delegate.cancel();
+      canceled = true;
     }
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
     @Override public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
-    }
-  }
-
-  static final class ExecutorCallback<T> implements Callback<T> {
-    private final Executor callbackExecutor;
-    private final Callback<T> delegate;
-
-    ExecutorCallback(Executor callbackExecutor, Callback<T> delegate) {
-      this.callbackExecutor = callbackExecutor;
-      this.delegate = delegate;
-    }
-
-    @Override public void onResponse(final Response<T> response, final Retrofit retrofit) {
-      callbackExecutor.execute(new Runnable() {
-        @Override public void run() {
-          delegate.onResponse(response, retrofit);
-        }
-      });
-    }
-
-    @Override public void onFailure(final Throwable t) {
-      callbackExecutor.execute(new Runnable() {
-        @Override public void run() {
-          delegate.onFailure(t);
-        }
-      });
     }
   }
 }
