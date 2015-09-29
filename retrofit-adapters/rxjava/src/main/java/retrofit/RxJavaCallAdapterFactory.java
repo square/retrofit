@@ -113,7 +113,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       } catch (Throwable t) {
         Exceptions.throwIfFatal(t);
         if (!subscriber.isUnsubscribed()) {
-          subscriber.onError(t);
+          subscriber.onNext(Result.<T>error(t));
         }
         return;
       }
@@ -137,10 +137,13 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
 
     @Override public <R> Observable<Response<R>> adapt(Call<R> call, Retrofit retrofit) {
       return Observable.create(new CallOnSubscribe<>(call, retrofit))
-          .map(new Func1<Result<R>, Response<R>>() {
-            @Override
-            public Response<R> call(Result<R> result) {
-              return result.response();
+          .flatMap(new Func1<Result<R>, Observable<Response<R>>>() {
+            @Override public Observable<Response<R>> call(Result<R> result) {
+              if (result.isError()) {
+                return Observable.error(result.error());
+              }
+
+              return Observable.just(result.response());
             }
           });
     }
@@ -161,10 +164,15 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return Observable.create(new CallOnSubscribe<>(call, retrofit)) //
           .flatMap(new Func1<Result<R>, Observable<R>>() {
             @Override public Observable<R> call(Result<R> result) {
+              if (result.isError()) {
+                return Observable.error(result.error());
+              }
+
               Response<R> response = result.response();
               if (response.isSuccess()) {
                 return Observable.just(response.body());
               }
+
               return Observable.error(new HttpException(response));
             }
           });
@@ -183,12 +191,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public <R> Observable<Result<R>> adapt(Call<R> call, Retrofit retrofit) {
-      return Observable.create(new CallOnSubscribe<>(call, retrofit)) //
-          .onErrorReturn(new Func1<Throwable, Result<R>>() {
-            @Override public Result<R> call(Throwable throwable) {
-              return Result.error(throwable);
-            }
-          });
+      return Observable.create(new CallOnSubscribe<>(call, retrofit));
     }
   }
 }
