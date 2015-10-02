@@ -929,13 +929,13 @@ public final class RequestBuilderTest {
   
   @Test public void getWithEncodedRelativeUrl() {
     class Example {
-	  @GET("{url}")
-	  Call<ResponseBody> method(@Path(value = "url", encoded = true) String url) {
-	    return null;
-	  }
-	}
-	Request request = buildRequest(Example.class, "2015-10-01/560d3447c28eb5853953101b/560d3448fca6b4191105633a.jpg");
-	assertThat(request.urlString()).isEqualTo("http://example.com/2015-10-01/560d3447c28eb5853953101b/560d3448fca6b4191105633a.jpg");
+      @GET("{url}")
+      Call<ResponseBody> method(@Path(value = "url", encoded = true) String url) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "2015-10-01/560d3447c28eb5853953101b/560d3448fca6b4191105633a.jpg");
+    assertThat(request.urlString()).isEqualTo("http://example.com/2015-10-01/560d3447c28eb5853953101b/560d3448fca6b4191105633a.jpg");
   }
 
   @Test public void getWithUrlAbsolute() {
