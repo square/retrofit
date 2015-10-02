@@ -29,7 +29,7 @@ import okio.BufferedSink;
 final class RequestBuilder {
   private static final char[] HEX_DIGITS =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-  private static final String PATH_SEGMENT_ENCODE_SET = " \"<>^`{}|/\\?#";
+  private static final String PATH_SEGMENT_ENCODE_SET = " \"<>^`{}|\\?#";
 
   private final String method;
 
@@ -94,7 +94,7 @@ final class RequestBuilder {
       codePoint = input.codePointAt(i);
       if (codePoint < 0x20 || codePoint >= 0x7f
           || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
-          || (codePoint == '%' && !alreadyEncoded)) {
+          || ((codePoint == '%' || codePoint == '/') && !alreadyEncoded)) {
         // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
         out.writeUtf8(input, 0, i);
@@ -118,7 +118,7 @@ final class RequestBuilder {
       } else if (codePoint < 0x20
           || codePoint >= 0x7f
           || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
-          || (codePoint == '%' && !alreadyEncoded)) {
+          || ((codePoint == '%' || codePoint == '/') && !alreadyEncoded)) {
         // Percent encode this character.
         if (utf8Buffer == null) {
           utf8Buffer = new Buffer();
