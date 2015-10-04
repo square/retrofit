@@ -121,7 +121,7 @@ public final class GsonConverterFactoryTest {
   }
 
   @Test public void serializeUsesConfiguration() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse());
+    server.enqueue(new MockResponse().setBody("{}"));
 
     service.anImplementation(new AnImplementation(null)).execute();
 
