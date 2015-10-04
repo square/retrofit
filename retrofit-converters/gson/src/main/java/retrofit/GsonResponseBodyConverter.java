@@ -15,25 +15,22 @@
  */
 package retrofit;
 
-import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Type;
 
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
-  private final Gson gson;
-  private final Type type;
+  private final TypeAdapter<T> adapter;
 
-  GsonResponseBodyConverter(Gson gson, Type type) {
-    this.gson = gson;
-    this.type = type;
+  GsonResponseBodyConverter(TypeAdapter<T> adapter) {
+    this.adapter = adapter;
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
     Reader reader = value.charStream();
     try {
-      return gson.fromJson(reader, type);
+      return adapter.fromJson(reader);
     } finally {
       Utils.closeQuietly(reader);
     }
