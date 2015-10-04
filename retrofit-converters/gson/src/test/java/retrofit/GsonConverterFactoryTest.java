@@ -118,6 +118,15 @@ public final class GsonConverterFactoryTest {
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readUtf8()).isEqualTo("{\"theName\":\"value\"}");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
 
+  @Test public void serializeUsesConfiguration() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    service.anImplementation(new AnImplementation(null)).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 }

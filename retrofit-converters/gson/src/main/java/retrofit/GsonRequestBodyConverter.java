@@ -15,7 +15,9 @@
  */
 package retrofit;
 
+import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonWriter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
@@ -28,18 +30,21 @@ final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
   private static final Charset UTF_8 = Charset.forName("UTF-8");
 
+  private final Gson gson;
   private final TypeAdapter<T> adapter;
 
-  GsonRequestBodyConverter(TypeAdapter<T> adapter) {
+  GsonRequestBodyConverter(Gson gson, TypeAdapter<T> adapter) {
+    this.gson = gson;
     this.adapter = adapter;
   }
 
   @Override public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
     Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
+    JsonWriter jsonWriter = gson.newJsonWriter(writer);
     try {
-      adapter.toJson(writer, value);
-      writer.flush();
+      adapter.write(jsonWriter, value);
+      jsonWriter.flush();
     } catch (IOException e) {
       throw new AssertionError(e); // Writing to Buffer does no I/O.
     }
