@@ -1,24 +1,24 @@
 rootProject.name = 'parent'
 include ':retrofit'
-include ':retrofit-adapters:adapter-rxjava'
-include ':retrofit-adapters:adapter-rxjava-mock'
-include ':retrofit-converters:converter-gson'
-include ':retrofit-converters:converter-protobuf'
-include ':retrofit-converters:converter-jackson'
-include ':retrofit-converters:converter-wire'
-include ':retrofit-converters:converter-simplexml'
-include ':retrofit-converters:converter-moshi'
+include ':adapters:adapter-rxjava'
+include ':adapters:adapter-rxjava-mock'
+include ':converters:converter-gson'
+include ':converters:converter-protobuf'
+include ':converters:converter-jackson'
+include ':converters:converter-wire'
+include ':converters:converter-simplexml'
+include ':converters:converter-moshi'
 include ':retrofit-mock'
 include ':samples'
 
 project(':retrofit').projectDir = "$rootDir/retrofit" as File
-project(':retrofit-adapters:adapter-rxjava').projectDir = "$rootDir/retrofit-adapters/rxjava" as File
-project(':retrofit-adapters:adapter-rxjava-mock').projectDir = "$rootDir/retrofit-adapters/rxjava-mock" as File
-project(':retrofit-converters:converter-gson').projectDir = "$rootDir/retrofit-converters/gson" as File
-project(':retrofit-converters:converter-protobuf').projectDir = "$rootDir/retrofit-converters/protobuf" as File
-project(':retrofit-converters:converter-jackson').projectDir = "$rootDir/retrofit-converters/jackson" as File
-project(':retrofit-converters:converter-wire').projectDir = "$rootDir/retrofit-converters/wire" as File
-project(':retrofit-converters:converter-simplexml').projectDir = "$rootDir/retrofit-converters/simplexml" as File
-project(':retrofit-converters:converter-moshi').projectDir = "$rootDir/retrofit-converters/moshi" as File
+project(':adapters:adapter-rxjava').projectDir = "$rootDir/adapters/rxjava" as File
+project(':adapters:adapter-rxjava-mock').projectDir = "$rootDir/adapters/rxjava-mock" as File
+project(':converters:converter-gson').projectDir = "$rootDir/converters/gson" as File
+project(':converters:converter-protobuf').projectDir = "$rootDir/converters/protobuf" as File
+project(':converters:converter-jackson').projectDir = "$rootDir/converters/jackson" as File
+project(':converters:converter-wire').projectDir = "$rootDir/converters/wire" as File
+project(':converters:converter-simplexml').projectDir = "$rootDir/converters/simplexml" as File
+project(':converters:converter-moshi').projectDir = "$rootDir/converters/moshi" as File
 project(':retrofit-mock').projectDir = "$rootDir/retrofit-mock" as File
 project(':samples').projectDir = "$rootDir/samples" as File
