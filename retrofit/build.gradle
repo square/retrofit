@@ -1,8 +1,3 @@
-apply plugin: 'java'
-
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
 description = 'Retrofit'
 dependencies {
     compile group: 'com.squareup.okhttp', name: 'okhttp', version:'2.5.0'

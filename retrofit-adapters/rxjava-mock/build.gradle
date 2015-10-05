@@ -1,4 +1,3 @@
-
 description = 'Adapter: RxJava Mock'
 dependencies {
   compile project(':retrofit')
