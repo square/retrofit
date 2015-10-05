@@ -1,3 +1,13 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath "be.insaneprogramming.gradle:animalsniffer-gradle-plugin:1.4.0"
+  }
+}
+
+
 allprojects  {
   apply plugin: 'maven'
 
@@ -19,6 +29,12 @@ configure(subprojects - project(':adapters') - project('converters')) {
             'checkstyle.cache.file' : new File(project.buildDir, '/tmp/checkstyle-cachefile')
     ]
     sourceSets = project.sourceSets - project.sourceSets.test
+  }
+
+  apply plugin: 'be.insaneprogramming.gradle.animalsniffer'
+
+  animalsniffer {
+    signature = 'org.codehaus.mojo.signature:java16:+@signature'
   }
 
   repositories {
