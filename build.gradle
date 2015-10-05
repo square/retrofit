@@ -4,22 +4,33 @@ buildscript {
   }
   dependencies {
     classpath "be.insaneprogramming.gradle:animalsniffer-gradle-plugin:1.4.0"
+    classpath "net.researchgate:gradle-release:2.2.2"
   }
 }
 
+apply plugin: 'net.researchgate.release'
+
+release {
+  git {
+    requireBranch = ''
+  }
+}
 
 allprojects  {
   apply plugin: 'maven'
 
   group = 'com.squareup.retrofit'
-  version = '2.0.0-SNAPSHOT'
+  version = version
 }
 
 configure(subprojects - project(':adapters') - project('converters')) {
+  
   apply plugin: 'java'
 
   sourceCompatibility = 1.7
   targetCompatibility = 1.7
+
+  rootProject.afterReleaseBuild.dependsOn install
 
   apply plugin: 'checkstyle'
 
