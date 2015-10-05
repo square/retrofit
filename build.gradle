@@ -1,0 +1,20 @@
+allprojects  {
+  apply plugin: 'maven'
+
+  group = 'com.squareup.retrofit'
+  version = '2.0.0-SNAPSHOT'
+}
+
+subprojects {
+  repositories {
+    mavenLocal()
+
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+  }
+
+  configurations.all {
+}
+
+
+}
