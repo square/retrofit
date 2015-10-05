@@ -10,27 +10,24 @@ buildscript {
 
 apply plugin: 'net.researchgate.release'
 
-release {
-  git {
-    requireBranch = ''
-  }
-}
-
 allprojects  {
-  apply plugin: 'maven'
+  repositories{
+    jcenter()
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+  }
 
   group = 'com.squareup.retrofit'
   version = version
 }
 
 configure(subprojects - project(':adapters') - project('converters')) {
-  
+
   apply plugin: 'java'
 
   sourceCompatibility = 1.7
   targetCompatibility = 1.7
-
-  rootProject.afterReleaseBuild.dependsOn install
 
   apply plugin: 'checkstyle'
 
@@ -48,11 +45,41 @@ configure(subprojects - project(':adapters') - project('converters')) {
     signature = 'org.codehaus.mojo.signature:java16:+@signature'
   }
 
-  repositories {
-    mavenLocal()
+  apply plugin: 'maven'
 
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url "http://repo.maven.apache.org/maven2" }
+  uploadArchives {
+    repositories.mavenDeployer {
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/")
+
+      pom.project {
+        description "Type-safe HTTP client for Android and Java by Square, Inc."
+        url "http://github.com/square/retrofit/"
+        organization {
+          name "Square, Inc."
+          url "http://squareup.com"
+        }
+        licenses {
+          license {
+            name 'Apache 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        scm {
+          connection "scm:git:git://github.com/square/retrofit.git"
+          developerConnection "scm:git:ssh://git@github.com/square/retrofit.git"
+          url "http://github.com/square/retrofit"
+        }
+        issueManagement {
+          system "GitHub Issues"
+          url "http://github.com/square/retrofit/issues"
+        }
+      }
+    }
+  }
+  install.repositories.mavenInstaller{
+    pom = uploadArchives.repositories.mavenDeployer.pom
   }
 
+  rootProject.afterReleaseBuild.dependsOn install, uploadArchives
 }
