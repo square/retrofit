@@ -11,15 +11,21 @@ configure(subprojects - project(':adapters') - project('converters')) {
   sourceCompatibility = 1.7
   targetCompatibility = 1.7
 
+  apply plugin: 'checkstyle'
+
+  checkstyle {
+    configFile = new File(rootDir, "checkstyle.xml")
+    configProperties = [
+            'checkstyle.cache.file' : new File(project.buildDir, '/tmp/checkstyle-cachefile')
+    ]
+    sourceSets = project.sourceSets - project.sourceSets.test
+  }
+
   repositories {
     mavenLocal()
 
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     maven { url "http://repo.maven.apache.org/maven2" }
   }
-
-  configurations.all {
-}
-
 
 }
