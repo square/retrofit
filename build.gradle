@@ -1,10 +1,12 @@
 buildscript {
   repositories {
     jcenter()
+    maven { url 'http://repo.spring.io/plugins-release' }
   }
   dependencies {
     classpath "be.insaneprogramming.gradle:animalsniffer-gradle-plugin:1.4.0"
     classpath "net.researchgate:gradle-release:2.2.2"
+    classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.6'
   }
 }
 
@@ -24,7 +26,7 @@ allprojects  {
 
 configure(subprojects - project(':adapters') - project('converters')) {
 
-  apply plugin: 'java'
+  apply plugin: 'propdeps-maven' //applys java and maven too
 
   sourceCompatibility = 1.7
   targetCompatibility = 1.7
@@ -44,8 +46,6 @@ configure(subprojects - project(':adapters') - project('converters')) {
   animalsniffer {
     signature = 'org.codehaus.mojo.signature:java16:+@signature'
   }
-
-  apply plugin: 'maven'
 
   uploadArchives {
     repositories.mavenDeployer {
