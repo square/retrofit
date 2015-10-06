@@ -10,6 +10,8 @@ buildscript {
   }
 }
 
+description = "Retrofit (Parent)"
+
 apply plugin: 'net.researchgate.release'
 
 allprojects  {

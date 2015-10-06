@@ -1,8 +1,4 @@
 description = 'Converter: Protocol Buffers'
 dependencies {
-    compile project(':retrofit')
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: protobufVersion
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
-    testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
 }

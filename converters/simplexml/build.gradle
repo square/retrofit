@@ -1,8 +1,4 @@
 description = 'Converter: SimpleXML'
 dependencies {
-    compile project(':retrofit')
     compile group: 'org.simpleframework', name: 'simple-xml', version: simpleXmlVersion
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
-    testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
 }

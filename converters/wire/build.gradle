@@ -4,7 +4,4 @@ dependencies {
     compile(group: 'com.squareup.wire', name: 'wire-runtime', version: wireVersion) {
         exclude(module: 'okio')
     }
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
-    testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
 }

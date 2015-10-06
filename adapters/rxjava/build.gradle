@@ -1,9 +1,5 @@
 description = 'Adapter: RxJava'
 dependencies {
-    compile project(':retrofit')
-    compile group: 'io.reactivex', name: 'rxjava', version: rxJavaVersion
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-    testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
     testCompile group: 'com.google.guava', name: 'guava', version: guavaVersion
     testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
 }

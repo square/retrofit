@@ -1,7 +1,9 @@
 rootProject.name = 'parent'
 include ':retrofit'
+include ':adapters'
 include ':adapters:adapter-rxjava'
 include ':adapters:adapter-rxjava-mock'
+include ':converters'
 include ':converters:converter-gson'
 include ':converters:converter-protobuf'
 include ':converters:converter-jackson'
@@ -12,8 +14,10 @@ include ':retrofit-mock'
 include ':samples'
 
 project(':retrofit').projectDir = "$rootDir/retrofit" as File
+project(':adapters').projectDir = "$rootDir/adapters" as File
 project(':adapters:adapter-rxjava').projectDir = "$rootDir/adapters/rxjava" as File
 project(':adapters:adapter-rxjava-mock').projectDir = "$rootDir/adapters/rxjava-mock" as File
+project(':converters').projectDir = "$rootDir/converters" as File
 project(':converters:converter-gson').projectDir = "$rootDir/converters/gson" as File
 project(':converters:converter-protobuf').projectDir = "$rootDir/converters/protobuf" as File
 project(':converters:converter-jackson').projectDir = "$rootDir/converters/jackson" as File

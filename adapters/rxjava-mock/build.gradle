@@ -1,9 +1,5 @@
 description = 'Adapter: RxJava Mock'
 dependencies {
-    compile project(':retrofit')
     compile project(':retrofit-mock')
     compile project(':adapters:adapter-rxjava')
-    compile group: 'io.reactivex', name: 'rxjava', version: rxJavaVersion
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-    testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
 }
