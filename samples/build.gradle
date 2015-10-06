@@ -1,8 +1,8 @@
 description = 'Samples'
 dependencies {
-  compile project(':retrofit')
-  compile project(':retrofit-mock')
-  compile project(':converters:converter-gson')
-    compile group: 'com.squareup.okhttp', name: 'mockwebserver', version:'2.5.0'
-    compile group: 'com.google.guava', name: 'guava', version:'18.0'
+    compile project(':retrofit')
+    compile project(':retrofit-mock')
+    compile project(':converters:converter-gson')
+    compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
+    compile group: 'com.google.guava', name: 'guava', version: guavaVersion
 }

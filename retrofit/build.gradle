@@ -1,11 +1,11 @@
 description = 'Retrofit'
 dependencies {
-    compile group: 'com.squareup.okhttp', name: 'okhttp', version:'2.5.0'
-    compile group: 'com.google.android', name: 'android', version:'4.1.1.4'
-    compile group: 'org.codehaus.mojo', name: 'animal-sniffer-annotations', version:'1.14'
-    testCompile group: 'junit', name: 'junit', version:'4.12'
-    testCompile group: 'org.assertj', name: 'assertj-core', version:'1.7.0'
-    testCompile group: 'org.mockito', name: 'mockito-core', version:'1.9.5'
-    testCompile group: 'com.google.guava', name: 'guava', version:'18.0'
-    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version:'2.5.0'
+    compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpVersion
+    compile group: 'com.google.android', name: 'android', version: androidVersion
+    compile group: 'org.codehaus.mojo', name: 'animal-sniffer-annotations', version: animalSnifferVersion
+    testCompile group: 'junit', name: 'junit', version: junitVersion
+    testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
+    testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+    testCompile group: 'com.google.guava', name: 'guava', version: guavaVersion
+    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
 }

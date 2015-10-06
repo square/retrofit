@@ -1,7 +1,7 @@
 description = 'Retrofit Mock Adapter'
 dependencies {
   compile project(':retrofit')
-    testCompile group: 'junit', name: 'junit', version:'4.12'
+    testCompile group: 'junit', name: 'junit', version: junitVersion
     testCompile group: 'org.assertj', name: 'assertj-core', version:'1.7.0'
     testCompile group: 'org.mockito', name: 'mockito-core', version:'1.9.5'
 }
