@@ -26,10 +26,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Denotes a single part of a multi-part request.
  * <p>
- * The parameter type on which this annotation exists will be processed in one of three ways:
+ * The parameter type on which this annotation exists will be processed in one of two ways:
  * <ul>
- * <li>If the type is {@link String} the value will also be used directly with a {@code text/plain}
- * content type.</li>
+ * <li>If the type is {@link com.squareup.okhttp.RequestBody RequestBody} the value will be used
+ * directly with its content type.</li>
  * <li>Other object types will be converted to an appropriate representation by using
  * {@linkplain Converter a converter}.</li>
  * </ul>
@@ -39,10 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * &#64;Multipart
  * &#64;POST("/")
- * void example(&#64;Part("description") String description,
- *              &#64;Part("image") TypedFile image,
- *              ...
- * );
+ * Call&lt;<ResponseBody> example(
+ *     &#64;Part("description") String description,
+ *     &#64;Part(value = "image", encoding = "8-bit") RequestBody image);
  * </pre>
  * <p>
  * Part parameters may not be {@code null}.
