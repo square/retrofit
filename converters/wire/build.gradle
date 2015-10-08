@@ -1,0 +1,7 @@
+description = 'Converter: Wire Protocol Buffers'
+dependencies {
+    compile project(':retrofit')
+    compile(group: 'com.squareup.wire', name: 'wire-runtime', version: wireVersion) {
+        exclude(module: 'okio')
+    }
+}

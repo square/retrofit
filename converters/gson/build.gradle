@@ -1,0 +1,4 @@
+description = 'Converter: Gson'
+dependencies {
+    compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+}

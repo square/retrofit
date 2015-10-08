@@ -1,0 +1,4 @@
+description = 'Converter: SimpleXML'
+dependencies {
+    compile group: 'org.simpleframework', name: 'simple-xml', version: simpleXmlVersion
+}

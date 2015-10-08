@@ -1,0 +1,4 @@
+description = 'Converter: Moshi'
+dependencies {
+    compile group: 'com.squareup.moshi', name: 'moshi', version: moshiVersion
+}

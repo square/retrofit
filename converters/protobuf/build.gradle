@@ -1,0 +1,4 @@
+description = 'Converter: Protocol Buffers'
+dependencies {
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: protobufVersion
+}

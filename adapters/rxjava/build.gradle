@@ -1,0 +1,5 @@
+description = 'Adapter: RxJava'
+dependencies {
+    testCompile group: 'com.google.guava', name: 'guava', version: guavaVersion
+    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
+}

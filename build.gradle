@@ -1,0 +1,87 @@
+buildscript {
+  repositories {
+    jcenter()
+    maven { url 'http://repo.spring.io/plugins-release' }
+  }
+  dependencies {
+    classpath "be.insaneprogramming.gradle:animalsniffer-gradle-plugin:1.4.0"
+    classpath "net.researchgate:gradle-release:2.2.2"
+    classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.6'
+  }
+}
+
+description = "Retrofit (Parent)"
+
+apply plugin: 'net.researchgate.release'
+
+allprojects  {
+  repositories{
+    jcenter()
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+  }
+
+  group = 'com.squareup.retrofit'
+  version = version
+}
+
+configure(subprojects - project(':adapters') - project('converters')) {
+
+  apply plugin: 'propdeps-maven' //applys java and maven too
+
+  sourceCompatibility = 1.7
+  targetCompatibility = 1.7
+
+  apply plugin: 'checkstyle'
+
+  checkstyle {
+    configFile = new File(rootDir, "checkstyle.xml")
+    configProperties = [
+            'checkstyle.cache.file' : new File(project.buildDir, '/tmp/checkstyle-cachefile')
+    ]
+    sourceSets = project.sourceSets - project.sourceSets.test
+  }
+
+  apply plugin: 'be.insaneprogramming.gradle.animalsniffer'
+
+  animalsniffer {
+    signature = 'org.codehaus.mojo.signature:java16:+@signature'
+  }
+
+  uploadArchives {
+    repositories.mavenDeployer {
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/")
+
+      pom.project {
+        description "Type-safe HTTP client for Android and Java by Square, Inc."
+        url "http://github.com/square/retrofit/"
+        organization {
+          name "Square, Inc."
+          url "http://squareup.com"
+        }
+        licenses {
+          license {
+            name 'Apache 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        scm {
+          connection "scm:git:git://github.com/square/retrofit.git"
+          developerConnection "scm:git:ssh://git@github.com/square/retrofit.git"
+          url "http://github.com/square/retrofit"
+        }
+        issueManagement {
+          system "GitHub Issues"
+          url "http://github.com/square/retrofit/issues"
+        }
+      }
+    }
+  }
+  install.repositories.mavenInstaller{
+    pom = uploadArchives.repositories.mavenDeployer.pom
+  }
+
+  rootProject.afterReleaseBuild.dependsOn install, uploadArchives
+}

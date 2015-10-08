@@ -1,0 +1,10 @@
+description = "Converters"
+
+subprojects {
+    dependencies {
+        compile project(':retrofit')
+        testCompile group: 'junit', name: 'junit', version: junitVersion
+        testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpVersion
+        testCompile group: 'org.assertj', name: 'assertj-core', version: assertjVersion
+    }
+}

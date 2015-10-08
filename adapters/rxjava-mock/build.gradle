@@ -1,0 +1,5 @@
+description = 'Adapter: RxJava Mock'
+dependencies {
+    compile project(':retrofit-mock')
+    compile project(':adapters:adapter-rxjava')
+}
