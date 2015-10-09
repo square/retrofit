@@ -8,6 +8,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -19,7 +20,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import okio.Buffer;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import javax.activation.MimetypesFileTypeMap;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -35,6 +39,7 @@ import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Part;
+import retrofit.http.PartFile;
 import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
@@ -48,6 +53,8 @@ import static org.junit.Assert.fail;
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
 public final class RequestBuilderTest {
   private static final MediaType TEXT_PLAIN = MediaType.parse("text/plain");
+
+  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Test public void customMethodNoBody() {
     class Example {
@@ -1355,6 +1362,36 @@ public final class RequestBuilderTest {
       assertThat(e).hasMessage(
           "@PartMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
+  }
+
+  @Test public void multipartPartFile() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartFile("image") File file) {
+        return null;
+      }
+    }
+    File file = tempFolder.newFile("file.png");
+    Request request = buildRequest(Example.class, file);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+    String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(file);
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"image\";")
+        .contains("filename=\"file.png\"");
+    assertThat(bodyString)
+        .contains("Content-Type: " + contentType);
+    assertThat(bodyString)
+        .contains("Content-Transfer-Encoding: binary");
   }
 
   @Test public void multipartNullRemovesPart() throws IOException {
