@@ -16,7 +16,9 @@
 package retrofit;
 
 import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -254,6 +256,29 @@ abstract class RequestBuilderAction {
         }
         builder.addPart(headers, body);
       }
+    }
+  }
+
+  static final class PartFile extends RequestBuilderAction {
+    private final String partName;
+    private final String contentType;
+
+    PartFile(String partName, String contentType) {
+      this.partName = partName;
+      this.contentType = contentType;
+    }
+
+    @Override void perform(RequestBuilder builder, Object value) {
+      if (value == null) return; // Skip null values.
+
+      File file = (File) value;
+      Headers headers = Headers.of(
+          "Content-Disposition", "form-data; name=\"" + partName + "\"; filename=\""
+              + file.getName() + "\"",
+          "Content-Transfer-Encoding", "binary");
+      MediaType mediaType = MediaType.parse(contentType);
+      RequestBody body = RequestBody.create(mediaType, file);
+      builder.addPart(headers, body);
     }
   }
 

@@ -17,6 +17,7 @@ package retrofit;
 
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -40,6 +41,7 @@ import retrofit.http.PATCH;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Part;
+import retrofit.http.PartFile;
 import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
@@ -315,6 +317,18 @@ final class RequestFactoryParser {
             PartMap partMap = (PartMap) methodParameterAnnotation;
             action = new RequestBuilderAction.PartMap(retrofit, partMap.encoding(),
                 methodParameterAnnotations);
+            gotPart = true;
+
+          } else if (methodParameterAnnotation instanceof PartFile) {
+            if (!isMultipart) {
+              throw parameterError(i,
+                  "@PartFile parameters can only be used with multipart encoding.");
+            }
+            if (methodParameterType != File.class) {
+              throw parameterError(i, "@PartFile parameter type must be File.");
+            }
+            PartFile partFile = (PartFile) methodParameterAnnotation;
+            action = new RequestBuilderAction.PartFile(partFile.value(), partFile.contentType());
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {
