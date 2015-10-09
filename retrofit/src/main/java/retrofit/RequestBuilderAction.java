@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.util.Map;
-import javax.activation.MimetypesFileTypeMap;
 
 import static retrofit.Utils.checkNotNull;
 
@@ -262,9 +261,11 @@ abstract class RequestBuilderAction {
 
   static final class PartFile extends RequestBuilderAction {
     private final String partName;
+    private final String contentType;
 
-    PartFile(String partName) {
+    PartFile(String partName, String contentType) {
       this.partName = partName;
+      this.contentType = contentType;
     }
 
     @Override void perform(RequestBuilder builder, Object value) {
@@ -275,8 +276,7 @@ abstract class RequestBuilderAction {
           "Content-Disposition", "form-data; name=\"" + partName + "\"; filename=\""
               + file.getName() + "\"",
           "Content-Transfer-Encoding", "binary");
-      MediaType mediaType = MediaType.parse(
-          MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(file));
+      MediaType mediaType = MediaType.parse(contentType);
       RequestBody body = RequestBody.create(mediaType, file);
       builder.addPart(headers, body);
     }

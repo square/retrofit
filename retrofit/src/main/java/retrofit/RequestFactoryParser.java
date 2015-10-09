@@ -328,7 +328,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@PartFile parameter type must be File.");
             }
             PartFile partFile = (PartFile) methodParameterAnnotation;
-            action = new RequestBuilderAction.PartFile(partFile.value());
+            action = new RequestBuilderAction.PartFile(partFile.value(), partFile.contentType());
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {

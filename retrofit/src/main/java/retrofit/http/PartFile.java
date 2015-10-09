@@ -27,24 +27,26 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Values may be {@code null} which will omit them from the request body.
  * <p>
- * The {@code Content-Transfer-Encoding} will be {@code binary}. The {@code Content-Type} and
- * {@code filename} parameter will both be read from the {@code File} provided.
+ * The {@code Content-Transfer-Encoding} will be {@code binary} and the {@code filename} parameter
+ * value will be read from the {@code File} provided. If you need finer control, consider using
+ * {@link PartMap} instead.
  * <p>
  * <pre>
  * &#64;Multipart
  * &#64;POST("/")
  * Call&lt;ResponseBody&gt; upload(
- *     &#64;PartFile("image") File imageFile);
+ *     &#64;PartFile(value = "image", contentType = "image/png") File imageFile);
  * </pre>
  * <p>
  * PartFile parameters may not be {@code null}.
  *
  * @see Multipart
- * @see Part
+ * @see PartMap
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface PartFile {
   String value();
+  String contentType();
 }

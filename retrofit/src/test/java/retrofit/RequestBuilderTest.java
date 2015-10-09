@@ -23,7 +23,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import javax.activation.MimetypesFileTypeMap;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -1368,7 +1367,7 @@ public final class RequestBuilderTest {
     class Example {
       @Multipart
       @POST("/foo/bar/") //
-      Call<ResponseBody> method(@PartFile("image") File file) {
+      Call<ResponseBody> method(@PartFile(value = "image", contentType = "image/png") File file) {
         return null;
       }
     }
@@ -1382,14 +1381,13 @@ public final class RequestBuilderTest {
     Buffer buffer = new Buffer();
     body.writeTo(buffer);
     String bodyString = buffer.readUtf8();
-    String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(file);
 
     assertThat(bodyString)
         .contains("Content-Disposition: form-data;")
         .contains("name=\"image\";")
         .contains("filename=\"file.png\"");
     assertThat(bodyString)
-        .contains("Content-Type: " + contentType);
+        .contains("Content-Type: image/png");
     assertThat(bodyString)
         .contains("Content-Transfer-Encoding: binary");
   }
