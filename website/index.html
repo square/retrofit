@@ -144,7 +144,7 @@ Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
                 <li><a href="http://simple.sourceforge.net/">Simple XML</a>: <code>com.squareup.retrofit:converter-simplexml</code></li>
               </ul>
               <h4>Custom Converters</h4>
-              <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that implements the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/Converter.java"><code>Converter.Factory</code> interface</a> and pass in an instance when building your adapter.</p>
+              <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that extends the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/Converter.java"><code>Converter.Factory</code> class</a> and pass in an instance when building your adapter.</p>
             </section>
 
             <section id="download">
