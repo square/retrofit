@@ -42,6 +42,7 @@ import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
+import retrofit2.http.PartFile;
 import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -454,6 +455,18 @@ final class RequestFactoryParser {
 
             PartMap partMap = (PartMap) methodParameterAnnotation;
             action = new RequestAction.PartMap<>(valueConverter, partMap.encoding());
+            gotPart = true;
+
+          } else if (methodParameterAnnotation instanceof PartFile) {
+            if (!isMultipart) {
+              throw parameterError(i,
+                  "@PartFile parameters can only be used with multipart encoding.");
+            }
+            if (methodParameterType != TypedFile.class) {
+              throw parameterError(i, "@PartFile parameter type must be TypedFile.");
+            }
+            PartFile partFile = (PartFile) methodParameterAnnotation;
+            action = new RequestAction.PartFile(partFile.value());
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof Body) {
