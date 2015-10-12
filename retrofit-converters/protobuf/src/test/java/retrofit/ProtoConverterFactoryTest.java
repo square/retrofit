@@ -120,7 +120,9 @@ public final class ProtoConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(InvalidProtocolBufferException.class)
+      assertThat(e).isExactlyInstanceOf(RuntimeException.class)
+          .hasMessage("Problem has occurred during conversion of response for Service.get(), HTTP method = GET, relative path template = /");
+      assertThat(e.getCause().getCause()).isInstanceOf(InvalidProtocolBufferException.class)
           .hasMessageContaining("input ended unexpectedly");
     }
   }

@@ -51,7 +51,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed");
+      if (executed) throw new IllegalStateException("Already executed, " + toString());
       executed = true;
     }
 
@@ -59,7 +59,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       rawCall = createRawCall();
     } catch (Throwable t) {
-      callback.onFailure(t);
+      callback.onFailure(new RuntimeException("Can not create call for " + toString(), t));
       return;
     }
     if (canceled) {
@@ -103,7 +103,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   public Response<T> execute() throws IOException {
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed");
+      if (executed) throw new IllegalStateException("Already executed, " + toString());
       executed = true;
     }
 
@@ -151,7 +151,8 @@ final class OkHttpCall<T> implements Call<T> {
       // If the underlying source threw an exception, propagate that rather than indicating it was
       // a runtime exception.
       catchingBody.throwIfCaught();
-      throw e;
+      throw new RuntimeException("Problem has occurred during conversion of response for "
+          + toString(), e);
     }
   }
 
@@ -161,6 +162,12 @@ final class OkHttpCall<T> implements Call<T> {
     if (rawCall != null) {
       rawCall.cancel();
     }
+  }
+
+  @Override
+  public String toString() {
+    // Should never include sensitive data such as query params, headers and so on.
+    return requestFactory.toString();
   }
 
   static final class NoContentResponseBody extends ResponseBody {

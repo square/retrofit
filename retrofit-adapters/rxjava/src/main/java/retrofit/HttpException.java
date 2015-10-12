@@ -6,8 +6,8 @@ public final class HttpException extends Exception {
   private final String message;
   private final transient Response<?> response;
 
-  public HttpException(Response<?> response) {
-    super("HTTP " + response.code() + " " + response.message());
+  public HttpException(Response<?> response, String callDescription) {
+    super("HTTP " + response.code() + " " + response.message() + ", " + callDescription);
     this.code = response.code();
     this.message = response.message();
     this.response = response;
