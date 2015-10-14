@@ -63,6 +63,7 @@
     <wire.version>1.7.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.0.0</moshi.version>
+    <fastjson.version>1.1.45.android</fastjson.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.12</junit.version>
@@ -147,6 +148,11 @@
         <groupId>com.squareup.moshi</groupId>
         <artifactId>moshi</artifactId>
         <version>${moshi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.alibaba</groupId>
+        <artifactId>fastjson</artifactId>
+        <version>${fastjson.version}</version>
       </dependency>
 
       <dependency>
