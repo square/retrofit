@@ -21,5 +21,6 @@
     <module>wire</module>
     <module>simplexml</module>
     <module>moshi</module>
+    <module>fastjson</module>
   </modules>
 </project>
