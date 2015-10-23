@@ -29,14 +29,18 @@ import rx.subscriptions.Subscriptions;
  * TODO docs
  */
 public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
+  private final boolean subscribeAsync;
+
   /**
    * TODO
    */
   public static RxJavaCallAdapterFactory create() {
-    return new RxJavaCallAdapterFactory();
+    Builder builder = new Builder();
+    return builder.build();
   }
 
-  private RxJavaCallAdapterFactory() {
+  private RxJavaCallAdapterFactory(boolean subscribeAsync) {
+    this.subscribeAsync = subscribeAsync;
   }
 
   @Override
@@ -70,7 +74,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
             + " as Response<Foo> or Response<? extends Foo>");
       }
       Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) observableType);
-      return new ResponseCallAdapter(responseType);
+      return new ResponseCallAdapter(responseType, subscribeAsync);
     }
 
     if (rawObservableType == Result.class) {
@@ -79,17 +83,19 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
             + " as Result<Foo> or Result<? extends Foo>");
       }
       Type responseType = Utils.getSingleParameterUpperBound((ParameterizedType) observableType);
-      return new ResultCallAdapter(responseType);
+      return new ResultCallAdapter(responseType, subscribeAsync);
     }
 
-    return new SimpleCallAdapter(observableType);
+    return new SimpleCallAdapter(observableType, subscribeAsync);
   }
 
   static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
     private final Call<T> originalCall;
+    private final boolean subscribeAsync;
 
-    private CallOnSubscribe(Call<T> originalCall) {
+    private CallOnSubscribe(Call<T> originalCall, boolean subscribeAsync) {
       this.originalCall = originalCall;
+      this.subscribeAsync = subscribeAsync;
     }
 
     @Override public void call(final Subscriber<? super Response<T>> subscriber) {
@@ -103,6 +109,43 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
         }
       }));
 
+      if (subscribeAsync) {
+        enqueueSubscriber(call, subscriber);
+      } else {
+        executeSubscriber(call, subscriber);
+      }
+    }
+
+    private void enqueueSubscriber(Call<T> call, Subscriber<? super Response<T>> subscriber) {
+      call.enqueue(new Callback<T>() {
+        @Override public void onResponse(Response<T> response, Retrofit retrofit) {
+          if (subscriber.isUnsubscribed()) {
+            return;
+          }
+          try {
+            subscriber.onNext(response);
+          } catch (Throwable t) {
+            if (!subscriber.isUnsubscribed()) {
+              subscriber.onError(t);
+            }
+            return;
+          }
+          if (!subscriber.isUnsubscribed()) {
+            subscriber.onCompleted();
+          }
+        }
+
+        @Override public void onFailure(Throwable t) {
+          Exceptions.throwIfFatal(t);
+          if (subscriber.isUnsubscribed()) {
+            return;
+          }
+          subscriber.onError(t);
+        }
+      });
+    }
+
+    private void executeSubscriber(Call<T> call, Subscriber<? super Response<T>> subscriber) {
       try {
         Response<T> response = call.execute();
         if (!subscriber.isUnsubscribed()) {
@@ -124,9 +167,11 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
 
   static final class ResponseCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
+    private final boolean subscribeAsync;
 
-    ResponseCallAdapter(Type responseType) {
+    ResponseCallAdapter(Type responseType, boolean subscribeAsync) {
       this.responseType = responseType;
+      this.subscribeAsync = subscribeAsync;
     }
 
     @Override public Type responseType() {
@@ -134,15 +179,17 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public <R> Observable<Response<R>> adapt(Call<R> call) {
-      return Observable.create(new CallOnSubscribe<>(call));
+      return Observable.create(new CallOnSubscribe<>(call, subscribeAsync));
     }
   }
 
   static final class SimpleCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
+    private final boolean subscribeAsync;
 
-    SimpleCallAdapter(Type responseType) {
+    SimpleCallAdapter(Type responseType, boolean subscribeAsync) {
       this.responseType = responseType;
+      this.subscribeAsync = subscribeAsync;
     }
 
     @Override public Type responseType() {
@@ -150,7 +197,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public <R> Observable<R> adapt(Call<R> call) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
+      return Observable.create(new CallOnSubscribe<>(call, subscribeAsync)) //
           .flatMap(new Func1<Response<R>, Observable<R>>() {
             @Override public Observable<R> call(Response<R> response) {
               if (response.isSuccess()) {
@@ -164,9 +211,11 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
 
   static final class ResultCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
+    private final boolean subscribeAsync;
 
-    ResultCallAdapter(Type responseType) {
+    ResultCallAdapter(Type responseType, boolean subscribeAsync) {
       this.responseType = responseType;
+      this.subscribeAsync = subscribeAsync;
     }
 
     @Override public Type responseType() {
@@ -185,6 +234,20 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
               return Result.error(throwable);
             }
           });
+    }
+  }
+
+  public static final class Builder {
+    private boolean subscribeAsync;
+    private Observable.Transformer transformer;
+
+    public Builder subscribeAsync() {
+      subscribeAsync = true;
+      return this;
+    }
+
+    public RxJavaCallAdapterFactory build() {
+      return new RxJavaCallAdapterFactory(subscribeAsync);
     }
   }
 }
