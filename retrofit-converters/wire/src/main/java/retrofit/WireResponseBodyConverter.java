@@ -17,25 +17,24 @@ package retrofit;
 
 import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
-import com.squareup.wire.Wire;
+import com.squareup.wire.ProtoAdapter;
 import java.io.IOException;
 import okio.BufferedSource;
 
-final class WireResponseBodyConverter<T extends Message> implements Converter<ResponseBody, T> {
-  private final Wire wire;
-  private final Class<T> cls;
+final class WireResponseBodyConverter<T extends Message<T, ?>>
+    implements Converter<ResponseBody, T> {
+  private final ProtoAdapter<T> adapter;
 
-  WireResponseBodyConverter(Wire wire, Class<T> cls) {
-    this.wire = wire;
-    this.cls = cls;
+  WireResponseBodyConverter(ProtoAdapter<T> adapter) {
+    this.adapter = adapter;
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
-    BufferedSource source = value.source();
     try {
-      return wire.parseFrom(source, cls);
+      BufferedSource source = value.source();
+      return adapter.decode(source);
     } finally {
-      Utils.closeQuietly(source);
+      Utils.closeQuietly(value);
     }
   }
 }
