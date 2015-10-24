@@ -18,13 +18,22 @@ package retrofit;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.wire.Message;
+import com.squareup.wire.ProtoAdapter;
 import java.io.IOException;
+import okio.Buffer;
 
-final class WireRequestBodyConverter<T extends Message> implements Converter<T, RequestBody> {
+final class WireRequestBodyConverter<T extends Message<T, ?>> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
+  private final ProtoAdapter<T> adapter;
+
+  WireRequestBodyConverter(ProtoAdapter<T> adapter) {
+    this.adapter = adapter;
+  }
+
   @Override public RequestBody convert(T value) throws IOException {
-    byte[] bytes = value.toByteArray();
-    return RequestBody.create(MEDIA_TYPE, bytes);
+    Buffer buffer = new Buffer();
+    adapter.encode(buffer, value);
+    return RequestBody.create(MEDIA_TYPE, buffer.snapshot());
   }
 }

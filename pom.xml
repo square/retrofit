@@ -60,7 +60,7 @@
     <gson.version>2.4</gson.version>
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.4.3</jackson.version>
-    <wire.version>1.7.0</wire.version>
+    <wire.version>2.0.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.0.0</moshi.version>
 
