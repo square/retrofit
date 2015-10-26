@@ -3,9 +3,6 @@
 set -ex
 
 REPO="git@github.com:square/retrofit.git"
-GROUP_ID="com.squareup.retrofit"
-ARTIFACT_ID="retrofit"
-
 DIR=temp-clone
 
 # Delete any existing temporary website clone
@@ -20,17 +17,11 @@ cd $DIR
 # Checkout and track the gh-pages branch
 git checkout -t origin/gh-pages
 
-# Delete everything
-rm -rf *
+# Delete everything that isn't versioned (1.x, 2.x)
+ls | grep -E -v '^\d+\.x$' | xargs rm -rf
 
 # Copy website files from real repo
 cp -R ../website/* .
-
-# Download the latest javadoc
-curl -L "https://search.maven.org/remote_content?g=$GROUP_ID&a=$ARTIFACT_ID&v=LATEST&c=javadoc" > javadoc.zip
-mkdir javadoc
-unzip javadoc.zip -d javadoc
-rm javadoc.zip
 
 # Stage all files in git and create a commit
 git add .
