@@ -16,11 +16,12 @@
 package retrofit;
 
 import com.squareup.okhttp.ResponseBody;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-final class MethodHandler<T> {
+final class MethodHandler<T> implements CallAdapter<T> {
   @SuppressWarnings("unchecked")
   static MethodHandler<?> create(Retrofit retrofit, Method method) {
     CallAdapter<Object> callAdapter = (CallAdapter<Object>) createCallAdapter(method, retrofit);
@@ -72,6 +73,14 @@ final class MethodHandler<T> {
   }
 
   Object invoke(Object... args) {
-    return callAdapter.adapt(new OkHttpCall<>(retrofit, requestFactory, responseConverter, args));
+    return adapt(new OkHttpCall<>(retrofit, requestFactory, responseConverter, args));
+  }
+
+  @Override public Type responseType() {
+    return callAdapter.responseType();
+  }
+
+  @Override public <R> T adapt(Call<R> call) {
+    return callAdapter.adapt(call);
   }
 }

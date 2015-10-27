@@ -26,11 +26,10 @@ import java.io.IOException;
 import okio.Buffer;
 import okio.BufferedSink;
 
-final class RequestBuilder {
+final class RestAdapterRawRequestBuilder {
   private static final char[] HEX_DIGITS =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
   private static final String PATH_SEGMENT_ENCODE_SET = " \"<>^`{}|/\\?#";
-
   private final String method;
 
   private final HttpUrl baseUrl;
@@ -45,7 +44,7 @@ final class RequestBuilder {
   private FormEncodingBuilder formEncodingBuilder;
   private RequestBody body;
 
-  RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
+  RestAdapterRawRequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
       MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
     this.baseUrl = baseUrl;

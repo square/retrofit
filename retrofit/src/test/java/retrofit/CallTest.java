@@ -22,6 +22,10 @@ import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
+
+import org.junit.Rule;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -31,8 +35,6 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
-import org.junit.Rule;
-import org.junit.Test;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;

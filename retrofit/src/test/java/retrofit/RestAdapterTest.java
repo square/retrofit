@@ -8,6 +8,10 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+
+import org.junit.Rule;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -22,8 +26,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Rule;
-import org.junit.Test;
+
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
@@ -40,7 +43,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-public final class RetrofitTest {
+public final class RestAdapterTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface CallMethod {
@@ -332,7 +335,7 @@ public final class RetrofitTest {
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
               + " * retrofit.BuiltInConverters\n"
-              + " * retrofit.RetrofitTest$1");
+              + " * retrofit.RestAdapterTest$1");
     }
   }
 

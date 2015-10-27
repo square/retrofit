@@ -18,14 +18,17 @@ package retrofit;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import java.io.EOFException;
-import java.io.IOException;
-import java.util.List;
-import okio.Buffer;
-import okio.ByteString;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.util.List;
+
+import okio.Buffer;
+import okio.ByteString;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
