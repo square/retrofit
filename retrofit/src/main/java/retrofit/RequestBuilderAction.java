@@ -207,7 +207,7 @@ abstract class RequestBuilderAction {
         //noinspection unchecked
         body = converter.convert((T) value);
       } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody");
+        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
       builder.addPart(headers, body);
     }
@@ -250,7 +250,7 @@ abstract class RequestBuilderAction {
         try {
           body = converter.convert(entryValue);
         } catch (IOException e) {
-          throw new RuntimeException("Unable to convert " + entryValue + " to RequestBody");
+          throw new RuntimeException("Unable to convert " + entryValue + " to RequestBody", e);
         }
         builder.addPart(headers, body);
       }
@@ -273,7 +273,7 @@ abstract class RequestBuilderAction {
         //noinspection unchecked
         body = converter.convert((T) value);
       } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody");
+        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
       builder.setBody(body);
     }
