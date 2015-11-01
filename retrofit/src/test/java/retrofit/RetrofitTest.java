@@ -115,10 +115,29 @@ public final class RetrofitTest {
     }
   }
 
+  @Test public void validateEagerlyDisabledByDefault() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    // Should not throw exception about incorrect configuration of the VoidService
+    retrofit.create(VoidService.class);
+  }
+
+  @Test public void validateEagerlyDisabledByUser() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .validateEagerly(false)
+        .build();
+
+    // Should not throw exception about incorrect configuration of the VoidService
+    retrofit.create(VoidService.class);
+  }
+
   @Test public void validateEagerlyFailsAtCreation() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .validateEagerly()
+        .validateEagerly(true)
         .build();
 
     try {

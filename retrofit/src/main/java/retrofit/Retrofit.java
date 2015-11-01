@@ -349,8 +349,8 @@ public final class Retrofit {
      * When calling {@link #create} on the resulting {@link Retrofit} instance, eagerly validate
      * the configuration of all methods in the supplied interface.
      */
-    public Builder validateEagerly() {
-      validateEagerly = true;
+    public Builder validateEagerly(boolean validateEagerly) {
+      this.validateEagerly = validateEagerly;
       return this;
     }
 
