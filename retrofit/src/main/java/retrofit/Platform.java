@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+import org.robovm.apple.foundation.NSOperationQueue;
 
 class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -36,6 +37,11 @@ class Platform {
       if (Build.VERSION.SDK_INT != 0) {
         return new Android();
       }
+    } catch (ClassNotFoundException ignored) {
+    }
+    try {
+      Class.forName("org.robovm.apple.foundation.NSObject");
+      return new IOS();
     } catch (ClassNotFoundException ignored) {
     }
     try {
@@ -91,6 +97,23 @@ class Platform {
 
       @Override public void execute(Runnable r) {
         handler.post(r);
+      }
+    }
+  }
+  
+  static class IOS extends Platform {
+    @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
+      if (callbackExecutor == null) {
+        callbackExecutor = new MainThreadExecutor();
+      }
+      return new ExecutorCallAdapterFactory(callbackExecutor);
+    }
+
+    static class MainThreadExecutor implements Executor {
+      private final NSOperationQueue queue = NSOperationQueue.getMainQueue();
+
+      @Override public void execute(Runnable r) {
+        queue.addOperation(r);
       }
     }
   }

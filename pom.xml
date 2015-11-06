@@ -52,6 +52,7 @@
     <android.platform>16</android.platform>
     <okhttp.version>2.5.0</okhttp.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
+    <robovm.version>1.9.0</robovm.version>
 
     <!-- Adapter Dependencies -->
     <rxjava.version>1.0.14</rxjava.version>
@@ -101,6 +102,16 @@
         <groupId>com.google.android</groupId>
         <artifactId>android</artifactId>
         <version>${android.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.robovm</groupId>
+        <artifactId>robovm-rt</artifactId>
+        <version>${robovm.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.robovm</groupId>
+        <artifactId>robovm-cocoatouch</artifactId>
+        <version>${robovm.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.mojo</groupId>
