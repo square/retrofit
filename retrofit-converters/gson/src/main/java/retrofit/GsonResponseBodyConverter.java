@@ -32,7 +32,12 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
     try {
       return adapter.fromJson(reader);
     } finally {
-      Utils.closeQuietly(reader);
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 }
