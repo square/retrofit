@@ -29,7 +29,7 @@ import okio.BufferedSink;
 final class RequestBuilder {
   private static final char[] HEX_DIGITS =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-  private static final String PATH_SEGMENT_ENCODE_SET = " \"<>^`{}|/\\?#";
+  private static final String PATH_SEGMENT_ENCODE_SET = " \"<>^`{}|\\?#";
 
   private final String method;
 
