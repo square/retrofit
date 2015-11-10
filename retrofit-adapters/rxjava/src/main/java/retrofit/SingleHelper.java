@@ -26,8 +26,8 @@ final class SingleHelper {
         return callAdapter.responseType();
       }
 
-      @Override public <R> Single<?> adapt(Call<R> call) {
-        Observable<?> observable = callAdapter.adapt(call);
+      @Override public <R> Single<?> adapt(Call<R> call, Retrofit retrofit) {
+        Observable<?> observable = callAdapter.adapt(call, retrofit);
         return observable.toSingle();
       }
     };

@@ -172,7 +172,7 @@ public final class RetrofitTest {
             return Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
           }
 
-          @Override public <R> Call<R> adapt(Call<R> call) {
+          @Override public <R> Call<R> adapt(Call<R> call, Retrofit retrofit) {
             adapterCalled.set(true);
             return call;
           }
@@ -202,7 +202,7 @@ public final class RetrofitTest {
             return String.class;
           }
 
-          @Override public <R> String adapt(Call<R> call) {
+          @Override public <R> String adapt(Call<R> call, Retrofit retrofit) {
             return "Hi!";
           }
         };

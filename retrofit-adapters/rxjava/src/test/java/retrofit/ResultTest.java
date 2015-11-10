@@ -16,15 +16,27 @@
 package retrofit;
 
 import java.io.IOException;
+
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class ResultTest {
+
+  private Retrofit retrofit;
+
+  @Before
+  public void setUp() {
+    retrofit = new Retrofit.Builder()
+        .baseUrl("http://madeup.com")
+        .build();
+  }
+
   @Test public void response() {
     Response<String> response = Response.success("Hi");
-    Result<String> result = Result.response(response);
+    Result<String> result = Result.response(response, retrofit);
     assertThat(result.isError()).isFalse();
     assertThat(result.error()).isNull();
     assertThat(result.response()).isSameAs(response);
@@ -32,10 +44,20 @@ public final class ResultTest {
 
   @Test public void nullResponseThrows() {
     try {
-      Result.response(null);
+      Result.response(null, retrofit);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("response == null");
+    }
+  }
+
+  @Test public void nullRetrofitThrows() {
+    try {
+      Response<String> response = Response.success("Hi");
+      Result.response(response, null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("retrofit == null");
     }
   }
 
