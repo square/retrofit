@@ -32,7 +32,12 @@ final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> 
     try {
       return adapter.fromJson(source);
     } finally {
-      Utils.closeQuietly(source);
+      if (source != null) {
+        try {
+          source.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 }

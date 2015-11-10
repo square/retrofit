@@ -32,7 +32,12 @@ final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T
     try {
       return adapter.readValue(reader);
     } finally {
-      Utils.closeQuietly(reader);
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 }
