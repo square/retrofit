@@ -26,12 +26,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.robovm</groupId>
-      <artifactId>robovm-cocoatouch</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
       <groupId>org.codehaus.mojo</groupId>
       <artifactId>animal-sniffer-annotations</artifactId>
       <optional>true</optional>

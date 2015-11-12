@@ -104,16 +104,6 @@
         <version>${android.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.robovm</groupId>
-        <artifactId>robovm-rt</artifactId>
-        <version>${robovm.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.robovm</groupId>
-        <artifactId>robovm-cocoatouch</artifactId>
-        <version>${robovm.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-annotations</artifactId>
         <version>${animal.sniffer.version}</version>
