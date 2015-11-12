@@ -100,7 +100,7 @@ class Platform {
       }
     }
   }
-  
+
   static class IOS extends Platform {
     @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
       if (callbackExecutor == null) {
