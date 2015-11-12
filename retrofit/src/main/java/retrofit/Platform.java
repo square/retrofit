@@ -42,7 +42,7 @@ class Platform {
     try {
       Class.forName("org.robovm.apple.foundation.NSObject");
       return new IOS();
-    } catch (ClassNotFoundException ignored) {
+    } catch (ClassNotFoundException | UnsatisfiedLinkError ignored) {
     }
     try {
       Class.forName("java.util.Optional");
