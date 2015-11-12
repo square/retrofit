@@ -26,12 +26,10 @@ import retrofit.mock.NetworkBehavior;
 public final class SimpleMockService {
   /** A mock implementation of the {@link GitHub} API interface. */
   static final class MockGitHub implements GitHub {
-    private final Retrofit retrofit;
     private final Map<String, Map<String, List<Contributor>>> ownerRepoContributors;
 
-    public MockGitHub(Retrofit retrofit) {
-      this.retrofit = retrofit;
-      this.ownerRepoContributors = new LinkedHashMap<>();
+    public MockGitHub() {
+      ownerRepoContributors = new LinkedHashMap<>();
 
       // Seed some mock data.
       addContributor("square", "retrofit", "John Doe", 12);
@@ -50,7 +48,7 @@ public final class SimpleMockService {
           response = contributors;
         }
       }
-      return Calls.response(response, retrofit);
+      return Calls.response(response);
     }
 
     public void addContributor(String owner, String repo, String name, int contributions) {
@@ -83,7 +81,7 @@ public final class SimpleMockService {
 
     // Create the mock implementation and use MockRetrofit to apply the behavior to it.
     MockRetrofit mockRetrofit = new MockRetrofit(behavior, new CallBehaviorAdapter(retrofit, bg));
-    MockGitHub mockGitHub = new MockGitHub(retrofit);
+    MockGitHub mockGitHub = new MockGitHub();
     GitHub gitHub = mockRetrofit.create(GitHub.class, mockGitHub);
 
     // Query for some contributors for a few repositories.

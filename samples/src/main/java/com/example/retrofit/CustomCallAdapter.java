@@ -73,7 +73,7 @@ public final class CustomCallAdapter {
         call.cancel();
       }
 
-      @Override public void onResponse(Response<T> response, Retrofit retrofit) {
+      @Override public void onResponse(Response<T> response) {
         if (response.isSuccess()) {
           set(response.body());
         } else {
