@@ -863,7 +863,7 @@ public final class RetrofitTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<ResponseBody>() {
-      @Override public void onResponse(Response<ResponseBody> response, Retrofit retrofit) {
+      @Override public void onResponse(Response<ResponseBody> response) {
         latch.countDown();
       }
 
@@ -894,7 +894,7 @@ public final class RetrofitTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<ResponseBody>() {
-      @Override public void onResponse(Response<ResponseBody> response, Retrofit retrofit) {
+      @Override public void onResponse(Response<ResponseBody> response) {
         throw new AssertionError();
       }
 

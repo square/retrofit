@@ -15,12 +15,13 @@
  */
 package retrofit.mock;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import retrofit.Call;
 import retrofit.Retrofit;
 
 public final class CallBehaviorAdapter implements NetworkBehavior.Adapter<Call<?>> {
-  private final Retrofit retrofit;
+  private final Executor callbackExecutor;
   private final ExecutorService backgroundExecutor;
 
   /**
@@ -29,11 +30,11 @@ public final class CallBehaviorAdapter implements NetworkBehavior.Adapter<Call<?
    * behavior of every mock service is consistent.
    */
   public CallBehaviorAdapter(Retrofit retrofit, ExecutorService backgroundExecutor) {
-    this.retrofit = retrofit;
+    this.callbackExecutor = retrofit.callbackExecutor();
     this.backgroundExecutor = backgroundExecutor;
   }
 
   @Override public Call<?> applyBehavior(NetworkBehavior behavior, Call<?> value) {
-    return new BehaviorCall<>(retrofit, behavior, backgroundExecutor, value);
+    return new BehaviorCall<>(behavior, backgroundExecutor, callbackExecutor, value);
   }
 }
