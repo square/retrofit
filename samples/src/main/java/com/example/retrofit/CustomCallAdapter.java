@@ -20,12 +20,14 @@ import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import retrofit.Call;
 import retrofit.CallAdapter;
 import retrofit.Callback;
+import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
 import retrofit.http.GET;
@@ -42,13 +44,11 @@ public final class CustomCallAdapter {
       if (token.getRawType() != ListenableFuture.class) {
         return null;
       }
-
-      TypeToken<?> componentType = token.getComponentType();
-      if (componentType == null) {
-        throw new IllegalStateException(); // TODO
+      if (!(returnType instanceof ParameterizedType)) {
+        throw new IllegalStateException(
+            "ListenableFuture must have generic type (e.g., ListenableFuture<ResponseBody>)");
       }
-      final Type responseType = componentType.getType();
-
+      final Type responseType = ((ParameterizedType) returnType).getActualTypeArguments()[0];
       return new CallAdapter<ListenableFuture<?>>() {
         @Override public Type responseType() {
           return responseType;
@@ -100,6 +100,7 @@ public final class CustomCallAdapter {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://httpbin.org")
         .addCallAdapterFactory(new ListenableFutureCallAdapterFactory())
+        .addConverterFactory(GsonConverterFactory.create())
         .build();
 
     HttpBinService service = retrofit.create(HttpBinService.class);
