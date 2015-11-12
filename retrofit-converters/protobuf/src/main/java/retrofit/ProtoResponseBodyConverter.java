@@ -37,7 +37,12 @@ final class ProtoResponseBodyConverter<T extends MessageLite>
     } catch (InvalidProtocolBufferException e) {
       throw new RuntimeException(e); // Despite extending IOException, this is data mismatch.
     } finally {
-      Utils.closeQuietly(is);
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 }

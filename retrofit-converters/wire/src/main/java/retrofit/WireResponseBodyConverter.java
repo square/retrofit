@@ -30,11 +30,17 @@ final class WireResponseBodyConverter<T extends Message<T, ?>>
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
+    BufferedSource source = null;
     try {
-      BufferedSource source = value.source();
+      source = value.source();
       return adapter.decode(source);
     } finally {
-      Utils.closeQuietly(value);
+      if (source != null) {
+        try {
+          source.close();
+        } catch (IOException ignored) {
+        }
+      }
     }
   }
 }
