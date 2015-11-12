@@ -27,6 +27,9 @@ import java.io.IOException;
  * #enqueue}. In either case the call can be canceled at any time with {@link #cancel}. A call that
  * is busy writing its request or reading its response may receive a {@link IOException}; this is
  * working as designed.
+ *
+ * <p>Implementation of {@code toString()} for this interface should never include sensitive data
+ * such as query params, headers and so on.
  */
 public interface Call<T> extends Cloneable {
   Response<T> execute() throws IOException;

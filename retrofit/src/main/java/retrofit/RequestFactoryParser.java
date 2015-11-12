@@ -79,8 +79,8 @@ final class RequestFactoryParser {
   }
 
   private RequestFactory toRequestFactory(BaseUrl baseUrl) {
-    return new RequestFactory(httpMethod, baseUrl, relativeUrl, headers, contentType, hasBody,
-        isFormEncoded, isMultipart, requestBuilderActions);
+    return new RequestFactory(method, httpMethod, baseUrl, relativeUrl, headers, contentType,
+        hasBody, isFormEncoded, isMultipart, requestBuilderActions);
   }
 
   private RuntimeException parameterError(Throwable cause, int index, String message,

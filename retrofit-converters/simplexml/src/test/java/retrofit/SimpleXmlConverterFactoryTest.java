@@ -79,7 +79,9 @@ public class SimpleXmlConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(ElementException.class)
+      assertThat(e).isExactlyInstanceOf(RuntimeException.class)
+          .hasMessage("Problem has occurred during conversion of response for Service.get(), HTTP method = GET, relative path template = /");
+      assertThat(e.getCause().getCause()).isInstanceOf(ElementException.class)
           .hasMessageStartingWith("Element 'foo' does not have a match in class retrofit.MyObject");
     }
   }
@@ -93,7 +95,9 @@ public class SimpleXmlConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
+      assertThat(e).isExactlyInstanceOf(RuntimeException.class)
+          .hasMessage("Problem has occurred during conversion of response for Service.wrongClass(), HTTP method = GET, relative path template = /");
+      assertThat(e.getCause()).hasMessage("Could not deserialize body as class java.lang.String");
     }
   }
 }

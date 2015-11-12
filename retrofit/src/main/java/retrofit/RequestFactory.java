@@ -18,9 +18,11 @@ package retrofit;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+import java.lang.reflect.Method;
 
 final class RequestFactory {
-  private final String method;
+  private final Method method;
+  private final String httpMethod;
   private final BaseUrl baseUrl;
   private final String relativeUrl;
   private final Headers headers;
@@ -29,11 +31,14 @@ final class RequestFactory {
   private final boolean isFormEncoded;
   private final boolean isMultipart;
   private final RequestBuilderAction[] requestBuilderActions;
+  // Should never include sensitive data such as query params, headers and so on.
+  private volatile String toString;
 
-  RequestFactory(String method, BaseUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
-      RequestBuilderAction[] requestBuilderActions) {
+  RequestFactory(Method method, String httpMethod, BaseUrl baseUrl, String relativeUrl,
+      Headers headers, MediaType contentType, boolean hasBody, boolean isFormEncoded,
+      boolean isMultipart, RequestBuilderAction[] requestBuilderActions) {
     this.method = method;
+    this.httpMethod = httpMethod;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
     this.headers = headers;
@@ -46,7 +51,7 @@ final class RequestFactory {
 
   Request create(Object... args) {
     RequestBuilder requestBuilder =
-        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
+        new RequestBuilder(httpMethod, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
             isFormEncoded, isMultipart);
 
     if (args != null) {
@@ -64,5 +69,34 @@ final class RequestFactory {
     }
 
     return requestBuilder.build();
+  }
+
+  @Override public String toString() {
+    if (toString != null) {
+      return toString;
+    }
+
+    StringBuilder parameters = new StringBuilder();
+    Class[] parameterTypes = method.getParameterTypes();
+
+    for (int i = 0; i < parameterTypes.length; i++) {
+      parameters.append(parameterTypes[i].getSimpleName());
+      if (i != parameterTypes.length - 1) {
+        parameters.append(',');
+      }
+    }
+
+    toString = method.getDeclaringClass().getSimpleName()
+        + "."
+        + method.getName()
+        + "("
+        + parameters
+        + ")"
+        + ", HTTP method = "
+        + httpMethod
+        + ", relative path template = "
+        + relativeUrl;
+
+    return toString;
   }
 }

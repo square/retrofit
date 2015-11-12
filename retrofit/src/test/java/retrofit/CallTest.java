@@ -241,8 +241,11 @@ public final class CallTest {
     });
     assertTrue(latch.await(2, SECONDS));
 
-    assertThat(failureRef.get()).isInstanceOf(UnsupportedOperationException.class)
-        .hasMessage("I am broken!");
+    Throwable failure = failureRef.get();
+
+    assertThat(failure).hasMessage("Can not create call for Service.postString(String), HTTP method = POST, relative path template = /");
+    assertThat(failure.getCause()).hasMessage("I am broken!")
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test public void conversionProblemIncomingSync() throws IOException {
@@ -267,8 +270,10 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("I am broken!");
+    } catch (RuntimeException e) {
+      assertThat(e).hasMessage("Problem has occurred during conversion of response for Service.postString(String), HTTP method = POST, relative path template = /");
+      assertThat(e.getCause()).hasMessage("I am broken!")
+          .isInstanceOf(UnsupportedOperationException.class);
     }
   }
 
@@ -353,8 +358,11 @@ public final class CallTest {
     });
     assertTrue(latch.await(2, SECONDS));
 
-    assertThat(failureRef.get()).isInstanceOf(UnsupportedOperationException.class)
-        .hasMessage("I am broken!");
+    Throwable failure = failureRef.get();
+
+    assertThat(failure).hasMessage("Problem has occurred during conversion of response for Service.postString(String), HTTP method = POST, relative path template = /");
+    assertThat(failure.getCause()).hasMessage("I am broken!")
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test public void http204SkipsConverter() throws IOException {

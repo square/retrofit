@@ -80,7 +80,7 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (RuntimeException e) {
       Throwable cause = e.getCause();
-      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 OK");
+      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 OK, Service.observableBody(), HTTP method = GET, relative path template = /");
     }
   }
 
