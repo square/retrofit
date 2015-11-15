@@ -479,6 +479,22 @@ public final class RetrofitTest {
     }
   }
 
+  @Test public void baseUrlNoTrailingSlashThrows() {
+    try {
+      new Retrofit.Builder().baseUrl("http://example.com/api");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("baseUrl must end in /: http://example.com/api");
+    }
+    HttpUrl parsed = HttpUrl.parse("http://example.com/api");
+    try {
+      new Retrofit.Builder().baseUrl(parsed);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("baseUrl must end in /: http://example.com/api");
+    }
+  }
+
   @Test public void baseUrlStringPropagated() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
