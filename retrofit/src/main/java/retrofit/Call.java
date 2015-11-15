@@ -36,7 +36,7 @@ public interface Call<T> extends Cloneable {
    *
    * @throws IOException if a problem occurred talking to the server.
    * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request
-   * or processing the response.
+   * or decoding the response.
    */
   Response<T> execute() throws IOException;
 
@@ -52,6 +52,9 @@ public interface Call<T> extends Cloneable {
    */
   void cancel();
 
-  /** Create a new, identical call to this one. */
+  /**
+   * Create a new, identical call to this one which can be enqueued or executed even if this call
+   * has already been.
+   */
   Call<T> clone();
 }

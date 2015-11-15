@@ -243,9 +243,8 @@ abstract class RequestBuilderAction {
             "Content-Transfer-Encoding", transferEncoding);
 
         Class<?> entryClass = entryValue.getClass();
-        //noinspection unchecked
         Converter<Object, RequestBody> converter =
-            (Converter<Object, RequestBody>) retrofit.requestConverter(entryClass, annotations);
+            retrofit.requestConverter(entryClass, annotations);
         RequestBody body;
         try {
           body = converter.convert(entryValue);

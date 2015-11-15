@@ -56,7 +56,7 @@ public final class ResponseTest {
     assertThat(response.body()).isNull();
   }
 
-  @Test public void successWithResponse() {
+  @Test public void successWithRawResponse() {
     Object body = new Object();
     Response<Object> response = Response.success(body, successResponse);
     assertThat(response.raw()).isSameAs(successResponse);
@@ -68,7 +68,7 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isNull();
   }
 
-  @Test public void successWithNullResponseThrows() {
+  @Test public void successWithNullRawResponseThrows() {
     try {
       Response.success("", null);
       fail();
@@ -77,7 +77,7 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void successWithErrorResponseThrows() {
+  @Test public void successWithErrorRawResponseThrows() {
     try {
       Response.success("", errorResponse);
       fail();
@@ -117,7 +117,7 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithResponse() {
+  @Test public void errorWithRawResponse() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     Response<?> response = Response.error(errorBody, errorResponse);
     assertThat(response.raw()).isSameAs(errorResponse);
@@ -129,7 +129,7 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isSameAs(errorBody);
   }
 
-  @Test public void nullErrorWithResponseThrows() {
+  @Test public void nullErrorWithRawResponseThrows() {
     try {
       Response.error(null, errorResponse);
       fail();
@@ -138,7 +138,7 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithNullResponseThrows() {
+  @Test public void errorWithNullRawResponseThrows() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     try {
       Response.error(errorBody, null);
@@ -148,7 +148,7 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithSuccessResponseThrows() {
+  @Test public void errorWithSuccessRawResponseThrows() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     try {
       Response.error(errorBody, successResponse);
