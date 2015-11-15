@@ -26,12 +26,20 @@ package retrofit;
  * <li>JVM: Callbacks are executed on the background thread which performed the request.</li>
  * </ul>
  *
- * @param <T> expected response type
+ * @param <T> Successful response body type.
  */
 public interface Callback<T> {
-  /** Successful HTTP response. */
+  /**
+   * Invoked for a received HTTP response.
+   * <p>
+   * Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
+   * Call {@link Response#isSuccess()} to determine if the response indicates success.
+   */
   void onResponse(Response<T> response);
 
-  /** Invoked when a network or unexpected exception occurred during the HTTP request. */
+  /**
+   * Invoked when a network exception occurred talking to the server or when an unexpected
+   * exception occurred creating the request or processing the response.
+   */
   void onFailure(Throwable t);
 }
