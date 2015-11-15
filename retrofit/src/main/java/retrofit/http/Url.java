@@ -15,6 +15,7 @@
  */
 package retrofit.http;
 
+import com.squareup.okhttp.HttpUrl;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -24,11 +25,14 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Relative URL resolved against the {@linkplain Retrofit#baseUrl() base URL}.
+ * URL resolved against the {@linkplain Retrofit#baseUrl() base URL}.
  * <pre>
  * &#64;GET
  * void list(@Url String url);
  * </pre>
+ * <p>
+ * See {@linkplain retrofit.Retrofit.Builder#baseUrl(HttpUrl) base URL} for details of how
+ * the value will be resolved against a base URL to create the full endpoint URL.
  */
 @Documented
 @Target(PARAMETER)
