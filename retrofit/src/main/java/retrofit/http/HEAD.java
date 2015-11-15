@@ -15,6 +15,7 @@
  */
 package retrofit.http;
 
+import com.squareup.okhttp.HttpUrl;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -22,14 +23,17 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Make a HEAD request to a REST path relative to base URL.
- * <p>
- * Note: HEAD requests must use {@link Void} as the response type since there is no body content.
- */
+/** Make a HEAD request. */
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
 public @interface HEAD {
+  /**
+   * A relative or absolute path, or full URL of the endpoint. This value is optional if the first
+   * parameter of the method is annotated with {@link Url @Url}.
+   * <p>
+   * See {@linkplain retrofit.Retrofit.Builder#baseUrl(HttpUrl) base URL} for details of how
+   * this is resolved against a base URL to create the full endpoint URL.
+   */
   String value() default "";
 }
