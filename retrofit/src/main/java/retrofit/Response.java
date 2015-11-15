@@ -16,51 +16,53 @@
 package retrofit;
 
 import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.ResponseBody;
 
-import static retrofit.Utils.checkNotNull;
-
-/**
- * TODO
- */
+/** An HTTP response. */
 public final class Response<T> {
-  /**
-   * TODO
-   */
+  /** Create a synthetic successful response with {@code body} as the deserialized body. */
   public static <T> Response<T> success(T body) {
     return success(body, new com.squareup.okhttp.Response.Builder() //
         .code(200)
+        .message("OK")
         .protocol(Protocol.HTTP_1_1)
-        .request(new com.squareup.okhttp.Request.Builder().url(HttpUrl.parse("http://localhost"))
-            .build())
+        .request(new com.squareup.okhttp.Request.Builder().url("http://localhost").build())
         .build());
   }
 
   /**
-   * TODO
+   * Create a successful response from {@code rawResponse} with {@code body} as the deserialized
+   * body.
    */
   public static <T> Response<T> success(T body, com.squareup.okhttp.Response rawResponse) {
+    if (rawResponse == null) throw new NullPointerException("rawResponse == null");
+    if (!rawResponse.isSuccessful()) {
+      throw new IllegalArgumentException("rawResponse must be successful response");
+    }
     return new Response<>(rawResponse, body, null);
   }
 
   /**
-   * TODO
+   * Create a synthetic error response with an HTTP status code of {@code code} and {@code body}
+   * as the error body.
    */
   public static <T> Response<T> error(int code, ResponseBody body) {
+    if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new com.squareup.okhttp.Response.Builder() //
         .code(code)
         .protocol(Protocol.HTTP_1_1)
-        .request(new com.squareup.okhttp.Request.Builder().url(HttpUrl.parse("http://localhost"))
-            .build())
+        .request(new com.squareup.okhttp.Request.Builder().url("http://localhost").build())
         .build());
   }
 
-  /**
-   * TODO
-   */
+  /** Create an error response from {@code rawResponse} with {@code body} as the error body. */
   public static <T> Response<T> error(ResponseBody body, com.squareup.okhttp.Response rawResponse) {
+    if (body == null) throw new NullPointerException("body == null");
+    if (rawResponse == null) throw new NullPointerException("rawResponse == null");
+    if (rawResponse.isSuccessful()) {
+      throw new IllegalArgumentException("rawResponse should not be successful response");
+    }
     return new Response<>(rawResponse, null, body);
   }
 
@@ -69,7 +71,7 @@ public final class Response<T> {
   private final ResponseBody errorBody;
 
   private Response(com.squareup.okhttp.Response rawResponse, T body, ResponseBody errorBody) {
-    this.rawResponse = checkNotNull(rawResponse, "rawResponse == null");
+    this.rawResponse = rawResponse;
     this.body = body;
     this.errorBody = errorBody;
   }
@@ -84,11 +86,12 @@ public final class Response<T> {
     return rawResponse.code();
   }
 
-  /** HTTP status message. */
+  /** HTTP status message or null if unknown. */
   public String message() {
     return rawResponse.message();
   }
 
+  /** HTTP headers. */
   public Headers headers() {
     return rawResponse.headers();
   }
