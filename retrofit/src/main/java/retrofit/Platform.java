@@ -18,9 +18,12 @@ package retrofit;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
+
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
@@ -119,7 +122,7 @@ class Platform {
           queue = operationQueue.getDeclaredMethod("getMainQueue").invoke(null);
           addOperation = operationQueue.getDeclaredMethod("addOperation", Runnable.class);
         } catch (Exception e) {
-          e.printStackTrace();
+          throw new AssertionError(e);
         }
       }
 
@@ -127,7 +130,10 @@ class Platform {
         try {
           // queue.addOperation(r);
           addOperation.invoke(queue, r);
-        } catch (Exception ignored) {
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+          throw new AssertionError(e);
+        } catch (InvocationTargetException e) {
+          throw new RuntimeException(e.getCause());
         }
       }
     }

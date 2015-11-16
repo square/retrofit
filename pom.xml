@@ -52,7 +52,6 @@
     <android.platform>16</android.platform>
     <okhttp.version>2.5.0</okhttp.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
-    <robovm.version>1.9.0</robovm.version>
 
     <!-- Adapter Dependencies -->
     <rxjava.version>1.0.14</rxjava.version>
