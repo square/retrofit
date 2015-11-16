@@ -71,7 +71,7 @@ final class RequestFactoryParser {
   private String relativeUrl;
   private com.squareup.okhttp.Headers headers;
   private MediaType contentType;
-  private RequestBuilderAction[] requestBuilderActions;
+  private RequestAction[] requestActions;
 
   private Set<String> relativeUrlParamNames;
 
@@ -81,7 +81,7 @@ final class RequestFactoryParser {
 
   private RequestFactory toRequestFactory(BaseUrl baseUrl) {
     return new RequestFactory(httpMethod, baseUrl, relativeUrl, headers, contentType, hasBody,
-        isFormEncoded, isMultipart, requestBuilderActions);
+        isFormEncoded, isMultipart, requestActions);
   }
 
   private RuntimeException parameterError(Throwable cause, int index, String message,
@@ -209,13 +209,13 @@ final class RequestFactoryParser {
     boolean gotUrl = false;
 
     int count = methodParameterAnnotationArrays.length;
-    RequestBuilderAction[] requestBuilderActions = new RequestBuilderAction[count];
+    RequestAction[] requestActions = new RequestAction[count];
     for (int i = 0; i < count; i++) {
       Type methodParameterType = methodParameterTypes[i];
       Annotation[] methodParameterAnnotations = methodParameterAnnotationArrays[i];
       if (methodParameterAnnotations != null) {
         for (Annotation methodParameterAnnotation : methodParameterAnnotations) {
-          RequestBuilderAction action = null;
+          RequestAction action = null;
           if (methodParameterAnnotation instanceof Url) {
             if (gotUrl) {
               throw parameterError(i, "Multiple @Url method annotations found.");
@@ -233,7 +233,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@Url cannot be used with @%s URL", httpMethod);
             }
             gotUrl = true;
-            action = new RequestBuilderAction.Url();
+            action = new RequestAction.Url();
 
           } else if (methodParameterAnnotation instanceof Path) {
             if (gotQuery) {
@@ -251,11 +251,11 @@ final class RequestFactoryParser {
             Path path = (Path) methodParameterAnnotation;
             String name = path.value();
             validatePathName(i, name);
-            action = new RequestBuilderAction.Path(name, path.encoded());
+            action = new RequestAction.Path(name, path.encoded());
 
           } else if (methodParameterAnnotation instanceof Query) {
             Query query = (Query) methodParameterAnnotation;
-            action = new RequestBuilderAction.Query(query.value(), query.encoded());
+            action = new RequestAction.Query(query.value(), query.encoded());
             gotQuery = true;
 
           } else if (methodParameterAnnotation instanceof QueryMap) {
@@ -263,18 +263,18 @@ final class RequestFactoryParser {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
             QueryMap queryMap = (QueryMap) methodParameterAnnotation;
-            action = new RequestBuilderAction.QueryMap(queryMap.encoded());
+            action = new RequestAction.QueryMap(queryMap.encoded());
 
           } else if (methodParameterAnnotation instanceof Header) {
             Header header = (Header) methodParameterAnnotation;
-            action = new RequestBuilderAction.Header(header.value());
+            action = new RequestAction.Header(header.value());
 
           } else if (methodParameterAnnotation instanceof Field) {
             if (!isFormEncoded) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
             Field field = (Field) methodParameterAnnotation;
-            action = new RequestBuilderAction.Field(field.value(), field.encoded());
+            action = new RequestAction.Field(field.value(), field.encoded());
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof FieldMap) {
@@ -285,7 +285,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
             FieldMap fieldMap = (FieldMap) methodParameterAnnotation;
-            action = new RequestBuilderAction.FieldMap(fieldMap.encoded());
+            action = new RequestAction.FieldMap(fieldMap.encoded());
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof Part) {
@@ -304,7 +304,7 @@ final class RequestFactoryParser {
               throw parameterError(e, i, "Unable to create @Part converter for %s",
                   methodParameterType);
             }
-            action = new RequestBuilderAction.Part<>(headers, converter);
+            action = new RequestAction.Part<>(headers, converter);
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof PartMap) {
@@ -316,7 +316,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
             PartMap partMap = (PartMap) methodParameterAnnotation;
-            action = new RequestBuilderAction.PartMap(retrofit, partMap.encoding(),
+            action = new RequestAction.PartMap(retrofit, partMap.encoding(),
                 methodParameterAnnotations);
             gotPart = true;
 
@@ -337,20 +337,20 @@ final class RequestFactoryParser {
               throw parameterError(e, i, "Unable to create @Body converter for %s",
                   methodParameterType);
             }
-            action = new RequestBuilderAction.Body<>(converter);
+            action = new RequestAction.Body<>(converter);
             gotBody = true;
           }
 
           if (action != null) {
-            if (requestBuilderActions[i] != null) {
+            if (requestActions[i] != null) {
               throw parameterError(i, "Multiple Retrofit annotations found, only one allowed.");
             }
-            requestBuilderActions[i] = action;
+            requestActions[i] = action;
           }
         }
       }
 
-      if (requestBuilderActions[i] == null) {
+      if (requestActions[i] == null) {
         throw parameterError(i, "No Retrofit annotation found.");
       }
     }
@@ -368,7 +368,7 @@ final class RequestFactoryParser {
       throw methodError(method, "Multipart method must contain at least one @Part.");
     }
 
-    this.requestBuilderActions = requestBuilderActions;
+    this.requestActions = requestActions;
   }
 
   private void validatePathName(int index, String name) {

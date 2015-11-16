@@ -28,11 +28,11 @@ final class RequestFactory {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
-  private final RequestBuilderAction[] requestBuilderActions;
+  private final RequestAction[] requestActions;
 
   RequestFactory(String method, BaseUrl baseUrl, String relativeUrl, Headers headers,
       MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
-      RequestBuilderAction[] requestBuilderActions) {
+      RequestAction[] requestActions) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -41,7 +41,7 @@ final class RequestFactory {
     this.hasBody = hasBody;
     this.isFormEncoded = isFormEncoded;
     this.isMultipart = isMultipart;
-    this.requestBuilderActions = requestBuilderActions;
+    this.requestActions = requestActions;
   }
 
   Request create(Object... args) {
@@ -50,7 +50,7 @@ final class RequestFactory {
             isFormEncoded, isMultipart);
 
     if (args != null) {
-      RequestBuilderAction[] actions = requestBuilderActions;
+      RequestAction[] actions = requestActions;
       if (actions.length != args.length) {
         throw new IllegalArgumentException("Argument count ("
             + args.length
