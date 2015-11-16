@@ -18,12 +18,10 @@ package retrofit;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
-
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
