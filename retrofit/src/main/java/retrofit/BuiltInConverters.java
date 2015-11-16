@@ -25,21 +25,40 @@ import retrofit.http.Streaming;
 import static retrofit.Utils.closeQuietly;
 
 final class BuiltInConverters extends Converter.Factory {
+  private OkHttpResponseBodyConverter streamingResponseBodyConverter;
+  private OkHttpResponseBodyConverter bufferingResponseBodyConverter;
+  private VoidConverter voidResponseBodyConverter;
+  private OkHttpRequestBodyConverter requestBodyConverter;
+
   @Override
   public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
-    if (ResponseBody.class.equals(type)) {
-      boolean isStreaming = Utils.isAnnotationPresent(annotations, Streaming.class);
-      return new OkHttpResponseBodyConverter(isStreaming);
+    if (ResponseBody.class == type) {
+      if (Utils.isAnnotationPresent(annotations, Streaming.class)) {
+        OkHttpResponseBodyConverter converter = streamingResponseBodyConverter;
+        return converter != null
+            ? converter
+            : (streamingResponseBodyConverter = new OkHttpResponseBodyConverter(true));
+      } else {
+        OkHttpResponseBodyConverter converter = bufferingResponseBodyConverter;
+        return converter != null
+            ? converter
+            : (bufferingResponseBodyConverter = new OkHttpResponseBodyConverter(false));
+      }
     }
-    if (Void.class.equals(type)) {
-      return new VoidConverter();
+    if (Void.class == type) {
+      VoidConverter converter = voidResponseBodyConverter;
+      return converter != null
+          ? converter
+          : (voidResponseBodyConverter = new VoidConverter());
     }
     return null;
   }
 
   @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
-    if (type instanceof Class && RequestBody.class.isAssignableFrom((Class<?>) type)) {
-      return new OkHttpRequestBodyConverter();
+    if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
+      return requestBodyConverter != null
+          ? requestBodyConverter
+          : (requestBodyConverter = new OkHttpRequestBodyConverter());
     }
     return null;
   }
