@@ -24,16 +24,16 @@ import java.util.Map;
 
 import static retrofit.Utils.checkNotNull;
 
-abstract class RequestBuilderAction {
-  abstract void perform(RequestBuilder builder, Object value);
+abstract class RequestAction<T> {
+  abstract void perform(RequestBuilder builder, T value);
 
-  static final class Url extends RequestBuilderAction {
-    @Override void perform(RequestBuilder builder, Object value) {
-      builder.setRelativeUrl((String) value);
+  static final class Url extends RequestAction<String> {
+    @Override void perform(RequestBuilder builder, String value) {
+      builder.setRelativeUrl(value);
     }
   }
 
-  static final class Header extends RequestBuilderAction {
+  static final class Header extends RequestAction<Object> {
     private final String name;
 
     Header(String name) {
@@ -62,7 +62,7 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class Path extends RequestBuilderAction {
+  static final class Path extends RequestAction<Object> {
     private final String name;
     private final boolean encoded;
 
@@ -80,7 +80,7 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class Query extends RequestBuilderAction {
+  static final class Query extends RequestAction<Object> {
     private final String name;
     private final boolean encoded;
 
@@ -111,18 +111,17 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class QueryMap extends RequestBuilderAction {
+  static final class QueryMap extends RequestAction<Map<?, ?>> {
     private final boolean encoded;
 
     QueryMap(boolean encoded) {
       this.encoded = encoded;
     }
 
-    @Override void perform(RequestBuilder builder, Object value) {
+    @Override void perform(RequestBuilder builder, Map<?, ?> value) {
       if (value == null) return; // Skip null values.
 
-      Map<?, ?> map = (Map<?, ?>) value;
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
+      for (Map.Entry<?, ?> entry : value.entrySet()) {
         Object entryKey = entry.getKey();
         if (entryKey == null) {
           throw new IllegalArgumentException("Query map contained null key.");
@@ -135,7 +134,7 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class Field extends RequestBuilderAction {
+  static final class Field extends RequestAction<Object> {
     private final String name;
     private final boolean encoded;
 
@@ -166,18 +165,17 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class FieldMap extends RequestBuilderAction {
+  static final class FieldMap extends RequestAction<Map<?, ?>> {
     private final boolean encoded;
 
     FieldMap(boolean encoded) {
       this.encoded = encoded;
     }
 
-    @Override void perform(RequestBuilder builder, Object value) {
+    @Override void perform(RequestBuilder builder, Map<?, ?> value) {
       if (value == null) return; // Skip null values.
 
-      Map<?, ?> map = (Map<?, ?>) value;
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
+      for (Map.Entry<?, ?> entry : value.entrySet()) {
         Object entryKey = entry.getKey();
         if (entryKey == null) {
           throw new IllegalArgumentException("Field map contained null key.");
@@ -190,7 +188,7 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class Part<T> extends RequestBuilderAction {
+  static final class Part<T> extends RequestAction<T> {
     private final Headers headers;
     private final Converter<T, RequestBody> converter;
 
@@ -199,13 +197,12 @@ abstract class RequestBuilderAction {
       this.converter = converter;
     }
 
-    @Override void perform(RequestBuilder builder, Object value) {
+    @Override void perform(RequestBuilder builder, T value) {
       if (value == null) return; // Skip null values.
 
       RequestBody body;
       try {
-        //noinspection unchecked
-        body = converter.convert((T) value);
+        body = converter.convert(value);
       } catch (IOException e) {
         throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
@@ -213,7 +210,7 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class PartMap extends RequestBuilderAction {
+  static final class PartMap extends RequestAction<Map<?, ?>> {
     private final Retrofit retrofit;
     private final String transferEncoding;
     private final Annotation[] annotations;
@@ -224,11 +221,10 @@ abstract class RequestBuilderAction {
       this.annotations = annotations;
     }
 
-    @Override void perform(RequestBuilder builder, Object value) {
+    @Override void perform(RequestBuilder builder, Map<?, ?> value) {
       if (value == null) return; // Skip null values.
 
-      Map<?, ?> map = (Map<?, ?>) value;
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
+      for (Map.Entry<?, ?> entry : value.entrySet()) {
         Object entryKey = entry.getKey();
         if (entryKey == null) {
           throw new IllegalArgumentException("Part map contained null key.");
@@ -256,21 +252,20 @@ abstract class RequestBuilderAction {
     }
   }
 
-  static final class Body<T> extends RequestBuilderAction {
+  static final class Body<T> extends RequestAction<T> {
     private final Converter<T, RequestBody> converter;
 
     Body(Converter<T, RequestBody> converter) {
       this.converter = converter;
     }
 
-    @Override void perform(RequestBuilder builder, Object value) {
+    @Override void perform(RequestBuilder builder, T value) {
       if (value == null) {
         throw new IllegalArgumentException("Body parameter value must not be null.");
       }
       RequestBody body;
       try {
-        //noinspection unchecked
-        body = converter.convert((T) value);
+        body = converter.convert(value);
       } catch (IOException e) {
         throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
