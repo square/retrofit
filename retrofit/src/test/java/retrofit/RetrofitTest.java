@@ -27,6 +27,7 @@ import org.junit.Test;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
+import retrofit.http.Query;
 
 import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -49,6 +50,8 @@ public final class RetrofitTest {
     @GET("/") Call<ResponseBody> getResponseBody();
     @GET("/") Call<Void> getVoid();
     @POST("/") Call<ResponseBody> postRequestBody(@Body RequestBody body);
+    @GET("/") Call<ResponseBody> queryString(@Query("foo") String foo);
+    @GET("/") Call<ResponseBody> queryObject(@Query("foo") Object foo);
   }
   interface FutureMethod {
     @GET("/") Future<String> method();
@@ -58,19 +61,27 @@ public final class RetrofitTest {
   interface StringService {
     @GET("/") String get();
   }
-  interface Unresolvable {
+  interface UnresolvableResponseType {
     @GET("/") <T> Call<T> typeVariable();
     @GET("/") <T extends ResponseBody> Call<T> typeVariableUpperBound();
     @GET("/") <T> Call<List<Map<String, Set<T[]>>>> crazy();
     @GET("/") Call<?> wildcard();
     @GET("/") Call<? extends ResponseBody> wildcardUpperBound();
   }
+  interface UnresolvableParameterType {
+    @POST("/") <T> Call<ResponseBody> typeVariable(@Body T body);
+    @POST("/") <T extends RequestBody> Call<ResponseBody> typeVariableUpperBound(@Body T body);
+    @POST("/") <T> Call<ResponseBody> crazy(@Body List<Map<String, Set<T[]>>> body);
+    @POST("/") Call<ResponseBody> wildcard(@Body List<?> body);
+    @POST("/") Call<ResponseBody> wildcardUpperBound(@Body List<? extends RequestBody> body);
+  }
   interface VoidService {
     @GET("/") void nope();
   }
   interface Annotated {
     @GET("/") @Foo Call<String> method();
-    @POST("/") Call<ResponseBody> parameter(@Foo @Body String param);
+    @POST("/") Call<ResponseBody> bodyParameter(@Foo @Body String param);
+    @GET("/") Call<ResponseBody> queryParameter(@Foo @Query("foo") Object foo);
 
     @Retention(RUNTIME)
     @interface Foo {}
@@ -169,7 +180,7 @@ public final class RetrofitTest {
         }
         return new CallAdapter<Call<?>>() {
           @Override public Type responseType() {
-            return Utils.getSingleParameterUpperBound((ParameterizedType) returnType);
+            return Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
           }
 
           @Override public <R> Call<R> adapt(Call<R> call) {
@@ -257,13 +268,13 @@ public final class RetrofitTest {
     }
   }
 
-  @Test public void methodAnnotationsPassedToConverter() {
+  @Test public void methodAnnotationsPassedToResponseBodyConverter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory extends Converter.Factory {
       @Override
-      public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+      public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
         annotationsRef.set(annotations);
-        return new ToStringConverterFactory().fromResponseBody(type, annotations);
+        return new ToStringConverterFactory().responseBodyConverter(type, annotations);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -277,13 +288,13 @@ public final class RetrofitTest {
     assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
   }
 
-  @Test public void parameterAnnotationsPassedToConverter() {
+  @Test public void parameterAnnotationsPassedToRequestBodyConverter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory extends Converter.Factory {
       @Override
-      public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+      public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
         annotationsRef.set(annotations);
-        return new ToStringConverterFactory().toRequestBody(type, annotations);
+        return new ToStringConverterFactory().requestBodyConverter(type, annotations);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -291,10 +302,68 @@ public final class RetrofitTest {
         .addConverterFactory(new MyConverterFactory())
         .build();
     Annotated annotated = retrofit.create(Annotated.class);
-    annotated.parameter(null); // Trigger internal setup.
+    annotated.bodyParameter(null); // Trigger internal setup.
 
     Annotation[] annotations = annotationsRef.get();
     assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
+  }
+
+  @Test public void parameterAnnotationsPassedToStringConverter() {
+    final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
+    class MyConverterFactory extends Converter.Factory {
+      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+        annotationsRef.set(annotations);
+
+        return new Converter<Object, String>() {
+          @Override public String convert(Object value) throws IOException {
+            return String.valueOf(value);
+          }
+        };
+      }
+    }
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new MyConverterFactory())
+        .build();
+    Annotated annotated = retrofit.create(Annotated.class);
+    annotated.queryParameter(null); // Trigger internal setup.
+
+    Annotation[] annotations = annotationsRef.get();
+    assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
+  }
+
+  @Test public void stringConverterNotCalledForString() {
+    class MyConverterFactory extends Converter.Factory {
+      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+        throw new AssertionError();
+      }
+    }
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new MyConverterFactory())
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.queryString(null);
+    assertThat(call).isNotNull();
+    // We also implicitly assert the above factory was not called as it would have thrown.
+  }
+
+  @Test public void stringConverterReturningNullResultsInDefault() {
+    final AtomicBoolean factoryCalled = new AtomicBoolean();
+    class MyConverterFactory extends Converter.Factory {
+      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+        factoryCalled.set(true);
+        return null;
+      }
+    }
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new MyConverterFactory())
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.queryObject(null);
+    assertThat(call).isNotNull();
+    assertThat(factoryCalled.get()).isTrue();
   }
 
   @Test public void missingConverterThrowsOnNonRequestBody() throws IOException {
@@ -394,26 +463,26 @@ public final class RetrofitTest {
     assertThat(server.takeRequest().getBody().readUtf8()).isEqualTo("Hey");
   }
 
-  @Test public void unresolvableTypeThrows() {
+  @Test public void unresolvableResponseTypeThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
         .build();
-    Unresolvable example = retrofit.create(Unresolvable.class);
+    UnresolvableResponseType example = retrofit.create(UnresolvableResponseType.class);
 
     try {
       example.typeVariable();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
-          + "retrofit.Call<T>\n    for method Unresolvable.typeVariable");
+          + "retrofit.Call<T>\n    for method UnresolvableResponseType.typeVariable");
     }
     try {
       example.typeVariableUpperBound();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
-          + "retrofit.Call<T>\n    for method Unresolvable.typeVariableUpperBound");
+          + "retrofit.Call<T>\n    for method UnresolvableResponseType.typeVariableUpperBound");
     }
     try {
       example.crazy();
@@ -421,14 +490,14 @@ public final class RetrofitTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
           + "retrofit.Call<java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>>>\n"
-          + "    for method Unresolvable.crazy");
+          + "    for method UnresolvableResponseType.crazy");
     }
     try {
       example.wildcard();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
-          + "retrofit.Call<?>\n    for method Unresolvable.wildcard");
+          + "retrofit.Call<?>\n    for method UnresolvableResponseType.wildcard");
     }
     try {
       example.wildcardUpperBound();
@@ -436,7 +505,53 @@ public final class RetrofitTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
           + "retrofit.Call<? extends com.squareup.okhttp.ResponseBody>\n"
-          + "    for method Unresolvable.wildcardUpperBound");
+          + "    for method UnresolvableResponseType.wildcardUpperBound");
+    }
+  }
+
+  @Test public void unresolvableParameterTypeThrows() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    UnresolvableParameterType example = retrofit.create(UnresolvableParameterType.class);
+
+    try {
+      example.typeVariable(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter type must not include a type variable or wildcard: "
+          + "T (parameter #1)\n    for method UnresolvableParameterType.typeVariable");
+    }
+    try {
+      example.typeVariableUpperBound(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter type must not include a type variable or wildcard: "
+          + "T (parameter #1)\n    for method UnresolvableParameterType.typeVariableUpperBound");
+    }
+    try {
+      example.crazy(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter type must not include a type variable or wildcard: "
+          + "java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>> (parameter #1)\n"
+          + "    for method UnresolvableParameterType.crazy");
+    }
+    try {
+      example.wildcard(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter type must not include a type variable or wildcard: "
+          + "java.util.List<?> (parameter #1)\n    for method UnresolvableParameterType.wildcard");
+    }
+    try {
+      example.wildcardUpperBound(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Parameter type must not include a type variable or wildcard: "
+          + "java.util.List<? extends com.squareup.okhttp.RequestBody> (parameter #1)\n"
+          + "    for method UnresolvableParameterType.wildcardUpperBound");
     }
   }
 
@@ -577,12 +692,12 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).toRequestBody(type, annotations);
+    doReturn(expectedAdapter).when(factory).requestBodyConverter(type, annotations);
 
     Converter<?, RequestBody> actualAdapter = retrofit.requestConverter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
-    verify(factory).toRequestBody(type, annotations);
+    verify(factory).requestBodyConverter(type, annotations);
     verifyNoMoreInteractions(factory);
   }
 
@@ -592,7 +707,7 @@ public final class RetrofitTest {
 
     Converter.Factory factory1 = spy(new Converter.Factory() {
       @Override
-      public Converter<?, RequestBody> toRequestBody(Type returnType, Annotation[] annotations) {
+      public Converter<?, RequestBody> requestBodyConverter(Type returnType, Annotation[] annotations) {
         return null;
       }
     });
@@ -609,7 +724,7 @@ public final class RetrofitTest {
           "Could not locate RequestBody converter for class java.lang.String. Tried:");
     }
 
-    verify(factory1).toRequestBody(type, annotations);
+    verify(factory1).requestBodyConverter(type, annotations);
     verifyNoMoreInteractions(factory1);
   }
 
@@ -625,12 +740,12 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).fromResponseBody(type, annotations);
+    doReturn(expectedAdapter).when(factory).responseBodyConverter(type, annotations);
 
     Converter<ResponseBody, ?> actualAdapter = retrofit.responseConverter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
-    verify(factory).fromResponseBody(type, annotations);
+    verify(factory).responseBodyConverter(type, annotations);
     verifyNoMoreInteractions(factory);
   }
 
@@ -640,7 +755,7 @@ public final class RetrofitTest {
 
     Converter.Factory factory1 = spy(new Converter.Factory() {
       @Override
-      public Converter<ResponseBody, ?> fromResponseBody(Type returnType, Annotation[] annotations) {
+      public Converter<ResponseBody, ?> responseBodyConverter(Type returnType, Annotation[] annotations) {
         return null;
       }
     });
@@ -657,8 +772,29 @@ public final class RetrofitTest {
           "Could not locate ResponseBody converter for class java.lang.String. Tried:");
     }
 
-    verify(factory1).fromResponseBody(type, annotations);
+    verify(factory1).responseBodyConverter(type, annotations);
     verifyNoMoreInteractions(factory1);
+  }
+
+  @Test public void stringConverterFactoryQueried() {
+    Type type = Object.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter<?, String> expectedAdapter = mock(Converter.class);
+    Converter.Factory factory = mock(Converter.Factory.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory)
+        .build();
+
+    doReturn(expectedAdapter).when(factory).stringConverter(type, annotations);
+
+    Converter<?, String> actualAdapter = retrofit.stringConverter(type, annotations);
+    assertThat(actualAdapter).isSameAs(expectedAdapter);
+
+    verify(factory).stringConverter(type, annotations);
+    verifyNoMoreInteractions(factory);
   }
 
   @Test public void converterFactoryPropagated() {

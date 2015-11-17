@@ -22,78 +22,89 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import retrofit.http.Streaming;
 
-import static retrofit.Utils.closeQuietly;
-
 final class BuiltInConverters extends Converter.Factory {
-  private OkHttpResponseBodyConverter streamingResponseBodyConverter;
-  private OkHttpResponseBodyConverter bufferingResponseBodyConverter;
-  private VoidConverter voidResponseBodyConverter;
-  private OkHttpRequestBodyConverter requestBodyConverter;
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+    if (type == ResponseBody.class) {
+      if (Utils.isAnnotationPresent(annotations, Streaming.class)) {
+        return StreamingResponseBodyConverter.INSTANCE;
+      }
+      return BufferingResponseBodyConverter.INSTANCE;
+    }
+    if (type == Void.class) {
+      return VoidResponseBodyConverter.INSTANCE;
+    }
+    return null;
+  }
 
   @Override
-  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
-    if (ResponseBody.class == type) {
-      if (Utils.isAnnotationPresent(annotations, Streaming.class)) {
-        OkHttpResponseBodyConverter converter = streamingResponseBodyConverter;
-        return converter != null
-            ? converter
-            : (streamingResponseBodyConverter = new OkHttpResponseBodyConverter(true));
-      } else {
-        OkHttpResponseBodyConverter converter = bufferingResponseBodyConverter;
-        return converter != null
-            ? converter
-            : (bufferingResponseBodyConverter = new OkHttpResponseBodyConverter(false));
-      }
-    }
-    if (Void.class == type) {
-      VoidConverter converter = voidResponseBodyConverter;
-      return converter != null
-          ? converter
-          : (voidResponseBodyConverter = new VoidConverter());
-    }
-    return null;
-  }
-
-  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
     if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
-      return requestBodyConverter != null
-          ? requestBodyConverter
-          : (requestBodyConverter = new OkHttpRequestBodyConverter());
+      return RequestBodyConverter.INSTANCE;
     }
     return null;
   }
 
-  static final class VoidConverter implements Converter<ResponseBody, Void> {
+  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+    if (type == String.class) {
+      return StringConverter.INSTANCE;
+    }
+    return null;
+  }
+
+  static final class StringConverter implements Converter<String, String> {
+    static final StringConverter INSTANCE = new StringConverter();
+
+    @Override public String convert(String value) throws IOException {
+      return value;
+    }
+  }
+
+  static final class VoidResponseBodyConverter implements Converter<ResponseBody, Void> {
+    static final VoidResponseBodyConverter INSTANCE = new VoidResponseBodyConverter();
+
     @Override public Void convert(ResponseBody value) throws IOException {
       value.close();
       return null;
     }
   }
 
-  static final class OkHttpRequestBodyConverter implements Converter<RequestBody, RequestBody> {
+  static final class RequestBodyConverter implements Converter<RequestBody, RequestBody> {
+    static final RequestBodyConverter INSTANCE = new RequestBodyConverter();
+
     @Override public RequestBody convert(RequestBody value) throws IOException {
       return value;
     }
   }
 
-  static final class OkHttpResponseBodyConverter implements Converter<ResponseBody, ResponseBody> {
-    private final boolean isStreaming;
-
-    OkHttpResponseBodyConverter(boolean isStreaming) {
-      this.isStreaming = isStreaming;
-    }
+  static final class StreamingResponseBodyConverter
+      implements Converter<ResponseBody, ResponseBody> {
+    static final StreamingResponseBodyConverter INSTANCE = new StreamingResponseBodyConverter();
 
     @Override public ResponseBody convert(ResponseBody value) throws IOException {
-      if (isStreaming) {
-        return value;
-      }
+      return value;
+    }
+  }
 
-      // Buffer the entire body to avoid future I/O.
+  static final class BufferingResponseBodyConverter
+      implements Converter<ResponseBody, ResponseBody> {
+    static final BufferingResponseBodyConverter INSTANCE = new BufferingResponseBodyConverter();
+
+    @Override public ResponseBody convert(ResponseBody value) throws IOException {
       try {
+        // Buffer the entire body to avoid future I/O.
         return Utils.readBodyToBytesIfNecessary(value);
       } finally {
-        closeQuietly(value);
+        Utils.closeQuietly(value);
       }
+    }
+  }
+
+  static final class ToStringConverter implements Converter<Object, String> {
+    static final ToStringConverter INSTANCE = new ToStringConverter();
+
+    @Override public String convert(Object value) {
+      return value.toString();
     }
   }
 }

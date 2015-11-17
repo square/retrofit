@@ -20,6 +20,15 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import retrofit.http.Body;
+import retrofit.http.Field;
+import retrofit.http.FieldMap;
+import retrofit.http.Header;
+import retrofit.http.Part;
+import retrofit.http.PartMap;
+import retrofit.http.Path;
+import retrofit.http.Query;
+import retrofit.http.QueryMap;
 
 /**
  * Convert objects to and from their representation in HTTP. Register a converter with Retrofit
@@ -32,17 +41,32 @@ public interface Converter<F, T> {
   abstract class Factory {
     /**
      * Returns a {@link Converter} for converting an HTTP response body to {@code type}, or null if
-     * {@code type} cannot be handled by this factory.
+     * {@code type} cannot be handled by this factory. This is used to create converters for
+     * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
+     * declaration.
      */
-    public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
       return null;
     }
 
     /**
      * Returns a {@link Converter} for converting {@code type} to an HTTP request body, or null if
-     * {@code type} cannot be handled by this factory.
+     * {@code type} cannot be handled by this factory. This is used to create converters for types
+     * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap}
+     * values.
      */
-    public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+      return null;
+    }
+
+    /**
+     * Returns a {@link Converter} for converting {@code type} to a {@link String}, or null if
+     * {@code type} cannot be handled by this factory. This is used to create converters for types
+     * specified by {@link Field @Field}, {@link FieldMap @FieldMap} values,
+     * {@link Header @Header}, {@link Path @Path}, {@link Query @Query}, and
+     * {@link QueryMap @QueryMap} values.
+     */
+    public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
       return null;
     }
   }

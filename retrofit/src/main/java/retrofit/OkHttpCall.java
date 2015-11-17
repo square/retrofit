@@ -117,7 +117,7 @@ final class OkHttpCall<T> implements Call<T> {
     return parseResponse(rawCall.execute());
   }
 
-  private com.squareup.okhttp.Call createRawCall() {
+  private com.squareup.okhttp.Call createRawCall() throws IOException {
     return client.newCall(requestFactory.create(args));
   }
 
