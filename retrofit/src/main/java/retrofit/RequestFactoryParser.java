@@ -255,7 +255,16 @@ final class RequestFactoryParser {
 
           } else if (methodParameterAnnotation instanceof Query) {
             Query query = (Query) methodParameterAnnotation;
-            action = new RequestAction.Query(query.value(), query.encoded());
+
+            RequestAction<?> queryAction = new RequestAction.Query(query.value(), query.encoded());
+            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            if (Iterable.class.isAssignableFrom(rawParameterType)) {
+              queryAction = queryAction.iterable();
+            } else if (rawParameterType.isArray()) {
+              queryAction = queryAction.array();
+            }
+
+            action = queryAction;
             gotQuery = true;
 
           } else if (methodParameterAnnotation instanceof QueryMap) {
@@ -267,14 +276,32 @@ final class RequestFactoryParser {
 
           } else if (methodParameterAnnotation instanceof Header) {
             Header header = (Header) methodParameterAnnotation;
-            action = new RequestAction.Header(header.value());
+
+            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            RequestAction<?> headerAction = new RequestAction.Header(header.value());
+            if (Iterable.class.isAssignableFrom(rawParameterType)) {
+              headerAction = headerAction.iterable();
+            } else if (rawParameterType.isArray()) {
+              headerAction = headerAction.array();
+            }
+
+            action = headerAction;
 
           } else if (methodParameterAnnotation instanceof Field) {
             if (!isFormEncoded) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
             Field field = (Field) methodParameterAnnotation;
-            action = new RequestAction.Field(field.value(), field.encoded());
+
+            RequestAction<?> fieldAction = new RequestAction.Field(field.value(), field.encoded());
+            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            if (Iterable.class.isAssignableFrom(rawParameterType)) {
+              fieldAction = fieldAction.iterable();
+            } else if (rawParameterType.isArray()) {
+              fieldAction = fieldAction.array();
+            }
+
+            action = fieldAction;
             gotField = true;
 
           } else if (methodParameterAnnotation instanceof FieldMap) {

@@ -27,6 +27,31 @@ import static retrofit.Utils.checkNotNull;
 abstract class RequestAction<T> {
   abstract void perform(RequestBuilder builder, T value);
 
+  final RequestAction<Iterable<T>> iterable() {
+    return new RequestAction<Iterable<T>>() {
+      @Override void perform(RequestBuilder builder, Iterable<T> values) {
+        if (values == null) return; // Skip null values.
+
+        for (T value : values) {
+          RequestAction.this.perform(builder, value);
+        }
+      }
+    };
+  }
+
+  final RequestAction<Object> array() {
+    return new RequestAction<Object>() {
+      @Override void perform(RequestBuilder builder, Object values) {
+        if (values == null) return; // Skip null values.
+
+        for (int i = 0, size = Array.getLength(values); i < size; i++) {
+          //noinspection unchecked
+          RequestAction.this.perform(builder, (T) Array.get(values, i));
+        }
+      }
+    };
+  }
+
   static final class Url extends RequestAction<String> {
     @Override void perform(RequestBuilder builder, String value) {
       builder.setRelativeUrl(value);
@@ -42,23 +67,7 @@ abstract class RequestAction<T> {
 
     @Override void perform(RequestBuilder builder, Object value) {
       if (value == null) return; // Skip null values.
-
-      if (value instanceof Iterable) {
-        for (Object iterableValue : (Iterable<?>) value) {
-          if (iterableValue != null) { // Skip null values.
-            builder.addHeader(name, iterableValue.toString());
-          }
-        }
-      } else if (value.getClass().isArray()) {
-        for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-          Object arrayValue = Array.get(value, x);
-          if (arrayValue != null) { // Skip null values.
-            builder.addHeader(name, arrayValue.toString());
-          }
-        }
-      } else {
-        builder.addHeader(name, value.toString());
-      }
+      builder.addHeader(name, value.toString());
     }
   }
 
@@ -91,23 +100,7 @@ abstract class RequestAction<T> {
 
     @Override void perform(RequestBuilder builder, Object value) {
       if (value == null) return; // Skip null values.
-
-      if (value instanceof Iterable) {
-        for (Object iterableValue : (Iterable<?>) value) {
-          if (iterableValue != null) { // Skip null values.
-            builder.addQueryParam(name, iterableValue.toString(), encoded);
-          }
-        }
-      } else if (value.getClass().isArray()) {
-        for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-          Object arrayValue = Array.get(value, x);
-          if (arrayValue != null) { // Skip null values.
-            builder.addQueryParam(name, arrayValue.toString(), encoded);
-          }
-        }
-      } else {
-        builder.addQueryParam(name, value.toString(), encoded);
-      }
+      builder.addQueryParam(name, value.toString(), encoded);
     }
   }
 
@@ -145,23 +138,7 @@ abstract class RequestAction<T> {
 
     @Override void perform(RequestBuilder builder, Object value) {
       if (value == null) return; // Skip null values.
-
-      if (value instanceof Iterable) {
-        for (Object iterableValue : (Iterable<?>) value) {
-          if (iterableValue != null) { // Skip null values.
-            builder.addFormField(name, iterableValue.toString(), encoded);
-          }
-        }
-      } else if (value.getClass().isArray()) {
-        for (int x = 0, arrayLength = Array.getLength(value); x < arrayLength; x++) {
-          Object arrayValue = Array.get(value, x);
-          if (arrayValue != null) { // Skip null values.
-            builder.addFormField(name, arrayValue.toString(), encoded);
-          }
-        }
-      } else {
-        builder.addFormField(name, value.toString(), encoded);
-      }
+      builder.addFormField(name, value.toString(), encoded);
     }
   }
 
