@@ -47,7 +47,6 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
   static final class ExecutorCallbackCall<T> implements Call<T> {
     private final Executor callbackExecutor;
     private final Call<T> delegate;
-    private volatile boolean canceled;
 
     ExecutorCallbackCall(Executor callbackExecutor, Call<T> delegate) {
       this.callbackExecutor = callbackExecutor;
@@ -59,7 +58,7 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
         @Override public void onResponse(final Response<T> response) {
           callbackExecutor.execute(new Runnable() {
             @Override public void run() {
-              if (canceled) {
+              if (delegate.isCanceled()) {
                 // Emulate OkHttp's behavior of throwing/delivering an IOException on cancelation
                 callback.onFailure(new IOException("Canceled"));
               } else {
@@ -84,8 +83,11 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public void cancel() {
-      canceled = true;
       delegate.cancel();
+    }
+
+    @Override public boolean isCanceled() {
+      return delegate.isCanceled();
     }
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.

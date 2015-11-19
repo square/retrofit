@@ -52,6 +52,9 @@ public interface Call<T> extends Cloneable {
    */
   void cancel();
 
+  /** True if {@link #cancel()} was called. */
+  boolean isCanceled();
+
   /**
    * Create a new, identical call to this one which can be enqueued or executed even if this call
    * has already been.
