@@ -159,6 +159,10 @@ public final class ExecutorCallAdapterFactoryTest {
       throw new UnsupportedOperationException();
     }
 
+    @Override public boolean isCanceled() {
+      return false;
+    }
+
     @Override public Call<String> clone() {
       throw new UnsupportedOperationException();
     }

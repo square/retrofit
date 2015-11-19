@@ -524,6 +524,7 @@ public final class CallTest {
     Call<String> call = service.getString();
 
     call.cancel();
+    assertThat(call.isCanceled()).isTrue();
 
     try {
       call.execute();
@@ -542,6 +543,7 @@ public final class CallTest {
     Call<String> call = service.getString();
 
     call.cancel();
+    assertThat(call.isCanceled()).isTrue();
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
@@ -601,6 +603,7 @@ public final class CallTest {
     });
 
     call.cancel();
+    assertThat(call.isCanceled()).isTrue();
 
     assertTrue(latch.await(2, SECONDS));
     assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");

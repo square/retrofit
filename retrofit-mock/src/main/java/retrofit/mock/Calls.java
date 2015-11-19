@@ -39,6 +39,10 @@ public final class Calls {
       @Override public void cancel() {
       }
 
+      @Override public boolean isCanceled() {
+        return false;
+      }
+
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.
       @Override public Call<T> clone() {
         return this;
@@ -57,6 +61,10 @@ public final class Calls {
       }
 
       @Override public void cancel() {
+      }
+
+      @Override public boolean isCanceled() {
+        return false;
       }
 
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.

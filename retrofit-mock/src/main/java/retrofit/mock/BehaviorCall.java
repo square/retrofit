@@ -154,4 +154,8 @@ final class BehaviorCall<T> implements Call<T> {
       task.cancel(true);
     }
   }
+
+  @Override public boolean isCanceled() {
+    return canceled;
+  }
 }

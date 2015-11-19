@@ -164,6 +164,10 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
+  @Override public boolean isCanceled() {
+    return canceled;
+  }
+
   static final class NoContentResponseBody extends ResponseBody {
     private final MediaType contentType;
     private final long contentLength;
