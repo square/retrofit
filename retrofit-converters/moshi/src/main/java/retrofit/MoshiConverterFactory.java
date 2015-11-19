@@ -49,12 +49,13 @@ public final class MoshiConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
     JsonAdapter<?> adapter = moshi.adapter(type);
     return new MoshiResponseBodyConverter<>(adapter);
   }
 
-  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
     JsonAdapter<?> adapter = moshi.adapter(type);
     return new MoshiRequestBodyConverter<>(adapter);
   }

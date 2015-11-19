@@ -245,7 +245,7 @@ public final class RxJavaCallAdapterFactoryTest {
 
   static class StringConverterFactory extends Converter.Factory {
     @Override
-    public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
       return new Converter<ResponseBody, String>() {
         @Override public String convert(ResponseBody value) throws IOException {
           return value.string();
@@ -253,7 +253,7 @@ public final class RxJavaCallAdapterFactoryTest {
       };
     }
 
-    @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+    @Override public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
       return new Converter<String, RequestBody>() {
         @Override public RequestBody convert(String value) throws IOException {
           return RequestBody.create(MediaType.parse("text/plain"), value);

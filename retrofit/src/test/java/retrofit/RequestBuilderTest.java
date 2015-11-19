@@ -1261,15 +1261,15 @@ public final class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Call<ResponseBody> method(@PartMap Map<String, Object> parts) {
+      Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<>();
-    params.put("ping", "pong");
+    Map<String, RequestBody> params = new LinkedHashMap<>();
+    params.put("ping", RequestBody.create(null, "pong"));
     params.put("foo", null); // Should be skipped.
-    params.put("kit", "kat");
+    params.put("kit", RequestBody.create(null, "kat"));
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("POST");
@@ -1298,15 +1298,15 @@ public final class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Call<ResponseBody> method(@PartMap(encoding = "8-bit") Map<String, Object> parts) {
+      Call<ResponseBody> method(@PartMap(encoding = "8-bit") Map<String, RequestBody> parts) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<>();
-    params.put("ping", "pong");
+    Map<String, RequestBody> params = new LinkedHashMap<>();
+    params.put("ping", RequestBody.create(null, "pong"));
     params.put("foo", null); // Should be skipped.
-    params.put("kit", "kat");
+    params.put("kit", RequestBody.create(null, "kat"));
 
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("POST");
@@ -1337,14 +1337,14 @@ public final class RequestBuilderTest {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
-      Call<ResponseBody> method(@PartMap Map<String, Object> parts) {
+      Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<>();
-    params.put("ping", "pong");
-    params.put(null, "kat");
+    Map<String, RequestBody> params = new LinkedHashMap<>();
+    params.put("ping", RequestBody.create(null, "pong"));
+    params.put(null, RequestBody.create(null, "kat"));
 
     try {
       buildRequest(Example.class, params);

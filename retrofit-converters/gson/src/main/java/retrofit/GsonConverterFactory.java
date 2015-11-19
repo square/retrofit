@@ -56,12 +56,13 @@ public final class GsonConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<ResponseBody, ?> fromResponseBody(Type type, Annotation[] annotations) {
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
     return new GsonResponseBodyConverter<>(adapter);
   }
 
-  @Override public Converter<?, RequestBody> toRequestBody(Type type, Annotation[] annotations) {
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
     return new GsonRequestBodyConverter<>(gson, adapter);
   }

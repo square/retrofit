@@ -89,13 +89,13 @@ final class Utils {
     }
   }
 
-  public static Type getSingleParameterUpperBound(ParameterizedType type) {
+  public static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
-    if (types.length != 1) {
+    if (types.length <= index) {
       throw new IllegalArgumentException(
-          "Expected one type argument but got: " + Arrays.toString(types));
+          "Expected at least " + index + " type argument(s) but got: " + Arrays.toString(types));
     }
-    Type paramType = types[0];
+    Type paramType = types[index];
     if (paramType instanceof WildcardType) {
       return ((WildcardType) paramType).getUpperBounds()[0];
     }
@@ -185,7 +185,7 @@ final class Utils {
       throw new IllegalArgumentException(
           "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
     }
-    final Type responseType = getSingleParameterUpperBound((ParameterizedType) returnType);
+    final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
     // Ensure the Call response type is not Response, we automatically deliver the Response object.
     if (getRawType(responseType) == retrofit.Response.class) {

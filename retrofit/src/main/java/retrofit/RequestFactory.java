@@ -18,6 +18,7 @@ package retrofit;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+import java.io.IOException;
 
 final class RequestFactory {
   private final String method;
@@ -44,7 +45,7 @@ final class RequestFactory {
     this.requestActions = requestActions;
   }
 
-  Request create(Object... args) {
+  Request create(Object... args) throws IOException {
     RequestBuilder requestBuilder =
         new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
             isFormEncoded, isMultipart);
