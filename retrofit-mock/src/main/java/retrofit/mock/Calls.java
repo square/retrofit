@@ -36,6 +36,10 @@ public final class Calls {
         callback.onResponse(response);
       }
 
+      @Override public boolean isExecuted() {
+        return false;
+      }
+
       @Override public void cancel() {
       }
 
@@ -58,6 +62,10 @@ public final class Calls {
 
       @Override public void enqueue(Callback<T> callback) {
         callback.onFailure(failure);
+      }
+
+      @Override public boolean isExecuted() {
+        return false;
       }
 
       @Override public void cancel() {

@@ -119,6 +119,10 @@ final class BehaviorCall<T> implements Call<T> {
     });
   }
 
+  @Override public synchronized boolean isExecuted() {
+    return executed;
+  }
+
   @Override public Response<T> execute() throws IOException {
     final AtomicReference<Response<T>> responseRef = new AtomicReference<>();
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();

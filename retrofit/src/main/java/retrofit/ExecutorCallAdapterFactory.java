@@ -78,6 +78,10 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
       });
     }
 
+    @Override public boolean isExecuted() {
+      return delegate.isExecuted();
+    }
+
     @Override public Response<T> execute() throws IOException {
       return delegate.execute();
     }

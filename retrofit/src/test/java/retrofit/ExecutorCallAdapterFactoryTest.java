@@ -151,6 +151,10 @@ public final class ExecutorCallAdapterFactoryTest {
       throw new UnsupportedOperationException();
     }
 
+    @Override public boolean isExecuted() {
+      return false;
+    }
+
     @Override public Response<String> execute() throws IOException {
       throw new UnsupportedOperationException();
     }
