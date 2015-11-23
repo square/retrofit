@@ -19,6 +19,7 @@ import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.CacheControl;
 import java.io.IOException;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -51,6 +52,10 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public void enqueue(final Callback<T> callback) {
+    enqueue(callback,null);
+  }
+
+  @Override public void enqueue(final Callback<T> callback, CacheControl cacheControl) {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
       executed = true;
@@ -58,7 +63,7 @@ final class OkHttpCall<T> implements Call<T> {
 
     com.squareup.okhttp.Call rawCall;
     try {
-      rawCall = createRawCall();
+      rawCall = createRawCall(cacheControl);
     } catch (Throwable t) {
       callback.onFailure(t);
       return;
@@ -107,12 +112,17 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   public Response<T> execute() throws IOException {
+   return execute(null);
+  }
+
+  @Override
+  public Response<T> execute(CacheControl cacheControl) throws IOException {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
       executed = true;
     }
 
-    com.squareup.okhttp.Call rawCall = createRawCall();
+    com.squareup.okhttp.Call rawCall = createRawCall(cacheControl);
     if (canceled) {
       rawCall.cancel();
     }
@@ -121,8 +131,8 @@ final class OkHttpCall<T> implements Call<T> {
     return parseResponse(rawCall.execute());
   }
 
-  private com.squareup.okhttp.Call createRawCall() throws IOException {
-    return client.newCall(requestFactory.create(args));
+  private com.squareup.okhttp.Call createRawCall(CacheControl cacheControl) throws IOException {
+    return client.newCall(requestFactory.create(cacheControl,args));
   }
 
   private Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
