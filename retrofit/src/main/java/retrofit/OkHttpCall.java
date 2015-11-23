@@ -102,6 +102,10 @@ final class OkHttpCall<T> implements Call<T> {
     });
   }
 
+  @Override public synchronized boolean isExecuted() {
+    return executed;
+  }
+
   public Response<T> execute() throws IOException {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");

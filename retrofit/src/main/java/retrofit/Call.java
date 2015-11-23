@@ -47,6 +47,12 @@ public interface Call<T> extends Cloneable {
   void enqueue(Callback<T> callback);
 
   /**
+   * Returns true if this call has been either {@linkplain #execute() executed} or {@linkplain
+   * #enqueue(Callback) enqueued}. It is an error to execute or enqueue a call more than once.
+   */
+  boolean isExecuted();
+
+  /**
    * Cancel this call. An attempt will be made to cancel in-flight calls, and if the call has not
    * yet been executed it never will be.
    */
