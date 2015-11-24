@@ -225,13 +225,25 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<T, RequestBody> requestConverter(Type type, Annotation[] annotations) {
+  public <T> Converter<T, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+    return nextRequestBodyConverter(null, type, annotations);
+  }
+
+  /**
+   * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
+   * {@linkplain #converterFactories() factories} except {@code skipPast}.
+   *
+   * @throws IllegalArgumentException if no converter available for {@code type}.
+   */
+  public <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
+      Type type, Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+    int start = converterFactories.indexOf(skipPast) + 1;
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
       Converter<?, RequestBody> converter =
-          converterFactories.get(i).requestBodyConverter(type, annotations);
+          converterFactories.get(i).requestBodyConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<T, RequestBody>) converter;
@@ -241,8 +253,14 @@ public final class Retrofit {
     StringBuilder builder = new StringBuilder("Could not locate RequestBody converter for ")
         .append(type)
         .append(". Tried:");
-    for (Converter.Factory converterFactory : converterFactories) {
-      builder.append("\n * ").append(converterFactory.getClass().getName());
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
+      builder.append("\n * ").append(converterFactories.get(i).getClass().getName());
+    }
+    if (skipPast != null) {
+      builder.append("\nSkipped:");
+      for (int i = 0; i < start; i++) {
+        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+      }
     }
     throw new IllegalArgumentException(builder.toString());
   }
@@ -253,13 +271,25 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<ResponseBody, T> responseConverter(Type type, Annotation[] annotations) {
+  public <T> Converter<ResponseBody, T> responseBodyConverter(Type type, Annotation[] annotations) {
+    return nextResponseBodyConverter(null, type, annotations);
+  }
+
+  /**
+   * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
+   * {@linkplain #converterFactories() factories} except {@code skipPast}.
+   *
+   * @throws IllegalArgumentException if no converter available for {@code type}.
+   */
+  public <T> Converter<ResponseBody, T> nextResponseBodyConverter(Converter.Factory skipPast,
+      Type type, Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+    int start = converterFactories.indexOf(skipPast) + 1;
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
       Converter<ResponseBody, ?> converter =
-          converterFactories.get(i).responseBodyConverter(type, annotations);
+          converterFactories.get(i).responseBodyConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<ResponseBody, T>) converter;
@@ -269,8 +299,14 @@ public final class Retrofit {
     StringBuilder builder = new StringBuilder("Could not locate ResponseBody converter for ")
         .append(type)
         .append(". Tried:");
-    for (Converter.Factory converterFactory : converterFactories) {
-      builder.append("\n * ").append(converterFactory.getClass().getName());
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
+      builder.append("\n * ").append(converterFactories.get(i).getClass().getName());
+    }
+    if (skipPast != null) {
+      builder.append("\nSkipped:");
+      for (int i = 0; i < start; i++) {
+        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+      }
     }
     throw new IllegalArgumentException(builder.toString());
   }

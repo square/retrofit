@@ -53,7 +53,7 @@ final class MethodHandler<T> {
       Retrofit retrofit, Type responseType) {
     Annotation[] annotations = method.getAnnotations();
     try {
-      return retrofit.responseConverter(responseType, annotations);
+      return retrofit.responseBodyConverter(responseType, annotations);
     } catch (RuntimeException e) { // Wide exception range because factories are user code.
       throw Utils.methodError(e, method, "Unable to create converter for %s", responseType);
     }

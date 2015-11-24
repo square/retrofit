@@ -63,7 +63,8 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class)) {
       return null;
     }
@@ -72,7 +73,8 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class)) {
       return null;
     }
