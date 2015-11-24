@@ -15,9 +15,11 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.CacheControl;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+
 import java.io.IOException;
 
 final class RequestFactory {
@@ -45,9 +47,16 @@ final class RequestFactory {
     this.requestActions = requestActions;
   }
 
-  Request create(Object... args) throws IOException {
+  Request create(CacheControl cacheControl,Object... args) throws IOException {
+    Headers requestHeader = headers;
+    if (cacheControl != null) {
+      String value = cacheControl.toString();
+      if (!value.isEmpty()) {
+        requestHeader = headers.newBuilder().set("Cache-Control", value).build();
+      }
+    }
     RequestBuilder requestBuilder =
-        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
+        new RequestBuilder(method, baseUrl.url(), relativeUrl, requestHeader, contentType, hasBody,
             isFormEncoded, isMultipart);
 
     if (args != null) {
