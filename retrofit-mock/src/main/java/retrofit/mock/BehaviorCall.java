@@ -22,6 +22,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.squareup.okhttp.CacheControl;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -58,7 +60,7 @@ final class BehaviorCall<T> implements Call<T> {
     return new BehaviorCall<>(behavior, backgroundExecutor, callbackExecutor, delegate.clone());
   }
 
-  @Override public void enqueue(final Callback<T> callback) {
+  @Override public void enqueue(final Callback<T> callback,CacheControl cacheControl) {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
       executed = true;
@@ -119,11 +121,15 @@ final class BehaviorCall<T> implements Call<T> {
     });
   }
 
+  @Override public void enqueue(Callback<T> callback) {
+    enqueue(callback,null);
+  }
+
   @Override public synchronized boolean isExecuted() {
     return executed;
   }
 
-  @Override public Response<T> execute() throws IOException {
+  @Override public Response<T> execute(CacheControl cacheControl) throws IOException {
     final AtomicReference<Response<T>> responseRef = new AtomicReference<>();
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
@@ -149,6 +155,10 @@ final class BehaviorCall<T> implements Call<T> {
     if (failure instanceof RuntimeException) throw (RuntimeException) failure;
     if (failure instanceof IOException) throw (IOException) failure;
     throw new RuntimeException(failure);
+  }
+
+  @Override public Response<T> execute() throws IOException {
+    return execute(null);
   }
 
   @Override public void cancel() {

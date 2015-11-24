@@ -15,6 +15,8 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.CacheControl;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -54,6 +56,10 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public void enqueue(final Callback<T> callback) {
+      enqueue(callback,null);
+    }
+
+    @Override public void enqueue(final Callback<T> callback, CacheControl cacheControl) {
       delegate.enqueue(new Callback<T>() {
         @Override public void onResponse(final Response<T> response) {
           callbackExecutor.execute(new Runnable() {
@@ -75,7 +81,7 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
             }
           });
         }
-      });
+      },cacheControl);
     }
 
     @Override public boolean isExecuted() {
@@ -83,7 +89,12 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     }
 
     @Override public Response<T> execute() throws IOException {
-      return delegate.execute();
+      return delegate.execute(null);
+    }
+
+    @Override
+    public Response<T> execute(CacheControl cacheControl) throws IOException {
+      return delegate.execute(cacheControl);
     }
 
     @Override public void cancel() {

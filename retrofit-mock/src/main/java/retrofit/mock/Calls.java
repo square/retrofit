@@ -16,6 +16,8 @@
 package retrofit.mock;
 
 import java.io.IOException;
+
+import com.squareup.okhttp.CacheControl;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -32,7 +34,17 @@ public final class Calls {
         return response;
       }
 
+      @Override
+      public Response<T> execute(CacheControl cacheControl) throws IOException {
+        return response;
+      }
+
       @Override public void enqueue(Callback<T> callback) {
+        callback.onResponse(response);
+      }
+
+      @Override
+      public void enqueue(Callback<T> callback, CacheControl cacheControl) {
         callback.onResponse(response);
       }
 
@@ -60,7 +72,17 @@ public final class Calls {
         throw failure;
       }
 
+      @Override
+      public Response<T> execute(CacheControl cacheControl) throws IOException {
+        throw failure;
+      }
+
       @Override public void enqueue(Callback<T> callback) {
+        callback.onFailure(failure);
+      }
+
+      @Override
+      public void enqueue(Callback<T> callback, CacheControl cacheControl) {
         callback.onFailure(failure);
       }
 
