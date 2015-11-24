@@ -15,6 +15,8 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.CacheControl;
+
 import java.io.IOException;
 
 /**
@@ -41,10 +43,24 @@ public interface Call<T> extends Cloneable {
   Response<T> execute() throws IOException;
 
   /**
+   * Synchronously send the request with custom {@link CacheControl} and return its response.
+   * @param cacheControl Cache policy specified for http requests.
+   * @return
+   * @throws IOException
+   */
+  Response<T> execute(CacheControl cacheControl) throws IOException;
+
+  /**
    * Asynchronously send the request and notify {@code callback} of its response or if an error
    * occurred talking to the server, creating the request, or processing the response.
    */
   void enqueue(Callback<T> callback);
+
+  /**
+   * Asynchronously send the request with custom {@link CacheControl} and notify {@code callback} of its response or if an error
+   * occurred talking to the server, creating the request, or processing the response.
+   */
+  void enqueue(Callback<T> callback,CacheControl cacheControl);
 
   /**
    * Returns true if this call has been either {@linkplain #execute() executed} or {@linkplain
