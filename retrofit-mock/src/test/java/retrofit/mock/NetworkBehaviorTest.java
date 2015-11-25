@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit;
+package retrofit.mock;
 
 import java.util.Random;
 import org.junit.Test;

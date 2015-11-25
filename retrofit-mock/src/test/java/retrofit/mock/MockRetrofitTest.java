@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package retrofit;
+package retrofit.mock;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -25,6 +25,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.Response;
+import retrofit.Retrofit;
 import retrofit.mock.CallBehaviorAdapter;
 import retrofit.mock.Calls;
 import retrofit.mock.MockRetrofit;
