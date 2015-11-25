@@ -1223,6 +1223,67 @@ public final class RequestBuilderTest {
         .contains("\r\nkat\r\n--");
   }
 
+  @Test public void multipartArray() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("ping") String[] ping) {
+        return null;
+      }
+    }
+
+    Request request =
+        buildRequest(Example.class, new Object[] { new String[] { "pong1", "pong2" } });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong1\r\n--");
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"")
+        .contains("\r\npong2\r\n--");
+  }
+
+  @Test public void multipartIterable() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("ping") List<String> ping) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, Arrays.asList("pong1", "pong2"));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong1\r\n--");
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"")
+        .contains("\r\npong2\r\n--");
+  }
+
   @Test public void multipartWithEncoding() throws IOException {
     class Example {
       @Multipart //
