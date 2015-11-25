@@ -24,7 +24,8 @@ import retrofit.http.Streaming;
 
 final class BuiltInConverters extends Converter.Factory {
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (type == ResponseBody.class) {
       if (Utils.isAnnotationPresent(annotations, Streaming.class)) {
         return StreamingResponseBodyConverter.INSTANCE;
@@ -38,7 +39,8 @@ final class BuiltInConverters extends Converter.Factory {
   }
 
   @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
       return RequestBodyConverter.INSTANCE;
     }

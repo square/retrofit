@@ -45,7 +45,8 @@ public interface Converter<F, T> {
      * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
      * declaration.
      */
-    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+        Retrofit retrofit) {
       return null;
     }
 
@@ -55,7 +56,8 @@ public interface Converter<F, T> {
      * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap}
      * values.
      */
-    public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+    public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+        Retrofit retrofit) {
       return null;
     }
 

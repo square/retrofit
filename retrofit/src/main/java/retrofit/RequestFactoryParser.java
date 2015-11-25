@@ -408,7 +408,7 @@ final class RequestFactoryParser {
             Converter<?, RequestBody> converter;
             try {
               converter =
-                  retrofit.requestConverter(methodParameterType, methodParameterAnnotations);
+                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Part converter for %s",
                   methodParameterType);
@@ -434,7 +434,7 @@ final class RequestFactoryParser {
             }
             Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
             Converter<?, RequestBody> valueConverter =
-                retrofit.requestConverter(valueType, methodParameterAnnotations);
+                retrofit.requestBodyConverter(valueType, methodParameterAnnotations);
 
             PartMap partMap = (PartMap) methodParameterAnnotation;
             action = new RequestAction.PartMap<>(valueConverter, partMap.encoding());
@@ -452,7 +452,7 @@ final class RequestFactoryParser {
             Converter<?, RequestBody> converter;
             try {
               converter =
-                  retrofit.requestConverter(methodParameterType, methodParameterAnnotations);
+                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Body converter for %s",
                   methodParameterType);

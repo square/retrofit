@@ -63,7 +63,7 @@ public final class DeserializeErrorBody {
 
     // Look up a converter for the Error type on the Retrofit instance.
     Converter<ResponseBody, Error> errorConverter =
-        retrofit.responseConverter(Error.class, new Annotation[0]);
+        retrofit.responseBodyConverter(Error.class, new Annotation[0]);
     // Convert the error body into our Error type.
     Error error = errorConverter.convert(response.errorBody());
     System.out.println("ERROR: " + error.message);

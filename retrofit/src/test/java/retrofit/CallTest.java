@@ -191,7 +191,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+              Retrofit retrofit) {
             return new Converter<String, RequestBody>() {
               @Override public RequestBody convert(String value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
@@ -216,7 +217,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+              Retrofit retrofit) {
             return new Converter<String, RequestBody>() {
               @Override public RequestBody convert(String value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
@@ -250,7 +252,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+              Annotation[] annotations, Retrofit retrofit) {
             return new Converter<ResponseBody, String>() {
               @Override public String convert(ResponseBody value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
@@ -294,7 +297,8 @@ public final class CallTest {
         .client(client)
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+              Annotation[] annotations, Retrofit retrofit) {
             return new Converter<ResponseBody, String>() {
               @Override public String convert(ResponseBody value) throws IOException {
                 try {
@@ -326,7 +330,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+              Annotation[] annotations, Retrofit retrofit) {
             return new Converter<ResponseBody, String>() {
               @Override public String convert(ResponseBody value) throws IOException {
                 throw new UnsupportedOperationException("I am broken!");
@@ -367,7 +372,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+              Annotation[] annotations, Retrofit retrofit) {
             return converter;
           }
         })
@@ -392,7 +398,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+              Annotation[] annotations, Retrofit retrofit) {
             return converter;
           }
         })

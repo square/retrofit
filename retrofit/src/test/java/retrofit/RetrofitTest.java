@@ -272,9 +272,10 @@ public final class RetrofitTest {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory extends Converter.Factory {
       @Override
-      public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations) {
+      public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
         annotationsRef.set(annotations);
-        return new ToStringConverterFactory().responseBodyConverter(type, annotations);
+        return new ToStringConverterFactory().responseBodyConverter(type, annotations, retrofit);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -292,9 +293,10 @@ public final class RetrofitTest {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory extends Converter.Factory {
       @Override
-      public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
+      public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
         annotationsRef.set(annotations);
-        return new ToStringConverterFactory().requestBodyConverter(type, annotations);
+        return new ToStringConverterFactory().requestBodyConverter(type, annotations, retrofit);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -692,12 +694,12 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).requestBodyConverter(type, annotations);
+    doReturn(expectedAdapter).when(factory).requestBodyConverter(type, annotations, retrofit);
 
-    Converter<?, RequestBody> actualAdapter = retrofit.requestConverter(type, annotations);
+    Converter<?, RequestBody> actualAdapter = retrofit.requestBodyConverter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
-    verify(factory).requestBodyConverter(type, annotations);
+    verify(factory).requestBodyConverter(type, annotations, retrofit);
     verifyNoMoreInteractions(factory);
   }
 
@@ -707,7 +709,8 @@ public final class RetrofitTest {
 
     Converter.Factory factory1 = spy(new Converter.Factory() {
       @Override
-      public Converter<?, RequestBody> requestBodyConverter(Type returnType, Annotation[] annotations) {
+      public Converter<?, RequestBody> requestBodyConverter(Type returnType,
+          Annotation[] annotations, Retrofit retrofit) {
         return null;
       }
     });
@@ -718,13 +721,13 @@ public final class RetrofitTest {
         .build();
 
     try {
-      retrofit.requestConverter(type, annotations);
+      retrofit.requestBodyConverter(type, annotations);
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageStartingWith(
           "Could not locate RequestBody converter for class java.lang.String. Tried:");
     }
 
-    verify(factory1).requestBodyConverter(type, annotations);
+    verify(factory1).requestBodyConverter(type, annotations, retrofit);
     verifyNoMoreInteractions(factory1);
   }
 
@@ -740,12 +743,12 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).responseBodyConverter(type, annotations);
+    doReturn(expectedAdapter).when(factory).responseBodyConverter(type, annotations, retrofit);
 
-    Converter<ResponseBody, ?> actualAdapter = retrofit.responseConverter(type, annotations);
+    Converter<ResponseBody, ?> actualAdapter = retrofit.responseBodyConverter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
-    verify(factory).responseBodyConverter(type, annotations);
+    verify(factory).responseBodyConverter(type, annotations, retrofit);
     verifyNoMoreInteractions(factory);
   }
 
@@ -755,7 +758,8 @@ public final class RetrofitTest {
 
     Converter.Factory factory1 = spy(new Converter.Factory() {
       @Override
-      public Converter<ResponseBody, ?> responseBodyConverter(Type returnType, Annotation[] annotations) {
+      public Converter<ResponseBody, ?> responseBodyConverter(Type returnType,
+          Annotation[] annotations, Retrofit retrofit) {
         return null;
       }
     });
@@ -766,13 +770,13 @@ public final class RetrofitTest {
         .build();
 
     try {
-      retrofit.responseConverter(type, annotations);
+      retrofit.responseBodyConverter(type, annotations);
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageStartingWith(
           "Could not locate ResponseBody converter for class java.lang.String. Tried:");
     }
 
-    verify(factory1).responseBodyConverter(type, annotations);
+    verify(factory1).responseBodyConverter(type, annotations, retrofit);
     verifyNoMoreInteractions(factory1);
   }
 
