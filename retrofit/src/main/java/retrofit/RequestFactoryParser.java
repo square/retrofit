@@ -405,15 +405,31 @@ final class RequestFactoryParser {
             com.squareup.okhttp.Headers headers = com.squareup.okhttp.Headers.of(
                 "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
-            Converter<?, RequestBody> converter;
-            try {
-              converter =
+
+            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            if (Iterable.class.isAssignableFrom(rawParameterType)) {
+              if (!(methodParameterType instanceof ParameterizedType)) {
+                throw parameterError(i, rawParameterType.getSimpleName()
+                    + " must include generic type (e.g., "
+                    + rawParameterType.getSimpleName()
+                    + "<String>)");
+              }
+              ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+              Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+              Converter<?, RequestBody> valueConverter =
+                  retrofit.requestBodyConverter(iterableType, methodParameterAnnotations);
+              action = new RequestAction.Part<>(headers, valueConverter).iterable();
+            } else if (rawParameterType.isArray()) {
+              Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+              Converter<?, RequestBody> valueConverter =
+                  retrofit.requestBodyConverter(arrayComponentType, methodParameterAnnotations);
+              action = new RequestAction.Part<>(headers, valueConverter).array();
+            } else {
+              Converter<?, RequestBody> valueConverter =
                   retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
-            } catch (RuntimeException e) { // Wide exception range because factories are user code.
-              throw parameterError(e, i, "Unable to create @Part converter for %s",
-                  methodParameterType);
+              action = new RequestAction.Part<>(headers, valueConverter);
             }
-            action = new RequestAction.Part<>(headers, converter);
+
             gotPart = true;
 
           } else if (methodParameterAnnotation instanceof PartMap) {
