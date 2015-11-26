@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -44,6 +45,7 @@ import retrofit.http.PUT;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
 import retrofit.http.Path;
+import retrofit.http.PathPrefix;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 import retrofit.http.Url;
@@ -69,6 +71,7 @@ final class RequestFactoryParser {
   private boolean hasBody;
   private boolean isFormEncoded;
   private boolean isMultipart;
+  private String pathPrefix;
   private String relativeUrl;
   private com.squareup.okhttp.Headers headers;
   private MediaType contentType;
@@ -92,6 +95,18 @@ final class RequestFactoryParser {
 
   private RuntimeException parameterError(int index, String message, Object... args) {
     return methodError(method, message + " (parameter #" + (index + 1) + ")", args);
+  }
+
+  private String getPathPrefix() {
+    if (pathPrefix == null) {
+      if (method.getDeclaringClass().isAnnotationPresent(PathPrefix.class)) {
+        PathPrefix pathAnnotation = method.getDeclaringClass().getAnnotation(PathPrefix.class);
+        pathPrefix = pathAnnotation.value();
+      } else {
+        pathPrefix = "";
+      }
+    }
+    return pathPrefix;
   }
 
   private void parseMethodAnnotations(Type responseType) {
@@ -159,15 +174,17 @@ final class RequestFactoryParser {
     this.httpMethod = httpMethod;
     this.hasBody = hasBody;
 
-    if (value.isEmpty()) {
+    String combinedRelativeUrl = getPathPrefix() + value;
+
+    if (combinedRelativeUrl.isEmpty()) {
       return;
     }
 
     // Get the relative URL path and existing query string, if present.
-    int question = value.indexOf('?');
-    if (question != -1 && question < value.length() - 1) {
+    int question = combinedRelativeUrl.indexOf('?');
+    if (question != -1 && question < combinedRelativeUrl.length() - 1) {
       // Ensure the query string does not have any named parameters.
-      String queryParams = value.substring(question + 1);
+      String queryParams = combinedRelativeUrl.substring(question + 1);
       Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(queryParams);
       if (queryParamMatcher.find()) {
         throw methodError(method, "URL query string \"%s\" must not have replace block. "
@@ -175,8 +192,8 @@ final class RequestFactoryParser {
       }
     }
 
-    this.relativeUrl = value;
-    this.relativeUrlParamNames = parsePathParameters(value);
+    this.relativeUrl = combinedRelativeUrl;
+    this.relativeUrlParamNames = parsePathParameters(combinedRelativeUrl);
   }
 
   private com.squareup.okhttp.Headers parseHeaders(String[] headers) {

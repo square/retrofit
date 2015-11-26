@@ -38,6 +38,7 @@ import retrofit.http.PUT;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
 import retrofit.http.Path;
+import retrofit.http.PathPrefix;
 import retrofit.http.Query;
 import retrofit.http.QueryMap;
 import retrofit.http.Url;
@@ -1748,6 +1749,36 @@ public final class RequestBuilderTest {
     RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "Plain");
     Request request = buildRequest(Example.class, "text/not-plain", body);
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
+  }
+
+  @Test public void testPathPrefix() {
+    @PathPrefix("/foo")
+    class Example {
+      @GET("/bar") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void testPathPrefix2() {
+    @PathPrefix("/foo")
+    class Example {
+      @GET("Bar") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/fooBar");
+    assertThat(request.body()).isNull();
   }
 
   private static void assertBody(RequestBody body, String expected) {
