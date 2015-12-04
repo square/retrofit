@@ -19,22 +19,34 @@ import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-class ToStringConverterFactory implements Converter.Factory {
+class ToStringConverterFactory extends Converter.Factory {
   private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
 
-  @Override public Converter get(Type type) {
-    return new StringConverter();
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    if (String.class.equals(type)) {
+      return new Converter<ResponseBody, String>() {
+        @Override public String convert(ResponseBody value) throws IOException {
+          return value.string();
+        }
+      };
+    }
+    return null;
   }
 
-  static class StringConverter implements Converter<Object> {
-    @Override public String fromBody(ResponseBody body) throws IOException {
-      return body.string();
+  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+      Annotation[] annotations, Retrofit retrofit) {
+    if (String.class.equals(type)) {
+      return new Converter<String, RequestBody>() {
+        @Override public RequestBody convert(String value) throws IOException {
+          return RequestBody.create(MEDIA_TYPE, value);
+        }
+      };
     }
-
-    @Override public RequestBody toBody(Object value) {
-      return RequestBody.create(MEDIA_TYPE, String.valueOf(value));
-    }
+    return null;
   }
 }

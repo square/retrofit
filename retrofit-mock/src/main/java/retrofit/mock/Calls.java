@@ -36,7 +36,15 @@ public final class Calls {
         callback.onResponse(response);
       }
 
+      @Override public boolean isExecuted() {
+        return false;
+      }
+
       @Override public void cancel() {
+      }
+
+      @Override public boolean isCanceled() {
+        return false;
       }
 
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.
@@ -56,7 +64,15 @@ public final class Calls {
         callback.onFailure(failure);
       }
 
+      @Override public boolean isExecuted() {
+        return false;
+      }
+
       @Override public void cancel() {
+      }
+
+      @Override public boolean isCanceled() {
+        return false;
       }
 
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.

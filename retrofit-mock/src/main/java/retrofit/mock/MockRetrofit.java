@@ -20,12 +20,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public final class MockRetrofit {
-  private final BehaviorAdapter<Object> adapter;
-  private final Behavior behavior;
+  private final NetworkBehavior behavior;
+  private final NetworkBehavior.Adapter<Object> adapter;
 
   @SuppressWarnings("unchecked") //
-  public MockRetrofit(BehaviorAdapter<?> adapter, Behavior behavior) {
-    this.adapter = (BehaviorAdapter<Object>) adapter;
+  public MockRetrofit(NetworkBehavior behavior, NetworkBehavior.Adapter<?> adapter) {
+    this.adapter = (NetworkBehavior.Adapter<Object>) adapter;
     this.behavior = behavior;
   }
 
@@ -39,7 +39,9 @@ public final class MockRetrofit {
               return method.invoke(this, args);
             }
             method.setAccessible(true); // Just In Case™
-            return adapter.applyBehavior(behavior, method.invoke(instance, args));
+
+            Object value = method.invoke(instance, args);
+            return adapter.applyBehavior(behavior, value);
           }
         });
   }

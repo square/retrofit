@@ -89,7 +89,7 @@ public final class GsonConverterFactoryTest {
         .create();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .converterFactory(GsonConverterFactory.create(gson))
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .build();
     service = retrofit.create(Service.class);
   }
@@ -118,6 +118,15 @@ public final class GsonConverterFactoryTest {
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readUtf8()).isEqualTo("{\"theName\":\"value\"}");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
 
+  @Test public void serializeUsesConfiguration() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    service.anImplementation(new AnImplementation(null)).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 }

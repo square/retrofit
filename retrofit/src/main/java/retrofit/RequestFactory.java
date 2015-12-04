@@ -18,39 +18,40 @@ package retrofit;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+import java.io.IOException;
 
 final class RequestFactory {
   private final String method;
   private final BaseUrl baseUrl;
   private final String relativeUrl;
   private final Headers headers;
-  private final MediaType mediaType;
+  private final MediaType contentType;
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
-  private final RequestBuilderAction[] requestBuilderActions;
+  private final RequestAction[] requestActions;
 
   RequestFactory(String method, BaseUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
-      RequestBuilderAction[] requestBuilderActions) {
+      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
+      RequestAction[] requestActions) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
     this.headers = headers;
-    this.mediaType = mediaType;
+    this.contentType = contentType;
     this.hasBody = hasBody;
     this.isFormEncoded = isFormEncoded;
     this.isMultipart = isMultipart;
-    this.requestBuilderActions = requestBuilderActions;
+    this.requestActions = requestActions;
   }
 
-  Request create(Object... args) {
+  Request create(Object... args) throws IOException {
     RequestBuilder requestBuilder =
-        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, mediaType, hasBody,
+        new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
             isFormEncoded, isMultipart);
 
     if (args != null) {
-      RequestBuilderAction[] actions = requestBuilderActions;
+      RequestAction[] actions = requestActions;
       if (actions.length != args.length) {
         throw new IllegalArgumentException("Argument count ("
             + args.length

@@ -29,7 +29,7 @@
   <packaging>pom</packaging>
 
   <name>Retrofit (Parent)</name>
-  <description>Type-safe REST client for Android and Java by Square, Inc.</description>
+  <description>Type-safe HTTP client for Android and Java by Square, Inc.</description>
   <url>http://github.com/square/retrofit/</url>
 
   <modules>
@@ -50,18 +50,19 @@
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
-    <okhttp.version>2.5.0-SNAPSHOT</okhttp.version>
+    <okhttp.version>2.5.0</okhttp.version>
+    <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
-    <rxjava.version>1.0.10</rxjava.version>
+    <rxjava.version>1.0.14</rxjava.version>
 
     <!-- Converter Dependencies -->
-    <gson.version>2.3.1</gson.version>
+    <gson.version>2.4</gson.version>
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.4.3</jackson.version>
-    <wire.version>1.7.0</wire.version>
+    <wire.version>2.0.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
-    <moshi.version>0.9.0</moshi.version>
+    <moshi.version>1.0.0</moshi.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.12</junit.version>
@@ -100,6 +101,11 @@
         <groupId>com.google.android</groupId>
         <artifactId>android</artifactId>
         <version>${android.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-annotations</artifactId>
+        <version>${animal.sniffer.version}</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp</groupId>
@@ -213,6 +219,27 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>${animal.sniffer.version}</version>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>java16</artifactId>
+            <version>1.1</version>
+          </signature>
+        </configuration>
       </plugin>
     </plugins>
   </build>

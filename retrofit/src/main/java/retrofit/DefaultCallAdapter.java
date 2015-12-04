@@ -15,6 +15,7 @@
  */
 package retrofit;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /**
@@ -22,18 +23,15 @@ import java.lang.reflect.Type;
  * synchronous calls this is the application thread making the request; for asynchronous calls this
  * is a thread provided by OkHttp's dispatcher.
  */
-final class DefaultCallAdapter<T> implements CallAdapter<T> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public CallAdapter<?> get(Type returnType) {
+final class DefaultCallAdapter implements CallAdapter<Call<?>> {
+  static final Factory FACTORY = new Factory() {
+    @Override
+    public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
       if (Utils.getRawType(returnType) != Call.class) {
         return null;
       }
       Type responseType = Utils.getCallResponseType(returnType);
-      return new DefaultCallAdapter<>(responseType);
-    }
-
-    @Override public String toString() {
-      return "Default";
+      return new DefaultCallAdapter(responseType);
     }
   };
 
@@ -47,7 +45,7 @@ final class DefaultCallAdapter<T> implements CallAdapter<T> {
     return responseType;
   }
 
-  @Override public Call<T> adapt(Call<T> call) {
+  @Override public <R> Call<R> adapt(Call<R> call) {
     return call;
   }
 }

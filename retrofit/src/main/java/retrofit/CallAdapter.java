@@ -15,8 +15,10 @@
  */
 package retrofit;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+/** Adapts a {@link Call} into the type of {@code T}. */
 public interface CallAdapter<T> {
   /**
    * Returns the value type that this adapter uses when converting the HTTP response body to a Java
@@ -28,18 +30,15 @@ public interface CallAdapter<T> {
    */
   Type responseType();
 
-  /**
-   * Returns an instance of the {@code returnType}, the same type originally passed to {@link
-   * Factory#get} used to create this instance.
-   */
-  Object adapt(Call<T> call);
+  /** Returns an instance of the {@code T} which adapts the execution of {@code call}. */
+  <R> T adapt(Call<R> call);
 
+  /** Creates {@link CallAdapter} instances based on a desired type. */
   interface Factory {
-
     /**
-     * Returns a call adapter for calls that return {@code returnType}, or null if this factory
-     * doesn't adapt that type.
+     * Returns a call adapter for interface methods that return {@code returnType}, or null if it
+     * cannot be handled by this factory.
      */
-    CallAdapter<?> get(Type returnType);
+    CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit);
   }
 }

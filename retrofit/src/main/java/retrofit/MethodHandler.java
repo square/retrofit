@@ -17,74 +17,55 @@ package retrofit;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import retrofit.http.Streaming;
-
-import static retrofit.Utils.methodError;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
-  static MethodHandler<?> create(Method method, OkHttpClient client, BaseUrl baseUrl,
-      CallAdapter.Factory callAdapterFactory, Converter.Factory converterFactory) {
-    CallAdapter<Object> callAdapter =
-        (CallAdapter<Object>) createCallAdapter(method, callAdapterFactory);
-    Converter<Object> responseConverter =
-        (Converter<Object>) createResponseConverter(method, callAdapter.responseType(),
-            converterFactory);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, baseUrl, converterFactory);
-    return new MethodHandler<>(client, requestFactory, callAdapter, responseConverter);
+  static MethodHandler<?> create(Retrofit retrofit, Method method) {
+    CallAdapter<Object> callAdapter = (CallAdapter<Object>) createCallAdapter(method, retrofit);
+    Type responseType = callAdapter.responseType();
+    Converter<ResponseBody, Object> responseConverter =
+        (Converter<ResponseBody, Object>) createResponseConverter(method, retrofit, responseType);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
+    return new MethodHandler<>(retrofit.client(), requestFactory, callAdapter, responseConverter);
   }
 
-  private static CallAdapter<?> createCallAdapter(Method method,
-      CallAdapter.Factory adapterFactory) {
+  private static CallAdapter<?> createCallAdapter(Method method, Retrofit retrofit) {
     Type returnType = method.getGenericReturnType();
     if (Utils.hasUnresolvableType(returnType)) {
-      throw methodError(method,
+      throw Utils.methodError(method,
           "Method return type must not include a type variable or wildcard: %s", returnType);
     }
-
     if (returnType == void.class) {
-      throw methodError(method, "Service methods cannot return void.");
+      throw Utils.methodError(method, "Service methods cannot return void.");
     }
-
-    CallAdapter<?> adapter = adapterFactory.get(returnType);
-    if (adapter == null) {
-      throw methodError(method, "Call adapter factory '%s' was unable to handle return type %s",
-          adapterFactory, returnType);
+    Annotation[] annotations = method.getAnnotations();
+    try {
+      return retrofit.callAdapter(returnType, annotations);
+    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+      throw Utils.methodError(e, method, "Unable to create call adapter for %s", returnType);
     }
-    return adapter;
   }
 
-  private static Converter<?> createResponseConverter(Method method, Type responseType,
-      Converter.Factory converterFactory) {
-    if (responseType == ResponseBody.class) {
-      boolean isStreaming = method.isAnnotationPresent(Streaming.class);
-      return new OkHttpResponseBodyConverter(isStreaming);
+  private static Converter<ResponseBody, ?> createResponseConverter(Method method,
+      Retrofit retrofit, Type responseType) {
+    Annotation[] annotations = method.getAnnotations();
+    try {
+      return retrofit.responseBodyConverter(responseType, annotations);
+    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+      throw Utils.methodError(e, method, "Unable to create converter for %s", responseType);
     }
-
-    if (converterFactory == null) {
-      throw methodError(method, "Method response type is "
-          + responseType
-          + " but no converter factory registered. "
-          + "Either add a converter factory to the Retrofit instance or use ResponseBody.");
-    }
-
-    Converter<?> converter = converterFactory.get(responseType);
-    if (converter == null) {
-      throw methodError(method, "Converter factory '%s' was unable to handle response type %s",
-          converterFactory, responseType);
-    }
-    return converter;
   }
 
   private final OkHttpClient client;
   private final RequestFactory requestFactory;
   private final CallAdapter<T> callAdapter;
-  private final Converter<T> responseConverter;
+  private final Converter<ResponseBody, T> responseConverter;
 
   private MethodHandler(OkHttpClient client, RequestFactory requestFactory,
-      CallAdapter<T> callAdapter, Converter<T> responseConverter) {
+      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter) {
     this.client = client;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;

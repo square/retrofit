@@ -18,26 +18,28 @@ package retrofit.http;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import retrofit.Retrofit;
+import retrofit.Converter;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Denotes name and value parts of a multi-part request
+ * Denotes name and value parts of a multi-part request.
  * <p>
- * Values of the map on which this annotation exists will be processed in one of three ways:
+ * Values of the map on which this annotation exists will be processed in one of two ways:
  * <ul>
- * <li>If the type is {@link String} the value will also be used directly with a {@code text/plain}
- * content type.</li>
+ * <li>If the type is {@link com.squareup.okhttp.RequestBody RequestBody} the value will be used
+ * directly with its content type.</li>
  * <li>Other object types will be converted to an appropriate representation by using
- * {@linkplain Retrofit#converterFactory() a converter}.</li>
+ * {@linkplain Converter a converter}.</li>
  * </ul>
  * <p>
  * <pre>
  * &#64;Multipart
  * &#64;POST("/upload")
- * void upload(&#64;Part("file") TypedFile file, &#64;PartMap Map&lt;String, String&gt; params);
+ * Call&lt;ResponseBody> upload(
+ *     &#64;Part("file") RequestBody file,
+ *     &#64;PartMap Map&lt;String, RequestBody&gt; params);
  * </pre>
  *
  * @see Multipart
@@ -47,6 +49,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface PartMap {
-  /** The {@code Content-Transfer-Encoding} of this part. */
+  /** The {@code Content-Transfer-Encoding} of the parts. */
   String encoding() default "binary";
 }

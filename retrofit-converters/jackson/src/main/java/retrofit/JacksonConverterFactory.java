@@ -19,10 +19,20 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-/** A {@linkplain Converter.Factory converter} which uses Jackson. */
-public final class JacksonConverterFactory implements Converter.Factory {
+/**
+ * A {@linkplain Converter.Factory converter} which uses Jackson.
+ * <p>
+ * Because Jackson is so flexible in the types it supports, this converter assumes that it can
+ * handle all types. If you are mixing JSON serialization with something else (such as protocol
+ * buffers), you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this
+ * instance} last to allow the other converters a chance to see their types.
+ */
+public final class JacksonConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link ObjectMapper} instance for conversion. */
   public static JacksonConverterFactory create() {
     return create(new ObjectMapper());
@@ -40,10 +50,19 @@ public final class JacksonConverterFactory implements Converter.Factory {
     this.mapper = mapper;
   }
 
-  @Override public Converter<?> get(Type type) {
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    JavaType javaType = mapper.getTypeFactory().constructType(type);
+    ObjectReader reader = mapper.reader(javaType);
+    return new JacksonResponseBodyConverter<>(reader);
+  }
+
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     JavaType javaType = mapper.getTypeFactory().constructType(type);
     ObjectWriter writer = mapper.writerWithType(javaType);
-    ObjectReader reader = mapper.reader(javaType);
-    return new JacksonConverter<>(writer, reader);
+    return new JacksonRequestBodyConverter<>(writer);
   }
 }

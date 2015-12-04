@@ -15,25 +15,30 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.ForwardingSource;
+import okio.Okio;
 
 import static retrofit.Utils.closeQuietly;
 
 final class OkHttpCall<T> implements Call<T> {
   private final OkHttpClient client;
   private final RequestFactory requestFactory;
-  private final Converter<T> responseConverter;
+  private final Converter<ResponseBody, T> responseConverter;
   private final Object[] args;
 
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
-  OkHttpCall(OkHttpClient client, RequestFactory requestFactory, Converter<T> responseConverter,
-      Object[] args) {
+  OkHttpCall(OkHttpClient client, RequestFactory requestFactory,
+      Converter<ResponseBody, T> responseConverter, Object[] args) {
     this.client = client;
     this.requestFactory = requestFactory;
     this.responseConverter = responseConverter;
@@ -45,7 +50,7 @@ final class OkHttpCall<T> implements Call<T> {
     return new OkHttpCall<>(client, requestFactory, responseConverter, args);
   }
 
-  public void enqueue(final Callback<T> callback) {
+  @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
       executed = true;
@@ -97,6 +102,10 @@ final class OkHttpCall<T> implements Call<T> {
     });
   }
 
+  @Override public synchronized boolean isExecuted() {
+    return executed;
+  }
+
   public Response<T> execute() throws IOException {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
@@ -112,7 +121,7 @@ final class OkHttpCall<T> implements Call<T> {
     return parseResponse(rawCall.execute());
   }
 
-  private com.squareup.okhttp.Call createRawCall() {
+  private com.squareup.okhttp.Call createRawCall() throws IOException {
     return client.newCall(requestFactory.create(args));
   }
 
@@ -141,7 +150,7 @@ final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      T body = responseConverter.fromBody(catchingBody);
+      T body = responseConverter.convert(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was
@@ -156,6 +165,84 @@ final class OkHttpCall<T> implements Call<T> {
     com.squareup.okhttp.Call rawCall = this.rawCall;
     if (rawCall != null) {
       rawCall.cancel();
+    }
+  }
+
+  @Override public boolean isCanceled() {
+    return canceled;
+  }
+
+  static final class NoContentResponseBody extends ResponseBody {
+    private final MediaType contentType;
+    private final long contentLength;
+
+    NoContentResponseBody(MediaType contentType, long contentLength) {
+      this.contentType = contentType;
+      this.contentLength = contentLength;
+    }
+
+    @Override public MediaType contentType() {
+      return contentType;
+    }
+
+    @Override public long contentLength() throws IOException {
+      return contentLength;
+    }
+
+    @Override public BufferedSource source() throws IOException {
+      throw new IllegalStateException("Cannot read raw response body of a converted body.");
+    }
+  }
+
+  static final class ExceptionCatchingRequestBody extends ResponseBody {
+    private final ResponseBody delegate;
+    private IOException thrownException;
+
+    ExceptionCatchingRequestBody(ResponseBody delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override public MediaType contentType() {
+      return delegate.contentType();
+    }
+
+    @Override public long contentLength() throws IOException {
+      try {
+        return delegate.contentLength();
+      } catch (IOException e) {
+        thrownException = e;
+        throw e;
+      }
+    }
+
+    @Override public BufferedSource source() throws IOException {
+      BufferedSource delegateSource;
+      try {
+        delegateSource = delegate.source();
+      } catch (IOException e) {
+        thrownException = e;
+        throw e;
+      }
+      return Okio.buffer(new ForwardingSource(delegateSource) {
+        @Override public long read(Buffer sink, long byteCount) throws IOException {
+          try {
+            return super.read(sink, byteCount);
+          } catch (IOException e) {
+            thrownException = e;
+            throw e;
+          }
+        }
+      });
+    }
+
+    @Override public void close() throws IOException {
+      delegate.close();
+    }
+
+    void throwIfCaught() throws IOException {
+      if (thrownException != null) {
+        throw thrownException;
+      }
     }
   }
 }

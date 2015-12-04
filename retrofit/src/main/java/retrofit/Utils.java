@@ -20,6 +20,7 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -48,6 +49,17 @@ final class Utils {
     }
   }
 
+  /** Returns true if {@code annotations} contains an instance of {@code cls}. */
+  static boolean isAnnotationPresent(Annotation[] annotations,
+      Class<? extends Annotation> cls) {
+    for (Annotation annotation : annotations) {
+      if (cls.isInstance(annotation)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Replace a {@link Response} with an identical copy whose body is backed by a
    * {@link Buffer} rather than a {@link Source}.
@@ -58,32 +70,32 @@ final class Utils {
     }
 
     BufferedSource source = body.source();
-    final Buffer buffer = new Buffer();
+    Buffer buffer = new Buffer();
     buffer.writeAll(source);
     source.close();
 
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);
   }
 
-  static <T> void validateServiceClass(Class<T> service) {
+  static <T> void validateServiceInterface(Class<T> service) {
     if (!service.isInterface()) {
-      throw new IllegalArgumentException("Only interface baseUrl definitions are supported.");
+      throw new IllegalArgumentException("API declarations must be interfaces.");
     }
     // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
     // Android (http://b.android.com/58753) but it forces composition of API declarations which is
     // the recommended pattern.
     if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("Interface definitions must not extend other interfaces.");
+      throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
     }
   }
 
-  public static Type getSingleParameterUpperBound(ParameterizedType type) {
+  public static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
-    if (types.length != 1) {
+    if (types.length <= index) {
       throw new IllegalArgumentException(
-          "Expected one type argument but got: " + Arrays.toString(types));
+          "Expected at least " + index + " type argument(s) but got: " + Arrays.toString(types));
     }
-    Type paramType = types[0];
+    Type paramType = types[index];
     if (paramType instanceof WildcardType) {
       return ((WildcardType) paramType).getUpperBounds()[0];
     }
@@ -152,12 +164,20 @@ final class Utils {
   }
 
   static RuntimeException methodError(Method method, String message, Object... args) {
+    return methodError(null, method, message, args);
+  }
+
+  static RuntimeException methodError(Throwable cause, Method method, String message,
+      Object... args) {
     message = String.format(message, args);
-    return new IllegalArgumentException(message
+    IllegalArgumentException e = new IllegalArgumentException(message
         + "\n    for method "
         + method.getDeclaringClass().getSimpleName()
         + "."
         + method.getName());
+    e.initCause(cause);
+    return e;
+
   }
 
   static Type getCallResponseType(Type returnType) {
@@ -165,7 +185,7 @@ final class Utils {
       throw new IllegalArgumentException(
           "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
     }
-    final Type responseType = getSingleParameterUpperBound((ParameterizedType) returnType);
+    final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
     // Ensure the Call response type is not Response, we automatically deliver the Response object.
     if (getRawType(responseType) == retrofit.Response.class) {

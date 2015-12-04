@@ -23,11 +23,14 @@ import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import okio.Buffer;
 import okio.BufferedSink;
 
 final class RequestBuilder {
+  private static final char[] HEX_DIGITS =
+      { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+  private static final String PATH_SEGMENT_ENCODE_SET = " \"<>^`{}|/\\?#";
+
   private final String method;
 
   private final HttpUrl baseUrl;
@@ -35,7 +38,7 @@ final class RequestBuilder {
   private HttpUrl.Builder urlBuilder;
 
   private final Request.Builder requestBuilder;
-  private MediaType mediaType;
+  private MediaType contentType;
 
   private final boolean hasBody;
   private MultipartBuilder multipartBuilder;
@@ -43,20 +46,17 @@ final class RequestBuilder {
   private RequestBody body;
 
   RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType mediaType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
-
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
+    this.requestBuilder = new Request.Builder();
+    this.contentType = contentType;
+    this.hasBody = hasBody;
 
-    Request.Builder requestBuilder = new Request.Builder();
     if (headers != null) {
       requestBuilder.headers(headers);
     }
-    this.requestBuilder = requestBuilder;
-    this.mediaType = mediaType;
-
-    this.hasBody = hasBody;
 
     if (isFormEncoded) {
       // Will be set to 'body' in 'build'.
@@ -64,6 +64,7 @@ final class RequestBuilder {
     } else if (isMultipart) {
       // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBuilder();
+      multipartBuilder.type(MultipartBuilder.FORM);
     }
   }
 
@@ -73,7 +74,7 @@ final class RequestBuilder {
 
   void addHeader(String name, String value) {
     if ("Content-Type".equalsIgnoreCase(name)) {
-      mediaType = MediaType.parse(value);
+      contentType = MediaType.parse(value);
     } else {
       requestBuilder.addHeader(name, value);
     }
@@ -84,20 +85,55 @@ final class RequestBuilder {
       // The relative URL is cleared when the first query parameter is set.
       throw new AssertionError();
     }
-    try {
-      if (!encoded) {
-        String encodedValue = URLEncoder.encode(String.valueOf(value), "UTF-8");
-        // URLEncoder encodes for use as a query parameter. Path encoding uses %20 to
-        // encode spaces rather than +. Query encoding difference specified in HTML spec.
-        // Any remaining plus signs represent spaces as already URLEncoded.
-        encodedValue = encodedValue.replace("+", "%20");
-        relativeUrl = relativeUrl.replace("{" + name + "}", encodedValue);
-      } else {
-        relativeUrl = relativeUrl.replace("{" + name + "}", String.valueOf(value));
+    relativeUrl = relativeUrl.replace("{" + name + "}", canonicalize(value, encoded));
+  }
+
+  static String canonicalize(String input, boolean alreadyEncoded) {
+    int codePoint;
+    for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
+      codePoint = input.codePointAt(i);
+      if (codePoint < 0x20 || codePoint >= 0x7f
+          || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
+          || (codePoint == '%' && !alreadyEncoded)) {
+        // Slow path: the character at i requires encoding!
+        Buffer out = new Buffer();
+        out.writeUtf8(input, 0, i);
+        canonicalize(out, input, i, limit, alreadyEncoded);
+        return out.readUtf8();
       }
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(
-          "Unable to convert path parameter \"" + name + "\" value to UTF-8:" + value, e);
+    }
+
+    // Fast path: no characters required encoding.
+    return input;
+  }
+
+  static void canonicalize(Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
+    Buffer utf8Buffer = null; // Lazily allocated.
+    int codePoint;
+    for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
+      codePoint = input.codePointAt(i);
+      if (alreadyEncoded
+          && (codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r')) {
+        // Skip this character.
+      } else if (codePoint < 0x20
+          || codePoint >= 0x7f
+          || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
+          || (codePoint == '%' && !alreadyEncoded)) {
+        // Percent encode this character.
+        if (utf8Buffer == null) {
+          utf8Buffer = new Buffer();
+        }
+        utf8Buffer.writeUtf8CodePoint(codePoint);
+        while (!utf8Buffer.exhausted()) {
+          int b = utf8Buffer.readByte() & 0xff;
+          out.writeByte('%');
+          out.writeByte(HEX_DIGITS[(b >> 4) & 0xf]);
+          out.writeByte(HEX_DIGITS[b & 0xf]);
+        }
+      } else {
+        // This character doesn't need encoding. Just copy it over.
+        out.writeUtf8CodePoint(codePoint);
+      }
     }
   }
 
@@ -154,12 +190,12 @@ final class RequestBuilder {
       }
     }
 
-    MediaType mediaType = this.mediaType;
-    if (mediaType != null) {
+    MediaType contentType = this.contentType;
+    if (contentType != null) {
       if (body != null) {
-        body = new MediaTypeOverridingRequestBody(body, mediaType);
+        body = new ContentTypeOverridingRequestBody(body, contentType);
       } else {
-        requestBuilder.addHeader("Content-Type", mediaType.toString());
+        requestBuilder.addHeader("Content-Type", contentType.toString());
       }
     }
 
@@ -169,17 +205,17 @@ final class RequestBuilder {
         .build();
   }
 
-  private static class MediaTypeOverridingRequestBody extends RequestBody {
+  private static class ContentTypeOverridingRequestBody extends RequestBody {
     private final RequestBody delegate;
-    private final MediaType mediaType;
+    private final MediaType contentType;
 
-    MediaTypeOverridingRequestBody(RequestBody delegate, MediaType mediaType) {
+    ContentTypeOverridingRequestBody(RequestBody delegate, MediaType contentType) {
       this.delegate = delegate;
-      this.mediaType = mediaType;
+      this.contentType = contentType;
     }
 
     @Override public MediaType contentType() {
-      return mediaType;
+      return contentType;
     }
 
     @Override public long contentLength() throws IOException {

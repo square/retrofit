@@ -17,10 +17,20 @@ package retrofit;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-/** A {@linkplain Converter.Factory converter} which uses Moshi for JSON. */
-public final class MoshiConverterFactory implements Converter.Factory {
+/**
+ * A {@linkplain Converter.Factory converter} which uses Moshi for JSON.
+ * <p>
+ * Because Moshi is so flexible in the types it supports, this converter assumes that it can handle
+ * all types. If you are mixing JSON serialization with something else (such as protocol buffers),
+ * you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this instance}
+ * last to allow the other converters a chance to see their types.
+ */
+public final class MoshiConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link Moshi} instance for conversion. */
   public static MoshiConverterFactory create() {
     return create(new Moshi.Builder().build());
@@ -38,8 +48,17 @@ public final class MoshiConverterFactory implements Converter.Factory {
     this.moshi = moshi;
   }
 
-  @Override public Converter<?> get(Type type) {
-    JsonAdapter<Object> adapter = moshi.adapter(type);
-    return new MoshiConverter<>(adapter);
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    JsonAdapter<?> adapter = moshi.adapter(type);
+    return new MoshiResponseBodyConverter<>(adapter);
+  }
+
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    JsonAdapter<?> adapter = moshi.adapter(type);
+    return new MoshiRequestBodyConverter<>(adapter);
   }
 }

@@ -20,6 +20,7 @@
     <module>jackson</module>
     <module>wire</module>
     <module>simplexml</module>
+    <module>scalars</module>
     <module>moshi</module>
   </modules>
 </project>

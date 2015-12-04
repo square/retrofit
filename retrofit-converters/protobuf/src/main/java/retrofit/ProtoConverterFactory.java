@@ -17,22 +17,32 @@ package retrofit;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
-/** A {@linkplain Converter.Factory converter} which uses Protocol Buffers. */
-public final class ProtoConverterFactory implements Converter.Factory {
+/**
+ * A {@linkplain Converter.Factory converter} which uses Protocol Buffers.
+ * <p>
+ * This converter only applies for types which extend from {@link MessageLite} (or one of its
+ * subclasses).
+ */
+public final class ProtoConverterFactory extends Converter.Factory {
   public static ProtoConverterFactory create() {
     return new ProtoConverterFactory();
   }
 
-  @Override public Converter<?> get(Type type) {
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
-      throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
+      return null;
     }
     Class<?> c = (Class<?>) type;
     if (!MessageLite.class.isAssignableFrom(c)) {
-      throw new IllegalArgumentException("Expected a protobuf message but was " + c.getName());
+      return null;
     }
 
     Parser<MessageLite> parser;
@@ -42,9 +52,20 @@ public final class ProtoConverterFactory implements Converter.Factory {
       parser = (Parser<MessageLite>) field.get(null);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new IllegalArgumentException(
-          "Expected a protobuf message but " + c.getName() + " had no PARSER field.");
+          "Found a protobuf message but " + c.getName() + " had no PARSER field.");
     }
+    return new ProtoResponseBodyConverter<>(parser);
+  }
 
-    return new ProtoConverter<>(parser);
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    if (!(type instanceof Class<?>)) {
+      return null;
+    }
+    if (!MessageLite.class.isAssignableFrom((Class<?>) type)) {
+      return null;
+    }
+    return new ProtoRequestBodyConverter<>();
   }
 }

@@ -16,6 +16,7 @@
 package retrofit;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
@@ -26,21 +27,18 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @Override public String toString() {
-    return "ExecutorCallAdapterFactory[" + callbackExecutor + ']';
-  }
-
-  @Override public CallAdapter<?> get(Type returnType) {
+  @Override
+  public CallAdapter<Call<?>> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (Utils.getRawType(returnType) != Call.class) {
       return null;
     }
     final Type responseType = Utils.getCallResponseType(returnType);
-    return new CallAdapter<Object>() {
+    return new CallAdapter<Call<?>>() {
       @Override public Type responseType() {
         return responseType;
       }
 
-      @Override public Call<Object> adapt(Call<Object> call) {
+      @Override public <R> Call<R> adapt(Call<R> call) {
         return new ExecutorCallbackCall<>(callbackExecutor, call);
       }
     };
@@ -55,8 +53,33 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
       this.delegate = delegate;
     }
 
-    @Override public void enqueue(Callback<T> callback) {
-      delegate.enqueue(new ExecutorCallback<>(callbackExecutor, callback));
+    @Override public void enqueue(final Callback<T> callback) {
+      delegate.enqueue(new Callback<T>() {
+        @Override public void onResponse(final Response<T> response) {
+          callbackExecutor.execute(new Runnable() {
+            @Override public void run() {
+              if (delegate.isCanceled()) {
+                // Emulate OkHttp's behavior of throwing/delivering an IOException on cancelation
+                callback.onFailure(new IOException("Canceled"));
+              } else {
+                callback.onResponse(response);
+              }
+            }
+          });
+        }
+
+        @Override public void onFailure(final Throwable t) {
+          callbackExecutor.execute(new Runnable() {
+            @Override public void run() {
+              callback.onFailure(t);
+            }
+          });
+        }
+      });
+    }
+
+    @Override public boolean isExecuted() {
+      return delegate.isExecuted();
     }
 
     @Override public Response<T> execute() throws IOException {
@@ -67,35 +90,13 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
       delegate.cancel();
     }
 
+    @Override public boolean isCanceled() {
+      return delegate.isCanceled();
+    }
+
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
     @Override public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
-    }
-  }
-
-  static final class ExecutorCallback<T> implements Callback<T> {
-    private final Executor callbackExecutor;
-    private final Callback<T> delegate;
-
-    ExecutorCallback(Executor callbackExecutor, Callback<T> delegate) {
-      this.callbackExecutor = callbackExecutor;
-      this.delegate = delegate;
-    }
-
-    @Override public void onResponse(final Response<T> response) {
-      callbackExecutor.execute(new Runnable() {
-        @Override public void run() {
-          delegate.onResponse(response);
-        }
-      });
-    }
-
-    @Override public void onFailure(final Throwable t) {
-      callbackExecutor.execute(new Runnable() {
-        @Override public void run() {
-          delegate.onFailure(t);
-        }
-      });
     }
   }
 }

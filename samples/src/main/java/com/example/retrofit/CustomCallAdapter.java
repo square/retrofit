@@ -19,12 +19,15 @@ import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import retrofit.Call;
 import retrofit.CallAdapter;
 import retrofit.Callback;
+import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
 import retrofit.http.GET;
@@ -35,25 +38,24 @@ import retrofit.http.GET;
  */
 public final class CustomCallAdapter {
   public static class ListenableFutureCallAdapterFactory implements CallAdapter.Factory {
-    @Override public CallAdapter<?> get(Type returnType) {
+    @Override public CallAdapter<ListenableFuture<?>> get(Type returnType, Annotation[] annotations,
+        Retrofit retrofit) {
       TypeToken<?> token = TypeToken.of(returnType);
       if (token.getRawType() != ListenableFuture.class) {
         return null;
       }
-
-      TypeToken<?> componentType = token.getComponentType();
-      if (componentType == null) {
-        throw new IllegalStateException(); // TODO
+      if (!(returnType instanceof ParameterizedType)) {
+        throw new IllegalStateException(
+            "ListenableFuture must have generic type (e.g., ListenableFuture<ResponseBody>)");
       }
-      final Type responseType = componentType.getType();
-
-      return new CallAdapter<Object>() {
+      final Type responseType = ((ParameterizedType) returnType).getActualTypeArguments()[0];
+      return new CallAdapter<ListenableFuture<?>>() {
         @Override public Type responseType() {
           return responseType;
         }
 
-        @Override public ListenableFuture<?> adapt(Call<Object> call) {
-          CallFuture<Object> future = new CallFuture<>(call);
+        @Override public <R> ListenableFuture<R> adapt(Call<R> call) {
+          CallFuture<R> future = new CallFuture<>(call);
           call.enqueue(future);
           return future;
         }
@@ -97,7 +99,8 @@ public final class CustomCallAdapter {
   public static void main(String... args) {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://httpbin.org")
-        .callAdapterFactory(new ListenableFutureCallAdapterFactory())
+        .addCallAdapterFactory(new ListenableFutureCallAdapterFactory())
+        .addConverterFactory(GsonConverterFactory.create())
         .build();
 
     HttpBinService service = retrofit.create(HttpBinService.class);

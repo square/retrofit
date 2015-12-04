@@ -15,39 +15,53 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
-import com.squareup.wire.Wire;
+import com.squareup.wire.ProtoAdapter;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-/** A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers. */
-public final class WireConverterFactory implements Converter.Factory {
-  /** Create an instance using a default {@link Wire} instance for conversion. */
+/**
+ * A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers.
+ * <p>
+ * This converter only applies for types which extend from {@link Message}.
+ */
+public final class WireConverterFactory extends Converter.Factory {
   public static WireConverterFactory create() {
-    return create(new Wire());
+    return new WireConverterFactory();
   }
 
-  /** Create an instance using {@code wire} for conversion. */
-  public static WireConverterFactory create(Wire wire) {
-    return new WireConverterFactory(wire);
+  private WireConverterFactory() {
   }
 
-  private final Wire wire;
-
-  /** Create a converter using the supplied {@link Wire} instance. */
-  private WireConverterFactory(Wire wire) {
-    if (wire == null) throw new NullPointerException("wire == null");
-    this.wire = wire;
-  }
-
-  @Override public Converter<?> get(Type type) {
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
-      throw new IllegalArgumentException("Expected a raw Class<?> but was " + type);
+      return null;
     }
     Class<?> c = (Class<?>) type;
     if (!Message.class.isAssignableFrom(c)) {
-      throw new IllegalArgumentException("Expected a proto message but was " + c.getName());
+      return null;
     }
     //noinspection unchecked
-    return new WireConverter<>(wire, (Class<Message>) c);
+    ProtoAdapter<? extends Message> adapter = ProtoAdapter.get((Class<? extends Message>) c);
+    return new WireResponseBodyConverter<>(adapter);
+  }
+
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    if (!(type instanceof Class<?>)) {
+      return null;
+    }
+    Class<?> c = (Class<?>) type;
+    if (!Message.class.isAssignableFrom(c)) {
+      return null;
+    }
+    //noinspection unchecked
+    ProtoAdapter<? extends Message> adapter = ProtoAdapter.get((Class<? extends Message>) c);
+    return new WireRequestBodyConverter<>(adapter);
   }
 }

@@ -1,7 +1,7 @@
 Retrofit
 ========
 
-Type-safe REST client for Android and Java by Square, Inc.
+Type-safe HTTP client for Android and Java by Square, Inc.
 
 For more information please see [the website][1].
 
@@ -14,17 +14,17 @@ Download [the latest JAR][2] or grab via Maven:
 <dependency>
   <groupId>com.squareup.retrofit</groupId>
   <artifactId>retrofit</artifactId>
-  <version>1.9.0</version>
+  <version>2.0.0-beta2</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.retrofit:retrofit:1.9.0'
+compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
-Retrofit requires at minimum Java 6 or Android 2.3.
+Retrofit requires at minimum Java 7 or Android 2.3.
 
 
 

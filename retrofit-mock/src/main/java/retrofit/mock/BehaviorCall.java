@@ -29,7 +29,7 @@ import retrofit.Response;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class BehaviorCall<T> implements Call<T> {
-  private final Behavior behavior;
+  private final NetworkBehavior behavior;
   private final ExecutorService backgroundExecutor;
   private final Executor callbackExecutor;
   private final Call<T> delegate;
@@ -38,8 +38,8 @@ final class BehaviorCall<T> implements Call<T> {
   private volatile boolean canceled;
   private volatile boolean executed;
 
-  BehaviorCall(Behavior behavior, ExecutorService backgroundExecutor, Executor callbackExecutor,
-      Call<T> delegate) {
+  BehaviorCall(NetworkBehavior behavior, ExecutorService backgroundExecutor,
+      Executor callbackExecutor, Call<T> delegate) {
     if (callbackExecutor == null) {
       callbackExecutor = new Executor() {
         @Override public void execute(Runnable command) {
@@ -119,6 +119,10 @@ final class BehaviorCall<T> implements Call<T> {
     });
   }
 
+  @Override public synchronized boolean isExecuted() {
+    return executed;
+  }
+
   @Override public Response<T> execute() throws IOException {
     final AtomicReference<Response<T>> responseRef = new AtomicReference<>();
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
@@ -153,5 +157,9 @@ final class BehaviorCall<T> implements Call<T> {
     if (task != null) {
       task.cancel(true);
     }
+  }
+
+  @Override public boolean isCanceled() {
+    return canceled;
   }
 }
