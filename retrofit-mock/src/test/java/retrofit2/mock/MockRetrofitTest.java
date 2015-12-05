@@ -30,7 +30,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,20 +51,20 @@ public final class MockRetrofitTest {
         .baseUrl("http://example.com")
         .build();
 
-    DoWorkService mockService = new DoWorkService() {
+    MockRetrofit mockRetrofit = MockRetrofit.create(retrofit, behavior);
+    final BehaviorDelegate<DoWorkService> delegate = mockRetrofit.create(DoWorkService.class);
+
+    service = new DoWorkService() {
       @Override public Call<String> response() {
-        return Calls.response("Response!");
+        Call<String> response = Calls.response("Response!");
+        return delegate.returning(response).response();
       }
 
       @Override public Call<String> failure() {
-        return Calls.failure(mockFailure);
+        Call<String> failure = Calls.failure(mockFailure);
+        return delegate.returning(failure).failure();
       }
     };
-
-    NetworkBehavior.Adapter<?> adapter =
-        new CallBehaviorAdapter(retrofit, newSingleThreadExecutor());
-    MockRetrofit mockRetrofit = new MockRetrofit(behavior, adapter);
-    service = mockRetrofit.create(DoWorkService.class, mockService);
   }
 
   @Test public void syncFailureThrowsAfterDelay() {
