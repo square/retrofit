@@ -27,12 +27,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 import okio.BufferedSink;
-import retrofit.Call;
-import retrofit.Converter;
-import retrofit.GsonConverterFactory;
-import retrofit.Retrofit;
-import retrofit.http.Body;
-import retrofit.http.POST;
+import retrofit2.Call;
+import retrofit2.Converter;
+import retrofit2.GsonConverterFactory;
+import retrofit2.Retrofit;
+import retrofit2.http.Body;
+import retrofit2.http.POST;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

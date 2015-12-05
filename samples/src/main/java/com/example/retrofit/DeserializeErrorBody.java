@@ -20,12 +20,12 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import retrofit.Call;
-import retrofit.Converter;
-import retrofit.GsonConverterFactory;
-import retrofit.Response;
-import retrofit.Retrofit;
-import retrofit.http.GET;
+import retrofit2.Call;
+import retrofit2.Converter;
+import retrofit2.GsonConverterFactory;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.http.GET;
 
 public final class DeserializeErrorBody {
   interface Service {

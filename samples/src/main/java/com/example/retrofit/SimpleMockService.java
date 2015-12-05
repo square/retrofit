@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import retrofit.Call;
-import retrofit.Retrofit;
-import retrofit.mock.CallBehaviorAdapter;
-import retrofit.mock.Calls;
-import retrofit.mock.MockRetrofit;
-import retrofit.mock.NetworkBehavior;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.mock.CallBehaviorAdapter;
+import retrofit2.mock.Calls;
+import retrofit2.mock.MockRetrofit;
+import retrofit2.mock.NetworkBehavior;
 
 /**
  * An example of using {@link MockRetrofit} to create a mock service implementation with
