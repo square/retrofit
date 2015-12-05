@@ -15,34 +15,35 @@
  */
 package retrofit2.mock;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import retrofit2.Retrofit;
 
 public final class MockRetrofit {
-  private final NetworkBehavior behavior;
-  private final NetworkBehavior.Adapter<Object> adapter;
+  public static MockRetrofit create(Retrofit retrofit) {
+    return create(retrofit, NetworkBehavior.create());
+  }
 
-  @SuppressWarnings("unchecked") //
-  public MockRetrofit(NetworkBehavior behavior, NetworkBehavior.Adapter<?> adapter) {
-    this.adapter = (NetworkBehavior.Adapter<Object>) adapter;
+  public static MockRetrofit create(Retrofit retrofit, NetworkBehavior behavior) {
+    return new MockRetrofit(retrofit, behavior);
+  }
+
+  private final Retrofit retrofit;
+  private final NetworkBehavior behavior;
+
+  public MockRetrofit(Retrofit retrofit, NetworkBehavior behavior) {
+    this.retrofit = retrofit;
     this.behavior = behavior;
   }
 
-  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
-  public <T> T create(Class<T> service, final T instance) {
-    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class[] { service },
-        new InvocationHandler() {
-          @Override public Object invoke(Object proxy, Method method, Object[] args)
-              throws Throwable {
-            if (method.getDeclaringClass() == Object.class) {
-              return method.invoke(this, args);
-            }
-            method.setAccessible(true); // Just In Case™
+  public Retrofit retrofit() {
+    return retrofit;
+  }
 
-            Object value = method.invoke(instance, args);
-            return adapter.applyBehavior(behavior, value);
-          }
-        });
+  public NetworkBehavior networkBehavior() {
+    return behavior;
+  }
+
+  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
+  public <T> BehaviorDelegate<T> create(Class<T> service) {
+    return new BehaviorDelegate<>(retrofit, behavior, service);
   }
 }

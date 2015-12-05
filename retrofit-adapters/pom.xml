@@ -16,6 +16,5 @@
 
   <modules>
     <module>rxjava</module>
-    <module>rxjava-mock</module>
   </modules>
 </project>
