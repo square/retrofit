@@ -20,13 +20,13 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import retrofit.Call;
-import retrofit.CallAdapter;
-import retrofit.Callback;
-import retrofit.GsonConverterFactory;
-import retrofit.Response;
-import retrofit.Retrofit;
-import retrofit.http.GET;
+import retrofit2.Call;
+import retrofit2.CallAdapter;
+import retrofit2.Callback;
+import retrofit2.GsonConverterFactory;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.http.GET;
 
 /**
  * A sample showing a custom {@link CallAdapter} which adapts the built-in {@link Call} to a custom
