@@ -52,7 +52,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed");
+      if (executed) throw new IllegalStateException("Already executed.");
       executed = true;
     }
 
@@ -106,9 +106,9 @@ final class OkHttpCall<T> implements Call<T> {
     return executed;
   }
 
-  public Response<T> execute() throws IOException {
+  @Override public Response<T> execute() throws IOException {
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed");
+      if (executed) throw new IllegalStateException("Already executed.");
       executed = true;
     }
 
