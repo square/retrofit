@@ -414,6 +414,23 @@ public final class CallTest {
     verifyNoMoreInteractions(converter);
   }
 
+  @Test public void executeCallOnce() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service example = retrofit.create(Service.class);
+    server.enqueue(new MockResponse());
+    Call<String> call = example.getString();
+    call.execute();
+    try {
+      call.execute();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Already executed.");
+    }
+  }
+
   @Test public void successfulRequestResponseWhenMimeTypeMissing() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
