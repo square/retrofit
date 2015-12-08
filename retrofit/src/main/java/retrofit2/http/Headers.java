@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Adds headers literally supplied in the {@code value}.
  * <p>
- * <pre>
+ * <pre>{@code
  * &#64;Headers("Cache-Control: max-age=640000")
  * &#64;GET("/")
  * ...
@@ -36,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * })
  * &#64;GET("/")
  * ...
- * </pre>
+ * }</pre>
  * <p>
  * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
  * be included in the request.

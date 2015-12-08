@@ -27,20 +27,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link String#valueOf(Object)} and URL encoded.
  * <p>
  * Simple example:
- * <pre>
+ * <pre>{@code
  * &#64;GET("/image/{id}")
- * void example(@Path("id") int id);
- * </pre>
+ * Call&lt;ResponseBody> example(@Path("id") int id);
+ * }</pre>
  * Calling with {@code foo.example(1)} yields {@code /image/1}.
  * <p>
  * Values are URL encoded by default. Disable with {@code encode=false}.
- * <pre>
+ * <pre>{@code
  * &#64;GET("/user/{name}")
- * void encoded(@Path("name") String name);
+ * Call&lt;ResponseBody> encoded(@Path("name") String name);
  *
  * &#64;GET("/user/{name}")
- * void notEncoded(@Path(value="name", encode=false) String name);
- * </pre>
+ * Call&lt;ResponseBody> notEncoded(@Path(value="name", encode=false) String name);
+ * }</pre>
  * Calling {@code foo.encoded("John+Doe")} yields {@code /user/John%2BDoe} whereas
  * {@code foo.notEncoded("John+Doe")} yields {@code /user/John+Doe}.
  * <p>

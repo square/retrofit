@@ -30,21 +30,22 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * field pair for each non-{@code null} item.
  * <p>
  * Simple Example:
- * <pre>
+ * <pre>{@code
  * &#64;FormUrlEncoded
  * &#64;POST("/")
- * void example(@Field("name") String name, @Field("occupation") String occupation);
- * }
- * </pre>
+ * Call&lt;ResponseBody> example(
+ *     &#64;Field("name") String name,
+ *     &#64;Field("occupation") String occupation);
+ * }</pre>
  * Calling with {@code foo.example("Bob Smith", "President")} yields a request body of
  * {@code name=Bob+Smith&occupation=President}.
  * <p>
- * Array Example:
- * <pre>
+ * Array/Varargs Example:
+ * <pre>{@code
  * &#64;FormUrlEncoded
  * &#64;POST("/list")
- * void example(@Field("name") String... names);
- * </pre>
+ * Call&lt;ResponseBody> example(@Field("name") String... names);
+ * }</pre>
  * Calling with {@code foo.example("Bob Smith", "Jane Doe")} yields a request body of
  * {@code name=Bob+Smith&name=Jane+Doe}.
  *
