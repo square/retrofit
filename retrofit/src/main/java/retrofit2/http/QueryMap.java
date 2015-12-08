@@ -30,19 +30,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * are not allowed.
  * <p>
  * Simple Example:
- * <pre>
+ * <pre>{@code
  * &#64;GET("/search")
- * void list(@QueryMap Map&lt;String, String&gt; filters);
- * </pre>
+ * Call&lt;ResponseBody> list(@QueryMap Map&lt;String, String&gt; filters);
+ * }</pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "bar", "kit", "kat"))} yields
  * {@code /search?foo=bar&kit=kat}.
  * <p>
  * Map keys and values representing parameter values are URL encoded by default. Specify
  * {@link #encoded() encoded=true} to change this behavior.
- * <pre>
+ * <pre>{@code
  * &#64;GET("/search")
- * void list(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
- * </pre>
+ * Call&lt;ResponseBody> list(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
+ * }</pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+foo"))} yields
  * {@code /search?foo=foo%2Bbar}.
  *

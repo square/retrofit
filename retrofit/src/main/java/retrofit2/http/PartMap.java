@@ -34,13 +34,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain Converter a converter}.</li>
  * </ul>
  * <p>
- * <pre>
+ * <pre>{@code
  * &#64;Multipart
  * &#64;POST("/upload")
  * Call&lt;ResponseBody> upload(
  *     &#64;Part("file") RequestBody file,
  *     &#64;PartMap Map&lt;String, RequestBody&gt; params);
- * </pre>
+ * }</pre>
  *
  * @see Multipart
  * @see Part

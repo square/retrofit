@@ -36,13 +36,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Values may be {@code null} which will omit them from the request body.
  * <p>
- * <pre>
+ * <pre>{@code
  * &#64;Multipart
  * &#64;POST("/")
- * Call&lt;<ResponseBody> example(
+ * Call&lt;ResponseBody> example(
  *     &#64;Part("description") String description,
  *     &#64;Part(value = "image", encoding = "8-bit") RequestBody image);
- * </pre>
+ * }</pre>
  * <p>
  * Part parameters may not be {@code null}.
  */
