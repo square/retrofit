@@ -51,6 +51,11 @@ public final class Calls {
       @Override public Call<T> clone() {
         return this;
       }
+
+      @Override
+      public com.squareup.okhttp.Call getOrCreateRawCall() throws IOException {
+        throw new UnsupportedOperationException();
+      }
     };
   }
 
@@ -78,6 +83,11 @@ public final class Calls {
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.
       @Override public Call<T> clone() {
         return this;
+      }
+
+      @Override
+      public com.squareup.okhttp.Call getOrCreateRawCall() throws IOException {
+        throw new UnsupportedOperationException();
       }
     };
   }

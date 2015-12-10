@@ -47,6 +47,11 @@ final class BehaviorCall<T> implements Call<T> {
     return new BehaviorCall<>(behavior, backgroundExecutor, delegate.clone());
   }
 
+  @Override
+  public com.squareup.okhttp.Call getOrCreateRawCall() throws IOException {
+    return delegate.getOrCreateRawCall();
+  }
+
   @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");

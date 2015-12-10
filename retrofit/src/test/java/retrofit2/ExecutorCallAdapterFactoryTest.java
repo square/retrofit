@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
+
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -115,6 +116,7 @@ public final class ExecutorCallAdapterFactoryTest {
       @Override public void enqueue(Callback<String> callback) {
         callback.onFailure(throwable);
       }
+
     });
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
@@ -168,6 +170,11 @@ public final class ExecutorCallAdapterFactoryTest {
     }
 
     @Override public Call<String> clone() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public com.squareup.okhttp.Call getOrCreateRawCall() {
       throw new UnsupportedOperationException();
     }
   }

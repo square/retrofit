@@ -50,6 +50,11 @@ final class OkHttpCall<T> implements Call<T> {
     return new OkHttpCall<>(client, requestFactory, responseConverter, args);
   }
 
+    @Override
+    public com.squareup.okhttp.Call getOrCreateRawCall() throws IOException {
+        return rawCall == null ? createRawCall() : rawCall;
+    }
+
   @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed.");
