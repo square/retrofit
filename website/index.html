@@ -80,13 +80,13 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
               <h4>URL Manipulation</h4>
               <p>A request URL can be updated dynamically using replacement blocks and parameters on the method. A replacement block is an alphanumeric string surrounded by <code>{</code> and <code>}</code>. A corresponding parameter must be annotated with <code>@Path</code> using the same string.</p>
               <pre class="prettyprint">@GET("/group/{id}/users")
-List&lt;User> groupList(@Path("id") int groupId);</pre>
+Call&lt;List&lt;User>> groupList(@Path("id") int groupId);</pre>
               <p>Query parameters can also be added.</p>
               <pre class="prettyprint">@GET("/group/{id}/users")
-List&lt;User> groupList(@Path("id") int groupId, @Query("sort") String sort);</pre>
+Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @Query("sort") String sort);</pre>
               <p>For complex query parameter combinations a <code>Map</code> can be used.</p>
               <pre class="prettyprint">@GET("/group/{id}/users")
-List&lt;User> groupList(@Path("id") int groupId, @QueryMap Map&lt;String, String&gt; options);</pre>
+Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @QueryMap Map&lt;String, String&gt; options);</pre>
 
               <h4>Request Body</h4>
               <p>An object can be specified for use as an HTTP request body with the <code>@Body</code> annotation.</p>
