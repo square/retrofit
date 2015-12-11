@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Named replacement in the URL path. Values are converted to string using
+ * Named replacement in a URL path segment. Values are converted to string using
  * {@link String#valueOf(Object)} and URL encoded.
  * <p>
  * Simple example:
@@ -33,13 +33,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }</pre>
  * Calling with {@code foo.example(1)} yields {@code /image/1}.
  * <p>
- * Values are URL encoded by default. Disable with {@code encode=false}.
+ * Values are URL encoded by default. Disable with {@code encoded=true}.
  * <pre>{@code
  * &#64;GET("/user/{name}")
  * Call&lt;ResponseBody> encoded(@Path("name") String name);
  *
  * &#64;GET("/user/{name}")
- * Call&lt;ResponseBody> notEncoded(@Path(value="name", encode=false) String name);
+ * Call&lt;ResponseBody> notEncoded(@Path(value="name", encoded=true) String name);
  * }</pre>
  * Calling {@code foo.encoded("John+Doe")} yields {@code /user/John%2BDoe} whereas
  * {@code foo.notEncoded("John+Doe")} yields {@code /user/John+Doe}.
