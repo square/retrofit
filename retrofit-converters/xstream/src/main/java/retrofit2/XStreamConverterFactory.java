@@ -43,7 +43,9 @@ public class XStreamConverterFactory extends Converter.Factory {
     this.xStream = xStream;
   }
 
-  @Override public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations, Retrofit retrofit) {
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class)) {
       return null;
     }
@@ -51,7 +53,9 @@ public class XStreamConverterFactory extends Converter.Factory {
     return new XStreamResponseBodyConverter<>(xStream);
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations, Retrofit retrofit) {
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class)) {
       return null;
     }
