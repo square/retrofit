@@ -16,7 +16,6 @@
 package retrofit2;
 
 import com.squareup.okhttp.Request;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
