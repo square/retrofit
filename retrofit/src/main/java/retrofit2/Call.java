@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import com.squareup.okhttp.Request;
+
 import java.io.IOException;
 
 /**
@@ -66,4 +68,9 @@ public interface Call<T> extends Cloneable {
    * has already been.
    */
   Call<T> clone();
+  
+  /**
+   * Builds a new {@link Request} identical to the one that Retrofit uses to dispatch the call.
+   */
+  Request buildRequest() throws IOException;
 }

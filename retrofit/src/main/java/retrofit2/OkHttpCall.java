@@ -20,6 +20,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
@@ -243,6 +244,15 @@ final class OkHttpCall<T> implements Call<T> {
       if (thrownException != null) {
         throw thrownException;
       }
+    }
+  }
+
+  @Override
+  public Request buildRequest() throws IOException {
+    try {
+      return requestFactory.create(args);
+    }catch(IOException e){
+      throw e;
     }
   }
 }

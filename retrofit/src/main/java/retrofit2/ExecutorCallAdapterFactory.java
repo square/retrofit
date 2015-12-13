@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import com.squareup.okhttp.Request;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -97,6 +99,10 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
     @Override public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
+    }
+
+    @Override public Request buildRequest() throws IOException {
+      return delegate.buildRequest();
     }
   }
 }

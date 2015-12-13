@@ -21,6 +21,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
+
+import com.squareup.okhttp.Request;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -168,6 +170,10 @@ public final class ExecutorCallAdapterFactoryTest {
     }
 
     @Override public Call<String> clone() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override public Request buildRequest() throws IOException {
       throw new UnsupportedOperationException();
     }
   }
