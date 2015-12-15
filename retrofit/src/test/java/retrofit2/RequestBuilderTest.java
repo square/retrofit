@@ -8,6 +8,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -19,7 +20,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import okio.Buffer;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
@@ -36,6 +39,7 @@ import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
+import retrofit2.http.PartFile;
 import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -49,6 +53,8 @@ import static org.junit.Assert.fail;
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
 public final class RequestBuilderTest {
   private static final MediaType TEXT_PLAIN = MediaType.parse("text/plain");
+
+  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Test public void customMethodNoBody() {
     class Example {
@@ -1431,6 +1437,71 @@ public final class RequestBuilderTest {
       assertThat(e).hasMessage(
           "@PartMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
+  }
+
+  @Test public void multipartPartFile() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartFile("image") TypedFile typedFile) {
+        return null;
+      }
+    }
+    MediaType mediaType = MediaType.parse("image/png");
+    File file = tempFolder.newFile("file.png");
+    TypedFile typedFile = new TypedFile(mediaType, file);
+
+    Request request = buildRequest(Example.class, typedFile);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"image\";")
+        .contains("filename=\"file.png\"");
+    assertThat(bodyString)
+        .contains("Content-Type: image/png");
+    assertThat(bodyString)
+        .contains("Content-Transfer-Encoding: binary");
+  }
+
+  @Test public void multipartPartFileWithFileName() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartFile("image") TypedFile typedFile) {
+        return null;
+      }
+    }
+    MediaType mediaType = MediaType.parse("image/png");
+    File file = tempFolder.newFile("file.png");
+    String fileName = "profile.png";
+    TypedFile typedFile = new TypedFile(mediaType, file, fileName);
+
+    Request request = buildRequest(Example.class, typedFile);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+            .contains("Content-Disposition: form-data;")
+            .contains("name=\"image\";")
+            .contains("filename=\"profile.png\"");
+    assertThat(bodyString)
+            .contains("Content-Type: image/png");
+    assertThat(bodyString)
+            .contains("Content-Transfer-Encoding: binary");
   }
 
   @Test public void multipartNullRemovesPart() throws IOException {

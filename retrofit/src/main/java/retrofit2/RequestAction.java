@@ -229,6 +229,26 @@ abstract class RequestAction<T> {
     }
   }
 
+  static final class PartFile extends RequestAction {
+    private final String partName;
+
+    PartFile(String partName) {
+      this.partName = partName;
+    }
+
+    @Override void perform(RequestBuilder builder, Object value) {
+      if (value == null) return; // Skip null values.
+
+      TypedFile typedFile = (TypedFile) value;
+      Headers headers = Headers.of(
+              "Content-Disposition", "form-data; name=\"" + partName + "\"; filename=\""
+                      + typedFile.fileName() + "\"",
+              "Content-Transfer-Encoding", "binary");
+      RequestBody body = RequestBody.create(typedFile.mediaType(), typedFile.file());
+      builder.addPart(headers, body);
+    }
+  }
+
   static final class Body<T> extends RequestAction<T> {
     private final Converter<T, RequestBody> converter;
 
