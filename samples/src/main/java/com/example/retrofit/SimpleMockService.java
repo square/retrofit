@@ -73,7 +73,9 @@ public final class SimpleMockService {
 
     // Create a MockRetrofit object with a NetworkBehavior which manages the fake behavior of calls.
     NetworkBehavior behavior = NetworkBehavior.create();
-    MockRetrofit mockRetrofit = MockRetrofit.create(retrofit, behavior);
+    MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit)
+        .networkBehavior(behavior)
+        .build();
 
     BehaviorDelegate<GitHub> delegate = mockRetrofit.create(GitHub.class);
     MockGitHub gitHub = new MockGitHub(delegate);
