@@ -17,7 +17,6 @@
 package retrofit2.mock;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -222,8 +221,8 @@ public final class MockRetrofitTest {
     try {
       call.execute();
       fail();
-    } catch (InterruptedIOException e) {
-      assertThat(e).hasMessage("canceled");
+    } catch (IOException e) {
+      assertThat(e).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
     }
   }
 
@@ -252,7 +251,7 @@ public final class MockRetrofitTest {
     call.cancel();
 
     assertTrue(latch.await(1, SECONDS));
-    assertThat(failureRef.get()).isInstanceOf(InterruptedIOException.class).hasMessage("canceled");
+    assertThat(failureRef.get()).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
   }
 
   @Test public void syncCanceledBeforeStart() throws IOException {
@@ -266,8 +265,8 @@ public final class MockRetrofitTest {
     try {
       call.execute();
       fail();
-    } catch (InterruptedIOException e) {
-      assertThat(e).hasMessage("canceled");
+    } catch (IOException e) {
+      assertThat(e).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
     }
   }
 
@@ -293,6 +292,6 @@ public final class MockRetrofitTest {
     });
 
     assertTrue(latch.await(1, SECONDS));
-    assertThat(failureRef.get()).isInstanceOf(InterruptedIOException.class).hasMessage("canceled");
+    assertThat(failureRef.get()).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
   }
 }
