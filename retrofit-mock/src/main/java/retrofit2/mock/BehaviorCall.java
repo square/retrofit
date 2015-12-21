@@ -16,7 +16,6 @@
 package retrofit2.mock;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -59,7 +58,7 @@ final class BehaviorCall<T> implements Call<T> {
           try {
             Thread.sleep(sleepMs);
           } catch (InterruptedException e) {
-            callback.onFailure(new InterruptedIOException("canceled"));
+            callback.onFailure(new IOException("canceled"));
             return false;
           }
         }
@@ -68,7 +67,7 @@ final class BehaviorCall<T> implements Call<T> {
 
       @Override public void run() {
         if (canceled) {
-          callback.onFailure(new InterruptedIOException("canceled"));
+          callback.onFailure(new IOException("canceled"));
         } else if (behavior.calculateIsFailure()) {
           if (delaySleep()) {
             callback.onFailure(behavior.failureException());
@@ -114,7 +113,7 @@ final class BehaviorCall<T> implements Call<T> {
     try {
       latch.await();
     } catch (InterruptedException e) {
-      throw new InterruptedIOException("canceled");
+      throw new IOException("canceled");
     }
     Response<T> response = responseRef.get();
     if (response != null) return response;
