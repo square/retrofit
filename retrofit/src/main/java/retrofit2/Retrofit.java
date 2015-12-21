@@ -92,17 +92,17 @@ import static retrofit2.Utils.checkNotNull;
 public final class Retrofit {
   private final Map<Method, MethodHandler> methodHandlerCache = new LinkedHashMap<>();
 
-  private final OkHttpClient client;
+  private final Call.Factory callFactory;
   private final BaseUrl baseUrl;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
-  private Retrofit(OkHttpClient client, BaseUrl baseUrl, List<Converter.Factory> converterFactories,
-      List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor,
-      boolean validateEagerly) {
-    this.client = client;
+  private Retrofit(Call.Factory callFactory, BaseUrl baseUrl,
+      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
+      Executor callbackExecutor, boolean validateEagerly) {
+    this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories;
     this.adapterFactories = adapterFactories;
@@ -156,8 +156,11 @@ public final class Retrofit {
     return handler;
   }
 
-  public OkHttpClient client() {
-    return client;
+  /**
+   * TODO
+   */
+  public Call.Factory callFactory() {
+    return callFactory;
   }
 
   public BaseUrl baseUrl() {
@@ -344,7 +347,7 @@ public final class Retrofit {
    * are optional.
    */
   public static final class Builder {
-    private OkHttpClient client;
+    private Call.Factory callFactory;
     private BaseUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
@@ -357,9 +360,25 @@ public final class Retrofit {
       converterFactories.add(new BuiltInConverters());
     }
 
-    /** The HTTP client used for requests. */
+    /**
+     * The HTTP client used for requests.
+     * <p>
+     * This is a convenience method for calling {@link #callFactory} with an instance that uses
+     * {@code client} for execution.
+     * <p>
+     * Note: This method <b>does not</b> make a defensive copy of {@code client}. Changes to its
+     * settings will affect subsequent requests. Pass in a {@linkplain OkHttpClient#clone() cloned}
+     * instance to prevent this if desired.
+     */
     public Builder client(OkHttpClient client) {
-      this.client = checkNotNull(client, "client == null");
+      return callFactory(new OkHttpCallFactory(checkNotNull(client, "client == null")));
+    }
+
+    /**
+     * TODO
+     */
+    public Builder callFactory(Call.Factory factory) {
+      this.callFactory = checkNotNull(factory, "factory == null");
       return this;
     }
 
@@ -488,9 +507,9 @@ public final class Retrofit {
         throw new IllegalStateException("Base URL required.");
       }
 
-      OkHttpClient client = this.client;
-      if (client == null) {
-        client = new OkHttpClient();
+      Call.Factory callFactory = this.callFactory;
+      if (callFactory == null) {
+        callFactory = new OkHttpCallFactory(new OkHttpClient());
       }
 
       // Make a defensive copy of the adapters and add the default Call adapter.
@@ -500,8 +519,8 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-      return new Retrofit(client, baseUrl, converterFactories, adapterFactories, callbackExecutor,
-          validateEagerly);
+      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
+          callbackExecutor, validateEagerly);
     }
   }
 }

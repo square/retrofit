@@ -15,7 +15,6 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -29,7 +28,8 @@ final class MethodHandler {
     Converter<ResponseBody, ?> responseConverter =
         createResponseConverter(method, retrofit, responseType);
     RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
-    return new MethodHandler(retrofit.client(), requestFactory, callAdapter, responseConverter);
+    return new MethodHandler(retrofit.callFactory(), requestFactory, callAdapter,
+        responseConverter);
   }
 
   private static CallAdapter<?> createCallAdapter(Method method, Retrofit retrofit) {
@@ -59,20 +59,25 @@ final class MethodHandler {
     }
   }
 
-  private final OkHttpClient client;
+  private final Call.Factory callFactory;
   private final RequestFactory requestFactory;
   private final CallAdapter<?> callAdapter;
   private final Converter<ResponseBody, ?> responseConverter;
 
-  private MethodHandler(OkHttpClient client, RequestFactory requestFactory,
+  private MethodHandler(Call.Factory callFactory, RequestFactory requestFactory,
       CallAdapter<?> callAdapter, Converter<ResponseBody, ?> responseConverter) {
-    this.client = client;
+    this.callFactory = callFactory;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;
     this.responseConverter = responseConverter;
   }
 
   Object invoke(Object... args) {
-    return callAdapter.adapt(new OkHttpCall<>(client, requestFactory, responseConverter, args));
+    DeferredRequest request = requestFactory.defer(args);
+    Call<?> call = callFactory.create(request, responseConverter);
+    if (call == null) {
+      throw new NullPointerException("Call.Factory returned null.");
+    }
+    return callAdapter.adapt(call);
   }
 }

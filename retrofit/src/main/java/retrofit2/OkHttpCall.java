@@ -29,25 +29,23 @@ import static retrofit2.Utils.closeQuietly;
 
 final class OkHttpCall<T> implements Call<T> {
   private final OkHttpClient client;
-  private final RequestFactory requestFactory;
+  private final DeferredRequest request;
   private final Converter<ResponseBody, T> responseConverter;
-  private final Object[] args;
 
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
-  OkHttpCall(OkHttpClient client, RequestFactory requestFactory,
-      Converter<ResponseBody, T> responseConverter, Object[] args) {
+  OkHttpCall(OkHttpClient client, DeferredRequest request,
+      Converter<ResponseBody, T> responseConverter) {
     this.client = client;
-    this.requestFactory = requestFactory;
+    this.request = request;
     this.responseConverter = responseConverter;
-    this.args = args;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(client, requestFactory, responseConverter, args);
+    return new OkHttpCall<>(client, request, responseConverter);
   }
 
   @Override public void enqueue(final Callback<T> callback) {
@@ -122,7 +120,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private com.squareup.okhttp.Call createRawCall() throws IOException {
-    return client.newCall(requestFactory.create(args));
+    return client.newCall(request.get());
   }
 
   private Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
