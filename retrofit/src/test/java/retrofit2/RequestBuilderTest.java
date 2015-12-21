@@ -1779,7 +1779,7 @@ public final class RequestBuilderTest {
         .build();
 
     Method method = TestingUtils.onlyMethod(cls);
-    MethodHandler<?> handler = retrofit.loadMethodHandler(method);
+    MethodHandler handler = retrofit.loadMethodHandler(method);
     Call<?> invoke = (Call<?>) handler.invoke(args);
     try {
       invoke.execute();

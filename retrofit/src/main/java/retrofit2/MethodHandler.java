@@ -21,15 +21,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-final class MethodHandler<T> {
+final class MethodHandler {
   @SuppressWarnings("unchecked")
-  static MethodHandler<?> create(Retrofit retrofit, Method method) {
-    CallAdapter<Object> callAdapter = (CallAdapter<Object>) createCallAdapter(method, retrofit);
+  static MethodHandler create(Retrofit retrofit, Method method) {
+    CallAdapter<?> callAdapter = createCallAdapter(method, retrofit);
     Type responseType = callAdapter.responseType();
-    Converter<ResponseBody, Object> responseConverter =
-        (Converter<ResponseBody, Object>) createResponseConverter(method, retrofit, responseType);
+    Converter<ResponseBody, ?> responseConverter =
+        createResponseConverter(method, retrofit, responseType);
     RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
-    return new MethodHandler<>(retrofit.client(), requestFactory, callAdapter, responseConverter);
+    return new MethodHandler(retrofit.client(), requestFactory, callAdapter, responseConverter);
   }
 
   private static CallAdapter<?> createCallAdapter(Method method, Retrofit retrofit) {
@@ -61,11 +61,11 @@ final class MethodHandler<T> {
 
   private final OkHttpClient client;
   private final RequestFactory requestFactory;
-  private final CallAdapter<T> callAdapter;
-  private final Converter<ResponseBody, T> responseConverter;
+  private final CallAdapter<?> callAdapter;
+  private final Converter<ResponseBody, ?> responseConverter;
 
   private MethodHandler(OkHttpClient client, RequestFactory requestFactory,
-      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter) {
+      CallAdapter<?> callAdapter, Converter<ResponseBody, ?> responseConverter) {
     this.client = client;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;
