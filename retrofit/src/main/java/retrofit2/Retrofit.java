@@ -90,7 +90,7 @@ import static retrofit2.Utils.checkNotNull;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, MethodHandler<?>> methodHandlerCache = new LinkedHashMap<>();
+  private final Map<Method, MethodHandler> methodHandlerCache = new LinkedHashMap<>();
 
   private final OkHttpClient client;
   private final BaseUrl baseUrl;
@@ -144,8 +144,8 @@ public final class Retrofit {
     }
   }
 
-  MethodHandler<?> loadMethodHandler(Method method) {
-    MethodHandler<?> handler;
+  MethodHandler loadMethodHandler(Method method) {
+    MethodHandler handler;
     synchronized (methodHandlerCache) {
       handler = methodHandlerCache.get(method);
       if (handler == null) {
