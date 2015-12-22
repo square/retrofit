@@ -741,7 +741,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().addConverterFactory(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("converterFactory == null");
+      assertThat(e).hasMessage("factory == null");
     }
   }
 
@@ -1054,7 +1054,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().callbackExecutor(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("callbackExecutor == null");
+      assertThat(e).hasMessage("executor == null");
     }
   }
 
