@@ -170,14 +170,11 @@ final class Utils {
   static RuntimeException methodError(Throwable cause, Method method, String message,
       Object... args) {
     message = String.format(message, args);
-    IllegalArgumentException e = new IllegalArgumentException(message
+    return new IllegalArgumentException(message
         + "\n    for method "
         + method.getDeclaringClass().getSimpleName()
         + "."
-        + method.getName());
-    e.initCause(cause);
-    return e;
-
+        + method.getName(), cause);
   }
 
   static Type getCallResponseType(Type returnType) {
