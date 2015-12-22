@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Replaces the header with the the value of its target.
+ * Replaces the header with the value of its target.
  * <p>
  * <pre>{@code
  * &#64;GET("/")
