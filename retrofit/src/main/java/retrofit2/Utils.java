@@ -89,7 +89,7 @@ final class Utils {
     }
   }
 
-  public static Type getParameterUpperBound(int index, ParameterizedType type) {
+  static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
     if (types.length <= index) {
       throw new IllegalArgumentException(
@@ -102,7 +102,7 @@ final class Utils {
     return paramType;
   }
 
-  public static boolean hasUnresolvableType(Type type) {
+  static boolean hasUnresolvableType(Type type) {
     if (type instanceof Class<?>) {
       return false;
     }
@@ -130,7 +130,7 @@ final class Utils {
   }
 
   // This method is copyright 2008 Google Inc. and is taken from Gson under the Apache 2.0 license.
-  public static Class<?> getRawType(Type type) {
+  static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
       // Type is a normal class.
       return (Class<?>) type;
