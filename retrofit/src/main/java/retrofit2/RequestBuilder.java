@@ -88,7 +88,7 @@ final class RequestBuilder {
     relativeUrl = relativeUrl.replace("{" + name + "}", canonicalize(value, encoded));
   }
 
-  static String canonicalize(String input, boolean alreadyEncoded) {
+  private static String canonicalize(String input, boolean alreadyEncoded) {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
@@ -107,7 +107,8 @@ final class RequestBuilder {
     return input;
   }
 
-  static void canonicalize(Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
+  private static void canonicalize(Buffer out, String input, int pos, int limit,
+      boolean alreadyEncoded) {
     Buffer utf8Buffer = null; // Lazily allocated.
     int codePoint;
     for (int i = pos; i < limit; i += Character.charCount(codePoint)) {

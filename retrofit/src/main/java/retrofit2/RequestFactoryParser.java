@@ -531,7 +531,7 @@ final class RequestFactoryParser {
     return patterns;
   }
 
-  static Class<?> boxIfPrimitive(Class<?> type) {
+  private static Class<?> boxIfPrimitive(Class<?> type) {
     if (boolean.class == type) return Boolean.class;
     if (byte.class == type) return Byte.class;
     if (char.class == type) return Character.class;
