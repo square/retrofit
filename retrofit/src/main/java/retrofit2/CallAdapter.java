@@ -18,22 +18,45 @@ package retrofit2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-/** Adapts a {@link Call} into the type of {@code T}. */
+/**
+ * Adapts a {@link Call} into the type of {@code T}. Instances are created by {@linkplain Factory a
+ * factory} which is {@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into
+ * the {@link Retrofit} instance.
+ */
 public interface CallAdapter<T> {
   /**
    * Returns the value type that this adapter uses when converting the HTTP response body to a Java
    * object. For example, the response type for {@code Call<Repo>} is {@code Repo}. This type
    * is used to prepare the {@code call} passed to {@code #adapt}.
-   *
-   * <p>Note that this is typically not the same type as the {@code returnType} provided to
-   * this call adapter's factory.
+   * <p>
+   * Note: This is typically not the same type as the {@code returnType} provided to this call
+   * adapter's factory.
    */
   Type responseType();
 
-  /** Returns an instance of the {@code T} which adapts the execution of {@code call}. */
+  /**
+   * Returns an instance of {@code T} which delegates to {@code call}.
+   * <p>
+   * For example, given an instance for a hypothetical utility, {@code Async}, this instance would
+   * return a new {@code Async<R>} which invoked {@code call} when run.
+   * <pre>{@code
+   * &#64;Override
+   * public <R> Async<R> adapt(final Call<R> call) {
+   *   return Async.create(new Callable<Response<R>>() {
+   *     &#64;Override
+   *     public Response<R> call() throws Exception {
+   *       return call.execute();
+   *     }
+   *   });
+   * }
+   * }</pre>
+   */
   <R> T adapt(Call<R> call);
 
-  /** Creates {@link CallAdapter} instances based on a desired type. */
+  /**
+   * Creates {@link CallAdapter} instances based on the return type of {@linkplain
+   * Retrofit#create(Class) the service interface} methods.
+   */
   interface Factory {
     /**
      * Returns a call adapter for interface methods that return {@code returnType}, or null if it

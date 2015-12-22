@@ -31,8 +31,9 @@ import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 
 /**
- * Convert objects to and from their representation in HTTP. Register a converter with Retrofit
- * using {@link Retrofit.Builder#addConverterFactory(Factory)}.
+ * Convert objects to and from their representation in HTTP. Instances are created by {@linkplain
+ * Factory a factory} which is {@linkplain Retrofit.Builder#addConverterFactory(Factory) installed}
+ * into the {@link Retrofit} instance.
  */
 public interface Converter<F, T> {
   T convert(F value) throws IOException;
