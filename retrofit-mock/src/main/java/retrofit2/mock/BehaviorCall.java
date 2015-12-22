@@ -27,12 +27,12 @@ import retrofit2.Response;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class BehaviorCall<T> implements Call<T> {
-  private final NetworkBehavior behavior;
-  private final ExecutorService backgroundExecutor;
-  private final Call<T> delegate;
+  final NetworkBehavior behavior;
+  final ExecutorService backgroundExecutor;
+  final Call<T> delegate;
 
   private volatile Future<?> task;
-  private volatile boolean canceled;
+  volatile boolean canceled;
   private volatile boolean executed;
 
   BehaviorCall(NetworkBehavior behavior, ExecutorService backgroundExecutor, Call<T> delegate) {
@@ -52,7 +52,7 @@ final class BehaviorCall<T> implements Call<T> {
       executed = true;
     }
     task = backgroundExecutor.submit(new Runnable() {
-      private boolean delaySleep() {
+      boolean delaySleep() {
         long sleepMs = behavior.calculateDelay(MILLISECONDS);
         if (sleepMs > 0) {
           try {

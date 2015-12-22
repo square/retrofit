@@ -33,7 +33,7 @@ import retrofit2.Retrofit;
  * @see MockRetrofit#create(Class)
  */
 public final class BehaviorDelegate<T> {
-  private final Retrofit retrofit;
+  final Retrofit retrofit;
   private final NetworkBehavior behavior;
   private final ExecutorService executor;
   private final Class<T> service;

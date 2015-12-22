@@ -21,7 +21,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
 final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
-  private final Executor callbackExecutor;
+  final Executor callbackExecutor;
 
   ExecutorCallAdapterFactory(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
@@ -45,8 +45,8 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
   }
 
   static final class ExecutorCallbackCall<T> implements Call<T> {
-    private final Executor callbackExecutor;
-    private final Call<T> delegate;
+    final Executor callbackExecutor;
+    final Call<T> delegate;
 
     ExecutorCallbackCall(Executor callbackExecutor, Call<T> delegate) {
       this.callbackExecutor = callbackExecutor;

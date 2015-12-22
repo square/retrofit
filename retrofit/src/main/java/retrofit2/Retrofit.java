@@ -99,9 +99,9 @@ public final class Retrofit {
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
-  private Retrofit(Call.Factory callFactory, BaseUrl baseUrl,
-      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
-      Executor callbackExecutor, boolean validateEagerly) {
+  Retrofit(Call.Factory callFactory, BaseUrl baseUrl, List<Converter.Factory> converterFactories,
+      List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor,
+      boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories;

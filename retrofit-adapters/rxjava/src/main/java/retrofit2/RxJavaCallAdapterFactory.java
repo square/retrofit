@@ -88,7 +88,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
   static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
     private final Call<T> originalCall;
 
-    private CallOnSubscribe(Call<T> originalCall) {
+    CallOnSubscribe(Call<T> originalCall) {
       this.originalCall = originalCall;
     }
 
