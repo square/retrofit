@@ -648,20 +648,92 @@ public final class RetrofitTest {
     }
   }
 
-  @Test public void clientDefault() {
+  @Test public void callFactoryDefault() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com")
         .build();
-      assertThat(retrofit.client()).isNotNull();
+    assertThat(retrofit.callFactory()).isNotNull();
   }
 
-  @Test public void clientPropagated() {
+  @Test public void callFactoryPropagated() {
+    Call.Factory callFactory = mock(Call.Factory.class);
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .callFactory(callFactory)
+        .build();
+    assertThat(retrofit.callFactory()).isSameAs(callFactory);
+  }
+
+  @Test public void callFactoryClientPropagated() {
     OkHttpClient client = new OkHttpClient();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .client(client)
         .build();
-    assertThat(retrofit.client()).isSameAs(client);
+    OkHttpCallFactory factory = (OkHttpCallFactory) retrofit.callFactory();
+    assertThat(factory.client).isSameAs(client);
+  }
+
+  @Test public void callFactoryUsed() {
+    final Retrofit blackbox = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .build();
+    Call.Factory callFactory = spy(new Call.Factory() {
+      @Override
+      public <T> Call<T> create(DeferredRequest request, Converter<ResponseBody, T> converter) {
+        // Wrap the default Call.Factory without directly relying on its implementation.
+        return blackbox.callFactory().create(request, converter);
+      }
+    });
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .callFactory(callFactory)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    service.getResponseBody();
+    verify(callFactory).create(any(DeferredRequest.class), any(Converter.class));
+    verifyNoMoreInteractions(callFactory);
+  }
+
+  @Test public void callFactoryReturningNullThrows() {
+    Call.Factory callFactory = new Call.Factory() {
+      @Override
+      public <T> Call<T> create(DeferredRequest request, Converter<ResponseBody, T> converter) {
+        return null;
+      }
+    };
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .callFactory(callFactory)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    try {
+      service.getResponseBody();
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("Call.Factory returned null.");
+    }
+  }
+
+  @Test public void callFactoryThrowingPropagates() {
+    final RuntimeException cause = new RuntimeException("Broken!");
+    Call.Factory callFactory = new Call.Factory() {
+      @Override
+      public <T> Call<T> create(DeferredRequest request, Converter<ResponseBody, T> converter) {
+        throw cause;
+      }
+    };
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .callFactory(callFactory)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    try {
+      service.getResponseBody();
+      fail();
+    } catch (Exception e) {
+      assertThat(e).isSameAs(cause);
+    }
   }
 
   @Test public void converterNullThrows() {
