@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 final class MethodHandler {
-  @SuppressWarnings("unchecked")
   static MethodHandler create(Retrofit retrofit, Method method) {
     CallAdapter<?> callAdapter = createCallAdapter(method, retrofit);
     Type responseType = callAdapter.responseType();
