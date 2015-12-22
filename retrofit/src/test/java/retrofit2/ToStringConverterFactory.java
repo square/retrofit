@@ -23,7 +23,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 class ToStringConverterFactory extends Converter.Factory {
-  private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
+  static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
 
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,

@@ -123,7 +123,7 @@ final class OkHttpCall<T> implements Call<T> {
     return client.newCall(request.get());
   }
 
-  private Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
+  Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
     ResponseBody rawBody = rawResponse.body();
 
     // Remove the body's source (the only stateful object) so we can pass the response along.
@@ -194,7 +194,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   static final class ExceptionCatchingRequestBody extends ResponseBody {
     private final ResponseBody delegate;
-    private IOException thrownException;
+    IOException thrownException;
 
     ExceptionCatchingRequestBody(ResponseBody delegate) {
       this.delegate = delegate;
