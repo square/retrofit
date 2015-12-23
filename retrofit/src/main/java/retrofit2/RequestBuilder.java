@@ -15,14 +15,14 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.MultipartBuilder;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
+import okhttp3.FormBody;
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okio.Buffer;
 import okio.BufferedSink;
 
@@ -41,8 +41,8 @@ final class RequestBuilder {
   private MediaType contentType;
 
   private final boolean hasBody;
-  private MultipartBuilder multipartBuilder;
-  private FormEncodingBuilder formEncodingBuilder;
+  private MultipartBody.Builder multipartBuilder;
+  private FormBody.Builder formBuilder;
   private RequestBody body;
 
   RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
@@ -60,11 +60,11 @@ final class RequestBuilder {
 
     if (isFormEncoded) {
       // Will be set to 'body' in 'build'.
-      formEncodingBuilder = new FormEncodingBuilder();
+      formBuilder = new FormBody.Builder();
     } else if (isMultipart) {
       // Will be set to 'body' in 'build'.
-      multipartBuilder = new MultipartBuilder();
-      multipartBuilder.type(MultipartBuilder.FORM);
+      multipartBuilder = new MultipartBody.Builder();
+      multipartBuilder.setType(MultipartBody.FORM);
     }
   }
 
@@ -154,9 +154,9 @@ final class RequestBuilder {
 
   void addFormField(String name, String value, boolean encoded) {
     if (encoded) {
-      formEncodingBuilder.addEncoded(name, value);
+      formBuilder.addEncoded(name, value);
     } else {
-      formEncodingBuilder.add(name, value);
+      formBuilder.add(name, value);
     }
   }
 
@@ -181,8 +181,8 @@ final class RequestBuilder {
     RequestBody body = this.body;
     if (body == null) {
       // Try to pull from one of the builders.
-      if (formEncodingBuilder != null) {
-        body = formEncodingBuilder.build();
+      if (formBuilder != null) {
+        body = formBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
       } else if (hasBody) {

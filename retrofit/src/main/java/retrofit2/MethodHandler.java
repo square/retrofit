@@ -15,10 +15,10 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import okhttp3.ResponseBody;
 
 final class MethodHandler {
   static MethodHandler create(Retrofit retrofit, Method method) {

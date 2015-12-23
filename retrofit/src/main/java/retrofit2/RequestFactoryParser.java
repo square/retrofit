@@ -15,8 +15,6 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -26,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
@@ -70,7 +70,7 @@ final class RequestFactoryParser {
   private boolean isFormEncoded;
   private boolean isMultipart;
   private String relativeUrl;
-  private com.squareup.okhttp.Headers headers;
+  private okhttp3.Headers headers;
   private MediaType contentType;
   private RequestAction[] requestActions;
 
@@ -179,8 +179,8 @@ final class RequestFactoryParser {
     this.relativeUrlParamNames = parsePathParameters(value);
   }
 
-  private com.squareup.okhttp.Headers parseHeaders(String[] headers) {
-    com.squareup.okhttp.Headers.Builder builder = new com.squareup.okhttp.Headers.Builder();
+  private okhttp3.Headers parseHeaders(String[] headers) {
+    okhttp3.Headers.Builder builder = new okhttp3.Headers.Builder();
     for (String header : headers) {
       int colon = header.indexOf(':');
       if (colon == -1 || colon == 0 || colon == header.length() - 1) {
@@ -402,7 +402,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
             Part part = (Part) methodParameterAnnotation;
-            com.squareup.okhttp.Headers headers = com.squareup.okhttp.Headers.of(
+            okhttp3.Headers headers = okhttp3.Headers.of(
                 "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
 

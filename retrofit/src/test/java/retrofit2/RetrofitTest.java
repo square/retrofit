@@ -1,13 +1,6 @@
 // Copyright 2013 Square, Inc.
 package retrofit2;
 
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -22,6 +15,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.Body;
@@ -29,8 +29,8 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -506,7 +506,7 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Method return type must not include a type variable or wildcard: "
-          + "retrofit2.Call<? extends com.squareup.okhttp.ResponseBody>\n"
+          + "retrofit2.Call<? extends okhttp3.ResponseBody>\n"
           + "    for method UnresolvableResponseType.wildcardUpperBound");
     }
   }
@@ -552,7 +552,7 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Parameter type must not include a type variable or wildcard: "
-          + "java.util.List<? extends com.squareup.okhttp.RequestBody> (parameter #1)\n"
+          + "java.util.List<? extends okhttp3.RequestBody> (parameter #1)\n"
           + "    for method UnresolvableParameterType.wildcardUpperBound");
     }
   }

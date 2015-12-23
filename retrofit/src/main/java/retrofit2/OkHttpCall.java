@@ -15,11 +15,11 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
@@ -32,7 +32,7 @@ final class OkHttpCall<T> implements Call<T> {
   private final DeferredRequest request;
   private final Converter<ResponseBody, T> responseConverter;
 
-  private volatile com.squareup.okhttp.Call rawCall;
+  private volatile okhttp3.Call rawCall;
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
@@ -54,7 +54,7 @@ final class OkHttpCall<T> implements Call<T> {
       executed = true;
     }
 
-    com.squareup.okhttp.Call rawCall;
+    okhttp3.Call rawCall;
     try {
       rawCall = createRawCall();
     } catch (Throwable t) {
@@ -66,7 +66,7 @@ final class OkHttpCall<T> implements Call<T> {
     }
     this.rawCall = rawCall;
 
-    rawCall.enqueue(new com.squareup.okhttp.Callback() {
+    rawCall.enqueue(new okhttp3.Callback() {
       private void callFailure(Throwable e) {
         try {
           callback.onFailure(e);
@@ -87,7 +87,7 @@ final class OkHttpCall<T> implements Call<T> {
         callFailure(e);
       }
 
-      @Override public void onResponse(com.squareup.okhttp.Response rawResponse) {
+      @Override public void onResponse(okhttp3.Response rawResponse) {
         Response<T> response;
         try {
           response = parseResponse(rawResponse);
@@ -110,7 +110,7 @@ final class OkHttpCall<T> implements Call<T> {
       executed = true;
     }
 
-    com.squareup.okhttp.Call rawCall = createRawCall();
+    okhttp3.Call rawCall = createRawCall();
     if (canceled) {
       rawCall.cancel();
     }
@@ -119,11 +119,11 @@ final class OkHttpCall<T> implements Call<T> {
     return parseResponse(rawCall.execute());
   }
 
-  private com.squareup.okhttp.Call createRawCall() throws IOException {
+  private okhttp3.Call createRawCall() throws IOException {
     return client.newCall(request.get());
   }
 
-  Response<T> parseResponse(com.squareup.okhttp.Response rawResponse) throws IOException {
+  Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {
     ResponseBody rawBody = rawResponse.body();
 
     // Remove the body's source (the only stateful object) so we can pass the response along.
@@ -160,7 +160,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   public void cancel() {
     canceled = true;
-    com.squareup.okhttp.Call rawCall = this.rawCall;
+    okhttp3.Call rawCall = this.rawCall;
     if (rawCall != null) {
       rawCall.cancel();
     }
@@ -183,11 +183,11 @@ final class OkHttpCall<T> implements Call<T> {
       return contentType;
     }
 
-    @Override public long contentLength() throws IOException {
+    @Override public long contentLength() {
       return contentLength;
     }
 
-    @Override public BufferedSource source() throws IOException {
+    @Override public BufferedSource source() {
       throw new IllegalStateException("Cannot read raw response body of a converted body.");
     }
   }
@@ -204,24 +204,12 @@ final class OkHttpCall<T> implements Call<T> {
       return delegate.contentType();
     }
 
-    @Override public long contentLength() throws IOException {
-      try {
-        return delegate.contentLength();
-      } catch (IOException e) {
-        thrownException = e;
-        throw e;
-      }
+    @Override public long contentLength() {
+      return delegate.contentLength();
     }
 
-    @Override public BufferedSource source() throws IOException {
-      BufferedSource delegateSource;
-      try {
-        delegateSource = delegate.source();
-      } catch (IOException e) {
-        thrownException = e;
-        throw e;
-      }
-      return Okio.buffer(new ForwardingSource(delegateSource) {
+    @Override public BufferedSource source() {
+      return Okio.buffer(new ForwardingSource(delegate.source()) {
         @Override public long read(Buffer sink, long byteCount) throws IOException {
           try {
             return super.read(sink, byteCount);
@@ -233,7 +221,7 @@ final class OkHttpCall<T> implements Call<T> {
       });
     }
 
-    @Override public void close() throws IOException {
+    @Override public void close() {
       delegate.close();
     }
 

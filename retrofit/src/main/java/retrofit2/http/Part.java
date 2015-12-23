@@ -28,7 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * The parameter type on which this annotation exists will be processed in one of two ways:
  * <ul>
- * <li>If the type is {@link com.squareup.okhttp.RequestBody RequestBody} the value will be used
+ * <li>If the type is {@link okhttp3.RequestBody RequestBody} the value will be used
  * directly with its content type.</li>
  * <li>Other object types will be converted to an appropriate representation by using
  * {@linkplain Converter a converter}.</li>

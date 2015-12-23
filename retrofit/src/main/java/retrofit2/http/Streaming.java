@@ -23,8 +23,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Treat the response body on methods returning {@link com.squareup.okhttp.Response Response} as is,
- * i.e. without converting {@link com.squareup.okhttp.Response#body() body()} to {@code byte[]}.
+ * Treat the response body on methods returning {@link okhttp3.Response Response} as is,
+ * i.e. without converting {@link okhttp3.Response#body() body()} to {@code byte[]}.
  */
 @Documented
 @Target(METHOD)

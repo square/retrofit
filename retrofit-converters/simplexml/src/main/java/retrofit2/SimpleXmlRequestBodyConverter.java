@@ -15,10 +15,10 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okio.Buffer;
 import org.simpleframework.xml.Serializer;
 

@@ -17,11 +17,11 @@ package retrofit2;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Protocol Buffers.

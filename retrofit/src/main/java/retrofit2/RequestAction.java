@@ -15,11 +15,11 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
+import okhttp3.Headers;
+import okhttp3.RequestBody;
 
 import static retrofit2.Utils.checkNotNull;
 

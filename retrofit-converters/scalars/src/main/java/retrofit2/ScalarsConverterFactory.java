@@ -15,9 +15,9 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.RequestBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import okhttp3.RequestBody;
 
 /**
  * A {@linkplain Converter.Factory converter} for strings and both primitives and their boxed types

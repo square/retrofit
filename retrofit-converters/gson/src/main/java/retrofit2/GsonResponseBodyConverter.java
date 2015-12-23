@@ -16,9 +16,9 @@
 package retrofit2;
 
 import com.google.gson.TypeAdapter;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.Reader;
+import okhttp3.ResponseBody;
 
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   private final TypeAdapter<T> adapter;

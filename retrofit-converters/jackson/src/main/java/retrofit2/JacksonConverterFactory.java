@@ -19,10 +19,10 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Jackson.
