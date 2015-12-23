@@ -15,12 +15,12 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
 import com.squareup.wire.ProtoAdapter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 
 /**
  * A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers.

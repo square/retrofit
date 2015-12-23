@@ -15,10 +15,10 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 

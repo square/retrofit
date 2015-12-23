@@ -15,9 +15,9 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 
 final class ScalarRequestBodyConverter<T> implements Converter<T, RequestBody> {
   static final ScalarRequestBodyConverter<Object> INSTANCE = new ScalarRequestBodyConverter<>();

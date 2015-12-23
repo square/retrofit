@@ -18,12 +18,12 @@ package retrofit2;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okio.Buffer;
 
 final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {

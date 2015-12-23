@@ -15,10 +15,10 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
 import java.io.IOException;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.Request;
 
 final class RequestFactory {
   private final String method;

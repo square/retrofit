@@ -15,10 +15,10 @@
  */
 package retrofit2.http;
 
-import com.squareup.okhttp.HttpUrl;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import okhttp3.HttpUrl;
 import retrofit2.Retrofit;
 
 import static java.lang.annotation.ElementType.PARAMETER;

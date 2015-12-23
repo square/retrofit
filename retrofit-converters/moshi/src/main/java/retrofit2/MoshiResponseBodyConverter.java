@@ -16,8 +16,8 @@
 package retrofit2;
 
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import okhttp3.ResponseBody;
 import okio.BufferedSource;
 
 final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> {

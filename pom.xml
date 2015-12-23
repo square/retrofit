@@ -50,7 +50,7 @@
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
     <android.platform>16</android.platform>
-    <okhttp.version>2.5.0</okhttp.version>
+    <okhttp.version>3.0.0-SNAPSHOT</okhttp.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
@@ -70,6 +70,13 @@
     <mockito.version>1.9.5</mockito.version>
     <guava.version>18.0</guava.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>sonatype-snapshots</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
 
   <scm>
     <url>http://github.com/square/retrofit</url>
@@ -108,7 +115,7 @@
         <version>${animal.sniffer.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.squareup.okhttp</groupId>
+        <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp</artifactId>
         <version>${okhttp.version}</version>
       </dependency>
@@ -170,7 +177,7 @@
         <version>${guava.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.squareup.okhttp</groupId>
+        <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
         <version>${okhttp.version}</version>
       </dependency>

@@ -15,8 +15,8 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
 
 final class OkHttpCallFactory implements Call.Factory {
   final OkHttpClient client;

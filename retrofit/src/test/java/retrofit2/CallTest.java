@@ -15,18 +15,18 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
@@ -38,8 +38,8 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Streaming;
 
-import static com.squareup.okhttp.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -279,8 +279,8 @@ public final class CallTest {
     // MWS has no way to trigger IOExceptions during the response body so use an interceptor.
     OkHttpClient client = new OkHttpClient();
     client.interceptors().add(new Interceptor() {
-      @Override public com.squareup.okhttp.Response intercept(Chain chain) throws IOException {
-        com.squareup.okhttp.Response response = chain.proceed(chain.request());
+      @Override public okhttp3.Response intercept(Chain chain) throws IOException {
+        okhttp3.Response response = chain.proceed(chain.request());
         ResponseBody body = response.body();
         BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {
           @Override public long read(Buffer sink, long byteCount) throws IOException {

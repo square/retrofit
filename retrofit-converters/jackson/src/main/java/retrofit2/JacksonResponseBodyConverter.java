@@ -16,9 +16,9 @@
 package retrofit2;
 
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.Reader;
+import okhttp3.ResponseBody;
 
 final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   private final ObjectReader adapter;

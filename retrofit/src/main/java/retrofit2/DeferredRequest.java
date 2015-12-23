@@ -15,8 +15,8 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.Request;
 import java.io.IOException;
+import okhttp3.Request;
 
 /**
  * An un-built HTTP request. This class defers any work necessary to create an HTTP request until

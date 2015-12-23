@@ -15,28 +15,26 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.Protocol;
+import okhttp3.ResponseBody;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class ResponseTest {
-  private final com.squareup.okhttp.Response successResponse =
-      new com.squareup.okhttp.Response.Builder() //
-          .code(200)
-          .message("OK")
-          .protocol(Protocol.HTTP_1_1)
-          .request(new com.squareup.okhttp.Request.Builder().url("http://localhost").build())
-          .build();
-  private final com.squareup.okhttp.Response errorResponse =
-      new com.squareup.okhttp.Response.Builder() //
-          .code(400)
-          .message("Broken!")
-          .protocol(Protocol.HTTP_1_1)
-          .request(new com.squareup.okhttp.Request.Builder().url("http://localhost").build())
-          .build();
+  private final okhttp3.Response successResponse = new okhttp3.Response.Builder() //
+      .code(200)
+      .message("OK")
+      .protocol(Protocol.HTTP_1_1)
+      .request(new okhttp3.Request.Builder().url("http://localhost").build())
+      .build();
+  private final okhttp3.Response errorResponse = new okhttp3.Response.Builder() //
+      .code(400)
+      .message("Broken!")
+      .protocol(Protocol.HTTP_1_1)
+      .request(new okhttp3.Request.Builder().url("http://localhost").build())
+      .build();
 
   @Test public void success() {
     Object body = new Object();

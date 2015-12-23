@@ -15,10 +15,10 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.ResponseBody;
 import com.squareup.wire.Message;
 import com.squareup.wire.ProtoAdapter;
 import java.io.IOException;
+import okhttp3.ResponseBody;
 import okio.BufferedSource;
 
 final class WireResponseBodyConverter<T extends Message<T, ?>>

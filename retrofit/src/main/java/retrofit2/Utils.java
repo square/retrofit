@@ -16,8 +16,6 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -29,6 +27,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.Source;
@@ -61,7 +60,7 @@ final class Utils {
   }
 
   /**
-   * Replace a {@link Response} with an identical copy whose body is backed by a
+   * Replace a {@link ResponseBody} with an identical copy which is backed by a
    * {@link Buffer} rather than a {@link Source}.
    */
   static ResponseBody readBodyToBytesIfNecessary(final ResponseBody body) throws IOException {

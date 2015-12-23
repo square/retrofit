@@ -15,9 +15,9 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
+import okhttp3.ResponseBody;
 import org.simpleframework.xml.Serializer;
 
 final class SimpleXmlResponseBodyConverter<T> implements Converter<ResponseBody, T> {

@@ -15,8 +15,8 @@
  */
 package retrofit2;
 
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
+import okhttp3.ResponseBody;
 
 /**
  * An invocation of a Retrofit method that sends a request to a webserver and returns a response.

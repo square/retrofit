@@ -16,9 +16,9 @@
 package retrofit2;
 
 import com.google.protobuf.MessageLite;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 
 final class ProtoRequestBodyConverter<T extends MessageLite> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");

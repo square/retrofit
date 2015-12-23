@@ -1,13 +1,6 @@
 // Copyright 2013 Square, Inc.
 package retrofit2;
 
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -17,6 +10,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public final class RequestBuilderTest {
 
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("CUSTOM1");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo");
     assertThat(request.body()).isNull();
   }
 
@@ -76,7 +76,7 @@ public final class RequestBuilderTest {
     RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("CUSTOM2");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo");
     assertBody(request.body(), "hi");
   }
 
@@ -177,7 +177,7 @@ public final class RequestBuilderTest {
       }
     }
     Request request = buildRequest(Example.class, "yep");
-    assertThat(request.urlString()).isEqualTo("http://example.com/?maybe=yep");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/?maybe=yep");
   }
 
   @Test public void twoMethodsFail() {
@@ -504,7 +504,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -518,7 +518,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("DELETE");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertNull(request.body());
   }
 
@@ -532,7 +532,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("HEAD");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -562,7 +562,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "hi");
   }
 
@@ -577,7 +577,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("PUT");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "hi");
   }
 
@@ -592,7 +592,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("PATCH");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "hi");
   }
 
@@ -606,7 +606,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("OPTIONS");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -620,7 +620,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "po ng");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
     assertThat(request.body()).isNull();
   }
 
@@ -634,7 +634,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/%7Bkit,kat%7D/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong/%7Bkit,kat%7D/");
     assertThat(request.body()).isNull();
   }
 
@@ -648,7 +648,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "po%20ng");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/po%20ng/");
     assertThat(request.body()).isNull();
   }
 
@@ -677,7 +677,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?ping=pong");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?ping=pong");
     assertThat(request.body()).isNull();
   }
 
@@ -691,7 +691,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "p%20o%20n%20g");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=p%20o%20n%20g");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?pi%20ng=p%20o%20n%20g");
     assertThat(request.body()).isNull();
   }
 
@@ -703,7 +703,7 @@ public final class RequestBuilderTest {
       }
     }
     Request request = buildRequest(Example.class, new Object[] { null });
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
   }
 
   @Test public void queryParamOptional() {
@@ -715,7 +715,7 @@ public final class RequestBuilderTest {
       }
     }
     Request request = buildRequest(Example.class, "bar", null, "kat");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?foo=bar&kit=kat");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?foo=bar&kit=kat");
   }
 
   @Test public void getWithQueryUrlAndParam() {
@@ -728,7 +728,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?hi=mom&ping=pong");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?hi=mom&ping=pong");
     assertThat(request.body()).isNull();
   }
 
@@ -742,7 +742,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?hi=mom");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?hi=mom");
     assertThat(request.body()).isNull();
   }
 
@@ -758,7 +758,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong", "kat", "raff");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
     assertThat(request.body()).isNull();
   }
 
@@ -790,7 +790,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong?", "kat?");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat?");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat?");
     assertThat(request.body()).isNull();
   }
 
@@ -805,7 +805,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong&", "kat&");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong&/?kit=kat%26");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong&/?kit=kat%26");
     assertThat(request.body()).isNull();
   }
 
@@ -820,7 +820,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong#", "kat#");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
     assertThat(request.body()).isNull();
   }
 
@@ -836,7 +836,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, values);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
     assertThat(request.body()).isNull();
   }
 
@@ -852,7 +852,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, new Object[] { values });
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
     assertThat(request.body()).isNull();
   }
 
@@ -868,7 +868,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, new Object[] { values });
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=3");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=3");
     assertThat(request.body()).isNull();
   }
 
@@ -888,7 +888,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=kat&ping=pong");
     assertThat(request.body()).isNull();
   }
 
@@ -908,7 +908,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&pi%20ng=p%20g");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&pi%20ng=p%20g");
     assertThat(request.body()).isNull();
   }
 
@@ -923,7 +923,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "foo/bar/");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -938,7 +938,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example2.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example2.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -953,7 +953,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "https://example2.com/foo/bar/");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("https://example2.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("https://example2.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -968,7 +968,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "http://example.com/foo/bar/");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -1085,7 +1085,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "foo/bar/", "hey!");
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/?hey=hey!");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?hey=hey!");
   }
 
   @Test public void postWithUrl() {
@@ -1099,7 +1099,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "http://example.com/foo/bar", body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar");
     assertBody(request.body(), "hi");
   }
 
@@ -1114,7 +1114,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong", body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong/");
     assertBody(request.body(), "Hi!");
   }
 
@@ -1128,7 +1128,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "");
   }
 
@@ -1143,7 +1143,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("CUSTOM");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "");
   }
 
@@ -1158,7 +1158,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertBody(request.body(), "hi");
   }
 
@@ -1188,7 +1188,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong", body, "kat");
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/pong/kat/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/pong/kat/");
     assertBody(request.body(), "Hi!");
   }
 
@@ -1205,7 +1205,7 @@ public final class RequestBuilderTest {
         MediaType.parse("text/plain"), "kat"));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1236,7 +1236,7 @@ public final class RequestBuilderTest {
         buildRequest(Example.class, new Object[] { new String[] { "pong1", "pong2" } });
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1266,7 +1266,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, Arrays.asList("pong1", "pong2"));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1298,7 +1298,7 @@ public final class RequestBuilderTest {
         MediaType.parse("text/plain"), "kat"));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1335,7 +1335,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1372,7 +1372,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, params);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1444,7 +1444,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "pong", null);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
     Buffer buffer = new Buffer();
@@ -1639,11 +1639,11 @@ public final class RequestBuilderTest {
     }
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
+    okhttp3.Headers headers = request.headers();
     assertThat(headers.size()).isEqualTo(2);
     assertThat(headers.get("ping")).isEqualTo("pong");
     assertThat(headers.get("kit")).isEqualTo("kat");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -1656,10 +1656,10 @@ public final class RequestBuilderTest {
     }
     Request request = buildRequest(Example.class, new BigInteger("1234"));
     assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
+    okhttp3.Headers headers = request.headers();
     assertThat(headers.size()).isEqualTo(1);
     assertThat(headers.get("kit")).isEqualTo("1234");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -1673,11 +1673,11 @@ public final class RequestBuilderTest {
     }
     Request request = buildRequest(Example.class, "kat");
     assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
+    okhttp3.Headers headers = request.headers();
     assertThat(headers.size()).isEqualTo(2);
     assertThat(headers.get("ping")).isEqualTo("pong");
     assertThat(headers.get("kit")).isEqualTo("kat");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -1690,10 +1690,10 @@ public final class RequestBuilderTest {
     }
     Request request = buildRequest(Example.class, Arrays.asList("bar", null, "baz"));
     assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
+    okhttp3.Headers headers = request.headers();
     assertThat(headers.size()).isEqualTo(2);
     assertThat(headers.values("foo")).containsExactly("bar", "baz");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 
@@ -1706,10 +1706,10 @@ public final class RequestBuilderTest {
     }
     Request request = buildRequest(Example.class, (Object) new String[] { "bar", null, "baz" });
     assertThat(request.method()).isEqualTo("GET");
-    com.squareup.okhttp.Headers headers = request.headers();
+    okhttp3.Headers headers = request.headers();
     assertThat(headers.size()).isEqualTo(2);
     assertThat(headers.values("foo")).containsExactly("bar", "baz");
-    assertThat(request.urlString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
 

@@ -18,9 +18,9 @@ package retrofit2;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
+import okhttp3.ResponseBody;
 
 final class ProtoResponseBodyConverter<T extends MessageLite>
     implements Converter<ResponseBody, T> {
