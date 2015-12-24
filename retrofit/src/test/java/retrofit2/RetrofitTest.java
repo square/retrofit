@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -656,7 +657,7 @@ public final class RetrofitTest {
   }
 
   @Test public void callFactoryPropagated() {
-    Call.Factory callFactory = mock(Call.Factory.class);
+    okhttp3.Call.Factory callFactory = mock(okhttp3.Call.Factory.class);
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .callFactory(callFactory)
@@ -670,35 +671,31 @@ public final class RetrofitTest {
         .baseUrl("http://example.com/")
         .client(client)
         .build();
-    OkHttpCallFactory factory = (OkHttpCallFactory) retrofit.callFactory();
-    assertThat(factory.client).isSameAs(client);
+    assertThat(retrofit.callFactory()).isSameAs(client);
   }
 
-  @Test public void callFactoryUsed() {
-    final Retrofit blackbox = new Retrofit.Builder()
-        .baseUrl("http://example.com/")
-        .build();
-    Call.Factory callFactory = spy(new Call.Factory() {
-      @Override
-      public <T> Call<T> create(DeferredRequest request, Converter<ResponseBody, T> converter) {
-        // Wrap the default Call.Factory without directly relying on its implementation.
-        return blackbox.callFactory().create(request, converter);
+  @Test public void callFactoryUsed() throws IOException {
+    okhttp3.Call.Factory callFactory = spy(new okhttp3.Call.Factory() {
+      @Override public okhttp3.Call newCall(Request request) {
+        return new OkHttpClient().newCall(request);
       }
     });
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://example.com/")
+        .baseUrl(server.url("/"))
         .callFactory(callFactory)
         .build();
+
+    server.enqueue(new MockResponse());
+
     CallMethod service = retrofit.create(CallMethod.class);
-    service.getResponseBody();
-    verify(callFactory).create(any(DeferredRequest.class), any(Converter.class));
+    service.getResponseBody().execute();
+    verify(callFactory).newCall(any(Request.class));
     verifyNoMoreInteractions(callFactory);
   }
 
-  @Test public void callFactoryReturningNullThrows() {
-    Call.Factory callFactory = new Call.Factory() {
-      @Override
-      public <T> Call<T> create(DeferredRequest request, Converter<ResponseBody, T> converter) {
+  @Test public void callFactoryReturningNullThrows() throws IOException {
+    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
+      @Override public okhttp3.Call newCall(Request request) {
         return null;
       }
     };
@@ -706,9 +703,13 @@ public final class RetrofitTest {
         .baseUrl("http://example.com/")
         .callFactory(callFactory)
         .build();
+
+    server.enqueue(new MockResponse());
+
     CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.getResponseBody();
     try {
-      service.getResponseBody();
+      call.execute();
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("Call.Factory returned null.");
@@ -717,9 +718,8 @@ public final class RetrofitTest {
 
   @Test public void callFactoryThrowingPropagates() {
     final RuntimeException cause = new RuntimeException("Broken!");
-    Call.Factory callFactory = new Call.Factory() {
-      @Override
-      public <T> Call<T> create(DeferredRequest request, Converter<ResponseBody, T> converter) {
+    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
+      @Override public okhttp3.Call newCall(Request request) {
         throw cause;
       }
     };
@@ -727,9 +727,13 @@ public final class RetrofitTest {
         .baseUrl("http://example.com/")
         .callFactory(callFactory)
         .build();
+
+    server.enqueue(new MockResponse());
+
     CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.getResponseBody();
     try {
-      service.getResponseBody();
+      call.execute();
       fail();
     } catch (Exception e) {
       assertThat(e).isSameAs(cause);

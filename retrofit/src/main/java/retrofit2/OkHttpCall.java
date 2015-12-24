@@ -17,7 +17,6 @@ package retrofit2;
 
 import java.io.IOException;
 import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import okio.Buffer;
@@ -28,24 +27,26 @@ import okio.Okio;
 import static retrofit2.Utils.closeQuietly;
 
 final class OkHttpCall<T> implements Call<T> {
-  private final OkHttpClient client;
-  private final DeferredRequest request;
+  private final okhttp3.Call.Factory callFactory;
+  private final RequestFactory requestFactory;
+  private final Object[] args;
   private final Converter<ResponseBody, T> responseConverter;
 
   private volatile okhttp3.Call rawCall;
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
-  OkHttpCall(OkHttpClient client, DeferredRequest request,
+  OkHttpCall(okhttp3.Call.Factory callFactory, RequestFactory requestFactory, Object[] args,
       Converter<ResponseBody, T> responseConverter) {
-    this.client = client;
-    this.request = request;
+    this.callFactory = callFactory;
+    this.requestFactory = requestFactory;
+    this.args = args;
     this.responseConverter = responseConverter;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(client, request, responseConverter);
+    return new OkHttpCall<>(callFactory, requestFactory, args, responseConverter);
   }
 
   @Override public void enqueue(final Callback<T> callback) {
@@ -120,7 +121,11 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private okhttp3.Call createRawCall() throws IOException {
-    return client.newCall(request.get());
+    okhttp3.Call call = callFactory.newCall(requestFactory.create(args));
+    if (call == null) {
+      throw new NullPointerException("Call.Factory returned null.");
+    }
+    return call;
   }
 
   Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {

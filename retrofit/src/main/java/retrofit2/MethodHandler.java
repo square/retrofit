@@ -58,12 +58,12 @@ final class MethodHandler {
     }
   }
 
-  private final Call.Factory callFactory;
+  private final okhttp3.Call.Factory callFactory;
   private final RequestFactory requestFactory;
   private final CallAdapter<?> callAdapter;
   private final Converter<ResponseBody, ?> responseConverter;
 
-  private MethodHandler(Call.Factory callFactory, RequestFactory requestFactory,
+  private MethodHandler(okhttp3.Call.Factory callFactory, RequestFactory requestFactory,
       CallAdapter<?> callAdapter, Converter<ResponseBody, ?> responseConverter) {
     this.callFactory = callFactory;
     this.requestFactory = requestFactory;
@@ -72,11 +72,7 @@ final class MethodHandler {
   }
 
   Object invoke(Object... args) {
-    DeferredRequest request = requestFactory.defer(args);
-    Call<?> call = callFactory.create(request, responseConverter);
-    if (call == null) {
-      throw new NullPointerException("Call.Factory returned null.");
-    }
-    return callAdapter.adapt(call);
+    return callAdapter.adapt(
+        new OkHttpCall<>(callFactory, requestFactory, args, responseConverter));
   }
 }

@@ -45,14 +45,6 @@ final class RequestFactory {
     this.requestActions = requestActions;
   }
 
-  DeferredRequest defer(final Object... args) {
-    return new DeferredRequest() {
-      @Override public Request get() throws IOException {
-        return create(args);
-      }
-    };
-  }
-
   Request create(Object... args) throws IOException {
     RequestBuilder requestBuilder =
         new RequestBuilder(method, baseUrl.url(), relativeUrl, headers, contentType, hasBody,
