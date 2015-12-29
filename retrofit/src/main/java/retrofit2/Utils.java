@@ -181,15 +181,7 @@ final class Utils {
       throw new IllegalArgumentException(
           "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
     }
-    final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
-
-    // Ensure the Call response type is not Response, we automatically deliver the Response object.
-    if (getRawType(responseType) == retrofit2.Response.class) {
-      throw new IllegalArgumentException(
-          "Call<T> cannot use Response as its generic parameter. "
-              + "Specify the response body type only (e.g., Call<TweetResponse>).");
-    }
-    return responseType;
+    return getParameterUpperBound(0, (ParameterizedType) returnType);
   }
 
   private Utils() {

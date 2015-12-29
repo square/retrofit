@@ -48,11 +48,16 @@ public final class RetrofitTest {
   interface CallMethod {
     @GET("/") Call<String> disallowed();
     @POST("/") Call<ResponseBody> disallowed(@Body String body);
+
+    @GET("/") Call<retrofit2.Response> badType1();
+    @GET("/") Call<okhttp3.Response> badType2();
+
     @GET("/") Call<ResponseBody> getResponseBody();
     @GET("/") Call<Void> getVoid();
     @POST("/") Call<ResponseBody> postRequestBody(@Body RequestBody body);
     @GET("/") Call<ResponseBody> queryString(@Query("foo") String foo);
     @GET("/") Call<ResponseBody> queryObject(@Query("foo") Object foo);
+
   }
   interface FutureMethod {
     @GET("/") Future<String> method();
@@ -109,6 +114,36 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("API interfaces must not extend other interfaces.");
+    }
+  }
+
+  @Test public void responseTypeCannotBeRetrofitResponse() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    try {
+      service.badType1();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "'retrofit2.Response' is not a valid response body type. Did you mean ResponseBody?\n"
+              + "    for method CallMethod.badType1");
+    }
+  }
+
+  @Test public void responseTypeCannotBeOkHttpResponse() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    try {
+      service.badType2();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "'okhttp3.Response' is not a valid response body type. Did you mean ResponseBody?\n"
+              + "    for method CallMethod.badType2");
     }
   }
 

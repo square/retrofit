@@ -55,17 +55,6 @@ public final class ExecutorCallAdapterFactoryTest {
     }
   }
 
-  @Test public void responseThrows() {
-    Type returnType = new TypeToken<Call<Response<String>>>() {}.getType();
-    try {
-      factory.get(returnType, NO_ANNOTATIONS, retrofit);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Call<T> cannot use Response as its generic parameter. "
-          + "Specify the response body type only (e.g., Call<TweetResponse>).");
-    }
-  }
-
   @Test public void responseType() {
     Type classType = new TypeToken<Call<String>>() {}.getType();
     assertThat(factory.get(classType, NO_ANNOTATIONS, retrofit).responseType())
