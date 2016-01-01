@@ -1762,20 +1762,18 @@ public final class RequestBuilderTest {
   }
 
   private Request buildRequest(Class<?> cls, Object... args) {
-    OkHttpClient client = new OkHttpClient();
-
     final AtomicReference<Request> requestRef = new AtomicReference<>();
-    client.interceptors().add(new Interceptor() {
-      @Override public Response intercept(Chain chain) throws IOException {
-        requestRef.set(chain.request());
+    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
+      @Override public okhttp3.Call newCall(Request request) {
+        requestRef.set(request);
         throw new UnsupportedOperationException("Not implemented");
       }
-    });
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(new ToStringConverterFactory())
-        .client(client)
+        .callFactory(callFactory)
         .build();
 
     Method method = TestingUtils.onlyMethod(cls);
