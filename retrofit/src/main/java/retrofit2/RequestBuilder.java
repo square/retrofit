@@ -141,7 +141,7 @@ final class RequestBuilder {
   void addQueryParam(String name, String value, boolean encoded) {
     if (relativeUrl != null) {
       // Do a one-time combination of the built relative URL and the base URL.
-      urlBuilder = baseUrl.resolve(relativeUrl).newBuilder();
+      urlBuilder = baseUrl.newBuilder(relativeUrl);
       relativeUrl = null;
     }
 
