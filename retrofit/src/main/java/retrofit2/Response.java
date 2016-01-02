@@ -17,6 +17,7 @@ package retrofit2;
 
 import okhttp3.Headers;
 import okhttp3.Protocol;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
 
 /** An HTTP response. */
@@ -27,7 +28,7 @@ public final class Response<T> {
         .code(200)
         .message("OK")
         .protocol(Protocol.HTTP_1_1)
-        .request(new okhttp3.Request.Builder().url("http://localhost").build())
+        .request(new Request.Builder().url("http://localhost").build())
         .build());
   }
 
@@ -52,7 +53,7 @@ public final class Response<T> {
     return error(body, new okhttp3.Response.Builder() //
         .code(code)
         .protocol(Protocol.HTTP_1_1)
-        .request(new okhttp3.Request.Builder().url("http://localhost").build())
+        .request(new Request.Builder().url("http://localhost").build())
         .build());
   }
 
