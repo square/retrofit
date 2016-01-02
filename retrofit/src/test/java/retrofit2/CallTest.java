@@ -277,20 +277,20 @@ public final class CallTest {
 
   @Test public void conversionProblemIncomingMaskedByConverterIsUnwrapped() throws IOException {
     // MWS has no way to trigger IOExceptions during the response body so use an interceptor.
-    OkHttpClient client = new OkHttpClient();
-    client.interceptors().add(new Interceptor() {
-      @Override public okhttp3.Response intercept(Chain chain) throws IOException {
-        okhttp3.Response response = chain.proceed(chain.request());
-        ResponseBody body = response.body();
-        BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {
-          @Override public long read(Buffer sink, long byteCount) throws IOException {
-            throw new IOException("cause");
+    OkHttpClient client = new OkHttpClient.Builder() //
+        .addInterceptor(new Interceptor() {
+          @Override public okhttp3.Response intercept(Chain chain) throws IOException {
+            okhttp3.Response response = chain.proceed(chain.request());
+            ResponseBody body = response.body();
+            BufferedSource source = Okio.buffer(new ForwardingSource(body.source()) {
+              @Override public long read(Buffer sink, long byteCount) throws IOException {
+                throw new IOException("cause");
+              }
+            });
+            body = ResponseBody.create(body.contentType(), body.contentLength(), source);
+            return response.newBuilder().body(body).build();
           }
-        });
-        body = ResponseBody.create(body.contentType(), body.contentLength(), source);
-        return response.newBuilder().body(body).build();
-      }
-    });
+        }).build();
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
