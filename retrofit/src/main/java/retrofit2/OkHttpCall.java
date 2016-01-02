@@ -24,8 +24,6 @@ import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 
-import static retrofit2.Utils.closeQuietly;
-
 final class OkHttpCall<T> implements Call<T> {
   private final okhttp3.Call.Factory callFactory;
   private final RequestFactory requestFactory;
@@ -140,10 +138,10 @@ final class OkHttpCall<T> implements Call<T> {
     if (code < 200 || code >= 300) {
       try {
         // Buffer the entire body to avoid future I/O.
-        ResponseBody bufferedBody = Utils.readBodyToBytesIfNecessary(rawBody);
+        ResponseBody bufferedBody = Utils.buffer(rawBody);
         return Response.error(bufferedBody, rawResponse);
       } finally {
-        closeQuietly(rawBody);
+        rawBody.close();
       }
     }
 

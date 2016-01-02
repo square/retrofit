@@ -95,9 +95,9 @@ final class BuiltInConverters extends Converter.Factory {
     @Override public ResponseBody convert(ResponseBody value) throws IOException {
       try {
         // Buffer the entire body to avoid future I/O.
-        return Utils.readBodyToBytesIfNecessary(value);
+        return Utils.buffer(value);
       } finally {
-        Utils.closeQuietly(value);
+        value.close();
       }
     }
   }
