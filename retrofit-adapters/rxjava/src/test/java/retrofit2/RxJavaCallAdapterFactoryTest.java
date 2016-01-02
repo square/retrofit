@@ -32,10 +32,10 @@ import retrofit2.http.GET;
 import rx.Observable;
 import rx.Single;
 import rx.observables.BlockingObservable;
+import rx.singles.BlockingSingle;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 public final class RxJavaCallAdapterFactoryTest {
@@ -236,11 +236,97 @@ public final class RxJavaCallAdapterFactoryTest {
     }
   }
 
-  @Test public void single() {
-    // TODO Better tests here. Why is there no toBlocking() on Single?
-    assertNotNull(service.singleBody());
-    assertNotNull(service.singleResponse());
-    assertNotNull(service.singleResult());
+  @Test public void singleBodySuccess200() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    BlockingSingle<String> o = service.singleBody().toBlocking();
+    assertThat(o.value()).isEqualTo("Hi");
+  }
+
+  @Test public void singleBodySuccess404() {
+    server.enqueue(new MockResponse().setResponseCode(404));
+
+    BlockingSingle<String> o = service.singleBody().toBlocking();
+    try {
+      o.value();
+      fail();
+    } catch (RuntimeException e) {
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 OK");
+    }
+  }
+
+  @Test public void singleBodyFailure() {
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    BlockingSingle<String> o = service.singleBody().toBlocking();
+    try {
+      o.value();
+      fail();
+    } catch (RuntimeException e) {
+      assertThat(e.getCause()).isInstanceOf(IOException.class);
+    }
+  }
+
+  @Test public void singleResponseSuccess200() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    BlockingSingle<Response<String>> o = service.singleResponse().toBlocking();
+    Response<String> response = o.value();
+    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.body()).isEqualTo("Hi");
+  }
+
+  @Test public void singleResponseSuccess404() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+    BlockingSingle<Response<String>> o = service.singleResponse().toBlocking();
+    Response<String> response = o.value();
+    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.errorBody().string()).isEqualTo("Hi");
+  }
+
+  @Test public void singleResponseFailure() {
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    BlockingSingle<Response<String>> o = service.singleResponse().toBlocking();
+    try {
+      o.value();
+      fail();
+    } catch (RuntimeException t) {
+      assertThat(t.getCause()).isInstanceOf(IOException.class);
+    }
+  }
+
+  @Test public void singleResultSuccess200() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    BlockingSingle<Result<String>> o = service.singleResult().toBlocking();
+    Result<String> result = o.value();
+    assertThat(result.isError()).isFalse();
+    Response<String> response = result.response();
+    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.body()).isEqualTo("Hi");
+  }
+
+  @Test public void singleResultSuccess404() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+    BlockingSingle<Result<String>> o = service.singleResult().toBlocking();
+    Result<String> result = o.value();
+    assertThat(result.isError()).isFalse();
+    Response<String> response = result.response();
+    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.errorBody().string()).isEqualTo("Hi");
+  }
+
+  @Test public void singleResultFailure() {
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    BlockingSingle<Result<String>> o = service.singleResult().toBlocking();
+    Result<String> result = o.value();
+    assertThat(result.isError()).isTrue();
+    assertThat(result.error()).isInstanceOf(IOException.class);
   }
 
   static class StringConverterFactory extends Converter.Factory {

@@ -54,7 +54,7 @@
     <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
-    <rxjava.version>1.0.14</rxjava.version>
+    <rxjava.version>1.1.0</rxjava.version>
 
     <!-- Converter Dependencies -->
     <gson.version>2.4</gson.version>
