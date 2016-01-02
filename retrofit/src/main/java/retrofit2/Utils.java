@@ -16,7 +16,6 @@
  */
 package retrofit2;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -29,8 +28,6 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import okhttp3.ResponseBody;
 import okio.Buffer;
-import okio.BufferedSource;
-import okio.Source;
 
 final class Utils {
   static <T> T checkNotNull(T object, String message) {
@@ -38,14 +35,6 @@ final class Utils {
       throw new NullPointerException(message);
     }
     return object;
-  }
-
-  static void closeQuietly(Closeable closeable) {
-    if (closeable == null) return;
-    try {
-      closeable.close();
-    } catch (IOException ignored) {
-    }
   }
 
   /** Returns true if {@code annotations} contains an instance of {@code cls}. */
@@ -59,20 +48,9 @@ final class Utils {
     return false;
   }
 
-  /**
-   * Replace a {@link ResponseBody} with an identical copy which is backed by a
-   * {@link Buffer} rather than a {@link Source}.
-   */
-  static ResponseBody readBodyToBytesIfNecessary(final ResponseBody body) throws IOException {
-    if (body == null) {
-      return null;
-    }
-
-    BufferedSource source = body.source();
+  static ResponseBody buffer(final ResponseBody body) throws IOException {
     Buffer buffer = new Buffer();
-    buffer.writeAll(source);
-    source.close();
-
+    body.source().readAll(buffer);
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);
   }
 
