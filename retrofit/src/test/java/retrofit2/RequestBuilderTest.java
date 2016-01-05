@@ -4,18 +4,16 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.Interceptor;
 import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 import org.junit.Ignore;
@@ -912,21 +910,6 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
-  @Test public void getWithUrl() {
-    class Example {
-      @GET
-      Call<ResponseBody> method(@Url String url) {
-        return null;
-      }
-    }
-
-    Request request = buildRequest(Example.class, "foo/bar/");
-    assertThat(request.method()).isEqualTo("GET");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
-    assertThat(request.body()).isNull();
-  }
-
   @Test public void getAbsoluteUrl() {
     class Example {
       @GET("http://example2.com/foo/bar/")
@@ -942,7 +925,37 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
-  @Test public void getWithUrlAbsolute() {
+  @Test public void getWithStringUrl() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@Url String url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "foo/bar/");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithJavaUriUrl() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@Url URI url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, URI.create("foo/bar/"));
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithStringUrlAbsolute() {
     class Example {
       @GET
       Call<ResponseBody> method(@Url String url) {
@@ -951,6 +964,21 @@ public final class RequestBuilderTest {
     }
 
     Request request = buildRequest(Example.class, "https://example2.com/foo/bar/");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("https://example2.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithJavaUriUrlAbsolute() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@Url URI url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, URI.create("https://example2.com/foo/bar/"));
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("https://example2.com/foo/bar/");
@@ -984,8 +1012,9 @@ public final class RequestBuilderTest {
       buildRequest(Example.class, "foo/bar");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("@Url must be String type. (parameter #1)\n"
-          + "    for method Example.method");
+      assertThat(e).hasMessage(
+          "@Url must be String, java.net.URI, or android.net.Uri type. (parameter #1)\n"
+              + "    for method Example.method");
     }
   }
 
@@ -1001,7 +1030,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class, "foo/bar");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("@Url must be String type. (parameter #1)\n"
+      assertThat(e).hasMessage("@Url cannot be used with @GET URL (parameter #1)\n"
           + "    for method Example.method");
     }
   }
@@ -1761,7 +1790,7 @@ public final class RequestBuilderTest {
     }
   }
 
-  private Request buildRequest(Class<?> cls, Object... args) {
+  static Request buildRequest(Class<?> cls, Object... args) {
     final AtomicReference<Request> requestRef = new AtomicReference<>();
     okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
       @Override public okhttp3.Call newCall(Request request) {

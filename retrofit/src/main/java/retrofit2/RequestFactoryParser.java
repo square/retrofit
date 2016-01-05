@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -232,14 +233,21 @@ final class RequestFactoryParser {
             if (gotQuery) {
               throw parameterError(i, "A @Url parameter must not come after a @Query");
             }
-            if (methodParameterType != String.class) {
-              throw parameterError(i, "@Url must be String type.");
-            }
             if (relativeUrl != null) {
               throw parameterError(i, "@Url cannot be used with @%s URL", httpMethod);
             }
+            if (methodParameterType == String.class) {
+              action = new RequestAction.StringUrl();
+            } else if (methodParameterType == URI.class) {
+              action = new RequestAction.JavaUriUrl();
+            } else if (methodParameterType instanceof Class
+                && "android.net.Uri".equals(((Class<?>) methodParameterType).getCanonicalName())) {
+              action = new RequestAction.AndroidUriUrl();
+            } else {
+              throw parameterError(i,
+                  "@Url must be String, java.net.URI, or android.net.Uri type.");
+            }
             gotUrl = true;
-            action = new RequestAction.Url();
 
           } else if (methodParameterAnnotation instanceof Path) {
             if (gotQuery) {
