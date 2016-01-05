@@ -68,6 +68,7 @@
     <assertj.version>1.7.0</assertj.version>
     <mockito.version>1.9.5</mockito.version>
     <guava.version>18.0</guava.version>
+    <robolectric.version>3.0</robolectric.version>
   </properties>
 
   <scm>
@@ -172,6 +173,11 @@
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
         <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.robolectric</groupId>
+        <artifactId>robolectric</artifactId>
+        <version>${robolectric.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
