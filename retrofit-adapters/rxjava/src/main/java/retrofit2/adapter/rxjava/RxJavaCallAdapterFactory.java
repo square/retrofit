@@ -46,14 +46,24 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   @Override
   public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
-    boolean isSingle = "rx.Single".equals(rawType.getCanonicalName());
-    if (rawType != Observable.class && !isSingle) {
+    String canonicalName = rawType.getCanonicalName();
+    boolean isSingle = "rx.Single".equals(canonicalName);
+    boolean isCompletable = "rx.Completable".equals(canonicalName);
+    if (rawType != Observable.class && !isSingle && !isCompletable) {
       return null;
     }
-    if (!(returnType instanceof ParameterizedType)) {
+    if (!isCompletable && !(returnType instanceof ParameterizedType)) {
       String name = isSingle ? "Single" : "Observable";
       throw new IllegalStateException(name + " return type must be parameterized"
           + " as " + name + "<Foo> or " + name + "<? extends Foo>");
+    }
+
+    if (isCompletable) {
+      // Add Completable-converter wrapper from a separate class. This defers classloading such that
+      // regular Observable operation can be leveraged without relying on this unstable RxJava API.
+      // Note that this has to be done separately since Completable doesn't have a parametrized
+      // type.
+      return CompletableHelper.INSTANCE;
     }
 
     CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType);
