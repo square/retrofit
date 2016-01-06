@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-Version 2.0.0-beta3 *(2015-01-05)*
+Version 2.0.0-beta3 *(2016-01-05)*
 ----------------------------------
 
  * New: All classes have been migrated to the `retrofit2.*` package name. The Maven groupId is now
