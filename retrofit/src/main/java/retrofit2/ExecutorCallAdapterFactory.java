@@ -98,5 +98,10 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     @Override public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
     }
+
+    @Override
+    public com.squareup.okhttp.Call getOrCreateRawCall() throws IOException {
+      return delegate.getOrCreateRawCall();
+    }
   }
 }
