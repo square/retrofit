@@ -56,6 +56,7 @@
     <rxjava.version>1.1.0</rxjava.version>
 
     <!-- Converter Dependencies -->
+    <avro.version>1.7.7</avro.version>
     <gson.version>2.4</gson.version>
     <protobuf.version>2.5.0</protobuf.version>
     <jackson.version>2.4.3</jackson.version>
@@ -116,6 +117,11 @@
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>${avro.version}</version>
       </dependency>
       <dependency>
         <groupId>io.reactivex</groupId>
