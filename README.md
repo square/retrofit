@@ -12,14 +12,14 @@ Download
 Download [the latest JAR][2] or grab via Maven:
 ```xml
 <dependency>
-  <groupId>com.squareup.retrofit</groupId>
+  <groupId>com.squareup.retrofit2</groupId>
   <artifactId>retrofit</artifactId>
-  <version>2.0.0-beta2</version>
+  <version>2.0.0-beta3</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+compile 'com.squareup.retrofit2:retrofit:2.0.0-beta3'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].

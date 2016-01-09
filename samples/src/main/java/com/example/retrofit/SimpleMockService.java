@@ -3,21 +3,18 @@ package com.example.retrofit;
 
 import com.example.retrofit.SimpleService.Contributor;
 import com.example.retrofit.SimpleService.GitHub;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import retrofit.Call;
-import retrofit.Retrofit;
-import retrofit.mock.CallBehaviorAdapter;
-import retrofit.mock.Calls;
-import retrofit.mock.MockRetrofit;
-import retrofit.mock.NetworkBehavior;
+import java.util.concurrent.TimeUnit;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.mock.BehaviorDelegate;
+import retrofit2.mock.MockRetrofit;
+import retrofit2.mock.NetworkBehavior;
 
 /**
  * An example of using {@link MockRetrofit} to create a mock service implementation with
@@ -26,9 +23,11 @@ import retrofit.mock.NetworkBehavior;
 public final class SimpleMockService {
   /** A mock implementation of the {@link GitHub} API interface. */
   static final class MockGitHub implements GitHub {
+    private final BehaviorDelegate<GitHub> delegate;
     private final Map<String, Map<String, List<Contributor>>> ownerRepoContributors;
 
-    public MockGitHub() {
+    public MockGitHub(BehaviorDelegate<GitHub> delegate) {
+      this.delegate = delegate;
       ownerRepoContributors = new LinkedHashMap<>();
 
       // Seed some mock data.
@@ -48,7 +47,7 @@ public final class SimpleMockService {
           response = contributors;
         }
       }
-      return Calls.response(response);
+      return delegate.returningResponse(response).contributors(owner, repo);
     }
 
     public void addContributor(String owner, String repo, String name, int contributions) {
@@ -72,26 +71,26 @@ public final class SimpleMockService {
         .baseUrl(SimpleService.API_URL)
         .build();
 
-    // Create the Behavior object which manages the fake behavior and the background executor.
+    // Create a MockRetrofit object with a NetworkBehavior which manages the fake behavior of calls.
     NetworkBehavior behavior = NetworkBehavior.create();
-    ExecutorService bg = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
-        .setNameFormat("mock-retrofit-%d")
-        .setDaemon(true)
-        .build());
+    MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit)
+        .networkBehavior(behavior)
+        .build();
 
-    // Create the mock implementation and use MockRetrofit to apply the behavior to it.
-    MockRetrofit mockRetrofit = new MockRetrofit(behavior, new CallBehaviorAdapter(retrofit, bg));
-    MockGitHub mockGitHub = new MockGitHub();
-    GitHub gitHub = mockRetrofit.create(GitHub.class, mockGitHub);
+    BehaviorDelegate<GitHub> delegate = mockRetrofit.create(GitHub.class);
+    MockGitHub gitHub = new MockGitHub(delegate);
 
     // Query for some contributors for a few repositories.
     printContributors(gitHub, "square", "retrofit");
     printContributors(gitHub, "square", "picasso");
 
-    // Using the mock object, add some additional mock data.
+    // Using the mock-only methods, add some additional data.
     System.out.println("Adding more mock data...\n");
-    mockGitHub.addContributor("square", "retrofit", "Foo Bar", 61);
-    mockGitHub.addContributor("square", "picasso", "Kit Kat", 53);
+    gitHub.addContributor("square", "retrofit", "Foo Bar", 61);
+    gitHub.addContributor("square", "picasso", "Kit Kat", 53);
+
+    // Reduce the delay to make the next calls complete faster.
+    behavior.setDelay(500, TimeUnit.MILLISECONDS);
 
     // Query for the contributors again so we can see the mock data that was added.
     printContributors(gitHub, "square", "retrofit");

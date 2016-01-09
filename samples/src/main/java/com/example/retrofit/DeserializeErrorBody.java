@@ -15,17 +15,17 @@
  */
 package com.example.retrofit;
 
-import com.squareup.okhttp.ResponseBody;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import retrofit.Call;
-import retrofit.Converter;
-import retrofit.GsonConverterFactory;
-import retrofit.Response;
-import retrofit.Retrofit;
-import retrofit.http.GET;
+import okhttp3.ResponseBody;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import retrofit2.Call;
+import retrofit2.Converter;
+import retrofit2.GsonConverterFactory;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.http.GET;
 
 public final class DeserializeErrorBody {
   interface Service {
@@ -63,7 +63,7 @@ public final class DeserializeErrorBody {
 
     // Look up a converter for the Error type on the Retrofit instance.
     Converter<ResponseBody, Error> errorConverter =
-        retrofit.responseConverter(Error.class, new Annotation[0]);
+        retrofit.responseBodyConverter(Error.class, new Annotation[0]);
     // Convert the error body into our Error type.
     Error error = errorConverter.convert(response.errorBody());
     System.out.println("ERROR: " + error.message);

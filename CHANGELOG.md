@@ -1,6 +1,53 @@
 Change Log
 ==========
 
+Version 2.0.0-beta3 *(2016-01-05)*
+----------------------------------
+
+ * New: All classes have been migrated to the `retrofit2.*` package name. The Maven groupId is now
+   `com.squareup.retrofit2`. This is in accordance with the
+   [Java Interoperability Policy for Major Version Updates](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/).
+   With this change Retrofit 2.x can coexiest with Retrofit 1.x in the same project.
+ * New: Update to use the OkHttp 3 API and OkHttp 3.0.0-RC1 or newer is now required. Similar to the previous
+   point, OkHttp has a new package name (`okhttp3.*`) and Maven groupId (`com.squareup.okhttp3`) which allow
+   it to coexist with OkHttp 2.x in the same project.
+ * New: String converters allow for custom serialization of parameters that end up as strings (such as `@Path`,
+   `@Query`, `@Header`, etc.). `Converter.Factory` has a new `stringConverter` method which receives the
+   parameter type and annotations and can return a converter for that type. This allows providing custom
+   rendering of types like `Date`, `User`, etc. to a string before being used for its purpose. A default
+   converter will call `toString()` for any type which retains the mimics the previous behavior.
+ * New: OkHttp's `Call.Factory` type is now used as the HTTP client rather than using the `OkHttpClient` type
+   directly (`OkHttpClient` does implement `Call.Factory`). A `callFactory` method has been added to both
+   `Retrofit.Builder` and `Retrofit` to allow supplying alternate implementations of an HTTP client. The
+   `client(OkHttpClient)` method on `Retrofit.Builder` still exists as a convenience.
+ * New: `isExecuted()` method returns whether a `Call` has been synchronously or asynchronously executed.
+ * New: `isCanceled()` method returns whether a `Call` has been canceled. Use this in `onFailure` to determine
+   whether the callback was invoked from cancelation or actual transport failure.
+ * New: `converter-scalars` module provides a `Converter.Factory` for converting `String`, the 8 primitive
+   types, and the 8 boxed primitive types as `text/plain` bodies. Install this before your normal converter
+   to avoid passing these simple scalars through, for example, a JSON converter.
+ * New: `Converter.Factory` methods now receive a `Retrofit` instance which also now has methods for querying
+   the next converter for a given type. This allows implementations to delegate to others and provide
+   additional behavior without complete reimplementation.
+ * New: `@OPTIONS` annotation more easily allows for making OPTIONS requests.
+ * New: `@Part` annotation now supports `List` and array types.
+ * New: The `@Url` annotation now allows using `java.net.URI` or `android.net.Uri` (in addition to `String`)
+   as parameter types for providing relative or absolute endpoint URLs dynamically.
+ * New: The `retrofit-mock` module has been rewritten with a new `BehaviorDelegate` class for implementing
+   fake network behavior in a local mock implementation of your service endpoints. Documentation and more
+   tests are forthcoming, but the `SimpleMockService` demonstrates its use for now.
+ * Fix: Forbid Retrofit's `Response` type and OkHttp's `Response` type as the response body type given to
+   a `Call` (i.e., `Call<Response>`). OkHttp's `ResponseBody` type is the correct one to use when the raw
+   body contents are desired.
+ * Fix: The Gson converter now respects settings on the supplied `Gson` instance (such as `serializeNulls`).
+   This requires Gson 2.4 or newer.
+ * The Wire converter has been updated to the Wire 2.0 API.
+ * The change in 2.0.0-beta2 which provided the `Retrofit` instance to the `onResponse` callback of `Callback`
+   has been reverted. There are too many edge cases around providing the `Retrofit` object in order to allow
+   deserialization of the error body. To accommodate this use case, pass around the `Retrofit` response
+   manually or implement a custom `CallAdapter.Factory` does so automatically.
+
+
 Version 2.0.0-beta2 *(2015-09-28)*
 ----------------------------------
 
