@@ -43,9 +43,8 @@ public final class ScalarsConverterFactory extends Converter.Factory {
   private ScalarsConverterFactory() {
   }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (type == String.class
         || type == boolean.class
         || type == Boolean.class

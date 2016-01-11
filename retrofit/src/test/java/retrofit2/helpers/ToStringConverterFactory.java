@@ -41,7 +41,7 @@ public class ToStringConverterFactory extends Converter.Factory {
   }
 
   @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] annotations, Retrofit retrofit) {
+      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (String.class.equals(type)) {
       return new Converter<String, RequestBody>() {
         @Override public RequestBody convert(String value) throws IOException {

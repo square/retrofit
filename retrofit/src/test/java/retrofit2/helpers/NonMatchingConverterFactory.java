@@ -32,9 +32,8 @@ public final class NonMatchingConverterFactory extends Converter.Factory {
     return null;
   }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     called = true;
     return null;
   }

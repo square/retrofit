@@ -55,7 +55,7 @@ public final class JsonQueryParameters {
           // you can call retrofit.requestBodyConverter(type, annotations) instead of having a
           // reference to it explicitly as a field.
           Converter<?, RequestBody> delegate =
-              delegateFactory.requestBodyConverter(type, annotations, retrofit);
+              delegateFactory.requestBodyConverter(type, annotations, new Annotation[0], retrofit);
           return new DelegateToStringConverter<>(delegate);
         }
       }

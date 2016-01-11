@@ -201,6 +201,7 @@ final class RequestFactoryParser {
 
   private void parseParameters(Retrofit retrofit) {
     Type[] methodParameterTypes = method.getGenericParameterTypes();
+    Annotation[] methodAnnotations = method.getAnnotations();
     Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
 
     boolean gotField = false;
@@ -429,16 +430,19 @@ final class RequestFactoryParser {
               ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
               Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
               Converter<?, RequestBody> valueConverter =
-                  retrofit.requestBodyConverter(iterableType, methodParameterAnnotations);
+                  retrofit.requestBodyConverter(iterableType, methodParameterAnnotations,
+                      methodAnnotations);
               action = new RequestAction.Part<>(headers, valueConverter).iterable();
             } else if (rawParameterType.isArray()) {
               Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
               Converter<?, RequestBody> valueConverter =
-                  retrofit.requestBodyConverter(arrayComponentType, methodParameterAnnotations);
+                  retrofit.requestBodyConverter(arrayComponentType, methodParameterAnnotations,
+                      methodAnnotations);
               action = new RequestAction.Part<>(headers, valueConverter).array();
             } else {
               Converter<?, RequestBody> valueConverter =
-                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
+                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations,
+                      methodAnnotations);
               action = new RequestAction.Part<>(headers, valueConverter);
             }
 
@@ -464,7 +468,8 @@ final class RequestFactoryParser {
             }
             Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
             Converter<?, RequestBody> valueConverter =
-                retrofit.requestBodyConverter(valueType, methodParameterAnnotations);
+                retrofit.requestBodyConverter(valueType, methodParameterAnnotations,
+                    methodAnnotations);
 
             PartMap partMap = (PartMap) methodParameterAnnotation;
             action = new RequestAction.PartMap<>(valueConverter, partMap.encoding());
@@ -482,7 +487,8 @@ final class RequestFactoryParser {
             Converter<?, RequestBody> converter;
             try {
               converter =
-                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
+                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations,
+                      methodAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Body converter for %s",
                   methodParameterType);
