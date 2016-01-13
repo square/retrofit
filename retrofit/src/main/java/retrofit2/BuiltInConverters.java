@@ -18,6 +18,7 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Streaming;
@@ -41,8 +42,12 @@ final class BuiltInConverters extends Converter.Factory {
   @Override
   public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
-    if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
+    Class<?> rawType = Utils.getRawType(type);
+    if (RequestBody.class.isAssignableFrom(rawType)) {
       return RequestBodyConverter.INSTANCE;
+    }
+    if (MultipartBody.Part.class.isAssignableFrom(rawType)) {
+      return MultipartRequestBodyPartConverter.INSTANCE;
     }
     return null;
   }
@@ -76,6 +81,15 @@ final class BuiltInConverters extends Converter.Factory {
 
     @Override public RequestBody convert(RequestBody value) throws IOException {
       return value;
+    }
+  }
+
+  static final class MultipartRequestBodyPartConverter
+      implements Converter<MultipartBody.Part, RequestBody> {
+    static final RequestBodyConverter INSTANCE = new RequestBodyConverter();
+
+    @Override public RequestBody convert(MultipartBody.Part value) throws IOException {
+      throw new RuntimeException("This is a placeholder");
     }
   }
 
