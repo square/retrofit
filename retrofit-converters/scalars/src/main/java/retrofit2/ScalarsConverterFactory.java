@@ -18,6 +18,16 @@ package retrofit2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.ScalarResponseBodyConverters.BooleanResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.ByteResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.CharacterResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.DoubleResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.FloatResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.IntegerResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.LongResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.ShortResponseBodyConverter;
+import retrofit2.ScalarResponseBodyConverters.StringResponseBodyConverter;
 
 /**
  * A {@linkplain Converter.Factory converter} for strings and both primitives and their boxed types
@@ -52,6 +62,39 @@ public final class ScalarsConverterFactory extends Converter.Factory {
         || type == short.class
         || type == Short.class) {
       return ScalarRequestBodyConverter.INSTANCE;
+    }
+    return null;
+  }
+
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    if (type == String.class) {
+      return StringResponseBodyConverter.INSTANCE;
+    }
+    if (type == Boolean.class) {
+      return BooleanResponseBodyConverter.INSTANCE;
+    }
+    if (type == Byte.class) {
+      return ByteResponseBodyConverter.INSTANCE;
+    }
+    if (type == Character.class) {
+      return CharacterResponseBodyConverter.INSTANCE;
+    }
+    if (type == Double.class) {
+      return DoubleResponseBodyConverter.INSTANCE;
+    }
+    if (type == Float.class) {
+      return FloatResponseBodyConverter.INSTANCE;
+    }
+    if (type == Integer.class) {
+      return IntegerResponseBodyConverter.INSTANCE;
+    }
+    if (type == Long.class) {
+      return LongResponseBodyConverter.INSTANCE;
+    }
+    if (type == Short.class) {
+      return ShortResponseBodyConverter.INSTANCE;
     }
     return null;
   }
