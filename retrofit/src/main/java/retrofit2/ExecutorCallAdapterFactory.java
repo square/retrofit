@@ -55,23 +55,23 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
 
     @Override public void enqueue(final Callback<T> callback) {
       delegate.enqueue(new Callback<T>() {
-        @Override public void onResponse(final Response<T> response) {
+        @Override public void onResponse(final Call<T> call, final Response<T> response) {
           callbackExecutor.execute(new Runnable() {
             @Override public void run() {
               if (delegate.isCanceled()) {
                 // Emulate OkHttp's behavior of throwing/delivering an IOException on cancelation
-                callback.onFailure(new IOException("Canceled"));
+                callback.onFailure(call, new IOException("Canceled"));
               } else {
-                callback.onResponse(response);
+                callback.onResponse(call, response);
               }
             }
           });
         }
 
-        @Override public void onFailure(final Throwable t) {
+        @Override public void onFailure(final Call<T> call, final Throwable t) {
           callbackExecutor.execute(new Runnable() {
             @Override public void run() {
-              callback.onFailure(t);
+              callback.onFailure(call, t);
             }
           });
         }

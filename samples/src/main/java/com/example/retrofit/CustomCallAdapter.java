@@ -73,7 +73,7 @@ public final class CustomCallAdapter {
         call.cancel();
       }
 
-      @Override public void onResponse(Response<T> response) {
+      @Override public void onResponse(Call<T> call, Response<T> response) {
         if (response.isSuccess()) {
           set(response.body());
         } else {
@@ -81,7 +81,7 @@ public final class CustomCallAdapter {
         }
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<T> call, Throwable t) {
         setException(t);
       }
     }

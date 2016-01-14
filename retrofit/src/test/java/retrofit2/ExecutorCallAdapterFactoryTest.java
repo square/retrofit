@@ -85,14 +85,15 @@ public final class ExecutorCallAdapterFactoryTest {
     CallAdapter<Call<?>> adapter =
         (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     final Response<String> response = Response.success("Hi");
-    Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
+    EmptyCall originalCall = new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
-        callback.onResponse(response);
+        callback.onResponse(this, response);
       }
-    });
+    };
+    Call<String> call = (Call<String>) adapter.adapt(originalCall);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
-    verify(callback).onResponse(response);
+    verify(callback).onResponse(originalCall, response);
   }
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
@@ -100,15 +101,16 @@ public final class ExecutorCallAdapterFactoryTest {
     CallAdapter<Call<?>> adapter =
         (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     final Throwable throwable = new IOException();
-    Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
+    EmptyCall originalCall = new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
-        callback.onFailure(throwable);
+        callback.onFailure(this, throwable);
       }
-    });
+    };
+    Call<String> call = (Call<String>) adapter.adapt(originalCall);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verifyNoMoreInteractions(callbackExecutor);
-    verify(callback).onFailure(throwable);
+    verify(callback).onFailure(originalCall, throwable);
     verifyNoMoreInteractions(callback);
   }
 

@@ -33,7 +33,7 @@ public final class Calls {
       }
 
       @Override public void enqueue(Callback<T> callback) {
-        callback.onResponse(response);
+        callback.onResponse(this, response);
       }
 
       @Override public boolean isExecuted() {
@@ -61,7 +61,7 @@ public final class Calls {
       }
 
       @Override public void enqueue(Callback<T> callback) {
-        callback.onFailure(failure);
+        callback.onFailure(this, failure);
       }
 
       @Override public boolean isExecuted() {

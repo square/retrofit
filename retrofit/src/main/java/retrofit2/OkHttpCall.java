@@ -17,7 +17,6 @@ package retrofit2;
 
 import java.io.IOException;
 import okhttp3.MediaType;
-import okhttp3.Request;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -57,7 +56,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       rawCall = createRawCall();
     } catch (Throwable t) {
-      callback.onFailure(t);
+      callback.onFailure(this, t);
       return;
     }
     if (canceled) {
@@ -66,27 +65,8 @@ final class OkHttpCall<T> implements Call<T> {
     this.rawCall = rawCall;
 
     rawCall.enqueue(new okhttp3.Callback() {
-      private void callFailure(Throwable e) {
-        try {
-          callback.onFailure(e);
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-
-      private void callSuccess(Response<T> response) {
-        try {
-          callback.onResponse(response);
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-
-      @Override public void onFailure(Request request, IOException e) {
-        callFailure(e);
-      }
-
-      @Override public void onResponse(okhttp3.Response rawResponse) {
+      @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse)
+          throws IOException {
         Response<T> response;
         try {
           response = parseResponse(rawResponse);
@@ -95,6 +75,30 @@ final class OkHttpCall<T> implements Call<T> {
           return;
         }
         callSuccess(response);
+      }
+
+      @Override public void onFailure(okhttp3.Call call, IOException e) {
+        try {
+          callback.onFailure(OkHttpCall.this, e);
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
+      }
+
+      private void callFailure(Throwable e) {
+        try {
+          callback.onFailure(OkHttpCall.this, e);
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
+      }
+
+      private void callSuccess(Response<T> response) {
+        try {
+          callback.onResponse(OkHttpCall.this, response);
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
       }
     });
   }

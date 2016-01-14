@@ -97,11 +97,11 @@ public final class BehaviorDelegateTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
         failureRef.set(t);
         latch.countDown();
@@ -140,13 +140,13 @@ public final class BehaviorDelegateTest {
     final AtomicReference<String> actual = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
         actual.set(response.body());
         latch.countDown();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         throw new AssertionError();
       }
     });
@@ -186,11 +186,11 @@ public final class BehaviorDelegateTest {
     final CountDownLatch latch = new CountDownLatch(1);
     final long startNanos = System.nanoTime();
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
         failureRef.set(t);
         latch.countDown();
@@ -237,11 +237,11 @@ public final class BehaviorDelegateTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         latch.countDown();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
@@ -282,11 +282,11 @@ public final class BehaviorDelegateTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         latch.countDown();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }

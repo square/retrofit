@@ -82,12 +82,12 @@ public final class CallTest {
     final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.getString().enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         responseRef.set(response);
         latch.countDown();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         t.printStackTrace();
       }
     });
@@ -125,12 +125,12 @@ public final class CallTest {
     final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.getString().enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         responseRef.set(response);
         latch.countDown();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         t.printStackTrace();
       }
     });
@@ -171,11 +171,11 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.getString().enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
@@ -232,11 +232,11 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.postString("Hi").enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
@@ -347,11 +347,11 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     example.postString("Hi").enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
@@ -568,8 +568,8 @@ public final class CallTest {
     assertThat(call.isExecuted()).isFalse();
 
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {}
-      @Override public void onFailure(Throwable t) {}
+      @Override public void onResponse(Call<String> call, Response<String> response) {}
+      @Override public void onFailure(Call<String> call, Throwable t) {}
     });
     assertThat(call.isExecuted()).isTrue();
   }
@@ -607,11 +607,11 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
@@ -651,11 +651,11 @@ public final class CallTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Response<String> response) {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
         throw new AssertionError();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<String> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
