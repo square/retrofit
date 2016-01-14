@@ -96,7 +96,7 @@ public final class ErrorHandlingCallAdapter {
 
     @Override public void enqueue(final MyCallback<T> callback) {
       call.enqueue(new Callback<T>() {
-        @Override public void onResponse(Response<T> response) {
+        @Override public void onResponse(Call<T> call, Response<T> response) {
           int code = response.code();
           if (code >= 200 && code < 300) {
             callback.success(response);
@@ -111,7 +111,7 @@ public final class ErrorHandlingCallAdapter {
           }
         }
 
-        @Override public void onFailure(Throwable t) {
+        @Override public void onFailure(Call<T> call, Throwable t) {
           if (t instanceof IOException) {
             callback.networkError((IOException) t);
           } else {

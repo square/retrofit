@@ -58,7 +58,7 @@ final class BehaviorCall<T> implements Call<T> {
           try {
             Thread.sleep(sleepMs);
           } catch (InterruptedException e) {
-            callback.onFailure(new IOException("canceled"));
+            callback.onFailure(BehaviorCall.this, new IOException("canceled"));
             return false;
           }
         }
@@ -67,22 +67,22 @@ final class BehaviorCall<T> implements Call<T> {
 
       @Override public void run() {
         if (canceled) {
-          callback.onFailure(new IOException("canceled"));
+          callback.onFailure(BehaviorCall.this, new IOException("canceled"));
         } else if (behavior.calculateIsFailure()) {
           if (delaySleep()) {
-            callback.onFailure(behavior.failureException());
+            callback.onFailure(BehaviorCall.this, behavior.failureException());
           }
         } else {
           delegate.enqueue(new Callback<T>() {
-            @Override public void onResponse(final Response<T> response) {
+            @Override public void onResponse(Call<T> call, Response<T> response) {
               if (delaySleep()) {
-                callback.onResponse(response);
+                callback.onResponse(call, response);
               }
             }
 
-            @Override public void onFailure(final Throwable t) {
+            @Override public void onFailure(Call<T> call, Throwable t) {
               if (delaySleep()) {
-                callback.onFailure(t);
+                callback.onFailure(call, t);
               }
             }
           });
@@ -100,12 +100,12 @@ final class BehaviorCall<T> implements Call<T> {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     enqueue(new Callback<T>() {
-      @Override public void onResponse(Response<T> response) {
+      @Override public void onResponse(Call<T> call, Response<T> response) {
         responseRef.set(response);
         latch.countDown();
       }
 
-      @Override public void onFailure(Throwable t) {
+      @Override public void onFailure(Call<T> call, Throwable t) {
         failureRef.set(t);
         latch.countDown();
       }
