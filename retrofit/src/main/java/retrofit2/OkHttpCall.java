@@ -238,4 +238,12 @@ final class OkHttpCall<T> implements Call<T> {
       }
     }
   }
+
+  @Override public Request buildRequest() throws IOException {
+    try {
+      return requestFactory.create(args);
+    }catch(IOException e){
+      throw e;
+    }
+  }
 }
