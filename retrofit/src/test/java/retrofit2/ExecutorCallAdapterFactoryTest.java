@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
+import okhttp3.Request;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -159,6 +160,10 @@ public final class ExecutorCallAdapterFactoryTest {
     }
 
     @Override public Call<String> clone() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override public Request request() {
       throw new UnsupportedOperationException();
     }
   }

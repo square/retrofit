@@ -16,6 +16,7 @@
 package retrofit2.mock;
 
 import java.io.IOException;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,6 +52,10 @@ public final class Calls {
       @Override public Call<T> clone() {
         return this;
       }
+
+      @Override public Request request() {
+        return response.raw().request();
+      }
     };
   }
 
@@ -78,6 +83,10 @@ public final class Calls {
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.
       @Override public Call<T> clone() {
         return this;
+      }
+
+      @Override public Request request() {
+        return new Request.Builder().url("http://localhost").build();
       }
     };
   }

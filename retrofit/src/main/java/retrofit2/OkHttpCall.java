@@ -17,6 +17,7 @@ package retrofit2;
 
 import java.io.IOException;
 import okhttp3.MediaType;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -29,9 +30,12 @@ final class OkHttpCall<T> implements Call<T> {
   private final Object[] args;
   private final Converter<ResponseBody, T> responseConverter;
 
-  private volatile okhttp3.Call rawCall;
-  private boolean executed; // Guarded by this.
   private volatile boolean canceled;
+
+  // All guarded by this.
+  private okhttp3.Call rawCall;
+  private Throwable creationFailure; // Either a RuntimeException or IOException.
+  private boolean executed;
 
   OkHttpCall(okhttp3.Call.Factory callFactory, RequestFactory requestFactory, Object[] args,
       Converter<ResponseBody, T> responseConverter) {
@@ -46,25 +50,58 @@ final class OkHttpCall<T> implements Call<T> {
     return new OkHttpCall<>(callFactory, requestFactory, args, responseConverter);
   }
 
+  @Override public synchronized Request request() {
+    okhttp3.Call call = rawCall;
+    if (call != null) {
+      return call.request();
+    }
+    if (creationFailure != null) {
+      if (creationFailure instanceof IOException) {
+        throw new RuntimeException("Unable to create request.", creationFailure);
+      } else {
+        throw (RuntimeException) creationFailure;
+      }
+    }
+    try {
+      return (rawCall = createRawCall()).request();
+    } catch (RuntimeException e) {
+      creationFailure = e;
+      throw e;
+    } catch (IOException e) {
+      creationFailure = e;
+      throw new RuntimeException("Unable to create request.", e);
+    }
+  }
+
   @Override public void enqueue(final Callback<T> callback) {
+    okhttp3.Call call;
+    Throwable failure;
+
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed.");
       executed = true;
+
+      call = rawCall;
+      failure = creationFailure;
+      if (call == null && failure == null) {
+        try {
+          call = rawCall = createRawCall();
+        } catch (Throwable t) {
+          failure = creationFailure = t;
+        }
+      }
     }
 
-    okhttp3.Call rawCall;
-    try {
-      rawCall = createRawCall();
-    } catch (Throwable t) {
-      callback.onFailure(this, t);
+    if (failure != null) {
+      callback.onFailure(this, failure);
       return;
     }
-    if (canceled) {
-      rawCall.cancel();
-    }
-    this.rawCall = rawCall;
 
-    rawCall.enqueue(new okhttp3.Callback() {
+    if (canceled) {
+      call.cancel();
+    }
+
+    call.enqueue(new okhttp3.Callback() {
       @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse)
           throws IOException {
         Response<T> response;
@@ -108,18 +145,36 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public Response<T> execute() throws IOException {
+    okhttp3.Call call;
+
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed.");
       executed = true;
+
+      if (creationFailure != null) {
+        if (creationFailure instanceof IOException) {
+          throw (IOException) creationFailure;
+        } else {
+          throw (RuntimeException) creationFailure;
+        }
+      }
+
+      call = rawCall;
+      if (call == null) {
+        try {
+          call = rawCall = createRawCall();
+        } catch (IOException | RuntimeException e) {
+          creationFailure = e;
+          throw e;
+        }
+      }
     }
 
-    okhttp3.Call rawCall = createRawCall();
     if (canceled) {
-      rawCall.cancel();
+      call.cancel();
     }
-    this.rawCall = rawCall;
 
-    return parseResponse(rawCall.execute());
+    return parseResponse(call.execute());
   }
 
   private okhttp3.Call createRawCall() throws IOException {
@@ -167,9 +222,13 @@ final class OkHttpCall<T> implements Call<T> {
 
   public void cancel() {
     canceled = true;
-    okhttp3.Call rawCall = this.rawCall;
-    if (rawCall != null) {
-      rawCall.cancel();
+
+    okhttp3.Call call;
+    synchronized (this) {
+      call = rawCall;
+    }
+    if (call != null) {
+      call.cancel();
     }
   }
 

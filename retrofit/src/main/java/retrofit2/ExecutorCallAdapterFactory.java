@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
+import okhttp3.Request;
 
 final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
   final Executor callbackExecutor;
@@ -97,6 +98,10 @@ final class ExecutorCallAdapterFactory implements CallAdapter.Factory {
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
     @Override public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
+    }
+
+    @Override public Request request() {
+      return delegate.request();
     }
   }
 }

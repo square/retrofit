@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,6 +45,10 @@ final class BehaviorCall<T> implements Call<T> {
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public Call<T> clone() {
     return new BehaviorCall<>(behavior, backgroundExecutor, delegate.clone());
+  }
+
+  @Override public Request request() {
+    return delegate.request();
   }
 
   @Override public void enqueue(final Callback<T> callback) {

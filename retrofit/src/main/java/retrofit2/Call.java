@@ -16,6 +16,7 @@
 package retrofit2;
 
 import java.io.IOException;
+import okhttp3.Request;
 
 /**
  * An invocation of a Retrofit method that sends a request to a webserver and returns a response.
@@ -66,4 +67,7 @@ public interface Call<T> extends Cloneable {
    * has already been.
    */
   Call<T> clone();
+
+  /** The original HTTP request. */
+  Request request();
 }
