@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +51,18 @@ public final class ScalarsConverterFactoryTest {
       @POST("/") Call<ResponseBody> longObject(@Body Long body);
       @POST("/") Call<ResponseBody> shortPrimitive(@Body short body);
       @POST("/") Call<ResponseBody> shortObject(@Body Short body);
+
+      @GET("/") Call<Object> object();
+
+      @GET("/") Call<String> stringObject();
+      @GET("/") Call<Boolean> booleanObject();
+      @GET("/") Call<Byte> byteObject();
+      @GET("/") Call<Character> charObject();
+      @GET("/") Call<Double> doubleObject();
+      @GET("/") Call<Float> floatObject();
+      @GET("/") Call<Integer> integerObject();
+      @GET("/") Call<Long> longObject();
+      @GET("/") Call<Short> shortObject();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
@@ -64,7 +77,7 @@ public final class ScalarsConverterFactoryTest {
     service = retrofit.create(Service.class);
   }
 
-  @Test public void unsupportedTypesNotMatched() {
+  @Test public void unsupportedRequestTypesNotMatched() {
     try {
       service.object(null);
       fail();
@@ -79,7 +92,7 @@ public final class ScalarsConverterFactoryTest {
     }
   }
 
-  @Test public void supportedTypes() throws IOException, InterruptedException {
+  @Test public void supportedRequestTypes() throws IOException, InterruptedException {
     RecordedRequest request;
 
     server.enqueue(new MockResponse());
@@ -200,5 +213,57 @@ public final class ScalarsConverterFactoryTest {
     assertThat(request.getHeader("Content-Type")).isEqualTo("text/plain; charset=UTF-8");
     assertThat(request.getHeader("Content-Length")).isEqualTo("2");
     assertThat(request.getBody().readUtf8()).isEqualTo("11");
+  }
+
+  @Test public void unsupportedResponseTypesNotMatched() {
+    try {
+      service.object();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Unable to create converter for class java.lang.Object\n"
+              + "    for method Service.object");
+      assertThat(e.getCause()).hasMessage(
+          "Could not locate ResponseBody converter for class java.lang.Object. Tried:\n"
+              + " * retrofit2.BuiltInConverters\n" + " * retrofit2.ScalarsConverterFactory");
+    }
+  }
+
+  @Test public void supportedResponseTypes() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("test"));
+    Response<String> stringResponse = service.stringObject().execute();
+    assertThat(stringResponse.body()).isEqualTo("test");
+
+    server.enqueue(new MockResponse().setBody("true"));
+    Response<Boolean> booleanResponse = service.booleanObject().execute();
+    assertThat(booleanResponse.body()).isTrue();
+
+    server.enqueue(new MockResponse().setBody("5"));
+    Response<Byte> byteResponse = service.byteObject().execute();
+    assertThat(byteResponse.body()).isEqualTo((byte) 5);
+
+    server.enqueue(new MockResponse().setBody("b"));
+    Response<Character> characterResponse = service.charObject().execute();
+    assertThat(characterResponse.body()).isEqualTo('b');
+
+    server.enqueue(new MockResponse().setBody("13.13"));
+    Response<Double> doubleResponse = service.doubleObject().execute();
+    assertThat(doubleResponse.body()).isEqualTo(13.13);
+
+    server.enqueue(new MockResponse().setBody("13.13"));
+    Response<Float> floatResponse = service.floatObject().execute();
+    assertThat(floatResponse.body()).isEqualTo(13.13f);
+
+    server.enqueue(new MockResponse().setBody("13"));
+    Response<Integer> integerResponse = service.integerObject().execute();
+    assertThat(integerResponse.body()).isEqualTo(13);
+
+    server.enqueue(new MockResponse().setBody("1347"));
+    Response<Long> longResponse = service.longObject().execute();
+    assertThat(longResponse.body()).isEqualTo(1347L);
+
+    server.enqueue(new MockResponse().setBody("134"));
+    Response<Short> shortResponse = service.shortObject().execute();
+    assertThat(shortResponse.body()).isEqualTo((short) 134);
   }
 }
