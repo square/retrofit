@@ -19,7 +19,6 @@ import com.squareup.wire.Message;
 import com.squareup.wire.ProtoAdapter;
 import java.io.IOException;
 import okhttp3.ResponseBody;
-import okio.BufferedSource;
 
 final class WireResponseBodyConverter<T extends Message<T, ?>>
     implements Converter<ResponseBody, T> {
@@ -30,17 +29,10 @@ final class WireResponseBodyConverter<T extends Message<T, ?>>
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
-    BufferedSource source = null;
     try {
-      source = value.source();
-      return adapter.decode(source);
+      return adapter.decode(value.source());
     } finally {
-      if (source != null) {
-        try {
-          source.close();
-        } catch (IOException ignored) {
-        }
-      }
+      value.close();
     }
   }
 }

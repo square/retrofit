@@ -19,7 +19,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 import java.io.IOException;
-import java.io.InputStream;
 import okhttp3.ResponseBody;
 
 final class ProtoResponseBodyConverter<T extends MessageLite>
@@ -31,18 +30,12 @@ final class ProtoResponseBodyConverter<T extends MessageLite>
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
-    InputStream is = value.byteStream();
     try {
-      return parser.parseFrom(is);
+      return parser.parseFrom(value.byteStream());
     } catch (InvalidProtocolBufferException e) {
       throw new RuntimeException(e); // Despite extending IOException, this is data mismatch.
     } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException ignored) {
-        }
-      }
+      value.close();
     }
   }
 }

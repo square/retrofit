@@ -17,7 +17,6 @@ package retrofit2;
 
 import com.google.gson.TypeAdapter;
 import java.io.IOException;
-import java.io.Reader;
 import okhttp3.ResponseBody;
 
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
@@ -28,16 +27,10 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
-    Reader reader = value.charStream();
     try {
-      return adapter.fromJson(reader);
+      return adapter.fromJson(value.charStream());
     } finally {
-      if (reader != null) {
-        try {
-          reader.close();
-        } catch (IOException ignored) {
-        }
-      }
+      value.close();
     }
   }
 }

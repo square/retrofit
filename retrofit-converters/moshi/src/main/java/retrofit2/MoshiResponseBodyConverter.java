@@ -18,7 +18,6 @@ package retrofit2;
 import com.squareup.moshi.JsonAdapter;
 import java.io.IOException;
 import okhttp3.ResponseBody;
-import okio.BufferedSource;
 
 final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   private final JsonAdapter<T> adapter;
@@ -28,16 +27,10 @@ final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> 
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
-    BufferedSource source = value.source();
     try {
-      return adapter.fromJson(source);
+      return adapter.fromJson(value.source());
     } finally {
-      if (source != null) {
-        try {
-          source.close();
-        } catch (IOException ignored) {
-        }
-      }
+      value.close();
     }
   }
 }
