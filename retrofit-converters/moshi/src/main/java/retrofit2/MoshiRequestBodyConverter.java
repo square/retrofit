@@ -32,11 +32,7 @@ final class MoshiRequestBodyConverter<T> implements Converter<T, RequestBody> {
 
   @Override public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
-    try {
-      adapter.toJson(buffer, value);
-    } catch (IOException e) {
-      throw new AssertionError(e); // Writing to Buffer does no I/O.
-    }
+    adapter.toJson(buffer, value);
     return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
 }
