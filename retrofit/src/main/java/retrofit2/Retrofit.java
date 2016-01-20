@@ -241,8 +241,9 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<T, RequestBody> requestBodyConverter(Type type, Annotation[] annotations) {
-    return nextRequestBodyConverter(null, type, annotations);
+  public <T> Converter<T, RequestBody> requestBodyConverter(Type type,
+      Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
+    return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
   }
 
   /**
@@ -252,14 +253,16 @@ public final class Retrofit {
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
   public <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
-      Type type, Annotation[] annotations) {
+      Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
     checkNotNull(type, "type == null");
-    checkNotNull(annotations, "annotations == null");
+    checkNotNull(parameterAnnotations, "parameterAnnotations == null");
+    checkNotNull(methodAnnotations, "methodAnnotations == null");
 
     int start = converterFactories.indexOf(skipPast) + 1;
     for (int i = start, count = converterFactories.size(); i < count; i++) {
+      Converter.Factory factory = converterFactories.get(i);
       Converter<?, RequestBody> converter =
-          converterFactories.get(i).requestBodyConverter(type, annotations, this);
+          factory.requestBodyConverter(type, parameterAnnotations, methodAnnotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<T, RequestBody>) converter;

@@ -194,7 +194,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+          public Converter<?, RequestBody> requestBodyConverter(Type type,
+              Annotation[] parameterAnnotations, Annotation[] methodAnnotations,
               Retrofit retrofit) {
             return new Converter<String, RequestBody>() {
               @Override public RequestBody convert(String value) throws IOException {
@@ -220,7 +221,8 @@ public final class CallTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
           @Override
-          public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+          public Converter<?, RequestBody> requestBodyConverter(Type type,
+              Annotation[] parameterAnnotations, Annotation[] methodAnnotations,
               Retrofit retrofit) {
             return new Converter<String, RequestBody>() {
               @Override public RequestBody convert(String value) throws IOException {

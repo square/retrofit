@@ -325,14 +325,18 @@ public final class RetrofitTest {
     assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
   }
 
-  @Test public void parameterAnnotationsPassedToRequestBodyConverter() {
-    final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
+  @Test public void methodAndParameterAnnotationsPassedToRequestBodyConverter() {
+    final AtomicReference<Annotation[]> parameterAnnotationsRef = new AtomicReference<>();
+    final AtomicReference<Annotation[]> methodAnnotationsRef = new AtomicReference<>();
+
     class MyConverterFactory extends Converter.Factory {
       @Override
-      public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
-          Retrofit retrofit) {
-        annotationsRef.set(annotations);
-        return new ToStringConverterFactory().requestBodyConverter(type, annotations, retrofit);
+      public Converter<?, RequestBody> requestBodyConverter(Type type,
+          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+        parameterAnnotationsRef.set(parameterAnnotations);
+        methodAnnotationsRef.set(methodAnnotations);
+        return new ToStringConverterFactory().requestBodyConverter(type, parameterAnnotations,
+            methodAnnotations, retrofit);
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -342,8 +346,8 @@ public final class RetrofitTest {
     Annotated annotated = retrofit.create(Annotated.class);
     annotated.bodyParameter(null); // Trigger internal setup.
 
-    Annotation[] annotations = annotationsRef.get();
-    assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
+    assertThat(parameterAnnotationsRef.get()).hasAtLeastOneElementOfType(Annotated.Foo.class);
+    assertThat(methodAnnotationsRef.get()).hasAtLeastOneElementOfType(POST.class);
   }
 
   @Test public void parameterAnnotationsPassedToStringConverter() {
@@ -795,7 +799,8 @@ public final class RetrofitTest {
 
   @Test public void requestConverterFactoryQueried() {
     Type type = String.class;
-    Annotation[] annotations = new Annotation[0];
+    Annotation[] parameterAnnotations = new Annotation[0];
+    Annotation[] methodAnnotations = new Annotation[1];
 
     Converter<?, RequestBody> expectedAdapter = mock(Converter.class);
     Converter.Factory factory = mock(Converter.Factory.class);
@@ -805,12 +810,14 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).requestBodyConverter(type, annotations, retrofit);
+    doReturn(expectedAdapter).when(factory).requestBodyConverter(type, parameterAnnotations,
+        methodAnnotations, retrofit);
 
-    Converter<?, RequestBody> actualAdapter = retrofit.requestBodyConverter(type, annotations);
+    Converter<?, RequestBody> actualAdapter = retrofit.requestBodyConverter(type,
+        parameterAnnotations, methodAnnotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
-    verify(factory).requestBodyConverter(type, annotations, retrofit);
+    verify(factory).requestBodyConverter(type, parameterAnnotations, methodAnnotations, retrofit);
     verifyNoMoreInteractions(factory);
   }
 
@@ -821,7 +828,7 @@ public final class RetrofitTest {
     Converter.Factory factory1 = spy(new Converter.Factory() {
       @Override
       public Converter<?, RequestBody> requestBodyConverter(Type returnType,
-          Annotation[] annotations, Retrofit retrofit) {
+          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
         return null;
       }
     });
@@ -832,13 +839,13 @@ public final class RetrofitTest {
         .build();
 
     try {
-      retrofit.requestBodyConverter(type, annotations);
+      retrofit.requestBodyConverter(type, annotations, annotations);
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageStartingWith(
           "Could not locate RequestBody converter for class java.lang.String. Tried:");
     }
 
-    verify(factory1).requestBodyConverter(type, annotations, retrofit);
+    verify(factory1).requestBodyConverter(type, annotations, new Annotation[0], retrofit);
     verifyNoMoreInteractions(factory1);
   }
 
