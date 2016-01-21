@@ -53,6 +53,10 @@ class Platform {
     return DefaultCallAdapter.FACTORY;
   }
 
+  RequestBuildInterceptor.Factory defaultRequestBuildInterceptorFactory() {
+    return DefaultRequestBuildInterceptorFactory.FACTORY;
+  }
+
   boolean isDefaultMethod(Method method) {
     return false;
   }
