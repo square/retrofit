@@ -275,7 +275,7 @@ public final class Retrofit {
     if (skipPast != null) {
       builder.append("\nSkipped:");
       for (int i = 0; i < start; i++) {
-        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+        builder.append("\n * ").append(converterFactories.get(i).getClass().getName());
       }
     }
     throw new IllegalArgumentException(builder.toString());
@@ -321,7 +321,7 @@ public final class Retrofit {
     if (skipPast != null) {
       builder.append("\nSkipped:");
       for (int i = 0; i < start; i++) {
-        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+        builder.append("\n * ").append(converterFactories.get(i).getClass().getName());
       }
     }
     throw new IllegalArgumentException(builder.toString());
