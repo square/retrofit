@@ -184,7 +184,9 @@ final class OkHttpCall<T> implements Call<T> {
   private okhttp3.Call createRawCall() throws IOException {
     Request request = requestFactory.create(args);
     try {
-      request = requestBuildInterceptor.build(request);
+      request = Utils.checkNotNull(requestBuildInterceptor.build(request),
+              String.format("The %s must not return null!",
+                      RequestBuildInterceptor.class.getSimpleName()));
     } catch (RuntimeException e) {
       throw new RuntimeException("Could not create request", e);
     }
