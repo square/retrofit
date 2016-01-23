@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Square, Inc.
+ * Copyright (C) 2016 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,40 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.helpers;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import retrofit2.Converter;
+import retrofit2.Retrofit;
 
-class ToStringConverterFactory extends Converter.Factory {
-  static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
+public final class NonMatchingConverterFactory extends Converter.Factory {
+  public boolean called;
 
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
-    if (String.class.equals(type)) {
-      return new Converter<ResponseBody, String>() {
-        @Override public String convert(ResponseBody value) throws IOException {
-          return value.string();
-        }
-      };
-    }
+    called = true;
     return null;
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] annotations, Retrofit retrofit) {
-    if (String.class.equals(type)) {
-      return new Converter<String, RequestBody>() {
-        @Override public RequestBody convert(String value) throws IOException {
-          return RequestBody.create(MEDIA_TYPE, value);
-        }
-      };
-    }
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    called = true;
+    return null;
+  }
+
+  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+    called = true;
     return null;
   }
 }

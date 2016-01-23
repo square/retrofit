@@ -85,12 +85,14 @@ public final class ProtoConverterFactoryTest {
       service.wrongClass();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Unable to create converter for class java.lang.String\n"
+      assertThat(e).hasMessage(""
+          + "Unable to create converter for class java.lang.String\n"
           + "    for method Service.wrongClass");
-      assertThat(e.getCause()).hasMessage(
-          "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
-              + " * retrofit2.BuiltInConverters\n"
-              + " * retrofit2.ProtoConverterFactory");
+      assertThat(e.getCause()).hasMessage(""
+          + "Could not locate ResponseBody converter for class java.lang.String.\n"
+          + "  Tried:\n"
+          + "   * retrofit2.BuiltInConverters\n"
+          + "   * retrofit2.ProtoConverterFactory");
     }
   }
 
@@ -102,12 +104,14 @@ public final class ProtoConverterFactoryTest {
       service.wrongType();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Unable to create converter for java.util.List<java.lang.String>\n"
+      assertThat(e).hasMessage(""
+          + "Unable to create converter for java.util.List<java.lang.String>\n"
           + "    for method Service.wrongType");
-      assertThat(e.getCause()).hasMessage(
-          "Could not locate ResponseBody converter for java.util.List<java.lang.String>. Tried:\n"
-              + " * retrofit2.BuiltInConverters\n"
-              + " * retrofit2.ProtoConverterFactory");
+      assertThat(e.getCause()).hasMessage(""
+          + "Could not locate ResponseBody converter for java.util.List<java.lang.String>.\n"
+          + "  Tried:\n"
+          + "   * retrofit2.BuiltInConverters\n"
+          + "   * retrofit2.ProtoConverterFactory");
     }
   }
 
