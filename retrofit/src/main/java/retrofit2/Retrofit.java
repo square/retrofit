@@ -215,15 +215,17 @@ public final class Retrofit {
 
     StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
         .append(returnType)
-        .append(". Tried:");
-    for (int i = start, count = adapterFactories.size(); i < count; i++) {
-      builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
-    }
+        .append(".\n");
     if (skipPast != null) {
-      builder.append("\nSkipped:");
+      builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
-        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+        builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
       }
+      builder.append('\n');
+    }
+    builder.append("  Tried:");
+    for (int i = start, count = adapterFactories.size(); i < count; i++) {
+      builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
     }
     throw new IllegalArgumentException(builder.toString());
   }
@@ -268,15 +270,17 @@ public final class Retrofit {
 
     StringBuilder builder = new StringBuilder("Could not locate RequestBody converter for ")
         .append(type)
-        .append(". Tried:");
-    for (int i = start, count = converterFactories.size(); i < count; i++) {
-      builder.append("\n * ").append(converterFactories.get(i).getClass().getName());
-    }
+        .append(".\n");
     if (skipPast != null) {
-      builder.append("\nSkipped:");
+      builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
-        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+        builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
       }
+      builder.append('\n');
+    }
+    builder.append("  Tried:");
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
+      builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
     }
     throw new IllegalArgumentException(builder.toString());
   }
@@ -314,15 +318,17 @@ public final class Retrofit {
 
     StringBuilder builder = new StringBuilder("Could not locate ResponseBody converter for ")
         .append(type)
-        .append(". Tried:");
-    for (int i = start, count = converterFactories.size(); i < count; i++) {
-      builder.append("\n * ").append(converterFactories.get(i).getClass().getName());
-    }
+        .append(".\n");
     if (skipPast != null) {
-      builder.append("\nSkipped:");
+      builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
-        builder.append("\n * ").append(adapterFactories.get(i).getClass().getName());
+        builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
       }
+      builder.append('\n');
+    }
+    builder.append("  Tried:");
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
+      builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
     }
     throw new IllegalArgumentException(builder.toString());
   }

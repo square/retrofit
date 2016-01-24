@@ -50,7 +50,7 @@ class Platform {
     if (callbackExecutor != null) {
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
-    return DefaultCallAdapter.FACTORY;
+    return DefaultCallAdapterFactory.INSTANCE;
   }
 
   boolean isDefaultMethod(Method method) {

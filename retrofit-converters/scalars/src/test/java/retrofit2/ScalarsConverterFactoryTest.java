@@ -82,13 +82,14 @@ public final class ScalarsConverterFactoryTest {
       service.object(null);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unable to create @Body converter for class java.lang.Object (parameter #1)\n"
-              + "    for method Service.object");
-      assertThat(e.getCause()).hasMessage(
-          "Could not locate RequestBody converter for class java.lang.Object. Tried:\n"
-              + " * retrofit2.BuiltInConverters\n"
-              + " * retrofit2.ScalarsConverterFactory");
+      assertThat(e).hasMessage(""
+          + "Unable to create @Body converter for class java.lang.Object (parameter #1)\n"
+          + "    for method Service.object");
+      assertThat(e.getCause()).hasMessage(""
+          + "Could not locate RequestBody converter for class java.lang.Object.\n"
+          + "  Tried:\n"
+          + "   * retrofit2.BuiltInConverters\n"
+          + "   * retrofit2.ScalarsConverterFactory");
     }
   }
 
@@ -220,12 +221,14 @@ public final class ScalarsConverterFactoryTest {
       service.object();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unable to create converter for class java.lang.Object\n"
-              + "    for method Service.object");
-      assertThat(e.getCause()).hasMessage(
-          "Could not locate ResponseBody converter for class java.lang.Object. Tried:\n"
-              + " * retrofit2.BuiltInConverters\n" + " * retrofit2.ScalarsConverterFactory");
+      assertThat(e).hasMessage(""
+          + "Unable to create converter for class java.lang.Object\n"
+          + "    for method Service.object");
+      assertThat(e.getCause()).hasMessage(""
+          + "Could not locate ResponseBody converter for class java.lang.Object.\n"
+          + "  Tried:\n"
+          + "   * retrofit2.BuiltInConverters\n"
+          + "   * retrofit2.ScalarsConverterFactory");
     }
   }
 
