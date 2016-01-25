@@ -18,7 +18,8 @@ package retrofit2;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
@@ -70,8 +71,11 @@ class Platform {
 
     @Override Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
         Object... args) throws Throwable {
-      return MethodHandles.lookup()
-          .in(declaringClass)
+      // Because the service interface might not be public, we need to use a MethodHandle lookup
+      // that ignores the visibility of the declaringClass.
+      Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
+      constructor.setAccessible(true);
+      return constructor.newInstance(declaringClass, -1 /* trusted */)
           .unreflectSpecial(method, declaringClass)
           .bindTo(object)
           .invokeWithArguments(args);
