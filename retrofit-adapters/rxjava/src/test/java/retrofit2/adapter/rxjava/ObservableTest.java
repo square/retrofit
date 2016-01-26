@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
@@ -21,21 +21,23 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.http.GET;
-import rx.Single;
-import rx.singles.BlockingSingle;
+import rx.Observable;
+import rx.observables.BlockingObservable;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class SingleTest {
+public final class ObservableTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") Single<String> body();
-    @GET("/") Single<Response<String>> response();
-    @GET("/") Single<Result<String>> result();
+    @GET("/") Observable<String> body();
+    @GET("/") Observable<Response<String>> response();
+    @GET("/") Observable<Result<String>> result();
   }
 
   private Service service;
@@ -52,16 +54,16 @@ public final class SingleTest {
   @Test public void bodySuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingSingle<String> o = service.body().toBlocking();
-    assertThat(o.value()).isEqualTo("Hi");
+    BlockingObservable<String> o = service.body().toBlocking();
+    assertThat(o.first()).isEqualTo("Hi");
   }
 
   @Test public void bodySuccess404() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
-    BlockingSingle<String> o = service.body().toBlocking();
+    BlockingObservable<String> o = service.body().toBlocking();
     try {
-      o.value();
+      o.first();
       fail();
     } catch (RuntimeException e) {
       Throwable cause = e.getCause();
@@ -72,9 +74,9 @@ public final class SingleTest {
   @Test public void bodyFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingSingle<String> o = service.body().toBlocking();
+    BlockingObservable<String> o = service.body().toBlocking();
     try {
-      o.value();
+      o.first();
       fail();
     } catch (RuntimeException e) {
       assertThat(e.getCause()).isInstanceOf(IOException.class);
@@ -84,8 +86,8 @@ public final class SingleTest {
   @Test public void responseSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingSingle<Response<String>> o = service.response().toBlocking();
-    Response<String> response = o.value();
+    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    Response<String> response = o.first();
     assertThat(response.isSuccess()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
@@ -93,8 +95,8 @@ public final class SingleTest {
   @Test public void responseSuccess404() throws IOException {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    BlockingSingle<Response<String>> o = service.response().toBlocking();
-    Response<String> response = o.value();
+    BlockingObservable<Response<String>> o = service.response().toBlocking();
+    Response<String> response = o.first();
     assertThat(response.isSuccess()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
@@ -102,9 +104,9 @@ public final class SingleTest {
   @Test public void responseFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingSingle<Response<String>> o = service.response().toBlocking();
+    BlockingObservable<Response<String>> o = service.response().toBlocking();
     try {
-      o.value();
+      o.first();
       fail();
     } catch (RuntimeException t) {
       assertThat(t.getCause()).isInstanceOf(IOException.class);
@@ -114,8 +116,8 @@ public final class SingleTest {
   @Test public void resultSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
+    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
     assertThat(response.isSuccess()).isTrue();
@@ -125,8 +127,8 @@ public final class SingleTest {
   @Test public void resultSuccess404() throws IOException {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
+    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
     assertThat(response.isSuccess()).isFalse();
@@ -136,8 +138,8 @@ public final class SingleTest {
   @Test public void resultFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
+    BlockingObservable<Result<String>> o = service.result().toBlocking();
+    Result<String> result = o.first();
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
   }

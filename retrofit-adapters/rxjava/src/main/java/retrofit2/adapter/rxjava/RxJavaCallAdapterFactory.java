@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.adapter.rxjava;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import retrofit2.Call;
+import retrofit2.CallAdapter;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 import rx.Observable;
 import rx.Subscriber;
 import rx.exceptions.Exceptions;
@@ -28,7 +32,7 @@ import rx.subscriptions.Subscriptions;
 /**
  * TODO docs
  */
-public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
+public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   /**
    * TODO
    */
@@ -41,7 +45,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
 
   @Override
   public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
-    Class<?> rawType = Utils.getRawType(returnType);
+    Class<?> rawType = getRawType(returnType);
     boolean isSingle = "rx.Single".equals(rawType.getCanonicalName());
     if (rawType != Observable.class && !isSingle) {
       return null;
@@ -62,14 +66,14 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
   }
 
   private CallAdapter<Observable<?>> getCallAdapter(Type returnType) {
-    Type observableType = Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
-    Class<?> rawObservableType = Utils.getRawType(observableType);
+    Type observableType = getParameterUpperBound(0, (ParameterizedType) returnType);
+    Class<?> rawObservableType = getRawType(observableType);
     if (rawObservableType == Response.class) {
       if (!(observableType instanceof ParameterizedType)) {
         throw new IllegalStateException("Response must be parameterized"
             + " as Response<Foo> or Response<? extends Foo>");
       }
-      Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) observableType);
+      Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
       return new ResponseCallAdapter(responseType);
     }
 
@@ -78,7 +82,7 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
         throw new IllegalStateException("Result must be parameterized"
             + " as Result<Foo> or Result<? extends Foo>");
       }
-      Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) observableType);
+      Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
       return new ResultCallAdapter(responseType);
     }
 

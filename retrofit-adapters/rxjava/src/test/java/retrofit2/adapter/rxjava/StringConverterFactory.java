@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -21,6 +21,8 @@ import java.lang.reflect.Type;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import retrofit2.Converter;
+import retrofit2.Retrofit;
 
 final class StringConverterFactory extends Converter.Factory {
   @Override

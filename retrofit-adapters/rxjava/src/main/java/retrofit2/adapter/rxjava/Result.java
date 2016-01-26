@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
-
-import static retrofit2.Utils.checkNotNull;
+import retrofit2.Response;
 
 /** The result of executing an HTTP request. */
 public final class Result<T> {
   public static <T> Result<T> error(Throwable error) {
-    return new Result<>(null, checkNotNull(error, "error == null"));
+    if (error == null) throw new NullPointerException("error == null");
+    return new Result<>(null, error);
   }
 
   public static <T> Result<T> response(Response<T> response) {
-    return new Result<>(checkNotNull(response, "response == null"), null);
+    if (response == null) throw new NullPointerException("response == null");
+    return new Result<>(response, null);
   }
 
   private final Response<T> response;
   private final Throwable error;
 
-  Result(Response<T> response, Throwable error) {
+  private Result(Response<T> response, Throwable error) {
     this.response = response;
     this.error = error;
   }
