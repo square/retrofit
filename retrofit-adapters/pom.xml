@@ -16,6 +16,7 @@
 
   <modules>
     <module>guava</module>
+    <module>java8</module>
     <module>rxjava</module>
   </modules>
 </project>
