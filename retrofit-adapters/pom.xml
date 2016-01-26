@@ -15,6 +15,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>guava</module>
     <module>rxjava</module>
   </modules>
 </project>
