@@ -78,7 +78,7 @@ public final class GuavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> ListenableFuture<?> adapt(final Call<R> call) {
+    @Override public <R> ListenableFuture<R> adapt(final Call<R> call) {
       return new AbstractFuture<R>() {
         {
           call.enqueue(new Callback<R>() {
