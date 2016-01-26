@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.adapter.rxjava;
 
 import java.lang.reflect.Type;
+import retrofit2.Call;
+import retrofit2.CallAdapter;
 import rx.Observable;
 import rx.Single;
 

@@ -15,7 +15,6 @@
  */
 package com.example.retrofit;
 
-import com.google.common.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
@@ -58,18 +57,17 @@ public final class ErrorHandlingCallAdapter {
     // TODO MyResponse<T> execute() throws MyHttpException;
   }
 
-  public static class ErrorHandlingCallAdapterFactory implements CallAdapter.Factory {
+  public static class ErrorHandlingCallAdapterFactory extends CallAdapter.Factory {
     @Override public CallAdapter<MyCall<?>> get(Type returnType, Annotation[] annotations,
         Retrofit retrofit) {
-      TypeToken<?> token = TypeToken.of(returnType);
-      if (token.getRawType() != MyCall.class) {
+      if (getRawType(returnType) != MyCall.class) {
         return null;
       }
       if (!(returnType instanceof ParameterizedType)) {
         throw new IllegalStateException(
             "MyCall must have generic type (e.g., MyCall<ResponseBody>)");
       }
-      final Type responseType = ((ParameterizedType) returnType).getActualTypeArguments()[0];
+      final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
       return new CallAdapter<MyCall<?>>() {
         @Override public Type responseType() {
           return responseType;

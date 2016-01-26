@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.adapter.rxjava;
 
 import com.google.common.reflect.TypeToken;
 import java.lang.annotation.Annotation;
@@ -21,6 +21,9 @@ import java.lang.reflect.Type;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import retrofit2.CallAdapter;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 import rx.Observable;
 import rx.Single;
 

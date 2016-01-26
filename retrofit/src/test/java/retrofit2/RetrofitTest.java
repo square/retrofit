@@ -211,16 +211,16 @@ public final class RetrofitTest {
   @Test public void callCallCustomAdapter() {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     final AtomicBoolean adapterCalled = new AtomicBoolean();
-    class MyCallAdapterFactory implements CallAdapter.Factory {
+    class MyCallAdapterFactory extends CallAdapter.Factory {
       @Override public CallAdapter<?> get(final Type returnType, Annotation[] annotations,
           Retrofit retrofit) {
         factoryCalled.set(true);
-        if (Utils.getRawType(returnType) != Call.class) {
+        if (getRawType(returnType) != Call.class) {
           return null;
         }
         return new CallAdapter<Call<?>>() {
           @Override public Type responseType() {
-            return Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
+            return getParameterUpperBound(0, (ParameterizedType) returnType);
           }
 
           @Override public <R> Call<R> adapt(Call<R> call) {
@@ -242,10 +242,10 @@ public final class RetrofitTest {
   }
 
   @Test public void customCallAdapter() {
-    class GreetingCallAdapterFactory implements CallAdapter.Factory {
+    class GreetingCallAdapterFactory extends CallAdapter.Factory {
       @Override public CallAdapter<String> get(Type returnType, Annotation[] annotations,
           Retrofit retrofit) {
-        if (Utils.getRawType(returnType) != String.class) {
+        if (getRawType(returnType) != String.class) {
           return null;
         }
         return new CallAdapter<String>() {
@@ -271,7 +271,7 @@ public final class RetrofitTest {
 
   @Test public void methodAnnotationsPassedToCallAdapter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
-    class MyCallAdapterFactory implements CallAdapter.Factory {
+    class MyCallAdapterFactory extends CallAdapter.Factory {
       @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations,
           Retrofit retrofit) {
         annotationsRef.set(annotations);

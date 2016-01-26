@@ -20,7 +20,7 @@ import java.lang.reflect.Type;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 
-public final class DelegatingCallAdapterFactory implements CallAdapter.Factory {
+public final class DelegatingCallAdapterFactory extends CallAdapter.Factory {
   public boolean called;
 
   @Override
