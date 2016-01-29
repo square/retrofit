@@ -343,7 +343,7 @@ public final class Retrofit {
 
     for (int i = 0, count = converterFactories.size(); i < count; i++) {
       Converter<?, String> converter =
-          converterFactories.get(i).stringConverter(type, annotations);
+          converterFactories.get(i).stringConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<T, String>) converter;

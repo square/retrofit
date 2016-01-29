@@ -69,7 +69,8 @@ public interface Converter<F, T> {
      * {@link Header @Header}, {@link Path @Path}, {@link Query @Query}, and
      * {@link QueryMap @QueryMap} values.
      */
-    public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+    public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+        Retrofit retrofit) {
       return null;
     }
   }
