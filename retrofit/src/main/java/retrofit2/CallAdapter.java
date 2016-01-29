@@ -79,7 +79,7 @@ public interface CallAdapter<T> {
      * {@code List<? extends Runnable>} returns {@code List.class}.
      */
     protected static Class<?> getRawType(Type type) {
-      return Utils.getRawType(type);
+      return Types.getRawType(type);
     }
   }
 }

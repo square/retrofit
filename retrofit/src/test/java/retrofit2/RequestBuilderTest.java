@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -438,6 +439,24 @@ public final class RequestBuilderTest {
       assertThat(e).hasMessage(
           "@QueryMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
+  }
+
+  @Test public void queryMapSupportsSubclasses() {
+    class Foo extends HashMap<String, String> {
+    }
+
+    class Example {
+      @GET("/") //
+      Call<ResponseBody> method(@QueryMap Foo a) {
+        return null;
+      }
+    }
+
+    Foo foo = new Foo();
+    foo.put("hello", "world");
+
+    Request request = buildRequest(Example.class, foo);
+    assertThat(request.url().toString()).isEqualTo("http://example.com/?hello=world");
   }
 
   @Test public void queryMapRejectsNullKeys() {
@@ -1463,6 +1482,29 @@ public final class RequestBuilderTest {
     }
   }
 
+  @Test public void multipartPartMapSupportsSubclasses() throws IOException {
+    class Foo extends HashMap<String, String> {
+    }
+
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap Foo parts) {
+        return null;
+      }
+    }
+
+    Foo foo = new Foo();
+    foo.put("hello", "world");
+
+    Request request = buildRequest(Example.class, foo);
+    Buffer buffer = new Buffer();
+    request.body().writeTo(buffer);
+    assertThat(buffer.readUtf8())
+        .contains("name=\"hello\"")
+        .contains("\r\n\r\nworld\r\n--");
+  }
+
   @Test public void multipartNullRemovesPart() throws IOException {
     class Example {
       @Multipart //
@@ -1654,6 +1696,27 @@ public final class RequestBuilderTest {
       assertThat(e).hasMessage(
           "@FieldMap parameter type must be Map. (parameter #1)\n    for method Example.method");
     }
+  }
+
+  @Test public void fieldMapSupportsSubclasses() throws IOException {
+    class Foo extends HashMap<String, String> {
+    }
+
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Call<ResponseBody> method(@FieldMap Foo a) {
+        return null;
+      }
+    }
+
+    Foo foo = new Foo();
+    foo.put("hello", "world");
+
+    Request request = buildRequest(Example.class, foo);
+    Buffer buffer = new Buffer();
+    request.body().writeTo(buffer);
+    assertThat(buffer.readUtf8()).isEqualTo("hello=world");
   }
 
   @Test public void simpleHeaders() {

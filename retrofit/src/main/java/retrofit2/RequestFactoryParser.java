@@ -275,7 +275,7 @@ final class RequestFactoryParser {
             String name = query.value();
             boolean encoded = query.encoded();
 
-            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(methodParameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
               if (!(methodParameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
@@ -302,13 +302,15 @@ final class RequestFactoryParser {
             gotQuery = true;
 
           } else if (methodParameterAnnotation instanceof QueryMap) {
-            if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
+            Class<?> rawType = Types.getRawType(methodParameterType);
+            if (!Map.class.isAssignableFrom(rawType)) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
-            if (!(methodParameterType instanceof ParameterizedType)) {
+            Type mapType = Types.getSupertype(methodParameterType, rawType, Map.class);
+            if (!(mapType instanceof ParameterizedType)) {
               throw parameterError(i, "Map must include generic types (e.g., Map<String, String>)");
             }
-            ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+            ParameterizedType parameterizedType = (ParameterizedType) mapType;
             Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
             if (String.class != keyType) {
               throw parameterError(i, "@QueryMap keys must be of type String: " + keyType);
@@ -324,7 +326,7 @@ final class RequestFactoryParser {
             Header header = (Header) methodParameterAnnotation;
             String name = header.value();
 
-            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(methodParameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
               if (!(methodParameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
@@ -356,7 +358,7 @@ final class RequestFactoryParser {
             String name = field.value();
             boolean encoded = field.encoded();
 
-            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(methodParameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
               if (!(methodParameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
@@ -386,13 +388,15 @@ final class RequestFactoryParser {
             if (!isFormEncoded) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
-            if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
+            Class<?> rawType = Types.getRawType(methodParameterType);
+            if (!Map.class.isAssignableFrom(rawType)) {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
-            if (!(methodParameterType instanceof ParameterizedType)) {
+            Type mapType = Types.getSupertype(methodParameterType, rawType, Map.class);
+            if (!(mapType instanceof ParameterizedType)) {
               throw parameterError(i, "Map must include generic types (e.g., Map<String, String>)");
             }
-            ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+            ParameterizedType parameterizedType = (ParameterizedType) mapType;
             Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
             if (String.class != keyType) {
               throw parameterError(i, "@FieldMap keys must be of type String: " + keyType);
@@ -414,7 +418,7 @@ final class RequestFactoryParser {
                 "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
 
-            Class<?> rawParameterType = Utils.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(methodParameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
               if (!(methodParameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
@@ -445,13 +449,15 @@ final class RequestFactoryParser {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
             }
-            if (!Map.class.isAssignableFrom(Utils.getRawType(methodParameterType))) {
+            Class<?> rawType = Types.getRawType(methodParameterType);
+            if (!Map.class.isAssignableFrom(rawType)) {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
-            if (!(methodParameterType instanceof ParameterizedType)) {
+            Type mapType = Types.getSupertype(methodParameterType, rawType, Map.class);
+            if (!(mapType instanceof ParameterizedType)) {
               throw parameterError(i, "Map must include generic types (e.g., Map<String, String>)");
             }
-            ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+            ParameterizedType parameterizedType = (ParameterizedType) mapType;
             Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
             if (String.class != keyType) {
               throw parameterError(i, "@PartMap keys must be of type String: " + keyType);
