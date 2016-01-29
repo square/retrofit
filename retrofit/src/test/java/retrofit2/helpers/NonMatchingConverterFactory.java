@@ -39,7 +39,8 @@ public final class NonMatchingConverterFactory extends Converter.Factory {
     return null;
   }
 
-  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     called = true;
     return null;
   }

@@ -354,7 +354,8 @@ public final class RetrofitTest {
   @Test public void parameterAnnotationsPassedToStringConverter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory extends Converter.Factory {
-      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
         annotationsRef.set(annotations);
 
         return new Converter<Object, String>() {
@@ -377,7 +378,8 @@ public final class RetrofitTest {
 
   @Test public void stringConverterNotCalledForString() {
     class MyConverterFactory extends Converter.Factory {
-      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
         throw new AssertionError();
       }
     }
@@ -394,7 +396,8 @@ public final class RetrofitTest {
   @Test public void stringConverterReturningNullResultsInDefault() {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     class MyConverterFactory extends Converter.Factory {
-      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
         factoryCalled.set(true);
         return null;
       }
@@ -945,12 +948,12 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).stringConverter(type, annotations);
+    doReturn(expectedAdapter).when(factory).stringConverter(type, annotations, retrofit);
 
     Converter<?, String> actualAdapter = retrofit.stringConverter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
-    verify(factory).stringConverter(type, annotations);
+    verify(factory).stringConverter(type, annotations, retrofit);
     verifyNoMoreInteractions(factory);
   }
 

@@ -47,7 +47,8 @@ final class BuiltInConverters extends Converter.Factory {
     return null;
   }
 
-  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations) {
+  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
     if (type == String.class) {
       return StringConverter.INSTANCE;
     }
