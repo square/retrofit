@@ -21,6 +21,7 @@ import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.Map;
 import okhttp3.Headers;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 import static retrofit2.Utils.checkNotNull;
@@ -202,13 +203,17 @@ abstract class RequestAction<T> {
     @Override void perform(RequestBuilder builder, T value) {
       if (value == null) return; // Skip null values.
 
-      RequestBody body;
-      try {
-        body = converter.convert(value);
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+      if (MultipartBody.Part.class.isAssignableFrom(value.getClass())) {
+        builder.addPart((MultipartBody.Part) value);
+      } else {
+        RequestBody body;
+        try {
+          body = converter.convert(value);
+        } catch (IOException e) {
+          throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+        }
+        builder.addPart(headers, body);
       }
-      builder.addPart(headers, body);
     }
   }
 
@@ -234,11 +239,15 @@ abstract class RequestAction<T> {
           continue; // Skip null values.
         }
 
-        Headers headers = Headers.of(
-            "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
-            "Content-Transfer-Encoding", transferEncoding);
+        if (MultipartBody.Part.class.isAssignableFrom(entryValue.getClass())) {
+          builder.addPart((MultipartBody.Part) entryValue);
+        } else {
+          Headers headers = Headers.of(
+              "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
+              "Content-Transfer-Encoding", transferEncoding);
 
-        builder.addPart(headers, valueConverter.convert(entryValue));
+          builder.addPart(headers, valueConverter.convert(entryValue));
+        }
       }
     }
   }

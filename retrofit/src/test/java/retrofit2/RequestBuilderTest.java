@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -1251,6 +1252,64 @@ public final class RequestBuilderTest {
         .contains("Content-Disposition: form-data;")
         .contains("name=\"kit\"")
         .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void prebuiltPartMultipart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("") MultipartBody.Part ping) {
+        return null;
+      }
+    }
+
+    RequestBody partBody = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    Request request = buildRequest(Example.class,
+        MultipartBody.Part.createFormData("file", "temp.png", partBody));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"file\"")
+        .contains("filename=\"temp.png\"")
+        .contains("\r\nhi\r\n--");
+  }
+
+  @Test public void prebuiltPartMultipartArray() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("") MultipartBody.Part[] ping) {
+        return null;
+      }
+    }
+
+    RequestBody partBody = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    MultipartBody.Part[] parts = new MultipartBody.Part[] {
+        MultipartBody.Part.createFormData("file", "temp.png", partBody) };
+    Request request = buildRequest(Example.class,
+        new Object[] { parts });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"file\"")
+        .contains("filename=\"temp.png\"")
+        .contains("\r\nhi\r\n--");
   }
 
   @Test public void multipartArray() throws IOException {
