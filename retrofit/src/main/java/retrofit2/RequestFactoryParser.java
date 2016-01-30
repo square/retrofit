@@ -59,8 +59,11 @@ final class RequestFactoryParser {
 
   static RequestFactory parse(Method method, Type responseType, Retrofit retrofit) {
     RequestFactoryParser parser = new RequestFactoryParser(method);
-    parser.parseMethodAnnotations(responseType);
-    parser.parseParameters(retrofit);
+
+    Annotation[] methodAnnotations = method.getAnnotations();
+    parser.parseMethodAnnotations(responseType, methodAnnotations);
+    parser.parseParameters(retrofit, methodAnnotations);
+
     return parser.toRequestFactory(retrofit.baseUrl());
   }
 
@@ -95,8 +98,8 @@ final class RequestFactoryParser {
     return methodError(method, message + " (parameter #" + (index + 1) + ")", args);
   }
 
-  private void parseMethodAnnotations(Type responseType) {
-    for (Annotation annotation : method.getAnnotations()) {
+  private void parseMethodAnnotations(Type responseType, Annotation[] methodAnnotations) {
+    for (Annotation annotation : methodAnnotations) {
       if (annotation instanceof DELETE) {
         parseHttpMethodAndPath("DELETE", ((DELETE) annotation).value(), false);
       } else if (annotation instanceof GET) {
@@ -199,8 +202,7 @@ final class RequestFactoryParser {
     return builder.build();
   }
 
-  private void parseParameters(Retrofit retrofit) {
-    Annotation[] methodAnnotations = method.getAnnotations();
+  private void parseParameters(Retrofit retrofit, Annotation[] methodAnnotations) {
     Type[] parameterTypes = method.getGenericParameterTypes();
     Annotation[][] parameterAnnotationsArray = method.getParameterAnnotations();
 
