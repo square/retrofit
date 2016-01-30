@@ -85,10 +85,10 @@ final class RequestBuilder {
       // The relative URL is cleared when the first query parameter is set.
       throw new AssertionError();
     }
-    relativeUrl = relativeUrl.replace("{" + name + "}", canonicalize(value, encoded));
+    relativeUrl = relativeUrl.replace("{" + name + "}", canonicalizeForPath(value, encoded));
   }
 
-  private static String canonicalize(String input, boolean alreadyEncoded) {
+  private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
@@ -97,7 +97,7 @@ final class RequestBuilder {
         // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
         out.writeUtf8(input, 0, i);
-        canonicalize(out, input, i, limit, alreadyEncoded);
+        canonicalizeForPath(out, input, i, limit, alreadyEncoded);
         return out.readUtf8();
       }
     }
@@ -106,8 +106,8 @@ final class RequestBuilder {
     return input;
   }
 
-  private static void canonicalize(Buffer out, String input, int pos, int limit,
-      boolean alreadyEncoded) {
+  private static void canonicalizeForPath(Buffer out, String input, int pos, int limit,
+                                          boolean alreadyEncoded) {
     Buffer utf8Buffer = null; // Lazily allocated.
     int codePoint;
     for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
