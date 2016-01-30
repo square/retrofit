@@ -92,9 +92,8 @@ final class RequestBuilder {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
-      if (codePoint < 0x20 || codePoint >= 0x7f
-          || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
-          || (codePoint == '%' && !alreadyEncoded)) {
+      if (shouldSkipCodePoint(codePoint)
+          || (!alreadyEncoded && shouldEncodeCodePoint(codePoint))) {
         // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
         out.writeUtf8(input, 0, i);
@@ -114,12 +113,9 @@ final class RequestBuilder {
     for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
       if (alreadyEncoded
-          && (codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r')) {
+          && shouldSkipCodePoint(codePoint)) {
         // Skip this character.
-      } else if (codePoint < 0x20
-          || codePoint >= 0x7f
-          || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
-          || (codePoint == '%' && !alreadyEncoded)) {
+      } else if (!alreadyEncoded && shouldEncodeCodePoint(codePoint)) {
         // Percent encode this character.
         if (utf8Buffer == null) {
           utf8Buffer = new Buffer();
@@ -136,6 +132,17 @@ final class RequestBuilder {
         out.writeUtf8CodePoint(codePoint);
       }
     }
+  }
+
+  private static boolean shouldSkipCodePoint(final int codePoint) {
+    return codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r';
+  }
+
+  private static boolean shouldEncodeCodePoint(final int codePoint) {
+    return codePoint < 0x20
+         || codePoint >= 0x7f
+         || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
+         || codePoint == '%';
   }
 
   void addQueryParam(String name, String value, boolean encoded) {
