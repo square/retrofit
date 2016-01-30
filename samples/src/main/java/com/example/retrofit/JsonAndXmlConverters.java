@@ -74,15 +74,16 @@ public final class JsonAndXmlConverters {
       return null;
     }
 
-    @Override
-    public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
-        Retrofit retrofit) {
-      for (Annotation annotation : annotations) {
+    @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+      for (Annotation annotation : parameterAnnotations) {
         if (annotation instanceof Json) {
-          return jsonFactory.requestBodyConverter(type, annotations, retrofit);
+          return jsonFactory.requestBodyConverter(type, parameterAnnotations, methodAnnotations,
+              retrofit);
         }
         if (annotation instanceof Xml) {
-          return jsonFactory.requestBodyConverter(type, annotations, retrofit);
+          return xmlFactory.requestBodyConverter(type, parameterAnnotations, methodAnnotations,
+              retrofit);
         }
       }
       return null;

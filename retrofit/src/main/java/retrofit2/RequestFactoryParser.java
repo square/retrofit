@@ -59,8 +59,11 @@ final class RequestFactoryParser {
 
   static RequestFactory parse(Method method, Type responseType, Retrofit retrofit) {
     RequestFactoryParser parser = new RequestFactoryParser(method);
-    parser.parseMethodAnnotations(responseType);
-    parser.parseParameters(retrofit);
+
+    Annotation[] methodAnnotations = method.getAnnotations();
+    parser.parseMethodAnnotations(responseType, methodAnnotations);
+    parser.parseParameters(retrofit, methodAnnotations);
+
     return parser.toRequestFactory(retrofit.baseUrl());
   }
 
@@ -95,8 +98,8 @@ final class RequestFactoryParser {
     return methodError(method, message + " (parameter #" + (index + 1) + ")", args);
   }
 
-  private void parseMethodAnnotations(Type responseType) {
-    for (Annotation annotation : method.getAnnotations()) {
+  private void parseMethodAnnotations(Type responseType, Annotation[] methodAnnotations) {
+    for (Annotation annotation : methodAnnotations) {
       if (annotation instanceof DELETE) {
         parseHttpMethodAndPath("DELETE", ((DELETE) annotation).value(), false);
       } else if (annotation instanceof GET) {
@@ -199,9 +202,9 @@ final class RequestFactoryParser {
     return builder.build();
   }
 
-  private void parseParameters(Retrofit retrofit) {
-    Type[] methodParameterTypes = method.getGenericParameterTypes();
-    Annotation[][] methodParameterAnnotationArrays = method.getParameterAnnotations();
+  private void parseParameters(Retrofit retrofit, Annotation[] methodAnnotations) {
+    Type[] parameterTypes = method.getGenericParameterTypes();
+    Annotation[][] parameterAnnotationsArray = method.getParameterAnnotations();
 
     boolean gotField = false;
     boolean gotPart = false;
@@ -210,20 +213,20 @@ final class RequestFactoryParser {
     boolean gotQuery = false;
     boolean gotUrl = false;
 
-    int count = methodParameterAnnotationArrays.length;
+    int count = parameterAnnotationsArray.length;
     RequestAction[] requestActions = new RequestAction[count];
     for (int i = 0; i < count; i++) {
-      Type methodParameterType = methodParameterTypes[i];
-      if (Utils.hasUnresolvableType(methodParameterType)) {
+      Type parameterType = parameterTypes[i];
+      if (Utils.hasUnresolvableType(parameterType)) {
         throw parameterError(i, "Parameter type must not include a type variable or wildcard: %s",
-            methodParameterType);
+            parameterType);
       }
 
-      Annotation[] methodParameterAnnotations = methodParameterAnnotationArrays[i];
-      if (methodParameterAnnotations != null) {
-        for (Annotation methodParameterAnnotation : methodParameterAnnotations) {
+      Annotation[] parameterAnnotations = parameterAnnotationsArray[i];
+      if (parameterAnnotations != null) {
+        for (Annotation parameterAnnotation : parameterAnnotations) {
           RequestAction action = null;
-          if (methodParameterAnnotation instanceof Url) {
+          if (parameterAnnotation instanceof Url) {
             if (gotUrl) {
               throw parameterError(i, "Multiple @Url method annotations found.");
             }
@@ -236,12 +239,12 @@ final class RequestFactoryParser {
             if (relativeUrl != null) {
               throw parameterError(i, "@Url cannot be used with @%s URL", httpMethod);
             }
-            if (methodParameterType == String.class) {
+            if (parameterType == String.class) {
               action = new RequestAction.StringUrl();
-            } else if (methodParameterType == URI.class) {
+            } else if (parameterType == URI.class) {
               action = new RequestAction.JavaUriUrl();
-            } else if (methodParameterType instanceof Class
-                && "android.net.Uri".equals(((Class<?>) methodParameterType).getCanonicalName())) {
+            } else if (parameterType instanceof Class
+                && "android.net.Uri".equals(((Class<?>) parameterType).getCanonicalName())) {
               action = new RequestAction.AndroidUriUrl();
             } else {
               throw parameterError(i,
@@ -249,7 +252,7 @@ final class RequestFactoryParser {
             }
             gotUrl = true;
 
-          } else if (methodParameterAnnotation instanceof Path) {
+          } else if (parameterAnnotation instanceof Path) {
             if (gotQuery) {
               throw parameterError(i, "A @Path parameter must not come after a @Query.");
             }
@@ -262,51 +265,51 @@ final class RequestFactoryParser {
             }
             gotPath = true;
 
-            Path path = (Path) methodParameterAnnotation;
+            Path path = (Path) parameterAnnotation;
             String name = path.value();
             validatePathName(i, name);
 
-            Converter<?, String> valueConverter =
-                retrofit.stringConverter(methodParameterType, methodParameterAnnotations);
-            action = new RequestAction.Path<>(name, valueConverter, path.encoded());
+            Converter<?, String> converter =
+                retrofit.stringConverter(parameterType, parameterAnnotations);
+            action = new RequestAction.Path<>(name, converter, path.encoded());
 
-          } else if (methodParameterAnnotation instanceof Query) {
-            Query query = (Query) methodParameterAnnotation;
+          } else if (parameterAnnotation instanceof Query) {
+            Query query = (Query) parameterAnnotation;
             String name = query.value();
             boolean encoded = query.encoded();
 
-            Class<?> rawParameterType = Types.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(parameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
-              if (!(methodParameterType instanceof ParameterizedType)) {
+              if (!(parameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
                     + " must include generic type (e.g., "
                     + rawParameterType.getSimpleName()
                     + "<String>)");
               }
-              ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+              ParameterizedType parameterizedType = (ParameterizedType) parameterType;
               Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(iterableType, methodParameterAnnotations);
-              action = new RequestAction.Query<>(name, valueConverter, encoded).iterable();
+              Converter<?, String> converter =
+                  retrofit.stringConverter(iterableType, parameterAnnotations);
+              action = new RequestAction.Query<>(name, converter, encoded).iterable();
             } else if (rawParameterType.isArray()) {
               Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(arrayComponentType, methodParameterAnnotations);
-              action = new RequestAction.Query<>(name, valueConverter, encoded).array();
+              Converter<?, String> converter =
+                  retrofit.stringConverter(arrayComponentType, parameterAnnotations);
+              action = new RequestAction.Query<>(name, converter, encoded).array();
             } else {
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(methodParameterType, methodParameterAnnotations);
-              action = new RequestAction.Query<>(name, valueConverter, encoded);
+              Converter<?, String> converter =
+                  retrofit.stringConverter(parameterType, parameterAnnotations);
+              action = new RequestAction.Query<>(name, converter, encoded);
             }
 
             gotQuery = true;
 
-          } else if (methodParameterAnnotation instanceof QueryMap) {
-            Class<?> rawType = Types.getRawType(methodParameterType);
-            if (!Map.class.isAssignableFrom(rawType)) {
+          } else if (parameterAnnotation instanceof QueryMap) {
+            Class<?> rawParameterType = Types.getRawType(parameterType);
+            if (!Map.class.isAssignableFrom(rawParameterType)) {
               throw parameterError(i, "@QueryMap parameter type must be Map.");
             }
-            Type mapType = Types.getSupertype(methodParameterType, rawType, Map.class);
+            Type mapType = Types.getSupertype(parameterType, rawParameterType, Map.class);
             if (!(mapType instanceof ParameterizedType)) {
               throw parameterError(i, "Map must include generic types (e.g., Map<String, String>)");
             }
@@ -317,82 +320,82 @@ final class RequestFactoryParser {
             }
             Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
             Converter<?, String> valueConverter =
-                retrofit.stringConverter(valueType, methodParameterAnnotations);
+                retrofit.stringConverter(valueType, parameterAnnotations);
 
-            QueryMap queryMap = (QueryMap) methodParameterAnnotation;
+            QueryMap queryMap = (QueryMap) parameterAnnotation;
             action = new RequestAction.QueryMap<>(valueConverter, queryMap.encoded());
 
-          } else if (methodParameterAnnotation instanceof Header) {
-            Header header = (Header) methodParameterAnnotation;
+          } else if (parameterAnnotation instanceof Header) {
+            Header header = (Header) parameterAnnotation;
             String name = header.value();
 
-            Class<?> rawParameterType = Types.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(parameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
-              if (!(methodParameterType instanceof ParameterizedType)) {
+              if (!(parameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
                     + " must include generic type (e.g., "
                     + rawParameterType.getSimpleName()
                     + "<String>)");
               }
-              ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+              ParameterizedType parameterizedType = (ParameterizedType) parameterType;
               Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(iterableType, methodParameterAnnotations);
-              action = new RequestAction.Header<>(name, valueConverter).iterable();
+              Converter<?, String> converter =
+                  retrofit.stringConverter(iterableType, parameterAnnotations);
+              action = new RequestAction.Header<>(name, converter).iterable();
             } else if (rawParameterType.isArray()) {
               Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(arrayComponentType, methodParameterAnnotations);
-              action = new RequestAction.Header<>(name, valueConverter).array();
+              Converter<?, String> converter =
+                  retrofit.stringConverter(arrayComponentType, parameterAnnotations);
+              action = new RequestAction.Header<>(name, converter).array();
             } else {
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(methodParameterType, methodParameterAnnotations);
-              action = new RequestAction.Header<>(name, valueConverter);
+              Converter<?, String> converter =
+                  retrofit.stringConverter(parameterType, parameterAnnotations);
+              action = new RequestAction.Header<>(name, converter);
             }
 
-          } else if (methodParameterAnnotation instanceof Field) {
+          } else if (parameterAnnotation instanceof Field) {
             if (!isFormEncoded) {
               throw parameterError(i, "@Field parameters can only be used with form encoding.");
             }
-            Field field = (Field) methodParameterAnnotation;
+            Field field = (Field) parameterAnnotation;
             String name = field.value();
             boolean encoded = field.encoded();
 
-            Class<?> rawParameterType = Types.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(parameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
-              if (!(methodParameterType instanceof ParameterizedType)) {
+              if (!(parameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
                     + " must include generic type (e.g., "
                     + rawParameterType.getSimpleName()
                     + "<String>)");
               }
-              ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+              ParameterizedType parameterizedType = (ParameterizedType) parameterType;
               Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(iterableType, methodParameterAnnotations);
-              action = new RequestAction.Field<>(name, valueConverter, encoded).iterable();
+              Converter<?, String> converter =
+                  retrofit.stringConverter(iterableType, parameterAnnotations);
+              action = new RequestAction.Field<>(name, converter, encoded).iterable();
             } else if (rawParameterType.isArray()) {
               Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(arrayComponentType, methodParameterAnnotations);
-              action = new RequestAction.Field<>(name, valueConverter, encoded).array();
+              Converter<?, String> converter =
+                  retrofit.stringConverter(arrayComponentType, parameterAnnotations);
+              action = new RequestAction.Field<>(name, converter, encoded).array();
             } else {
-              Converter<?, String> valueConverter =
-                  retrofit.stringConverter(methodParameterType, methodParameterAnnotations);
-              action = new RequestAction.Field<>(name, valueConverter, encoded);
+              Converter<?, String> converter =
+                  retrofit.stringConverter(parameterType, parameterAnnotations);
+              action = new RequestAction.Field<>(name, converter, encoded);
             }
 
             gotField = true;
 
-          } else if (methodParameterAnnotation instanceof FieldMap) {
+          } else if (parameterAnnotation instanceof FieldMap) {
             if (!isFormEncoded) {
               throw parameterError(i, "@FieldMap parameters can only be used with form encoding.");
             }
-            Class<?> rawType = Types.getRawType(methodParameterType);
-            if (!Map.class.isAssignableFrom(rawType)) {
+            Class<?> rawParameterType = Types.getRawType(parameterType);
+            if (!Map.class.isAssignableFrom(rawParameterType)) {
               throw parameterError(i, "@FieldMap parameter type must be Map.");
             }
-            Type mapType = Types.getSupertype(methodParameterType, rawType, Map.class);
+            Type mapType = Types.getSupertype(parameterType, rawParameterType, Map.class);
             if (!(mapType instanceof ParameterizedType)) {
               throw parameterError(i, "Map must include generic types (e.g., Map<String, String>)");
             }
@@ -403,57 +406,60 @@ final class RequestFactoryParser {
             }
             Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
             Converter<?, String> valueConverter =
-                retrofit.stringConverter(valueType, methodParameterAnnotations);
+                retrofit.stringConverter(valueType, parameterAnnotations);
 
-            FieldMap fieldMap = (FieldMap) methodParameterAnnotation;
+            FieldMap fieldMap = (FieldMap) parameterAnnotation;
             action = new RequestAction.FieldMap<>(valueConverter, fieldMap.encoded());
             gotField = true;
 
-          } else if (methodParameterAnnotation instanceof Part) {
+          } else if (parameterAnnotation instanceof Part) {
             if (!isMultipart) {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
-            Part part = (Part) methodParameterAnnotation;
+            Part part = (Part) parameterAnnotation;
             okhttp3.Headers headers = okhttp3.Headers.of(
                 "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
 
-            Class<?> rawParameterType = Types.getRawType(methodParameterType);
+            Class<?> rawParameterType = Types.getRawType(parameterType);
             if (Iterable.class.isAssignableFrom(rawParameterType)) {
-              if (!(methodParameterType instanceof ParameterizedType)) {
+              if (!(parameterType instanceof ParameterizedType)) {
                 throw parameterError(i, rawParameterType.getSimpleName()
                     + " must include generic type (e.g., "
                     + rawParameterType.getSimpleName()
                     + "<String>)");
               }
-              ParameterizedType parameterizedType = (ParameterizedType) methodParameterType;
+              ParameterizedType parameterizedType = (ParameterizedType) parameterType;
               Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-              Converter<?, RequestBody> valueConverter =
-                  retrofit.requestBodyConverter(iterableType, methodParameterAnnotations);
-              action = new RequestAction.Part<>(headers, valueConverter).iterable();
+              Converter<?, RequestBody> converter =
+                  retrofit.requestBodyConverter(iterableType, parameterAnnotations,
+                      methodAnnotations);
+              action = new RequestAction.Part<>(headers, converter).iterable();
             } else if (rawParameterType.isArray()) {
               Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-              Converter<?, RequestBody> valueConverter =
-                  retrofit.requestBodyConverter(arrayComponentType, methodParameterAnnotations);
-              action = new RequestAction.Part<>(headers, valueConverter).array();
+              Converter<?, RequestBody> converter =
+                  retrofit.requestBodyConverter(arrayComponentType, parameterAnnotations,
+                      methodAnnotations);
+              action = new RequestAction.Part<>(headers, converter).array();
             } else {
-              Converter<?, RequestBody> valueConverter =
-                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
-              action = new RequestAction.Part<>(headers, valueConverter);
+              Converter<?, RequestBody> converter =
+                  retrofit.requestBodyConverter(parameterType, parameterAnnotations,
+                      methodAnnotations);
+              action = new RequestAction.Part<>(headers, converter);
             }
 
             gotPart = true;
 
-          } else if (methodParameterAnnotation instanceof PartMap) {
+          } else if (parameterAnnotation instanceof PartMap) {
             if (!isMultipart) {
               throw parameterError(i,
                   "@PartMap parameters can only be used with multipart encoding.");
             }
-            Class<?> rawType = Types.getRawType(methodParameterType);
-            if (!Map.class.isAssignableFrom(rawType)) {
+            Class<?> rawParameterType = Types.getRawType(parameterType);
+            if (!Map.class.isAssignableFrom(rawParameterType)) {
               throw parameterError(i, "@PartMap parameter type must be Map.");
             }
-            Type mapType = Types.getSupertype(methodParameterType, rawType, Map.class);
+            Type mapType = Types.getSupertype(parameterType, rawParameterType, Map.class);
             if (!(mapType instanceof ParameterizedType)) {
               throw parameterError(i, "Map must include generic types (e.g., Map<String, String>)");
             }
@@ -464,13 +470,14 @@ final class RequestFactoryParser {
             }
             Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
             Converter<?, RequestBody> valueConverter =
-                retrofit.requestBodyConverter(valueType, methodParameterAnnotations);
+                retrofit.requestBodyConverter(valueType, parameterAnnotations,
+                    methodAnnotations);
 
-            PartMap partMap = (PartMap) methodParameterAnnotation;
+            PartMap partMap = (PartMap) parameterAnnotation;
             action = new RequestAction.PartMap<>(valueConverter, partMap.encoding());
             gotPart = true;
 
-          } else if (methodParameterAnnotation instanceof Body) {
+          } else if (parameterAnnotation instanceof Body) {
             if (isFormEncoded || isMultipart) {
               throw parameterError(i,
                   "@Body parameters cannot be used with form or multi-part encoding.");
@@ -481,11 +488,10 @@ final class RequestFactoryParser {
 
             Converter<?, RequestBody> converter;
             try {
-              converter =
-                  retrofit.requestBodyConverter(methodParameterType, methodParameterAnnotations);
+              converter = retrofit.requestBodyConverter(parameterType, parameterAnnotations,
+                  methodAnnotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
-              throw parameterError(e, i, "Unable to create @Body converter for %s",
-                  methodParameterType);
+              throw parameterError(e, i, "Unable to create @Body converter for %s", parameterType);
             }
             action = new RequestAction.Body<>(converter);
             gotBody = true;

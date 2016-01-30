@@ -57,8 +57,8 @@ public interface Converter<F, T> {
      * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap}
      * values.
      */
-    public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] annotations,
-        Retrofit retrofit) {
+    public Converter<?, RequestBody> requestBodyConverter(Type type,
+        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
       return null;
     }
 
