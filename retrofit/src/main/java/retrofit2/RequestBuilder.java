@@ -92,8 +92,10 @@ final class RequestBuilder {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
-      if (codePoint < 0x20 || codePoint >= 0x7f
-          || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
+      if (codePoint < 0x20
+          || codePoint >= 0x7f
+          || (!alreadyEncoded
+              && PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1)
           || (codePoint == '%' && !alreadyEncoded)) {
         // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
@@ -118,8 +120,9 @@ final class RequestBuilder {
         // Skip this character.
       } else if (codePoint < 0x20
           || codePoint >= 0x7f
-          || PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1
-          || (codePoint == '%' && !alreadyEncoded)) {
+          || (!alreadyEncoded
+              && PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1)
+              || (codePoint == '%' && !alreadyEncoded)) {
         // Percent encode this character.
         if (utf8Buffer == null) {
           utf8Buffer = new Buffer();
