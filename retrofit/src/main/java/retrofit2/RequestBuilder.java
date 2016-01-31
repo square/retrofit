@@ -95,8 +95,7 @@ final class RequestBuilder {
       if (codePoint < 0x20
           || codePoint >= 0x7f
           || (!alreadyEncoded
-              && PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1)
-          || (codePoint == '%' && !alreadyEncoded)) {
+              && (PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1 || codePoint == '%'))) {
         // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
         out.writeUtf8(input, 0, i);
@@ -121,8 +120,7 @@ final class RequestBuilder {
       } else if (codePoint < 0x20
           || codePoint >= 0x7f
           || (!alreadyEncoded
-              && PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1)
-              || (codePoint == '%' && !alreadyEncoded)) {
+              && (PATH_SEGMENT_ENCODE_SET.indexOf(codePoint) != -1 || codePoint == '%'))) {
         // Percent encode this character.
         if (utf8Buffer == null) {
           utf8Buffer = new Buffer();
