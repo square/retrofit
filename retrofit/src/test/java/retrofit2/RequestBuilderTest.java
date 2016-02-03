@@ -670,6 +670,48 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
+  @Test public void getWithEncodedPathSegments() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Call<ResponseBody> method(@Path(value = "ping", encoded = true) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "baz/pong/more");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/baz/pong/more/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithUnencodedPathSegmentsPreventsRequestSplitting() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Call<ResponseBody> method(@Path(value = "ping", encoded = false) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "baz/\r\nheader: blue");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/baz%2F%0D%0Aheader:%20blue/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithEncodedPathStillPreventsRequestSplitting() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Call<ResponseBody> method(@Path(value = "ping", encoded = true) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "baz/\r\npong");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/baz/pong/");
+    assertThat(request.body()).isNull();
+  }
+
   @Test public void pathParamRequired() {
     class Example {
       @GET("/foo/bar/{ping}/") //
