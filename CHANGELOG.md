@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Version 2.0.0-beta4 *(In Development)*
---------------------------------------
+Version 2.0.0-beta4 *(2016-02-04)*
+----------------------------------
 
  * New: `Call` instance is now passed to both `onResponse` and `onFailure` methods of `Callback`. This aids
    in detecting when `onFailure` is called as a result of `Call.cancel()` by checking `Call.isCanceled()`.
