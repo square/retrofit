@@ -97,6 +97,11 @@ public final class Response<T> {
     return rawResponse.headers();
   }
 
+  /** Check HTTP header */
+  public boolean containsHeader(String header) {
+    return rawResponse.header(header) != null;
+  }
+
   /** {@code true} if {@link #code()} is in the range [200..300). */
   public boolean isSuccess() {
     return rawResponse.isSuccessful();
