@@ -1,6 +1,32 @@
 Change Log
 ==========
 
+Version 2.0.0-beta4 *(In Development)*
+--------------------------------------
+
+ * New: `Call` instance is now passed to both `onResponse` and `onFailure` methods of `Callback`. This aids
+   in detecting when `onFailure` is called as a result of `Call.cancel()` by checking `Call.isCanceled()`.
+ * New: `Call.request()` returns (optionally creating) the `Request` object for the call. Note: If this is
+   called before `Call.execute()` or `Call.enqueue()` this will do relatively expensive work synchronously.
+   Doing so in performance-critical sections (like on the Android main thread) should be avoided.
+ * New: Support for the release version of OkHttp 3.0 and newer.
+ * New: `adapter-guava` module provides a `CallAdapter.Factory` for Guava's `ListenableFuture`.
+ * New: `adapter-java8` module provides a `CallAdapter.Factory` for Java 8's `CompleteableFuture`.
+ * New: `ScalarsConverterFactory` (from `converter-scalars` module) now supports parsing response bodies
+   into either `String`, the 8 primitive types, or the 8 boxed primitive types.
+ * New: Automatic support for sending callbacks to the iOS main thread when running via RoboVM.
+ * New: Method annotations are now passed to the factory for request body converters. This allows converters
+   to alter the structure of both request bodies and response bodies with a single method-level annotation.
+ * Each converter has been moved to its own package under `retrofit2.converter.<name>`. This prevents type
+   collisions when many converters are simultaneously in use.
+ * Fix: Exceptions thrown when unable to locate a `CallAdapter.Factory` for a method return type now
+   correctly list the `CallAdapter.Factory` instances checked.
+ * Fix: Ensure default methods on service interfaces can be invoked.
+ * Fix: Correctly resolve the generic parameter types of collection interfaces when subclasses of those
+   collections are used as method parameters.
+ * Fix: Do not encode `/` characters in `@Path` replacements when `encoded = true`.
+
+
 Version 2.0.0-beta3 *(2016-01-05)*
 ----------------------------------
 
