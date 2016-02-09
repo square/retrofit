@@ -1885,6 +1885,38 @@ public final class RequestBuilderTest {
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
   }
 
+  @Test public void malformedAnnotationRelativeUrlThrows() {
+    class Example {
+      @GET("ftp://example.org")
+      Call<ResponseBody> get() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Malformed URL. Base: http://example.com/, Relative: ftp://example.org");
+    }
+  }
+
+  @Test public void malformedParameterRelativeUrlThrows() {
+    class Example {
+      @GET
+      Call<ResponseBody> get(@Url String relativeUrl) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class, "ftp://example.org");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Malformed URL. Base: http://example.com/, Relative: ftp://example.org");
+    }
+  }
+
   private static void assertBody(RequestBody body, String expected) {
     assertThat(body).isNotNull();
     Buffer buffer = new Buffer();
