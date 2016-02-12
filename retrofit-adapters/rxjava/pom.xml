@@ -22,7 +22,6 @@
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxjava</artifactId>
-      <version>1.1.1</version>
     </dependency>
 
     <dependency>
