@@ -29,42 +29,29 @@ import java.lang.reflect.Type;
 final class CompletableHelper {
   static CallAdapter<Completable> makeCompletable() {
 
-    final CompletableCallAdapter callAdapter = new CompletableCallAdapter();
-
     return new CallAdapter<Completable>() {
       @Override public Type responseType() {
-        return callAdapter.responseType();
+        return Void.class;
       }
 
       @Override public Completable adapt(Call call) {
-        return callAdapter.adapt(call);
+        return Completable.create(new CompletableCallOnSubscribe(call));
       }
     };
   }
 
-  static final class CompletableCallAdapter implements CallAdapter<Completable> {
-
-    @Override public Type responseType() {
-      return Void.class;
-    }
-
-    @Override public <R> Completable adapt(Call<R> call) {
-      return Completable.create(new CompletableCallOnSubscribe<>(call));
-    }
-  }
-
-  private static final class CompletableCallOnSubscribe<T>
+  private static final class CompletableCallOnSubscribe
       implements Completable.CompletableOnSubscribe {
-    private final Call<T> originalCall;
+    private final Call originalCall;
 
-    private CompletableCallOnSubscribe(Call<T> originalCall) {
+    private CompletableCallOnSubscribe(Call originalCall) {
       this.originalCall = originalCall;
     }
 
     @Override
     public void call(final Completable.CompletableSubscriber subscriber) {
       // Since Call is a one-shot type, clone it for each new subscriber.
-      final Call<T> call = originalCall.clone();
+      final Call call = originalCall.clone();
 
       // Attempt to cancel the call if it is still in-flight on unsubscription.
       CompositeSubscription set = new CompositeSubscription(Subscriptions.create(new Action0() {
@@ -76,7 +63,7 @@ final class CompletableHelper {
       subscriber.onSubscribe(set);
 
       try {
-        Response<T> response = call.execute();
+        Response response = call.execute();
         if (!set.isUnsubscribed()) {
           if (response.isSuccess()) {
             subscriber.onCompleted();
