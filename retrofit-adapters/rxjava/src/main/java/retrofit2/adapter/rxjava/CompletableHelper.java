@@ -19,9 +19,9 @@ import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import rx.Completable;
+import rx.Subscription;
 import rx.exceptions.Exceptions;
 import rx.functions.Action0;
-import rx.subscriptions.CompositeSubscription;
 import rx.subscriptions.Subscriptions;
 
 import java.lang.reflect.Type;
@@ -57,17 +57,16 @@ final class CompletableHelper {
       final Call call = originalCall.clone();
 
       // Attempt to cancel the call if it is still in-flight on unsubscription.
-      CompositeSubscription set = new CompositeSubscription(Subscriptions.create(new Action0() {
+      Subscription subscription = Subscriptions.create(new Action0() {
         @Override public void call() {
           call.cancel();
         }
-      }));
-
-      subscriber.onSubscribe(set);
+      });
+      subscriber.onSubscribe(subscription);
 
       try {
         Response response = call.execute();
-        if (!set.isUnsubscribed()) {
+        if (!subscription.isUnsubscribed()) {
           if (response.isSuccess()) {
             subscriber.onCompleted();
           } else {
@@ -76,7 +75,7 @@ final class CompletableHelper {
         }
       } catch (Throwable t) {
         Exceptions.throwIfFatal(t);
-        if (!set.isUnsubscribed()) {
+        if (!subscription.isUnsubscribed()) {
           subscriber.onError(t);
         }
       }
