@@ -27,17 +27,20 @@ import rx.subscriptions.Subscriptions;
 import java.lang.reflect.Type;
 
 final class CompletableHelper {
+
+  private static final CallAdapter<Completable> COMPLETABLE_CALL_ADAPTER
+      = new CallAdapter<Completable>() {
+    @Override public Type responseType() {
+      return Void.class;
+    }
+
+    @Override public Completable adapt(Call call) {
+      return Completable.create(new CompletableCallOnSubscribe(call));
+    }
+  };
+
   static CallAdapter<Completable> makeCompletable() {
-
-    return new CallAdapter<Completable>() {
-      @Override public Type responseType() {
-        return Void.class;
-      }
-
-      @Override public Completable adapt(Call call) {
-        return Completable.create(new CompletableCallOnSubscribe(call));
-      }
-    };
+    return COMPLETABLE_CALL_ADAPTER;
   }
 
   private static final class CompletableCallOnSubscribe
