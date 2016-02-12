@@ -52,12 +52,7 @@ public final class CompletableTest {
   @Test public void completableSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    try {
-      service.completable().await();
-      assertThat(true);
-    } catch (RuntimeException e) {
-      fail();
-    }
+    service.completable().await();
   }
 
   @Test public void completableSuccess404() {
