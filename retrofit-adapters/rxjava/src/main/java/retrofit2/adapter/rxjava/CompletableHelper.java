@@ -53,7 +53,8 @@ final class CompletableHelper {
     }
   }
 
-  private static final class CompletableCallOnSubscribe<T> implements Completable.CompletableOnSubscribe {
+  private static final class CompletableCallOnSubscribe<T>
+      implements Completable.CompletableOnSubscribe {
     private final Call<T> originalCall;
 
     private CompletableCallOnSubscribe(Call<T> originalCall) {
