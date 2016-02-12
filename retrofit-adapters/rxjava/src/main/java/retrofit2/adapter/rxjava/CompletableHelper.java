@@ -47,7 +47,7 @@ final class CompletableHelper {
       implements Completable.CompletableOnSubscribe {
     private final Call originalCall;
 
-    private CompletableCallOnSubscribe(Call originalCall) {
+    CompletableCallOnSubscribe(Call originalCall) {
       this.originalCall = originalCall;
     }
 
