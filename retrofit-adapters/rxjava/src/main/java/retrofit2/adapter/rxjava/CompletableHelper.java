@@ -29,15 +29,15 @@ import java.lang.reflect.Type;
 final class CompletableHelper {
 
   private static final CallAdapter<Completable> COMPLETABLE_CALL_ADAPTER
-      = new CallAdapter<Completable>() {
-    @Override public Type responseType() {
-      return Void.class;
-    }
+          = new CallAdapter<Completable>() {
+            @Override public Type responseType() {
+              return Void.class;
+            }
 
-    @Override public Completable adapt(Call call) {
-      return Completable.create(new CompletableCallOnSubscribe(call));
-    }
-  };
+            @Override public Completable adapt(Call call) {
+              return Completable.create(new CompletableCallOnSubscribe(call));
+            }
+          };
 
   static CallAdapter<Completable> makeCompletable() {
     return COMPLETABLE_CALL_ADAPTER;
