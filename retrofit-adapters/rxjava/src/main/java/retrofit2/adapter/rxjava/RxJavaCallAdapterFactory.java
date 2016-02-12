@@ -65,16 +65,16 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       // Note that this has to be done separately since Completable doesn't have a parametrized
       // type.
       return CompletableHelper.makeCompletable();
-    } else {
-      CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType);
-      if (isSingle) {
-        // Add Single-converter wrapper from a separate class. This defers classloading such that
-        // regular Observable operation can be leveraged without relying on this unstable RxJava
-        // API.
-        return SingleHelper.makeSingle(callAdapter);
-      }
-      return callAdapter;
     }
+
+    CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType);
+    if (isSingle) {
+      // Add Single-converter wrapper from a separate class. This defers classloading such that
+      // regular Observable operation can be leveraged without relying on this unstable RxJava
+      // API.
+      return SingleHelper.makeSingle(callAdapter);
+    }
+    return callAdapter;
   }
 
   private CallAdapter<Observable<?>> getCallAdapter(Type returnType) {
