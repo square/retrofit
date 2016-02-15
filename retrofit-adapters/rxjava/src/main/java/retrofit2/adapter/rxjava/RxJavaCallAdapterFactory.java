@@ -15,9 +15,6 @@
  */
 package retrofit2.adapter.rxjava;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
@@ -28,6 +25,10 @@ import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.functions.Func1;
 import rx.subscriptions.Subscriptions;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 /**
  * TODO docs
@@ -46,20 +47,31 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   @Override
   public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
-    boolean isSingle = "rx.Single".equals(rawType.getCanonicalName());
-    if (rawType != Observable.class && !isSingle) {
+    final String canonicalName = rawType.getCanonicalName();
+    boolean isSingle = "rx.Single".equals(canonicalName);
+    boolean isCompletable = "rx.Completable".equals(canonicalName);
+    if (rawType != Observable.class && !isSingle && !isCompletable) {
       return null;
     }
-    if (!(returnType instanceof ParameterizedType)) {
+    if (!isCompletable && !(returnType instanceof ParameterizedType)) {
       String name = isSingle ? "Single" : "Observable";
       throw new IllegalStateException(name + " return type must be parameterized"
           + " as " + name + "<Foo> or " + name + "<? extends Foo>");
     }
 
+    if (isCompletable) {
+      // Add Completable-converter wrapper from a separate class. This defers classloading such that
+      // regular Observable operation can be leveraged without relying on this unstable RxJava API.
+      // Note that this has to be done separately since Completable doesn't have a parametrized
+      // type.
+      return CompletableHelper.makeCompletable();
+    }
+
     CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType);
     if (isSingle) {
       // Add Single-converter wrapper from a separate class. This defers classloading such that
-      // regular Observable operation can be leveraged without relying on this unstable RxJava API.
+      // regular Observable operation can be leveraged without relying on this unstable RxJava
+      // API.
       return SingleHelper.makeSingle(callAdapter);
     }
     return callAdapter;
