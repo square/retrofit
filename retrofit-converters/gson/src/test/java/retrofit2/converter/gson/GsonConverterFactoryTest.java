@@ -31,7 +31,6 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
@@ -90,6 +89,7 @@ public final class GsonConverterFactoryTest {
   @Before public void setUp() {
     Gson gson = new GsonBuilder()
         .registerTypeAdapter(AnInterface.class, new AnInterfaceAdapter())
+        .setLenient()
         .create();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -132,5 +132,13 @@ public final class GsonConverterFactoryTest {
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
+
+  @Test public void deserializeUsesConfiguration() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{/* a comment! */}"));
+
+    Response<AnImplementation> response =
+        service.anImplementation(new AnImplementation("value")).execute();
+    assertThat(response.body().getName()).isNull();
   }
 }
