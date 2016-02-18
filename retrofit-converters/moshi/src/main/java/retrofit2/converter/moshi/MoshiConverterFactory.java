@@ -40,20 +40,29 @@ public final class MoshiConverterFactory extends Converter.Factory {
 
   /** Create an instance using {@code moshi} for conversion. */
   public static MoshiConverterFactory create(Moshi moshi) {
-    return new MoshiConverterFactory(moshi);
+    return new MoshiConverterFactory(moshi, false);
   }
 
   private final Moshi moshi;
+  private final boolean lenient;
 
-  private MoshiConverterFactory(Moshi moshi) {
+  private MoshiConverterFactory(Moshi moshi, boolean lenient) {
     if (moshi == null) throw new NullPointerException("moshi == null");
     this.moshi = moshi;
+    this.lenient = lenient;
+  }
+
+  public MoshiConverterFactory asLenient() {
+    return new MoshiConverterFactory(moshi, true);
   }
 
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
     JsonAdapter<?> adapter = moshi.adapter(type);
+    if (lenient) {
+      adapter = adapter.lenient();
+    }
     return new MoshiResponseBodyConverter<>(adapter);
   }
 
@@ -61,6 +70,9 @@ public final class MoshiConverterFactory extends Converter.Factory {
   public Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     JsonAdapter<?> adapter = moshi.adapter(type);
+    if (lenient) {
+      adapter = adapter.lenient();
+    }
     return new MoshiRequestBodyConverter<>(adapter);
   }
 }
