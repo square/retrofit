@@ -60,7 +60,7 @@ final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
           callbackExecutor.execute(new Runnable() {
             @Override public void run() {
               if (delegate.isCanceled()) {
-                // Emulate OkHttp's behavior of throwing/delivering an IOException on cancelation
+                // Emulate OkHttp's behavior of throwing/delivering an IOException on cancellation.
                 callback.onFailure(call, new IOException("Canceled"));
               } else {
                 callback.onResponse(call, response);

@@ -48,7 +48,7 @@ Version 2.0.0-beta3 *(2016-01-05)*
    `client(OkHttpClient)` method on `Retrofit.Builder` still exists as a convenience.
  * New: `isExecuted()` method returns whether a `Call` has been synchronously or asynchronously executed.
  * New: `isCanceled()` method returns whether a `Call` has been canceled. Use this in `onFailure` to determine
-   whether the callback was invoked from cancelation or actual transport failure.
+   whether the callback was invoked from cancellation or actual transport failure.
  * New: `converter-scalars` module provides a `Converter.Factory` for converting `String`, the 8 primitive
    types, and the 8 boxed primitive types as `text/plain` bodies. Install this before your normal converter
    to avoid passing these simple scalars through, for example, a JSON converter.
