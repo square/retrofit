@@ -60,17 +60,20 @@ public final class Retrofit {
   private final Map<Method, MethodHandler> methodHandlerCache = new LinkedHashMap<>();
 
   private final okhttp3.Call.Factory callFactory;
+  private final RequestBuildInterceptor.Factory requestBuildInterceptorFactory;
   private final BaseUrl baseUrl;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
-  Retrofit(okhttp3.Call.Factory callFactory, BaseUrl baseUrl,
+  Retrofit(okhttp3.Call.Factory callFactory,
+      RequestBuildInterceptor.Factory requestBuildInterceptorFactory, BaseUrl baseUrl,
       List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
       Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
+    this.requestBuildInterceptorFactory = requestBuildInterceptorFactory;
     this.converterFactories = converterFactories;
     this.adapterFactories = adapterFactories;
     this.callbackExecutor = callbackExecutor;
@@ -174,6 +177,10 @@ public final class Retrofit {
    */
   public okhttp3.Call.Factory callFactory() {
     return callFactory;
+  }
+
+  public RequestBuildInterceptor.Factory requestBuildInterceptorFactory() {
+    return requestBuildInterceptorFactory;
   }
 
   public BaseUrl baseUrl() {
@@ -371,6 +378,7 @@ public final class Retrofit {
    */
   public static final class Builder {
     private okhttp3.Call.Factory callFactory;
+    private RequestBuildInterceptor.Factory requestBuildInterceptorFactory;
     private BaseUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
@@ -509,6 +517,14 @@ public final class Retrofit {
     }
 
     /**
+     * Add an interceptor, which will be called on request creation
+     */
+    public Builder addRequestBuildInterceptorFactory(RequestBuildInterceptor.Factory factory) {
+      requestBuildInterceptorFactory = checkNotNull(factory, "factory == null");
+      return this;
+    }
+
+    /**
      * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
      * your service method.
      * <p>
@@ -545,6 +561,12 @@ public final class Retrofit {
         callFactory = new OkHttpClient();
       }
 
+      RequestBuildInterceptor.Factory requestBuildInterceptorFactory =
+              this.requestBuildInterceptorFactory;
+      if (requestBuildInterceptorFactory == null) {
+        requestBuildInterceptorFactory = Platform.get().defaultRequestBuildInterceptorFactory();
+      }
+
       // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
       adapterFactories.add(Platform.get().defaultCallAdapterFactory(callbackExecutor));
@@ -552,8 +574,8 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
-          callbackExecutor, validateEagerly);
+      return new Retrofit(callFactory, requestBuildInterceptorFactory, baseUrl, converterFactories,
+              adapterFactories, callbackExecutor, validateEagerly);
     }
   }
 }

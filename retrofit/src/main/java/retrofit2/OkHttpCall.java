@@ -27,6 +27,7 @@ import okio.Okio;
 final class OkHttpCall<T> implements Call<T> {
   private final okhttp3.Call.Factory callFactory;
   private final RequestFactory requestFactory;
+  private final RequestBuildInterceptor requestBuildInterceptor;
   private final Object[] args;
   private final Converter<ResponseBody, T> responseConverter;
 
@@ -37,17 +38,20 @@ final class OkHttpCall<T> implements Call<T> {
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
 
-  OkHttpCall(okhttp3.Call.Factory callFactory, RequestFactory requestFactory, Object[] args,
+  OkHttpCall(okhttp3.Call.Factory callFactory, RequestFactory requestFactory,
+      RequestBuildInterceptor requestBuildInterceptor, Object[] args,
       Converter<ResponseBody, T> responseConverter) {
     this.callFactory = callFactory;
     this.requestFactory = requestFactory;
+    this.requestBuildInterceptor = requestBuildInterceptor;
     this.args = args;
     this.responseConverter = responseConverter;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(callFactory, requestFactory, args, responseConverter);
+    return new OkHttpCall<>(callFactory, requestFactory, requestBuildInterceptor,
+            args, responseConverter);
   }
 
   @Override public synchronized Request request() {
@@ -178,7 +182,15 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private okhttp3.Call createRawCall() throws IOException {
-    okhttp3.Call call = callFactory.newCall(requestFactory.create(args));
+    Request request = requestFactory.create(args);
+    try {
+      request = Utils.checkNotNull(requestBuildInterceptor.build(request),
+              String.format("The %s must not return null!",
+                      RequestBuildInterceptor.class.getSimpleName()));
+    } catch (RuntimeException e) {
+      throw new RuntimeException("Could not create request", e);
+    }
+    okhttp3.Call call = callFactory.newCall(request);
     if (call == null) {
       throw new NullPointerException("Call.Factory returned null.");
     }

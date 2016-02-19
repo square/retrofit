@@ -15,10 +15,11 @@
  */
 package retrofit2;
 
+import okhttp3.ResponseBody;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import okhttp3.ResponseBody;
 
 final class MethodHandler {
   static MethodHandler create(Retrofit retrofit, Method method) {
@@ -32,8 +33,22 @@ final class MethodHandler {
     Converter<ResponseBody, ?> responseConverter =
         createResponseConverter(method, retrofit, responseType);
     RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
-    return new MethodHandler(retrofit.callFactory(), requestFactory, callAdapter,
-        responseConverter);
+
+    RequestBuildInterceptor requestBuildInterceptor =
+            createRequestBuildInterceptor(method, retrofit);
+
+    return new MethodHandler(retrofit.callFactory(), requestFactory, requestBuildInterceptor,
+            callAdapter, responseConverter);
+  }
+
+  private static RequestBuildInterceptor createRequestBuildInterceptor(Method method,
+                                                                               Retrofit retrofit) {
+    try {
+      return retrofit.requestBuildInterceptorFactory().get(method);
+    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+      throw Utils.methodError(e, method, "Unable to create RequestBuildInterceptor for method %s",
+              method.getName());
+    }
   }
 
   private static CallAdapter<?> createCallAdapter(Method method, Retrofit retrofit) {
@@ -67,17 +82,21 @@ final class MethodHandler {
   private final RequestFactory requestFactory;
   private final CallAdapter<?> callAdapter;
   private final Converter<ResponseBody, ?> responseConverter;
+  private final RequestBuildInterceptor requestBuildInterceptor;
 
   private MethodHandler(okhttp3.Call.Factory callFactory, RequestFactory requestFactory,
-      CallAdapter<?> callAdapter, Converter<ResponseBody, ?> responseConverter) {
+      RequestBuildInterceptor requestBuildInterceptor, CallAdapter<?> callAdapter,
+      Converter<ResponseBody, ?> responseConverter) {
     this.callFactory = callFactory;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;
     this.responseConverter = responseConverter;
+    this.requestBuildInterceptor = requestBuildInterceptor;
   }
 
   Object invoke(Object... args) {
     return callAdapter.adapt(
-        new OkHttpCall<>(callFactory, requestFactory, args, responseConverter));
+        new OkHttpCall<>(callFactory, requestFactory, requestBuildInterceptor, args,
+          responseConverter));
   }
 }
