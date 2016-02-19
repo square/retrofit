@@ -23,6 +23,7 @@ import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
 import rx.exceptions.Exceptions;
 import rx.functions.Action0;
@@ -37,10 +38,21 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * TODO
    */
   public static RxJavaCallAdapterFactory create() {
-    return new RxJavaCallAdapterFactory();
+    return new RxJavaCallAdapterFactory(null);
   }
 
-  private RxJavaCallAdapterFactory() {
+  /**
+   * TODO
+   */
+  public static RxJavaCallAdapterFactory createWithScheduler(Scheduler scheduler) {
+    if (scheduler == null) throw new NullPointerException("scheduler == null");
+    return new RxJavaCallAdapterFactory(scheduler);
+  }
+
+  private final Scheduler scheduler;
+
+  private RxJavaCallAdapterFactory(Scheduler scheduler) {
+    this.scheduler = scheduler;
   }
 
   @Override
@@ -63,10 +75,10 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       // regular Observable operation can be leveraged without relying on this unstable RxJava API.
       // Note that this has to be done separately since Completable doesn't have a parametrized
       // type.
-      return CompletableHelper.INSTANCE;
+      return CompletableHelper.createCallAdapter(scheduler);
     }
 
-    CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType);
+    CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType, scheduler);
     if (isSingle) {
       // Add Single-converter wrapper from a separate class. This defers classloading such that
       // regular Observable operation can be leveraged without relying on this unstable RxJava API.
@@ -75,7 +87,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     return callAdapter;
   }
 
-  private CallAdapter<Observable<?>> getCallAdapter(Type returnType) {
+  private CallAdapter<Observable<?>> getCallAdapter(Type returnType, Scheduler scheduler) {
     Type observableType = getParameterUpperBound(0, (ParameterizedType) returnType);
     Class<?> rawObservableType = getRawType(observableType);
     if (rawObservableType == Response.class) {
@@ -84,7 +96,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
             + " as Response<Foo> or Response<? extends Foo>");
       }
       Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
-      return new ResponseCallAdapter(responseType);
+      return new ResponseCallAdapter(responseType, scheduler);
     }
 
     if (rawObservableType == Result.class) {
@@ -93,10 +105,10 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
             + " as Result<Foo> or Result<? extends Foo>");
       }
       Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
-      return new ResultCallAdapter(responseType);
+      return new ResultCallAdapter(responseType, scheduler);
     }
 
-    return new SimpleCallAdapter(observableType);
+    return new SimpleCallAdapter(observableType, scheduler);
   }
 
   static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
@@ -138,9 +150,11 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
   static final class ResponseCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
+    private final Scheduler scheduler;
 
-    ResponseCallAdapter(Type responseType) {
+    ResponseCallAdapter(Type responseType, Scheduler scheduler) {
       this.responseType = responseType;
+      this.scheduler = scheduler;
     }
 
     @Override public Type responseType() {
@@ -148,15 +162,21 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public <R> Observable<Response<R>> adapt(Call<R> call) {
-      return Observable.create(new CallOnSubscribe<>(call));
+      Observable<Response<R>> observable = Observable.create(new CallOnSubscribe<>(call));
+      if (scheduler != null) {
+        return observable.subscribeOn(scheduler);
+      }
+      return observable;
     }
   }
 
   static final class SimpleCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
+    private final Scheduler scheduler;
 
-    SimpleCallAdapter(Type responseType) {
+    SimpleCallAdapter(Type responseType, Scheduler scheduler) {
       this.responseType = responseType;
+      this.scheduler = scheduler;
     }
 
     @Override public Type responseType() {
@@ -164,7 +184,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public <R> Observable<R> adapt(Call<R> call) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
+      Observable<R> observable = Observable.create(new CallOnSubscribe<>(call)) //
           .flatMap(new Func1<Response<R>, Observable<R>>() {
             @Override public Observable<R> call(Response<R> response) {
               if (response.isSuccess()) {
@@ -173,14 +193,20 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
               return Observable.error(new HttpException(response));
             }
           });
+      if (scheduler != null) {
+        return observable.subscribeOn(scheduler);
+      }
+      return observable;
     }
   }
 
   static final class ResultCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
+    private final Scheduler scheduler;
 
-    ResultCallAdapter(Type responseType) {
+    ResultCallAdapter(Type responseType, Scheduler scheduler) {
       this.responseType = responseType;
+      this.scheduler = scheduler;
     }
 
     @Override public Type responseType() {
@@ -188,17 +214,20 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public <R> Observable<Result<R>> adapt(Call<R> call) {
-      return Observable.create(new CallOnSubscribe<>(call)) //
+      Observable<Result<R>> observable = Observable.create(new CallOnSubscribe<>(call)) //
           .map(new Func1<Response<R>, Result<R>>() {
             @Override public Result<R> call(Response<R> response) {
               return Result.response(response);
             }
-          })
-          .onErrorReturn(new Func1<Throwable, Result<R>>() {
+          }).onErrorReturn(new Func1<Throwable, Result<R>>() {
             @Override public Result<R> call(Throwable throwable) {
               return Result.error(throwable);
             }
           });
+      if (scheduler != null) {
+        return observable.subscribeOn(scheduler);
+      }
+      return observable;
     }
   }
 }

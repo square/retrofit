@@ -44,6 +44,15 @@ public final class RxJavaCallAdapterFactoryTest {
         .build();
   }
 
+  @Test public void nullSchedulerThrows() {
+    try {
+      RxJavaCallAdapterFactory.createWithScheduler(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("scheduler == null");
+    }
+  }
+
   @Test public void nonRxJavaTypeReturnsNull() {
     CallAdapter<?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
     assertThat(adapter).isNull();

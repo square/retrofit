@@ -22,22 +22,16 @@ import retrofit2.Response;
 import rx.Completable;
 import rx.Completable.CompletableOnSubscribe;
 import rx.Completable.CompletableSubscriber;
+import rx.Scheduler;
 import rx.Subscription;
 import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.subscriptions.Subscriptions;
 
 final class CompletableHelper {
-  static final CallAdapter<Completable> INSTANCE =
-      new CallAdapter<Completable>() {
-        @Override public Type responseType() {
-          return Void.class;
-        }
-
-        @Override public Completable adapt(Call call) {
-          return Completable.create(new CompletableCallOnSubscribe(call));
-        }
-      };
+  static CallAdapter<Completable> createCallAdapter(Scheduler scheduler) {
+    return new CompletableCallAdapter(scheduler);
+  }
 
   private static final class CompletableCallOnSubscribe implements CompletableOnSubscribe {
     private final Call originalCall;
@@ -73,6 +67,26 @@ final class CompletableHelper {
           subscriber.onError(t);
         }
       }
+    }
+  }
+
+  static class CompletableCallAdapter implements CallAdapter<Completable> {
+    private final Scheduler scheduler;
+
+    CompletableCallAdapter(Scheduler scheduler) {
+      this.scheduler = scheduler;
+    }
+
+    @Override public Type responseType() {
+      return Void.class;
+    }
+
+    @Override public Completable adapt(Call call) {
+      Completable completable = Completable.create(new CompletableCallOnSubscribe(call));
+      if (scheduler != null) {
+        return completable.subscribeOn(scheduler);
+      }
+      return completable;
     }
   }
 }

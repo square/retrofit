@@ -15,7 +15,6 @@
  */
 package retrofit2.adapter.rxjava;
 
-import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
@@ -24,53 +23,35 @@ import org.junit.Test;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Completable;
+import rx.observers.TestSubscriber;
+import rx.schedulers.TestScheduler;
 
-import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
-public final class CompletableTest {
+public final class CompletableSchedulerTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
     @GET("/") Completable completable();
   }
 
+  private final TestScheduler scheduler = new TestScheduler();
   private Service service;
 
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+        .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(scheduler))
         .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void completableSuccess200() {
+  @Test public void completableUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
-    service.completable().await();
-  }
 
-  @Test public void completableSuccess404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
+    TestSubscriber<Void> subscriber = new TestSubscriber<>();
+    service.completable().subscribe(subscriber);
+    subscriber.assertNoTerminalEvent();
 
-    try {
-      service.completable().await();
-      fail();
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
-    }
-  }
-
-  @Test public void completableFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
-
-    try {
-      service.completable().await();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
-    }
+    scheduler.triggerActions();
+    subscriber.assertCompleted();
   }
 }
