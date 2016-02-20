@@ -57,12 +57,13 @@ public final class ResponseTest {
 
   @Test public void successWithHeaders() {
     Object body = new Object();
-    Response<Object> response = Response.success(body, Headers.of("foo", "bar"));
+    Headers headers = Headers.of("foo", "bar");
+    Response<Object> response = Response.success(body, headers);
     assertThat(response.raw()).isNotNull();
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.message()).isEqualTo("OK");
     assertThat(response.headers().size()).isEqualTo(1);
-    assertThat(response.headers().get("foo")).isEqualTo("bar");
+    assertThat(response.headers().get("foo")).isSameAs("bar");
     assertThat(response.isSuccess()).isTrue();
     assertThat(response.body()).isSameAs(body);
     assertThat(response.errorBody()).isNull();
