@@ -33,6 +33,21 @@ public final class Response<T> {
   }
 
   /**
+   * Create a synthetic successful response using {@code headers} with {@code body} as the
+   * deserialized body.
+   */
+  public static <T> Response<T> success(T body, Headers headers) {
+    if (headers == null) throw new NullPointerException("headers == null");
+    return success(body, new okhttp3.Response.Builder() //
+        .code(200)
+        .message("OK")
+        .protocol(Protocol.HTTP_1_1)
+        .headers(headers)
+        .request(new Request.Builder().url("http://localhost").build())
+        .build());
+  }
+
+  /**
    * Create a successful response from {@code rawResponse} with {@code body} as the deserialized
    * body.
    */
