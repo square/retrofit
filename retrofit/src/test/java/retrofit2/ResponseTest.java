@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import okhttp3.Headers;
 import okhttp3.Protocol;
 import okhttp3.ResponseBody;
 import org.junit.Test;
@@ -54,6 +55,28 @@ public final class ResponseTest {
     assertThat(response.body()).isNull();
   }
 
+  @Test public void successWithHeaders() {
+    Object body = new Object();
+    Headers headers = Headers.of("foo", "bar");
+    Response<Object> response = Response.success(body, headers);
+    assertThat(response.raw()).isNotNull();
+    assertThat(response.code()).isEqualTo(200);
+    assertThat(response.message()).isEqualTo("OK");
+    assertThat(response.headers().toMultimap()).isEqualTo(headers.toMultimap());
+    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.body()).isSameAs(body);
+    assertThat(response.errorBody()).isNull();
+  }
+
+  @Test public void succesWithNullHeadersThrows() {
+    try {
+      Response.success("", (okhttp3.Headers) null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("headers == null");
+    }
+  }
+
   @Test public void successWithRawResponse() {
     Object body = new Object();
     Response<Object> response = Response.success(body, successResponse);
@@ -68,7 +91,7 @@ public final class ResponseTest {
 
   @Test public void successWithNullRawResponseThrows() {
     try {
-      Response.success("", null);
+      Response.success("", (okhttp3.Response) null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("rawResponse == null");
