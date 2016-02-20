@@ -68,7 +68,7 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isNull();
   }
 
-  @Test public void succesWithNullHeadersThrows() {
+  @Test public void successWithNullHeadersThrows() {
     try {
       Response.success("", (okhttp3.Headers) null);
       fail();
