@@ -58,7 +58,7 @@
     <!-- Converter Dependencies -->
     <gson.version>2.6.1</gson.version>
     <protobuf.version>2.5.0</protobuf.version>
-    <jackson.version>2.4.3</jackson.version>
+    <jackson.version>2.7.1</jackson.version>
     <wire.version>2.1.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.1.0</moshi.version>
