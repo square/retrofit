@@ -73,28 +73,28 @@ public final class ScalarsConverterFactory extends Converter.Factory {
     if (type == String.class) {
       return StringResponseBodyConverter.INSTANCE;
     }
-    if (type == Boolean.class) {
+    if (type == Boolean.class || type == boolean.class) {
       return BooleanResponseBodyConverter.INSTANCE;
     }
-    if (type == Byte.class) {
+    if (type == Byte.class || type == byte.class) {
       return ByteResponseBodyConverter.INSTANCE;
     }
-    if (type == Character.class) {
+    if (type == Character.class || type == char.class) {
       return CharacterResponseBodyConverter.INSTANCE;
     }
-    if (type == Double.class) {
+    if (type == Double.class || type == double.class) {
       return DoubleResponseBodyConverter.INSTANCE;
     }
-    if (type == Float.class) {
+    if (type == Float.class || type == float.class) {
       return FloatResponseBodyConverter.INSTANCE;
     }
-    if (type == Integer.class) {
+    if (type == Integer.class || type == int.class) {
       return IntegerResponseBodyConverter.INSTANCE;
     }
-    if (type == Long.class) {
+    if (type == Long.class || type == long.class) {
       return LongResponseBodyConverter.INSTANCE;
     }
-    if (type == Short.class) {
+    if (type == Short.class || type == short.class) {
       return ShortResponseBodyConverter.INSTANCE;
     }
     return null;
