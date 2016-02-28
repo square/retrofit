@@ -178,6 +178,9 @@ compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert l
 -keep class retrofit2.** { *; }
 -keepattributes Signature
 -keepattributes Exceptions
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
 </pre>
             </section>
 
