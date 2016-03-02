@@ -22,5 +22,6 @@
     <module>simplexml</module>
     <module>scalars</module>
     <module>moshi</module>
+      <module>fastjson</module>
   </modules>
 </project>
