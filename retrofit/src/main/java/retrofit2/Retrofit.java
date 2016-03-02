@@ -358,7 +358,10 @@ public final class Retrofit {
     return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
   }
 
-  /** The executor used for {@link Callback} methods on a {@link Call}. */
+  /**
+   * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null},
+   * in which case callbacks should be made synchronously on the background thread.
+   */
   public Executor callbackExecutor() {
     return callbackExecutor;
   }
@@ -370,6 +373,7 @@ public final class Retrofit {
    * are optional.
    */
   public static final class Builder {
+    private Platform platform;
     private okhttp3.Call.Factory callFactory;
     private BaseUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
@@ -377,10 +381,15 @@ public final class Retrofit {
     private Executor callbackExecutor;
     private boolean validateEagerly;
 
-    public Builder() {
+    Builder(Platform platform) {
+      this.platform = platform;
       // Add the built-in converter factory first. This prevents overriding its behavior but also
       // ensures correct behavior when using converters that consume all types.
       converterFactories.add(new BuiltInConverters());
+    }
+
+    public Builder() {
+      this(Platform.get());
     }
 
     /**
@@ -545,9 +554,14 @@ public final class Retrofit {
         callFactory = new OkHttpClient();
       }
 
+      Executor callbackExecutor = this.callbackExecutor;
+      if (callbackExecutor == null) {
+        callbackExecutor = platform.defaultCallbackExecutor();
+      }
+
       // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
-      adapterFactories.add(Platform.get().defaultCallAdapterFactory(callbackExecutor));
+      adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);

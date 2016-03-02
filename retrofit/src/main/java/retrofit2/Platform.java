@@ -53,6 +53,10 @@ class Platform {
     return new Platform();
   }
 
+  Executor defaultCallbackExecutor() {
+    return null;
+  }
+
   CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
     if (callbackExecutor != null) {
       return new ExecutorCallAdapterFactory(callbackExecutor);
@@ -89,10 +93,11 @@ class Platform {
   }
 
   static class Android extends Platform {
+    @Override public Executor defaultCallbackExecutor() {
+      return new MainThreadExecutor();
+    }
+
     @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
-      if (callbackExecutor == null) {
-        callbackExecutor = new MainThreadExecutor();
-      }
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
 
@@ -106,10 +111,11 @@ class Platform {
   }
 
   static class IOS extends Platform {
+    @Override public Executor defaultCallbackExecutor() {
+      return new MainThreadExecutor();
+    }
+
     @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
-      if (callbackExecutor == null) {
-        callbackExecutor = new MainThreadExecutor();
-      }
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
 
