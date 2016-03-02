@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
 public final class WireConverterFactoryTest {
   interface Service {
     @GET("/") Call<Phone> get();
-    @POST("/") Call<Phone> post(@Body Phone impl);
+    @POST("/") Call<Phone> post(@Body(ignoreNull = false) Phone impl);
     @GET("/") Call<String> wrongClass();
     @GET("/") Call<List<String>> wrongType();
   }
@@ -126,6 +126,16 @@ public final class WireConverterFactoryTest {
       call.execute();
       fail();
     } catch (EOFException ignored) {
+    }
+  }
+
+  @Test public void serializeNullThrows() throws IOException {
+    Call<Phone> call = service.post(null);
+    try {
+      call.execute();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Unable to serialize null message.");
     }
   }
 }

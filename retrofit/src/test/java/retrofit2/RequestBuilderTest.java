@@ -1253,19 +1253,60 @@ public final class RequestBuilderTest {
     assertBody(request.body(), "hi");
   }
 
-  @Test public void bodyRequired() {
+  @Test public void rawBodyIgnoringNullSetsEmpty() {
     class Example {
       @POST("/foo/bar/") //
       Call<ResponseBody> method(@Body RequestBody body) {
         return null;
       }
     }
-    try {
-      buildRequest(Example.class, new Object[] { null });
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Body parameter value must not be null.");
+    Request request = buildRequest(Example.class, new Object[] { null });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertBody(request.body(), "");
+  }
+
+  @Test public void rawBodyNotIgnoringNullSetsEmpty() {
+    class Example {
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Body(ignoreNull = false) RequestBody body) {
+        return null;
+      }
     }
+    Request request = buildRequest(Example.class, new Object[] { null });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertBody(request.body(), "");
+  }
+
+  @Test public void bodyIgnoringNullSetsEmpty() {
+    class Example {
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Body String body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new Object[] { null });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertBody(request.body(), "");
+  }
+
+  @Test public void bodyNotIgnoringNullSetsEmpty() {
+    class Example {
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Body(ignoreNull = false) String body) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new Object[] { null });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertBody(request.body(), "NULL!!!");
   }
 
   @Test public void bodyWithPathParams() {
@@ -1446,6 +1487,63 @@ public final class RequestBuilderTest {
     assertThat(bodyString).doesNotContain("name=\"foo\"\r\n");
   }
 
+  @Test public void multipartPartMapNotIgnoringNull() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap(ignoreNull = false) Map<String, String> parts) {
+        return null;
+      }
+    }
+
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("ping", "pong");
+    params.put("foo", null);
+    params.put("kit", "kat");
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"foo\"\r\n")
+        .contains("\r\nNULL!!!\r\n--");
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartNullPartMapThrows() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap Map<String, String> parts) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Part map must not be null.");
+    }
+  }
+
   @Test public void multipartPartMapWithEncoding() throws IOException {
     class Example {
       @Multipart //
@@ -1547,7 +1645,7 @@ public final class RequestBuilderTest {
         .contains("\r\n\r\nworld\r\n--");
   }
 
-  @Test public void multipartNullRemovesPart() throws IOException {
+  @Test public void multipartIgnoresNullPart() throws IOException {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //
@@ -1571,7 +1669,38 @@ public final class RequestBuilderTest {
         .contains("\r\npong\r\n--");
   }
 
-  @Test public void multipartPartOptional() {
+  @Test public void multipartNotIgnoringNullPart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(
+          @Part("ping") String ping,
+          @Part(value = "fizz", ignoreNull = false) String fizz) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong", null);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"fizz\"")
+        .contains("\r\nNULL!!!\r\n--");
+  }
+
+  @Test public void multipartRequiresAtLeastOnePart() {
     class Example {
       @Multipart //
       @POST("/foo/bar/") //

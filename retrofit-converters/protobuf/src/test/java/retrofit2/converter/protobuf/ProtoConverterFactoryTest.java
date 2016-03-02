@@ -40,7 +40,7 @@ import static retrofit2.converter.protobuf.PhoneProtos.Phone;
 public final class ProtoConverterFactoryTest {
   interface Service {
     @GET("/") Call<Phone> get();
-    @POST("/") Call<Phone> post(@Body Phone impl);
+    @POST("/") Call<Phone> post(@Body(ignoreNull = false) Phone impl);
     @GET("/") Call<String> wrongClass();
     @GET("/") Call<List<String>> wrongType();
   }
@@ -129,6 +129,16 @@ public final class ProtoConverterFactoryTest {
     } catch (RuntimeException e) {
       assertThat(e.getCause()).isInstanceOf(InvalidProtocolBufferException.class)
           .hasMessageContaining("input ended unexpectedly");
+    }
+  }
+
+  @Test public void serializeNullThrows() throws IOException {
+    Call<Phone> call = service.post(null);
+    try {
+      call.execute();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Unable to serialize null message.");
     }
   }
 }

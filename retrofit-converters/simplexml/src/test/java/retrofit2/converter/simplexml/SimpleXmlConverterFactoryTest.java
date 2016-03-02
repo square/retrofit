@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
 public class SimpleXmlConverterFactoryTest {
   interface Service {
     @GET("/") Call<MyObject> get();
-    @POST("/") Call<MyObject> post(@Body MyObject impl);
+    @POST("/") Call<MyObject> post(@Body(ignoreNull = false) MyObject impl);
     @GET("/") Call<String> wrongClass();
   }
 
@@ -97,6 +97,16 @@ public class SimpleXmlConverterFactoryTest {
       fail();
     } catch (RuntimeException e) {
       assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
+    }
+  }
+
+  @Test public void serializeNullThrows() throws IOException {
+    Call<MyObject> call = service.post(null);
+    try {
+      call.execute();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Unable to serialize null object.");
     }
   }
 }

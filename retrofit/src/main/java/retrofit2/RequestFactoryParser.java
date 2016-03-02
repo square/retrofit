@@ -417,6 +417,7 @@ final class RequestFactoryParser {
               throw parameterError(i, "@Part parameters can only be used with multipart encoding.");
             }
             Part part = (Part) parameterAnnotation;
+            boolean ignoreNull = part.ignoreNull();
             okhttp3.Headers headers = okhttp3.Headers.of(
                 "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
                 "Content-Transfer-Encoding", part.encoding());
@@ -434,18 +435,18 @@ final class RequestFactoryParser {
               Converter<?, RequestBody> converter =
                   retrofit.requestBodyConverter(iterableType, parameterAnnotations,
                       methodAnnotations);
-              action = new RequestAction.Part<>(headers, converter).iterable();
+              action = new RequestAction.Part<>(ignoreNull, headers, converter).iterable();
             } else if (rawParameterType.isArray()) {
               Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
               Converter<?, RequestBody> converter =
                   retrofit.requestBodyConverter(arrayComponentType, parameterAnnotations,
                       methodAnnotations);
-              action = new RequestAction.Part<>(headers, converter).array();
+              action = new RequestAction.Part<>(ignoreNull, headers, converter).array();
             } else {
               Converter<?, RequestBody> converter =
                   retrofit.requestBodyConverter(parameterType, parameterAnnotations,
                       methodAnnotations);
-              action = new RequestAction.Part<>(headers, converter);
+              action = new RequestAction.Part<>(ignoreNull, headers, converter);
             }
 
             gotPart = true;
@@ -474,7 +475,8 @@ final class RequestFactoryParser {
                     methodAnnotations);
 
             PartMap partMap = (PartMap) parameterAnnotation;
-            action = new RequestAction.PartMap<>(valueConverter, partMap.encoding());
+            boolean ignoreNull = partMap.ignoreNull();
+            action = new RequestAction.PartMap<>(ignoreNull, valueConverter, partMap.encoding());
             gotPart = true;
 
           } else if (parameterAnnotation instanceof Body) {
@@ -486,6 +488,9 @@ final class RequestFactoryParser {
               throw parameterError(i, "Multiple @Body method annotations found.");
             }
 
+            Body body = (Body) parameterAnnotation;
+            boolean ignoreNull = body.ignoreNull();
+
             Converter<?, RequestBody> converter;
             try {
               converter = retrofit.requestBodyConverter(parameterType, parameterAnnotations,
@@ -493,7 +498,7 @@ final class RequestFactoryParser {
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
               throw parameterError(e, i, "Unable to create @Body converter for %s", parameterType);
             }
-            action = new RequestAction.Body<>(converter);
+            action = new RequestAction.Body<>(ignoreNull, converter);
             gotBody = true;
           }
 

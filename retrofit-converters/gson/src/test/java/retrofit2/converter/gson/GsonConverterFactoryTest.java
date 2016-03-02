@@ -78,7 +78,7 @@ public final class GsonConverterFactoryTest {
   }
 
   interface Service {
-    @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+    @POST("/") Call<AnImplementation> anImplementation(@Body(ignoreNull = false) AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
   }
 
@@ -131,6 +131,16 @@ public final class GsonConverterFactoryTest {
 
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
+
+  @Test public void serializeNull() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    service.anImplementation(null).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("null"); // Top-level null literal.
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 

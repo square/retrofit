@@ -36,7 +36,6 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
@@ -102,7 +101,7 @@ public class JacksonConverterFactoryTest {
   }
 
   interface Service {
-    @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+    @POST("/") Call<AnImplementation> anImplementation(@Body(ignoreNull = false) AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
   }
 
@@ -154,6 +153,16 @@ public class JacksonConverterFactoryTest {
     RecordedRequest request = server.takeRequest();
     // TODO figure out how to get Jackson to stop using AnInterface's serializer here.
     assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
+
+  @Test public void serializeNull() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    service.anImplementation(null).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("null"); // Top-level null literal.
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 }

@@ -26,7 +26,6 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -38,7 +37,7 @@ public final class ScalarsConverterFactoryTest {
   interface Service {
       @POST("/") Call<ResponseBody> object(@Body Object body);
 
-      @POST("/") Call<ResponseBody> stringObject(@Body String body);
+      @POST("/") Call<ResponseBody> stringObject(@Body(ignoreNull = false) String body);
       @POST("/") Call<ResponseBody> booleanPrimitive(@Body boolean body);
       @POST("/") Call<ResponseBody> booleanObject(@Body Boolean body);
       @POST("/") Call<ResponseBody> bytePrimitive(@Body byte body);
@@ -95,6 +94,14 @@ public final class ScalarsConverterFactoryTest {
           + "   * retrofit2.BuiltInConverters\n"
           + "   * retrofit2.converter.scalars.ScalarsConverterFactory");
     }
+  }
+
+  @Test public void serializeNullToEmptyBody() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse());
+    service.stringObject(null).execute();
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getHeader("Content-Type")).isNull();
+    assertThat(request.getBody().size()).isZero();
   }
 
   @Test public void supportedRequestTypes() throws IOException, InterruptedException {
