@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.Executor;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -68,13 +69,14 @@ public final class ErrorHandlingCallAdapter {
             "MyCall must have generic type (e.g., MyCall<ResponseBody>)");
       }
       final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
+      final Executor callbackExecutor = retrofit.callbackExecutor();
       return new CallAdapter<MyCall<?>>() {
         @Override public Type responseType() {
           return responseType;
         }
 
         @Override public <R> MyCall<R> adapt(Call<R> call) {
-          return new MyCallAdapter<>(call);
+          return new MyCallAdapter<>(call, callbackExecutor);
         }
       };
     }
@@ -83,9 +85,11 @@ public final class ErrorHandlingCallAdapter {
   /** Adapts a {@link Call} to {@link MyCall}. */
   static class MyCallAdapter<T> implements MyCall<T> {
     private final Call<T> call;
+    private final Executor callbackExecutor;
 
-    MyCallAdapter(Call<T> call) {
+    MyCallAdapter(Call<T> call, Executor callbackExecutor) {
       this.call = call;
+      this.callbackExecutor = callbackExecutor;
     }
 
     @Override public void cancel() {
@@ -95,6 +99,9 @@ public final class ErrorHandlingCallAdapter {
     @Override public void enqueue(final MyCallback<T> callback) {
       call.enqueue(new Callback<T>() {
         @Override public void onResponse(Call<T> call, Response<T> response) {
+          // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
+          // on that executor by submitting a Runnable. This is left as an exercise for the reader.
+
           int code = response.code();
           if (code >= 200 && code < 300) {
             callback.success(response);
@@ -110,6 +117,9 @@ public final class ErrorHandlingCallAdapter {
         }
 
         @Override public void onFailure(Call<T> call, Throwable t) {
+          // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
+          // on that executor by submitting a Runnable. This is left as an exercise for the reader.
+
           if (t instanceof IOException) {
             callback.networkError((IOException) t);
           } else {
@@ -120,7 +130,7 @@ public final class ErrorHandlingCallAdapter {
     }
 
     @Override public MyCall<T> clone() {
-      return new MyCallAdapter<>(call.clone());
+      return new MyCallAdapter<>(call.clone(), callbackExecutor);
     }
   }
 
