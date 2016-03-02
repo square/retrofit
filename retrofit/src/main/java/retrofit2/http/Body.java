@@ -39,4 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface Body {
+  /**
+   * When true a {@code null} value will be ignored and an empty body will be used. Otherwise
+   * {@code null} will be passed to the {@link Converter} for this endpoint.
+   */
+  boolean ignoreNull() default true;
 }

@@ -193,8 +193,7 @@ final class RequestBuilder {
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
       } else if (hasBody) {
-        // Body is absent, make an empty body.
-        body = RequestBody.create(null, new byte[0]);
+        body = Utils.EMPTY_BODY;
       }
     }
 

@@ -191,16 +191,18 @@ abstract class RequestAction<T> {
   }
 
   static final class Part<T> extends RequestAction<T> {
+    private final boolean ignoreNull;
     private final Headers headers;
     private final Converter<T, RequestBody> converter;
 
-    Part(Headers headers, Converter<T, RequestBody> converter) {
+    Part(boolean ignoreNull, Headers headers, Converter<T, RequestBody> converter) {
+      this.ignoreNull = ignoreNull;
       this.headers = headers;
       this.converter = converter;
     }
 
     @Override void perform(RequestBuilder builder, T value) {
-      if (value == null) return; // Skip null values.
+      if (ignoreNull && value == null) return; // Skip null values.
 
       RequestBody body;
       try {
@@ -213,16 +215,20 @@ abstract class RequestAction<T> {
   }
 
   static final class PartMap<T> extends RequestAction<Map<String, T>> {
+    private final boolean ignoreNull;
     private final Converter<T, RequestBody> valueConverter;
     private final String transferEncoding;
 
-    PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
+    PartMap(boolean ignoreNull, Converter<T, RequestBody> valueConverter, String transferEncoding) {
+      this.ignoreNull = ignoreNull;
       this.valueConverter = valueConverter;
       this.transferEncoding = transferEncoding;
     }
 
     @Override void perform(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) return; // Skip null values.
+      if (value == null) {
+        throw new IllegalArgumentException("Part map must not be null.");
+      }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
@@ -230,7 +236,7 @@ abstract class RequestAction<T> {
           throw new IllegalArgumentException("Part map contained null key.");
         }
         T entryValue = entry.getValue();
-        if (entryValue == null) {
+        if (ignoreNull && entryValue == null) {
           continue; // Skip null values.
         }
 
@@ -244,21 +250,24 @@ abstract class RequestAction<T> {
   }
 
   static final class Body<T> extends RequestAction<T> {
+    private final boolean ignoreNull;
     private final Converter<T, RequestBody> converter;
 
-    Body(Converter<T, RequestBody> converter) {
+    Body(boolean ignoreNull, Converter<T, RequestBody> converter) {
+      this.ignoreNull = ignoreNull;
       this.converter = converter;
     }
 
     @Override void perform(RequestBuilder builder, T value) {
-      if (value == null) {
-        throw new IllegalArgumentException("Body parameter value must not be null.");
-      }
       RequestBody body;
-      try {
-        body = converter.convert(value);
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+      if (ignoreNull && value == null) {
+        body = Utils.EMPTY_BODY;
+      } else {
+        try {
+          body = converter.convert(value);
+        } catch (IOException e) {
+          throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+        }
       }
       builder.setBody(body);
     }

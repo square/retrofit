@@ -25,6 +25,9 @@ final class ProtoRequestBodyConverter<T extends MessageLite> implements Converte
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
   @Override public RequestBody convert(T value) throws IOException {
+    if (value == null) {
+      throw new IllegalStateException("Unable to serialize null message.");
+    }
     byte[] bytes = value.toByteArray();
     return RequestBody.create(MEDIA_TYPE, bytes);
   }

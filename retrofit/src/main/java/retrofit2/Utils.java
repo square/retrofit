@@ -25,10 +25,13 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
 final class Utils {
+  static final RequestBody EMPTY_BODY = RequestBody.create(null, new byte[0]);
+
   static <T> T checkNotNull(T object, String message) {
     if (object == null) {
       throw new NullPointerException(message);

@@ -51,4 +51,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface PartMap {
   /** The {@code Content-Transfer-Encoding} of the parts. */
   String encoding() default "binary";
+
+  /**
+   * When true a {@code null} values will cause their part to be omitted. Otherwise {@code null}
+   * values will be passed to the {@link Converter} for these parts.
+   */
+  boolean ignoreNull() default true;
 }

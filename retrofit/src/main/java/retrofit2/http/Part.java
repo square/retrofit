@@ -51,6 +51,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Part {
   String value();
+
   /** The {@code Content-Transfer-Encoding} of this part. */
   String encoding() default "binary";
+
+  /**
+   * When true a {@code null} value will cause this part to be omitted. Otherwise {@code null} will
+   * be passed to the {@link Converter} for this part.
+   */
+  boolean ignoreNull() default true;
 }

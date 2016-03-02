@@ -23,11 +23,15 @@ import retrofit2.Converter;
 final class ScalarRequestBodyConverter<T> implements Converter<T, RequestBody> {
   static final ScalarRequestBodyConverter<Object> INSTANCE = new ScalarRequestBodyConverter<>();
   private static final MediaType MEDIA_TYPE = MediaType.parse("text/plain; charset=UTF-8");
+  private static final RequestBody EMPTY_BODY = RequestBody.create(null, new byte[0]);
 
   private ScalarRequestBodyConverter() {
   }
 
   @Override public RequestBody convert(T value) throws IOException {
+    if (value == null) {
+      return EMPTY_BODY;
+    }
     return RequestBody.create(MEDIA_TYPE, String.valueOf(value));
   }
 }

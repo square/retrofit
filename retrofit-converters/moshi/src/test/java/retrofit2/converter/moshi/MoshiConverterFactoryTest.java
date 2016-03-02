@@ -79,7 +79,7 @@ public final class MoshiConverterFactoryTest {
   }
 
   interface Service {
-    @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+    @POST("/") Call<AnImplementation> anImplementation(@Body(ignoreNull = false) AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
   }
 
@@ -150,5 +150,15 @@ public final class MoshiConverterFactoryTest {
     Response<AnImplementation> response = call2.execute();
     AnImplementation body = response.body();
     assertThat(body.theName).isEqualTo("value");
+  }
+
+  @Test public void serializeNull() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    service.anImplementation(null).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("null"); // Top-level null literal.
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 }

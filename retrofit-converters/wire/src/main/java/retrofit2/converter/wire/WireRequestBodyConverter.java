@@ -33,6 +33,9 @@ final class WireRequestBodyConverter<T extends Message<T, ?>> implements Convert
   }
 
   @Override public RequestBody convert(T value) throws IOException {
+    if (value == null) {
+      throw new IllegalStateException("Unable to serialize null message.");
+    }
     Buffer buffer = new Buffer();
     adapter.encode(buffer, value);
     return RequestBody.create(MEDIA_TYPE, buffer.snapshot());

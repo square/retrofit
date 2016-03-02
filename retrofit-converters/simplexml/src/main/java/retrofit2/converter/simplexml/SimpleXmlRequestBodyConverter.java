@@ -34,6 +34,9 @@ final class SimpleXmlRequestBodyConverter<T> implements Converter<T, RequestBody
   }
 
   @Override public RequestBody convert(T value) throws IOException {
+    if (value == null) {
+      throw new IllegalStateException("Unable to serialize null object.");
+    }
     Buffer buffer = new Buffer();
     try {
       OutputStreamWriter osw = new OutputStreamWriter(buffer.outputStream(), CHARSET);

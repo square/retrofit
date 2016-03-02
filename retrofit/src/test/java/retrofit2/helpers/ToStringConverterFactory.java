@@ -45,6 +45,9 @@ public class ToStringConverterFactory extends Converter.Factory {
     if (String.class.equals(type)) {
       return new Converter<String, RequestBody>() {
         @Override public RequestBody convert(String value) throws IOException {
+          if (value == null) {
+            return RequestBody.create(MEDIA_TYPE, "NULL!!!");
+          }
           return RequestBody.create(MEDIA_TYPE, value);
         }
       };
