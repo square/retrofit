@@ -459,6 +459,22 @@ public final class RequestBuilderTest {
     assertThat(request.url().toString()).isEqualTo("http://example.com/?hello=world");
   }
 
+  @Test public void queryMapRejectsNull() {
+    class Example {
+      @GET("/") //
+      Call<ResponseBody> method(@QueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Query map was null.");
+    }
+  }
+
   @Test public void queryMapRejectsNullKeys() {
     class Example {
       @GET("/") //
@@ -476,6 +492,26 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Query map contained null key.");
+    }
+  }
+
+  @Test public void queryMapRejectsNullValues() {
+    class Example {
+      @GET("/") //
+      Call<ResponseBody> method(@QueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Map<String, String> queryParams = new LinkedHashMap<>();
+    queryParams.put("ping", "pong");
+    queryParams.put("kit", null);
+
+    try {
+      buildRequest(Example.class, queryParams);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Query map contained null value for key 'kit'.");
     }
   }
 
@@ -942,7 +978,6 @@ public final class RequestBuilderTest {
 
     Map<String, Object> params = new LinkedHashMap<>();
     params.put("kit", "kat");
-    params.put("foo", null);
     params.put("ping", "pong");
 
     Request request = buildRequest(Example.class, params);
@@ -962,7 +997,6 @@ public final class RequestBuilderTest {
 
     Map<String, Object> params = new LinkedHashMap<>();
     params.put("kit", "k%20t");
-    params.put("foo", null);
     params.put("pi%20ng", "p%20g");
 
     Request request = buildRequest(Example.class, params);
@@ -1420,7 +1454,6 @@ public final class RequestBuilderTest {
 
     Map<String, RequestBody> params = new LinkedHashMap<>();
     params.put("ping", RequestBody.create(null, "pong"));
-    params.put("foo", null); // Should be skipped.
     params.put("kit", RequestBody.create(null, "kat"));
 
     Request request = buildRequest(Example.class, params);
@@ -1442,8 +1475,6 @@ public final class RequestBuilderTest {
         .contains("Content-Disposition: form-data;")
         .contains("name=\"kit\"")
         .contains("\r\nkat\r\n--");
-
-    assertThat(bodyString).doesNotContain("name=\"foo\"\r\n");
   }
 
   @Test public void multipartPartMapWithEncoding() throws IOException {
@@ -1457,7 +1488,6 @@ public final class RequestBuilderTest {
 
     Map<String, RequestBody> params = new LinkedHashMap<>();
     params.put("ping", RequestBody.create(null, "pong"));
-    params.put("foo", null); // Should be skipped.
     params.put("kit", RequestBody.create(null, "kat"));
 
     Request request = buildRequest(Example.class, params);
@@ -1481,8 +1511,23 @@ public final class RequestBuilderTest {
         .contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 8-bit")
         .contains("\r\nkat\r\n--");
+  }
 
-    assertThat(bodyString).doesNotContain("name=\"foo\"\r\n");
+  @Test public void multipartPartMapRejectsNull() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Part map was null.");
+    }
   }
 
   @Test public void multipartPartMapRejectsNullKeys() {
@@ -1503,6 +1548,27 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Part map contained null key.");
+    }
+  }
+
+  @Test public void multipartPartMapRejectsNullValues() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
+        return null;
+      }
+    }
+
+    Map<String, RequestBody> params = new LinkedHashMap<>();
+    params.put("ping", RequestBody.create(null, "pong"));
+    params.put("kit", null);
+
+    try {
+      buildRequest(Example.class, params);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Part map contained null value for key 'kit'.");
     }
   }
 
@@ -1694,11 +1760,27 @@ public final class RequestBuilderTest {
 
     Map<String, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
-    fieldMap.put("foo", null);
     fieldMap.put("ping", "pong");
 
     Request request = buildRequest(Example.class, fieldMap);
     assertBody(request.body(), "kit=kat&ping=pong");
+  }
+
+  @Test public void fieldMapRejectsNull() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Field map was null.");
+    }
   }
 
   @Test public void fieldMapRejectsNullKeys() {
@@ -1712,7 +1794,6 @@ public final class RequestBuilderTest {
 
     Map<String, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
-    fieldMap.put("foo", null);
     fieldMap.put(null, "pong");
 
     try {
@@ -1720,6 +1801,27 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Field map contained null key.");
+    }
+  }
+
+  @Test public void fieldMapRejectsNullValues() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put("foo", null);
+
+    try {
+      buildRequest(Example.class, fieldMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Field map contained null value for key 'foo'.");
     }
   }
 
