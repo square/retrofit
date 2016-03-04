@@ -133,7 +133,9 @@ abstract class RequestAction<T> {
     }
 
     @Override void perform(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) return; // Skip null values.
+      if (value == null) {
+        throw new IllegalArgumentException("Query map was null.");
+      }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
@@ -141,9 +143,11 @@ abstract class RequestAction<T> {
           throw new IllegalArgumentException("Query map contained null key.");
         }
         T entryValue = entry.getValue();
-        if (entryValue != null) { // Skip null values.
-          builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+              "Query map contained null value for key '" + entryKey + "'.");
         }
+        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
       }
     }
   }
@@ -175,7 +179,9 @@ abstract class RequestAction<T> {
     }
 
     @Override void perform(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) return; // Skip null values.
+      if (value == null) {
+        throw new IllegalArgumentException("Field map was null.");
+      }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
@@ -183,9 +189,11 @@ abstract class RequestAction<T> {
           throw new IllegalArgumentException("Field map contained null key.");
         }
         T entryValue = entry.getValue();
-        if (entryValue != null) { // Skip null values.
-          builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+              "Field map contained null value for key '" + entryKey + "'.");
         }
+        builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
       }
     }
   }
@@ -222,7 +230,9 @@ abstract class RequestAction<T> {
     }
 
     @Override void perform(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) return; // Skip null values.
+      if (value == null) {
+        throw new IllegalArgumentException("Part map was null.");
+      }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
@@ -231,7 +241,8 @@ abstract class RequestAction<T> {
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          continue; // Skip null values.
+          throw new IllegalArgumentException(
+              "Part map contained null value for key '" + entryKey + "'.");
         }
 
         Headers headers = Headers.of(
