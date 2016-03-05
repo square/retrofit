@@ -187,7 +187,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       Observable<R> observable = Observable.create(new CallOnSubscribe<>(call)) //
           .flatMap(new Func1<Response<R>, Observable<R>>() {
             @Override public Observable<R> call(Response<R> response) {
-              if (response.isSuccess()) {
+              if (response.isSuccessful()) {
                 return Observable.just(response.body());
               }
               return Observable.error(new HttpException(response));

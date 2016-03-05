@@ -81,7 +81,7 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
 
       call.enqueue(new Callback<R>() {
         @Override public void onResponse(Call<R> call, Response<R> response) {
-          if (response.isSuccess()) {
+          if (response.isSuccessful()) {
             future.complete(response.body());
           } else {
             future.completeExceptionally(new HttpException(response));

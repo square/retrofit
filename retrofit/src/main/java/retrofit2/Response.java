@@ -28,7 +28,7 @@ public final class Response<T> {
         .code(200)
         .message("OK")
         .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://localhost").build())
+        .request(new Request.Builder().url("http://localhost/").build())
         .build());
   }
 
@@ -43,7 +43,7 @@ public final class Response<T> {
         .message("OK")
         .protocol(Protocol.HTTP_1_1)
         .headers(headers)
-        .request(new Request.Builder().url("http://localhost").build())
+        .request(new Request.Builder().url("http://localhost/").build())
         .build());
   }
 
@@ -68,7 +68,7 @@ public final class Response<T> {
     return error(body, new okhttp3.Response.Builder() //
         .code(code)
         .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://localhost").build())
+        .request(new Request.Builder().url("http://localhost/").build())
         .build());
   }
 
@@ -112,17 +112,17 @@ public final class Response<T> {
     return rawResponse.headers();
   }
 
-  /** {@code true} if {@link #code()} is in the range [200..300). */
-  public boolean isSuccess() {
+  /** Returns true if {@link #code()} is in the range [200..300). */
+  public boolean isSuccessful() {
     return rawResponse.isSuccessful();
   }
 
-  /** The deserialized response body of a {@linkplain #isSuccess() successful} response. */
+  /** The deserialized response body of a {@linkplain #isSuccessful() successful} response. */
   public T body() {
     return body;
   }
 
-  /** The raw response body of an {@linkplain #isSuccess() unsuccessful} response. */
+  /** The raw response body of an {@linkplain #isSuccessful() unsuccessful} response. */
   public ResponseBody errorBody() {
     return errorBody;
   }

@@ -45,7 +45,7 @@ import static retrofit2.Utils.checkNotNull;
  * For example,
  * <pre>{@code
  * Retrofit retrofit = new Retrofit.Builder()
- *     .baseUrl("http://api.example.com")
+ *     .baseUrl("https://api.example.com/")
  *     .addConverterFactory(GsonConverterFactory.create())
  *     .build();
  *
@@ -102,7 +102,7 @@ public final class Retrofit {
    * <ul>
    * <li>{@link retrofit2.http.FormUrlEncoded @FormUrlEncoded} - Form-encoded data with key-value
    * pairs specified by the {@link retrofit2.http.Field @Field} parameter annotation.
-   * <li>{@link retrofit2.http.Multipart @Multipart} - RFC 2388-compliant multi-part data with
+   * <li>{@link retrofit2.http.Multipart @Multipart} - RFC 2388-compliant multipart data with
    * parts specified by the {@link retrofit2.http.Part @Part} parameter annotation.
    * </ul>
    * <p>

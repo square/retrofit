@@ -1,4 +1,18 @@
-// Copyright 2013 Square, Inc.
+/*
+ * Copyright (C) 2013 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit2;
 
 import java.io.IOException;
@@ -480,6 +494,22 @@ public final class RetrofitTest {
 
     Response<Void> response = example.getVoid().execute();
     assertThat(response.body()).isNull();
+  }
+
+  @Test public void voidResponsesArePooled() throws Exception {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+    CallMethod example = retrofit.create(CallMethod.class);
+
+    server.enqueue(new MockResponse().setBody("abc"));
+    server.enqueue(new MockResponse().setBody("def"));
+
+    example.getVoid().execute();
+    example.getVoid().execute();
+
+    assertThat(server.takeRequest().getSequenceNumber()).isEqualTo(0);
+    assertThat(server.takeRequest().getSequenceNumber()).isEqualTo(1);
   }
 
   @Test public void responseBodyIncomingAllowed() throws IOException, InterruptedException {

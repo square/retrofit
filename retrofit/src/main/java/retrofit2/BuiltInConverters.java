@@ -41,7 +41,7 @@ final class BuiltInConverters extends Converter.Factory {
   @Override
   public Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    if (RequestBody.class.isAssignableFrom(Types.getRawType(type))) {
+    if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
       return RequestBodyConverter.INSTANCE;
     }
     return null;

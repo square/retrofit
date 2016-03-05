@@ -26,12 +26,13 @@ final class MethodHandler {
     Type responseType = callAdapter.responseType();
     if (responseType == Response.class || responseType == okhttp3.Response.class) {
       throw Utils.methodError(method, "'"
-          + Types.getRawType(responseType).getName()
+          + Utils.getRawType(responseType).getName()
           + "' is not a valid response body type. Did you mean ResponseBody?");
     }
     Converter<ResponseBody, ?> responseConverter =
         createResponseConverter(method, retrofit, responseType);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
+    RequestFactory requestFactory = new RequestFactory.Builder(retrofit, method, responseType)
+        .build();
     return new MethodHandler(retrofit.callFactory(), requestFactory, callAdapter,
         responseConverter);
   }

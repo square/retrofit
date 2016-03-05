@@ -70,7 +70,7 @@ public final class CallTest {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     Response<String> response = example.getString().execute();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -98,7 +98,7 @@ public final class CallTest {
     assertTrue(latch.await(2, SECONDS));
 
     Response<String> response = responseRef.get();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -112,7 +112,7 @@ public final class CallTest {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
     Response<String> response = example.getString().execute();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.code()).isEqualTo(404);
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
@@ -141,7 +141,7 @@ public final class CallTest {
     assertTrue(latch.await(2, SECONDS));
 
     Response<String> response = responseRef.get();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.code()).isEqualTo(404);
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
