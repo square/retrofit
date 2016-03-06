@@ -88,7 +88,7 @@ public final class ObservableTest {
 
     BlockingObservable<Response<String>> o = service.response().toBlocking();
     Response<String> response = o.first();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -97,7 +97,7 @@ public final class ObservableTest {
 
     BlockingObservable<Response<String>> o = service.response().toBlocking();
     Response<String> response = o.first();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
@@ -120,7 +120,7 @@ public final class ObservableTest {
     Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -131,7 +131,7 @@ public final class ObservableTest {
     Result<String> result = o.first();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 

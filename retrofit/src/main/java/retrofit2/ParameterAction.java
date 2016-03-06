@@ -25,53 +25,53 @@ import okhttp3.RequestBody;
 
 import static retrofit2.Utils.checkNotNull;
 
-abstract class RequestAction<T> {
+abstract class ParameterAction<T> {
   abstract void perform(RequestBuilder builder, T value) throws IOException;
 
-  final RequestAction<Iterable<T>> iterable() {
-    return new RequestAction<Iterable<T>>() {
+  final ParameterAction<Iterable<T>> iterable() {
+    return new ParameterAction<Iterable<T>>() {
       @Override void perform(RequestBuilder builder, Iterable<T> values) throws IOException {
         if (values == null) return; // Skip null values.
 
         for (T value : values) {
-          RequestAction.this.perform(builder, value);
+          ParameterAction.this.perform(builder, value);
         }
       }
     };
   }
 
-  final RequestAction<Object> array() {
-    return new RequestAction<Object>() {
+  final ParameterAction<Object> array() {
+    return new ParameterAction<Object>() {
       @Override void perform(RequestBuilder builder, Object values) throws IOException {
         if (values == null) return; // Skip null values.
 
         for (int i = 0, size = Array.getLength(values); i < size; i++) {
           //noinspection unchecked
-          RequestAction.this.perform(builder, (T) Array.get(values, i));
+          ParameterAction.this.perform(builder, (T) Array.get(values, i));
         }
       }
     };
   }
 
-  static final class StringUrl extends RequestAction<String> {
+  static final class StringUrl extends ParameterAction<String> {
     @Override void perform(RequestBuilder builder, String value) {
       builder.setRelativeUrl(value);
     }
   }
 
-  static final class JavaUriUrl extends RequestAction<URI> {
+  static final class JavaUriUrl extends ParameterAction<URI> {
     @Override void perform(RequestBuilder builder, URI value) {
       builder.setRelativeUrl(value.toString());
     }
   }
 
-  static final class AndroidUriUrl extends RequestAction<Uri> {
+  static final class AndroidUriUrl extends ParameterAction<Uri> {
     @Override void perform(RequestBuilder builder, Uri value) {
       builder.setRelativeUrl(value.toString());
     }
   }
 
-  static final class Header<T> extends RequestAction<T> {
+  static final class Header<T> extends ParameterAction<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
 
@@ -86,7 +86,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class Path<T> extends RequestAction<T> {
+  static final class Path<T> extends ParameterAction<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
@@ -106,7 +106,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class Query<T> extends RequestAction<T> {
+  static final class Query<T> extends ParameterAction<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
@@ -123,7 +123,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class QueryMap<T> extends RequestAction<Map<String, T>> {
+  static final class QueryMap<T> extends ParameterAction<Map<String, T>> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
@@ -152,7 +152,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class Field<T> extends RequestAction<T> {
+  static final class Field<T> extends ParameterAction<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
@@ -169,7 +169,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class FieldMap<T> extends RequestAction<Map<String, T>> {
+  static final class FieldMap<T> extends ParameterAction<Map<String, T>> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
@@ -198,7 +198,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class Part<T> extends RequestAction<T> {
+  static final class Part<T> extends ParameterAction<T> {
     private final Headers headers;
     private final Converter<T, RequestBody> converter;
 
@@ -220,7 +220,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class PartMap<T> extends RequestAction<Map<String, T>> {
+  static final class PartMap<T> extends ParameterAction<Map<String, T>> {
     private final Converter<T, RequestBody> valueConverter;
     private final String transferEncoding;
 
@@ -254,7 +254,7 @@ abstract class RequestAction<T> {
     }
   }
 
-  static final class Body<T> extends RequestAction<T> {
+  static final class Body<T> extends ParameterAction<T> {
     private final Converter<T, RequestBody> converter;
 
     Body(Converter<T, RequestBody> converter) {

@@ -44,14 +44,14 @@ public final class ResponseTest {
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.message()).isEqualTo("OK");
     assertThat(response.headers().size()).isZero();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isSameAs(body);
     assertThat(response.errorBody()).isNull();
   }
 
   @Test public void successNullAllowed() {
     Response<Object> response = Response.success(null);
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isNull();
   }
 
@@ -63,7 +63,7 @@ public final class ResponseTest {
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.message()).isEqualTo("OK");
     assertThat(response.headers().toMultimap()).isEqualTo(headers.toMultimap());
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isSameAs(body);
     assertThat(response.errorBody()).isNull();
   }
@@ -84,7 +84,7 @@ public final class ResponseTest {
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.message()).isEqualTo("OK");
     assertThat(response.headers().size()).isZero();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isSameAs(body);
     assertThat(response.errorBody()).isNull();
   }
@@ -114,7 +114,7 @@ public final class ResponseTest {
     assertThat(response.code()).isEqualTo(400);
     assertThat(response.message()).isNull();
     assertThat(response.headers().size()).isZero();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.body()).isNull();
     assertThat(response.errorBody()).isSameAs(errorBody);
   }
@@ -145,7 +145,7 @@ public final class ResponseTest {
     assertThat(response.code()).isEqualTo(400);
     assertThat(response.message()).isEqualTo("Broken!");
     assertThat(response.headers().size()).isZero();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.body()).isNull();
     assertThat(response.errorBody()).isSameAs(errorBody);
   }

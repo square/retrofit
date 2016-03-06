@@ -75,7 +75,7 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
         {
           call.enqueue(new Callback<R>() {
             @Override public void onResponse(Call<R> call, Response<R> response) {
-              if (response.isSuccess()) {
+              if (response.isSuccessful()) {
                 set(response.body());
               } else {
                 setException(new HttpException(response));

@@ -55,7 +55,7 @@ final class CompletableHelper {
       try {
         Response response = call.execute();
         if (!subscription.isUnsubscribed()) {
-          if (response.isSuccess()) {
+          if (response.isSuccessful()) {
             subscriber.onCompleted();
           } else {
             subscriber.onError(new HttpException(response));

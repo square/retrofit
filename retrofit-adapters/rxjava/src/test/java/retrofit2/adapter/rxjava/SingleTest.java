@@ -88,7 +88,7 @@ public final class SingleTest {
 
     BlockingSingle<Response<String>> o = service.response().toBlocking();
     Response<String> response = o.value();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -97,7 +97,7 @@ public final class SingleTest {
 
     BlockingSingle<Response<String>> o = service.response().toBlocking();
     Response<String> response = o.value();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
@@ -120,7 +120,7 @@ public final class SingleTest {
     Result<String> result = o.value();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -131,7 +131,7 @@ public final class SingleTest {
     Result<String> result = o.value();
     assertThat(result.isError()).isFalse();
     Response<String> response = result.response();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 

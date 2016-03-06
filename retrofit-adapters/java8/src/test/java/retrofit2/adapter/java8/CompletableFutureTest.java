@@ -87,7 +87,7 @@ public final class CompletableFutureTest {
 
     CompletableFuture<Response<String>> future = service.response();
     Response<String> response = future.get();
-    assertThat(response.isSuccess()).isTrue();
+    assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isEqualTo("Hi");
   }
 
@@ -96,7 +96,7 @@ public final class CompletableFutureTest {
 
     CompletableFuture<Response<String>> future = service.response();
     Response<String> response = future.get();
-    assertThat(response.isSuccess()).isFalse();
+    assertThat(response.isSuccessful()).isFalse();
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
