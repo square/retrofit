@@ -25,10 +25,8 @@ import okio.ForwardingSource;
 import okio.Okio;
 
 final class OkHttpCall<T> implements Call<T> {
-  private final okhttp3.Call.Factory callFactory;
-  private final RequestFactory requestFactory;
+  private final ServiceMethod<T> serviceMethod;
   private final Object[] args;
-  private final Converter<ResponseBody, T> responseConverter;
 
   private volatile boolean canceled;
 
@@ -37,17 +35,14 @@ final class OkHttpCall<T> implements Call<T> {
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
 
-  OkHttpCall(okhttp3.Call.Factory callFactory, RequestFactory requestFactory, Object[] args,
-      Converter<ResponseBody, T> responseConverter) {
-    this.callFactory = callFactory;
-    this.requestFactory = requestFactory;
+  OkHttpCall(ServiceMethod<T> serviceMethod, Object[] args) {
+    this.serviceMethod = serviceMethod;
     this.args = args;
-    this.responseConverter = responseConverter;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(callFactory, requestFactory, args, responseConverter);
+    return new OkHttpCall<>(serviceMethod, args);
   }
 
   @Override public synchronized Request request() {
@@ -178,7 +173,8 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private okhttp3.Call createRawCall() throws IOException {
-    okhttp3.Call call = callFactory.newCall(requestFactory.create(args));
+    Request request = serviceMethod.toRequest(args);
+    okhttp3.Call call = serviceMethod.callFactory.newCall(request);
     if (call == null) {
       throw new NullPointerException("Call.Factory returned null.");
     }
@@ -210,7 +206,7 @@ final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      T body = responseConverter.convert(catchingBody);
+      T body = serviceMethod.toResponse(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was

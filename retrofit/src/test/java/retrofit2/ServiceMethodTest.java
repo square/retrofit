@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class RequestFactoryTest {
+public final class ServiceMethodTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
@@ -41,7 +41,7 @@ public final class RequestFactoryTest {
   }
 
   private static void expectParams(String path, String... expected) {
-    Set<String> calculated = RequestFactory.Builder.parsePathParameters(path);
+    Set<String> calculated = ServiceMethod.parsePathParameters(path);
     assertThat(calculated).containsExactly(expected);
   }
 }

@@ -2060,10 +2060,11 @@ public final class RequestBuilderTest {
         .build();
 
     Method method = TestingUtils.onlyMethod(cls);
-    MethodHandler handler = retrofit.loadMethodHandler(method);
-    Call<?> invoke = (Call<?>) handler.invoke(args);
+    ServiceMethod<?> serviceMethod = retrofit.loadServiceMethod(method);
+    OkHttpCall<?> okHttpCall = new OkHttpCall<>(serviceMethod, args);
+    Call<?> call = (Call<?>) serviceMethod.callAdapter.adapt(okHttpCall);
     try {
-      invoke.execute();
+      call.execute();
       throw new AssertionError();
     } catch (UnsupportedOperationException ignored) {
       return requestRef.get();

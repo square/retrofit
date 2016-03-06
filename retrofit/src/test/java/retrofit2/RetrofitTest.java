@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -52,6 +53,7 @@ import retrofit2.http.Query;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -76,7 +78,6 @@ public final class RetrofitTest {
     @POST("/") Call<ResponseBody> postRequestBody(@Body RequestBody body);
     @GET("/") Call<ResponseBody> queryString(@Query("foo") String foo);
     @GET("/") Call<ResponseBody> queryObject(@Query("foo") Object foo);
-
   }
   interface FutureMethod {
     @GET("/") Future<String> method();
@@ -110,6 +111,9 @@ public final class RetrofitTest {
 
     @Retention(RUNTIME)
     @interface Foo {}
+  }
+  interface MutableParameters {
+    @GET("/") Call<String> method(@Query("i") AtomicInteger value);
   }
 
   @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
@@ -1276,5 +1280,40 @@ public final class RetrofitTest {
 
     verify(executor).execute(any(Runnable.class));
     verifyNoMoreInteractions(executor);
+  }
+
+  /** Confirm that Retrofit encodes parameters when the call is executed, and not earlier. */
+  @Test public void argumentCapture() throws Exception {
+    AtomicInteger i = new AtomicInteger();
+
+    server.enqueue(new MockResponse().setBody("a"));
+    server.enqueue(new MockResponse().setBody("b"));
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    MutableParameters mutableParameters = retrofit.create(MutableParameters.class);
+
+    i.set(100);
+    Call<String> call1 = mutableParameters.method(i);
+
+    i.set(101);
+    Response<String> response1 = call1.execute();
+
+    i.set(102);
+    assertEquals("a", response1.body());
+    assertEquals("/?i=101", server.takeRequest().getPath());
+
+    i.set(200);
+    Call<String> call2 = call1.clone();
+
+    i.set(201);
+    Response<String> response2 = call2.execute();
+
+    i.set(202);
+    assertEquals("b", response2.body());
+
+    assertEquals("/?i=201", server.takeRequest().getPath());
   }
 }

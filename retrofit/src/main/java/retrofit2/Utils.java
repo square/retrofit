@@ -20,7 +20,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -355,20 +354,6 @@ final class Utils {
     String className = type == null ? "null" : type.getClass().getName();
     throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
         + "GenericArrayType, but <" + type + "> is of type " + className);
-  }
-
-  static RuntimeException methodError(Method method, String message, Object... args) {
-    return methodError(null, method, message, args);
-  }
-
-  static RuntimeException methodError(Throwable cause, Method method, String message,
-      Object... args) {
-    message = String.format(message, args);
-    return new IllegalArgumentException(message
-        + "\n    for method "
-        + method.getDeclaringClass().getSimpleName()
-        + "."
-        + method.getName(), cause);
   }
 
   static Type getCallResponseType(Type returnType) {
