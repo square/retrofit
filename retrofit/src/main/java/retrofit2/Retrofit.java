@@ -57,7 +57,7 @@ import static retrofit2.Utils.checkNotNull;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, MethodHandler> methodHandlerCache = new LinkedHashMap<>();
+  private final Map<Method, ServiceMethod> serviceMethodCache = new LinkedHashMap<>();
 
   private final okhttp3.Call.Factory callFactory;
   private final BaseUrl baseUrl;
@@ -142,7 +142,9 @@ public final class Retrofit {
             if (platform.isDefaultMethod(method)) {
               return platform.invokeDefaultMethod(method, service, proxy, args);
             }
-            return loadMethodHandler(method).invoke(args);
+            ServiceMethod serviceMethod = loadServiceMethod(method);
+            OkHttpCall okHttpCall = new OkHttpCall<>(serviceMethod, args);
+            return serviceMethod.callAdapter.adapt(okHttpCall);
           }
         });
   }
@@ -151,21 +153,21 @@ public final class Retrofit {
     Platform platform = Platform.get();
     for (Method method : service.getDeclaredMethods()) {
       if (!platform.isDefaultMethod(method)) {
-        loadMethodHandler(method);
+        loadServiceMethod(method);
       }
     }
   }
 
-  MethodHandler loadMethodHandler(Method method) {
-    MethodHandler handler;
-    synchronized (methodHandlerCache) {
-      handler = methodHandlerCache.get(method);
-      if (handler == null) {
-        handler = MethodHandler.create(this, method);
-        methodHandlerCache.put(method, handler);
+  ServiceMethod loadServiceMethod(Method method) {
+    ServiceMethod result;
+    synchronized (serviceMethodCache) {
+      result = serviceMethodCache.get(method);
+      if (result == null) {
+        result = new ServiceMethod.Builder(this, method).build();
+        serviceMethodCache.put(method, result);
       }
     }
-    return handler;
+    return result;
   }
 
   /**
