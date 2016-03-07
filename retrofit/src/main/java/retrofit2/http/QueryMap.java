@@ -43,8 +43,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;GET("/search")
  * Call&lt;ResponseBody> list(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
  * }</pre>
- * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+foo"))} yields
- * {@code /search?foo=foo%2Bbar}.
+ * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+bar"))} yields
+ * {@code /search?foo=foo+bar}.
  *
  * @see Query
  */
