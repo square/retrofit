@@ -645,12 +645,6 @@ public final class RetrofitTest {
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("baseUrl == null");
     }
-    try {
-      new Retrofit.Builder().baseUrl((BaseUrl) null);
-      fail();
-    } catch (NullPointerException e) {
-      assertThat(e).hasMessage("baseUrl == null");
-    }
   }
 
   @Test public void baseUrlInvalidThrows() {
@@ -682,9 +676,8 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .build();
-    BaseUrl baseUrl = retrofit.baseUrl();
-    assertThat(baseUrl).isNotNull();
-    assertThat(baseUrl.url().toString()).isEqualTo("http://example.com/");
+    HttpUrl baseUrl = retrofit.baseUrl();
+    assertThat(baseUrl).isEqualTo(HttpUrl.parse("http://example.com/"));
   }
 
   @Test public void baseHttpUrlPropagated() {
@@ -692,17 +685,7 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(url)
         .build();
-    BaseUrl baseUrl = retrofit.baseUrl();
-    assertThat(baseUrl).isNotNull();
-    assertThat(baseUrl.url()).isSameAs(url);
-  }
-
-  @Test public void baseUrlPropagated() {
-    BaseUrl baseUrl = mock(BaseUrl.class);
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .build();
-    assertThat(retrofit.baseUrl()).isSameAs(baseUrl);
+    assertThat(retrofit.baseUrl()).isSameAs(url);
   }
 
   @Test public void clientNullThrows() {
