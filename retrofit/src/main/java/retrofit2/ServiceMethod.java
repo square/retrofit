@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import okhttp3.Headers;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -62,7 +63,7 @@ final class ServiceMethod<T> {
   public final okhttp3.Call.Factory callFactory;
   public final CallAdapter<?> callAdapter;
 
-  private final BaseUrl baseUrl;
+  private final HttpUrl baseUrl;
   private final Converter<ResponseBody, T> responseConverter;
   private final String httpMethod;
   private final String relativeUrl;
@@ -90,8 +91,8 @@ final class ServiceMethod<T> {
 
   /** Builds an HTTP request from method arguments. */
   public Request toRequest(Object... args) throws IOException {
-    RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl.url(), relativeUrl,
-        headers, contentType, hasBody, isFormEncoded, isMultipart);
+    RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
+        contentType, hasBody, isFormEncoded, isMultipart);
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;

@@ -60,13 +60,13 @@ public final class Retrofit {
   private final Map<Method, ServiceMethod> serviceMethodCache = new LinkedHashMap<>();
 
   private final okhttp3.Call.Factory callFactory;
-  private final BaseUrl baseUrl;
+  private final HttpUrl baseUrl;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
-  Retrofit(okhttp3.Call.Factory callFactory, BaseUrl baseUrl,
+  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
       List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
       Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
@@ -178,7 +178,7 @@ public final class Retrofit {
     return callFactory;
   }
 
-  public BaseUrl baseUrl() {
+  public HttpUrl baseUrl() {
     return baseUrl;
   }
 
@@ -377,7 +377,7 @@ public final class Retrofit {
   public static final class Builder {
     private Platform platform;
     private okhttp3.Call.Factory callFactory;
-    private BaseUrl baseUrl;
+    private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
@@ -481,26 +481,13 @@ public final class Retrofit {
      * Endpoint: //github.com/square/retrofit/<br>
      * Result: http://github.com/square/retrofit/ (note the scheme stays 'http')
      */
-    public Builder baseUrl(final HttpUrl baseUrl) {
+    public Builder baseUrl(HttpUrl baseUrl) {
       checkNotNull(baseUrl, "baseUrl == null");
       List<String> pathSegments = baseUrl.pathSegments();
       if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
         throw new IllegalArgumentException("baseUrl must end in /: " + baseUrl);
       }
-      return baseUrl(new BaseUrl() {
-        @Override public HttpUrl url() {
-          return baseUrl;
-        }
-      });
-    }
-
-    /**
-     * Set an API base URL which can change over time.
-     *
-     * @see #baseUrl(HttpUrl)
-     */
-    public Builder baseUrl(BaseUrl baseUrl) {
-      this.baseUrl = checkNotNull(baseUrl, "baseUrl == null");
+      this.baseUrl = baseUrl;
       return this;
     }
 
