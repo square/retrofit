@@ -55,6 +55,8 @@ final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public void enqueue(final Callback<T> callback) {
+      if (callback == null) throw new NullPointerException("callback == null");
+
       delegate.enqueue(new Callback<T>() {
         @Override public void onResponse(final Call<T> call, final Response<T> response) {
           callbackExecutor.execute(new Runnable() {

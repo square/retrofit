@@ -52,6 +52,8 @@ final class BehaviorCall<T> implements Call<T> {
   }
 
   @Override public void enqueue(final Callback<T> callback) {
+    if (callback == null) throw new NullPointerException("callback == null");
+
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
       executed = true;

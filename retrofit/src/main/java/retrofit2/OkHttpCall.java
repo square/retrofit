@@ -69,6 +69,8 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public void enqueue(final Callback<T> callback) {
+    if (callback == null) throw new NullPointerException("callback == null");
+
     okhttp3.Call call;
     Throwable failure;
 
