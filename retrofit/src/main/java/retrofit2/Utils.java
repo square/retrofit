@@ -30,7 +30,7 @@ import okhttp3.ResponseBody;
 import okio.Buffer;
 
 final class Utils {
-  private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
+  static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Utils() {
     // No instances.
@@ -158,7 +158,7 @@ final class Utils {
     return a == b || (a != null && a.equals(b));
   }
 
-  private static int hashCodeOrZero(Object o) {
+  static int hashCodeOrZero(Object o) {
     return o != null ? o.hashCode() : 0;
   }
 
@@ -274,7 +274,7 @@ final class Utils {
     return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
   }
 
-  private static void checkNotPrimitive(Type type) {
+  static void checkNotPrimitive(Type type) {
     if (type instanceof Class<?> && ((Class<?>) type).isPrimitive()) {
       throw new IllegalArgumentException();
     }
