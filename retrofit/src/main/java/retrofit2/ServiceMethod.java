@@ -56,12 +56,12 @@ import retrofit2.http.Url;
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<T> {
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
-  private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
-  private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
-  private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
+  static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
+  static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
+  static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
 
-  public final okhttp3.Call.Factory callFactory;
-  public final CallAdapter<?> callAdapter;
+  final okhttp3.Call.Factory callFactory;
+  final CallAdapter<?> callAdapter;
 
   private final HttpUrl baseUrl;
   private final Converter<ResponseBody, T> responseConverter;
@@ -90,7 +90,7 @@ final class ServiceMethod<T> {
   }
 
   /** Builds an HTTP request from method arguments. */
-  public Request toRequest(Object... args) throws IOException {
+  Request toRequest(Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
         contentType, hasBody, isFormEncoded, isMultipart);
 
@@ -111,7 +111,7 @@ final class ServiceMethod<T> {
   }
 
   /** Builds a method return value from an HTTP response body. */
-  public T toResponse(ResponseBody body) throws IOException {
+  T toResponse(ResponseBody body) throws IOException {
     return responseConverter.convert(body);
   }
 
@@ -668,7 +668,7 @@ final class ServiceMethod<T> {
     return patterns;
   }
 
-  private static Class<?> boxIfPrimitive(Class<?> type) {
+  static Class<?> boxIfPrimitive(Class<?> type) {
     if (boolean.class == type) return Boolean.class;
     if (byte.class == type) return Byte.class;
     if (char.class == type) return Character.class;
