@@ -18,6 +18,10 @@ public final class FastJsonResponseBodyConverter<T> implements Converter<Respons
 
     @Override
     public T convert(ResponseBody value) throws IOException {
-        return JSON.parseObject(value.string(), type, Feature.AllowComment);
+        try {
+            return JSON.parseObject(value.string(), type, Feature.AllowComment);
+        }finally {
+            value.close();
+        }
     }
 }
