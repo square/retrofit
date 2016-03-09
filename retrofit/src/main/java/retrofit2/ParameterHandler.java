@@ -21,6 +21,7 @@ import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.Map;
 import okhttp3.Headers;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 import static retrofit2.Utils.checkNotNull;
@@ -217,6 +218,19 @@ abstract class ParameterHandler<T> {
         throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
       builder.addPart(headers, body);
+    }
+  }
+
+  static final class RawPart extends ParameterHandler<MultipartBody.Part> {
+    static final RawPart INSTANCE = new RawPart();
+
+    private RawPart() {
+    }
+
+    @Override void apply(RequestBuilder builder, MultipartBody.Part value) throws IOException {
+      if (value != null) { // Skip null values.
+        builder.addPart(value);
+      }
     }
   }
 

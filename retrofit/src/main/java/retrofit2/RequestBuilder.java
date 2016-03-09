@@ -167,6 +167,10 @@ final class RequestBuilder {
     multipartBuilder.addPart(headers, body);
   }
 
+  void addPart(MultipartBody.Part part) {
+    multipartBuilder.addPart(part);
+  }
+
   void setBody(RequestBody body) {
     this.body = body;
   }
