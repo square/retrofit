@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -1393,6 +1394,97 @@ public final class RequestBuilderTest {
         .contains("\r\npong2\r\n--");
   }
 
+  @Test public void multipartRequiresName() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part RequestBody part) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter #1)\n"
+              + "    for method Example.method");
+    }
+  }
+
+  @Test public void multipartOkHttpPartForbidsName() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("name") MultipartBody.Part part) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter #1)\n"
+              + "    for method Example.method");
+    }
+  }
+
+  @Test public void multipartOkHttpPart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part MultipartBody.Part part) {
+        return null;
+      }
+    }
+
+    MultipartBody.Part part = MultipartBody.Part.createFormData("kit", "kat");
+    Request request = buildRequest(Example.class, part);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"\r\n")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartOkHttpPartWithFilename() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part MultipartBody.Part part) {
+        return null;
+      }
+    }
+
+    MultipartBody.Part part =
+        MultipartBody.Part.createFormData("kit", "kit.txt", RequestBody.create(null, "kat"));
+    Request request = buildRequest(Example.class, part);
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"; filename=\"kit.txt\"\r\n")
+        .contains("\r\nkat\r\n--");
+  }
+
   @Test public void multipartIterable() throws IOException {
     class Example {
       @Multipart //
@@ -1525,6 +1617,44 @@ public final class RequestBuilderTest {
         .contains("name=\"kit\"")
         .contains("Content-Transfer-Encoding: 8-bit")
         .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartPartMapRejectsNonStringKeys() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap Map<Object, RequestBody> parts) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@PartMap keys must be of type String: class java.lang.Object (parameter #1)\n"
+              + "    for method Example.method");
+    }
+  }
+
+  @Test public void multipartPartMapRejectsOkHttpPartValues() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@PartMap Map<String, MultipartBody.Part> parts) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@PartMap values cannot be MultipartBody.Part. Use @Part List<Part> or a different value type instead. (parameter #1)\n"
+              + "    for method Example.method");
+    }
   }
 
   @Test public void multipartPartMapRejectsNull() {

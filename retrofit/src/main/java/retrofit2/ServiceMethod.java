@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -535,33 +536,47 @@ final class ServiceMethod<T> {
           throw parameterError(p, "@Part parameters can only be used with multipart encoding.");
         }
         Part part = (Part) annotation;
-        Headers headers = Headers.of(
-            "Content-Disposition", "form-data; name=\"" + part.value() + "\"",
-            "Content-Transfer-Encoding", part.encoding());
-
-        Class<?> rawParameterType = Utils.getRawType(type);
         gotPart = true;
-        if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(p, rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
+
+        String partName = part.value();
+        Class<?> rawParameterType = Utils.getRawType(type);
+        if (partName.isEmpty()) {
+          if (!MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
+            throw parameterError(p,
+                "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
           }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, RequestBody> converter = retrofit.requestBodyConverter(
-              iterableType, annotations, methodAnnotations);
-          return new ParameterHandler.Part<>(headers, converter).iterable();
-        } else if (rawParameterType.isArray()) {
-          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-          Converter<?, RequestBody> converter =
-              retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
-          return new ParameterHandler.Part<>(headers, converter).array();
+
+          return ParameterHandler.RawPart.INSTANCE;
         } else {
-          Converter<?, RequestBody> converter =
-              retrofit.requestBodyConverter(type, annotations, methodAnnotations);
-          return new ParameterHandler.Part<>(headers, converter);
+          Headers headers =
+              Headers.of("Content-Disposition", "form-data; name=\"" + partName + "\"",
+                  "Content-Transfer-Encoding", part.encoding());
+
+          if (Iterable.class.isAssignableFrom(rawParameterType)) {
+            if (!(type instanceof ParameterizedType)) {
+              throw parameterError(p, rawParameterType.getSimpleName()
+                  + " must include generic type (e.g., "
+                  + rawParameterType.getSimpleName()
+                  + "<String>)");
+            }
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+            Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+            Converter<?, RequestBody> converter =
+                retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
+            return new ParameterHandler.Part<>(headers, converter).iterable();
+          } else if (rawParameterType.isArray()) {
+            Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+            Converter<?, RequestBody> converter =
+                retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
+            return new ParameterHandler.Part<>(headers, converter).array();
+          } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
+            throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                + "include a part name in the annotation.");
+          } else {
+            Converter<?, RequestBody> converter =
+                retrofit.requestBodyConverter(type, annotations, methodAnnotations);
+            return new ParameterHandler.Part<>(headers, converter);
+          }
         }
 
       } else if (annotation instanceof PartMap) {
@@ -578,11 +593,18 @@ final class ServiceMethod<T> {
           throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
+
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
         if (String.class != keyType) {
           throw parameterError(p, "@PartMap keys must be of type String: " + keyType);
         }
+
         Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
+        if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(valueType))) {
+          throw parameterError(p, "@PartMap values cannot be MultipartBody.Part. "
+              + "Use @Part List<Part> or a different value type instead.");
+        }
+
         Converter<?, RequestBody> valueConverter =
             retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
 
