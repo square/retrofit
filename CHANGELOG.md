@@ -53,6 +53,8 @@ Changes from beta 4:
    single argument.
  * The `BaseUrl` interface and support for changeable base URLs was removed. This functionality
    can be done using an OkHttp interceptor and a sample showcasing it was added.
+ * `Response.isSuccess()` was renamed to `Response.isSuccessful()` for parity with the name of
+   OkHttp's version of that method.
  * Fix: Throw a more appropriate exception with a message when a resolved url (base URL + relative
    URL) is malformed.
  * Fix: `GsonConverterFactory` now honors settings on the `Gson` instance (like leniency).
