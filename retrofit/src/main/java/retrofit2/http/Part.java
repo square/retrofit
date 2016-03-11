@@ -35,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code @Part("foo") RequestBody foo}).</li>
  * <li>Other object types will be converted to an appropriate representation by using
  * {@linkplain Converter a converter}. Supply the part name in the annotation (e.g.,
- * {@code @Part("foo") RequestBody foo}).</li>
+ * {@code @Part("foo") Image photo}).</li>
  * </ul>
  * <p>
  * Values may be {@code null} which will omit them from the request body.
