@@ -49,7 +49,7 @@
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
-    <okhttp.version>3.1.2</okhttp.version>
+    <okhttp.version>3.2.0</okhttp.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
@@ -57,9 +57,9 @@
 
     <!-- Converter Dependencies -->
     <gson.version>2.6.1</gson.version>
-    <protobuf.version>2.5.0</protobuf.version>
-    <jackson.version>2.7.1</jackson.version>
-    <wire.version>2.1.0</wire.version>
+    <protobuf.version>2.6.1</protobuf.version>
+    <jackson.version>2.7.2</jackson.version>
+    <wire.version>2.1.1</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.1.0</moshi.version>
 
@@ -67,7 +67,7 @@
     <junit.version>4.12</junit.version>
     <assertj.version>1.7.0</assertj.version>
     <mockito.version>1.9.5</mockito.version>
-    <guava.version>18.0</guava.version>
+    <guava.version>19.0</guava.version>
     <robolectric.version>3.0</robolectric.version>
   </properties>
 
