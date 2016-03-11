@@ -1,6 +1,68 @@
 Change Log
 ==========
 
+Version 2.0.0 *(2016-03-11)*
+----------------------------
+
+Retrofit 2 is a major release focused on extensibility. The API changes are numerous but solve
+shortcomings of the previous version and provide a path for future enhancement.
+
+Because the release includes breaking API changes, we're changing the project's package name from
+`retrofit` to `retrofit2`. This should make it possible for large applications and libraries to
+migrate incrementally. The Maven group ID is now `com.squareup.retrofit2`. For an explanation of
+this strategy, see Jake Wharton's post, [Java Interoperability Policy for Major Version
+Updates](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/).
+
+ * **Service methods return `Call<T>`.** This allows them to be executed synchronously or
+   asynchronously using the same method definition. A `Call` instance represents a single
+   request/response pair so it can only be used once, but you can `clone()` it for re-use.
+   Invoking `cancel()` will cancel in-flight requests or prevent the request from even being
+   performed if it has not already.
+ 
+ * **Multiple converters for multiple serialization formats.** API calls returning different
+  formats (like JSON, protocol buffers, and plain text) no longer need to be separated into
+  separate service interfaces. Combine them together and add multiple converters. Converters are
+  chosen based on the response type you declare. Gson is no longer included by default, so you will
+  always need to add a converter for any serialization support. OkHttp's `RequestBody` and
+  `ResponseBody` types can always be used without adding one, however.
+   
+ * **Call adapters allow different execution mechanisms.** While `Call` is the built-in mechanism,
+   support for additional ones can be added similar to how different converters can be added.
+   RxJava's `Observable` support has moved into a separate artifact as a result, and support for
+   Java 8's `CompletableFuture` and Guava's `ListenableFuture` are also provided as additional
+   artifacts.
+   
+ * **Generic response type includes HTTP information and deserialized body.** You no longer have to
+   choose between the deserialized body and reading HTTP information. Every `Call` automatically
+   receives both via the `Response<T>` type and the RxJava, Guava, and Java 8 call adapters also
+   support it.
+   
+ * **@Url for hypermedia-like APIs.** When your API returns links for pagination, additional
+   resources, or updated content they can now be used with a service method whose first parameter
+   is annotated with `@Url`.
+
+Changes from beta 4:
+
+ * New: `RxJavaCallAdapterFactory` now supports service methods which return `Completable` which
+   ignores and discards response bodies, if any.
+ * New: `RxJavaCallAdapterFactory` supports supplying a default `Scheduler` which will be used
+   for `subscribeOn` on returned `Observable`, `Single`, and `Completable` instances.
+ * New: `MoshiConverterFactory` supports creating an instance which uses lenient parsing.
+ * New: `@Part` can omit the part name and use OkHttp's `MultipartBody.Part` type for supplying
+   parts. This lets you customize the headers, name, and filename and provide the part body in a
+   single argument.
+ * The `BaseUrl` interface and support for changeable base URLs was removed. This functionality
+   can be done using an OkHttp interceptor and a sample showcasing it was added.
+ * Fix: Throw a more appropriate exception with a message when a resolved url (base URL + relative
+   URL) is malformed.
+ * Fix: `GsonConverterFactory` now honors settings on the `Gson` instance (like leniency).
+ * Fix: `ScalarsConverterFactory` now supports primitive scalar types in addition to boxed for
+   response body parsing.
+ * Fix: `Retrofit.callbackExecutor()` may now return an executor even when one was not explicitly
+   provided. This allows custom `CallAdapter.Factory` implementations to use it when triggering
+   callbacks to ensure they happen on the appropriate thread for the platform (e.g., Android).
+
+
 Version 2.0.0-beta4 *(2016-02-04)*
 ----------------------------------
 
