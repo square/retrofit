@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +34,7 @@ import retrofit2.http.HTTP;
 import retrofit2.http.Header;
 import retrofit2.http.Url;
 
+import static java.util.Collections.unmodifiableList;
 import static retrofit2.Utils.checkNotNull;
 
 /**
@@ -71,8 +71,8 @@ public final class Retrofit {
       Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
-    this.converterFactories = converterFactories;
-    this.adapterFactories = adapterFactories;
+    this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
+    this.adapterFactories = unmodifiableList(adapterFactories); // Defensive copy at call site.
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
   }
@@ -178,12 +178,17 @@ public final class Retrofit {
     return callFactory;
   }
 
+  /** The API base URL. */
   public HttpUrl baseUrl() {
     return baseUrl;
   }
 
+  /**
+   * Returns a list of the factories tried when creating a
+   * {@linkplain #callAdapter(Type, Annotation[])} call adapter}.
+   */
   public List<CallAdapter.Factory> callAdapterFactories() {
-    return Collections.unmodifiableList(adapterFactories);
+    return adapterFactories;
   }
 
   /**
@@ -233,10 +238,13 @@ public final class Retrofit {
   }
 
   /**
-   * TODO
+   * Returns a list of the factories tried when creating a
+   * {@linkplain #requestBodyConverter(Type, Annotation[], Annotation[]) request body converter}, a
+   * {@linkplain #responseBodyConverter(Type, Annotation[]) response body converter}, or a
+   * {@linkplain #stringConverter(Type, Annotation[]) string converter}.
    */
   public List<Converter.Factory> converterFactories() {
-    return Collections.unmodifiableList(converterFactories);
+    return converterFactories;
   }
 
   /**
@@ -418,7 +426,7 @@ public final class Retrofit {
     }
 
     /**
-     * Set a fixed API base URL.
+     * Set the API base URL.
      *
      * @see #baseUrl(HttpUrl)
      */
@@ -432,7 +440,7 @@ public final class Retrofit {
     }
 
     /**
-     * Set a fixed API base URL.
+     * Set the API base URL.
      * <p>
      * The specified endpoint values (such as with {@link GET @GET}) are resolved against this
      * value using {@link HttpUrl#resolve(String)}. The behavior of this matches that of an

@@ -31,18 +31,29 @@ import rx.functions.Func1;
 import rx.subscriptions.Subscriptions;
 
 /**
- * TODO docs
+ * A {@linkplain CallAdapter.Factory call adapter} which uses RxJava for creating observables.
+ * <p>
+ * Adding this class to {@link Retrofit} allows you to return {@link Observable} from service
+ * methods.
+ * <pre>{@code
+ * interface MyService {
+ *   &#64;GET("user/me")
+ *   Observable<User> getUser()
+ * }
+ * }</pre>
  */
 public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   /**
-   * TODO
+   * Returns an instance which creates synchronous observables that do not operate on any scheduler
+   * by default.
    */
   public static RxJavaCallAdapterFactory create() {
     return new RxJavaCallAdapterFactory(null);
   }
 
   /**
-   * TODO
+   * Returns an instance which creates synchronous observables that
+   * {@linkplain Observable#subscribeOn(Scheduler) subscribe on} {@code scheduler} by default.
    */
   public static RxJavaCallAdapterFactory createWithScheduler(Scheduler scheduler) {
     if (scheduler == null) throw new NullPointerException("scheduler == null");
