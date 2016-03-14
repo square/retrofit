@@ -68,8 +68,9 @@ final class RequestBuilder {
     }
   }
 
-  void setRelativeUrl(String relativeUrl) {
-    this.relativeUrl = relativeUrl;
+  void setRelativeUrl(Object relativeUrl) {
+    if (relativeUrl == null) throw new NullPointerException("@Url parameter is null.");
+    this.relativeUrl = relativeUrl.toString();
   }
 
   void addHeader(String name, String value) {

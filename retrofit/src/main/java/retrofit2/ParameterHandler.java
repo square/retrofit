@@ -15,10 +15,8 @@
  */
 package retrofit2;
 
-import android.net.Uri;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.net.URI;
 import java.util.Map;
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
@@ -54,21 +52,9 @@ abstract class ParameterHandler<T> {
     };
   }
 
-  static final class StringUrl extends ParameterHandler<String> {
-    @Override void apply(RequestBuilder builder, String value) {
+  static final class RelativeUrl extends ParameterHandler<Object> {
+    @Override void apply(RequestBuilder builder, Object value) {
       builder.setRelativeUrl(value);
-    }
-  }
-
-  static final class JavaUriUrl extends ParameterHandler<URI> {
-    @Override void apply(RequestBuilder builder, URI value) {
-      builder.setRelativeUrl(value.toString());
-    }
-  }
-
-  static final class AndroidUriUrl extends ParameterHandler<Uri> {
-    @Override void apply(RequestBuilder builder, Uri value) {
-      builder.setRelativeUrl(value.toString());
     }
   }
 

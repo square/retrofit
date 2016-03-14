@@ -364,15 +364,14 @@ final class ServiceMethod<T> {
 
         gotUrl = true;
 
-        if (type == String.class) {
-          return new ParameterHandler.StringUrl();
-        } else if (type == URI.class) {
-          return new ParameterHandler.JavaUriUrl();
-        } else if (type instanceof Class
-            && "android.net.Uri".equals(((Class<?>) type).getCanonicalName())) {
-          return new ParameterHandler.AndroidUriUrl();
+        if (type == HttpUrl.class
+            || type == String.class
+            || type == URI.class
+            || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()))) {
+          return new ParameterHandler.RelativeUrl();
         } else {
-          throw parameterError(p, "@Url must be String, java.net.URI, or android.net.Uri type.");
+          throw parameterError(p,
+              "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type.");
         }
 
       } else if (annotation instanceof Path) {

@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
@@ -1111,6 +1112,37 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
+  @Test public void getWithHttpUrl() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@Url HttpUrl url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, HttpUrl.parse("http://example.com/foo/bar/"));
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url()).isEqualTo(HttpUrl.parse("http://example.com/foo/bar/"));
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithNullUrl() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@Url HttpUrl url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, (HttpUrl) null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("@Url parameter is null.");
+    }
+  }
+
   @Test public void getWithNonStringUrlThrows() {
     class Example {
       @GET
@@ -1124,7 +1156,8 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "@Url must be String, java.net.URI, or android.net.Uri type. (parameter #1)\n"
+          "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type."
+              + " (parameter #1)\n"
               + "    for method Example.method");
     }
   }
