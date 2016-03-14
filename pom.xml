@@ -63,6 +63,9 @@
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.1.0</moshi.version>
 
+    <!-- Sample Dependencies -->
+    <jsoup.version>1.7.3</jsoup.version>
+
     <!-- Test Dependencies -->
     <junit.version>4.12</junit.version>
     <assertj.version>1.7.0</assertj.version>
