@@ -25,9 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Query parameter keys and values appended to the URL.
  * <p>
- * Both keys and values are converted to strings using {@link String#valueOf(Object)}. Values are
- * URL encoded and {@code null} will not include the query parameter in the URL. {@code null} keys
- * are not allowed.
+ * Both keys and values are converted to strings using {@link String#valueOf(Object)}.
  * <p>
  * Simple Example:
  * <pre>{@code
@@ -45,6 +43,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }</pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+bar"))} yields
  * {@code /search?foo=foo+bar}.
+ * <p>
+ * A {@code null} value for the map, as a key, or as a value is not allowed.
  *
  * @see Query
  */
