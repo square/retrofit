@@ -41,6 +41,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     &#64;Part("file") RequestBody file,
  *     &#64;PartMap Map&lt;String, RequestBody&gt; params);
  * }</pre>
+ * <p>
+ * A {@code null} value for the map, as a key, or as a value is not allowed.
  *
  * @see Multipart
  * @see Part
