@@ -15,11 +15,6 @@ public final class HttpException extends Exception {
     this.response = response;
   }
 
-  /** HTTP status statusCode. */
-  public int statusCode() {
-    return code;
-  }
-
   /** HTTP status message. */
   public String message() {
     return message;
