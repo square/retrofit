@@ -26,13 +26,13 @@ import java.util.concurrent.Executor;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
-  private static final Platform PLATFORM = findPlatform();
+  private static final Platform PLATFORM = locatePlatform();
 
   static Platform get() {
     return PLATFORM;
   }
 
-  private static Platform findPlatform() {
+  private static Platform locatePlatform() {
     try {
       Class.forName("android.os.Build");
       if (Build.VERSION.SDK_INT != 0) {

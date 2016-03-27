@@ -15,6 +15,10 @@
  */
 package retrofit2;
 
+import okhttp3.Headers;
+import okhttp3.*;
+import retrofit2.http.*;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -26,33 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.Multipart;
-import retrofit2.http.OPTIONS;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Url;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<T> {
@@ -161,7 +138,7 @@ final class ServiceMethod<T> {
       if (responseType == Response.class || responseType == okhttp3.Response.class) {
         throw methodError("'"
             + Utils.getRawType(responseType).getName()
-            + "' is not a valid response body type. Did you mean ResponseBody?");
+            + "' is not a valid response. Did you mean ResponseBody?");
       }
       responseConverter = createResponseConverter();
 

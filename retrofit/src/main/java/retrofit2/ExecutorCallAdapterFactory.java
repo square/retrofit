@@ -15,14 +15,15 @@
  */
 package retrofit2;
 
+import okhttp3.Request;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
-import okhttp3.Request;
 
 final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
-  final Executor callbackExecutor;
+  private final Executor callbackExecutor;
 
   ExecutorCallAdapterFactory(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
@@ -45,7 +46,7 @@ final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
     };
   }
 
-  static final class ExecutorCallbackCall<T> implements Call<T> {
+  private static final class ExecutorCallbackCall<T> implements Call<T> {
     final Executor callbackExecutor;
     final Call<T> delegate;
 
