@@ -15,10 +15,11 @@
  */
 package retrofit2.http;
 
+import retrofit2.Converter;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import retrofit2.Converter;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -35,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code @Part("foo") RequestBody foo}).</li>
  * <li>Other object types will be converted to an appropriate representation by using
  * {@linkplain Converter a converter}. Supply the part name in the annotation (e.g.,
- * {@code @Part("foo") Image photo}).</li>
+ * {@code @Part("foo") RequestBody foo}).</li>
  * </ul>
  * <p>
  * Values may be {@code null} which will omit them from the request body.
