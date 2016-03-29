@@ -78,7 +78,7 @@ public final class JsonQueryParameters {
     }
   }
 
-  static class Filter {
+  private static class Filter {
     public final String userId;
 
     public Filter(String userId) {
