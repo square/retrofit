@@ -15,10 +15,6 @@
  */
 package com.example.retrofit;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.reflect.Type;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -32,6 +28,11 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.reflect.Type;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -95,11 +96,7 @@ public final class JsonQueryParameters {
     server.start();
     server.enqueue(new MockResponse());
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new JsonStringConverterFactory(GsonConverterFactory.create()))
-        .build();
-    Service service = retrofit.create(Service.class);
+    Service service = getService(server);
 
     Call<ResponseBody> call = service.example(new Filter("123"));
     Response<ResponseBody> response = call.execute();
@@ -110,5 +107,13 @@ public final class JsonQueryParameters {
     System.out.println(recordedRequest.getPath());
 
     server.shutdown();
+  }
+
+  private static Service getService(MockWebServer server) {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new JsonStringConverterFactory(GsonConverterFactory.create()))
+        .build();
+    return retrofit.create(Service.class);
   }
 }
