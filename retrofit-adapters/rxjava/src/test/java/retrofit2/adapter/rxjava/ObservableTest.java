@@ -26,6 +26,7 @@ import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Observable;
 import rx.observables.BlockingObservable;
+import rx.observers.TestSubscriber;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,6 +84,22 @@ public final class ObservableTest {
     }
   }
 
+  @Test public void bodyRespectsBackpressure() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    TestSubscriber<String> subscriber = new TestSubscriber<>(0);
+    Observable<String> o = service.body();
+
+    o.subscribe(subscriber);
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    subscriber.requestMore(1);
+    assertThat(server.getRequestCount()).isEqualTo(1);
+
+    subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
+    assertThat(server.getRequestCount()).isEqualTo(1);
+  }
+
   @Test public void responseSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
@@ -111,6 +128,22 @@ public final class ObservableTest {
     } catch (RuntimeException t) {
       assertThat(t.getCause()).isInstanceOf(IOException.class);
     }
+  }
+
+  @Test public void responseRespectsBackpressure() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    TestSubscriber<Response<String>> subscriber = new TestSubscriber<>(0);
+    Observable<Response<String>> o = service.response();
+
+    o.subscribe(subscriber);
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    subscriber.requestMore(1);
+    assertThat(server.getRequestCount()).isEqualTo(1);
+
+    subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
+    assertThat(server.getRequestCount()).isEqualTo(1);
   }
 
   @Test public void resultSuccess200() {
@@ -142,5 +175,21 @@ public final class ObservableTest {
     Result<String> result = o.first();
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
+  }
+
+  @Test public void resultRespectsBackpressure() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    TestSubscriber<Result<String>> subscriber = new TestSubscriber<>(0);
+    Observable<Result<String>> o = service.result();
+
+    o.subscribe(subscriber);
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    subscriber.requestMore(1);
+    assertThat(server.getRequestCount()).isEqualTo(1);
+
+    subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
+    assertThat(server.getRequestCount()).isEqualTo(1);
   }
 }

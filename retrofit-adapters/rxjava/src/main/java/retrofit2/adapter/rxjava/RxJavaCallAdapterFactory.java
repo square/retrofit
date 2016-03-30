@@ -18,11 +18,13 @@ package retrofit2.adapter.rxjava;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicBoolean;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import rx.Observable;
+import rx.Producer;
 import rx.Scheduler;
 import rx.Subscriber;
 import rx.exceptions.Exceptions;
@@ -131,14 +133,28 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
     @Override public void call(final Subscriber<? super Response<T>> subscriber) {
       // Since Call is a one-shot type, clone it for each new subscriber.
-      final Call<T> call = originalCall.clone();
+      Call<T> call = originalCall.clone();
 
-      // Attempt to cancel the call if it is still in-flight on unsubscription.
-      subscriber.add(Subscriptions.create(new Action0() {
-        @Override public void call() {
-          call.cancel();
-        }
-      }));
+      // Wrap the call in a helper which handles both unsubscription and backpressure.
+      RequestArbiter<T> requestArbiter = new RequestArbiter<>(call, subscriber);
+      subscriber.add(Subscriptions.create(requestArbiter));
+      subscriber.setProducer(requestArbiter);
+    }
+  }
+
+  static final class RequestArbiter<T> extends AtomicBoolean implements Action0, Producer {
+    private final Call<T> call;
+    private final Subscriber<? super Response<T>> subscriber;
+
+    RequestArbiter(Call<T> call, Subscriber<? super Response<T>> subscriber) {
+      this.call = call;
+      this.subscriber = subscriber;
+    }
+
+    @Override public void request(long n) {
+      if (n < 0) throw new IllegalArgumentException("n < 0: " + n);
+      if (n == 0) return; // Nothing to do when requesting 0.
+      if (!compareAndSet(false, true)) return; // Request was already triggered.
 
       try {
         Response<T> response = call.execute();
@@ -156,6 +172,10 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       if (!subscriber.isUnsubscribed()) {
         subscriber.onCompleted();
       }
+    }
+
+    @Override public void call() {
+      call.cancel();
     }
   }
 
@@ -196,14 +216,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
     @Override public <R> Observable<R> adapt(Call<R> call) {
       Observable<R> observable = Observable.create(new CallOnSubscribe<>(call)) //
-          .flatMap(new Func1<Response<R>, Observable<R>>() {
-            @Override public Observable<R> call(Response<R> response) {
-              if (response.isSuccessful()) {
-                return Observable.just(response.body());
-              }
-              return Observable.error(new HttpException(response));
-            }
-          });
+          .lift(OperatorMapResponseToBodyOrError.<R>instance());
       if (scheduler != null) {
         return observable.subscribeOn(scheduler);
       }
