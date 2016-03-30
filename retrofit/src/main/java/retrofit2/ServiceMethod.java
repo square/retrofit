@@ -540,12 +540,33 @@ final class ServiceMethod<T> {
         String partName = part.value();
         Class<?> rawParameterType = Utils.getRawType(type);
         if (partName.isEmpty()) {
-          if (!MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
+          if (Iterable.class.isAssignableFrom(rawParameterType)) {
+            if (!(type instanceof ParameterizedType)) {
+              throw parameterError(p, rawParameterType.getSimpleName()
+                  + " must include generic type (e.g., "
+                  + rawParameterType.getSimpleName()
+                  + "<String>)");
+            }
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+            Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+            if (!MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
+              throw parameterError(p,
+                  "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
+            }
+            return ParameterHandler.RawPart.INSTANCE.iterable();
+          } else if (rawParameterType.isArray()) {
+            Class<?> arrayComponentType = rawParameterType.getComponentType();
+            if (!MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
+              throw parameterError(p,
+                  "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
+            }
+            return ParameterHandler.RawPart.INSTANCE.array();
+          } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
+            return ParameterHandler.RawPart.INSTANCE;
+          } else {
             throw parameterError(p,
                 "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
           }
-
-          return ParameterHandler.RawPart.INSTANCE;
         } else {
           Headers headers =
               Headers.of("Content-Disposition", "form-data; name=\"" + partName + "\"",
@@ -560,11 +581,19 @@ final class ServiceMethod<T> {
             }
             ParameterizedType parameterizedType = (ParameterizedType) type;
             Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+            if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
+              throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                  + "include a part name in the annotation.");
+            }
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
             return new ParameterHandler.Part<>(headers, converter).iterable();
           } else if (rawParameterType.isArray()) {
             Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+            if (MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
+              throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                  + "include a part name in the annotation.");
+            }
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
             return new ParameterHandler.Part<>(headers, converter).array();
