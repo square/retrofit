@@ -1446,6 +1446,44 @@ public final class RequestBuilderTest {
     }
   }
 
+  @Test public void multipartIterableRequiresName() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part List<RequestBody> part) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter #1)\n"
+              + "    for method Example.method");
+    }
+  }
+
+  @Test public void multipartArrayRequiresName() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part RequestBody[] part) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter #1)\n"
+              + "    for method Example.method");
+    }
+  }
+
   @Test public void multipartOkHttpPartForbidsName() {
     class Example {
       @Multipart //
@@ -1484,6 +1522,71 @@ public final class RequestBuilderTest {
     Buffer buffer = new Buffer();
     body.writeTo(buffer);
     String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"\r\n")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartOkHttpIterablePart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part List<MultipartBody.Part> part) {
+        return null;
+      }
+    }
+
+    MultipartBody.Part part1 = MultipartBody.Part.createFormData("foo", "bar");
+    MultipartBody.Part part2 = MultipartBody.Part.createFormData("kit", "kat");
+    Request request = buildRequest(Example.class, Arrays.asList(part1, part2));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"foo\"\r\n")
+        .contains("\r\nbar\r\n--");
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"\r\n")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartOkHttpArrayPart() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part MultipartBody.Part[] part) {
+        return null;
+      }
+    }
+
+    MultipartBody.Part part1 = MultipartBody.Part.createFormData("foo", "bar");
+    MultipartBody.Part part2 = MultipartBody.Part.createFormData("kit", "kat");
+    Request request =
+        buildRequest(Example.class, new Object[] { new MultipartBody.Part[] { part1, part2 } });
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"foo\"\r\n")
+        .contains("\r\nbar\r\n--");
 
     assertThat(bodyString)
         .contains("Content-Disposition: form-data;")
@@ -1546,6 +1649,44 @@ public final class RequestBuilderTest {
         .contains("Content-Disposition: form-data;")
         .contains("name=\"ping\"")
         .contains("\r\npong2\r\n--");
+  }
+
+  @Test public void multipartIterableOkHttpPart() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("ping") List<MultipartBody.Part> part) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter #1)\n"
+              + "    for method Example.method");
+    }
+  }
+
+  @Test public void multipartArrayOkHttpPart() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("ping") MultipartBody.Part[] part) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter #1)\n"
+              + "    for method Example.method");
+    }
   }
 
   @Test public void multipartWithEncoding() throws IOException {
