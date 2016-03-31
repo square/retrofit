@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 2.0.1 *(2016-03-30)*
+----------------------------
+
+ * New: Support OkHttp's `HttpUrl` as a `@Url` parameter type.
+ * New: Support iterable and array `@Part` parameters using OkHttp's `MultipartBody.Part`.
+ * Fix: Honor backpressure in `Observable`s created from the RxJavaCallAdapterFactory.
+
+
 Version 2.0.0 *(2016-03-11)*
 ----------------------------
 
