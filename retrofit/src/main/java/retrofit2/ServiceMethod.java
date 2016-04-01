@@ -52,7 +52,7 @@ final class ServiceMethod<T> {
   private final boolean isMultipart;
   private final ParameterHandler<?>[] parameterHandlers;
 
-  ServiceMethod(Builder<T> builder) {
+  private ServiceMethod(Builder<T> builder) {
     this.callFactory = builder.retrofit.callFactory();
     this.callAdapter = builder.callAdapter;
     this.baseUrl = builder.retrofit.baseUrl();
@@ -81,7 +81,7 @@ final class ServiceMethod<T> {
           + ") doesn't match expected count (" + handlers.length + ")");
     }
 
-    for (int p = 0; p < argumentCount; p++) {
+    for (int p = 1; p < argumentCount; p++) {
       handlers[p].apply(requestBuilder, args[p]);
     }
 
