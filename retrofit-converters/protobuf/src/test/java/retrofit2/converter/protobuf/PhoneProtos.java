@@ -3,17 +3,17 @@
 
 package retrofit2.converter.protobuf;
 
-import com.google.protobuf.AbstractMessage;
-
 public final class PhoneProtos {
   private PhoneProtos() {}
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
+    registry.add(retrofit2.converter.protobuf.PhoneProtos.voicemail);
   }
-  public interface PhoneOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface PhoneOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:retrofit2.converter.protobuf.Phone)
+      com.google.protobuf.GeneratedMessage.
+          ExtendableMessageOrBuilder<Phone> {
 
-    // optional string number = 1;
     /**
      * <code>optional string number = 1;</code>
      */
@@ -29,13 +29,15 @@ public final class PhoneProtos {
         getNumberBytes();
   }
   /**
-   * Protobuf type {@code retrofit2.Phone}
+   * Protobuf type {@code retrofit2.converter.protobuf.Phone}
    */
   public static final class Phone extends
-      com.google.protobuf.GeneratedMessage
-      implements PhoneOrBuilder {
+      com.google.protobuf.GeneratedMessage.ExtendableMessage<
+        Phone> implements
+      // @@protoc_insertion_point(message_implements:retrofit2.converter.protobuf.Phone)
+      PhoneOrBuilder {
     // Use Phone.newBuilder() to construct.
-    private Phone(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private Phone(com.google.protobuf.GeneratedMessage.ExtendableBuilder<retrofit2.converter.protobuf.PhoneProtos.Phone, ?> builder) {
       super(builder);
       this.unknownFields = builder.getUnknownFields();
     }
@@ -80,8 +82,9 @@ public final class PhoneProtos {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              number_ = input.readBytes();
+              number_ = bs;
               break;
             }
           }
@@ -98,14 +101,14 @@ public final class PhoneProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return PhoneProtos.internal_static_retrofit_Phone_descriptor;
+      return retrofit2.converter.protobuf.PhoneProtos.internal_static_retrofit2_converter_protobuf_Phone_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return PhoneProtos.internal_static_retrofit_Phone_fieldAccessorTable
+      return retrofit2.converter.protobuf.PhoneProtos.internal_static_retrofit2_converter_protobuf_Phone_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              PhoneProtos.Phone.class, PhoneProtos.Phone.Builder.class);
+              retrofit2.converter.protobuf.PhoneProtos.Phone.class, retrofit2.converter.protobuf.PhoneProtos.Phone.Builder.class);
     }
 
     public static com.google.protobuf.Parser<Phone> PARSER =
@@ -124,7 +127,6 @@ public final class PhoneProtos {
     }
 
     private int bitField0_;
-    // optional string number = 1;
     public static final int NUMBER_FIELD_NUMBER = 1;
     private java.lang.Object number_;
     /**
@@ -141,7 +143,7 @@ public final class PhoneProtos {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -157,7 +159,7 @@ public final class PhoneProtos {
         getNumberBytes() {
       java.lang.Object ref = number_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         number_ = b;
@@ -173,8 +175,13 @@ public final class PhoneProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
+      if (!extensionsAreInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -182,9 +189,13 @@ public final class PhoneProtos {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
+      com.google.protobuf.GeneratedMessage
+        .ExtendableMessage<retrofit2.converter.protobuf.PhoneProtos.Phone>.ExtensionWriter extensionWriter =
+          newExtensionWriter();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(1, getNumberBytes());
       }
+      extensionWriter.writeUntil(3, output);
       getUnknownFields().writeTo(output);
     }
 
@@ -198,6 +209,7 @@ public final class PhoneProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, getNumberBytes());
       }
+      size += extensionsSerializedSize();
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
       return size;
@@ -210,53 +222,53 @@ public final class PhoneProtos {
       return super.writeReplace();
     }
 
-    public static PhoneProtos.Phone parseFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static PhoneProtos.Phone parseFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static PhoneProtos.Phone parseFrom(byte[] data)
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static PhoneProtos.Phone parseFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static PhoneProtos.Phone parseFrom(java.io.InputStream input)
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static PhoneProtos.Phone parseFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static PhoneProtos.Phone parseDelimitedFrom(java.io.InputStream input)
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static PhoneProtos.Phone parseDelimitedFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static PhoneProtos.Phone parseFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static PhoneProtos.Phone parseFrom(
+    public static retrofit2.converter.protobuf.PhoneProtos.Phone parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -265,7 +277,7 @@ public final class PhoneProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(PhoneProtos.Phone prototype) {
+    public static Builder newBuilder(retrofit2.converter.protobuf.PhoneProtos.Phone prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
@@ -277,21 +289,23 @@ public final class PhoneProtos {
       return builder;
     }
     /**
-     * Protobuf type {@code retrofit2.Phone}
+     * Protobuf type {@code retrofit2.converter.protobuf.Phone}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements PhoneProtos.PhoneOrBuilder {
+        com.google.protobuf.GeneratedMessage.ExtendableBuilder<
+          retrofit2.converter.protobuf.PhoneProtos.Phone, Builder> implements
+        // @@protoc_insertion_point(builder_implements:retrofit2.converter.protobuf.Phone)
+        retrofit2.converter.protobuf.PhoneProtos.PhoneOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return PhoneProtos.internal_static_retrofit_Phone_descriptor;
+        return retrofit2.converter.protobuf.PhoneProtos.internal_static_retrofit2_converter_protobuf_Phone_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return PhoneProtos.internal_static_retrofit_Phone_fieldAccessorTable
+        return retrofit2.converter.protobuf.PhoneProtos.internal_static_retrofit2_converter_protobuf_Phone_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                PhoneProtos.Phone.class, PhoneProtos.Phone.Builder.class);
+                retrofit2.converter.protobuf.PhoneProtos.Phone.class, retrofit2.converter.protobuf.PhoneProtos.Phone.Builder.class);
       }
 
       // Construct using retrofit2.converter.protobuf.PhoneProtos.Phone.newBuilder()
@@ -325,23 +339,23 @@ public final class PhoneProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return PhoneProtos.internal_static_retrofit_Phone_descriptor;
+        return retrofit2.converter.protobuf.PhoneProtos.internal_static_retrofit2_converter_protobuf_Phone_descriptor;
       }
 
-      public PhoneProtos.Phone getDefaultInstanceForType() {
-        return PhoneProtos.Phone.getDefaultInstance();
+      public retrofit2.converter.protobuf.PhoneProtos.Phone getDefaultInstanceForType() {
+        return retrofit2.converter.protobuf.PhoneProtos.Phone.getDefaultInstance();
       }
 
-      public PhoneProtos.Phone build() {
-        PhoneProtos.Phone result = buildPartial();
+      public retrofit2.converter.protobuf.PhoneProtos.Phone build() {
+        retrofit2.converter.protobuf.PhoneProtos.Phone result = buildPartial();
         if (!result.isInitialized()) {
-          throw AbstractMessage.Builder.newUninitializedMessageException(result);
+          throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public PhoneProtos.Phone buildPartial() {
-        PhoneProtos.Phone result = new PhoneProtos.Phone(this);
+      public retrofit2.converter.protobuf.PhoneProtos.Phone buildPartial() {
+        retrofit2.converter.protobuf.PhoneProtos.Phone result = new retrofit2.converter.protobuf.PhoneProtos.Phone(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -354,26 +368,31 @@ public final class PhoneProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof PhoneProtos.Phone) {
-          return mergeFrom((PhoneProtos.Phone)other);
+        if (other instanceof retrofit2.converter.protobuf.PhoneProtos.Phone) {
+          return mergeFrom((retrofit2.converter.protobuf.PhoneProtos.Phone)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(PhoneProtos.Phone other) {
-        if (other == PhoneProtos.Phone.getDefaultInstance()) return this;
+      public Builder mergeFrom(retrofit2.converter.protobuf.PhoneProtos.Phone other) {
+        if (other == retrofit2.converter.protobuf.PhoneProtos.Phone.getDefaultInstance()) return this;
         if (other.hasNumber()) {
           bitField0_ |= 0x00000001;
           number_ = other.number_;
           onChanged();
         }
+        this.mergeExtensionFields(other);
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
+        if (!extensionsAreInitialized()) {
+          
+          return false;
+        }
         return true;
       }
 
@@ -381,11 +400,11 @@ public final class PhoneProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        PhoneProtos.Phone parsedMessage = null;
+        retrofit2.converter.protobuf.PhoneProtos.Phone parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (PhoneProtos.Phone) e.getUnfinishedMessage();
+          parsedMessage = (retrofit2.converter.protobuf.PhoneProtos.Phone) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -396,7 +415,6 @@ public final class PhoneProtos {
       }
       private int bitField0_;
 
-      // optional string number = 1;
       private java.lang.Object number_ = "";
       /**
        * <code>optional string number = 1;</code>
@@ -410,9 +428,12 @@ public final class PhoneProtos {
       public java.lang.String getNumber() {
         java.lang.Object ref = number_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          number_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            number_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -425,7 +446,7 @@ public final class PhoneProtos {
           getNumberBytes() {
         java.lang.Object ref = number_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           number_ = b;
@@ -470,7 +491,7 @@ public final class PhoneProtos {
         return this;
       }
 
-      // @@protoc_insertion_point(builder_scope:retrofit2.Phone)
+      // @@protoc_insertion_point(builder_scope:retrofit2.converter.protobuf.Phone)
     }
 
     static {
@@ -478,14 +499,25 @@ public final class PhoneProtos {
       defaultInstance.initFields();
     }
 
-    // @@protoc_insertion_point(class_scope:retrofit2.Phone)
+    // @@protoc_insertion_point(class_scope:retrofit2.converter.protobuf.Phone)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_retrofit_Phone_descriptor;
+  public static final int VOICEMAIL_FIELD_NUMBER = 2;
+  /**
+   * <code>extend .retrofit2.converter.protobuf.Phone { ... }</code>
+   */
+  public static final
+    com.google.protobuf.GeneratedMessage.GeneratedExtension<
+      retrofit2.converter.protobuf.PhoneProtos.Phone,
+      java.lang.Boolean> voicemail = com.google.protobuf.GeneratedMessage
+          .newFileScopedGeneratedExtension(
+        java.lang.Boolean.class,
+        null);
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_retrofit2_converter_protobuf_Phone_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_retrofit_Phone_fieldAccessorTable;
+      internal_static_retrofit2_converter_protobuf_Phone_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -495,28 +527,31 @@ public final class PhoneProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022protos/phone.proto\022\010retrofit\"\027\n\005Phone\022" +
-      "\016\n\006number\030\001 \001(\tB!\n\022retrofit.converterB\013P" +
-      "honeProtos"
+      "\n\022protos/phone.proto\022\034retrofit2.converte" +
+      "r.protobuf\"\035\n\005Phone\022\016\n\006number\030\001 \001(\t*\004\010\002\020" +
+      "\003:6\n\tvoicemail\022#.retrofit2.converter.pro" +
+      "tobuf.Phone\030\002 \001(\010B+\n\034retrofit2.converter" +
+      ".protobufB\013PhoneProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_retrofit_Phone_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_retrofit_Phone_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_retrofit_Phone_descriptor,
-              new java.lang.String[] { "Number", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_retrofit2_converter_protobuf_Phone_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_retrofit2_converter_protobuf_Phone_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_retrofit2_converter_protobuf_Phone_descriptor,
+        new java.lang.String[] { "Number", });
+    voicemail.internalInit(descriptor.getExtensions().get(0));
   }
 
   // @@protoc_insertion_point(outer_class_scope)

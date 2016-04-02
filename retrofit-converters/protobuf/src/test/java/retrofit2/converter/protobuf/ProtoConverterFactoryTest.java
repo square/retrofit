@@ -15,6 +15,7 @@
  */
 package retrofit2.converter.protobuf;
 
+import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.util.List;
@@ -44,10 +45,14 @@ public final class ProtoConverterFactoryTest {
     @GET("/") Call<String> wrongClass();
     @GET("/") Call<List<String>> wrongType();
   }
+  interface ServiceWithRegistry {
+    @GET("/") Call<Phone> get();
+  }
 
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
+  private ServiceWithRegistry serviceWithRegistry;
 
   @Before public void setUp() {
     Retrofit retrofit = new Retrofit.Builder()
@@ -55,6 +60,14 @@ public final class ProtoConverterFactoryTest {
         .addConverterFactory(ProtoConverterFactory.create())
         .build();
     service = retrofit.create(Service.class);
+
+    ExtensionRegistry registry = ExtensionRegistry.newInstance();
+    PhoneProtos.registerAllExtensions(registry);
+    Retrofit retrofitWithRegistry = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ProtoConverterFactory.createWithRegistry(registry))
+        .build();
+    serviceWithRegistry = retrofitWithRegistry.create(ServiceWithRegistry.class);
   }
 
   @Test public void serializeAndDeserialize() throws IOException, InterruptedException {
@@ -78,6 +91,17 @@ public final class ProtoConverterFactoryTest {
     Response<Phone> response = call.execute();
     Phone body = response.body();
     assertThat(body.hasNumber()).isFalse();
+  }
+
+  @Test public void deserializeUsesRegistry() throws IOException {
+    ByteString encoded = ByteString.decodeBase64("Cg4oNTE5KSA4NjctNTMwORAB");
+    server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
+
+    Call<Phone> call = serviceWithRegistry.get();
+    Response<Phone> response = call.execute();
+    Phone body = response.body();
+    assertThat(body.getNumber()).isEqualTo("(519) 867-5309");
+    assertThat(body.getExtension(PhoneProtos.voicemail)).isEqualTo(true);
   }
 
   @Test public void deserializeWrongClass() throws IOException {

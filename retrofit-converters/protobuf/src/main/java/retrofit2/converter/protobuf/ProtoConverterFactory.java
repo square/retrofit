@@ -15,6 +15,7 @@
  */
 package retrofit2.converter.protobuf;
 
+import com.google.protobuf.ExtensionRegistryLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 import java.lang.annotation.Annotation;
@@ -33,7 +34,18 @@ import retrofit2.Retrofit;
  */
 public final class ProtoConverterFactory extends Converter.Factory {
   public static ProtoConverterFactory create() {
-    return new ProtoConverterFactory();
+    return new ProtoConverterFactory(null);
+  }
+
+  /** Create an instance which uses {@code registry} when deserializing. */
+  public static ProtoConverterFactory createWithRegistry(ExtensionRegistryLite registry) {
+    return new ProtoConverterFactory(registry);
+  }
+
+  private final ExtensionRegistryLite registry;
+
+  private ProtoConverterFactory(ExtensionRegistryLite registry) {
+    this.registry = registry;
   }
 
   @Override
@@ -56,7 +68,7 @@ public final class ProtoConverterFactory extends Converter.Factory {
       throw new IllegalArgumentException(
           "Found a protobuf message but " + c.getName() + " had no PARSER field.");
     }
-    return new ProtoResponseBodyConverter<>(parser);
+    return new ProtoResponseBodyConverter<>(parser, registry);
   }
 
   @Override
