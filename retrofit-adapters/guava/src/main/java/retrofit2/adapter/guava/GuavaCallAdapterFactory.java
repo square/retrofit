@@ -17,6 +17,7 @@ package retrofit2.adapter.guava;
 
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -26,6 +27,27 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+/**
+ * A {@linkplain CallAdapter.Factory call adapter} which creates Guava futures.
+ * <p>
+ * Adding this class to {@link Retrofit} allows you to return {@link ListenableFuture} from service
+ * methods.
+ * <pre>{@code
+ * interface MyService {
+ *   &#64;GET("user/me")
+ *   ListenableFuture<User> getUser()
+ * }
+ * }</pre>
+ * There are two configurations supported for the {@code ListenableFuture} type parameter:
+ * <ul>
+ * <li>Direct body (e.g., {@code ListenableFuture<User>}) returns the deserialized body for 2XX
+ * responses, sets {@link HttpException} errors for non-2XX responses, and sets {@link IOException}
+ * for network errors.</li>
+ * <li>Response wrapped body (e.g., {@code ListenableFuture<Response<User>>}) returns a
+ * {@link Response} object for all HTTP responses and sets {@link IOException} for network
+ * errors</li>
+ * </ul>
+ */
 public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
   public static GuavaCallAdapterFactory create() {
     return new GuavaCallAdapterFactory();
