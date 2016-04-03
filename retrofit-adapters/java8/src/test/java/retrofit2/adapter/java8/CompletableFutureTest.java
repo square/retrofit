@@ -78,7 +78,8 @@ public final class CompletableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e.getCause()).isInstanceOf(IOException.class)
+          .hasMessage("IO bodyFailure Error");
     }
   }
 
@@ -108,7 +109,8 @@ public final class CompletableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e.getCause()).isInstanceOf(IOException.class)
+          .hasMessage("IO responseFailure Error");
     }
   }
 }
