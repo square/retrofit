@@ -15,6 +15,7 @@
  */
 package retrofit2.adapter.rxjava;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -43,6 +44,17 @@ import rx.subscriptions.Subscriptions;
  *   Observable<User> getUser()
  * }
  * }</pre>
+ * There are three configurations supported for the {@code Observable} type parameter:
+ * <ul>
+ * <li>Direct body (e.g., {@code Observable<User>}) calls {@code onNext} with the deserialized body
+ * for 2XX responses and calls {@code onError} with {@link HttpException} for non-2XX responses and
+ * {@link IOException} for network errors.</li>
+ * <li>Response wrapped body (e.g., {@code Observable<Response<User>>}) calls {@code onNext}
+ * with a {@link Response} object for all HTTP responses and calls {@code onError} with
+ * {@link IOException} for network errors</li>
+ * <li>Result wrapped body (e.g., {@code Observable<Result<User>>}) calls {@code onNext} with a
+ * {@link Result} object for all HTTP responses and errors.</li>
+ * </ul>
  */
 public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   /**
