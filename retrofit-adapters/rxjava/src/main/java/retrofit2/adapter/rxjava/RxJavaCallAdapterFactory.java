@@ -27,10 +27,9 @@ import rx.Observable;
 import rx.Producer;
 import rx.Scheduler;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.exceptions.Exceptions;
-import rx.functions.Action0;
 import rx.functions.Func1;
-import rx.subscriptions.Subscriptions;
 
 /**
  * A {@linkplain CallAdapter.Factory call adapter} which uses RxJava for creating observables.
@@ -137,12 +136,12 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
       // Wrap the call in a helper which handles both unsubscription and backpressure.
       RequestArbiter<T> requestArbiter = new RequestArbiter<>(call, subscriber);
-      subscriber.add(Subscriptions.create(requestArbiter));
+      subscriber.add(requestArbiter);
       subscriber.setProducer(requestArbiter);
     }
   }
 
-  static final class RequestArbiter<T> extends AtomicBoolean implements Action0, Producer {
+  static final class RequestArbiter<T> extends AtomicBoolean implements Subscription, Producer {
     private final Call<T> call;
     private final Subscriber<? super Response<T>> subscriber;
 
@@ -174,8 +173,12 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       }
     }
 
-    @Override public void call() {
+    @Override public void unsubscribe() {
       call.cancel();
+    }
+
+    @Override public boolean isUnsubscribed() {
+      return call.isCanceled();
     }
   }
 
