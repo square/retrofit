@@ -94,7 +94,7 @@ public final class ExecutorCallAdapterFactoryTest {
     Call<String> call = (Call<String>) adapter.adapt(originalCall);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
-    verify(callback).onResponse(originalCall, response);
+    verify(callback).onResponse(call, response);
   }
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
@@ -111,7 +111,7 @@ public final class ExecutorCallAdapterFactoryTest {
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verifyNoMoreInteractions(callbackExecutor);
-    verify(callback).onFailure(originalCall, throwable);
+    verify(callback).onFailure(call, throwable);
     verifyNoMoreInteractions(callback);
   }
 
