@@ -28,19 +28,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Both keys and values are converted to strings using {@link String#valueOf(Object)}.
  * <p>
  * Simple Example:
- * <pre>{@code
+ * <pre><code>
  * &#64;GET("/search")
  * Call&lt;ResponseBody> list(@QueryMap Map&lt;String, String&gt; filters);
- * }</pre>
+ * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "bar", "kit", "kat"))} yields
  * {@code /search?foo=bar&kit=kat}.
  * <p>
  * Map keys and values representing parameter values are URL encoded by default. Specify
  * {@link #encoded() encoded=true} to change this behavior.
- * <pre>{@code
+ * <pre><code>
  * &#64;GET("/search")
  * Call&lt;ResponseBody> list(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
- * }</pre>
+ * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+bar"))} yields
  * {@code /search?foo=foo+bar}.
  * <p>

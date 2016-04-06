@@ -43,7 +43,7 @@ import static retrofit2.Utils.checkNotNull;
  * the builder} and pass your interface to {@link #create} to generate an implementation.
  * <p>
  * For example,
- * <pre>{@code
+ * <pre><code>
  * Retrofit retrofit = new Retrofit.Builder()
  *     .baseUrl("https://api.example.com/")
  *     .addConverterFactory(GsonConverterFactory.create())
@@ -51,7 +51,7 @@ import static retrofit2.Utils.checkNotNull;
  *
  * MyApi api = retrofit.create(MyApi.class);
  * Response<User> user = api.getUser().execute();
- * }</pre>
+ * </code></pre>
  *
  * @author Bob Lee (bob@squareup.com)
  * @author Jake Wharton (jw@squareup.com)

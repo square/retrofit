@@ -40,7 +40,7 @@ public interface CallAdapter<T> {
    * <p>
    * For example, given an instance for a hypothetical utility, {@code Async}, this instance would
    * return a new {@code Async<R>} which invoked {@code call} when run.
-   * <pre>{@code
+   * <pre><code>
    * &#64;Override
    * public <R> Async<R> adapt(final Call<R> call) {
    *   return Async.create(new Callable<Response<R>>() {
@@ -50,7 +50,7 @@ public interface CallAdapter<T> {
    *     }
    *   });
    * }
-   * }</pre>
+   * </code></pre>
    */
   <R> T adapt(Call<R> call);
 
