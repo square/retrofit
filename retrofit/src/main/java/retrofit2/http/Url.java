@@ -26,10 +26,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * URL resolved against the {@linkplain Retrofit#baseUrl() base URL}.
- * <pre>{@code
+ * <pre><code>
  * &#64;GET
  * Call&lt;ResponseBody> list(@Url String url);
- * }</pre>
+ * </code></pre>
  * <p>
  * See {@linkplain retrofit2.Retrofit.Builder#baseUrl(HttpUrl) base URL} for details of how
  * the value will be resolved against a base URL to create the full endpoint URL.

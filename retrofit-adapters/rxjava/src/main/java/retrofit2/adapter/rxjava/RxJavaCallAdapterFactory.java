@@ -37,12 +37,12 @@ import rx.functions.Func1;
  * <p>
  * Adding this class to {@link Retrofit} allows you to return {@link Observable} from service
  * methods.
- * <pre>{@code
+ * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
  *   Observable<User> getUser()
  * }
- * }</pre>
+ * </code></pre>
  * There are three configurations supported for the {@code Observable} type parameter:
  * <ul>
  * <li>Direct body (e.g., {@code Observable<User>}) calls {@code onNext} with the deserialized body

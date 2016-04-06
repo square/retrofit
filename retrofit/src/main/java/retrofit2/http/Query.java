@@ -30,33 +30,33 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * query parameter for each non-{@code null} item.
  * <p>
  * Simple Example:
- * <pre>{@code
+ * <pre><code>
  * &#64;GET("/list")
  * Call&lt;ResponseBody> list(@Query("page") int page);
- * }</pre>
+ * </code></pre>
  * Calling with {@code foo.list(1)} yields {@code /list?page=1}.
  * <p>
  * Example with {@code null}:
- * <pre>{@code
+ * <pre><code>
  * &#64;GET("/list")
  * Call&lt;ResponseBody> list(@Query("category") String category);
- * }</pre>
+ * </code></pre>
  * Calling with {@code foo.list(null)} yields {@code /list}.
  * <p>
  * Array/Varargs Example:
- * <pre>{@code
+ * <pre><code>
  * &#64;GET("/list")
  * Call&lt;ResponseBody> list(@Query("category") String... categories);
- * }</pre>
+ * </code></pre>
  * Calling with {@code foo.list("bar", "baz")} yields
  * {@code /list?category=bar&category=baz}.
  * <p>
  * Parameter names and values are URL encoded by default. Specify {@link #encoded() encoded=true}
  * to change this behavior.
- * <pre>{@code
+ * <pre><code>
  * &#64;GET("/search")
  * Call&lt;ResponseBody> list(@Query(value="foo", encoded=true) String foo);
- * }</pre>
+ * </code></pre>
  * Calling with {@code foo.list("foo+bar"))} yields {@code /search?foo=foo+bar}.
  *
  * @see QueryMap

@@ -25,19 +25,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Use a custom HTTP verb for a request.
- * <pre>{@code
+ * <pre><code>
  * interface Service {
  *   &#064;HTTP(method = "CUSTOM", path = "custom/endpoint/")
  *   Call<ResponseBody> customEndpoint();
  * }
- * }</pre>
+ * </code></pre>
  * This annotation can also used for sending {@code DELETE} with a request body:
- * <pre>{@code
+ * <pre><code>
  * interface Service {
  *   &#064;HTTP(method = "DELETE", path = "remove/", hasBody = true)
  *   Call<ResponseBody> deleteObject(@Body RequestBody object);
  * }
- * }</pre>
+ * </code></pre>
  */
 @Documented
 @Target(METHOD)

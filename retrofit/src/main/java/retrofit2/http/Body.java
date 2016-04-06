@@ -32,8 +32,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * request body.
  * <p>
  * Body parameters may not be {@code null}.
- *
- * @author Eric Denman (edenman@squareup.com)
  */
 @Documented
 @Target(PARAMETER)

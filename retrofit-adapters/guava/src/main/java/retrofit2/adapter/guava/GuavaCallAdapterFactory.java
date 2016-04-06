@@ -32,12 +32,12 @@ import retrofit2.Retrofit;
  * <p>
  * Adding this class to {@link Retrofit} allows you to return {@link ListenableFuture} from service
  * methods.
- * <pre>{@code
+ * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
  *   ListenableFuture<User> getUser()
  * }
- * }</pre>
+ * </code></pre>
  * There are two configurations supported for the {@code ListenableFuture} type parameter:
  * <ul>
  * <li>Direct body (e.g., {@code ListenableFuture<User>}) returns the deserialized body for 2XX
