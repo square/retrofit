@@ -36,12 +36,14 @@ final class Utils {
     // No instances.
   }
 
-  public static Class<?> getRawType(Type type) {
+  static Class<?> getRawType(Type type) {
+    if (type == null) throw new NullPointerException("type == null");
+
     if (type instanceof Class<?>) {
       // Type is a normal class.
       return (Class<?>) type;
-
-    } else if (type instanceof ParameterizedType) {
+    }
+    if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
 
       // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
@@ -49,28 +51,26 @@ final class Utils {
       Type rawType = parameterizedType.getRawType();
       if (!(rawType instanceof Class)) throw new IllegalArgumentException();
       return (Class<?>) rawType;
-
-    } else if (type instanceof GenericArrayType) {
+    }
+    if (type instanceof GenericArrayType) {
       Type componentType = ((GenericArrayType) type).getGenericComponentType();
       return Array.newInstance(getRawType(componentType), 0).getClass();
-
-    } else if (type instanceof TypeVariable) {
+    }
+    if (type instanceof TypeVariable) {
       // We could use the variable's bounds, but that won't work if there are multiple. Having a raw
       // type that's more general than necessary is okay.
       return Object.class;
-
-    } else if (type instanceof WildcardType) {
-      return getRawType(((WildcardType) type).getUpperBounds()[0]);
-
-    } else {
-      String className = type == null ? "null" : type.getClass().getName();
-      throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-          + "GenericArrayType, but <" + type + "> is of type " + className);
     }
+    if (type instanceof WildcardType) {
+      return getRawType(((WildcardType) type).getUpperBounds()[0]);
+    }
+
+    throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
+          + "GenericArrayType, but <" + type + "> is of type " + type.getClass().getName());
   }
 
   /** Returns true if {@code a} and {@code b} are equal. */
-  public static boolean equals(Type a, Type b) {
+  static boolean equals(Type a, Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
 
@@ -162,7 +162,7 @@ final class Utils {
     return o != null ? o.hashCode() : 0;
   }
 
-  public static String typeToString(Type type) {
+  static String typeToString(Type type) {
     return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
   }
 
@@ -173,13 +173,13 @@ final class Utils {
    *
    * @param supertype a superclass of, or interface implemented by, this.
    */
-  public static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
+  static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
     return resolve(context, contextRawType,
         getGenericSupertype(context, contextRawType, supertype));
   }
 
-  public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
+  static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
       if (toResolve instanceof TypeVariable) {
@@ -318,9 +318,9 @@ final class Utils {
 
   static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
-    if (types.length <= index) {
+    if (index < 0 || index >= types.length) {
       throw new IllegalArgumentException(
-          "Expected at least " + index + " type argument(s) but got: " + Arrays.toString(types));
+          "Index " + index + " not in range [0," + types.length + ") for " + type);
     }
     Type paramType = types[index];
     if (paramType instanceof WildcardType) {
