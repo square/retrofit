@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+Version 2.0.2 *(2016-04-12)*
+----------------------------
+
+ * New: `ProtoConverterFactory.createWithRegistry()` method accepts an extension registry to be used
+   when deserializing protos.
+ * Fix: Pass the correct `Call` instance to `Callback`'s `onResponse` and `onFailure` methods such
+   that calling `clone()` retains the correct threading behavior.
+ * Fix: Reduce the per-request allocation overhead for the RxJava call adapter.
+
+
 Version 2.0.1 *(2016-03-30)*
 ----------------------------
 
