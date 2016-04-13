@@ -33,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre><code>
  * &#64;FormUrlEncoded
  * &#64;POST("/")
- * Call&lt;ResponseBody> example(
+ * Call&lt;ResponseBody&gt; example(
  *     &#64;Field("name") String name,
  *     &#64;Field("occupation") String occupation);
  * </code></pre>
@@ -44,7 +44,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre><code>
  * &#64;FormUrlEncoded
  * &#64;POST("/list")
- * Call&lt;ResponseBody> example(@Field("name") String... names);
+ * Call&lt;ResponseBody&gt; example(@Field("name") String... names);
  * </code></pre>
  * Calling with {@code foo.example("Bob Smith", "Jane Doe")} yields a request body of
  * {@code name=Bob+Smith&name=Jane+Doe}.

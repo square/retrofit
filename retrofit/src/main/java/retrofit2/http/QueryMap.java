@@ -30,7 +30,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Simple Example:
  * <pre><code>
  * &#64;GET("/search")
- * Call&lt;ResponseBody> list(@QueryMap Map&lt;String, String&gt; filters);
+ * Call&lt;ResponseBody&gt; list(@QueryMap Map&lt;String, String&gt; filters);
  * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "bar", "kit", "kat"))} yields
  * {@code /search?foo=bar&kit=kat}.
@@ -39,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link #encoded() encoded=true} to change this behavior.
  * <pre><code>
  * &#64;GET("/search")
- * Call&lt;ResponseBody> list(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
+ * Call&lt;ResponseBody&gt; list(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
  * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+bar"))} yields
  * {@code /search?foo=foo+bar}.

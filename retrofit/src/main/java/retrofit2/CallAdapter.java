@@ -42,10 +42,10 @@ public interface CallAdapter<T> {
    * return a new {@code Async<R>} which invoked {@code call} when run.
    * <pre><code>
    * &#64;Override
-   * public <R> Async<R> adapt(final Call<R> call) {
-   *   return Async.create(new Callable<Response<R>>() {
+   * public &lt;R&gt; Async&lt;R&gt; adapt(final Call&lt;R&gt; call) {
+   *   return Async.create(new Callable&lt;Response&lt;R&gt;&gt;() {
    *     &#64;Override
-   *     public Response<R> call() throws Exception {
+   *     public Response&lt;R&gt; call() throws Exception {
    *       return call.execute();
    *     }
    *   });

@@ -40,7 +40,7 @@ import rx.functions.Func1;
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
- *   Observable<User> getUser()
+ *   Observable&lt;User&gt; getUser()
  * }
  * </code></pre>
  * There are three configurations supported for the {@code Observable} type parameter:

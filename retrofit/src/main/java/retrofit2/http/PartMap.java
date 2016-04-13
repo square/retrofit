@@ -37,7 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre><code>
  * &#64;Multipart
  * &#64;POST("/upload")
- * Call&lt;ResponseBody> upload(
+ * Call&lt;ResponseBody&gt; upload(
  *     &#64;Part("file") RequestBody file,
  *     &#64;PartMap Map&lt;String, RequestBody&gt; params);
  * </code></pre>

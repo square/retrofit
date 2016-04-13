@@ -32,21 +32,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Simple Example:
  * <pre><code>
  * &#64;GET("/list")
- * Call&lt;ResponseBody> list(@Query("page") int page);
+ * Call&lt;ResponseBody&gt; list(@Query("page") int page);
  * </code></pre>
  * Calling with {@code foo.list(1)} yields {@code /list?page=1}.
  * <p>
  * Example with {@code null}:
  * <pre><code>
  * &#64;GET("/list")
- * Call&lt;ResponseBody> list(@Query("category") String category);
+ * Call&lt;ResponseBody&gt; list(@Query("category") String category);
  * </code></pre>
  * Calling with {@code foo.list(null)} yields {@code /list}.
  * <p>
  * Array/Varargs Example:
  * <pre><code>
  * &#64;GET("/list")
- * Call&lt;ResponseBody> list(@Query("category") String... categories);
+ * Call&lt;ResponseBody&gt; list(@Query("category") String... categories);
  * </code></pre>
  * Calling with {@code foo.list("bar", "baz")} yields
  * {@code /list?category=bar&category=baz}.
@@ -55,7 +55,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * to change this behavior.
  * <pre><code>
  * &#64;GET("/search")
- * Call&lt;ResponseBody> list(@Query(value="foo", encoded=true) String foo);
+ * Call&lt;ResponseBody&gt; list(@Query(value="foo", encoded=true) String foo);
  * </code></pre>
  * Calling with {@code foo.list("foo+bar"))} yields {@code /search?foo=foo+bar}.
  *

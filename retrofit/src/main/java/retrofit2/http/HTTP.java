@@ -28,14 +28,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre><code>
  * interface Service {
  *   &#064;HTTP(method = "CUSTOM", path = "custom/endpoint/")
- *   Call<ResponseBody> customEndpoint();
+ *   Call&lt;ResponseBody&gt; customEndpoint();
  * }
  * </code></pre>
  * This annotation can also used for sending {@code DELETE} with a request body:
  * <pre><code>
  * interface Service {
  *   &#064;HTTP(method = "DELETE", path = "remove/", hasBody = true)
- *   Call<ResponseBody> deleteObject(@Body RequestBody object);
+ *   Call&lt;ResponseBody&gt; deleteObject(@Body RequestBody object);
  * }
  * </code></pre>
  */

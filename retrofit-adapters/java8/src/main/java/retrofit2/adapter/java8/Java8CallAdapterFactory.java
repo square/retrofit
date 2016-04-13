@@ -34,7 +34,7 @@ import retrofit2.Retrofit;
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
- *   CompletableFuture<User> getUser()
+ *   CompletableFuture&lt;User&gt; getUser()
  * }
  * </code></pre>
  * There are two configurations supported for the {@code CompletableFuture} type parameter:

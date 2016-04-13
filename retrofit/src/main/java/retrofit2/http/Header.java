@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Replaces the header with the value of its target.
  * <pre><code>
  * &#64;GET("/")
- * Call&lt;ResponseBody> foo(@Header("Accept-Language") String lang);
+ * Call&lt;ResponseBody&gt; foo(@Header("Accept-Language") String lang);
  * </code></pre>
  * Header parameters may be {@code null} which will omit them from the request. Passing a
  * {@link java.util.List List} or array will result in a header for each non-{@code null} item.

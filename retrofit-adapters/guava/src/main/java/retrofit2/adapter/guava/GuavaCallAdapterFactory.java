@@ -35,7 +35,7 @@ import retrofit2.Retrofit;
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
- *   ListenableFuture<User> getUser()
+ *   ListenableFuture&lt;User&gt; getUser()
  * }
  * </code></pre>
  * There are two configurations supported for the {@code ListenableFuture} type parameter:

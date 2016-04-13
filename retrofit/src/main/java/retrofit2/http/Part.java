@@ -43,7 +43,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre><code>
  * &#64;Multipart
  * &#64;POST("/")
- * Call&lt;ResponseBody> example(
+ * Call&lt;ResponseBody&gt; example(
  *     &#64;Part("description") String description,
  *     &#64;Part(value = "image", encoding = "8-bit") RequestBody image);
  * </code></pre>

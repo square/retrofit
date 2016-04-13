@@ -50,7 +50,7 @@ import static retrofit2.Utils.checkNotNull;
  *     .build();
  *
  * MyApi api = retrofit.create(MyApi.class);
- * Response<User> user = api.getUser().execute();
+ * Response&lt;User&gt; user = api.getUser().execute();
  * </code></pre>
  *
  * @author Bob Lee (bob@squareup.com)
