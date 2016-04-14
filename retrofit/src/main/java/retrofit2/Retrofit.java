@@ -15,6 +15,15 @@
  */
 package retrofit2;
 
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.http.GET;
+import retrofit2.http.HTTP;
+import retrofit2.http.Header;
+import retrofit2.http.Url;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -25,14 +34,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.http.GET;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.Url;
 
 import static java.util.Collections.unmodifiableList;
 import static retrofit2.Utils.checkNotNull;
@@ -354,9 +355,9 @@ public final class Retrofit {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+    for (Converter.Factory converterFactory : converterFactories) {
       Converter<?, String> converter =
-          converterFactories.get(i).stringConverter(type, annotations, this);
+              converterFactory.stringConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<T, String>) converter;
