@@ -35,8 +35,18 @@ import java.util.regex.Pattern;
 final class ServiceMethod<T> {
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
-  static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
-  static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
+  static final ThreadLocal<Pattern> PARAM_URL_REGEX = new ThreadLocal<Pattern>() {
+    @Override
+    protected Pattern initialValue() {
+      return Pattern.compile("\\{(" + PARAM + ")\\}");
+    }
+  };
+  private static final ThreadLocal<Pattern> PARAM_NAME_REGEX = new ThreadLocal<Pattern>() {
+    @Override
+    protected Pattern initialValue() {
+      return Pattern.compile(PARAM);
+    }
+  };
 
   final okhttp3.Call.Factory callFactory;
   final CallAdapter<?> callAdapter;
@@ -82,7 +92,7 @@ final class ServiceMethod<T> {
     }
 
     for (int p = 1; p < argumentCount; p++) {
-      handlers[p].apply(requestBuilder, args[p]);
+      handlers[p].apply(requestBuilder, (args != null) ? args[p] : null);
     }
 
     return requestBuilder.build();
@@ -268,7 +278,7 @@ final class ServiceMethod<T> {
       if (question != -1 && question < value.length() - 1) {
         // Ensure the query string does not have any named parameters.
         String queryParams = value.substring(question + 1);
-        Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(queryParams);
+        Matcher queryParamMatcher = PARAM_URL_REGEX.get().matcher(queryParams);
         if (queryParamMatcher.find()) {
           throw methodError("URL query string \"%s\" must not have replace block. "
               + "For dynamic query parameters use @Query.", queryParams);
@@ -611,9 +621,9 @@ final class ServiceMethod<T> {
     }
 
     private void validatePathName(int p, String name) {
-      if (!PARAM_NAME_REGEX.matcher(name).matches()) {
+      if (!PARAM_NAME_REGEX.get().matcher(name).matches()) {
         throw parameterError(p, "@Path parameter name must match %s. Found: %s",
-            PARAM_URL_REGEX.pattern(), name);
+            PARAM_URL_REGEX.get().pattern(), name);
       }
       // Verify URL replacement name is actually present in the URL path.
       if (!relativeUrlParamNames.contains(name)) {
@@ -658,7 +668,7 @@ final class ServiceMethod<T> {
    * in the URI, it will only show up once in the set.
    */
   static Set<String> parsePathParameters(String path) {
-    Matcher m = PARAM_URL_REGEX.matcher(path);
+    Matcher m = PARAM_URL_REGEX.get().matcher(path);
     Set<String> patterns = new LinkedHashSet<>();
     while (m.find()) {
       patterns.add(m.group(1));
