@@ -25,7 +25,7 @@
 
   <groupId>com.squareup.retrofit2</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0.2-SNAPSHOT</version>
+  <version>2.0.2</version>
   <packaging>pom</packaging>
 
   <name>Retrofit (Parent)</name>
@@ -78,7 +78,7 @@
     <url>http://github.com/square/retrofit</url>
     <connection>scm:git:git://github.com/square/retrofit.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/square/retrofit.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>parent-2.0.2</tag>
   </scm>
 
   <issueManagement>
