@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-Version 2.0.2 *(2016-04-12)*
+Version 2.0.2 *(2016-04-14)*
 ----------------------------
 
  * New: `ProtoConverterFactory.createWithRegistry()` method accepts an extension registry to be used
