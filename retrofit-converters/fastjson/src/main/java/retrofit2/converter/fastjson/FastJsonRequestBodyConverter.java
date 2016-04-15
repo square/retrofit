@@ -10,31 +10,31 @@ import retrofit2.Converter;
 import java.io.IOException;
 
 final class FastJsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
-    private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
-    private SerializeConfig mSerializeConfig;
-    private SerializerFeature[] mSerializerFeatures;
+  private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
+  private SerializeConfig serializeConfig;
+  private SerializerFeature[] serializerFeatures;
 
-    FastJsonRequestBodyConverter(SerializeConfig config, SerializerFeature... features) {
-        mSerializeConfig = config;
-        mSerializerFeatures = features;
-    }
+  FastJsonRequestBodyConverter(SerializeConfig config, SerializerFeature... features) {
+    serializeConfig = config;
+    serializerFeatures = features;
+  }
 
-    @Override
-    public RequestBody convert(T value) throws IOException {
-        byte[] content;
-        if (mSerializeConfig != null) {
-            if (mSerializerFeatures != null) {
-                content = JSON.toJSONBytes(value, mSerializeConfig, mSerializerFeatures);
-            } else {
-                content = JSON.toJSONBytes(value, mSerializeConfig);
-            }
-        } else {
-            if (mSerializerFeatures != null) {
-                content = JSON.toJSONBytes(value, mSerializerFeatures);
-            } else {
-                content = JSON.toJSONBytes(value);
-            }
-        }
-        return RequestBody.create(MEDIA_TYPE, content);
+  @Override
+  public RequestBody convert(T value) throws IOException {
+    byte[] content;
+    if (serializeConfig != null) {
+      if (serializerFeatures != null) {
+        content = JSON.toJSONBytes(value, serializeConfig, serializerFeatures);
+      } else {
+        content = JSON.toJSONBytes(value, serializeConfig);
+      }
+    } else {
+      if (serializerFeatures != null) {
+        content = JSON.toJSONBytes(value, serializerFeatures);
+      } else {
+        content = JSON.toJSONBytes(value);
+      }
     }
+    return RequestBody.create(MEDIA_TYPE, content);
+  }
 }

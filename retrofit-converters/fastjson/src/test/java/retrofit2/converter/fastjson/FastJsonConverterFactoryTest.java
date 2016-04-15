@@ -25,92 +25,92 @@ import java.lang.reflect.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FastJsonConverterFactoryTest {
-    interface AnInterface {
-        @JSONField(name = "name")
-        String getName();
-        @JSONField(name = "name")
-        void setName(String name);
+  interface AnInterface {
+    @JSONField(name = "name")
+    String getName();
+    @JSONField(name = "name")
+    void setName(String name);
+  }
+
+  static class AnImplementation implements AnInterface {
+
+    @JSONField(name = "name")
+    private String theName;
+
+    AnImplementation() {
     }
 
-    static class AnImplementation implements AnInterface {
-
-        @JSONField(name = "name")
-        private String theName;
-
-        AnImplementation() {
-        }
-
-        AnImplementation(String name) {
-            theName = name;
-        }
-
-        @JSONField(name = "name")
-        @Override public String getName() {
-            return theName;
-        }
-
-        @JSONField(name = "name")
-        @Override
-        public void setName(String name) {
-            theName = name;
-        }
+    AnImplementation(String name) {
+      theName = name;
     }
 
-    interface Service {
-        @POST("/")
-        Call<AnImplementation> anImplementation(@Body AnImplementation impl);
-        @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+    @JSONField(name = "name")
+    @Override public String getName() {
+      return theName;
     }
 
-    @Rule
-    public final MockWebServer server = new MockWebServer();
-
-    private Service service;
-
-    @Before
-    public void setUp() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(server.url("/"))
-                .addConverterFactory(FastJsonConverterFactory.create())
-                .build();
-        service = retrofit.create(Service.class);
+    @JSONField(name = "name")
+    @Override
+    public void setName(String name) {
+      theName = name;
     }
+  }
 
-    @Test
-    public void anInterface() throws IOException, InterruptedException {
-        server.enqueue(new MockResponse().setBody("{\"name\":\"value\"}"));
+  interface Service {
+    @POST("/")
+    Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+    @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+  }
 
-        Call<AnInterface> call = service.anInterface(new AnImplementation("value"));
-        Response<AnInterface> response = call.execute();
-        AnInterface body = response.body();
-        assertThat(body.getName()).isEqualTo("value");
+  @Rule
+  public final MockWebServer server = new MockWebServer();
 
-        RecordedRequest request = server.takeRequest();
-        assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
-        assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
-    }
+  private Service service;
 
-    @Test public void anImplementation() throws IOException, InterruptedException {
-        server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
+  @Before
+  public void setUp() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(FastJsonConverterFactory.create())
+        .build();
+    service = retrofit.create(Service.class);
+  }
 
-        Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
-        Response<AnImplementation> response = call.execute();
-        AnImplementation body = response.body();
-        assertThat(body.theName).isNull();
+  @Test
+  public void anInterface() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"name\":\"value\"}"));
 
-        RecordedRequest request = server.takeRequest();
-        assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
-        assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
-    }
+    Call<AnInterface> call = service.anInterface(new AnImplementation("value"));
+    Response<AnInterface> response = call.execute();
+    AnInterface body = response.body();
+    assertThat(body.getName()).isEqualTo("value");
 
-    @Test public void serializeUsesConfiguration() throws IOException, InterruptedException {
-        server.enqueue(new MockResponse().setBody("{}"));
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
 
-        service.anImplementation(new AnImplementation(null)).execute();
+  @Test public void anImplementation() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
 
-        RecordedRequest request = server.takeRequest();
-        assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
-        assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
-    }
+    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+    Response<AnImplementation> response = call.execute();
+    AnImplementation body = response.body();
+    assertThat(body.theName).isNull();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
+
+  @Test public void serializeUsesConfiguration() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    service.anImplementation(new AnImplementation(null)).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
 
 }
