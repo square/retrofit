@@ -63,8 +63,6 @@ public final class JacksonConverterFactory extends Converter.Factory {
   @Override
   public Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    JavaType javaType = mapper.getTypeFactory().constructType(type);
-    ObjectWriter writer = mapper.writerWithType(javaType);
-    return new JacksonRequestBodyConverter<>(writer);
+    return new JacksonRequestBodyConverter<>(mapper);
   }
 }
