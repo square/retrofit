@@ -16,7 +16,6 @@
 package retrofit2.converter.jackson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
