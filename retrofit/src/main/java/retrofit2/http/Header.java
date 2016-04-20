@@ -33,6 +33,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
  * be included in the request.
+ *
+ * @see Headers
+ * @see HeaderMap
  */
 @Documented
 @Retention(RUNTIME)

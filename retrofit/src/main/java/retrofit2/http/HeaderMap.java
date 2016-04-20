@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2016 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,37 @@
  */
 package retrofit2.http;
 
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.util.Map;
 
 /**
- * Adds headers literally supplied in the {@code value}.
- * <pre><code>
- * &#64;Headers("Cache-Control: max-age=640000")
- * &#64;GET("/")
+ * Adds headers specified in the {@link Map}.
+ * <p>
+ * Values are converted to strings using {@link String#valueOf(Object)}.
+ * <p>
+ * Simple Example:
+ * <pre>
+ * &#64;GET("/search")
+ * void list(@HeaderMap Map&lt;String, String&gt; headers);
+ *
  * ...
  *
- * &#64;Headers({
- *   "X-Foo: Bar",
- *   "X-Ping: Pong"
- * })
- * &#64;GET("/")
- * ...
- * </code></pre>
- * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
- * be included in the request.
+ * // The following call yields /search with headers
+ * // Accept: text/plain and Accept-Charset: utf-8
+ * foo.list(ImmutableMap.of("Accept", "text/plain", "Accept-Charset", "utf-8"));
+ * </pre>
  *
  * @see Header
- * @see HeaderMap
+ * @see Headers
  */
 @Documented
-@Target(METHOD)
+@Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface Headers {
-  String[] value();
+public @interface HeaderMap {
+
 }

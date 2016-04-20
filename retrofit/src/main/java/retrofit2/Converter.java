@@ -66,8 +66,8 @@ public interface Converter<F, T> {
      * Returns a {@link Converter} for converting {@code type} to a {@link String}, or null if
      * {@code type} cannot be handled by this factory. This is used to create converters for types
      * specified by {@link Field @Field}, {@link FieldMap @FieldMap} values,
-     * {@link Header @Header}, {@link Path @Path}, {@link Query @Query}, and
-     * {@link QueryMap @QueryMap} values.
+     * {@link Header @Header}, {@link HeaderMap @HeaderMap}, {@link Path @Path},
+     * {@link Query @Query}, and {@link QueryMap @QueryMap} values.
      */
     public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
         Retrofit retrofit) {

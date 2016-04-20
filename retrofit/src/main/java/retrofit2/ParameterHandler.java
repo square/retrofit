@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Square, Inc.
+ * Copyright (C) 2015-2016 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
+
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -135,6 +136,33 @@ abstract class ParameterHandler<T> {
               "Query map contained null value for key '" + entryKey + "'.");
         }
         builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
+      }
+    }
+  }
+
+  static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Converter<T, String> valueConverter;
+
+    HeaderMap(Converter<T, String> valueConverter) {
+      this.valueConverter = valueConverter;
+    }
+
+    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException("Header map was null.");
+      }
+
+      for (Map.Entry<String, T> entry : value.entrySet()) {
+        String headerName = entry.getKey();
+        if (headerName == null) {
+          throw new IllegalArgumentException("Header map contained null key.");
+        }
+        T headerValue = entry.getValue();
+        if (headerValue == null) {
+          throw new IllegalArgumentException(
+              "Header map contained null value for key '" + headerName + "'.");
+        }
+        builder.addHeader(headerName, valueConverter.convert(headerValue));
       }
     }
   }
