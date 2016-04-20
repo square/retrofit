@@ -45,6 +45,7 @@ import retrofit2.http.GET;
 import retrofit2.http.HEAD;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
+import retrofit2.http.HeaderMap;
 import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.OPTIONS;
@@ -528,6 +529,119 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Query map contained null value for key 'kit'.");
+    }
+  }
+
+  @Test public void getWithHeaderMap() {
+    class Example {
+      @GET("/search")
+      Call<ResponseBody> method(@HeaderMap Map<String, Object> headers) {
+        return null;
+      }
+    }
+
+    Map<String, Object> headers = new LinkedHashMap<>();
+    headers.put("Accept", "text/plain");
+    headers.put("Accept-Charset", "utf-8");
+
+    Request request = buildRequest(Example.class, headers);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/search");
+    assertThat(request.body()).isNull();
+    assertThat(request.headers().size()).isEqualTo(2);
+    assertThat(request.header("Accept")).isEqualTo("text/plain");
+    assertThat(request.header("Accept-Charset")).isEqualTo("utf-8");
+  }
+
+  @Test public void headerMapMustBeAMap() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap List<String> headers) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@HeaderMap parameter type must be Map. (parameter #1)\n    for method Example.method");
+    }
+  }
+
+  @Test public void headerMapSupportsSubclasses() {
+    class Foo extends HashMap<String, String> {
+    }
+
+    class Example {
+      @GET("/search")
+      Call<ResponseBody> method(@HeaderMap Foo headers) {
+        return null;
+      }
+    }
+
+    Foo headers = new Foo();
+    headers.put("Accept", "text/plain");
+
+    Request request = buildRequest(Example.class, headers);
+    assertThat(request.url().toString()).isEqualTo("http://example.com/search");
+    assertThat(request.headers().size()).isEqualTo(1);
+    assertThat(request.header("Accept")).isEqualTo("text/plain");
+  }
+
+  @Test public void headerMapRejectsNull() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, (Map<String, String>) null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Header map was null.");
+    }
+  }
+
+  @Test public void headerMapRejectsNullKeys() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
+        return null;
+      }
+    }
+
+    Map<String, String> headers = new LinkedHashMap<>();
+    headers.put("Accept", "text/plain");
+    headers.put(null, "utf-8");
+
+    try {
+      buildRequest(Example.class, headers);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Header map contained null key.");
+    }
+  }
+
+  @Test public void headerMapRejectsNullValues() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
+        return null;
+      }
+    }
+
+    Map<String, String> headers = new LinkedHashMap<>();
+    headers.put("Accept", "text/plain");
+    headers.put("Accept-Charset", null);
+
+    try {
+      buildRequest(Example.class, headers);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Header map contained null value for key 'Accept-Charset'.");
     }
   }
 

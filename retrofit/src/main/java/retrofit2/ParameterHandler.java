@@ -139,6 +139,33 @@ abstract class ParameterHandler<T> {
     }
   }
 
+  static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Converter<T, String> valueConverter;
+
+    HeaderMap(Converter<T, String> valueConverter) {
+      this.valueConverter = valueConverter;
+    }
+
+    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException("Header map was null.");
+      }
+
+      for (Map.Entry<String, T> entry : value.entrySet()) {
+        String headerName = entry.getKey();
+        if (headerName == null) {
+          throw new IllegalArgumentException("Header map contained null key.");
+        }
+        T headerValue = entry.getValue();
+        if (headerValue == null) {
+          throw new IllegalArgumentException(
+              "Header map contained null value for key '" + headerName + "'.");
+        }
+        builder.addHeader(headerName, valueConverter.convert(headerValue));
+      }
+    }
+  }
+
   static final class Field<T> extends ParameterHandler<T> {
     private final String name;
     private final Converter<T, String> valueConverter;

@@ -42,6 +42,7 @@ import retrofit2.http.GET;
 import retrofit2.http.HEAD;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
+import retrofit2.http.HeaderMap;
 import retrofit2.http.Multipart;
 import retrofit2.http.OPTIONS;
 import retrofit2.http.PATCH;
@@ -470,6 +471,26 @@ final class ServiceMethod<T> {
               retrofit.stringConverter(type, annotations);
           return new ParameterHandler.Header<>(name, converter);
         }
+
+      } else if (annotation instanceof HeaderMap) {
+        Class<?> rawParameterType = Utils.getRawType(type);
+        if (!Map.class.isAssignableFrom(rawParameterType)) {
+          throw parameterError(p, "@HeaderMap parameter type must be Map.");
+        }
+        Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
+        if (!(mapType instanceof ParameterizedType)) {
+          throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) mapType;
+        Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
+        if (String.class != keyType) {
+          throw parameterError(p, "@HeaderMap keys must be of type String: " + keyType);
+        }
+        Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
+        Converter<?, String> valueConverter =
+            retrofit.stringConverter(valueType, annotations);
+
+        return new ParameterHandler.HeaderMap<>(valueConverter);
 
       } else if (annotation instanceof Field) {
         if (!isFormEncoded) {
