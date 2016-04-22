@@ -15,6 +15,8 @@
  */
 package retrofit;
 
+import com.squareup.okhttp.RequestBody;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -45,9 +47,12 @@ import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
+  private static final byte[] NO_BODY = new byte[0];
+
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
+  private final boolean requestHasBody;
   private final boolean isSynchronous;
   private final boolean isObservable;
   private final String apiUrl;
@@ -67,6 +72,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
 
     paramAnnotations = methodInfo.requestParamAnnotations;
     requestMethod = methodInfo.requestMethod;
+    requestHasBody = methodInfo.requestHasBody;
     isSynchronous = methodInfo.isSynchronous;
     isObservable = methodInfo.isObservable;
 
@@ -401,6 +407,11 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     TypedOutput body = this.body;
+    if (body == null && requestHasBody) {
+      // Body is absent, make an empty body.
+      body = RequestBody.create(null, NO_BODY);
+    }
+
     List<Header> headers = this.headers;
     if (contentTypeHeader != null) {
       if (body != null) {
