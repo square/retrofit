@@ -15,11 +15,11 @@
  */
 package retrofit;
 
-import com.squareup.okhttp.RequestBody;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.Override;
+import java.lang.String;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URLEncoder;
@@ -47,8 +47,6 @@ import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 
 final class RequestBuilder implements RequestInterceptor.RequestFacade {
-  private static final byte[] NO_BODY = new byte[0];
-
   private final Converter converter;
   private final Annotation[] paramAnnotations;
   private final String requestMethod;
@@ -60,6 +58,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
   private final FormUrlEncodedTypedOutput formBody;
   private final MultipartTypedOutput multipartBody;
   private TypedOutput body;
+  private TypedOutput mEmptyOutput;
 
   private String relativeUrl;
   private StringBuilder queryParams;
@@ -409,7 +408,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     TypedOutput body = this.body;
     if (body == null && requestHasBody) {
       // Body is absent, make an empty body.
-      body = RequestBody.create(null, NO_BODY);
+      body = createEmptyOutput();
     }
 
     List<Header> headers = this.headers;
@@ -427,6 +426,35 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
     }
 
     return new Request(requestMethod, url.toString(), headers, body);
+  }
+
+  private TypedOutput createEmptyOutput() {
+
+    if (mEmptyOutput != null) {
+      return mEmptyOutput;
+    }
+
+    return mEmptyOutput = new TypedOutput() {
+      @Override
+      public String fileName() {
+        return null;
+      }
+
+      @Override
+      public String mimeType() {
+        return "application/protobuf";
+      }
+
+      @Override
+      public long length() {
+        return 0;
+      }
+
+      @Override
+      public void writeTo(OutputStream out) throws IOException {
+
+      }
+    };
   }
 
   private static class MimeOverridingTypedOutput implements TypedOutput {
