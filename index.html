@@ -68,13 +68,13 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
             </section>
 
             <section id="api-declaration">
-              <h3>Declaração da API</h3>
-              <p>Annotations em métodos da interface e seus parâmetros indicam como uma request será manuseada.</p>
+               <h3>API Declaration</h3>
+              <p>Annotations on the interface methods and its parameters indicate how a request will be handled.</p>
 
-              <h4>Método da Request</h4>
-              <p>Todo método deve possuir uma annotation HTTP que fornece o método da request e a URL relativa. Existem cinco annotations contruídas: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, e <code>HEAD</code>. A URL relativa do recurso é especificada na annotation.</p>
+              <h4>Request Method</h4>
+              <p>Every method must have an HTTP annotation that provides the request method and relative URL. There are five built-in annotations: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, and <code>HEAD</code>. The relative URL of the resource is specified in the annotation.</p>
               <pre class="prettyprint">@GET("users/list")</pre>
-              <p>Você pode especificar os parâmetros da busca na URL.</p>
+              <p>You can also specify query parameters in the URL.</p>
               <pre class="prettyprint">@GET("users/list?sort=desc")</pre>
 
               <h4>URL Manipulation</h4>
