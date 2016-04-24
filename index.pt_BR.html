@@ -92,11 +92,11 @@ Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @QueryMap Map&lt;Strin
               <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a annontation <code>@Body</code> .</p>
               <pre class="prettyprint">@POST("users/new")
 Call&lt;User> createUser(@Body User user);</pre>
-              <p>O objecto também será convertido usando um conversor especificado na instância <code>Retrofit</code> . Se nenhum conversor for adicionado, apenas <code>RequestBody</code> poderá ser utilizado.</p>
+              <p>O objeto também será convertido usando um conversor especificado na instância <code>Retrofit</code> . Se nenhum conversor for adicionado, apenas <code>RequestBody</code> poderá ser utilizado.</p>
 
               <h4>Form Encoded and Multipart</h4>
-              <p>Methods can also be declared to send form-encoded and multipart data.</p>
-              <p>Form-encoded data is sent when <code>@FormUrlEncoded</code> is present on the method. Each key-value pair is annotated with <code>@Field</code> containing the name and the object providing the value.</p>
+              <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
+              <p>Dados form-encoded são enviados quando <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
 @POST("user/edit")
 Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") String last);</pre>
@@ -104,7 +104,7 @@ Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") 
               <pre class="prettyprint">@Multipart
 @PUT("user/photo")
 Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
-              <p>Multipart parts use one of <code>Retrofit</code>'s converters or they can implement <code>RequestBody</code> to handle their own serialization.</p>
+              <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
 
               <h4>Header Manipulation</h4>
               <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
