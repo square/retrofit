@@ -107,8 +107,8 @@ Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") 
 Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
               <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
 
-              <h4>Header Manipulation</h4>
-              <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
+              <h4>Manipulação de Cabeçalho</h4>
+              <p>Você pode setar cabeçalhos estáticos para um método utilizando a anotação <code>@Headers</code>.</p>
               <pre class="prettyprint">@Headers("Cache-Control: max-age=640000")
 @GET("widget/list")
 Call&lt;List&lt;Widget>> widgetList();</pre>
@@ -122,7 +122,7 @@ Call&lt;User> getUser(@Path("username") String username);</pre>
               <p>Um cabeçalho de uma request pode ser atualizado dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho será omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
-              <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
+              <p>Cabeçalhos que precisam ser utilizados em todas requests podem ser especificados utilizando um <a href="https://github.com/square/okhttp/wiki/Interceptors">interceptador OkHttp</a>.
 
               <h4>Síncrono vs. Assincrono</h4>
               <p>Instâncias de <code>Call</code> podem ser executadas tanto sincronamente ou assincronamente. Cada instância só pode ser utilizada uma vez, mas chamar <code>clone()</code> gerará uma nova instância que pode ser utilizada.</p>
