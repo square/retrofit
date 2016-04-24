@@ -89,10 +89,10 @@ Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @Query("sort") String 
 Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @QueryMap Map&lt;String, String&gt; options);</pre>
 
               <h4>Request Body</h4>
-              <p>An object can be specified for use as an HTTP request body with the <code>@Body</code> annotation.</p>
+              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a annontation <code>@Body</code> .</p>
               <pre class="prettyprint">@POST("users/new")
 Call&lt;User> createUser(@Body User user);</pre>
-              <p>The object will also be converted using a converter specified on the <code>Retrofit</code> instance. If no converter is added, only <code>RequestBody</code> can be used.</p>
+              <p>O objecto também será convertido usando um conversor especificado na instância <code>Retrofit</code> . Se nenhum conversor for adicionado, apenas <code>RequestBody</code> poderá ser utilizado.</p>
 
               <h4>Form Encoded and Multipart</h4>
               <p>Methods can also be declared to send form-encoded and multipart data.</p>
