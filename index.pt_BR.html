@@ -68,13 +68,13 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
             </section>
 
             <section id="api-declaration">
-              <h3>API Declaration</h3>
-              <p>Annotations on the interface methods and its parameters indicate how a request will be handled.</p>
+              <h3>Declaração da API</h3>
+              <p>Annotations em métodos da interface e seus parâmetros indicam como uma request será manuseada.</p>
 
-              <h4>Request Method</h4>
-              <p>Every method must have an HTTP annotation that provides the request method and relative URL. There are five built-in annotations: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, and <code>HEAD</code>. The relative URL of the resource is specified in the annotation.</p>
+              <h4>Método da Request</h4>
+              <p>Todo método deve possuir uma annotation HTTP que fornece o método da request e a URL relativa. Existem cinco annotations contruídas: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, e <code>HEAD</code>. A URL relativa do recurso é especificada na annotation.</p>
               <pre class="prettyprint">@GET("users/list")</pre>
-              <p>You can also specify query parameters in the URL.</p>
+              <p>Você pode especificar os parâmetros da busca na URL.</p>
               <pre class="prettyprint">@GET("users/list?sort=desc")</pre>
 
               <h4>Manipulação de URL</h4>
@@ -89,7 +89,8 @@ Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @Query("sort") St
 Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @QueryMap Map&lt;String, String&gt; options);</pre>
 
               <h4>Request Body</h4>
-              <p>Um objeto pode ser especificado para uso como um request body HTTP com a anotação <code>@Body</code>.</p>
+
+              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a annontation <code>@Body</code>.</p>
               <pre class="prettyprint">@POST("usuarios/novo")
 Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
               <p>O objeto também será convertido usando um conversor especificado na instância do <code>Retrofit</code>. Se nenhum conversor for utilizado, somente <code>RequestBody</code> poderá ser utilizado.</p>
@@ -192,17 +193,17 @@ compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert l
               <h3>License</h3>
               <pre>Copyright 2013 Square, Inc.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licenciado sob a licença do Apache, Versão 2.0 (a "Licença");
+você não pode usar este arquivo exceto em conformidade com a Licença.
+Você pode obter uma cópia da Licença em
 
    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.</pre>
+A menos que seja exigido pela lei aplicável ou acordado por escrito, software
+distribuído sob a Licença é distribuído na base "AS IS",
+SEM GARANTIAS OU CONDIÇÕES DE QUALQUER NATUREZA, evidente ou implícita. 
+Veja a Licença para as permissões específicas da linguagem e as limitações
+sob a licença.</pre>
             </section>
           </div>
           <div class="span3">
