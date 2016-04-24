@@ -107,7 +107,8 @@ Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") 
 Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
               <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
 
-              <h4>Header Manipulation</h4>
+              <h4>Manipulação de cabeçalho</h4>
+              <p>Você pode estabelecer cabeçalhos estáticos para um método utilizando a anotação <code>@Headers</code> .</p>
               <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
               <pre class="prettyprint">@Headers("Cache-Control: max-age=640000")
 @GET("widget/list")
