@@ -134,9 +134,9 @@ Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
               <h3>Configuração do Retrofit</h3>
               <p><code>Retrofit</code> é a classe cujas interfaces de API interfaces são transformadas em objetos chamáveis. Por default, Retrofit te dará defaults para sua plataforma mas permitirá customização.</p>
 
-              <h4>Converters</h4>
-              <p>By default, Retrofit can only deserialize HTTP bodies into OkHttp's <code>ResponseBody</code> type and it can only accept its <code>RequestBody</code> type for <code>@Body</code>.</p>
-              <p>Converters can be added to support other types. Six sibling modules adapt popular serialization libraries for your convenience.</p>
+              <h4>Conversores</h4>
+              <p>Por default, o Retrofit só pode deserializar corpos HTTP no tipo OkHttp's <code>ResponseBody</code> e só pode aceitar seus tipos <code>RequestBody</code> por <code>@Body</code>.</p>
+              <p>Conversores podem ser adicionados para suportar outros tipos. Seis módulos de bibliotecas de serialização populares adaptam para a sua conveniencia.</p>
               <ul>
                 <li><a href="https://github.com/google/gson">Gson</a>: <code>com.squareup.retrofit2:converter-gson</code></li>
                 <li><a href="http://wiki.fasterxml.com/JacksonHome">Jackson</a>: <code>com.squareup.retrofit2:converter-jackson</code></li>
@@ -146,7 +146,7 @@ Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
                 <li><a href="http://simple.sourceforge.net/">Simple XML</a>: <code>com.squareup.retrofit2:converter-simplexml</code></li>
                 <li>Scalars (primitives, boxed, and String): <code>com.squareup.retrofit2:converter-scalars</code></li>
               </ul>
-              <p>Here's an example of using the <code>GsonConverterFactory</code> class to generate an implementation of the <code>GitHubService</code> interface which uses Gson for its deserialization.</p>
+              <p>Aqui está um exemplo utilizando a classe <code>GsonConverterFactory</code> para gerar uma implementação da interface <code>GitHubService</code> que utiliza Gson para sua deserialização.</p>
               <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
     .baseUrl("https://api.github.com")
     .addConverterFactory(GsonConverterFactory.create())
