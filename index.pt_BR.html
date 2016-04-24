@@ -152,8 +152,8 @@ Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
     .build();
 
 GitHubService service = retrofit.create(GitHubService.class);</pre>
-              <h4>Custom Converters</h4>
-              <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that extends the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/Converter.java"><code>Converter.Factory</code> class</a> and pass in an instance when building your adapter.</p>
+              <h4>Conversores personalizados</h4>
+              <p>Se você precisar se comunicar com uma API que usa um formato de conteúdo que o Retrofit não suporta fora da caixa (e.g. YAML, txt, formato personalizado) ou se você desejar usar uma biblioteca diferente para implementar um formato existente, você pode criar facilmente seu próprio conversor. Crie uma classe que extende de <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/Converter.java"><code>Converter.Factory</code> class</a> e passe em uma instância quando construir seu adaptador.</p>
             </section>
 
             <section id="download">
