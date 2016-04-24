@@ -69,7 +69,7 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
 
             <section id="api-declaration">
               <h3>Declaração da API</h3>
-              <p>Annotations em métodos da interface e seus parâmetros indicam como uma request será manuseada.</p>
+              <p>Anotações em métodos da interface e seus parâmetros indicam como uma request será manuseada.</p>
 
               <h4>Método da Request</h4>
               <p>Todo método deve possuir uma annotation HTTP que fornece o método da request e a URL relativa. Existem cinco annotations contruídas: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, e <code>HEAD</code>. A URL relativa do recurso é especificada na annotation.</p>
@@ -90,18 +90,18 @@ Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @QueryMap Map&lt;
 
               <h4>Request Body</h4>
 
-              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a annontation <code>@Body</code>.</p>
+              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a anotação <code>@Body</code>.</p>
               <pre class="prettyprint">@POST("usuarios/novo")
 Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
               <p>O objeto também será convertido usando um conversor especificado na instância do <code>Retrofit</code>. Se nenhum conversor for utilizado, somente <code>RequestBody</code> poderá ser utilizado.</p>
 
               <h4>Form Encoded e Multipart</h4>
               <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
-              <p>Dados form-encoded são enviados quando <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
+              <p>Dados form-encoded são enviados quando a anotação <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
 @POST("user/edit")
 Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") String last);</pre>
-              <p>Multipart requests are used when <code>@Multipart</code> is present on the method. Parts are declared using the <code>@Part</code> annotation.</p>
+              <p>Multipart requests são usadas quando <code>@Multipart</code> está presente no método. Partes são declaradas usando a anotação <code>@Part</code> .</p>
               <pre class="prettyprint">@Multipart
 @PUT("user/photo")
 Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
