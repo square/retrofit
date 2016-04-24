@@ -124,9 +124,9 @@ Call&lt;User> getUser(@Path("username") String username);</pre>
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
               <p>Cabeçalhos que precisam ser adicionados em todas as requests podem ser especificados usando o interceptor <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp</a>.
 
-              <h4>Synchronous vs. Asynchronous</h4>
-              <p><code>Call</code> instances can be executed either synchronously or asynchronously. Each instance can only be used once, but calling <code>clone()</code> will create a new instance that can be used.</p>
-              <p>On Android, callbacks will be executed on the main thread. On the JVM, callbacks will happen on the same thread that executed the HTTP request.</p>
+              <h4>Síncrono vs. Assincrono</h4>
+              <p>Instâncias de <code>Call</code> podem ser executadas tanto sincronamente ou assincronamente. Cada instância só pode ser utilizada uma vez, mas chamar <code>clone()</code> gerará uma nova instância que pode ser utilizada.</p>
+              <p>No Android, callbacks serão executados no thread principal. Na JVM, callbacks acontecerão no mesmo thread que foi executado request HTTP.</p>
             </section>
 
             <section id="restadapter-configuration">
