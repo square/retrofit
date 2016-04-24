@@ -109,7 +109,6 @@ Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") 
 
               <h4>Manipulação de cabeçalho</h4>
               <p>Você pode estabelecer cabeçalhos estáticos para um método utilizando a anotação <code>@Headers</code> .</p>
-              <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
               <pre class="prettyprint">@Headers("Cache-Control: max-age=640000")
 @GET("widget/list")
 Call&lt;List&lt;Widget>> widgetList();</pre>
