@@ -73,19 +73,19 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
 
               <h4>Método da Request</h4>
               <p>Todo método deve possuir uma annotation HTTP que fornece o método da request e a URL relativa. Existem cinco annotations contruídas: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, e <code>HEAD</code>. A URL relativa do recurso é especificada na annotation.</p>
-              <pre class="prettyprint">@GET("users/list")</pre>
+              <pre class="prettyprint">@GET("usuarios/list")</pre>
               <p>Você pode especificar os parâmetros da busca na URL.</p>
-              <pre class="prettyprint">@GET("users/list?sort=desc")</pre>
+              <pre class="prettyprint">@GET("usuarios/list?sort=desc")</pre>
 
               <h4>Manipulação de URL</h4>
               <p>Um request pode ser atualizado dinamicamente usando blocos de substituição e parâmetros no método. Um bloco de substituição é uma string alfanumérica cercado por <code>{</code> e <code>}</code>. Um parâmetro correspondente deve ser anotado com <code>@Path</code> usando a mesma string.</p>
-              <pre class="prettyprint">@GET("group/{id}/usuarios")
+              <pre class="prettyprint">@GET("grupo/{id}/usuarios")
 Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo);</pre>
               <p>Parâmetros de query também podem ser adicionados.</p>
-              <pre class="prettyprint">@GET("group/{id}/usuarios")
+              <pre class="prettyprint">@GET("grupo/{id}/usuarios")
 Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @Query("sort") String sort);</pre>
               <p>Para combinações de parâmetros de query complexos um <code>Map</code> pode ser utilizado.</p>
-              <pre class="prettyprint">@GET("group/{id}/usuarios")
+              <pre class="prettyprint">@GET("grupo/{id}/usuarios")
 Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @QueryMap Map&lt;String, String&gt; options);</pre>
 
               <h4>Request Body</h4>
@@ -99,12 +99,12 @@ Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
               <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
               <p>Dados form-encoded são enviados quando a anotação <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
-@POST("user/edit")
-Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") String last);</pre>
+@POST("usuario/edit")
+Call&lt;User> updateUser(@Field("nome") String first, @Field("sobrenome") String last);</pre>
               <p>Multipart requests são usadas quando <code>@Multipart</code> está presente no método. Partes são declaradas usando a anotação <code>@Part</code> .</p>
               <pre class="prettyprint">@Multipart
-@PUT("user/photo")
-Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
+@PUT("usuario/foto")
+Call&lt;User> updateUser(@Part("foto") RequestBody foto, @Part("descricao") RequestBody descricao);</pre>
               <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
 
               <h4>Manipulação de cabeçalho</h4>
