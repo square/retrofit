@@ -77,22 +77,23 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
               <p>Você pode especificar os parâmetros da busca na URL.</p>
               <pre class="prettyprint">@GET("users/list?sort=desc")</pre>
 
-              <h4>URL Manipulation</h4>
-              <p>A request URL can be updated dynamically using replacement blocks and parameters on the method. A replacement block is an alphanumeric string surrounded by <code>{</code> and <code>}</code>. A corresponding parameter must be annotated with <code>@Path</code> using the same string.</p>
-              <pre class="prettyprint">@GET("group/{id}/users")
-Call&lt;List&lt;User>> groupList(@Path("id") int groupId);</pre>
-              <p>Query parameters can also be added.</p>
-              <pre class="prettyprint">@GET("group/{id}/users")
-Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @Query("sort") String sort);</pre>
-              <p>For complex query parameter combinations a <code>Map</code> can be used.</p>
-              <pre class="prettyprint">@GET("group/{id}/users")
-Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @QueryMap Map&lt;String, String&gt; options);</pre>
+              <h4>Manipulação de URL</h4>
+              <p>Um request pode ser atualizado dinamicamente usando blocos de substituição e parâmetros no método. Um bloco de substituição é uma string alfanumérica cercado por <code>{</code> e <code>}</code>. Um parâmetro correspondente deve ser anotado com <code>@Path</code> usando a mesma string.</p>
+              <pre class="prettyprint">@GET("group/{id}/usuarios")
+Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo);</pre>
+              <p>Parâmetros de query também podem ser adicionados.</p>
+              <pre class="prettyprint">@GET("group/{id}/usuarios")
+Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @Query("sort") String sort);</pre>
+              <p>Para combinações de parâmetros de query complexos um <code>Map</code> pode ser utilizado.</p>
+              <pre class="prettyprint">@GET("group/{id}/usuarios")
+Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @QueryMap Map&lt;String, String&gt; options);</pre>
 
               <h4>Request Body</h4>
-              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a annontation <code>@Body</code> .</p>
-              <pre class="prettyprint">@POST("users/new")
-Call&lt;User> createUser(@Body User user);</pre>
-              <p>O objeto também será convertido usando um conversor especificado na instância <code>Retrofit</code> . Se nenhum conversor for adicionado, apenas <code>RequestBody</code> poderá ser utilizado.</p>
+
+              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a annontation <code>@Body</code>.</p>
+              <pre class="prettyprint">@POST("usuarios/novo")
+Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
+              <p>O objeto também será convertido usando um conversor especificado na instância do <code>Retrofit</code>. Se nenhum conversor for utilizado, somente <code>RequestBody</code> poderá ser utilizado.</p>
 
               <h4>Form Encoded e Multipart</h4>
               <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
