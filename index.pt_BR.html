@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Retrofit</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A type-safe HTTP client for Android and Java">
+    <meta name="description" content="Client HTTP fortemente tipado para Android and Java">
     <link href="static/bootstrap-combined.min.css" rel="stylesheet">
     <link href="static/app.css" rel="stylesheet">
     <link href="static/app-theme.css" rel="stylesheet">
@@ -21,7 +21,7 @@
           <div class="span7">
             <menu>
               <ul>
-                <li><a href="#download" class="menu download">Download <span class="version-tag">Latest</span></a></li>
+                <li><a href="#download" class="menu download">Baixe a <span class="version-tag">Última Versão</span></a></li>
                 <li><a href="http://github.com/square/retrofit" data-title="View GitHub Project" class="menu github"><img src="static/icon-github.png" alt="GitHub"/></a></li>
                 <li><a href="http://square.github.io/" data-title="Square Open Source Portal" class="menu square"><img src="static/icon-square.png" alt="Square"/></a></li>
               </ul>
@@ -34,7 +34,7 @@
       <div class="container">
         <div class="row">
           <div class="span12">
-            <h2>A type-safe <strong>HTTP client</strong> for Android and Java<!-- and Samsung! --></h2>
+            <h2>Um <strong>HTTP client</strong> fortemente tipado para Android e Java<!-- e Samsung! --></h2>
           </div>
         </div>
       </div>
@@ -44,27 +44,27 @@
         <div class="row">
           <div class="span9">
             <section id="introduction">
-              <h3>Introduction</h3>
-              <p>Retrofit turns your HTTP API into a Java interface.</p>
+              <h3>Introdução</h3>
+              <p>Retrofit faz de sua API HTTP A  uma interface Java.</p>
               <pre class="prettyprint">public interface GitHubService {
-  @GET("users/{user}/repos")
-  Call&lt;List&lt;Repo>> listRepos(@Path("user") String user);
+  @GET("usuarios/{usuario}/repos")
+  Call&lt;List&lt;Repo>> listarRepos(@Path("usuario") String usuario);
 }</pre>
-              <p>The <code>Retrofit</code> class generates an implementation of the <code>GitHubService</code> interface.</p>
+              <p>A classe <code>Retrofit</code> gera uma implementação da interface <code>GitHubService</code>.</p>
               <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
     .baseUrl("https://api.github.com/")
     .build();
 
 GitHubService service = retrofit.create(GitHubService.class);</pre>
-              <p>Each <code>Call</code> from the created <code>GitHubService</code> can make a synchronous or asynchronous HTTP request to the remote webserver.</p>
+              <p>Cada <code>Chamada</code> do <code>GitHubService</code> criado pode fazer um request HTTP síncrono ou assíncrono do webserver remoto.</p>
               <pre class="prettyprint">Call&lt;List&lt;Repo>> repos = service.listRepos("octocat");</pre>
-              <p>Use annotations to describe the HTTP request:</p>
+              <p>Use anotações para descrever o request HTTP:</p>
               <ul>
-                <li>URL parameter replacement and query parameter support</li>
-                <li>Object conversion to request body (e.g., JSON, protocol buffers)</li>
-                <li>Multipart request body and file upload</li>
+                <li>Suporte de substituição de parâmetro de URL e parâmetro de query</li>
+                <li>Conversão de objetos para requerir body (JSON, protocolos de transferência)</li>
+                <li>Upload de arquivos e dados</li>
               </ul>
-              <p><em>Note:</em> This site is still in the process of being expanded for the new 2.0 APIs.</p>
+              <p><em>Nota:</em> Este site ainda está em processo de ser expandido para as novas APIs 2.0.</p>
             </section>
 
             <section id="api-declaration">
