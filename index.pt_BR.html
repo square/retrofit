@@ -100,11 +100,11 @@ Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
               <p>Dados form-encoded são enviados quando a anotação <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
 @POST("user/edit")
-Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") String last);</pre>
+Call&lt;User> updateUser(@Field("primeiro_nome") String primeiro, @Field("ultimo_nome") String ultimo);</pre>
               <p>Multipart requests são usadas quando <code>@Multipart</code> está presente no método. Partes são declaradas usando a anotação <code>@Part</code> .</p>
               <pre class="prettyprint">@Multipart
-@PUT("user/photo")
-Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
+@PUT("usuario/foto")
+Call&lt;Usuario> updateUsuario(@Part("foto") RequestBody foto, @Part("descricao") RequestBody descricao);</pre>
               <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
 
               <h4>Manipulação de cabeçalho</h4>
@@ -117,12 +117,12 @@ Call&lt;List&lt;Widget>> widgetList();</pre>
     "Accept: application/vnd.github.v3.full+json",
     "User-Agent: Retrofit-Sample-App"
 })
-@GET("users/{username}")
-Call&lt;User> getUser(@Path("username") String username);</pre>
+@GET("usuarios/{username}")
+Call&lt;Usuario> getUsuario(@Path("username") String username);</pre>
               <p>Note que cabeçalhos não sobreescrevem outros. Todos os cabeçalhos com o mesmo nome serão inclusos na request.</p>
               <p>Um cabeçalho de uma request pode ser atualizado dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho será omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
-              <pre class="prettyprint">@GET("user")
-Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
+              <pre class="prettyprint">@GET("usuario")
+Call&lt;Usuario> getUsuario(@Header("Authorization") String authorization)</pre>
               <p>Cabeçalhos que precisam ser utilizados em todas requests podem ser especificados utilizando um <a href="https://github.com/square/okhttp/wiki/Interceptors">interceptador OkHttp</a>.
 
               <h4>Síncrono vs. Assincrono</h4>
