@@ -120,7 +120,6 @@ Call&lt;List&lt;Widget>> widgetList();</pre>
 Call&lt;User> getUser(@Path("username") String username);</pre>
               <p>Note que cabeçalhos não sobreescrevem outros. Todos os cabeçalhos com o mesmo nome serão inclusos na request.</p>
               <p>Um cabeçalho de uma request pode ser atualizado dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho será omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
->>>>>>> a1b8f0dbcd8754a0608e08b02c2c9f97b387284d
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
               <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
@@ -171,10 +170,10 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
               <pre class="prettyprint">
 compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
 </pre>
-              <p>Retrofit requires at minimum Java 7 or Android 2.3.</p>
+              <p>Retrofit requer no mínimo Java 7 ou Android 2.3.</p>
 
               <h4>ProGuard</h4>
-              <p>If you are using Proguard in your project add the following lines to your configuration:</p>
+              <p>Se você estiver usando Proguard no seu projeto adicione as seguintes linhas na sua configuração:</p>
               <pre class="prettyprint">
 -dontwarn retrofit2.**
 -keep class retrofit2.** { *; }
