@@ -94,7 +94,7 @@ Call&lt;List&lt;User>> groupList(@Path("id") int groupId, @QueryMap Map&lt;Strin
 Call&lt;User> createUser(@Body User user);</pre>
               <p>O objeto também será convertido usando um conversor especificado na instância <code>Retrofit</code> . Se nenhum conversor for adicionado, apenas <code>RequestBody</code> poderá ser utilizado.</p>
 
-              <h4>Form Encoded and Multipart</h4>
+              <h4>Form Encoded e Multipart</h4>
               <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
               <p>Dados form-encoded são enviados quando <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
