@@ -119,7 +119,7 @@ Call&lt;List&lt;Widget>> widgetList();</pre>
 @GET("users/{username}")
 Call&lt;User> getUser(@Path("username") String username);</pre>
               <p>Note que cabeçalhos não sobreescrevem outros. Todos os cabeçalhos com o mesmo nome serão inclusos na request.</p>
-              <p>Um cabeçalho de uma request podem ser atualizados dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho irá ser omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
+              <p>Um cabeçalho de uma request pode ser atualizado dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho será omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
               <p>Cabeçalhos que precisam ser adicionados em todas as requests podem ser especificados usando o interceptor <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp</a>.
