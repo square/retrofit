@@ -99,7 +99,7 @@ Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
               <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
               <p>Dados form-encoded são enviados quando a anotação <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
-@POST("user/edit")
+@POST("usuario/editar")
 Call&lt;User> updateUser(@Field("primeiro_nome") String primeiro, @Field("ultimo_nome") String ultimo);</pre>
               <p>Multipart requests são usadas quando <code>@Multipart</code> está presente no método. Partes são declaradas usando a anotação <code>@Part</code> .</p>
               <pre class="prettyprint">@Multipart
@@ -122,7 +122,7 @@ Call&lt;Usuario> getUsuario(@Path("username") String username);</pre>
               <p>Note que cabeçalhos não sobreescrevem outros. Todos os cabeçalhos com o mesmo nome serão inclusos na request.</p>
               <p>Um cabeçalho de uma request pode ser atualizado dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho será omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
               <pre class="prettyprint">@GET("usuario")
-Call&lt;Usuario> getUsuario(@Header("Authorization") String authorization)</pre>
+Call&lt;Usuario> getUsuario(@Header("Autorizacao") String autorizacao)</pre>
               <p>Cabeçalhos que precisam ser utilizados em todas requests podem ser especificados utilizando um <a href="https://github.com/square/okhttp/wiki/Interceptors">interceptador OkHttp</a>.
 
               <h4>Síncrono vs. Assincrono</h4>
