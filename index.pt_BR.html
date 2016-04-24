@@ -107,8 +107,8 @@ Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") 
 Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
               <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
 
-              <h4>Header Manipulation</h4>
-              <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
+              <h4>Manipulação do cabeçalho</h4>
+              <p>Você pode estabelecer cabeçalhos estáticos para um método usando a anotação <code>@Headers</code> .</p>
               <pre class="prettyprint">@Headers("Cache-Control: max-age=640000")
 @GET("widget/list")
 Call&lt;List&lt;Widget>> widgetList();</pre>
@@ -118,11 +118,11 @@ Call&lt;List&lt;Widget>> widgetList();</pre>
 })
 @GET("users/{username}")
 Call&lt;User> getUser(@Path("username") String username);</pre>
-              <p>Note that headers do not overwrite each other. All headers with the same name will be included in the request.</p>
-              <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted. Otherwise, <code>toString</code> will be called on the value, and the result used.</p>
+              <p>Note que cabeçalhos não sobreescrevem outros. Todos os cabeçalhos com o mesmo nome serão inclusos na request.</p>
+              <p>Um cabeçalho de uma request podem ser atualizados dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho irá ser omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
-              <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
+              <p>Cabeçalhos que precisam ser adicionados em todas as requests podem ser especificados usando o interceptor <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp</a>.
 
               <h4>Synchronous vs. Asynchronous</h4>
               <p><code>Call</code> instances can be executed either synchronously or asynchronously. Each instance can only be used once, but calling <code>clone()</code> will create a new instance that can be used.</p>
