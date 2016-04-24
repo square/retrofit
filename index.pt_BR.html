@@ -100,7 +100,7 @@ Call&lt;Usuario> criarUser(@Body Usuario usuario);</pre>
               <p>Dados form-encoded são enviados quando a anotação <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
               <pre class="prettyprint">@FormUrlEncoded
 @POST("usuario/editar")
-Call&lt;User> updateUser(@Field("primeiro_nome") String primeiro, @Field("ultimo_nome") String ultimo);</pre>
+Call&lt;Usuario> updateUser(@Field("primeiro_nome") String primeiro, @Field("ultimo_nome") String ultimo);</pre>
               <p>Multipart requests são usadas quando <code>@Multipart</code> está presente no método. Partes são declaradas usando a anotação <code>@Part</code> .</p>
               <pre class="prettyprint">@Multipart
 @PUT("usuario/foto")
