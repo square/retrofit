@@ -16,9 +16,11 @@
 package retrofit2.converter.simplexml;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import okio.Buffer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,6 +74,19 @@ public class SimpleXmlConverterFactoryTest {
     assertThat(request.getBody().readUtf8()).isEqualTo(
         "<my-object><message>hello world</message><count>10</count></my-object>");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=UTF-8");
+  }
+
+  @Test public void honorsCharacterEncoding() throws IOException {
+    Buffer buffer = new Buffer().writeString(
+        "<my-object><message>你好，世界</message><count>10</count></my-object>",
+        Charset.forName("GBK"));
+    server.enqueue(
+        new MockResponse().setBody(buffer).addHeader("Content-Type", "text/xml;charset=GBK"));
+
+    Call<MyObject> call = service.get();
+    Response<MyObject> response = call.execute();
+    MyObject body = response.body();
+    assertThat(body.getMessage()).isEqualTo("你好，世界");
   }
 
   @Test public void deserializeWrongValue() throws IOException {
