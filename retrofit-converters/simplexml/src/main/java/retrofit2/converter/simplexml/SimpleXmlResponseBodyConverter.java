@@ -33,7 +33,7 @@ final class SimpleXmlResponseBodyConverter<T> implements Converter<ResponseBody,
 
   @Override public T convert(ResponseBody value) throws IOException {
     try {
-      T read = serializer.read(cls, value.byteStream(), strict);
+      T read = serializer.read(cls, value.charStream(), strict);
       if (read == null) {
         throw new IllegalStateException("Could not deserialize body as " + cls);
       }
