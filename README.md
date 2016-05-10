@@ -22,6 +22,16 @@ or Gradle:
 compile 'com.squareup.retrofit2:retrofit:2.0.2'
 ```
 
+ProGuard
+--------
+If you are using Proguard in your project add the following lines to your configuration:
+```
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+```
+
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
 Retrofit requires at minimum Java 7 or Android 2.3.
