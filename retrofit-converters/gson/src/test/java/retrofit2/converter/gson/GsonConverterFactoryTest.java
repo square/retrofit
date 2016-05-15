@@ -32,9 +32,11 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 public final class GsonConverterFactoryTest {
   interface AnInterface {
@@ -80,6 +82,11 @@ public final class GsonConverterFactoryTest {
   interface Service {
     @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+  }
+
+  interface NonJSONService {
+    @POST("/") Call<Void> postString(@Body String body);
+    @GET("/") Call<String> getString();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
@@ -141,4 +148,33 @@ public final class GsonConverterFactoryTest {
         service.anImplementation(new AnImplementation("value")).execute();
     assertThat(response.body().getName()).isNull();
   }
+
+  @Test public void noRequestAdapaterForScalars() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(GsonConverterFactory.create())
+        .build();
+    NonJSONService service = retrofit.create(NonJSONService.class);
+    try {
+      Call<Void> call = service.postString("IamNotJSON");
+    } catch (IllegalArgumentException e) {
+      return;
+    }
+   fail();
+  }
+
+  @Test public void noResponseAdapaterForScalars() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(GsonConverterFactory.create())
+        .build();
+    NonJSONService service = retrofit.create(NonJSONService.class);
+    try {
+      Call<String> call = service.getString();
+    } catch (IllegalArgumentException e) {
+      return;
+    }
+    fail();
+  }
+
 }

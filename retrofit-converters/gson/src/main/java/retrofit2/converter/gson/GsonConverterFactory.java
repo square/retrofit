@@ -60,14 +60,52 @@ public final class GsonConverterFactory extends Converter.Factory {
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new GsonResponseBodyConverter<>(gson, adapter);
+    if (type != String.class
+        && type != boolean.class
+        && type != Boolean.class
+        && type != byte.class
+        && type != Byte.class
+        && type != char.class
+        && type != Character.class
+        && type != double.class
+        && type != Double.class
+        && type != float.class
+        && type != Float.class
+        && type != int.class
+        && type != Integer.class
+        && type != long.class
+        && type != Long.class
+        && type != short.class
+        && type != Short.class) {
+      TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
+      return new GsonResponseBodyConverter<>(gson, adapter);
+    }
+    return null;
   }
 
   @Override
   public Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new GsonRequestBodyConverter<>(gson, adapter);
+    if (type != String.class
+        && type != boolean.class
+        && type != Boolean.class
+        && type != byte.class
+        && type != Byte.class
+        && type != char.class
+        && type != Character.class
+        && type != double.class
+        && type != Double.class
+        && type != float.class
+        && type != Float.class
+        && type != int.class
+        && type != Integer.class
+        && type != long.class
+        && type != Long.class
+        && type != short.class
+        && type != Short.class) {
+      TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
+      return new GsonRequestBodyConverter<>(gson, adapter);
+    }
+    return null;
   }
 }
