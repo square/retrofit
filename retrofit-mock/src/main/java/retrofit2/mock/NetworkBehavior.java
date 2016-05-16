@@ -69,10 +69,13 @@ public final class NetworkBehavior {
   private volatile long delayMs = DEFAULT_DELAY_MS;
   private volatile int variancePercent = DEFAULT_VARIANCE_PERCENT;
   private volatile int failurePercent = DEFAULT_FAILURE_PERCENT;
-  private volatile Throwable failureException = new IOException("Mock failure!");
+  private volatile Throwable failureException;
 
   private NetworkBehavior(Random random) {
     this.random = random;
+
+    failureException = new IOException("Mock failure!");
+    failureException.setStackTrace(new StackTraceElement[0]);
   }
 
   /** Set the network round trip delay. */
@@ -114,7 +117,12 @@ public final class NetworkBehavior {
     return failurePercent;
   }
 
-  /** Set the exception to be used when a failure is triggered. */
+  /**
+   * Set the exception to be used when a failure is triggered.
+   * <p>
+   * It is a best practice to remove the stack trace from {@code t} since it can misleadingly
+   * point to code unrelated to this class.
+   */
   public void setFailureException(Throwable t) {
     if (t == null) {
       throw new NullPointerException("t == null");
