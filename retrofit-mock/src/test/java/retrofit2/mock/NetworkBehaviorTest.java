@@ -15,6 +15,7 @@
  */
 package retrofit2.mock;
 
+import java.io.IOException;
 import java.util.Random;
 import org.junit.Test;
 
@@ -25,6 +26,12 @@ import static org.junit.Assert.fail;
 
 public final class NetworkBehaviorTest {
   private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
+
+  @Test public void defaultThrowable() {
+    Throwable t = behavior.failureException();
+    assertThat(t).isExactlyInstanceOf(IOException.class).hasMessage("Mock failure!");
+    assertThat(t.getStackTrace()).isEmpty();
+  }
 
   @Test public void delayMustBePositive() {
     try {
