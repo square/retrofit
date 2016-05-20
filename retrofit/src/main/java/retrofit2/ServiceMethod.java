@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -621,6 +622,13 @@ final class ServiceMethod<T> {
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
                 + "include a part name in the annotation.");
+          } else if (File.class.isAssignableFrom(rawParameterType)) {
+            /**
+             * support file zhouqian@2016-05-19
+             * Notice here is a alternative usage of 'encoding'. Since file is always being transferred with binary
+             * encoding, so I use 'encoding' as media type. Of course, we can also add another property in @Part.
+             */
+            return new ParameterHandler.FilePart(partName, MediaType.parse(part.encoding()));
           } else {
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(type, annotations, methodAnnotations);
