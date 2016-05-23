@@ -18,9 +18,6 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
