@@ -18,6 +18,9 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -299,6 +302,29 @@ abstract class ParameterHandler<T> {
         throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
       builder.setBody(body);
+    }
+  }
+  
+  static final class Root<T> extends ParameterHandler<T> {
+    private final String rootKey;
+    private final Converter<T, String> converter;
+    
+    Root(String rootKey, Converter<T, String> converter) {
+      this.rootKey = checkNotNull(rootKey, "root key == null");
+      this.converter = converter;
+    }
+
+    @Override void apply(RequestBuilder builder, T rootValue) throws IOException {
+      if (rootValue == null) {
+        throw new IllegalArgumentException("Root parameter value must not be null.");
+      }
+      String jsonString;
+      try {
+        jsonString = converter.convert(rootValue);
+      } catch (IOException e) {
+        throw new RuntimeException("Unable to convert " + rootValue + " to RequestBody", e);
+      }
+      builder.setJSONRoot(this.rootKey, jsonString);
     }
   }
 }

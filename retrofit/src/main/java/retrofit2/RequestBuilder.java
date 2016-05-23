@@ -43,10 +43,12 @@ final class RequestBuilder {
   private final boolean hasBody;
   private MultipartBody.Builder multipartBuilder;
   private FormBody.Builder formBuilder;
+  private JSONBody.Builder jsonBuilder;
   private RequestBody body;
 
   RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart,
+      boolean isJSON) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -65,6 +67,8 @@ final class RequestBuilder {
       // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBody.Builder();
       multipartBuilder.setType(MultipartBody.FORM);
+    } else if (isJSON) {
+      jsonBuilder = new JSONBody.Builder();
     }
   }
 
@@ -171,6 +175,20 @@ final class RequestBuilder {
   void addPart(MultipartBody.Part part) {
     multipartBuilder.addPart(part);
   }
+  
+  void setJSON(String jsonValue) {
+    jsonBuilder.setJSONString(jsonValue);
+  }
+  
+  void setJSONRoot(String root, String jsonValue) {
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("{\"");
+    stringBuilder.append(root);
+    stringBuilder.append("\":");
+    stringBuilder.append(jsonValue);
+    stringBuilder.append("}");
+    jsonBuilder.setJSONString(stringBuilder.toString());
+  }
 
   void setBody(RequestBody body) {
     this.body = body;
@@ -197,6 +215,8 @@ final class RequestBuilder {
         body = formBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
+      } else if (jsonBuilder != null) {
+        body = jsonBuilder.build();
       } else if (hasBody) {
         // Body is absent, make an empty body.
         body = RequestBody.create(null, new byte[0]);
