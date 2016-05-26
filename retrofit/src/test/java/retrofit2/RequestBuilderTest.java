@@ -2395,6 +2395,24 @@ public final class RequestBuilderTest {
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
   }
 
+  @Test public void malformedContentTypeHeaderThrows() {
+    class Example {
+      @POST("/") //
+      @Headers("Content-Type: hello, world!") //
+      Call<ResponseBody> method(@Body RequestBody body) {
+        return null;
+      }
+    }
+    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    try {
+      buildRequest(Example.class, body);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Malformed content type: hello, world!\n"
+          + "    for method Example.method");
+    }
+  }
+
   @Test public void contentTypeAnnotationHeaderAddsHeaderWithNoBody() {
     class Example {
       @DELETE("/") //
@@ -2417,6 +2435,22 @@ public final class RequestBuilderTest {
     RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "Plain");
     Request request = buildRequest(Example.class, "text/not-plain", body);
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
+  }
+
+  @Test public void malformedContentTypeParameterThrows() {
+    class Example {
+      @POST("/") //
+      Call<ResponseBody> method(@Header("Content-Type") String contentType, @Body RequestBody body) {
+        return null;
+      }
+    }
+    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    try {
+      buildRequest(Example.class, "hello, world!", body);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Malformed content type: hello, world!");
+    }
   }
 
   @Test public void malformedAnnotationRelativeUrlThrows() {

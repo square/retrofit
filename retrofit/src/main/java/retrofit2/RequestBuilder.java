@@ -75,7 +75,11 @@ final class RequestBuilder {
 
   void addHeader(String name, String value) {
     if ("Content-Type".equalsIgnoreCase(name)) {
-      contentType = MediaType.parse(value);
+      MediaType type = MediaType.parse(value);
+      if (type == null) {
+        throw new IllegalArgumentException("Malformed content type: " + value);
+      }
+      contentType = type;
     } else {
       requestBuilder.addHeader(name, value);
     }
