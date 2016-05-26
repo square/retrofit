@@ -314,7 +314,11 @@ final class ServiceMethod<T> {
         String headerName = header.substring(0, colon);
         String headerValue = header.substring(colon + 1).trim();
         if ("Content-Type".equalsIgnoreCase(headerName)) {
-          contentType = MediaType.parse(headerValue);
+          MediaType type = MediaType.parse(headerValue);
+          if (type == null) {
+            throw methodError("Malformed content type: %s", headerValue);
+          }
+          contentType = type;
         } else {
           builder.add(headerName, headerValue);
         }
