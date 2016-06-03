@@ -50,6 +50,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public final class CallTest {
+  private final int SECONDS_WAIT_ON_CALLBACKS = 10;
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
@@ -95,7 +96,7 @@ public final class CallTest {
         t.printStackTrace();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     Response<String> response = responseRef.get();
     assertThat(response.isSuccessful()).isTrue();
@@ -138,7 +139,7 @@ public final class CallTest {
         t.printStackTrace();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     Response<String> response = responseRef.get();
     assertThat(response.isSuccessful()).isFalse();
@@ -184,7 +185,7 @@ public final class CallTest {
         latch.countDown();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     Throwable failure = failureRef.get();
     assertThat(failure).isInstanceOf(IOException.class);
@@ -247,7 +248,7 @@ public final class CallTest {
         latch.countDown();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     assertThat(failureRef.get()).isInstanceOf(UnsupportedOperationException.class)
         .hasMessage("I am broken!");
@@ -362,7 +363,7 @@ public final class CallTest {
         latch.countDown();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     assertThat(failureRef.get()).isInstanceOf(UnsupportedOperationException.class)
         .hasMessage("I am broken!");
@@ -622,7 +623,7 @@ public final class CallTest {
         latch.countDown();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
     assertThat(failureRef.get()).hasMessage("Canceled");
   }
 
@@ -670,7 +671,7 @@ public final class CallTest {
     call.cancel();
     assertThat(call.isCanceled()).isTrue();
 
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
     assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
   }
 
@@ -825,7 +826,7 @@ public final class CallTest {
       @Override public void onFailure(Call<String> call, Throwable t) {
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
   }
 
   @Test public void requestThrowingBeforeEnqueueFailsEnqueue()
@@ -866,7 +867,7 @@ public final class CallTest {
         latch.countDown();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
   }
 
   @Test public void requestAfterEnqueueReturnsCachedValue() throws IOException,
@@ -898,7 +899,7 @@ public final class CallTest {
       @Override public void onFailure(Call<String> call, Throwable t) {
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     call.request();
     assertThat(writeCount.get()).isEqualTo(1);
@@ -934,7 +935,7 @@ public final class CallTest {
         latch.countDown();
       }
     });
-    assertTrue(latch.await(10, SECONDS));
+    assertTrue(latch.await(SECONDS_WAIT_ON_CALLBACKS, SECONDS));
 
     try {
       call.request();
