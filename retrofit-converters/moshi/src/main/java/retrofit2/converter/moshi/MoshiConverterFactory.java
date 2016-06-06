@@ -16,13 +16,19 @@
 package retrofit2.converter.moshi;
 
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.Moshi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Moshi for JSON.
@@ -31,6 +37,10 @@ import retrofit2.Retrofit;
  * all types. If you are mixing JSON serialization with something else (such as protocol buffers),
  * you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this instance}
  * last to allow the other converters a chance to see their types.
+ * <p>
+ * Any {@link JsonQualifier @JsonQualifier}-annotated annotations on the parameter will be used
+ * when looking up a request body converter and those on the method will be used when looking up a
+ * response body converter.
  */
 public final class MoshiConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link Moshi} instance for conversion. */
@@ -60,7 +70,7 @@ public final class MoshiConverterFactory extends Converter.Factory {
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
-    JsonAdapter<?> adapter = moshi.adapter(type);
+    JsonAdapter<?> adapter = moshi.adapter(type, jsonAnnotations(annotations));
     if (lenient) {
       adapter = adapter.lenient();
     }
@@ -70,10 +80,21 @@ public final class MoshiConverterFactory extends Converter.Factory {
   @Override
   public Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    JsonAdapter<?> adapter = moshi.adapter(type);
+    JsonAdapter<?> adapter = moshi.adapter(type, jsonAnnotations(parameterAnnotations));
     if (lenient) {
       adapter = adapter.lenient();
     }
     return new MoshiRequestBodyConverter<>(adapter);
+  }
+
+  private static Set<? extends Annotation> jsonAnnotations(Annotation[] annotations) {
+    Set<Annotation> result = null;
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
+        if (result == null) result = new LinkedHashSet<>();
+        result.add(annotation);
+      }
+    }
+    return result != null ? unmodifiableSet(result) : Collections.<Annotation>emptySet();
   }
 }

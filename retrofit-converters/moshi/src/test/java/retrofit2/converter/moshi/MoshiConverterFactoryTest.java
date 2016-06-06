@@ -16,11 +16,17 @@
 package retrofit2.converter.moshi;
 
 import com.squareup.moshi.FromJson;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.ToJson;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.reflect.Type;
+import java.util.Set;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -33,11 +39,19 @@ import retrofit2.Retrofit;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class MoshiConverterFactoryTest {
+  @Retention(RUNTIME)
+  @JsonQualifier
+  @interface Qualifier {}
+
+  @Retention(RUNTIME)
+  @interface NonQualifer {}
+
   interface AnInterface {
     String getName();
   }
@@ -54,7 +68,7 @@ public final class MoshiConverterFactoryTest {
     }
   }
 
-  static class AnInterfaceAdapter {
+  static class Adapters {
     @ToJson public void write(JsonWriter jsonWriter, AnInterface anInterface) throws IOException {
       jsonWriter.beginObject();
       jsonWriter.name("name").value(anInterface.getName());
@@ -76,11 +90,26 @@ public final class MoshiConverterFactoryTest {
       jsonReader.endObject();
       return new AnImplementation(name);
     }
+
+    @ToJson public void write(JsonWriter writer, @Qualifier String value) throws IOException {
+      writer.value("qualified!");
+    }
+
+    @FromJson @Qualifier public String readQualified(JsonReader reader) throws IOException {
+      String string = reader.nextString();
+      if (string.equals("qualified!")) {
+        return "it worked!";
+      }
+      throw new AssertionError("Found: " + string);
+    }
   }
 
   interface Service {
     @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+
+    @POST("/") @Qualifier @NonQualifer //
+    Call<String> annotations(@Body @Qualifier @NonQualifer String body);
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
@@ -90,7 +119,18 @@ public final class MoshiConverterFactoryTest {
 
   @Before public void setUp() {
     Moshi moshi = new Moshi.Builder()
-        .add(new AnInterfaceAdapter())
+        .add(new JsonAdapter.Factory() {
+          @Override public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations,
+              Moshi moshi) {
+            for (Annotation annotation : annotations) {
+              if (!annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
+                throw new AssertionError("Non-@JsonQualifier annotation: " + annotation);
+              }
+            }
+            return null;
+          }
+        })
+        .add(new Adapters())
         .build();
     MoshiConverterFactory factory = MoshiConverterFactory.create(moshi);
     MoshiConverterFactory factoryLenient = factory.asLenient();
@@ -129,6 +169,18 @@ public final class MoshiConverterFactoryTest {
 
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readUtf8()).isEqualTo("{\"theName\":\"value\"}");
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+  }
+
+  @Test public void annotations() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("\"qualified!\""));
+
+    Call<String> call = service.annotations("value");
+    Response<String> response = call.execute();
+    assertThat(response.body()).isEqualTo("it worked!");
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getBody().readUtf8()).isEqualTo("\"qualified!\"");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
   }
 
