@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+Version 2.0.3 *(2016-06-15)*
+----------------------------
+
+ * New: `@HeaderMap` annotation and support for supplying an arbitrary number of headers to an endpoint.
+ * New: `@JsonAdapter` annotations on the `@Body` parameter and on the method will be propagated to Moshi
+   for creating the request and response adapters, respectively.
+ * Fix: Honor the `Content-Type` encoding of XML responses when deserializing response bodies.
+ * Fix: Remove the stacktrace from fake network exceptions created from retrofit-mock's `NetworkBehavior`.
+   They had the potential to be misleading and look like a library issue.
+ * Fix: Eagerly catch malformed `Content-Type` headers supplied via `@Header` or `@Headers`.
+
+
 Version 2.0.2 *(2016-04-14)*
 ----------------------------
 
