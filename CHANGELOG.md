@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-Version 2.0.3 *(2016-06-15)*
+Version 2.1.0 *(2016-06-15)*
 ----------------------------
 
  * New: `@HeaderMap` annotation and support for supplying an arbitrary number of headers to an endpoint.
