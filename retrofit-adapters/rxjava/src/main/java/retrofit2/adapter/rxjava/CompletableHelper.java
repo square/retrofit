@@ -15,6 +15,7 @@
  */
 package retrofit2.adapter.rxjava;
 
+import java.lang.reflect.Type;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
@@ -26,11 +27,9 @@ import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.subscriptions.Subscriptions;
 
-import java.lang.reflect.Type;
-
 final class CompletableHelper {
-  static CallAdapter<Completable> createCallAdapter(Transformer transformer) {
-    return new CompletableCallAdapter(transformer);
+  static CallAdapter<Completable> createCallAdapter(TransformerProvider transformerProvider) {
+    return new CompletableCallAdapter(transformerProvider);
   }
 
   private static final class CompletableCallOnSubscribe implements CompletableOnSubscribe {
@@ -71,10 +70,10 @@ final class CompletableHelper {
   }
 
   static class CompletableCallAdapter implements CallAdapter<Completable> {
-    private final Transformer transformer;
+    private final TransformerProvider transformerProvider;
 
-    CompletableCallAdapter(Transformer transformer) {
-      this.transformer = transformer;
+    CompletableCallAdapter(TransformerProvider transformerProvider) {
+      this.transformerProvider = transformerProvider;
     }
 
     @Override public Type responseType() {
@@ -83,8 +82,8 @@ final class CompletableHelper {
 
     @Override public Completable adapt(Call call) {
       Completable completable = Completable.create(new CompletableCallOnSubscribe(call));
-      if (transformer != null) {
-        return transformer.transform(completable);
+      if (transformerProvider != null) {
+        return completable.compose(transformerProvider.createCompletableTransformer());
       }
       return completable;
     }
