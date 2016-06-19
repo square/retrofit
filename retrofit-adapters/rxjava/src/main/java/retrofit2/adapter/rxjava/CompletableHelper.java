@@ -15,22 +15,22 @@
  */
 package retrofit2.adapter.rxjava;
 
-import java.lang.reflect.Type;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import rx.Completable;
 import rx.Completable.CompletableOnSubscribe;
 import rx.Completable.CompletableSubscriber;
-import rx.Scheduler;
 import rx.Subscription;
 import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.subscriptions.Subscriptions;
 
+import java.lang.reflect.Type;
+
 final class CompletableHelper {
-  static CallAdapter<Completable> createCallAdapter(Scheduler scheduler) {
-    return new CompletableCallAdapter(scheduler);
+  static CallAdapter<Completable> createCallAdapter(Transformer transformer) {
+    return new CompletableCallAdapter(transformer);
   }
 
   private static final class CompletableCallOnSubscribe implements CompletableOnSubscribe {
@@ -71,10 +71,10 @@ final class CompletableHelper {
   }
 
   static class CompletableCallAdapter implements CallAdapter<Completable> {
-    private final Scheduler scheduler;
+    private final Transformer transformer;
 
-    CompletableCallAdapter(Scheduler scheduler) {
-      this.scheduler = scheduler;
+    CompletableCallAdapter(Transformer transformer) {
+      this.transformer = transformer;
     }
 
     @Override public Type responseType() {
@@ -83,8 +83,8 @@ final class CompletableHelper {
 
     @Override public Completable adapt(Call call) {
       Completable completable = Completable.create(new CompletableCallOnSubscribe(call));
-      if (scheduler != null) {
-        return completable.subscribeOn(scheduler);
+      if (transformer != null) {
+        return transformer.transform(completable);
       }
       return completable;
     }
