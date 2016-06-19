@@ -78,7 +78,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates synchronous observables that will be transforms by the
    * provided {@link TransformerProvider}.
    */
-  public static RxJavaCallAdapterFactory createWithTransformer(TransformerProvider transformerProvider) {
+  public static RxJavaCallAdapterFactory createWithTransformer(
+      TransformerProvider transformerProvider) {
     if (transformerProvider == null) throw new NullPointerException("transformerProvider == null");
     return new RxJavaCallAdapterFactory(transformerProvider);
   }
@@ -141,7 +142,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     return callAdapter;
   }
 
-  private CallAdapter<Observable<?>> getCallAdapter(Type returnType, TransformerProvider transformerProvider) {
+  private CallAdapter<Observable<?>> getCallAdapter(Type returnType,
+      TransformerProvider transformerProvider) {
     Type observableType = getParameterUpperBound(0, (ParameterizedType) returnType);
     Class<?> rawObservableType = getRawType(observableType);
     if (rawObservableType == Response.class) {
