@@ -210,8 +210,9 @@ public final class RequestBuilderTest {
       buildRequest(Example.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Only one HTTP method is allowed. Found: PATCH and POST.\n    for method Example.method");
+        assertThat(e.getMessage())
+            .isIn("Only one HTTP method is allowed. Found: PATCH and POST.\n    for method Example.method",
+                  "Only one HTTP method is allowed. Found: POST and PATCH.\n    for method Example.method");
     }
   }
 
