@@ -264,7 +264,8 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, File value) throws IOException {
       if (value != null) { // Skip null values.
         RequestBody fileRequestBody = RequestBody.create(mediaType, value);
-        MultipartBody.Part photo = MultipartBody.Part.createFormData(name, value.getName(), fileRequestBody);
+        MultipartBody.Part photo = MultipartBody.Part.createFormData(
+                name, value.getName(), fileRequestBody);
         builder.addPart(photo);
       }
     }
