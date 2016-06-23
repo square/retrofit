@@ -71,8 +71,9 @@ public class SimpleXmlConverterFactoryTest {
     assertThat(body.getCount()).isEqualTo(10);
 
     RecordedRequest request = server.takeRequest();
-    assertThat(request.getBody().readUtf8()).isEqualTo(
-        "<my-object><message>hello world</message><count>10</count></my-object>");
+    assertThat(request.getBody().readUtf8()).isIn(
+        "<my-object><message>hello world</message><count>10</count></my-object>",
+        "<my-object><count>10</count><message>hello world</message></my-object>");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=UTF-8");
   }
 
