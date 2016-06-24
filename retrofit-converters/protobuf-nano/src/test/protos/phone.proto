@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+package retrofit2.converter.protobuf;
+
+option java_package = "retrofit2.converter.protobuf";
+option java_outer_classname = "PhoneProtos";
+
+message Phone {
+  optional string number = 1;
+
+  optional bool voicemail = 2;
+}

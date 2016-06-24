@@ -17,6 +17,7 @@
   <modules>
     <module>gson</module>
     <module>protobuf</module>
+    <module>protobuf-nano</module>
     <module>jackson</module>
     <module>wire</module>
     <module>simplexml</module>
