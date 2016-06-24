@@ -15,14 +15,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>retrofit</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf.nano</groupId>
       <artifactId>protobuf-javanano</artifactId>
-      <version>3.0.0-alpha-5</version>
     </dependency>
 
     <dependency>
