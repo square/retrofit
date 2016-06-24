@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Square, Inc.
+ * Copyright (C) 2013 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.protobuf;
+package retrofit2.converter.protobuf.nano;
 
-import com.google.protobuf.MessageLite;
+import com.google.protobuf.nano.MessageNano;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Converter;
 
-final class ProtoRequestBodyConverter<T extends MessageLite> implements Converter<T, RequestBody> {
+/**
+ * * @author Keith Banks - Architect at siilo.com
+ */
+final class ProtoRequestBodyConverter<T extends MessageNano> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
   @Override public RequestBody convert(T value) throws IOException {
-    byte[] bytes = value.toByteArray();
+    byte[] bytes = MessageNano.toByteArray(value);
     return RequestBody.create(MEDIA_TYPE, bytes);
   }
 }
+
