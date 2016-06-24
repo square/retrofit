@@ -28,7 +28,6 @@ import retrofit2.Retrofit;
  * <p>
  * This converter only applies for types which extend from {@link MessageNano} (or one of its
  * subclasses).
- * @author Keith Banks - Architect at siilo.com
  */
 public final class ProtoConverterFactory extends Converter.Factory {
   public static ProtoConverterFactory create() {
@@ -49,7 +48,7 @@ public final class ProtoConverterFactory extends Converter.Factory {
       return null;
     }
 
-    return new ProtoResponseBodyConverter<>(getNanoProtoInstance(type));
+    return new ProtoResponseBodyConverter<>(type);
   }
 
   @Override
@@ -64,22 +63,6 @@ public final class ProtoConverterFactory extends Converter.Factory {
       return null;
     }
     return new ProtoRequestBodyConverter<>();
-  }
-
-  private MessageNano getNanoProtoInstance(final Type type) {
-    Class<?> c = (Class<?>) type;
-    if (!(MessageNano.class.isAssignableFrom(c))) {
-      throw new IllegalArgumentException(
-                 "Expected a nanoproto message but was " + c.toString());
-    }
-
-    try {
-      return (MessageNano) c.newInstance();
-    } catch (InstantiationException e) {
-      throw new RuntimeException("Nanoproto instantiation failed", e);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    }
   }
 }
 

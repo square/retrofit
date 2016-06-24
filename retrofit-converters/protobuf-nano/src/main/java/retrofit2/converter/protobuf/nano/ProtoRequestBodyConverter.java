@@ -17,13 +17,11 @@ package retrofit2.converter.protobuf.nano;
 
 import com.google.protobuf.nano.MessageNano;
 import java.io.IOException;
+
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Converter;
 
-/**
- * * @author Keith Banks - Architect at siilo.com
- */
 final class ProtoRequestBodyConverter<T extends MessageNano> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-protobuf");
 
