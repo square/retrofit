@@ -44,6 +44,7 @@ final class RequestBuilder {
   private MultipartBody.Builder multipartBuilder;
   private FormBody.Builder formBuilder;
   private RequestBody body;
+  private Headers.Builder mHeaders;
 
   RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
       MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
@@ -56,6 +57,9 @@ final class RequestBuilder {
 
     if (headers != null) {
       requestBuilder.headers(headers);
+      mHeaders = headers.newBuilder();
+    }else {
+      mHeaders = new Headers.Builder();
     }
 
     if (isFormEncoded) {
@@ -82,8 +86,31 @@ final class RequestBuilder {
       contentType = type;
     } else {
       requestBuilder.addHeader(name, value);
+      mHeaders.add(name,value);
     }
   }
+
+  void addHeaderParams(String name, String value) {
+    String partten = "{" + name + "}";
+      Headers headers = mHeaders.build();;
+      int size = headers.size();
+      Headers.Builder builder = new Headers.Builder();
+      for (int i = 0 ; i < size ; i++){
+        String itmeValue = headers.value(i);
+        String itemName = headers.name(i);
+        if(itmeValue.contains(partten)){
+          itmeValue = itmeValue.replace(partten,value);
+        }
+        if(itemName.contains(partten)){
+          itemName = itemName.replaceAll(partten,value);
+        }
+        builder.add(itemName,itmeValue);
+      }
+      mHeaders = builder;
+      requestBuilder.headers(mHeaders.build());
+
+  }
+
 
   void addPathParam(String name, String value, boolean encoded) {
     if (relativeUrl == null) {

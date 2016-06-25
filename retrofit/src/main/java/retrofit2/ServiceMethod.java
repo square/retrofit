@@ -41,6 +41,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.HEAD;
 import retrofit2.http.HTTP;
+import retrofit2.http.Head;
 import retrofit2.http.Header;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.Multipart;
@@ -682,6 +683,12 @@ final class ServiceMethod<T> {
         }
         gotBody = true;
         return new ParameterHandler.Body<>(converter);
+      }else if (annotation instanceof Head) {
+        Head head = (Head) annotation;
+        String name = head.value();
+        Converter<?, String> converter = retrofit.stringConverter(type, annotations);
+        return new ParameterHandler.Head<>(name,converter);
+
       }
 
       return null; // Not a Retrofit annotation.
