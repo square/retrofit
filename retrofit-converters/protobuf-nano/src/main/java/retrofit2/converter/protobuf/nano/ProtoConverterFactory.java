@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2016 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,12 +43,12 @@ public final class ProtoConverterFactory extends Converter.Factory {
     if (!(type instanceof Class<?>)) {
       return null;
     }
-    Class<?> c = (Class<?>) type;
-    if (!MessageNano.class.isAssignableFrom(c)) {
+    Class<?> typeClass = (Class<?>) type;
+    if (!MessageNano.class.isAssignableFrom(typeClass)) {
       return null;
     }
 
-    return new ProtoResponseBodyConverter<>(type);
+    return new ProtoResponseBodyConverter<>((Class<? extends MessageNano>) typeClass);
   }
 
   @Override
