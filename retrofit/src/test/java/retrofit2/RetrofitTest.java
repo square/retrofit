@@ -399,11 +399,13 @@ public final class RetrofitTest {
     assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
   }
 
-  @Test public void stringConverterNotCalledForString() {
+  @Test public void stringConverterCalledForString() {
+    final AtomicBoolean factoryCalled = new AtomicBoolean();
     class MyConverterFactory extends Converter.Factory {
       @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
           Retrofit retrofit) {
-        throw new AssertionError();
+        factoryCalled.set(true);
+        return null;
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -413,7 +415,7 @@ public final class RetrofitTest {
     CallMethod service = retrofit.create(CallMethod.class);
     Call<ResponseBody> call = service.queryString(null);
     assertThat(call).isNotNull();
-    // We also implicitly assert the above factory was not called as it would have thrown.
+    assertThat(factoryCalled.get()).isTrue();
   }
 
   @Test public void stringConverterReturningNullResultsInDefault() {
