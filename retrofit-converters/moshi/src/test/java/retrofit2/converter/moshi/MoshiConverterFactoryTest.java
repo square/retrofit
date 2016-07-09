@@ -26,10 +26,13 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.Set;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import okio.Buffer;
+import okio.ByteString;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -202,5 +205,33 @@ public final class MoshiConverterFactoryTest {
     Response<AnImplementation> response = call2.execute();
     AnImplementation body = response.body();
     assertThat(body.theName).isEqualTo("value");
+  }
+
+  @Test public void utf8BomSkipped() throws IOException {
+    Buffer responseBody = new Buffer()
+        .write(ByteString.decodeHex("EFBBBF"))
+        .writeUtf8("{\"theName\":\"value\"}");
+    MockResponse malformedResponse = new MockResponse().setBody(responseBody);
+    server.enqueue(malformedResponse);
+
+    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+    Response<AnImplementation> response = call.execute();
+    AnImplementation body = response.body();
+    assertThat(body.theName).isEqualTo("value");
+  }
+
+  @Test public void nonUtf8BomIsNotSkipped() throws IOException {
+    Buffer responseBody = new Buffer()
+        .write(ByteString.decodeHex("FEFF"))
+        .writeString("{\"theName\":\"value\"}", Charset.forName("UTF-16"));
+    MockResponse malformedResponse = new MockResponse().setBody(responseBody);
+    server.enqueue(malformedResponse);
+
+    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+    try {
+      call.execute();
+      fail();
+    } catch (IOException expected) {
+    }
   }
 }
