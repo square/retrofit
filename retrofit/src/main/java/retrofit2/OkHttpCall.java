@@ -270,7 +270,7 @@ final class OkHttpCall<T> implements Call<T> {
       this.headers = headers;
     }
 
-    public Headers getBody() {
+    public Headers getHeaders() {
       return headers;
     }
   }
