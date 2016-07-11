@@ -16,13 +16,17 @@
 package retrofit2;
 
 import java.io.IOException;
+
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import okhttp3.Headers;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
+
+
 
 final class OkHttpCall<T> implements Call<T> {
   private final ServiceMethod<T> serviceMethod;
@@ -191,6 +195,8 @@ final class OkHttpCall<T> implements Call<T> {
         .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
         .build();
 
+    Headers headers = rawResponse.headers();
+
     int code = rawResponse.code();
     if (code < 200 || code >= 300) {
       try {
@@ -214,7 +220,7 @@ final class OkHttpCall<T> implements Call<T> {
       // If the underlying source threw an exception, propagate that rather than indicating it was
       // a runtime exception.
       catchingBody.throwIfCaught();
-      throw e;
+      throw new CatchException(e, headers);
     }
   }
 
@@ -253,6 +259,19 @@ final class OkHttpCall<T> implements Call<T> {
 
     @Override public BufferedSource source() {
       throw new IllegalStateException("Cannot read raw response body of a converted body.");
+    }
+  }
+
+  static final class CatchException extends RuntimeException {
+    private Headers headers;
+
+    public CatchException(Throwable throwable, Headers headers) {
+      super(throwable);
+      this.headers = headers;
+    }
+
+    public Headers getBody() {
+      return headers;
     }
   }
 
