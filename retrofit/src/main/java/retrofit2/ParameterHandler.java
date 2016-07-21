@@ -139,7 +139,7 @@ abstract class ParameterHandler<T> {
       }
     }
   }
-  
+
   static final class QueryList<T> extends ParameterHandler<List<KeyValue<String, T>>> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
@@ -155,16 +155,16 @@ abstract class ParameterHandler<T> {
       }
 
       for (KeyValue<String, T> item : value) {
-    	  String entryKey = item.getKey();
-          if (entryKey == null) {
-            throw new IllegalArgumentException("Query list item contained null key.");
-          }
-          T entryValue = item.getValue();
-          if (entryValue == null) {
-            throw new IllegalArgumentException(
-                "Query map contained null value for key '" + entryKey + "'.");
-          }
-          builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);  
+        String entryKey = item.getKey();
+        if (entryKey == null) {
+          throw new IllegalArgumentException("Query list item contained null key.");
+        }
+        T entryValue = item.getValue();
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+              "Query map contained null value for key '" + entryKey + "'.");
+        }
+        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);  
       }
     }
   }

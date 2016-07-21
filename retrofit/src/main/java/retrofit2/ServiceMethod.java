@@ -685,21 +685,20 @@ final class ServiceMethod<T> {
         gotBody = true;
         return new ParameterHandler.Body<>(converter);
       } else if (annotation instanceof QueryList) {
-    	  Class<?> rawParameterType = Utils.getRawType(type);
-          if (!List.class.isAssignableFrom(rawParameterType)) {
-            throw parameterError(p, "@QueryList parameter type must be List.");
-          }
-          Type listType = Utils.getSupertype(type, rawParameterType, List.class);
-          if (!(listType instanceof ParameterizedType)) {
-            throw parameterError(p, "List must include generic types (e.g., List<KeyValue>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter =
-              retrofit.stringConverter(iterableType, annotations);
-          return new ParameterHandler.QueryList<>(converter, ((QueryList) annotation).encoded());
+        Class<?> rawParameterType = Utils.getRawType(type);
+        if (!List.class.isAssignableFrom(rawParameterType)) {
+          throw parameterError(p, "@QueryList parameter type must be List.");
+        }
+        Type listType = Utils.getSupertype(type, rawParameterType, List.class);
+        if (!(listType instanceof ParameterizedType)) {
+          throw parameterError(p, "List must include generic types (e.g., List<KeyValue>)");
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+        Converter<?, String> converter =
+            retrofit.stringConverter(iterableType, annotations);
+        return new ParameterHandler.QueryList<>(converter, ((QueryList) annotation).encoded());
       }
-
       return null; // Not a Retrofit annotation.
     }
 
