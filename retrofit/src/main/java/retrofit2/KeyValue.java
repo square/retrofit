@@ -13,7 +13,7 @@ public class KeyValue<K, V> {
 
   @Override
   public String toString() {
-	return key.toString() + ":" + value.toString();
+    return key.toString() + ":" + value.toString();
   }
 
   public V getValue() {

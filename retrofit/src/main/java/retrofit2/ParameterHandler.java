@@ -164,7 +164,7 @@ abstract class ParameterHandler<T> {
           throw new IllegalArgumentException(
               "Query map contained null value for key '" + entryKey + "'.");
         }
-        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);  
+        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
       }
     }
   }
