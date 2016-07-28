@@ -2486,6 +2486,25 @@ public final class RequestBuilderTest {
     }
   }
 
+  @Test public void multipartPartsShouldBeInOrder() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo")
+      Call<ResponseBody> get(@Part("first") String data, @Part("second") String dataTwo, @Part("third") String dataThree) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "firstParam", "secondParam", "thirdParam");
+    MultipartBody body = (MultipartBody) request.body();
+
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String readBody = buffer.readUtf8();
+
+    assertThat(readBody.indexOf("firstParam")).isLessThan(readBody.indexOf("secondParam"));
+    assertThat(readBody.indexOf("secondParam")).isLessThan(readBody.indexOf("thirdParam"));
+  }
+
   private static void assertBody(RequestBody body, String expected) {
     assertThat(body).isNotNull();
     Buffer buffer = new Buffer();
