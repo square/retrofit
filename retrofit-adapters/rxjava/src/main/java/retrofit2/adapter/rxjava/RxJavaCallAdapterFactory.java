@@ -24,6 +24,7 @@ import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import rx.Completable;
 import rx.Observable;
 import rx.Producer;
 import rx.Scheduler;
@@ -61,22 +62,52 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * by default.
    */
   public static RxJavaCallAdapterFactory create() {
-    return new RxJavaCallAdapterFactory(null);
+    return new RxJavaCallAdapterFactory((TransformerProvider) null);
   }
 
   /**
-   * Returns an instance which creates synchronous observables that
-   * {@linkplain Observable#subscribeOn(Scheduler) subscribe on} {@code scheduler} by default.
+   * Returns an instance which creates synchronous observables that {@linkplain
+   * Observable#subscribeOn(Scheduler) subscribe on} {@code scheduler} by default.
    */
   public static RxJavaCallAdapterFactory createWithScheduler(Scheduler scheduler) {
     if (scheduler == null) throw new NullPointerException("scheduler == null");
     return new RxJavaCallAdapterFactory(scheduler);
   }
 
-  private final Scheduler scheduler;
+  /**
+   * Returns an instance which creates synchronous observables that will be transforms by the
+   * provided {@link TransformerProvider}.
+   */
+  public static RxJavaCallAdapterFactory createWithTransformer(
+      TransformerProvider transformerProvider) {
+    if (transformerProvider == null) throw new NullPointerException("transformerProvider == null");
+    return new RxJavaCallAdapterFactory(transformerProvider);
+  }
 
-  private RxJavaCallAdapterFactory(Scheduler scheduler) {
-    this.scheduler = scheduler;
+  private final TransformerProvider transformerProvider;
+
+  private RxJavaCallAdapterFactory(final Scheduler scheduler) {
+    this(new TransformerProvider() {
+      @Override public <T> Observable.Transformer<T, T> createObservableTransformer() {
+        return new Observable.Transformer<T, T>() {
+          @Override public Observable<T> call(Observable<T> observable) {
+            return observable.observeOn(scheduler);
+          }
+        };
+      }
+
+      @Override public Completable.CompletableTransformer createCompletableTransformer() {
+        return new Completable.CompletableTransformer() {
+          @Override public Completable call(Completable completable) {
+            return completable.observeOn(scheduler);
+          }
+        };
+      }
+    });
+  }
+
+  private RxJavaCallAdapterFactory(TransformerProvider transformerProvider) {
+    this.transformerProvider = transformerProvider;
   }
 
   @Override
@@ -99,10 +130,10 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       // regular Observable operation can be leveraged without relying on this unstable RxJava API.
       // Note that this has to be done separately since Completable doesn't have a parametrized
       // type.
-      return CompletableHelper.createCallAdapter(scheduler);
+      return CompletableHelper.createCallAdapter(transformerProvider);
     }
 
-    CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType, scheduler);
+    CallAdapter<Observable<?>> callAdapter = getCallAdapter(returnType, transformerProvider);
     if (isSingle) {
       // Add Single-converter wrapper from a separate class. This defers classloading such that
       // regular Observable operation can be leveraged without relying on this unstable RxJava API.
@@ -111,7 +142,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     return callAdapter;
   }
 
-  private CallAdapter<Observable<?>> getCallAdapter(Type returnType, Scheduler scheduler) {
+  private CallAdapter<Observable<?>> getCallAdapter(Type returnType,
+      TransformerProvider transformerProvider) {
     Type observableType = getParameterUpperBound(0, (ParameterizedType) returnType);
     Class<?> rawObservableType = getRawType(observableType);
     if (rawObservableType == Response.class) {
@@ -120,7 +152,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
             + " as Response<Foo> or Response<? extends Foo>");
       }
       Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
-      return new ResponseCallAdapter(responseType, scheduler);
+      return new ResponseCallAdapter(responseType, transformerProvider);
     }
 
     if (rawObservableType == Result.class) {
@@ -129,10 +161,10 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
             + " as Result<Foo> or Result<? extends Foo>");
       }
       Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
-      return new ResultCallAdapter(responseType, scheduler);
+      return new ResultCallAdapter(responseType, transformerProvider);
     }
 
-    return new SimpleCallAdapter(observableType, scheduler);
+    return new SimpleCallAdapter(observableType, transformerProvider);
   }
 
   static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {
@@ -196,11 +228,11 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
   static final class ResponseCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
-    private final Scheduler scheduler;
+    private final TransformerProvider transformerProvider;
 
-    ResponseCallAdapter(Type responseType, Scheduler scheduler) {
+    ResponseCallAdapter(Type responseType, TransformerProvider transformerProvider) {
       this.responseType = responseType;
-      this.scheduler = scheduler;
+      this.transformerProvider = transformerProvider;
     }
 
     @Override public Type responseType() {
@@ -209,8 +241,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
     @Override public <R> Observable<Response<R>> adapt(Call<R> call) {
       Observable<Response<R>> observable = Observable.create(new CallOnSubscribe<>(call));
-      if (scheduler != null) {
-        return observable.subscribeOn(scheduler);
+      if (transformerProvider != null) {
+        return observable.compose(transformerProvider.<Response<R>>createObservableTransformer());
       }
       return observable;
     }
@@ -218,11 +250,11 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
   static final class SimpleCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
-    private final Scheduler scheduler;
+    private final TransformerProvider transformerProvider;
 
-    SimpleCallAdapter(Type responseType, Scheduler scheduler) {
+    SimpleCallAdapter(Type responseType, TransformerProvider transformerProvider) {
       this.responseType = responseType;
-      this.scheduler = scheduler;
+      this.transformerProvider = transformerProvider;
     }
 
     @Override public Type responseType() {
@@ -232,8 +264,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     @Override public <R> Observable<R> adapt(Call<R> call) {
       Observable<R> observable = Observable.create(new CallOnSubscribe<>(call)) //
           .lift(OperatorMapResponseToBodyOrError.<R>instance());
-      if (scheduler != null) {
-        return observable.subscribeOn(scheduler);
+      if (transformerProvider != null) {
+        return observable.compose(transformerProvider.<R>createObservableTransformer());
       }
       return observable;
     }
@@ -241,11 +273,11 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
 
   static final class ResultCallAdapter implements CallAdapter<Observable<?>> {
     private final Type responseType;
-    private final Scheduler scheduler;
+    private final TransformerProvider transformerProvider;
 
-    ResultCallAdapter(Type responseType, Scheduler scheduler) {
+    ResultCallAdapter(Type responseType, TransformerProvider transformerProvider) {
       this.responseType = responseType;
-      this.scheduler = scheduler;
+      this.transformerProvider = transformerProvider;
     }
 
     @Override public Type responseType() {
@@ -263,8 +295,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
               return Result.error(throwable);
             }
           });
-      if (scheduler != null) {
-        return observable.subscribeOn(scheduler);
+      if (transformerProvider != null) {
+        return observable.compose(transformerProvider.<Result<R>>createObservableTransformer());
       }
       return observable;
     }
