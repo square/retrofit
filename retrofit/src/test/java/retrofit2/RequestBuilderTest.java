@@ -1435,21 +1435,6 @@ public final class RequestBuilderTest {
     assertBody(request.body(), "");
   }
 
-  @Test public void bodyResponseBody() {
-    class Example {
-      @POST("/foo/bar/") //
-      Call<ResponseBody> method(@Body RequestBody body) {
-        return null;
-      }
-    }
-    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
-    Request request = buildRequest(Example.class, body);
-    assertThat(request.method()).isEqualTo("POST");
-    assertThat(request.headers().size()).isZero();
-    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
-    assertBody(request.body(), "hi");
-  }
-
   @Test public void bodyRequired() {
     class Example {
       @POST("/foo/bar/") //
