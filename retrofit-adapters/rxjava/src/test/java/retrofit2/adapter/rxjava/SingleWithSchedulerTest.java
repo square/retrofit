@@ -27,7 +27,7 @@ import rx.Single;
 import rx.observers.TestSubscriber;
 import rx.schedulers.TestScheduler;
 
-public final class SingleSchedulerTest {
+public final class SingleWithSchedulerTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {

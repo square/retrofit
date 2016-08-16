@@ -24,9 +24,11 @@ import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import rx.Completable;
 import rx.Observable;
 import rx.Producer;
 import rx.Scheduler;
+import rx.Single;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.exceptions.Exceptions;
@@ -35,15 +37,16 @@ import rx.functions.Func1;
 /**
  * A {@linkplain CallAdapter.Factory call adapter} which uses RxJava for creating observables.
  * <p>
- * Adding this class to {@link Retrofit} allows you to return {@link Observable} from service
- * methods.
+ * Adding this class to {@link Retrofit} allows you to return an {@link Observable}, {@link Single},
+ * or {@link Completable} from service methods.
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
  *   Observable&lt;User&gt; getUser()
  * }
  * </code></pre>
- * There are three configurations supported for the {@code Observable} type parameter:
+ * There are three configurations supported for the {@code Observable} or {@code Single} type
+ * parameter:
  * <ul>
  * <li>Direct body (e.g., {@code Observable<User>}) calls {@code onNext} with the deserialized body
  * for 2XX responses and calls {@code onError} with {@link HttpException} for non-2XX responses and
@@ -54,6 +57,10 @@ import rx.functions.Func1;
  * <li>Result wrapped body (e.g., {@code Observable<Result<User>>}) calls {@code onNext} with a
  * {@link Result} object for all HTTP responses and errors.</li>
  * </ul>
+ * <p>
+ * <em>Note:</em> Support for {@link Single} and {@link Completable} is experimental and subject
+ * to backwards-incompatible changes at any time since both of these types are not considered
+ * stable by RxJava.
  */
 public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   /**

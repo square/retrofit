@@ -24,10 +24,10 @@ import org.junit.Test;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Completable;
+import rx.observers.TestSubscriber;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 
 public final class CompletableTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -48,29 +48,26 @@ public final class CompletableTest {
 
   @Test public void completableSuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
-    service.completable().await();
+
+    TestSubscriber<Void> subscriber = new TestSubscriber<>();
+    service.completable().subscribe(subscriber);
+    subscriber.assertCompleted();
   }
 
   @Test public void completableSuccess404() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
-    try {
-      service.completable().await();
-      fail();
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
-    }
+    TestSubscriber<Void> subscriber = new TestSubscriber<>();
+    service.completable().subscribe(subscriber);
+    Throwable cause = subscriber.getOnErrorEvents().get(0);
+    assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
   }
 
   @Test public void completableFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    try {
-      service.completable().await();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
-    }
+    TestSubscriber<Void> subscriber = new TestSubscriber<>();
+    service.completable().subscribe(subscriber);
+    subscriber.assertError(IOException.class);
   }
 }
