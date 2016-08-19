@@ -24,11 +24,11 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Single;
-import rx.observers.TestSubscriber;
 import rx.schedulers.TestScheduler;
 
 public final class SingleWithSchedulerTest {
   @Rule public final MockWebServer server = new MockWebServer();
+  @Rule public final RecordingSubscriber.Rule subscriberRule = new RecordingSubscriber.Rule();
 
   interface Service {
     @GET("/") Single<String> body();
@@ -51,36 +51,33 @@ public final class SingleWithSchedulerTest {
   @Test public void bodyUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    TestSubscriber<String> subscriber = new TestSubscriber<>();
-    service.body().subscribe(subscriber);
-    subscriber.assertNoValues();
-    subscriber.assertNoTerminalEvent();
+    RecordingSubscriber<String> subscriber = subscriberRule.create();
+    service.body().unsafeSubscribe(subscriber);
+    subscriber.assertNoEvents();
 
     scheduler.triggerActions();
-    subscriber.assertValueCount(1);
+    subscriber.assertAnyValue().assertCompleted();
   }
 
   @Test public void responseUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    TestSubscriber<Response<String>> subscriber = new TestSubscriber<>();
-    service.response().subscribe(subscriber);
-    subscriber.assertNoValues();
-    subscriber.assertNoTerminalEvent();
+    RecordingSubscriber<Response<String>> subscriber = subscriberRule.create();
+    service.response().unsafeSubscribe(subscriber);
+    subscriber.assertNoEvents();
 
     scheduler.triggerActions();
-    subscriber.assertValueCount(1);
+    subscriber.assertAnyValue().assertCompleted();
   }
 
   @Test public void resultUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    TestSubscriber<Result<String>> subscriber = new TestSubscriber<>();
-    service.result().subscribe(subscriber);
-    subscriber.assertNoValues();
-    subscriber.assertNoTerminalEvent();
+    RecordingSubscriber<Result<String>> subscriber = subscriberRule.create();
+    service.result().unsafeSubscribe(subscriber);
+    subscriber.assertNoEvents();
 
     scheduler.triggerActions();
-    subscriber.assertValueCount(1);
+    subscriber.assertAnyValue().assertCompleted();
   }
 }

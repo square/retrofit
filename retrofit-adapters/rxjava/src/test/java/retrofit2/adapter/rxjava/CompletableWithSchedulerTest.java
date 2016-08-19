@@ -23,11 +23,11 @@ import org.junit.Test;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Completable;
-import rx.observers.TestSubscriber;
 import rx.schedulers.TestScheduler;
 
 public final class CompletableWithSchedulerTest {
   @Rule public final MockWebServer server = new MockWebServer();
+  @Rule public final RecordingSubscriber.Rule subscriberRule = new RecordingSubscriber.Rule();
 
   interface Service {
     @GET("/") Completable completable();
@@ -47,9 +47,9 @@ public final class CompletableWithSchedulerTest {
   @Test public void completableUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    TestSubscriber<Void> subscriber = new TestSubscriber<>();
-    service.completable().subscribe(subscriber);
-    subscriber.assertNoTerminalEvent();
+    RecordingSubscriber<String> subscriber = subscriberRule.create();
+    service.completable().unsafeSubscribe(subscriber);
+    subscriber.assertNoEvents();
 
     scheduler.triggerActions();
     subscriber.assertCompleted();
