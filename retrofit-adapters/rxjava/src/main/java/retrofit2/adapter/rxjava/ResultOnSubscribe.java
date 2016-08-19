@@ -18,6 +18,8 @@ package retrofit2.adapter.rxjava;
 import retrofit2.Response;
 import rx.Observable.OnSubscribe;
 import rx.Subscriber;
+import rx.exceptions.CompositeException;
+import rx.plugins.RxJavaPlugins;
 
 final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
   private final OnSubscribe<Response<T>> upstream;
@@ -46,7 +48,12 @@ final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
       try {
         subscriber.onNext(Result.<R>error(throwable));
       } catch (Throwable t) {
-        subscriber.onError(t);
+        try {
+          subscriber.onError(t);
+        } catch (Throwable inner) {
+          CompositeException composite = new CompositeException(t, inner);
+          RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
+        }
         return;
       }
       subscriber.onCompleted();

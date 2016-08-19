@@ -18,6 +18,8 @@ package retrofit2.adapter.rxjava;
 import retrofit2.Response;
 import rx.Observable.OnSubscribe;
 import rx.Subscriber;
+import rx.exceptions.CompositeException;
+import rx.plugins.RxJavaPlugins;
 
 final class BodyOnSubscribe<T> implements OnSubscribe<T> {
   private final OnSubscribe<Response<T>> upstream;
@@ -45,15 +47,27 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
         subscriber.onNext(response.body());
       } else {
         subscriberTerminated = true;
-        subscriber.onError(new HttpException(response));
+        Throwable t = new HttpException(response);
+        try {
+          subscriber.onError(t);
+        } catch (Throwable inner) {
+          CompositeException composite = new CompositeException(t, inner);
+          RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
+        }
       }
     }
 
     @Override public void onError(Throwable throwable) {
       if (!subscriberTerminated) {
         subscriber.onError(throwable);
+      } else {
+        // This should never happen! onNext handles and forwards errors automatically.
+        Throwable broken = new AssertionError(
+            "This should never happen! Report as a Retrofit bug with the full stacktrace.");
+        //noinspection UnnecessaryInitCause Two-arg AssertionError constructor is 1.7+ only.
+        broken.initCause(throwable);
+        RxJavaPlugins.getInstance().getErrorHandler().handleError(broken);
       }
-      // TODO else send to plugin as unhandled error
     }
 
     @Override public void onCompleted() {
