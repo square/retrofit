@@ -22,7 +22,9 @@ import rx.Observable.OnSubscribe;
 import rx.Producer;
 import rx.Subscriber;
 import rx.Subscription;
+import rx.exceptions.CompositeException;
 import rx.exceptions.Exceptions;
+import rx.plugins.RxJavaPlugins;
 
 final class CallOnSubscribe<T> implements OnSubscribe<Response<T>> {
   private final Call<T> originalCall;
@@ -62,18 +64,27 @@ final class CallOnSubscribe<T> implements OnSubscribe<Response<T>> {
         return;
       }
 
+      boolean terminated = false;
       try {
         Response<T> response = call.execute();
         if (!call.isCanceled()) {
           subscriber.onNext(response);
         }
         if (!call.isCanceled()) {
+          terminated = true;
           subscriber.onCompleted();
         }
       } catch (Throwable t) {
         Exceptions.throwIfFatal(t);
-        if (!call.isCanceled()) {
-          subscriber.onError(t);
+        if (terminated) {
+          RxJavaPlugins.getInstance().getErrorHandler().handleError(t);
+        } else if (!call.isCanceled()) {
+          try {
+            subscriber.onError(t);
+          } catch (Throwable inner) {
+            CompositeException composite = new CompositeException(t, inner);
+            RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
+          }
         }
       }
     }
