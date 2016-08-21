@@ -126,4 +126,8 @@ public final class Response<T> {
   public ResponseBody errorBody() {
     return errorBody;
   }
+
+  @Override public String toString() {
+    return rawResponse.toString();
+  }
 }
