@@ -19,6 +19,7 @@ import retrofit2.Response;
 import rx.Observable.OnSubscribe;
 import rx.Subscriber;
 import rx.exceptions.CompositeException;
+import rx.exceptions.Exceptions;
 import rx.plugins.RxJavaPlugins;
 
 final class BodyOnSubscribe<T> implements OnSubscribe<T> {
@@ -51,6 +52,7 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
         try {
           subscriber.onError(t);
         } catch (Throwable inner) {
+          Exceptions.throwIfFatal(inner);
           CompositeException composite = new CompositeException(t, inner);
           RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
         }

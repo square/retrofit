@@ -82,6 +82,7 @@ final class CallOnSubscribe<T> implements OnSubscribe<Response<T>> {
           try {
             subscriber.onError(t);
           } catch (Throwable inner) {
+            Exceptions.throwIfFatal(inner);
             CompositeException composite = new CompositeException(t, inner);
             RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
           }
