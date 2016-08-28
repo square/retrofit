@@ -33,27 +33,7 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.Multipart;
-import retrofit2.http.OPTIONS;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Url;
+import retrofit2.http.*;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<T> {
@@ -66,6 +46,7 @@ final class ServiceMethod<T> {
   final CallAdapter<?> callAdapter;
 
   private final HttpUrl baseUrl;
+  private final HttpUrl baseHttpsUrl;
   private final Converter<ResponseBody, T> responseConverter;
   private final String httpMethod;
   private final String relativeUrl;
@@ -74,12 +55,14 @@ final class ServiceMethod<T> {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final boolean isHttps;
   private final ParameterHandler<?>[] parameterHandlers;
 
   ServiceMethod(Builder<T> builder) {
     this.callFactory = builder.retrofit.callFactory();
     this.callAdapter = builder.callAdapter;
     this.baseUrl = builder.retrofit.baseUrl();
+    this.baseHttpsUrl = builder.retrofit.baseHttpsUrl();
     this.responseConverter = builder.responseConverter;
     this.httpMethod = builder.httpMethod;
     this.relativeUrl = builder.relativeUrl;
@@ -88,13 +71,20 @@ final class ServiceMethod<T> {
     this.hasBody = builder.hasBody;
     this.isFormEncoded = builder.isFormEncoded;
     this.isMultipart = builder.isMultipart;
+    this.isHttps = builder.isHttps;
     this.parameterHandlers = builder.parameterHandlers;
   }
 
-  /** Builds an HTTP request from method arguments. */
+  /** Builds an HTTP ot Https request from method arguments. */
   Request toRequest(Object... args) throws IOException {
-    RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
-        contentType, hasBody, isFormEncoded, isMultipart);
+    RequestBuilder requestBuilder;
+    if(!isHttps){
+        requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
+                contentType, hasBody, isFormEncoded, isMultipart);
+    }else {
+        requestBuilder = new RequestBuilder(httpMethod, baseHttpsUrl, relativeUrl, headers,
+              contentType, hasBody, isFormEncoded, isMultipart);
+    }
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
@@ -140,6 +130,7 @@ final class ServiceMethod<T> {
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
+    boolean isHttps;
     String relativeUrl;
     Headers headers;
     MediaType contentType;
@@ -272,6 +263,9 @@ final class ServiceMethod<T> {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isFormEncoded = true;
+      } else if (annotation instanceof TYPE) {
+        int type = ((TYPE) annotation).value();
+        isHttps = type == TYPE.TYPE_HTTPS ? true : false;
       }
     }
 
