@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -34,11 +33,30 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import retrofit2.http.*;
+import retrofit2.http.Body;
+import retrofit2.http.DELETE;
+import retrofit2.http.Field;
+import retrofit2.http.FieldMap;
+import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
+import retrofit2.http.HEAD;
+import retrofit2.http.HTTP;
+import retrofit2.http.Header;
+import retrofit2.http.HeaderMap;
+import retrofit2.http.Multipart;
+import retrofit2.http.OPTIONS;
+import retrofit2.http.PATCH;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Part;
+import retrofit2.http.PartMap;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
+import retrofit2.http.Url;
+import retrofit2.http.TYPE;
 
-/**
- * Adapts an invocation of an interface method into an HTTP call.
- */
+/** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<T> {
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
@@ -78,9 +96,7 @@ final class ServiceMethod<T> {
     this.parameterHandlers = builder.parameterHandlers;
   }
 
-  /**
-   * Builds an HTTP ot Https request from method arguments.
-   */
+  /** Builds an HTTP request from method arguments. */
   Request toRequest(Object... args) throws IOException {
     RequestBuilder requestBuilder;
     if (!isHttps) {
@@ -92,7 +108,7 @@ final class ServiceMethod<T> {
     }
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
-        ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
+    ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
     int argumentCount = args != null ? args.length : 0;
     if (argumentCount != handlers.length) {
