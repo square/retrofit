@@ -15,8 +15,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface TYPE {
 
-    int TYPE_HTTP = 0;
-    int TYPE_HTTPS = 1;
+  int TYPE_HTTP = 0;
+  int TYPE_HTTPS = 1;
 
-    int value() default TYPE_HTTP;
+  int value() default TYPE_HTTP;
 }

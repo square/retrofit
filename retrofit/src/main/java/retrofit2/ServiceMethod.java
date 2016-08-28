@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -35,7 +36,9 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.*;
 
-/** Adapts an invocation of an interface method into an HTTP call. */
+/**
+ * Adapts an invocation of an interface method into an HTTP call.
+ */
 final class ServiceMethod<T> {
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
@@ -75,19 +78,21 @@ final class ServiceMethod<T> {
     this.parameterHandlers = builder.parameterHandlers;
   }
 
-  /** Builds an HTTP ot Https request from method arguments. */
+  /**
+   * Builds an HTTP ot Https request from method arguments.
+   */
   Request toRequest(Object... args) throws IOException {
     RequestBuilder requestBuilder;
-    if(!isHttps){
-        requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
-                contentType, hasBody, isFormEncoded, isMultipart);
-    }else {
-        requestBuilder = new RequestBuilder(httpMethod, baseHttpsUrl, relativeUrl, headers,
-              contentType, hasBody, isFormEncoded, isMultipart);
+    if (!isHttps) {
+      requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
+          contentType, hasBody, isFormEncoded, isMultipart);
+    } else {
+      requestBuilder = new RequestBuilder(httpMethod, baseHttpsUrl, relativeUrl, headers,
+          contentType, hasBody, isFormEncoded, isMultipart);
     }
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
-    ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
+        ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
     int argumentCount = args != null ? args.length : 0;
     if (argumentCount != handlers.length) {
@@ -102,7 +107,9 @@ final class ServiceMethod<T> {
     return requestBuilder.build();
   }
 
-  /** Builds a method return value from an HTTP response body. */
+  /**
+   * Builds a method return value from an HTTP response body.
+   */
   T toResponse(ResponseBody body) throws IOException {
     return responseConverter.convert(body);
   }

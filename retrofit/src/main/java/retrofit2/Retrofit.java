@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
@@ -68,8 +69,8 @@ public final class Retrofit {
   private final boolean validateEagerly;
 
   Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl, HttpUrl baseHttpsUrl,
-      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
-      Executor callbackExecutor, boolean validateEagerly) {
+           List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
+           Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.baseHttpsUrl = baseHttpsUrl;
@@ -131,11 +132,12 @@ public final class Retrofit {
     if (validateEagerly) {
       eagerlyValidateMethods(service);
     }
-    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
+    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
         new InvocationHandler() {
           private final Platform platform = Platform.get();
 
-          @Override public Object invoke(Object proxy, Method method, Object... args)
+          @Override
+          public Object invoke(Object proxy, Method method, Object... args)
               throws Throwable {
             // If the method is a method from Object then defer to normal invocation.
             if (method.getDeclaringClass() == Object.class) {
@@ -180,14 +182,18 @@ public final class Retrofit {
     return callFactory;
   }
 
-  /** The API base URL. */
+  /**
+   * The API base URL.
+   */
   public HttpUrl baseUrl() {
     return baseUrl;
   }
 
-  /** The API base Https URL. */
-  public HttpUrl baseHttpsUrl(){
-        return baseHttpsUrl;
+  /**
+   * The API base Https URL.
+   */
+  public HttpUrl baseHttpsUrl() {
+    return baseHttpsUrl;
   }
 
   /**
@@ -215,7 +221,7 @@ public final class Retrofit {
    * @throws IllegalArgumentException if no call adapter available for {@code type}.
    */
   public CallAdapter<?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
-      Annotation[] annotations) {
+                                        Annotation[] annotations) {
     checkNotNull(returnType, "returnType == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -261,7 +267,7 @@ public final class Retrofit {
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
   public <T> Converter<T, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
+                                                            Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
     return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
   }
 
@@ -272,7 +278,7 @@ public final class Retrofit {
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
   public <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
-      Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
+                                                                Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
     checkNotNull(type, "type == null");
     checkNotNull(parameterAnnotations, "parameterAnnotations == null");
     checkNotNull(methodAnnotations, "methodAnnotations == null");
@@ -322,7 +328,7 @@ public final class Retrofit {
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
   public <T> Converter<ResponseBody, T> nextResponseBodyConverter(Converter.Factory skipPast,
-      Type type, Annotation[] annotations) {
+                                                                  Type type, Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -512,7 +518,7 @@ public final class Retrofit {
      *
      * @see #baseHttpsUrl(HttpUrl)
      */
-    public Builder baseHttpsUrl(String baseHttpsUrl){
+    public Builder baseHttpsUrl(String baseHttpsUrl) {
       checkNotNull(baseHttpsUrl, "baseHttpsUrl == null");
       HttpUrl httpsUrl = HttpUrl.parse(baseHttpsUrl);
       if (httpsUrl == null) {
@@ -523,7 +529,6 @@ public final class Retrofit {
 
     /**
      * This api is for https request.
-     *
      */
     public Builder baseHttpsUrl(HttpUrl baseHttpsUrl) {
       checkNotNull(baseHttpsUrl, "baseHttpsUrl == null");
@@ -535,7 +540,9 @@ public final class Retrofit {
       return this;
     }
 
-    /** Add converter factory for serialization and deserialization of objects. */
+    /**
+     * Add converter factory for serialization and deserialization of objects.
+     */
     public Builder addConverterFactory(Converter.Factory factory) {
       converterFactories.add(checkNotNull(factory, "factory == null"));
       return this;
