@@ -68,8 +68,8 @@ public final class Retrofit {
   private final boolean validateEagerly;
 
   Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl, HttpUrl baseHttpsUrl,
-    List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
-    Executor callbackExecutor, boolean validateEagerly) {
+      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
+      Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.baseHttpsUrl = baseHttpsUrl;
