@@ -61,18 +61,16 @@ public final class Retrofit {
 
   private final okhttp3.Call.Factory callFactory;
   private final HttpUrl baseUrl;
-  private final HttpUrl baseHttpsUrl;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
-  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl, HttpUrl baseHttpsUrl,
+  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
       List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
       Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
-    this.baseHttpsUrl = baseHttpsUrl;
     this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
     this.adapterFactories = unmodifiableList(adapterFactories); // Defensive copy at call site.
     this.callbackExecutor = callbackExecutor;
@@ -131,12 +129,11 @@ public final class Retrofit {
     if (validateEagerly) {
       eagerlyValidateMethods(service);
     }
-    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
+    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new InvocationHandler() {
           private final Platform platform = Platform.get();
 
-          @Override
-          public Object invoke(Object proxy, Method method, Object... args)
+          @Override public Object invoke(Object proxy, Method method, Object... args)
               throws Throwable {
             // If the method is a method from Object then defer to normal invocation.
             if (method.getDeclaringClass() == Object.class) {
@@ -184,13 +181,6 @@ public final class Retrofit {
   /** The API base URL. */
   public HttpUrl baseUrl() {
     return baseUrl;
-  }
-
-  /**
-   * The API base Https URL.
-   */
-  public HttpUrl baseHttpsUrl() {
-    return baseHttpsUrl;
   }
 
   /**
@@ -396,7 +386,6 @@ public final class Retrofit {
     private Platform platform;
     private okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
-    private HttpUrl baseHttpsUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
@@ -510,36 +499,7 @@ public final class Retrofit {
       return this;
     }
 
-    /**
-     * Set the API base Https URL.
-     *
-     * @see #baseHttpsUrl(HttpUrl)
-     */
-    public Builder baseHttpsUrl(String baseHttpsUrl) {
-      checkNotNull(baseHttpsUrl, "baseHttpsUrl == null");
-      HttpUrl httpsUrl = HttpUrl.parse(baseHttpsUrl);
-      if (httpsUrl == null) {
-        throw new IllegalArgumentException("Illegal URL: " + baseHttpsUrl);
-      }
-      return baseHttpsUrl(httpsUrl);
-    }
-
-    /**
-     * This api is for https request.
-     */
-    public Builder baseHttpsUrl(HttpUrl baseHttpsUrl) {
-      checkNotNull(baseHttpsUrl, "baseHttpsUrl == null");
-      List<String> pathSegments = baseHttpsUrl.pathSegments();
-      if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
-        throw new IllegalArgumentException("baseHttpsUrl must end in /: " + baseHttpsUrl);
-      }
-      this.baseHttpsUrl = baseHttpsUrl;
-      return this;
-    }
-
-    /**
-     * Add converter factory for serialization and deserialization of objects.
-     */
+    /** Add converter factory for serialization and deserialization of objects. */
     public Builder addConverterFactory(Converter.Factory factory) {
       converterFactories.add(checkNotNull(factory, "factory == null"));
       return this;
@@ -603,7 +563,7 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-      return new Retrofit(callFactory, baseUrl, baseHttpsUrl, converterFactories, adapterFactories,
+      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
           callbackExecutor, validateEagerly);
     }
   }
