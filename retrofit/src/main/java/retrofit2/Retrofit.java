@@ -33,6 +33,17 @@ import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
 import retrofit2.http.Url;
+import retrofit2.parameters.BodyParameterFactory;
+import retrofit2.parameters.FieldMapParameterFactory;
+import retrofit2.parameters.FieldParameterFactory;
+import retrofit2.parameters.HeaderMapParameterFactory;
+import retrofit2.parameters.HeaderParameterFactory;
+import retrofit2.parameters.PartMapParameterFactory;
+import retrofit2.parameters.PartParameterFactory;
+import retrofit2.parameters.PathParameterFactory;
+import retrofit2.parameters.QueryMapParameterFactory;
+import retrofit2.parameters.QueryParameterFactory;
+import retrofit2.parameters.UrlParameterFactory;
 
 import static java.util.Collections.unmodifiableList;
 import static retrofit2.Utils.checkNotNull;
@@ -63,16 +74,20 @@ public final class Retrofit {
   private final HttpUrl baseUrl;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
+  private final List<ParameterHandler.Factory> parameterHandlersFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
   Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
       List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
+      List<ParameterHandler.Factory> parameterHandlersFactories,
       Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
     this.adapterFactories = unmodifiableList(adapterFactories); // Defensive copy at call site.
+    // Defensive copy at call site.
+    this.parameterHandlersFactories = unmodifiableList(parameterHandlersFactories);
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
   }
@@ -368,6 +383,19 @@ public final class Retrofit {
     return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
   }
 
+  public <T> ParameterHandler<T> parameterHandler(Annotation annotation, Type type,
+        String relativeUrl, Annotation[] annotations, Annotation[] methodAnnotations) {
+    for (ParameterHandler.Factory factory : parameterHandlersFactories) {
+      //noinspection unchecked
+      ParameterHandler<T> h = (ParameterHandler<T>) factory
+          .get(annotation, type, relativeUrl, annotations, methodAnnotations, this);
+      if (h != null) {
+        return h;
+      }
+    }
+    return null;
+  }
+
   /**
    * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null},
    * in which case callbacks should be made synchronously on the background thread.
@@ -388,6 +416,7 @@ public final class Retrofit {
     private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
+    private List<ParameterHandler.Factory> parameterHandlersFactories = new ArrayList<>();
     private Executor callbackExecutor;
     private boolean validateEagerly;
 
@@ -514,6 +543,11 @@ public final class Retrofit {
       return this;
     }
 
+    public Builder addParameterHandlerFactory(ParameterHandler.Factory factory) {
+      parameterHandlersFactories.add(checkNotNull(factory, "factory == null"));
+      return this;
+    }
+
     /**
      * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
      * your service method.
@@ -563,8 +597,23 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
+      // Make a defensive copy of the parameter handlers and add default handlers
+      List<ParameterHandler.Factory> parameterHandlersFactories =
+          new ArrayList<>(this.parameterHandlersFactories);
+      parameterHandlersFactories.add(new UrlParameterFactory());
+      parameterHandlersFactories.add(new PathParameterFactory());
+      parameterHandlersFactories.add(new QueryParameterFactory());
+      parameterHandlersFactories.add(new QueryMapParameterFactory());
+      parameterHandlersFactories.add(new HeaderParameterFactory());
+      parameterHandlersFactories.add(new HeaderMapParameterFactory());
+      parameterHandlersFactories.add(new FieldParameterFactory());
+      parameterHandlersFactories.add(new FieldMapParameterFactory());
+      parameterHandlersFactories.add(new PartParameterFactory());
+      parameterHandlersFactories.add(new PartMapParameterFactory());
+      parameterHandlersFactories.add(new BodyParameterFactory());
+
       return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
-          callbackExecutor, validateEagerly);
+          parameterHandlersFactories, callbackExecutor, validateEagerly);
     }
   }
 }

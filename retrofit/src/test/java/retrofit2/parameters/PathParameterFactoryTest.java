@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.parameters;
 
 import java.util.Set;
 import org.junit.Test;
 
+import retrofit2.parameters.PathParameterFactory;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class ServiceMethodTest {
+public final class PathParameterFactoryTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
@@ -41,7 +43,7 @@ public final class ServiceMethodTest {
   }
 
   private static void expectParams(String path, String... expected) {
-    Set<String> calculated = ServiceMethod.parsePathParameters(path);
+    Set<String> calculated = PathParameterFactory.parsePathParameters(path);
     assertThat(calculated).containsExactly(expected);
   }
 }
