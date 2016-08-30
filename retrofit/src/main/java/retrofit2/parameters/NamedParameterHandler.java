@@ -5,7 +5,7 @@ import java.io.IOException;
 import retrofit2.ParameterHandler;
 import retrofit2.RequestBuilder;
 
-public class NamedParameterHandler<T> extends ParameterHandler<T> {
+public class NamedParameterHandler<T> implements ParameterHandler<T> {
   private final String name;
   private final NamedValuesHandler<T> handler;
 

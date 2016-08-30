@@ -31,7 +31,7 @@ public class BodyParameterFactory implements ParameterHandler.Factory {
     return null;
   }
 
-  static final class BodyParameter<T> extends ParameterHandler<T> {
+  static final class BodyParameter<T> implements ParameterHandler<T> {
     private final Converter<T, RequestBody> converter;
 
     BodyParameter(Converter<T, RequestBody> converter) {

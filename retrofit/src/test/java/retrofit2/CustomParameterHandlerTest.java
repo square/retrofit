@@ -60,7 +60,7 @@ public class CustomParameterHandlerTest {
       return null;
     }
 
-    static final class IndexedFieldParameter<T> extends ParameterHandler<Iterable<T>> {
+    static final class IndexedFieldParameter<T> implements ParameterHandler<Iterable<T>> {
       private final String name;
       private final Converter<T, String> valueConverter;
       private final boolean encoded;

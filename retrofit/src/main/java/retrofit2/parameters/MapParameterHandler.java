@@ -10,7 +10,7 @@ import retrofit2.ParameterHandler;
 import retrofit2.RequestBuilder;
 import retrofit2.Utils;
 
-public class MapParameterHandler<T> extends ParameterHandler<Map<String, T>> {
+public class MapParameterHandler<T> implements ParameterHandler<Map<String, T>> {
 
   public MapParameterHandler(NamedValuesHandler<T> handler, String handlerName) {
     this.handler = handler;

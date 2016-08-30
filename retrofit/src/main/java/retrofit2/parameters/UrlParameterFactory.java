@@ -30,7 +30,7 @@ public class UrlParameterFactory implements ParameterHandler.Factory {
     return null;
   }
 
-  static final class UrlParameter extends ParameterHandler<Object> {
+  static final class UrlParameter implements ParameterHandler<Object> {
     @Override
     public void apply(RequestBuilder builder, Object value) {
       builder.setRelativeUrl(value);

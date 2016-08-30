@@ -38,7 +38,7 @@ public class PathParameterFactory implements ParameterHandler.Factory {
     return null;
   }
 
-  static final class PathParameter<T> extends ParameterHandler<T> {
+  static final class PathParameter<T> implements ParameterHandler<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;

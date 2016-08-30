@@ -2,7 +2,6 @@ package retrofit2.parameters;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import okhttp3.Headers;
@@ -24,78 +23,28 @@ public class PartParameterFactory implements ParameterHandler.Factory {
 
     if (annotation instanceof Part) {
       Part part = (Part) annotation;
-
-
       String partName = part.value();
-      Class<?> rawParameterType = Utils.getRawType(type);
-      if (partName.isEmpty()) {
-        if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw new IllegalArgumentException(rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          if (!MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
-            throw new IllegalArgumentException(
-                "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
-          }
-          return new RawPartParameter().iterable();
-        } else if (rawParameterType.isArray()) {
-          Class<?> arrayComponentType = rawParameterType.getComponentType();
-          if (!MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
-            throw new IllegalArgumentException(
-                "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
-          }
-          return new RawPartParameter().array();
-        } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
-          return new RawPartParameter();
-        } else {
+
+      Type itemType = RepeatedParameterHelper.getItemType(type);
+
+      if (MultipartBody.Part.class.isAssignableFrom((Class<?>) itemType)) {
+        if (!partName.isEmpty()) {
+          throw new IllegalArgumentException(
+              "@Part parameters using the MultipartBody.Part must not "
+                  + "include a part name in the annotation.");
+        }
+        return RepeatedParameterHelper.wrapIfRepeated(type, new RawPartParameter());
+      } else {
+        if (partName.isEmpty()) {
           throw new IllegalArgumentException(
               "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
         }
-      } else {
         String encoding = part.encoding();
-        if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw new IllegalArgumentException(rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
-            throw new IllegalArgumentException(
-                "@Part parameters using the MultipartBody.Part must not "
-                + "include a part name in the annotation.");
-          }
-          Converter<?, RequestBody> converter =
-              retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
-          return new NamedParameterHandler<>(partName, new PartHandler<>(encoding, converter))
-              .iterable();
-        } else if (rawParameterType.isArray()) {
-          Class<?> arrayComponentType = Utils.boxIfPrimitive(rawParameterType.getComponentType());
-          if (MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
-            throw new IllegalArgumentException(
-                "@Part parameters using the MultipartBody.Part must not "
-                + "include a part name in the annotation.");
-          }
-          Converter<?, RequestBody> converter =
-              retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
-          return new NamedParameterHandler<>(partName, new PartHandler<>(encoding, converter))
-              .array();
-        } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
-          throw new IllegalArgumentException(
-              "@Part parameters using the MultipartBody.Part must not "
-              + "include a part name in the annotation.");
-        } else {
-          Converter<?, RequestBody> converter =
-              retrofit.requestBodyConverter(type, annotations, methodAnnotations);
-          return new NamedParameterHandler<>(partName, new PartHandler<>(encoding, converter));
-        }
+        Converter<?, RequestBody> converter =
+            retrofit.requestBodyConverter(itemType, annotations, methodAnnotations);
+        return RepeatedParameterHelper.wrapIfRepeated(type,
+            new NamedParameterHandler<>(partName, new PartHandler<>(encoding, converter))
+        );
       }
     } else if (annotation instanceof PartMap) {
       Type valueType = MapParameterHandler.getValueType(type, annotation);
@@ -139,7 +88,7 @@ public class PartParameterFactory implements ParameterHandler.Factory {
     }
   }
 
-  static final class RawPartParameter extends ParameterHandler<MultipartBody.Part> {
+  static final class RawPartParameter implements ParameterHandler<MultipartBody.Part> {
 
     @Override
     public void apply(RequestBuilder builder, MultipartBody.Part value) throws IOException {

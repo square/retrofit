@@ -2,14 +2,12 @@ package retrofit2.parameters;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import retrofit2.Converter;
 import retrofit2.ParameterHandler;
 import retrofit2.RequestBuilder;
 import retrofit2.Retrofit;
-import retrofit2.Utils;
 import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
 
@@ -24,31 +22,10 @@ public class FieldParameterFactory implements ParameterHandler.Factory {
       String name = field.value();
       boolean encoded = field.encoded();
 
-
-      Class<?> rawParameterType = Utils.getRawType(type);
-      if (Iterable.class.isAssignableFrom(rawParameterType)) {
-        if (!(type instanceof ParameterizedType)) {
-          throw new IllegalArgumentException(rawParameterType.getSimpleName()
-              + " must include generic type (e.g., "
-              + rawParameterType.getSimpleName()
-              + "<String>)");
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) type;
-        Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-        Converter<?, String> converter =
-            retrofit.stringConverter(iterableType, annotations);
-        return new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded))
-            .iterable();
-      } else if (rawParameterType.isArray()) {
-        Class<?> arrayComponentType = Utils.boxIfPrimitive(rawParameterType.getComponentType());
-        Converter<?, String> converter =
-            retrofit.stringConverter(arrayComponentType, annotations);
-        return new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded)).array();
-      } else {
-        Converter<?, String> converter =
-            retrofit.stringConverter(type, annotations);
-        return new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded));
-      }
+      Type itemType = RepeatedParameterHelper.getItemType(type);
+      Converter<?, String> converter = retrofit.stringConverter(itemType, annotations);
+      return RepeatedParameterHelper.wrapIfRepeated(type,
+          new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded)));
     } else if (annotation instanceof FieldMap) {
       FieldMap fieldMap = (FieldMap) annotation;
       Converter<?, String> converter =
