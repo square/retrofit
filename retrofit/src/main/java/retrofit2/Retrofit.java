@@ -34,14 +34,10 @@ import retrofit2.http.HTTP;
 import retrofit2.http.Header;
 import retrofit2.http.Url;
 import retrofit2.parameters.BodyParameterFactory;
-import retrofit2.parameters.FieldMapParameterFactory;
 import retrofit2.parameters.FieldParameterFactory;
-import retrofit2.parameters.HeaderMapParameterFactory;
 import retrofit2.parameters.HeaderParameterFactory;
-import retrofit2.parameters.PartMapParameterFactory;
 import retrofit2.parameters.PartParameterFactory;
 import retrofit2.parameters.PathParameterFactory;
-import retrofit2.parameters.QueryMapParameterFactory;
 import retrofit2.parameters.QueryParameterFactory;
 import retrofit2.parameters.UrlParameterFactory;
 
@@ -603,13 +599,9 @@ public final class Retrofit {
       parameterHandlersFactories.add(new UrlParameterFactory());
       parameterHandlersFactories.add(new PathParameterFactory());
       parameterHandlersFactories.add(new QueryParameterFactory());
-      parameterHandlersFactories.add(new QueryMapParameterFactory());
       parameterHandlersFactories.add(new HeaderParameterFactory());
-      parameterHandlersFactories.add(new HeaderMapParameterFactory());
       parameterHandlersFactories.add(new FieldParameterFactory());
-      parameterHandlersFactories.add(new FieldMapParameterFactory());
       parameterHandlersFactories.add(new PartParameterFactory());
-      parameterHandlersFactories.add(new PartMapParameterFactory());
       parameterHandlersFactories.add(new BodyParameterFactory());
 
       return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,

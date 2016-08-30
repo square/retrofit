@@ -11,8 +11,7 @@ import retrofit2.RequestBuilder;
 import retrofit2.Retrofit;
 import retrofit2.Utils;
 import retrofit2.http.Header;
-
-import static retrofit2.Utils.checkNotNull;
+import retrofit2.http.HeaderMap;
 
 public class HeaderParameterFactory implements ParameterHandler.Factory {
 
@@ -36,32 +35,34 @@ public class HeaderParameterFactory implements ParameterHandler.Factory {
         Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
         Converter<?, String> converter =
             retrofit.stringConverter(iterableType, annotations);
-        return new HeaderParameter<>(name, converter).iterable();
+        return new NamedParameterHandler<>(name, new HeaderHandler<>(converter)).iterable();
       } else if (rawParameterType.isArray()) {
         Class<?> arrayComponentType = Utils.boxIfPrimitive(rawParameterType.getComponentType());
         Converter<?, String> converter =
             retrofit.stringConverter(arrayComponentType, annotations);
-        return new HeaderParameter<>(name, converter).array();
+        return new NamedParameterHandler<>(name, new HeaderHandler<>(converter)).array();
       } else {
         Converter<?, String> converter =
             retrofit.stringConverter(type, annotations);
-        return new HeaderParameter<>(name, converter);
+        return new NamedParameterHandler<>(name, new HeaderHandler<>(converter));
       }
+    } else if (annotation instanceof HeaderMap) {
+      Converter<?, String> converter =
+          retrofit.stringConverter(MapParameterHandler.getValueType(type, annotation), annotations);
+      return new MapParameterHandler<>(new HeaderHandler<>(converter), "Header");
     }
     return null;
   }
 
-  static final class HeaderParameter<T> extends ParameterHandler<T> {
-    private final String name;
+  static final class HeaderHandler<T> implements NamedValuesHandler<T> {
     private final Converter<T, String> valueConverter;
 
-    HeaderParameter(String name, Converter<T, String> valueConverter) {
-      this.name = checkNotNull(name, "name == null");
+    HeaderHandler(Converter<T, String> valueConverter) {
       this.valueConverter = valueConverter;
     }
 
     @Override
-    public void apply(RequestBuilder builder, T value) throws IOException {
+    public void apply(RequestBuilder builder, String name, T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addHeader(name, valueConverter.convert(value));
     }

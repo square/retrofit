@@ -11,8 +11,7 @@ import retrofit2.RequestBuilder;
 import retrofit2.Retrofit;
 import retrofit2.Utils;
 import retrofit2.http.Field;
-
-import static retrofit2.Utils.checkNotNull;
+import retrofit2.http.FieldMap;
 
 public class FieldParameterFactory implements ParameterHandler.Factory {
 
@@ -38,34 +37,38 @@ public class FieldParameterFactory implements ParameterHandler.Factory {
         Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
         Converter<?, String> converter =
             retrofit.stringConverter(iterableType, annotations);
-        return new FieldParameter<>(name, converter, encoded).iterable();
+        return new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded))
+            .iterable();
       } else if (rawParameterType.isArray()) {
         Class<?> arrayComponentType = Utils.boxIfPrimitive(rawParameterType.getComponentType());
         Converter<?, String> converter =
             retrofit.stringConverter(arrayComponentType, annotations);
-        return new FieldParameter<>(name, converter, encoded).array();
+        return new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded)).array();
       } else {
         Converter<?, String> converter =
             retrofit.stringConverter(type, annotations);
-        return new FieldParameter<>(name, converter, encoded);
+        return new NamedParameterHandler<>(name, new FieldHandler<>(converter, encoded));
       }
+    } else if (annotation instanceof FieldMap) {
+      FieldMap fieldMap = (FieldMap) annotation;
+      Converter<?, String> converter =
+          retrofit.stringConverter(MapParameterHandler.getValueType(type, annotation), annotations);
+      return new MapParameterHandler<>(new FieldHandler<>(converter, fieldMap.encoded()), "Field");
     }
     return null;
   }
 
-  static final class FieldParameter<T> extends ParameterHandler<T> {
-    private final String name;
+  static final class FieldHandler<T> implements NamedValuesHandler<T> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    FieldParameter(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+    FieldHandler(Converter<T, String> valueConverter, boolean encoded) {
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
     @Override
-    public void apply(RequestBuilder builder, T value) throws IOException {
+    public void apply(RequestBuilder builder, String name, T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addFormField(name, valueConverter.convert(value), encoded);
     }
