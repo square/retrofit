@@ -19,6 +19,12 @@ import java.io.IOException;
 
 import retrofit2.RequestBuilder;
 
+/**
+ * Applies a named value to the {@link RequestBuilder}.
+ * The {@code name} is defined by parameter annotation or {@code Map} key when used with
+ * {@link NamedParameterHandler} and {@link MapParameterHandler} respectively.
+ * @param <T> type of the passed value
+ */
 public interface NamedValuesHandler<T> {
   void apply(RequestBuilder builder, String name, T value) throws IOException;
 }

@@ -26,6 +26,10 @@ import retrofit2.Retrofit;
 import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Field @Field}
+ * and {@link FieldMap @FieldMap}.
+ */
 public class FieldParameterFactory implements ParameterHandler.Factory {
 
   @Override

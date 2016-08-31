@@ -30,6 +30,10 @@ import retrofit2.Utils;
 import retrofit2.http.Part;
 import retrofit2.http.PartMap;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Part @Part}
+ * and {@link PartMap @PartMap}.
+ */
 public class PartParameterFactory implements ParameterHandler.Factory {
 
   @Override

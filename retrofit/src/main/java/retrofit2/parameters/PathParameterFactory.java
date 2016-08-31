@@ -31,6 +31,9 @@ import retrofit2.http.Path;
 
 import static retrofit2.Utils.checkNotNull;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Path @Path}.
+ */
 public class PathParameterFactory implements ParameterHandler.Factory {
 
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.

@@ -20,6 +20,9 @@ import java.io.IOException;
 import retrofit2.ParameterHandler;
 import retrofit2.RequestBuilder;
 
+/**
+ * {@link ParameterHandler} passing a single value to a wrapped {@link NamedParameterHandler}.
+ */
 public class NamedParameterHandler<T> implements ParameterHandler<T> {
   private final String name;
   private final NamedValuesHandler<T> handler;

@@ -539,6 +539,12 @@ public final class Retrofit {
       return this;
     }
 
+    /**
+     * Add a parameter handler factory for modifying how service method parameters are handled.
+     *
+     * <p>This is an advanced extension point. For most users custom {@linkplain Converter}
+     * or {@linkplain CallAdapter} should be sufficient.</p>
+     */
     public Builder addParameterHandlerFactory(ParameterHandler.Factory factory) {
       parameterHandlersFactories.add(checkNotNull(factory, "factory == null"));
       return this;

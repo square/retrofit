@@ -24,8 +24,17 @@ import retrofit2.ParameterHandler;
 import retrofit2.RequestBuilder;
 import retrofit2.Utils;
 
+/**
+ * A helper class used to wrap {@link ParameterHandler} so that it is applied for each
+ * item in the {@code Iterable} or array.
+ */
 public class RepeatedParameterHelper {
 
+  /**
+   * Returns the {@code Type} of the item if {@code type} is {@code Iterable} or array and
+   * unmodified {@code type} otherwise.
+   * @throws IllegalArgumentException if the passed {@code Iterable} does not include a generic type
+   */
   public static Type getItemType(Type type) {
     Class<?> rawParameterType = Utils.getRawType(type);
     if (Iterable.class.isAssignableFrom(rawParameterType)) {
@@ -44,6 +53,9 @@ public class RepeatedParameterHelper {
     }
   }
 
+  /**
+   * Wraps {@code handler} if {@code type} is {@code Iterable} or array.
+   */
   public static ParameterHandler<?> wrapIfRepeated(Type type, ParameterHandler<?> handler) {
     Class<?> rawParameterType = Utils.getRawType(type);
     if (Iterable.class.isAssignableFrom(rawParameterType)) {

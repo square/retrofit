@@ -26,6 +26,9 @@ import retrofit2.RequestBuilder;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Body @Body}.
+ */
 public class BodyParameterFactory implements ParameterHandler.Factory {
 
   @Override

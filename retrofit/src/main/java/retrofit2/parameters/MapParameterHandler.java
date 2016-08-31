@@ -25,6 +25,12 @@ import retrofit2.ParameterHandler;
 import retrofit2.RequestBuilder;
 import retrofit2.Utils;
 
+/**
+ * {@link ParameterHandler} passing each key-value pair from the {@code Map} argument to
+ * {@link NamedParameterHandler}. Used to handle {@link retrofit2.http.HeaderMap @HeaderMap},
+ * {@link retrofit2.http.PartMap @PartMap} etc. The supplied {@code Map} argument
+ * may not be {@code null} and can't contain {@code null} keys of values.
+ */
 public class MapParameterHandler<T> implements ParameterHandler<Map<String, T>> {
 
   public MapParameterHandler(NamedValuesHandler<T> handler, String handlerName) {

@@ -26,6 +26,10 @@ import retrofit2.Retrofit;
 import retrofit2.http.Header;
 import retrofit2.http.HeaderMap;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Header @Header}
+ * and {@link HeaderMap @HeaderMap}.
+ */
 public class HeaderParameterFactory implements ParameterHandler.Factory {
 
   @Override

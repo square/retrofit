@@ -25,6 +25,9 @@ import retrofit2.RequestBuilder;
 import retrofit2.Retrofit;
 import retrofit2.http.Url;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Url @Url}.
+ */
 public class UrlParameterFactory implements ParameterHandler.Factory {
 
   @Override

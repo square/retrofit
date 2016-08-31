@@ -26,6 +26,10 @@ import retrofit2.Retrofit;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 
+/**
+ * Creates a default {@link ParameterHandler} for parameters annotated with {@link Query @Query}
+ * and {@link QueryMap @QueryMap}.
+ */
 public class QueryParameterFactory implements ParameterHandler.Factory {
 
   @Override
