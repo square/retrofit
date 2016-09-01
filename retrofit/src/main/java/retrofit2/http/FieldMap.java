@@ -45,4 +45,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface FieldMap {
   /** Specifies whether the names and values are already URL encoded. */
   boolean encoded() default false;
+
+  /**
+   * Specifies weather Iterable and Array values should be treated as multiple values.
+   * When {@code true}, separate field will be created for each item in the value collection.
+   **/
+  boolean multimap() default false;
 }

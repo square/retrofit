@@ -15,11 +15,14 @@
  */
 package retrofit2;
 
+import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -536,7 +539,7 @@ public final class RequestBuilderTest {
   @Test public void queryMapMultimapMustBeParametrized() {
     class Example {
       @GET("/") //
-      Call<ResponseBody> method(@QueryMap HashMap<String, List> a) {
+      Call<ResponseBody> method(@QueryMap(multimap = true) HashMap<String, List> a) {
         return null;
       }
     }
@@ -1153,10 +1156,10 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
-  @Test public void getWithQueryParamMultiMapIterable() {
+  @Test public void getWithQueryParamMultimapIterable() {
     class Example {
       @GET("/foo/bar/") //
-      Call<ResponseBody> method(@QueryMap Map<String, List<String>> query) {
+      Call<ResponseBody> method(@QueryMap(multimap = true) Map<String, List<String>> query) {
         return null;
       }
     }
@@ -1172,10 +1175,10 @@ public final class RequestBuilderTest {
     assertThat(request.body()).isNull();
   }
 
-  @Test public void getWithQueryParamMultiMapArray() {
+  @Test public void getWithQueryParamMultimapArray() {
     class Example {
       @GET("/foo/bar/") //
-      Call<ResponseBody> method(@QueryMap Map<String, String[]> query) {
+      Call<ResponseBody> method(@QueryMap(multimap = true) Map<String, String[]> query) {
         return null;
       }
     }
@@ -1188,6 +1191,35 @@ public final class RequestBuilderTest {
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=kat&kit=kot&ping=pong&ping=pang");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryParamIterableValueNotMultimap() {
+    class FormattedList extends ArrayList<String> {
+      public FormattedList(Collection<? extends String> collection) {
+        super(collection);
+      }
+
+      @Override
+      public String toString() {
+        return Joiner.on(",").join(this);
+      }
+    }
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap Map<String, List<String>> query) {
+        return null;
+      }
+    }
+
+    Map<String, List<String>> params = new LinkedHashMap<>();
+    params.put("kit", new FormattedList(Arrays.asList("kat", "kot")));
+    params.put("ping", new FormattedList(Arrays.asList("pong", "pang")));
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=kat,kot&ping=pong,pang");
     assertThat(request.body()).isNull();
   }
 
