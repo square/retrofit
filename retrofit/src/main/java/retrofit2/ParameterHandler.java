@@ -54,6 +54,33 @@ abstract class ParameterHandler<T> {
 
   abstract static class NamedValuesHandler<T> {
     abstract void apply(RequestBuilder builder, String name, T value) throws IOException;
+
+    final NamedValuesHandler<Iterable<T>> iterable() {
+      return new NamedValuesHandler<Iterable<T>>() {
+        @Override
+        void apply(RequestBuilder builder, String name, Iterable<T> values) throws IOException {
+          if (values == null) return; // Skip null values.
+
+          for (T value : values) {
+            NamedValuesHandler.this.apply(builder, name, value);
+          }
+        }
+      };
+    }
+
+    final NamedValuesHandler<Object> array() {
+      return new NamedValuesHandler<Object>() {
+        @Override
+        void apply(RequestBuilder builder, String name, Object values) throws IOException {
+          if (values == null) return; // Skip null values.
+
+          for (int i = 0, size = Array.getLength(values); i < size; i++) {
+            //noinspection unchecked
+            NamedValuesHandler.this.apply(builder, name, (T) Array.get(values, i));
+          }
+        }
+      };
+    }
   }
 
   static class NamedParameterHandler<T> extends ParameterHandler<T> {

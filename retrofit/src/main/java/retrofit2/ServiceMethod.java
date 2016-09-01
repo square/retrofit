@@ -411,8 +411,8 @@ final class ServiceMethod<T> {
       } else if (annotation instanceof QueryMap) {
         QueryMap queryMap = (QueryMap) annotation;
         Converter<?, String> converter =
-            retrofit.stringConverter(getMapValueType(type, annotation, p), annotations);
-        return new ParameterHandler.MapParameterHandler<>(
+            retrofit.stringConverter(getMapValueItemType(type, annotation, p), annotations);
+        return wrapMapParameterHandler(type,
             new ParameterHandler.Query<>(converter, queryMap.encoded()), "Query");
 
       } else if (annotation instanceof Header) {
@@ -426,8 +426,8 @@ final class ServiceMethod<T> {
 
       } else if (annotation instanceof HeaderMap) {
         Converter<?, String> converter =
-            retrofit.stringConverter(getMapValueType(type, annotation, p), annotations);
-        return new ParameterHandler.MapParameterHandler<>(
+            retrofit.stringConverter(getMapValueItemType(type, annotation, p), annotations);
+        return wrapMapParameterHandler(type,
             new ParameterHandler.Header<>(converter), "Header");
 
       } else if (annotation instanceof Field) {
@@ -451,8 +451,8 @@ final class ServiceMethod<T> {
         gotField = true;
 
         Converter<?, String> converter =
-            retrofit.stringConverter(getMapValueType(type, annotation, p), annotations);
-        return new ParameterHandler.MapParameterHandler<>(
+            retrofit.stringConverter(getMapValueItemType(type, annotation, p), annotations);
+        return wrapMapParameterHandler(type,
             new ParameterHandler.Field<>(converter, ((FieldMap) annotation).encoded()), "Field");
 
       } else if (annotation instanceof Part) {
@@ -489,7 +489,7 @@ final class ServiceMethod<T> {
           throw parameterError(p, "@PartMap parameters can only be used with multipart encoding.");
         }
         gotPart = true;
-        Type valueType = getMapValueType(type, annotation, p);
+        Type valueType = getMapValueItemType(type, annotation, p);
         if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(valueType))) {
           throw parameterError(p, "@PartMap values cannot be MultipartBody.Part. "
               + "Use @Part List<Part> or a different value type instead.");
@@ -498,7 +498,7 @@ final class ServiceMethod<T> {
         Converter<?, RequestBody> converter =
             retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
 
-        return new ParameterHandler.MapParameterHandler<>(
+        return wrapMapParameterHandler(type,
             new ParameterHandler.Part<>(((PartMap) annotation).encoding(), converter), "Part");
 
       } else if (annotation instanceof Body) {
@@ -542,7 +542,7 @@ final class ServiceMethod<T> {
       }
     }
 
-    private Type getMapValueType(Type type, Annotation annotation, int p) {
+    private Type getMapValueItemType(Type type, Annotation annotation, int p) {
       String annotationName = annotation.annotationType().getSimpleName();
       Class<?> rawParameterType = Utils.getRawType(type);
       if (!Map.class.isAssignableFrom(rawParameterType)) {
@@ -559,7 +559,22 @@ final class ServiceMethod<T> {
         throw parameterError(p, String.format("@%1$s keys must be of type String: %2$s",
             annotationName, keyType));
       }
-      return Utils.getParameterUpperBound(1, parameterizedType);
+      Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
+
+      Class<?> rawValueType = Utils.getRawType(valueType);
+      if (Iterable.class.isAssignableFrom(rawValueType)) {
+        if (!(valueType instanceof ParameterizedType)) {
+          throw parameterError(p, "@" + annotationName + " " + rawParameterType.getSimpleName()
+              + " value parameter must include generic type (e.g. "
+              + rawParameterType.getSimpleName() + "<String, "
+              + rawValueType.getSimpleName() + "<String>>).");
+        }
+        return Utils.getParameterUpperBound(0, (ParameterizedType) valueType);
+      } else if (rawValueType.isArray()) {
+        return boxIfPrimitive(rawValueType.getComponentType());
+      } else {
+        return valueType;
+      }
     }
 
     private ParameterHandler<?> wrapParameterHandler(Type type, ParameterHandler<?> handler) {
@@ -571,6 +586,24 @@ final class ServiceMethod<T> {
       } else {
         return handler;
       }
+    }
+
+    private ParameterHandler<?> wrapMapParameterHandler(Type type,
+        ParameterHandler.NamedValuesHandler<?> handler, String handlerName) {
+      Class<?> rawParameterType = Utils.getRawType(type);
+      Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
+      Type valueType = Utils.getParameterUpperBound(1, (ParameterizedType) mapType);
+      Class<?> rawValueType = Utils.getRawType(valueType);
+
+      ParameterHandler.NamedValuesHandler<?> wrappedHandler;
+      if (Iterable.class.isAssignableFrom(rawValueType)) {
+        wrappedHandler = handler.iterable();
+      } else if (rawValueType.isArray()) {
+        wrappedHandler = handler.array();
+      } else {
+        wrappedHandler = handler;
+      }
+      return new ParameterHandler.MapParameterHandler<>(wrappedHandler, handlerName);
     }
 
     private void validatePathName(int p, String name) {

@@ -533,6 +533,22 @@ public final class RequestBuilderTest {
     }
   }
 
+  @Test public void queryMapMultimapMustBeParametrized() {
+    class Example {
+      @GET("/") //
+      Call<ResponseBody> method(@QueryMap HashMap<String, List> a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@QueryMap HashMap value parameter must include generic type " +
+          "(e.g. HashMap<String, List<String>>). (parameter #1)\n    for method Example.method");
+    }
+  }
+
   @Test public void getWithHeaderMap() {
     class Example {
       @GET("/search")
@@ -1134,6 +1150,44 @@ public final class RequestBuilderTest {
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=k%20t&pi%20ng=p%20g");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryParamMultiMapIterable() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap Map<String, List<String>> query) {
+        return null;
+      }
+    }
+
+    Map<String, List<String>> params = new LinkedHashMap<>();
+    params.put("kit", Arrays.asList("kat", "kot"));
+    params.put("ping", Arrays.asList("pong", "pang"));
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=kat&kit=kot&ping=pong&ping=pang");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryParamMultiMapArray() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap Map<String, String[]> query) {
+        return null;
+      }
+    }
+
+    Map<String, String[]> params = new LinkedHashMap<>();
+    params.put("kit", new String[]{"kat", "kot"});
+    params.put("ping", new String[]{"pong", "pang"});
+
+    Request request = buildRequest(Example.class, params);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?kit=kat&kit=kot&ping=pong&ping=pang");
     assertThat(request.body()).isNull();
   }
 
