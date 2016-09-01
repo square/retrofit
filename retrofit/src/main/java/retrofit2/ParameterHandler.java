@@ -52,22 +52,70 @@ abstract class ParameterHandler<T> {
     };
   }
 
+  abstract static class NamedValuesHandler<T> {
+    abstract void apply(RequestBuilder builder, String name, T value) throws IOException;
+  }
+
+  static class NamedParameterHandler<T> extends ParameterHandler<T> {
+    private final String name;
+    private final NamedValuesHandler<T> handler;
+
+    public NamedParameterHandler(String name, NamedValuesHandler<T> handler) {
+      this.name = name;
+      this.handler = handler;
+    }
+
+    @Override
+    public void apply(RequestBuilder builder, T value) throws IOException {
+      handler.apply(builder, name, value);
+    }
+  }
+
+  static class MapParameterHandler<T> extends ParameterHandler<Map<String, T>> {
+
+    private final String handlerName;
+    private final NamedValuesHandler<T> handler;
+
+    public MapParameterHandler(NamedValuesHandler<T> handler, String handlerName) {
+      this.handler = handler;
+      this.handlerName = handlerName;
+    }
+
+    @Override
+    public void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException(handlerName + " map was null.");
+      }
+
+      for (Map.Entry<String, T> entry : value.entrySet()) {
+        String entryKey = entry.getKey();
+        if (entryKey == null) {
+          throw new IllegalArgumentException(handlerName + " map contained null key.");
+        }
+        T entryValue = entry.getValue();
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+              handlerName + " map contained null value for key '" + entryKey + "'.");
+        }
+        handler.apply(builder, entryKey, entryValue);
+      }
+    }
+  }
+
   static final class RelativeUrl extends ParameterHandler<Object> {
     @Override void apply(RequestBuilder builder, Object value) {
       builder.setRelativeUrl(value);
     }
   }
 
-  static final class Header<T> extends ParameterHandler<T> {
-    private final String name;
+  static final class Header<T> extends NamedValuesHandler<T> {
     private final Converter<T, String> valueConverter;
 
-    Header(String name, Converter<T, String> valueConverter) {
-      this.name = checkNotNull(name, "name == null");
+    Header(Converter<T, String> valueConverter) {
       this.valueConverter = valueConverter;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, String name, T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addHeader(name, valueConverter.convert(value));
     }
@@ -93,135 +141,46 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class Query<T> extends ParameterHandler<T> {
-    private final String name;
+  static final class Query<T> extends NamedValuesHandler<T> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    Query(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+    Query(Converter<T, String> valueConverter, boolean encoded) {
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, String name, T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addQueryParam(name, valueConverter.convert(value), encoded);
     }
   }
 
-  static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
+  static final class Field<T> extends NamedValuesHandler<T> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    QueryMap(Converter<T, String> valueConverter, boolean encoded) {
+    Field(Converter<T, String> valueConverter, boolean encoded) {
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Query map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Query map contained null key.");
-        }
-        T entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Query map contained null value for key '" + entryKey + "'.");
-        }
-        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
-      }
-    }
-  }
-
-  static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-
-    HeaderMap(Converter<T, String> valueConverter) {
-      this.valueConverter = valueConverter;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Header map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String headerName = entry.getKey();
-        if (headerName == null) {
-          throw new IllegalArgumentException("Header map contained null key.");
-        }
-        T headerValue = entry.getValue();
-        if (headerValue == null) {
-          throw new IllegalArgumentException(
-              "Header map contained null value for key '" + headerName + "'.");
-        }
-        builder.addHeader(headerName, valueConverter.convert(headerValue));
-      }
-    }
-  }
-
-  static final class Field<T> extends ParameterHandler<T> {
-    private final String name;
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    Field(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, String name, T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addFormField(name, valueConverter.convert(value), encoded);
     }
   }
 
-  static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    FieldMap(Converter<T, String> valueConverter, boolean encoded) {
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Field map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Field map contained null key.");
-        }
-        T entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Field map contained null value for key '" + entryKey + "'.");
-        }
-        builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
-      }
-    }
-  }
-
-  static final class Part<T> extends ParameterHandler<T> {
-    private final Headers headers;
+  static final class Part<T> extends NamedValuesHandler<T> {
+    private final String transferEncoding;
     private final Converter<T, RequestBody> converter;
 
-    Part(Headers headers, Converter<T, RequestBody> converter) {
-      this.headers = headers;
+    Part(String transferEncoding, Converter<T, RequestBody> converter) {
+      this.transferEncoding = transferEncoding;
       this.converter = converter;
     }
 
-    @Override void apply(RequestBuilder builder, T value) {
+    @Override void apply(RequestBuilder builder, String name, T value) {
       if (value == null) return; // Skip null values.
 
       RequestBody body;
@@ -230,53 +189,17 @@ abstract class ParameterHandler<T> {
       } catch (IOException e) {
         throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
       }
+      Headers headers = Headers.of(
+          "Content-Disposition", "form-data; name=\"" + name + "\"",
+          "Content-Transfer-Encoding", transferEncoding);
       builder.addPart(headers, body);
     }
   }
 
   static final class RawPart extends ParameterHandler<MultipartBody.Part> {
-    static final RawPart INSTANCE = new RawPart();
-
-    private RawPart() {
-    }
-
     @Override void apply(RequestBuilder builder, MultipartBody.Part value) throws IOException {
       if (value != null) { // Skip null values.
         builder.addPart(value);
-      }
-    }
-  }
-
-  static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, RequestBody> valueConverter;
-    private final String transferEncoding;
-
-    PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
-      this.valueConverter = valueConverter;
-      this.transferEncoding = transferEncoding;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Part map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Part map contained null key.");
-        }
-        T entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Part map contained null value for key '" + entryKey + "'.");
-        }
-
-        Headers headers = Headers.of(
-            "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
-            "Content-Transfer-Encoding", transferEncoding);
-
-        builder.addPart(headers, valueConverter.convert(entryValue));
       }
     }
   }
