@@ -82,9 +82,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   @Override
   public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
-    String canonicalName = rawType.getCanonicalName();
-    boolean isSingle = "rx.Single".equals(canonicalName);
-    boolean isCompletable = "rx.Completable".equals(canonicalName);
+    boolean isSingle = rawType == Single.class;
+    boolean isCompletable = "rx.Completable".equals(rawType.getCanonicalName());
     if (rawType != Observable.class && !isSingle && !isCompletable) {
       return null;
     }
