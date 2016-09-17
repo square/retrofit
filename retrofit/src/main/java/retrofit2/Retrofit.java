@@ -21,9 +21,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -57,7 +57,7 @@ import static retrofit2.Utils.checkNotNull;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, ServiceMethod<?, ?>> serviceMethodCache = new LinkedHashMap<>();
+  private final Map<Method, ServiceMethod<?, ?>> serviceMethodCache = new ConcurrentHashMap<>();
 
   private final okhttp3.Call.Factory callFactory;
   private final HttpUrl baseUrl;
@@ -160,7 +160,9 @@ public final class Retrofit {
   }
 
   ServiceMethod<?, ?> loadServiceMethod(Method method) {
-    ServiceMethod<?, ?> result;
+    ServiceMethod<?, ?> result = serviceMethodCache.get(method);
+    if (result != null) return result;
+
     synchronized (serviceMethodCache) {
       result = serviceMethodCache.get(method);
       if (result == null) {
