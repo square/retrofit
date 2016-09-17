@@ -23,7 +23,7 @@ import rx.Observable;
 import rx.Observable.OnSubscribe;
 import rx.Scheduler;
 
-final class RxJavaCallAdapter implements CallAdapter<Object> {
+final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
   private final Type responseType;
   private final Scheduler scheduler;
   private final boolean isResult;
@@ -45,7 +45,7 @@ final class RxJavaCallAdapter implements CallAdapter<Object> {
     return responseType;
   }
 
-  @Override public <R> Object adapt(Call<R> call) {
+  @Override public Object adapt(Call<R> call) {
     OnSubscribe<Response<R>> callFunc = new CallOnSubscribe<>(call);
 
     OnSubscribe<?> func;

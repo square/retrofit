@@ -51,15 +51,16 @@ public final class BehaviorDelegate<T> {
   }
 
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
-  public T returning(Call<?> call) {
-    final Call<?> behaviorCall = new BehaviorCall<>(behavior, executor, call);
+  public <R> T returning(Call<R> call) {
+    final Call<R> behaviorCall = new BehaviorCall<>(behavior, executor, call);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class[] { service },
         new InvocationHandler() {
           @Override
-          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+          public T invoke(Object proxy, Method method, Object[] args) throws Throwable {
             Type returnType = method.getGenericReturnType();
             Annotation[] methodAnnotations = method.getAnnotations();
-            CallAdapter<?> callAdapter = retrofit.callAdapter(returnType, methodAnnotations);
+            CallAdapter<R, T> callAdapter =
+                (CallAdapter<R, T>) retrofit.callAdapter(returnType, methodAnnotations);
             return callAdapter.adapt(behaviorCall);
           }
         });

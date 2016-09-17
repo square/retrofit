@@ -20,11 +20,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * Adapts a {@link Call} into the type of {@code T}. Instances are created by {@linkplain Factory a
- * factory} which is {@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into
- * the {@link Retrofit} instance.
+ * Adapts a {@link Call} with response type {@code R} into the type of {@code T}. Instances are
+ * created by {@linkplain Factory a factory} which is
+ * {@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into the {@link Retrofit}
+ * instance.
  */
-public interface CallAdapter<T> {
+public interface CallAdapter<R, T> {
   /**
    * Returns the value type that this adapter uses when converting the HTTP response body to a Java
    * object. For example, the response type for {@code Call<Repo>} is {@code Repo}. This type
@@ -52,7 +53,7 @@ public interface CallAdapter<T> {
    * }
    * </code></pre>
    */
-  <R> T adapt(Call<R> call);
+  T adapt(Call<R> call);
 
   /**
    * Creates {@link CallAdapter} instances based on the return type of {@linkplain
@@ -63,7 +64,7 @@ public interface CallAdapter<T> {
      * Returns a call adapter for interface methods that return {@code returnType}, or null if it
      * cannot be handled by this factory.
      */
-    public abstract CallAdapter<?> get(Type returnType, Annotation[] annotations,
+    public abstract CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
         Retrofit retrofit);
 
     /**

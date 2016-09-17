@@ -57,7 +57,7 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != ListenableFuture.class) {
       return null;
     }
@@ -69,7 +69,7 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
 
     if (getRawType(innerType) != Response.class) {
       // Generic type is not Response<T>. Use it for body-only adapter.
-      return new BodyCallAdapter(innerType);
+      return new BodyCallAdapter<>(innerType);
     }
 
     // Generic type is Response<T>. Extract T and create the Response version of the adapter.
@@ -78,10 +78,10 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
           + " as Response<Foo> or Response<? extends Foo>");
     }
     Type responseType = getParameterUpperBound(0, (ParameterizedType) innerType);
-    return new ResponseCallAdapter(responseType);
+    return new ResponseCallAdapter<>(responseType);
   }
 
-  private static class BodyCallAdapter implements CallAdapter<ListenableFuture<?>> {
+  private static final class BodyCallAdapter<R> implements CallAdapter<R, ListenableFuture<R>> {
     private final Type responseType;
 
     BodyCallAdapter(Type responseType) {
@@ -92,7 +92,7 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> ListenableFuture<R> adapt(final Call<R> call) {
+    @Override public ListenableFuture<R> adapt(final Call<R> call) {
       return new AbstractFuture<R>() {
         {
           call.enqueue(new Callback<R>() {
@@ -117,7 +117,8 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
     }
   }
 
-  private static class ResponseCallAdapter implements CallAdapter<ListenableFuture<?>> {
+  private static final class ResponseCallAdapter<R>
+      implements CallAdapter<R, ListenableFuture<Response<R>>> {
     private final Type responseType;
 
     ResponseCallAdapter(Type responseType) {
@@ -128,7 +129,7 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> ListenableFuture<Response<R>> adapt(final Call<R> call) {
+    @Override public ListenableFuture<Response<R>> adapt(final Call<R> call) {
       return new AbstractFuture<Response<R>>() {
         {
           call.enqueue(new Callback<R>() {

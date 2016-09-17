@@ -80,7 +80,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
     String canonicalName = rawType.getCanonicalName();
     boolean isSingle = "rx.Single".equals(canonicalName);

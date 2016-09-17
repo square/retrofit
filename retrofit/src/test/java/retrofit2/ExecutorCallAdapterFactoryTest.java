@@ -70,10 +70,10 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallExecute() throws IOException {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<Call<?>> adapter =
-        (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+    CallAdapter<String, Call<String>> adapter =
+        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     final Response<String> response = Response.success("Hi");
-    Call<String> call = (Call<String>) adapter.adapt(new EmptyCall() {
+    Call<String> call = adapter.adapt(new EmptyCall() {
       @Override public Response<String> execute() throws IOException {
         return response;
       }
@@ -83,15 +83,15 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<Call<?>> adapter =
-        (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+    CallAdapter<String, Call<String>> adapter =
+        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     final Response<String> response = Response.success("Hi");
     EmptyCall originalCall = new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
         callback.onResponse(this, response);
       }
     };
-    Call<String> call = (Call<String>) adapter.adapt(originalCall);
+    Call<String> call = adapter.adapt(originalCall);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verify(callback).onResponse(call, response);
@@ -99,15 +99,15 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<Call<?>> adapter =
-        (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+    CallAdapter<String, Call<String>> adapter =
+        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     final Throwable throwable = new IOException();
     EmptyCall originalCall = new EmptyCall() {
       @Override public void enqueue(Callback<String> callback) {
         callback.onFailure(this, throwable);
       }
     };
-    Call<String> call = (Call<String>) adapter.adapt(originalCall);
+    Call<String> call = adapter.adapt(originalCall);
     call.enqueue(callback);
     verify(callbackExecutor).execute(any(Runnable.class));
     verifyNoMoreInteractions(callbackExecutor);
@@ -117,10 +117,10 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallCloneDeepCopy() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<Call<?>> adapter =
-        (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+    CallAdapter<String, Call<String>> adapter =
+        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     Call<String> delegate = mock(Call.class);
-    Call<String> call = (Call<String>) adapter.adapt(delegate);
+    Call<String> call = adapter.adapt(delegate);
     Call<String> cloned = call.clone();
     assertThat(cloned).isNotSameAs(call);
     verify(delegate).clone();
@@ -129,10 +129,10 @@ public final class ExecutorCallAdapterFactoryTest {
 
   @Test public void adaptedCallCancel() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<Call<?>> adapter =
-        (CallAdapter<Call<?>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+    CallAdapter<String, Call<String>> adapter =
+        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     Call<String> delegate = mock(Call.class);
-    Call<String> call = (Call<String>) adapter.adapt(delegate);
+    Call<String> call = adapter.adapt(delegate);
     call.cancel();
     verify(delegate).cancel();
     verifyNoMoreInteractions(delegate);
