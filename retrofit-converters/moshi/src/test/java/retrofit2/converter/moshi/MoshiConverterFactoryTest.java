@@ -119,6 +119,7 @@ public final class MoshiConverterFactoryTest {
 
   private Service service;
   private Service serviceLenient;
+  private Service serviceNulls;
 
   @Before public void setUp() {
     Moshi moshi = new Moshi.Builder()
@@ -137,6 +138,7 @@ public final class MoshiConverterFactoryTest {
         .build();
     MoshiConverterFactory factory = MoshiConverterFactory.create(moshi);
     MoshiConverterFactory factoryLenient = factory.asLenient();
+    MoshiConverterFactory factoryNulls = factory.withNullSerialization();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(factory)
@@ -145,8 +147,13 @@ public final class MoshiConverterFactoryTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(factoryLenient)
         .build();
+    Retrofit retrofitNulls = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(factoryNulls)
+        .build();
     service = retrofit.create(Service.class);
     serviceLenient = retrofitLenient.create(Service.class);
+    serviceNulls = retrofitNulls.create(Service.class);
   }
 
   @Test public void anInterface() throws IOException, InterruptedException {
@@ -205,6 +212,14 @@ public final class MoshiConverterFactoryTest {
     Response<AnImplementation> response = call2.execute();
     AnImplementation body = response.body();
     assertThat(body.theName).isEqualTo("value");
+  }
+
+  @Test public void withNulls() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{}"));
+
+    Call<AnImplementation> call = serviceNulls.anImplementation(new AnImplementation(null));
+    call.execute();
+    assertEquals("{\"theName\":null}", server.takeRequest().getBody().readUtf8());
   }
 
   @Test public void utf8BomSkipped() throws IOException {
