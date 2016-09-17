@@ -50,8 +50,8 @@ public final class ScalarsConverterPrimitivesFactoryTest {
 
   static class DirectCallAdapterFactory extends CallAdapter.Factory {
     @Override
-    public CallAdapter<?> get(final Type returnType, Annotation[] annotations, Retrofit retrofit) {
-      return new CallAdapter<Object>() {
+    public CallAdapter<?, ?> get(final Type returnType, Annotation[] annotations, Retrofit retrofit) {
+      return new CallAdapter<Object, Object>() {
         @Override public Type responseType() {
           return returnType;
         }

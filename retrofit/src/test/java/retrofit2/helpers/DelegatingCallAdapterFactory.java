@@ -24,7 +24,7 @@ public final class DelegatingCallAdapterFactory extends CallAdapter.Factory {
   public boolean called;
 
   @Override
-  public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
     called = true;
     return retrofit.nextCallAdapter(this, returnType, annotations);
   }

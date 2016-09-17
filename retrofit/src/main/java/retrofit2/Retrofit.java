@@ -57,7 +57,7 @@ import static retrofit2.Utils.checkNotNull;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, ServiceMethod> serviceMethodCache = new LinkedHashMap<>();
+  private final Map<Method, ServiceMethod<?, ?>> serviceMethodCache = new LinkedHashMap<>();
 
   private final okhttp3.Call.Factory callFactory;
   private final HttpUrl baseUrl;
@@ -142,8 +142,9 @@ public final class Retrofit {
             if (platform.isDefaultMethod(method)) {
               return platform.invokeDefaultMethod(method, service, proxy, args);
             }
-            ServiceMethod serviceMethod = loadServiceMethod(method);
-            OkHttpCall okHttpCall = new OkHttpCall<>(serviceMethod, args);
+            ServiceMethod<Object, Object> serviceMethod =
+                (ServiceMethod<Object, Object>) loadServiceMethod(method);
+            OkHttpCall<Object> okHttpCall = new OkHttpCall<>(serviceMethod, args);
             return serviceMethod.callAdapter.adapt(okHttpCall);
           }
         });
@@ -158,12 +159,12 @@ public final class Retrofit {
     }
   }
 
-  ServiceMethod loadServiceMethod(Method method) {
-    ServiceMethod result;
+  ServiceMethod<?, ?> loadServiceMethod(Method method) {
+    ServiceMethod<?, ?> result;
     synchronized (serviceMethodCache) {
       result = serviceMethodCache.get(method);
       if (result == null) {
-        result = new ServiceMethod.Builder(this, method).build();
+        result = new ServiceMethod.Builder<>(this, method).build();
         serviceMethodCache.put(method, result);
       }
     }
@@ -197,7 +198,7 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no call adapter available for {@code type}.
    */
-  public CallAdapter<?> callAdapter(Type returnType, Annotation[] annotations) {
+  public CallAdapter<?, ?> callAdapter(Type returnType, Annotation[] annotations) {
     return nextCallAdapter(null, returnType, annotations);
   }
 
@@ -207,14 +208,14 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no call adapter available for {@code type}.
    */
-  public CallAdapter<?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
+  public CallAdapter<?, ?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
       Annotation[] annotations) {
     checkNotNull(returnType, "returnType == null");
     checkNotNull(annotations, "annotations == null");
 
     int start = adapterFactories.indexOf(skipPast) + 1;
     for (int i = start, count = adapterFactories.size(); i < count; i++) {
-      CallAdapter<?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
+      CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
       if (adapter != null) {
         return adapter;
       }

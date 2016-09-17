@@ -54,7 +54,7 @@ public final class RxJavaCallAdapterFactoryTest {
   }
 
   @Test public void nonRxJavaTypeReturnsNull() {
-    CallAdapter<?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
+    CallAdapter<?, ?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
     assertThat(adapter).isNull();
   }
 

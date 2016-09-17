@@ -231,18 +231,18 @@ public final class RetrofitTest {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     final AtomicBoolean adapterCalled = new AtomicBoolean();
     class MyCallAdapterFactory extends CallAdapter.Factory {
-      @Override public CallAdapter<?> get(final Type returnType, Annotation[] annotations,
+      @Override public CallAdapter<?, ?> get(final Type returnType, Annotation[] annotations,
           Retrofit retrofit) {
         factoryCalled.set(true);
         if (getRawType(returnType) != Call.class) {
           return null;
         }
-        return new CallAdapter<Call<?>>() {
+        return new CallAdapter<Object, Call<?>>() {
           @Override public Type responseType() {
             return getParameterUpperBound(0, (ParameterizedType) returnType);
           }
 
-          @Override public <R> Call<R> adapt(Call<R> call) {
+          @Override public Call<Object> adapt(Call<Object> call) {
             adapterCalled.set(true);
             return call;
           }
@@ -262,17 +262,17 @@ public final class RetrofitTest {
 
   @Test public void customCallAdapter() {
     class GreetingCallAdapterFactory extends CallAdapter.Factory {
-      @Override public CallAdapter<String> get(Type returnType, Annotation[] annotations,
+      @Override public CallAdapter<Object, String> get(Type returnType, Annotation[] annotations,
           Retrofit retrofit) {
         if (getRawType(returnType) != String.class) {
           return null;
         }
-        return new CallAdapter<String>() {
+        return new CallAdapter<Object, String>() {
           @Override public Type responseType() {
             return String.class;
           }
 
-          @Override public <R> String adapt(Call<R> call) {
+          @Override public String adapt(Call<Object> call) {
             return "Hi!";
           }
         };
@@ -291,7 +291,7 @@ public final class RetrofitTest {
   @Test public void methodAnnotationsPassedToCallAdapter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyCallAdapterFactory extends CallAdapter.Factory {
-      @Override public CallAdapter<?> get(Type returnType, Annotation[] annotations,
+      @Override public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
           Retrofit retrofit) {
         annotationsRef.set(annotations);
         return null;
@@ -1022,7 +1022,7 @@ public final class RetrofitTest {
     Type type = String.class;
     Annotation[] annotations = new Annotation[0];
 
-    CallAdapter<?> expectedAdapter = mock(CallAdapter.class);
+    CallAdapter<?, ?> expectedAdapter = mock(CallAdapter.class);
     CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
 
     Retrofit retrofit = new Retrofit.Builder()
@@ -1032,7 +1032,7 @@ public final class RetrofitTest {
 
     doReturn(expectedAdapter).when(factory).get(type, annotations, retrofit);
 
-    CallAdapter<?> actualAdapter = retrofit.callAdapter(type, annotations);
+    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
     verify(factory).get(type, annotations, retrofit);
@@ -1043,11 +1043,11 @@ public final class RetrofitTest {
     Type type = String.class;
     Annotation[] annotations = new Annotation[0];
 
-    CallAdapter<?> expectedAdapter = mock(CallAdapter.class);
+    CallAdapter<?, ?> expectedAdapter = mock(CallAdapter.class);
     CallAdapter.Factory factory2 = mock(CallAdapter.Factory.class);
     CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
       @Override
-      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         return retrofit.nextCallAdapter(this, returnType, annotations);
       }
     });
@@ -1060,7 +1060,7 @@ public final class RetrofitTest {
 
     doReturn(expectedAdapter).when(factory2).get(type, annotations, retrofit);
 
-    CallAdapter<?> actualAdapter = retrofit.callAdapter(type, annotations);
+    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
     verify(factory1).get(type, annotations, retrofit);
@@ -1073,17 +1073,17 @@ public final class RetrofitTest {
     Type type = String.class;
     Annotation[] annotations = new Annotation[0];
 
-    CallAdapter<?> expectedAdapter = mock(CallAdapter.class);
+    CallAdapter<?, ?> expectedAdapter = mock(CallAdapter.class);
     CallAdapter.Factory factory3 = mock(CallAdapter.Factory.class);
     CallAdapter.Factory factory2 = spy(new CallAdapter.Factory() {
       @Override
-      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         return retrofit.nextCallAdapter(this, returnType, annotations);
       }
     });
     CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
       @Override
-      public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         return retrofit.nextCallAdapter(this, returnType, annotations);
       }
     });
@@ -1097,7 +1097,7 @@ public final class RetrofitTest {
 
     doReturn(expectedAdapter).when(factory3).get(type, annotations, retrofit);
 
-    CallAdapter<?> actualAdapter = retrofit.callAdapter(type, annotations);
+    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
 
     verify(factory1).get(type, annotations, retrofit);

@@ -72,7 +72,7 @@ public final class GuavaCallAdapterFactoryTest {
   }
 
   @Test public void nonListenableFutureReturnsNull() {
-    CallAdapter<?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
+    CallAdapter<?, ?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
     assertThat(adapter).isNull();
   }
 

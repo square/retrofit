@@ -32,7 +32,7 @@ import retrofit2.http.GET;
  * A sample showing a custom {@link CallAdapter} which adapts the built-in {@link Call} to a custom
  * version whose callback has more granular methods.
  */
-public final class ErrorHandlingCallAdapter {
+public final class ErrorHandlingAdapter {
   /** A callback which offers granular callbacks for various conditions. */
   interface MyCallback<T> {
     /** Called for [200, 300) responses. */
@@ -59,7 +59,7 @@ public final class ErrorHandlingCallAdapter {
   }
 
   public static class ErrorHandlingCallAdapterFactory extends CallAdapter.Factory {
-    @Override public CallAdapter<MyCall<?>> get(Type returnType, Annotation[] annotations,
+    @Override public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
         Retrofit retrofit) {
       if (getRawType(returnType) != MyCall.class) {
         return null;
@@ -68,17 +68,27 @@ public final class ErrorHandlingCallAdapter {
         throw new IllegalStateException(
             "MyCall must have generic type (e.g., MyCall<ResponseBody>)");
       }
-      final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
-      final Executor callbackExecutor = retrofit.callbackExecutor();
-      return new CallAdapter<MyCall<?>>() {
-        @Override public Type responseType() {
-          return responseType;
-        }
+      Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
+      Executor callbackExecutor = retrofit.callbackExecutor();
+      return new ErrorHandlingCallAdapter<>(responseType, callbackExecutor);
+    }
 
-        @Override public <R> MyCall<R> adapt(Call<R> call) {
-          return new MyCallAdapter<>(call, callbackExecutor);
-        }
-      };
+    private static final class ErrorHandlingCallAdapter<R> implements CallAdapter<R, MyCall<R>> {
+      private final Type responseType;
+      private final Executor callbackExecutor;
+
+      ErrorHandlingCallAdapter(Type responseType, Executor callbackExecutor) {
+        this.responseType = responseType;
+        this.callbackExecutor = callbackExecutor;
+      }
+
+      @Override public Type responseType() {
+        return responseType;
+      }
+
+      @Override public MyCall<R> adapt(Call<R> call) {
+        return new MyCallAdapter<>(call, callbackExecutor);
+      }
     }
   }
 

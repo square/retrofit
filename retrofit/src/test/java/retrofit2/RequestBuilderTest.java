@@ -2501,7 +2501,7 @@ public final class RequestBuilderTest {
     }
   }
 
-  static Request buildRequest(Class<?> cls, Object... args) {
+  static <T> Request buildRequest(Class<T> cls, Object... args) {
     final AtomicReference<Request> requestRef = new AtomicReference<>();
     okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
       @Override public okhttp3.Call newCall(Request request) {
@@ -2517,9 +2517,11 @@ public final class RequestBuilderTest {
         .build();
 
     Method method = TestingUtils.onlyMethod(cls);
-    ServiceMethod<?> serviceMethod = retrofit.loadServiceMethod(method);
-    OkHttpCall<?> okHttpCall = new OkHttpCall<>(serviceMethod, args);
-    Call<?> call = (Call<?>) serviceMethod.callAdapter.adapt(okHttpCall);
+    //noinspection unchecked
+    ServiceMethod<T, Call<T>> serviceMethod =
+        (ServiceMethod<T, Call<T>>) retrofit.loadServiceMethod(method);
+    Call<T> okHttpCall = new OkHttpCall<>(serviceMethod, args);
+    Call<T> call = serviceMethod.callAdapter.adapt(okHttpCall);
     try {
       call.execute();
       throw new AssertionError();
