@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
 import okhttp3.Headers;
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
@@ -269,7 +268,7 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static abstract class BasePartMap<T> extends ParameterHandler<Map<String, T>> {
+  abstract static class BasePartMap<T> extends ParameterHandler<Map<String, T>> {
     @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Part map was null.");
