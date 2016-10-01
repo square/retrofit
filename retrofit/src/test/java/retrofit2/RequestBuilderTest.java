@@ -2092,6 +2092,39 @@ public final class RequestBuilderTest {
             .contains("name=\"filepart\"; filename=\"" + multipartFile.getName() + "\"");
   }
 
+  @Test public void multipartFileContentsNullValue() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/")
+      Call<ResponseBody> method(@Part("text") String text, @Part("filepart") File content) { return null; }
+    }
+
+    Request request = buildRequest(Example.class, "param", (File) null);
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"text\"")
+        .doesNotContain("name=\"filepart\"");
+  }
+
+  @Test public void multipartFileContentsWithoutPartName() {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/")
+      Call<ResponseBody> method(@Part File content) { return null; }
+    }
+
+    try {
+      buildRequest(Example.class, null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).isEqualTo("File parts must have defined name. (parameter #1)\n    for method Example.method");
+    }
+  }
+
   @Test public void simpleFormEncoded() {
     class Example {
       @FormUrlEncoded //

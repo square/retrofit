@@ -590,6 +590,8 @@ final class ServiceMethod<R, T> {
             return ParameterHandler.RawPart.INSTANCE.array();
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             return ParameterHandler.RawPart.INSTANCE;
+          } else if (File.class.isAssignableFrom(rawParameterType)) {
+            throw parameterError(p, "File parts must have defined name.");
           } else {
             throw parameterError(p,
                 "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
