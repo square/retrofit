@@ -284,17 +284,17 @@ abstract class ParameterHandler<T> {
           throw new IllegalArgumentException(
               "Part map contained null value for key '" + entryKey + "'.");
         }
-        applyElement(builder, entryKey, entryValue);
+        applyEntry(builder, entryKey, entryValue);
       }
     }
 
-    abstract void applyElement(RequestBuilder builder, String key, T value) throws IOException;
+    abstract void applyEntry(RequestBuilder builder, String key, T value) throws IOException;
   }
 
   static final class FilePartMap extends BasePartMap<File> {
     static final FilePartMap INSTANCE = new FilePartMap();
 
-    @Override void applyElement(RequestBuilder builder, String key, File value) throws IOException {
+    @Override void applyEntry(RequestBuilder builder, String key, File value) throws IOException {
       FilePart.apply(builder, key, value);
     }
   }
@@ -308,7 +308,7 @@ abstract class ParameterHandler<T> {
       this.transferEncoding = transferEncoding;
     }
 
-    @Override void applyElement(RequestBuilder builder, String key, T value) throws IOException {
+    @Override void applyEntry(RequestBuilder builder, String key, T value) throws IOException {
       Headers headers = Headers.of(
           "Content-Disposition", "form-data; name=\"" + key + "\"",
           "Content-Transfer-Encoding", transferEncoding);
