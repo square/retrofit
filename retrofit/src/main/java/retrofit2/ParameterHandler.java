@@ -265,6 +265,31 @@ abstract class ParameterHandler<T> {
     }
   }
 
+  static final class FilePartMap extends ParameterHandler<Map<String, File>> {
+    static final FilePartMap INSTANCE = new FilePartMap();
+
+    @Override void apply(RequestBuilder builder, Map<String, File> value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException("Part map was null.");
+      }
+
+      for (Map.Entry<String, File> entry : value.entrySet()) {
+        String entryKey = entry.getKey();
+        if (entryKey == null) {
+          throw new IllegalArgumentException("Part map contained null key.");
+        }
+        File entryValue = entry.getValue();
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+              "Part map contained null value for key '" + entryKey + "'.");
+        }
+
+        FilePart singleFileHandler = new FilePart(entryKey);
+        singleFileHandler.apply(builder, entryValue);
+      }
+    }
+  }
+
   static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
     private final Converter<T, RequestBody> valueConverter;
     private final String transferEncoding;

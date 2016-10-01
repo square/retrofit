@@ -663,6 +663,9 @@ final class ServiceMethod<R, T> {
           throw parameterError(p, "@PartMap values cannot be MultipartBody.Part. "
               + "Use @Part List<Part> or a different value type instead.");
         }
+        if (File.class.isAssignableFrom(Utils.getRawType(valueType))) {
+          return ParameterHandler.FilePartMap.INSTANCE;
+        }
 
         Converter<?, RequestBody> valueConverter =
             retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
