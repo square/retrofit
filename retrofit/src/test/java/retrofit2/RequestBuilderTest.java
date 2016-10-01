@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -2069,6 +2070,26 @@ public final class RequestBuilderTest {
     } catch (IllegalStateException e) {
       assertThat(e.getMessage()).isEqualTo("Multipart body must have at least one part.");
     }
+  }
+
+  @Test public void multipartWithFile() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/")
+      Call<ResponseBody> method(@Part("filepart") File contenxt) { return null; }
+    }
+
+    File multipartFile = File.createTempFile("multipartFileTest", ".txt");
+
+    Request request = buildRequest(Example.class, multipartFile);
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+            .contains("Content-Disposition: form-data;")
+            .contains("name=\"filepart\"; filename=\"" + multipartFile.getName() + "\"");
   }
 
   @Test public void simpleFormEncoded() {
