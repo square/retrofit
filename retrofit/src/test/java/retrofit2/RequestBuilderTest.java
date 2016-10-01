@@ -2091,6 +2091,30 @@ public final class RequestBuilderTest {
             .contains("name=\"filepart\"; filename=\"" + multipartFile.getName() + "\"");
   }
 
+  @Test public void multipartMapWithFiles() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar")
+      Call<ResponseBody> method(@PartMap Map<String, File> files) { return null; }
+    }
+
+    Map<String, File> fileMap = new HashMap<>(3);
+    fileMap.put("file[0]", File.createTempFile("multipartFileTest", ".txt"));
+    fileMap.put("file[1]", File.createTempFile("multipartFileTest", ".txt"));
+    fileMap.put("file[2]", File.createTempFile("multipartFileTest", ".txt"));
+
+    Request request = buildRequest(Example.class, fileMap);
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"file[0]\"; filename=\"" + fileMap.get("file[0]").getName() + "\"")
+        .contains("name=\"file[1]\"; filename=\"" + fileMap.get("file[1]").getName() + "\"")
+        .contains("name=\"file[2]\"; filename=\"" + fileMap.get("file[2]").getName() + "\"");
+  }
+
   @Test public void multipartFileContentsNullValue() throws IOException {
     class Example {
       @Multipart
