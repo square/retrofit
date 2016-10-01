@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -626,6 +627,8 @@ final class ServiceMethod<R, T> {
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
                 + "include a part name in the annotation.");
+          } else if (File.class.isAssignableFrom(rawParameterType)) {
+            return new ParameterHandler.FilePart(partName);
           } else {
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(type, annotations, methodAnnotations);

@@ -15,10 +15,12 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
 import okhttp3.Headers;
+import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
@@ -243,6 +245,22 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, MultipartBody.Part value) throws IOException {
       if (value != null) { // Skip null values.
         builder.addPart(value);
+      }
+    }
+  }
+
+  static final class FilePart extends ParameterHandler<File> {
+    private final String name;
+
+    FilePart(String name) {
+      this.name = name;
+    }
+
+    @Override void apply(RequestBuilder builder, File value) throws IOException {
+      if (value != null) { // Skip null values.
+        builder.addPart(MultipartBody.Part.createFormData(name,
+                value.getName(),
+                RequestBody.create(MediaType.parse("multipart/form-data"), value)));
       }
     }
   }

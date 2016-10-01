@@ -2072,11 +2072,11 @@ public final class RequestBuilderTest {
     }
   }
 
-  @Test public void multipartWithFile() throws IOException {
+  @Test public void multipartWithFileContents() throws IOException {
     class Example {
       @Multipart
       @POST("/foo/bar/")
-      Call<ResponseBody> method(@Part("filepart") File contenxt) { return null; }
+      Call<ResponseBody> method(@Part("filepart") File content) { return null; }
     }
 
     File multipartFile = File.createTempFile("multipartFileTest", ".txt");
