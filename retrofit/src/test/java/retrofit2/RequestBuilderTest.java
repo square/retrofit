@@ -2088,7 +2088,6 @@ public final class RequestBuilderTest {
     String bodyString = buffer.readUtf8();
 
     assertThat(bodyString)
-            .contains("Content-Disposition: form-data;")
             .contains("name=\"filepart\"; filename=\"" + multipartFile.getName() + "\"");
   }
 

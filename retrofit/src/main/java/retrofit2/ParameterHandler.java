@@ -260,7 +260,7 @@ abstract class ParameterHandler<T> {
       if (value != null) { // Skip null values.
         builder.addPart(MultipartBody.Part.createFormData(name,
                 value.getName(),
-                RequestBody.create(MediaType.parse("multipart/form-data"), value)));
+                RequestBody.create(null, value)));
       }
     }
   }
