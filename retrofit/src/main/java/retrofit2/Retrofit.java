@@ -409,10 +409,6 @@ public final class Retrofit {
      * The HTTP client used for requests.
      * <p>
      * This is a convenience method for calling {@link #callFactory}.
-     * <p>
-     * Note: This method <b>does not</b> make a defensive copy of {@code client}. Changes to its
-     * settings will affect subsequent requests. Pass in a {@linkplain OkHttpClient#clone() cloned}
-     * instance to prevent this if desired.
      */
     public Builder client(OkHttpClient client) {
       return callFactory(checkNotNull(client, "client == null"));
