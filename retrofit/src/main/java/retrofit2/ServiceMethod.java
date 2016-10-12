@@ -77,7 +77,7 @@ final class ServiceMethod<R, T> {
   private final ParameterHandler<?>[] parameterHandlers;
 
   ServiceMethod(Builder<R, T> builder) {
-    this.callFactory = builder.retrofit.callFactory();
+    this.callFactory = builder.callFactory;
     this.callAdapter = builder.callAdapter;
     this.baseUrl = builder.retrofit.baseUrl();
     this.responseConverter = builder.responseConverter;
@@ -146,6 +146,7 @@ final class ServiceMethod<R, T> {
     Set<String> relativeUrlParamNames;
     ParameterHandler<?>[] parameterHandlers;
     Converter<ResponseBody, T> responseConverter;
+    okhttp3.Call.Factory callFactory;
     CallAdapter<T, R> callAdapter;
 
     public Builder(Retrofit retrofit, Method method) {
@@ -157,6 +158,7 @@ final class ServiceMethod<R, T> {
     }
 
     public ServiceMethod build() {
+      callFactory = retrofit.clientFactory().forCall(methodAnnotations);
       callAdapter = createCallAdapter();
       responseType = callAdapter.responseType();
       if (responseType == Response.class || responseType == okhttp3.Response.class) {

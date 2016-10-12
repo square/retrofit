@@ -59,17 +59,17 @@ import static retrofit2.Utils.checkNotNull;
 public final class Retrofit {
   private final Map<Method, ServiceMethod<?, ?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-  private final okhttp3.Call.Factory callFactory;
   private final HttpUrl baseUrl;
+  private final ClientFactory clientFactory;
   private final List<Converter.Factory> converterFactories;
   private final List<CallAdapter.Factory> adapterFactories;
   private final Executor callbackExecutor;
   private final boolean validateEagerly;
 
-  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
-      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
-      Executor callbackExecutor, boolean validateEagerly) {
-    this.callFactory = callFactory;
+  Retrofit(HttpUrl baseUrl, ClientFactory clientFactory, List<Converter.Factory> converterFactories,
+      List<CallAdapter.Factory> adapterFactories, Executor callbackExecutor,
+      boolean validateEagerly) {
+    this.clientFactory = clientFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
     this.adapterFactories = unmodifiableList(adapterFactories); // Defensive copy at call site.
@@ -175,15 +175,27 @@ public final class Retrofit {
 
   /**
    * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
-   * Typically an instance of {@link OkHttpClient}.
+   * Typically an instance of {@link OkHttpClient}. Returns {@code null} if a
+   * {@linkplain Builder#clientFactory client factory} was specified.
+   *
+   * @deprecated Instances of {@link okhttp3.Call.Factory} are now created for each service method
+   * using {@link #clientFactory()}.
    */
+  @Deprecated
   public okhttp3.Call.Factory callFactory() {
-    return callFactory;
+    return clientFactory instanceof FixedClientFactory
+        ? ((FixedClientFactory) clientFactory).callFactory
+        : null;
   }
 
   /** The API base URL. */
   public HttpUrl baseUrl() {
     return baseUrl;
+  }
+
+  /** The factory for creating {@linkplain okhttp3.Call OkHttp calls} for each service method. */
+  public ClientFactory clientFactory() {
+    return clientFactory;
   }
 
   /**
@@ -387,7 +399,7 @@ public final class Retrofit {
    */
   public static final class Builder {
     private Platform platform;
-    private okhttp3.Call.Factory callFactory;
+    private ClientFactory clientFactory;
     private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories = new ArrayList<>();
     private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
@@ -405,22 +417,25 @@ public final class Retrofit {
       this(Platform.get());
     }
 
-    /**
-     * The HTTP client used for requests.
-     * <p>
-     * This is a convenience method for calling {@link #callFactory}.
-     */
-    public Builder client(OkHttpClient client) {
-      return callFactory(checkNotNull(client, "client == null"));
+    /** @deprecated Use {@link #client(okhttp3.Call.Factory)} */
+    @Deprecated
+    public Builder callFactory(okhttp3.Call.Factory factory) {
+      return clientFactory(new FixedClientFactory(checkNotNull(factory, "factory == null")));
     }
 
-    /**
-     * Specify a custom call factory for creating {@link Call} instances.
-     * <p>
-     * Note: Calling {@link #client} automatically sets this value.
-     */
-    public Builder callFactory(okhttp3.Call.Factory factory) {
-      this.callFactory = checkNotNull(factory, "factory == null");
+    /** The HTTP client used for requests. */
+    public Builder client(okhttp3.Call.Factory factory) {
+      return clientFactory(new FixedClientFactory(checkNotNull(factory, "factory == null")));
+    }
+
+    /** The HTTP client used for requests. */
+    public Builder client(OkHttpClient client) {
+      return clientFactory(new FixedClientFactory(checkNotNull(client, "client == null")));
+    }
+
+    /** Sets the factory which is used to create the HTTP client for each method. */
+    public Builder clientFactory(ClientFactory factory) {
+      clientFactory = checkNotNull(factory, "factory == null");
       return this;
     }
 
@@ -545,9 +560,9 @@ public final class Retrofit {
         throw new IllegalStateException("Base URL required.");
       }
 
-      okhttp3.Call.Factory callFactory = this.callFactory;
-      if (callFactory == null) {
-        callFactory = new OkHttpClient();
+      ClientFactory clientFactory = this.clientFactory;
+      if (clientFactory == null) {
+        clientFactory = new FixedClientFactory(new OkHttpClient());
       }
 
       Executor callbackExecutor = this.callbackExecutor;
@@ -562,7 +577,7 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
+      return new Retrofit(baseUrl, clientFactory, converterFactories, adapterFactories,
           callbackExecutor, validateEagerly);
     }
   }
