@@ -29,14 +29,14 @@ import java.util.NoSuchElementException;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
-final class Utils {
+public final class Utils {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Utils() {
     // No instances.
   }
 
-  static Class<?> getRawType(Type type) {
+  public static Class<?> getRawType(Type type) {
     if (type == null) throw new NullPointerException("type == null");
 
     if (type instanceof Class<?>) {
@@ -173,7 +173,7 @@ final class Utils {
    *
    * @param supertype a superclass of, or interface implemented by, this.
    */
-  static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
+  public static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
     return resolve(context, contextRawType,
         getGenericSupertype(context, contextRawType, supertype));
@@ -280,7 +280,7 @@ final class Utils {
     }
   }
 
-  static <T> T checkNotNull(T object, String message) {
+  public static <T> T checkNotNull(T object, String message) {
     if (object == null) {
       throw new NullPointerException(message);
     }
@@ -316,7 +316,7 @@ final class Utils {
     }
   }
 
-  static Type getParameterUpperBound(int index, ParameterizedType type) {
+  public static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
     if (index < 0 || index >= types.length) {
       throw new IllegalArgumentException(
@@ -492,5 +492,17 @@ final class Utils {
       if (upperBound == Object.class) return "?";
       return "? extends " + typeToString(upperBound);
     }
+  }
+
+  public static Class<?> boxIfPrimitive(Class<?> type) {
+    if (boolean.class == type) return Boolean.class;
+    if (byte.class == type) return Byte.class;
+    if (char.class == type) return Character.class;
+    if (double.class == type) return Double.class;
+    if (float.class == type) return Float.class;
+    if (int.class == type) return Integer.class;
+    if (long.class == type) return Long.class;
+    if (short.class == type) return Short.class;
+    return type;
   }
 }

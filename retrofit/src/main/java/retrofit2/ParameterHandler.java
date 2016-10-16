@@ -16,289 +16,39 @@
 package retrofit2;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.Map;
-import okhttp3.Headers;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
-import static retrofit2.Utils.checkNotNull;
+/**
+ * Applies service method argument's value to the {@linkplain RequestBuilder}.
+ * Each {@code ParameterHandler} instance corresponds to a single parameter of the service method.
+ * Instances are created by {@linkplain Factory a factory} which is
+ * {@linkplain Retrofit.Builder#addParameterHandlerFactory(Factory) installed}
+ * into the {@link Retrofit} instance.
+ *
+ * <p>This is an advanced extension point. For most users custom {@linkplain Converter}
+ * or {@linkplain CallAdapter} should be sufficient.</p>
+ *
+ * @param <T> method parameter type
+ */
+public interface ParameterHandler<T> {
+  /**
+   * Apply parameter {@code value} to the {builder}.
+   */
+  void apply(RequestBuilder builder, T value) throws IOException;
 
-abstract class ParameterHandler<T> {
-  abstract void apply(RequestBuilder builder, T value) throws IOException;
-
-  final ParameterHandler<Iterable<T>> iterable() {
-    return new ParameterHandler<Iterable<T>>() {
-      @Override void apply(RequestBuilder builder, Iterable<T> values) throws IOException {
-        if (values == null) return; // Skip null values.
-
-        for (T value : values) {
-          ParameterHandler.this.apply(builder, value);
-        }
-      }
-    };
-  }
-
-  final ParameterHandler<Object> array() {
-    return new ParameterHandler<Object>() {
-      @Override void apply(RequestBuilder builder, Object values) throws IOException {
-        if (values == null) return; // Skip null values.
-
-        for (int i = 0, size = Array.getLength(values); i < size; i++) {
-          //noinspection unchecked
-          ParameterHandler.this.apply(builder, (T) Array.get(values, i));
-        }
-      }
-    };
-  }
-
-  static final class RelativeUrl extends ParameterHandler<Object> {
-    @Override void apply(RequestBuilder builder, Object value) {
-      builder.setRelativeUrl(value);
-    }
-  }
-
-  static final class Header<T> extends ParameterHandler<T> {
-    private final String name;
-    private final Converter<T, String> valueConverter;
-
-    Header(String name, Converter<T, String> valueConverter) {
-      this.name = checkNotNull(name, "name == null");
-      this.valueConverter = valueConverter;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
-      if (value == null) return; // Skip null values.
-      builder.addHeader(name, valueConverter.convert(value));
-    }
-  }
-
-  static final class Path<T> extends ParameterHandler<T> {
-    private final String name;
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    Path(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException(
-            "Path parameter \"" + name + "\" value must not be null.");
-      }
-      builder.addPathParam(name, valueConverter.convert(value), encoded);
-    }
-  }
-
-  static final class Query<T> extends ParameterHandler<T> {
-    private final String name;
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    Query(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
-      if (value == null) return; // Skip null values.
-      builder.addQueryParam(name, valueConverter.convert(value), encoded);
-    }
-  }
-
-  static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    QueryMap(Converter<T, String> valueConverter, boolean encoded) {
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Query map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Query map contained null key.");
-        }
-        T entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Query map contained null value for key '" + entryKey + "'.");
-        }
-        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
-      }
-    }
-  }
-
-  static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-
-    HeaderMap(Converter<T, String> valueConverter) {
-      this.valueConverter = valueConverter;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Header map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String headerName = entry.getKey();
-        if (headerName == null) {
-          throw new IllegalArgumentException("Header map contained null key.");
-        }
-        T headerValue = entry.getValue();
-        if (headerValue == null) {
-          throw new IllegalArgumentException(
-              "Header map contained null value for key '" + headerName + "'.");
-        }
-        builder.addHeader(headerName, valueConverter.convert(headerValue));
-      }
-    }
-  }
-
-  static final class Field<T> extends ParameterHandler<T> {
-    private final String name;
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    Field(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
-      if (value == null) return; // Skip null values.
-      builder.addFormField(name, valueConverter.convert(value), encoded);
-    }
-  }
-
-  static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
-
-    FieldMap(Converter<T, String> valueConverter, boolean encoded) {
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Field map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Field map contained null key.");
-        }
-        T entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Field map contained null value for key '" + entryKey + "'.");
-        }
-        builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
-      }
-    }
-  }
-
-  static final class Part<T> extends ParameterHandler<T> {
-    private final Headers headers;
-    private final Converter<T, RequestBody> converter;
-
-    Part(Headers headers, Converter<T, RequestBody> converter) {
-      this.headers = headers;
-      this.converter = converter;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) {
-      if (value == null) return; // Skip null values.
-
-      RequestBody body;
-      try {
-        body = converter.convert(value);
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
-      }
-      builder.addPart(headers, body);
-    }
-  }
-
-  static final class RawPart extends ParameterHandler<MultipartBody.Part> {
-    static final RawPart INSTANCE = new RawPart();
-
-    private RawPart() {
-    }
-
-    @Override void apply(RequestBuilder builder, MultipartBody.Part value) throws IOException {
-      if (value != null) { // Skip null values.
-        builder.addPart(value);
-      }
-    }
-  }
-
-  static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, RequestBody> valueConverter;
-    private final String transferEncoding;
-
-    PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
-      this.valueConverter = valueConverter;
-      this.transferEncoding = transferEncoding;
-    }
-
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
-      if (value == null) {
-        throw new IllegalArgumentException("Part map was null.");
-      }
-
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Part map contained null key.");
-        }
-        T entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Part map contained null value for key '" + entryKey + "'.");
-        }
-
-        Headers headers = Headers.of(
-            "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
-            "Content-Transfer-Encoding", transferEncoding);
-
-        builder.addPart(headers, valueConverter.convert(entryValue));
-      }
-    }
-  }
-
-  static final class Body<T> extends ParameterHandler<T> {
-    private final Converter<T, RequestBody> converter;
-
-    Body(Converter<T, RequestBody> converter) {
-      this.converter = converter;
-    }
-
-    @Override void apply(RequestBuilder builder, T value) {
-      if (value == null) {
-        throw new IllegalArgumentException("Body parameter value must not be null.");
-      }
-      RequestBody body;
-      try {
-        body = converter.convert(value);
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
-      }
-      builder.setBody(body);
-    }
+  /**
+   * Creates {@link ParameterHandler} instances based on annotations and parameter type.
+   */
+  interface Factory {
+    /**
+     * Returns a {@link ParameterHandler} instance for {@code annotation} and parameter
+     * {@code type}, or null if {@code annotation} cannot be handled by this factory.
+     * If this factory is designed to handle passed {@code annotation} but other parameters
+     * (e.g. {@code type}) have incompatible values {@linkplain IllegalArgumentException}
+     * should be thrown.
+     */
+    ParameterHandler<?> get(Annotation annotation, Type type, String relativeUrl,
+        Annotation[] annotations, Annotation[] methodAnnotations, Retrofit retrofit);
   }
 }
