@@ -54,6 +54,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -138,6 +139,36 @@ public final class RetrofitTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("API interfaces must not extend other interfaces.");
     }
+  }
+
+  @Test public void cloneSharesStatefulInstances() {
+    CallAdapter.Factory callAdapter = mock(CallAdapter.Factory.class);
+    Converter.Factory converter = mock(Converter.Factory.class);
+    HttpUrl baseUrl = server.url("/");
+    Executor executor = mock(Executor.class);
+    okhttp3.Call.Factory callFactory = mock(okhttp3.Call.Factory.class);
+
+    Retrofit one = new Retrofit.Builder()
+        .addCallAdapterFactory(callAdapter)
+        .addConverterFactory(converter)
+        .baseUrl(baseUrl)
+        .callbackExecutor(executor)
+        .callFactory(callFactory)
+        .build();
+
+    CallAdapter.Factory callAdapter2 = mock(CallAdapter.Factory.class);
+    Converter.Factory converter2 = mock(Converter.Factory.class);
+    Retrofit two = one.newBuilder()
+        .addCallAdapterFactory(callAdapter2)
+        .addConverterFactory(converter2)
+        .build();
+    assertEquals(one.callAdapterFactories().size() + 1, two.callAdapterFactories().size());
+    assertThat(two.callAdapterFactories()).contains(callAdapter, callAdapter2);
+    assertEquals(one.converterFactories().size() + 1, two.converterFactories().size());
+    assertThat(two.converterFactories()).contains(converter, converter2);
+    assertSame(baseUrl, two.baseUrl());
+    assertSame(executor, two.callbackExecutor());
+    assertSame(callFactory, two.callFactory());
   }
 
   @Test public void responseTypeCannotBeRetrofitResponse() {
