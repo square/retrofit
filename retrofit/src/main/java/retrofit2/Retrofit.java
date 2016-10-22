@@ -59,12 +59,12 @@ import static retrofit2.Utils.checkNotNull;
 public final class Retrofit {
   private final Map<Method, ServiceMethod<?, ?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-  private final okhttp3.Call.Factory callFactory;
-  private final HttpUrl baseUrl;
-  private final List<Converter.Factory> converterFactories;
-  private final List<CallAdapter.Factory> adapterFactories;
-  private final Executor callbackExecutor;
-  private final boolean validateEagerly;
+  final okhttp3.Call.Factory callFactory;
+  final HttpUrl baseUrl;
+  final List<Converter.Factory> converterFactories;
+  final List<CallAdapter.Factory> adapterFactories;
+  final Executor callbackExecutor;
+  final boolean validateEagerly;
 
   Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
       List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
@@ -379,6 +379,10 @@ public final class Retrofit {
     return callbackExecutor;
   }
 
+  public Builder newBuilder() {
+    return new Builder(this);
+  }
+
   /**
    * Build a new {@link Retrofit}.
    * <p>
@@ -386,11 +390,11 @@ public final class Retrofit {
    * are optional.
    */
   public static final class Builder {
-    private Platform platform;
+    private final Platform platform;
     private okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
-    private List<Converter.Factory> converterFactories = new ArrayList<>();
-    private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
+    private final List<Converter.Factory> converterFactories = new ArrayList<>();
+    private final List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
     private Executor callbackExecutor;
     private boolean validateEagerly;
 
@@ -403,6 +407,18 @@ public final class Retrofit {
 
     public Builder() {
       this(Platform.get());
+    }
+
+    Builder(Retrofit retrofit) {
+      platform = Platform.get();
+      callFactory = retrofit.callFactory;
+      baseUrl = retrofit.baseUrl;
+      converterFactories.addAll(retrofit.converterFactories);
+      adapterFactories.addAll(retrofit.adapterFactories);
+      // Remove the default, platform-aware call adapter added by build().
+      adapterFactories.remove(adapterFactories.size() - 1);
+      callbackExecutor = retrofit.callbackExecutor;
+      validateEagerly = retrofit.validateEagerly;
     }
 
     /**
