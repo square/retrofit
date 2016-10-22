@@ -59,16 +59,18 @@ import static retrofit2.Utils.checkNotNull;
 public final class Retrofit {
   private final Map<Method, ServiceMethod<?, ?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-  private final okhttp3.Call.Factory callFactory;
-  private final HttpUrl baseUrl;
-  private final List<Converter.Factory> converterFactories;
-  private final List<CallAdapter.Factory> adapterFactories;
-  private final Executor callbackExecutor;
-  private final boolean validateEagerly;
+  final Platform platform;
+  final okhttp3.Call.Factory callFactory;
+  final HttpUrl baseUrl;
+  final List<Converter.Factory> converterFactories;
+  final List<CallAdapter.Factory> adapterFactories;
+  final Executor callbackExecutor;
+  final boolean validateEagerly;
 
-  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
+  Retrofit(Platform platform, okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
       List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
       Executor callbackExecutor, boolean validateEagerly) {
+    this.platform = platform;
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
@@ -379,6 +381,10 @@ public final class Retrofit {
     return callbackExecutor;
   }
 
+  public Builder newBuilder() {
+    return new Builder(this);
+  }
+
   /**
    * Build a new {@link Retrofit}.
    * <p>
@@ -386,13 +392,13 @@ public final class Retrofit {
    * are optional.
    */
   public static final class Builder {
-    private Platform platform;
-    private okhttp3.Call.Factory callFactory;
-    private HttpUrl baseUrl;
-    private List<Converter.Factory> converterFactories = new ArrayList<>();
-    private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
-    private Executor callbackExecutor;
-    private boolean validateEagerly;
+    Platform platform;
+    okhttp3.Call.Factory callFactory;
+    HttpUrl baseUrl;
+    List<Converter.Factory> converterFactories = new ArrayList<>();
+    List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
+    Executor callbackExecutor;
+    boolean validateEagerly;
 
     Builder(Platform platform) {
       this.platform = platform;
@@ -403,6 +409,16 @@ public final class Retrofit {
 
     public Builder() {
       this(Platform.get());
+    }
+
+    public Builder(Retrofit retrofit) {
+      this.platform = retrofit.platform;
+      this.callFactory = retrofit.callFactory;
+      this.baseUrl = retrofit.baseUrl;
+      this.converterFactories.addAll(retrofit.converterFactories);
+      this.adapterFactories.addAll(retrofit.adapterFactories);
+      this.callbackExecutor = retrofit.callbackExecutor;
+      this.validateEagerly = retrofit.validateEagerly;
     }
 
     /**
@@ -562,7 +578,7 @@ public final class Retrofit {
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
+      return new Retrofit(platform, callFactory, baseUrl, converterFactories, adapterFactories,
           callbackExecutor, validateEagerly);
     }
   }

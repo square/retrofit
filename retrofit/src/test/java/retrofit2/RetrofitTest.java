@@ -54,6 +54,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -138,6 +140,39 @@ public final class RetrofitTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("API interfaces must not extend other interfaces.");
     }
+  }
+
+  @Test public void cloneSharesStatefulInstances() {
+    CallAdapter.Factory callAdapter = mock(CallAdapter.Factory.class);
+    Converter.Factory converter = mock(Converter.Factory.class);
+    Executor executor = mock(Executor.class);
+    okhttp3.Call.Factory call = mock(okhttp3.Call.Factory.class);
+    OkHttpClient client = mock(OkHttpClient.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .addCallAdapterFactory(callAdapter)
+        .addConverterFactory(converter)
+        .baseUrl(server.url("/"))
+        .callbackExecutor(executor)
+        .callFactory(call)
+        .client(client)
+        .build();
+
+    // Values should be non-null.
+    Retrofit a = retrofit.newBuilder().build();
+    assertNotNull(a.callAdapterFactories().get(0));
+    assertNotNull(a.converterFactories().get(0));
+    assertNotNull(a.baseUrl());
+    assertNotNull(a.callbackExecutor());
+    assertNotNull(a.callFactory());
+
+    // Multiple clients share the instances.
+    Retrofit b = retrofit.newBuilder().build();
+    assertSame(a.callAdapterFactories().get(0), b.callAdapterFactories().get(0));
+    assertSame(a.converterFactories().get(0), b.converterFactories().get(0));
+    assertSame(a.baseUrl(), b.baseUrl());
+    assertSame(a.callbackExecutor(), b.callbackExecutor());
+    assertSame(a.callFactory(), b.callFactory());
   }
 
   @Test public void responseTypeCannotBeRetrofitResponse() {
