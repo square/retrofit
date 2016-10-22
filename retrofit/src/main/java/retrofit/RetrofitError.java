@@ -37,7 +37,7 @@ public class RetrofitError extends RuntimeException {
   public static RetrofitError httpError(String url, Response response, Converter converter,
       Type successType) {
     String message = response.getStatus() + " " + response.getReason();
-    return new RetrofitError(message, url, response, converter, successType, Kind.HTTP, null);
+    return new RetrofitError(message, url, response, converter, successType, Kind.HTTP);
   }
 
   public static RetrofitError unexpectedError(String url, Throwable exception) {
@@ -65,6 +65,16 @@ public class RetrofitError extends RuntimeException {
   private final Converter converter;
   private final Type successType;
   private final Kind kind;
+
+  RetrofitError(String message, String url, Response response, Converter converter,
+      Type successType, Kind kind) {
+    super(message);
+    this.url = url;
+    this.response = response;
+    this.converter = converter;
+    this.successType = successType;
+    this.kind = kind;
+  }
 
   RetrofitError(String message, String url, Response response, Converter converter,
       Type successType, Kind kind, Throwable exception) {
