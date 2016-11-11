@@ -217,7 +217,7 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
       }
       Object entryValue = entry.getValue();
       if (entryValue != null) { // Skip null values.
-        addQueryParam(entryKey.toString(), entryValue.toString(), encodeNames, encodeValues);
+        addQueryParam(entryKey.toString(), entryValue, encodeNames, encodeValues);
       }
     }
   }
