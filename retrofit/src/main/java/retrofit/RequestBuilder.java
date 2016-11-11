@@ -24,11 +24,15 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.converter.Converter;
 import retrofit.http.Body;
+import retrofit.http.Cookie;
+import retrofit.http.CookieMap;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
@@ -100,6 +104,42 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
         break;
       default:
         throw new IllegalArgumentException("Unknown request type: " + methodInfo.requestType);
+    }
+  }
+
+  private static final String COOKIE_HEADER = "Cookie";
+
+  @Override public void addCookie(String name, String value) {
+    if (name == null) {
+      throw new IllegalArgumentException("Cookie name must not be null.");
+    }
+    StringBuilder newCookie = new StringBuilder(name).append("=").append(value);
+    List<Header> headers = this.headers;
+    if (headers == null) {
+      this.headers = headers = new ArrayList<Header>(2);
+    }
+    boolean cookieHeaderPresent = false;
+    ListIterator<Header> headersIterator = headers.listIterator();
+    while (headersIterator.hasNext()) {
+      final Header header = headersIterator.next();
+      if (header != null && COOKIE_HEADER.equalsIgnoreCase(header.getName())) {
+        // Append to existing header
+        final String previousCookie = header.getValue();
+        StringBuilder cookies;
+        if (previousCookie == null || previousCookie.isEmpty() || previousCookie.trim().isEmpty()) {
+          cookies = new StringBuilder();
+        } else {
+          cookies = new StringBuilder(previousCookie);
+          cookies.append("; ");
+        }
+        cookies.append(newCookie);
+        headers.set(headersIterator.previousIndex(), new Header(COOKIE_HEADER, cookies.toString()));
+        cookieHeaderPresent = true;
+        break;
+      }
+    }
+    if (!cookieHeaderPresent) {
+      headers.add(new Header(COOKIE_HEADER, newCookie.toString()));
     }
   }
 
@@ -373,6 +413,25 @@ final class RequestBuilder implements RequestInterceptor.RequestFacade {
           body = (TypedOutput) value;
         } else {
           body = converter.toBody(value);
+        }
+      } else if (annotationType == Cookie.class) {
+        if (value != null) { // Skip null values.
+            String name = ((retrofit.http.Cookie) annotation).value();
+            addCookie(name, value.toString());
+        }
+      } else if (annotationType == CookieMap.class) {
+        if (value != null) { // Skip null values.
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+            Object entryKey = entry.getKey();
+            if (entryKey == null) {
+              throw new IllegalArgumentException(
+                "Parameter #" + (i + 1) + " cookies contained null key.");
+            }
+            Object entryValue = entry.getValue();
+            if (entryValue != null) { // Skip null values.
+              addCookie(entryKey.toString(), entryValue.toString());
+            }
+          }
         }
       } else {
         throw new IllegalArgumentException(

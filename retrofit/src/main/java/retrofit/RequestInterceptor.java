@@ -6,6 +6,9 @@ public interface RequestInterceptor {
   void intercept(RequestFacade request);
 
   interface RequestFacade {
+    /** Add a cookie to the request. This will not replace any existing cookies. */
+    void addCookie(String name, String value);
+
     /** Add a header to the request. This will not replace any existing headers. */
     void addHeader(String name, String value);
 

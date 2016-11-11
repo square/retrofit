@@ -11,6 +11,10 @@ final class RequestInterceptorTape implements RequestInterceptor.RequestFacade, 
 
   private final List<CommandWithParams> tape = new ArrayList<CommandWithParams>();
 
+  @Override public void addCookie(String name, String value) {
+    tape.add(new CommandWithParams(Command.ADD_COOKIE, name, value));
+  }
+
   @Override public void addHeader(String name, String value) {
     tape.add(new CommandWithParams(Command.ADD_HEADER, name, value));
   }
@@ -38,6 +42,12 @@ final class RequestInterceptorTape implements RequestInterceptor.RequestFacade, 
   }
 
   private enum Command {
+    ADD_COOKIE {
+      @Override
+      public void intercept(RequestFacade facade, String name, String value) {
+        facade.addCookie(name, value);
+      }
+    },
     ADD_HEADER {
       @Override
       public void intercept(RequestFacade facade, String name, String value) {
