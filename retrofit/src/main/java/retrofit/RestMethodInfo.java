@@ -27,8 +27,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import retrofit.client.Response;
 import retrofit.http.Body;
+import retrofit.http.Cookie;
+import retrofit.http.CookieMap;
 import retrofit.http.EncodedPath;
 import retrofit.http.EncodedQuery;
 import retrofit.http.EncodedQueryMap;
@@ -392,6 +395,13 @@ final class RestMethodInfo {
             }
 
             gotBody = true;
+          } else if (methodAnnotationType == Cookie.class) {
+            // Nothing to do.
+          } else if (methodAnnotationType == CookieMap.class) {
+            if (!Map.class.isAssignableFrom(methodParameterType)) {
+              throw parameterError(i, "@CookieMap parameter type must be Map.");
+            }
+
           } else {
             // This is a non-Retrofit annotation. Skip to the next one.
             continue;

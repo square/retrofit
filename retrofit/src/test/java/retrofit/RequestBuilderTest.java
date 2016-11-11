@@ -1,7 +1,13 @@
 // Copyright 2013 Square, Inc.
 package retrofit;
 
+import com.android.internal.util.Predicate;
+import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -14,7 +20,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+
 import org.junit.Test;
+
 import retrofit.client.Header;
 import retrofit.client.Request;
 import retrofit.client.Response;
@@ -48,7 +57,6 @@ import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import retrofit.mime.TypedString;
 import rx.Observable;
-
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -1896,6 +1904,110 @@ public class RequestBuilderTest {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+  
+  @Test public void cookieIsSet() {
+    class Example {
+      @GET("/")
+      @retrofit.http.Headers("Cookie: ")
+      Response method(@retrofit.http.CookieMap Map<String, String> cookies) {
+        return null;
+      }
+    }
+    final Map<String, String> map = Maps.newHashMap();
+    map.put("somekey", "somevalue");
+    Request request = buildRequest(Example.class, map);
+    List<Header> headers = request.getHeaders();
+    Optional<Header> cookieHeader = Iterables.tryFind(headers, new com.google.common.base.Predicate<Header>() {
+      @Override public boolean apply(Header paramT) {
+        return paramT != null && "Cookie".equals(paramT.getName());
+      }
+    });
+    assertThat(cookieHeader.isPresent()).isTrue();
+    assertThat(cookieHeader.get().getValue()).isEqualTo("somekey=somevalue");
+  }
+
+  @Test public void cookiesAreSet() {
+    class Example {
+      @GET("/")
+      @retrofit.http.Headers("Cookie: ")
+      Response method(@retrofit.http.CookieMap Map<String, String> cookies) {
+        return null;
+      }
+    }
+    final Map<String, String> map = Maps.newHashMap();
+    map.put("somekey", "somevalue");
+    map.put("someOtherKey", "someOtherValue");
+    Request request = buildRequest(Example.class, map);
+    List<Header> headers = request.getHeaders();
+    Optional<Header> cookieHeader = Iterables.tryFind(headers, new com.google.common.base.Predicate<Header>() {
+      @Override public boolean apply(Header paramT) {
+        return paramT != null && "Cookie".equals(paramT.getName());
+      }
+    });
+    assertThat(cookieHeader.isPresent()).isTrue();
+    String[] cookies = cookieHeader.get().getValue().split("; ");
+    assertThat(cookies).containsExactly("somekey=somevalue", "someOtherKey=someOtherValue");
+  }
+  
+  @Test public void cookiesAreSetWithSameKey() {
+    class Example {
+      @GET("/")
+      @retrofit.http.Headers("Cookie: ")
+      Response method(@retrofit.http.Cookie("somekey") String firstCookie, @retrofit.http.Cookie("somekey") String secondCookie) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "somevalue", "someOtherValue");
+    List<Header> headers = request.getHeaders();
+    Optional<Header> cookieHeader = Iterables.tryFind(headers, new com.google.common.base.Predicate<Header>() {
+      @Override public boolean apply(Header paramT) {
+        return paramT != null && "Cookie".equals(paramT.getName());
+      }
+    });
+    assertThat(cookieHeader.isPresent()).isTrue();
+    List<String> split = Splitter.on(";").trimResults().splitToList(cookieHeader.get().getValue());
+    assertThat(split).containsExactly("somekey=somevalue", "somekey=someOtherValue");
+  }
+  
+  @Test public void cookiePlusEmptyHeaderDoesNotStartWithSemicolon() {
+    class Example {
+      @GET("/")
+      @retrofit.http.Headers("Cookie: ")
+      Response method(@retrofit.http.CookieMap Map<String, String> cookies) {
+        return null;
+        }
+    }
+    final Map<String, String> map = Maps.newHashMap();
+    map.put("somekey", "somevalue");
+    Request request = buildRequest(Example.class, map);
+    List<Header> headers = request.getHeaders();
+    Optional<Header> cookieHeader = Iterables.tryFind(headers, new com.google.common.base.Predicate<Header>() {
+      @Override public boolean apply(Header paramT) {
+        return paramT != null && "Cookie".equals(paramT.getName());
+      }
+    });
+    assertThat(cookieHeader.isPresent()).isTrue();
+    assertThat(cookieHeader.get().getValue()).doesNotMatch(Pattern.compile("^;.*$"));
+  }
+  
+  @Test public void cookieIsNotSetWithNullValue() {
+    class Example {
+      @GET("/")
+      Response method(@retrofit.http.CookieMap Map<String, String> cookies) {
+        return null;
+      }
+    }
+    final Map<String, String> map = Maps.newHashMap();
+    map.put("somekey", null);
+    Request request = buildRequest(Example.class, map);
+    List<Header> headers = request.getHeaders();
+    Optional<Header> cookieHeader = Iterables.tryFind(headers, new com.google.common.base.Predicate<Header>() {
+      @Override public boolean apply(Header paramT) {
+        return paramT != null && "Cookie".equals(paramT.getName());
+      }
+    });
+    assertThat(cookieHeader.isPresent()).isFalse();
   }
 
   private static final Converter GSON = new GsonConverter(new Gson());
