@@ -95,7 +95,7 @@ public class OkClient implements Client {
   }
 
   private static TypedInput createResponseBody(final ResponseBody body) {
-    if (body.contentLength() == 0) {
+    if (body.contentLength() <= 0) {
       return null;
     }
     return new TypedInput() {
