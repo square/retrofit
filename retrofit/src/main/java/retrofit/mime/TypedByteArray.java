@@ -29,9 +29,28 @@ import java.util.Arrays;
 public class TypedByteArray implements TypedInput, TypedOutput {
   private final String mimeType;
   private final byte[] bytes;
+  private final String fileName;
 
   /**
    * Constructs a new typed byte array.  Sets mimeType to {@code application/unknown} if absent.
+   *
+   * @throws NullPointerException if bytes are null
+   */
+  public TypedByteArray(String mimeType, byte[] bytes, String fileName) {
+    if (mimeType == null) {
+      mimeType = "application/unknown";
+    }
+    if (bytes == null) {
+      throw new NullPointerException("bytes");
+    }
+    this.mimeType = mimeType;
+    this.bytes = bytes;
+    this.fileName = fileName;
+  }
+
+  /**
+   * Constructs a new typed byte array.  Sets mimeType to {@code application/unknown} if absent.
+   * Sets fileName to null
    *
    * @throws NullPointerException if bytes are null
    */
@@ -44,6 +63,7 @@ public class TypedByteArray implements TypedInput, TypedOutput {
     }
     this.mimeType = mimeType;
     this.bytes = bytes;
+    this.fileName = null;
   }
 
   public byte[] getBytes() {
@@ -51,7 +71,7 @@ public class TypedByteArray implements TypedInput, TypedOutput {
   }
 
   @Override public String fileName() {
-    return null;
+    return fileName;
   }
 
   @Override public String mimeType() {
