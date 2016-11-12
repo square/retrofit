@@ -674,6 +674,40 @@ public final class CallTest {
     assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
   }
 
+  @Test public void cancelOkHttpRequest() throws InterruptedException {
+    OkHttpClient client = new OkHttpClient();
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .client(client)
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+
+    Call<String> call = service.getString();
+
+    final AtomicReference<Throwable> failureRef = new AtomicReference<>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<String>() {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void onFailure(Call<String> call, Throwable t) {
+        failureRef.set(t);
+        latch.countDown();
+      }
+    });
+
+    // Cancel the underlying HTTP Call. Should be reflected accurately back in the Retrofit Call.
+    client.dispatcher().cancelAll();
+    assertThat(call.isCanceled()).isTrue();
+
+    assertTrue(latch.await(10, SECONDS));
+    assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
+  }
+
   @Test public void requestBeforeExecuteCreates() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))

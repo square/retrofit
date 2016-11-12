@@ -232,7 +232,12 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public boolean isCanceled() {
-    return canceled;
+    if (canceled) {
+      return true;
+    }
+    synchronized (this) {
+      return rawCall != null && rawCall.isCanceled();
+    }
   }
 
   static final class NoContentResponseBody extends ResponseBody {
