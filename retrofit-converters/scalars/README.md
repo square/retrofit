@@ -7,7 +7,7 @@ A `Converter` which supports converting strings and both primitives and their bo
 Download
 --------
 
-Download [the latest JAR][2] or grab via Maven:
+Download [the latest JAR][1] or grab via Maven:
 ```xml
 <dependency>
   <groupId>com.squareup.retrofit2</groupId>
@@ -22,5 +22,5 @@ compile 'com.squareup.retrofit2:converter-scalars:2.1.0'
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
- [2]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=converter-scalars&v=LATEST
+ [1]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=converter-scalars&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
