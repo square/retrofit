@@ -7,20 +7,21 @@ A `Converter` which supports converting strings and both primitives and their bo
 Download
 --------
 
-Download [the latest JAR][1] or grab via Maven:
+Download [the latest JAR][1] or grab via [Maven][2]:
 ```xml
 <dependency>
   <groupId>com.squareup.retrofit2</groupId>
   <artifactId>converter-scalars</artifactId>
-  <version>2.1.0</version>
+  <version>see.latest.version</version>
 </dependency>
 ```
-or Gradle:
+or [Gradle][2]:
 ```groovy
-compile 'com.squareup.retrofit2:converter-scalars:2.1.0'
+compile 'com.squareup.retrofit2:converter-scalars:see.latest.version'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
  [1]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=converter-scalars&v=LATEST
+ [2]: https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-scalars
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
