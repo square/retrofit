@@ -32,12 +32,14 @@ class Platform {
   }
 
   private static Platform findPlatform() {
-    try {
-      Class.forName("android.os.Build");
-      if (Build.VERSION.SDK_INT != 0) {
-        return new Android();
+    if ("Dalvik".equals(System.getProperty("java.vm.name"))) {
+      try {
+        Class.forName("android.os.Build");
+        if (Build.VERSION.SDK_INT != 0) {
+          return new Android();
+        }
+      } catch (ClassNotFoundException ignored) {
       }
-    } catch (ClassNotFoundException ignored) {
     }
     try {
       Class.forName("java.util.Optional");
