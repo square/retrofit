@@ -15,12 +15,13 @@
  */
 package retrofit2;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.Map;
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Map;
 
 import static retrofit2.Utils.checkNotNull;
 
@@ -208,6 +209,52 @@ abstract class ParameterHandler<T> {
               "Field map contained null value for key '" + entryKey + "'.");
         }
         builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
+      }
+    }
+  }
+
+  static final class Key<T> extends ParameterHandler<T> {
+    private final String name;
+    private final Converter<T, String> valueConverter;
+    private final boolean encoded;
+
+    Key(String name, Converter<T, String> valueConverter, boolean encoded) {
+      this.name = checkNotNull(name, "name == null");
+      this.valueConverter = valueConverter;
+      this.encoded = encoded;
+    }
+
+    @Override void apply(RequestBuilder builder, T value) throws IOException {
+      if (value == null) return; // Skip null values.
+      builder.addJsonParam(name, valueConverter.convert(value), encoded);
+    }
+  }
+
+  static final class KeyMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Converter<T, String> valueConverter;
+    private final boolean encoded;
+
+    KeyMap(Converter<T, String> valueConverter, boolean encoded) {
+      this.valueConverter = valueConverter;
+      this.encoded = encoded;
+    }
+
+    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException("Key map was null.");
+      }
+
+      for (Map.Entry<String, T> entry : value.entrySet()) {
+        String entryKey = entry.getKey();
+        if (entryKey == null) {
+          throw new IllegalArgumentException("Key map contained null key.");
+        }
+        T entryValue = entry.getValue();
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+                  "Key map contained null value for key '" + entryKey + "'.");
+        }
+        builder.addJsonParam(entryKey, valueConverter.convert(entryValue), encoded);
       }
     }
   }

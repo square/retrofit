@@ -15,6 +15,10 @@
  */
 package retrofit2;
 
+import okhttp3.Headers;
+import okhttp3.*;
+import retrofit2.http.*;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -26,34 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.Multipart;
-import retrofit2.http.OPTIONS;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Url;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<R, T> {
@@ -74,6 +50,7 @@ final class ServiceMethod<R, T> {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final boolean isJsonEncoded;
   private final ParameterHandler<?>[] parameterHandlers;
 
   ServiceMethod(Builder<R, T> builder) {
@@ -88,13 +65,14 @@ final class ServiceMethod<R, T> {
     this.hasBody = builder.hasBody;
     this.isFormEncoded = builder.isFormEncoded;
     this.isMultipart = builder.isMultipart;
+    this.isJsonEncoded = builder.isJsonEncoded;
     this.parameterHandlers = builder.parameterHandlers;
   }
 
   /** Builds an HTTP request from method arguments. */
   Request toRequest(Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
-        contentType, hasBody, isFormEncoded, isMultipart);
+        contentType, hasBody, isFormEncoded, isMultipart, isJsonEncoded);
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
@@ -135,10 +113,12 @@ final class ServiceMethod<R, T> {
     boolean gotBody;
     boolean gotPath;
     boolean gotQuery;
+    boolean gotKey;
     boolean gotUrl;
     String httpMethod;
     boolean hasBody;
     boolean isFormEncoded;
+    boolean isJsonEncoded;
     boolean isMultipart;
     String relativeUrl;
     Headers headers;
@@ -183,6 +163,10 @@ final class ServiceMethod<R, T> {
           throw methodError("FormUrlEncoded can only be specified on HTTP methods with "
               + "request body (e.g., @POST).");
         }
+        if (isJsonEncoded) {
+          throw methodError("JsonEncoded can only be specified on HTTP methods with "
+                  + "request body (e.g., @POST).");
+        }
       }
 
       int parameterCount = parameterAnnotationsArray.length;
@@ -210,6 +194,9 @@ final class ServiceMethod<R, T> {
       }
       if (isFormEncoded && !gotField) {
         throw methodError("Form-encoded method must contain at least one @Field.");
+      }
+      if (isJsonEncoded && !gotKey) {
+        throw methodError("Json-encoded method must contain at least one @Key.");
       }
       if (isMultipart && !gotPart) {
         throw methodError("Multipart method must contain at least one @Part.");
@@ -264,15 +251,20 @@ final class ServiceMethod<R, T> {
         }
         headers = parseHeaders(headersToParse);
       } else if (annotation instanceof Multipart) {
-        if (isFormEncoded) {
+        if (isFormEncoded || isJsonEncoded) {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isMultipart = true;
       } else if (annotation instanceof FormUrlEncoded) {
-        if (isMultipart) {
+        if (isMultipart || isJsonEncoded) {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isFormEncoded = true;
+      } else if (annotation instanceof JsonEncoded) {
+        if (isMultipart || isFormEncoded) {
+          throw methodError("Only one encoding annotation is allowed.");
+        }
+        isJsonEncoded = true;
       }
     }
 
@@ -555,6 +547,67 @@ final class ServiceMethod<R, T> {
 
         gotField = true;
         return new ParameterHandler.FieldMap<>(valueConverter, ((FieldMap) annotation).encoded());
+
+      } else if (annotation instanceof Key) {
+        if (!isJsonEncoded) {
+          throw parameterError(p, "@Key parameters can only be used with json encoding.");
+        }
+        Key key = (Key) annotation;
+        String name = key.value();
+        boolean encoded = key.encoded();
+
+        gotKey = true;
+
+        Class<?> rawParameterType = Utils.getRawType(type);
+        if (Iterable.class.isAssignableFrom(rawParameterType)) {
+          if (!(type instanceof ParameterizedType)) {
+            throw parameterError(p, rawParameterType.getSimpleName()
+                    + " must include generic type (e.g., "
+                    + rawParameterType.getSimpleName()
+                    + "<String>)");
+          }
+          ParameterizedType parameterizedType = (ParameterizedType) type;
+          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+          Converter<?, String> converter =
+                  retrofit.stringConverter(iterableType, annotations);
+          return new ParameterHandler.Field<>(name, converter, encoded).iterable();
+        } else if (rawParameterType.isArray()) {
+          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+          Converter<?, String> converter =
+                  retrofit.stringConverter(arrayComponentType, annotations);
+          return new ParameterHandler.Field<>(name, converter, encoded).array();
+        } else {
+          Converter<?, String> converter =
+                  retrofit.stringConverter(type, annotations);
+          return new ParameterHandler.Key<>(name, converter, encoded);
+        }
+
+      } else if (annotation instanceof KeyMap) {
+        if (!isJsonEncoded) {
+          throw parameterError(p, "@KeyMap parameters can only be used with form encoding.");
+        }
+
+        Class<?> rawParameterType = Utils.getRawType(type);
+        if (!Map.class.isAssignableFrom(rawParameterType)) {
+          throw parameterError(p, "@KeyMap parameter type must be Map.");
+        }
+        Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
+        if (!(mapType instanceof ParameterizedType)) {
+          throw parameterError(p,
+                  "Map must include generic types (e.g., Map<String, String>)");
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) mapType;
+        Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
+        if (String.class != keyType) {
+          throw parameterError(p, "@KeyMap keys must be of type String: " + keyType);
+        }
+        Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
+        Converter<?, String> valueConverter =
+                retrofit.stringConverter(valueType, annotations);
+
+        gotKey = true;
+
+        return new ParameterHandler.KeyMap<>(valueConverter, ((KeyMap) annotation).encoded());
 
       } else if (annotation instanceof Part) {
         if (!isMultipart) {
