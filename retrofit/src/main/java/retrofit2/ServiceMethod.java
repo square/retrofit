@@ -570,12 +570,12 @@ final class ServiceMethod<R, T> {
           Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
           Converter<?, String> converter =
                   retrofit.stringConverter(iterableType, annotations);
-          return new ParameterHandler.Field<>(name, converter, encoded).iterable();
+          return new ParameterHandler.Key<>(name, converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
           Converter<?, String> converter =
                   retrofit.stringConverter(arrayComponentType, annotations);
-          return new ParameterHandler.Field<>(name, converter, encoded).array();
+          return new ParameterHandler.Key<>(name, converter, encoded).array();
         } else {
           Converter<?, String> converter =
                   retrofit.stringConverter(type, annotations);
