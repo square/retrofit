@@ -78,9 +78,9 @@ public final class JsonQueryParameters {
   }
 
   static class Filter {
-    public final String userId;
+    final String userId;
 
-    public Filter(String userId) {
+    Filter(String userId) {
       this.userId = userId;
     }
   }
