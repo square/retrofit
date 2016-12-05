@@ -148,7 +148,7 @@ final class ServiceMethod<R, T> {
     Converter<ResponseBody, T> responseConverter;
     CallAdapter<T, R> callAdapter;
 
-    public Builder(Retrofit retrofit, Method method) {
+    Builder(Retrofit retrofit, Method method) {
       this.retrofit = retrofit;
       this.method = method;
       this.methodAnnotations = method.getAnnotations();
