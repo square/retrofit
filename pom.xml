@@ -49,7 +49,7 @@
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
-    <okhttp.version>3.4.1</okhttp.version>
+    <okhttp.version>3.5.0</okhttp.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
@@ -218,7 +218,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.15</version>
+        <version>2.17</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>7.3</version>
+          </dependency>
+        </dependencies>
         <configuration>
           <failsOnError>true</failsOnError>
           <configLocation>checkstyle.xml</configLocation>
