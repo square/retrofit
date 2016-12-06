@@ -33,7 +33,7 @@ import retrofit2.Retrofit;
  * A {@linkplain CallAdapter.Factory call adapter} which uses RxJava 2 for creating observables.
  * <p>
  * Adding this class to {@link Retrofit} allows you to return an {@link Observable},
- * {@link Flowable}, {@code Single}, {@link Completable} or {@link Maybe} from service methods.
+ * {@link Flowable}, {@link Single}, {@link Completable} or {@link Maybe} from service methods.
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
