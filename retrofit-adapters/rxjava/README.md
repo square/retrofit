@@ -1,4 +1,4 @@
-Java8 Adapter
+RxJava Adapter
 ==============
 
 An `Adapter` for adapting [RxJava 1.x][1] types.
