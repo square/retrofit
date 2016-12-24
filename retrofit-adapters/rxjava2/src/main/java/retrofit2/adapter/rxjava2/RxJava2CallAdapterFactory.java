@@ -41,7 +41,7 @@ import retrofit2.Retrofit;
  * }
  * </code></pre>
  * There are three configurations supported for the {@code Observable}, {@code Flowable},
- * {@code Single}, and {@code Maybe} type parameter:
+ * {@code Single}, {@link Completable} and {@code Maybe} type parameter:
  * <ul>
  * <li>Direct body (e.g., {@code Observable<User>}) calls {@code onNext} with the deserialized body
  * for 2XX responses and calls {@code onError} with {@link HttpException} for non-2XX responses and
