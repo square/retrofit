@@ -98,7 +98,9 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
     boolean isBody = false;
     Type responseType;
     if (!(returnType instanceof ParameterizedType)) {
-      String name = isFlowable ? "Flowable" : isSingle ? "Single" : "Observable";
+      String name = isFlowable ? "Flowable"
+          : isSingle ? "Single"
+          : isMaybe ? "Maybe" : "Observable";
       throw new IllegalStateException(name + " return type must be parameterized"
           + " as " + name + "<Foo> or " + name + "<? extends Foo>");
     }
