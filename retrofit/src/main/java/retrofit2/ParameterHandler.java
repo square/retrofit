@@ -301,4 +301,27 @@ abstract class ParameterHandler<T> {
       builder.setBody(body);
     }
   }
+  
+  static final class Root<T> extends ParameterHandler<T> {
+    private final String rootKey;
+    private final Converter<T, String> converter;
+    
+    Root(String rootKey, Converter<T, String> converter) {
+      this.rootKey = checkNotNull(rootKey, "root key == null");
+      this.converter = converter;
+    }
+
+    @Override void apply(RequestBuilder builder, T rootValue) throws IOException {
+      if (rootValue == null) {
+        throw new IllegalArgumentException("Root parameter value must not be null.");
+      }
+      String jsonString;
+      try {
+        jsonString = converter.convert(rootValue);
+      } catch (IOException e) {
+        throw new RuntimeException("Unable to convert " + rootValue + " to RequestBody", e);
+      }
+      builder.setJSONRoot(this.rootKey, jsonString);
+    }
+  }
 }

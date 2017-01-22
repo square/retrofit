@@ -43,6 +43,7 @@ import retrofit2.http.HEAD;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
 import retrofit2.http.HeaderMap;
+import retrofit2.http.JSON;
 import retrofit2.http.Multipart;
 import retrofit2.http.OPTIONS;
 import retrofit2.http.PATCH;
@@ -53,6 +54,7 @@ import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
+import retrofit2.http.Root;
 import retrofit2.http.Url;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
@@ -74,6 +76,7 @@ final class ServiceMethod<R, T> {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final boolean isJSON;
   private final ParameterHandler<?>[] parameterHandlers;
 
   ServiceMethod(Builder<R, T> builder) {
@@ -88,13 +91,14 @@ final class ServiceMethod<R, T> {
     this.hasBody = builder.hasBody;
     this.isFormEncoded = builder.isFormEncoded;
     this.isMultipart = builder.isMultipart;
+    this.isJSON = builder.isJSON;
     this.parameterHandlers = builder.parameterHandlers;
   }
 
   /** Builds an HTTP request from method arguments. */
   Request toRequest(Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
-        contentType, hasBody, isFormEncoded, isMultipart);
+        contentType, hasBody, isFormEncoded, isMultipart, isJSON);
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
@@ -132,6 +136,7 @@ final class ServiceMethod<R, T> {
     Type responseType;
     boolean gotField;
     boolean gotPart;
+    boolean gotJSON;
     boolean gotBody;
     boolean gotPath;
     boolean gotQuery;
@@ -140,6 +145,7 @@ final class ServiceMethod<R, T> {
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
+    boolean isJSON;
     String relativeUrl;
     Headers headers;
     MediaType contentType;
@@ -175,13 +181,17 @@ final class ServiceMethod<R, T> {
       }
 
       if (!hasBody) {
+        String badEncodingAnnotation = null;
         if (isMultipart) {
-          throw methodError(
-              "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
+          badEncodingAnnotation = "Multipart";
+        } else if (isFormEncoded) {
+          badEncodingAnnotation = "FormUrlEncoded";
+        } else if (isJSON) {
+          badEncodingAnnotation = "JSON";
         }
-        if (isFormEncoded) {
-          throw methodError("FormUrlEncoded can only be specified on HTTP methods with "
-              + "request body (e.g., @POST).");
+        if (badEncodingAnnotation != null) {
+          throw methodError(badEncodingAnnotation + " can only be specified on HTTP methods with "
+            + "request body (e.g., @POST).");
         }
       }
 
@@ -213,6 +223,9 @@ final class ServiceMethod<R, T> {
       }
       if (isMultipart && !gotPart) {
         throw methodError("Multipart method must contain at least one @Part.");
+      }
+      if (isJSON && !gotJSON) {
+        throw methodError("JSON-encoded method must contain @Root.");
       }
 
       return new ServiceMethod<>(this);
@@ -264,15 +277,20 @@ final class ServiceMethod<R, T> {
         }
         headers = parseHeaders(headersToParse);
       } else if (annotation instanceof Multipart) {
-        if (isFormEncoded) {
+        if (isFormEncoded || isJSON) {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isMultipart = true;
       } else if (annotation instanceof FormUrlEncoded) {
-        if (isMultipart) {
+        if (isMultipart || isJSON) {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isFormEncoded = true;
+      } else if (annotation instanceof JSON) {
+        if (isFormEncoded || isMultipart) {
+          throw methodError("Only one encoding annotation is allowed.");
+        }
+        isJSON = true;
       }
     }
 
@@ -665,10 +683,58 @@ final class ServiceMethod<R, T> {
         PartMap partMap = (PartMap) annotation;
         return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
 
+      } else if (annotation instanceof Root) {
+        Root root = (Root) annotation;
+        String rootKey = root.value();
+        
+        if (!isJSON) {
+          throw parameterError(p, "@Root parameters can only be used with JSON encoding.");
+        }
+        if (gotBody) {
+          throw parameterError(p, "@Root cannot be used with @Body method annotation.");
+        }
+        // TODO: Add test
+        if (gotJSON) {
+          throw parameterError(p, "Multiple @Root method annotations found.");
+        }
+
+        gotJSON = true;
+        gotBody = true;
+                
+        // Copied from Field implementation
+        /*
+        Class<?> rawParameterType = Utils.getRawType(type);
+        if (Iterable.class.isAssignableFrom(rawParameterType)) {
+          if (!(type instanceof ParameterizedType)) {
+            throw parameterError(p, rawParameterType.getSimpleName()
+                + " must include generic type (e.g., "
+                + rawParameterType.getSimpleName()
+                + "<String>)");
+          }
+          ParameterizedType parameterizedType = (ParameterizedType) type;
+          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+          Converter<?, String> converter =
+              retrofit.stringConverter(iterableType, annotations);
+          return new ParameterHandler.Root<>(rootKey, converter).iterable();
+        } else if (rawParameterType.isArray()) {
+          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+          Converter<?, String> converter =
+              retrofit.stringConverter(arrayComponentType, annotations);
+          return new ParameterHandler.Root<>(rootKey, converter).array();
+        } else {
+        */
+          Converter<?, String> converter =
+              retrofit.stringConverter(type, annotations);
+          return new ParameterHandler.Root<>(rootKey, converter);
+//        }
+        
       } else if (annotation instanceof Body) {
         if (isFormEncoded || isMultipart) {
           throw parameterError(p,
               "@Body parameters cannot be used with form or multi-part encoding.");
+        }
+        if (gotJSON) {
+          throw parameterError(p, "@Root cannot be used with @Body method annotation.");
         }
         if (gotBody) {
           throw parameterError(p, "Multiple @Body method annotations found.");

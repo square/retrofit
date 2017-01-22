@@ -47,6 +47,7 @@ import retrofit2.http.HTTP;
 import retrofit2.http.Header;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.Headers;
+import retrofit2.http.JSON;
 import retrofit2.http.Multipart;
 import retrofit2.http.OPTIONS;
 import retrofit2.http.PATCH;
@@ -57,6 +58,7 @@ import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
+import retrofit2.http.Root;
 import retrofit2.http.Url;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,6 +120,24 @@ public final class RequestBuilderTest {
   @Test public void onlyOneEncodingIsAllowedFormEncodingFirst() {
     class Example {
       @FormUrlEncoded //
+      @Multipart //
+      @POST("/") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Only one encoding annotation is allowed.\n    for method Example.method");
+    }
+  }
+  
+  @Test public void onlyOneEncodingIsAllowedJSONEncodingFirst() {
+    class Example {
+      @JSON //
       @Multipart //
       @POST("/") //
       Call<ResponseBody> method() {
@@ -359,6 +379,56 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Form-encoded method must contain at least one @Field.\n    for method Example.method");
+    }
+  }
+  
+  // JSON
+  @Test public void implicitJSONEncodingByRootForbidden() {
+    class Example {
+      @POST("/") //
+      Call<ResponseBody> method(@Root("a") int a) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Root parameters can only be used with JSON encoding. (parameter #1)\n    for method Example.method");
+    }
+  }
+
+  @Test public void JSONEncodingFailsOnNonBodyMethod() {
+    class Example {
+      @JSON //
+      @GET("/") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "JSON can only be specified on HTTP methods with request body (e.g., @POST).\n    for method Example.method");
+    }
+  }
+
+  @Test public void JSONEncodingFailsWithNoParts() {
+    class Example {
+      @JSON //
+      @POST("/") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("JSON-encoded method must contain @Root.\n    for method Example.method");
     }
   }
 
@@ -661,6 +731,41 @@ public final class RequestBuilderTest {
           "Multiple @Body method annotations found. (parameter #2)\n    for method Example.method");
     }
   }
+  
+  @Test public void bodyAndRoot() {
+    class Example {
+      @JSON
+      @POST("/") //
+      Call<ResponseBody> method(@Body String o1, @Root("key") String o2) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Root cannot be used with @Body method annotation. (parameter #2)\n    for method Example.method");
+    }
+  }
+  
+  @Test public void rootAndBody() {
+    class Example {
+      @JSON
+      @POST("/") //
+      Call<ResponseBody> method(@Root("key") String o1, @Body String o2) {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Root cannot be used with @Body method annotation. (parameter #2)\n    for method Example.method");
+    }
+  }
+
 
   @Test public void bodyInNonBodyRequest() {
     class Example {
@@ -2107,7 +2212,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, "bar", null, "kat");
     assertBody(request.body(), "foo=bar&kit=kat");
   }
-
+  
   @Test public void formEncodedFieldList() {
     class Example {
       @FormUrlEncoded //
@@ -2149,7 +2254,7 @@ public final class RequestBuilderTest {
     Request request = buildRequest(Example.class, values, "kat");
     assertBody(request.body(), "foo=1&foo=2&foo=3&kit=kat");
   }
-
+  
   @Test public void formEncodedWithEncodedNameFieldParamMap() {
     class Example {
       @FormUrlEncoded //
@@ -2280,6 +2385,143 @@ public final class RequestBuilderTest {
     request.body().writeTo(buffer);
     assertThat(buffer.readUtf8()).isEqualTo("hello=world");
   }
+  
+  // JSON Tests
+  
+  @Test public void rootJSONString() {
+    class Example {
+      @JSON //
+      @POST("/foo") //
+      Call<ResponseBody> method(@Root("key-foo") String bar) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar");
+    assertBody(request.body(), "{\"key-foo\":bar}");
+  }
+
+  @Test public void rootJSONList() {
+    class Example {
+      @JSON //
+      @POST("/foo") //
+      Call<ResponseBody> method(@Root("key-foo") List<Object> fields) {
+        return null;
+      }
+    }
+
+    // null?
+    List<Object> values = Arrays.<Object>asList("foo", "bar", 3);
+    Request request = buildRequest(Example.class, values);
+    assertBody(request.body(), "{\"key-foo\":[foo, bar, 3]}");
+  }
+
+  @Test public void rootJSONArray() {
+    class Example {
+      @JSON //
+      @POST("/foo") //
+      Call<ResponseBody> method(@Root("key-foo") Object[] fields) {
+        return null;
+      }
+    }
+
+    Object[] values = { 1, 2, "three" };
+    Request request = buildRequest(Example.class, values);
+    assertBody(request.body(), "{\"key-foo\":[1,2,\"three\"]}");
+  }
+
+  @Test public void rootJSONPrimitiveArray() {
+    class Example {
+      @JSON //
+      @POST("/foo") //
+      Call<ResponseBody> method(@Root("key-foo") int[] fields) {
+        return null;
+      }
+    }
+
+    int[] values = { 1, 2, 3 };
+    Request request = buildRequest(Example.class, values);
+    assertBody(request.body(), "{\"key-foo\":[1,2,3]}");
+  }
+  
+  @Test public void rootJSONMap() {
+    class Example {
+      @JSON //
+      @POST("/foo") //
+      Call<ResponseBody> method(@Root("key-bar") Map<String, Object> map) {
+        return null;
+      }
+    }
+
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("kit", "kat");
+    map.put("ping", "pong");
+
+    Request request = buildRequest(Example.class, map);
+//    assertBody(request.body(), "{\"key-bar\":{\"kit\":\"kat\",\"ping\":\"pong\"}}");
+    assertBody(request.body(), "{\"key-bar\":{kit=kat, ping=pong}}");
+}
+
+  // TODO: Maybe need these tests?
+  /*
+  @Test public void rootJSONMapRejectsNull() {
+    class Example {
+      @JSON //
+      @POST("/") //
+      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, new Object[] { null });
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Field map was null.");
+    }
+  }
+
+  @Test public void fieldMapRejectsNullKeys() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put(null, "pong");
+
+    try {
+      buildRequest(Example.class, fieldMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Field map contained null key.");
+    }
+  }
+
+  @Test public void fieldMapRejectsNullValues() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/") //
+      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+        return null;
+      }
+    }
+
+    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    fieldMap.put("kit", "kat");
+    fieldMap.put("foo", null);
+
+    try {
+      buildRequest(Example.class, fieldMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Field map contained null value for key 'foo'.");
+    }
+  }
+  */
 
   @Test public void simpleHeaders() {
     class Example {
