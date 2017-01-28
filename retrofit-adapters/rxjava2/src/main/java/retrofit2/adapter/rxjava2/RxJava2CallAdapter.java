@@ -26,6 +26,7 @@ import retrofit2.Response;
 final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   private final Type responseType;
   private final Scheduler scheduler;
+  private final boolean isAsync;
   private final boolean isResult;
   private final boolean isBody;
   private final boolean isFlowable;
@@ -33,10 +34,12 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   private final boolean isMaybe;
   private final boolean isCompletable;
 
-  RxJava2CallAdapter(Type responseType, Scheduler scheduler, boolean isResult, boolean isBody,
-      boolean isFlowable, boolean isSingle, boolean isMaybe, boolean isCompletable) {
+  RxJava2CallAdapter(Type responseType, Scheduler scheduler, boolean isAsync, boolean isResult,
+      boolean isBody, boolean isFlowable, boolean isSingle, boolean isMaybe,
+      boolean isCompletable) {
     this.responseType = responseType;
     this.scheduler = scheduler;
+    this.isAsync = isAsync;
     this.isResult = isResult;
     this.isBody = isBody;
     this.isFlowable = isFlowable;
@@ -50,7 +53,9 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   }
 
   @Override public Object adapt(Call<R> call) {
-    Observable<Response<R>> responseObservable = new CallObservable<>(call);
+    Observable<Response<R>> responseObservable = isAsync
+        ? new CallEnqueueObservable<>(call)
+        : new CallExecuteObservable<>(call);
 
     Observable<?> observable;
     if (isResult) {
