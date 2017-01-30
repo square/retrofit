@@ -41,15 +41,6 @@ public final class NetworkBehavior {
   private static final int DEFAULT_VARIANCE_PERCENT = 40; // Network delay varies by ±40%.
   private static final int DEFAULT_FAILURE_PERCENT = 3; // 3% of network calls will fail.
 
-  /** Applies {@link NetworkBehavior} to instances of {@code T}. */
-  public interface Adapter<T> {
-    /**
-     * Apply {@code behavior} to {@code value} so that it exhibits the configured network behavior
-     * traits when interacted with.
-     */
-    T applyBehavior(NetworkBehavior behavior, T value);
-  }
-
   /** Create an instance with default behavior. */
   public static NetworkBehavior create() {
     return new NetworkBehavior(new Random());
