@@ -17,7 +17,10 @@ package retrofit2.mock;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -40,6 +43,7 @@ public final class NetworkBehavior {
   private static final int DEFAULT_DELAY_MS = 2000; // Network calls will take 2 seconds.
   private static final int DEFAULT_VARIANCE_PERCENT = 40; // Network delay varies by ±40%.
   private static final int DEFAULT_FAILURE_PERCENT = 3; // 3% of network calls will fail.
+  private static final int DEFAULT_ERROR_PERCENT = 0; // 0% of network calls will return errors.
 
   /** Applies {@link NetworkBehavior} to instances of {@code T}. */
   public interface Adapter<T> {
@@ -70,6 +74,12 @@ public final class NetworkBehavior {
   private volatile int variancePercent = DEFAULT_VARIANCE_PERCENT;
   private volatile int failurePercent = DEFAULT_FAILURE_PERCENT;
   private volatile Throwable failureException;
+  private volatile int errorPercent = DEFAULT_ERROR_PERCENT;
+  private volatile Callable<Response<?>> errorFactory = new Callable<Response<?>>() {
+    @Override public Response<?> call() {
+      return Response.error(500, ResponseBody.create(null, new byte[0]));
+    }
+  };
 
   private NetworkBehavior(Random random) {
     this.random = random;
@@ -120,14 +130,14 @@ public final class NetworkBehavior {
   /**
    * Set the exception to be used when a failure is triggered.
    * <p>
-   * It is a best practice to remove the stack trace from {@code t} since it can misleadingly
-   * point to code unrelated to this class.
+   * It is a best practice to remove the stack trace from {@code exception} since it can
+   * misleadingly point to code unrelated to this class.
    */
-  public void setFailureException(Throwable t) {
-    if (t == null) {
-      throw new NullPointerException("t == null");
+  public void setFailureException(Throwable exception) {
+    if (exception == null) {
+      throw new NullPointerException("exception == null");
     }
-    this.failureException = t;
+    this.failureException = exception;
   }
 
   /** The exception to be used when a failure is triggered. */
@@ -135,13 +145,61 @@ public final class NetworkBehavior {
     return failureException;
   }
 
+  /** The percentage of calls to {@link #calculateIsError()} that return {@code true}. */
+  public int errorPercent() {
+    return errorPercent;
+  }
+
+  /** Set the percentage of calls to {@link #calculateIsError()} that return {@code true}. */
+  public void setErrorPercent(int errorPercent) {
+    if (errorPercent < 0 || errorPercent > 100) {
+      throw new IllegalArgumentException("Error percentage must be between 0 and 100.");
+    }
+    this.errorPercent = errorPercent;
+  }
+
+  /**
+   * Set the error response factory to be used when an error is triggered. This factory may only
+   * return responses for which {@link Response#isSuccessful()} returns false.
+   */
+  public void setErrorFactory(Callable<Response<?>> errorFactory) {
+    if (errorFactory == null) {
+      throw new NullPointerException("errorFactory == null");
+    }
+    this.errorFactory = errorFactory;
+  }
+
+  /** The HTTP error to be used when an error is triggered. */
+  public Response<?> createErrorResponse() {
+    Response<?> call;
+    try {
+      call = errorFactory.call();
+    } catch (Exception e) {
+      throw new IllegalStateException("Error factory threw an exception.", e);
+    }
+    if (call == null) {
+      throw new IllegalStateException("Error factory returned null.");
+    }
+    if (call.isSuccessful()) {
+      throw new IllegalStateException("Error factory returned successful response.");
+    }
+    return call;
+  }
+
   /**
    * Randomly determine whether this call should result in a network failure in accordance with
    * configured behavior. When true, {@link #failureException()} should be thrown.
    */
   public boolean calculateIsFailure() {
-    int randomValue = random.nextInt(100);
-    return randomValue < failurePercent;
+    return random.nextInt(100) < failurePercent;
+  }
+
+  /**
+   * Randomly determine whether this call should result in an HTTP error in accordance with
+   * configured behavior. When true, {@link #createErrorResponse()} should be returned.
+   */
+  public boolean calculateIsError() {
+    return random.nextInt(100) < errorPercent;
   }
 
   /**
