@@ -53,6 +53,7 @@ import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
+import retrofit2.http.QueryName;
 import retrofit2.http.Url;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
@@ -427,6 +428,35 @@ final class ServiceMethod<R, T> {
           Converter<?, String> converter =
               retrofit.stringConverter(type, annotations);
           return new ParameterHandler.Query<>(name, converter, encoded);
+        }
+
+      } else if (annotation instanceof QueryName) {
+        QueryName query = (QueryName) annotation;
+        boolean encoded = query.encoded();
+
+        Class<?> rawParameterType = Utils.getRawType(type);
+        gotQuery = true;
+        if (Iterable.class.isAssignableFrom(rawParameterType)) {
+          if (!(type instanceof ParameterizedType)) {
+            throw parameterError(p, rawParameterType.getSimpleName()
+                + " must include generic type (e.g., "
+                + rawParameterType.getSimpleName()
+                + "<String>)");
+          }
+          ParameterizedType parameterizedType = (ParameterizedType) type;
+          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+          Converter<?, String> converter =
+              retrofit.stringConverter(iterableType, annotations);
+          return new ParameterHandler.QueryName<>(converter, encoded).iterable();
+        } else if (rawParameterType.isArray()) {
+          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+          Converter<?, String> converter =
+              retrofit.stringConverter(arrayComponentType, annotations);
+          return new ParameterHandler.QueryName<>(converter, encoded).array();
+        } else {
+          Converter<?, String> converter =
+              retrofit.stringConverter(type, annotations);
+          return new ParameterHandler.QueryName<>(converter, encoded);
         }
 
       } else if (annotation instanceof QueryMap) {

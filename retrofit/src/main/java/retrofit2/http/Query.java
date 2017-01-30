@@ -31,35 +31,36 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Simple Example:
  * <pre><code>
- * &#64;GET("/list")
- * Call&lt;ResponseBody&gt; list(@Query("page") int page);
+ * &#64;GET("/friends")
+ * Call&lt;ResponseBody&gt; friends(@Query("page") int page);
  * </code></pre>
- * Calling with {@code foo.list(1)} yields {@code /list?page=1}.
+ * Calling with {@code foo.friends(1)} yields {@code /friends?page=1}.
  * <p>
  * Example with {@code null}:
  * <pre><code>
- * &#64;GET("/list")
- * Call&lt;ResponseBody&gt; list(@Query("category") String category);
+ * &#64;GET("/friends")
+ * Call&lt;ResponseBody&gt; friends(@Query("group") String group);
  * </code></pre>
- * Calling with {@code foo.list(null)} yields {@code /list}.
+ * Calling with {@code foo.friends(null)} yields {@code /friends}.
  * <p>
  * Array/Varargs Example:
  * <pre><code>
- * &#64;GET("/list")
- * Call&lt;ResponseBody&gt; list(@Query("category") String... categories);
+ * &#64;GET("/friends")
+ * Call&lt;ResponseBody&gt; friends(@Query("group") String... groups);
  * </code></pre>
- * Calling with {@code foo.list("bar", "baz")} yields
- * {@code /list?category=bar&category=baz}.
+ * Calling with {@code foo.friends("coworker", "bowling")} yields
+ * {@code /friends?group=coworker&group=bowling}.
  * <p>
  * Parameter names and values are URL encoded by default. Specify {@link #encoded() encoded=true}
  * to change this behavior.
  * <pre><code>
- * &#64;GET("/search")
- * Call&lt;ResponseBody&gt; list(@Query(value="foo", encoded=true) String foo);
+ * &#64;GET("/friends")
+ * Call&lt;ResponseBody&gt; friends(@Query(value="group", encoded=true) String group);
  * </code></pre>
- * Calling with {@code foo.list("foo+bar"))} yields {@code /search?foo=foo+bar}.
+ * Calling with {@code foo.friends("foo+bar"))} yields {@code /friends?group=foo+bar}.
  *
  * @see QueryMap
+ * @see QueryName
  */
 @Documented
 @Target(PARAMETER)
