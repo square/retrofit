@@ -110,6 +110,21 @@ abstract class ParameterHandler<T> {
     }
   }
 
+  static final class QueryName<T> extends ParameterHandler<T> {
+    private final Converter<T, String> nameConverter;
+    private final boolean encoded;
+
+    QueryName(Converter<T, String> nameConverter, boolean encoded) {
+      this.nameConverter = nameConverter;
+      this.encoded = encoded;
+    }
+
+    @Override void apply(RequestBuilder builder, T value) throws IOException {
+      if (value == null) return; // Skip null values.
+      builder.addQueryParam(nameConverter.convert(value), null, encoded);
+    }
+  }
+
   static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
