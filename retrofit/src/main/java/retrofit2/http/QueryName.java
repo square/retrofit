@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Square, Inc.
+ * Copyright (C) 2013 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,36 +23,43 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Query parameter keys and values appended to the URL.
+ * Query parameter appended to the URL that has no value.
  * <p>
- * Both keys and values are converted to strings using {@link String#valueOf(Object)}.
+ * Passing a {@link java.util.List List} or array will result in a query parameter for each
+ * non-{@code null} item.
  * <p>
  * Simple Example:
  * <pre><code>
  * &#64;GET("/friends")
- * Call&lt;ResponseBody&gt; friends(@QueryMap Map&lt;String, String&gt; filters);
+ * Call&lt;ResponseBody&gt; friends(@QueryName String filter);
  * </code></pre>
- * Calling with {@code foo.friends(ImmutableMap.of("group", "coworker", "age", "42"))} yields
- * {@code /friends?group=coworker&age=42}.
+ * Calling with {@code foo.friends("contains(Bob)")} yields {@code /friends?contains(Bob)}.
  * <p>
- * Map keys and values representing parameter values are URL encoded by default. Specify
- * {@link #encoded() encoded=true} to change this behavior.
+ * Array/Varargs Example:
  * <pre><code>
  * &#64;GET("/friends")
- * Call&lt;ResponseBody&gt; friends(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
+ * Call&lt;ResponseBody&gt; friends(@QueryName String... filters);
  * </code></pre>
- * Calling with {@code foo.list(ImmutableMap.of("group", "coworker+bowling"))} yields
- * {@code /search?group=coworker+bowling}.
+ * Calling with {@code foo.friends("contains(Bob)", "age(42)")} yields
+ * {@code /friends?contains(Bob)&age(42)}.
  * <p>
- * A {@code null} value for the map, as a key, or as a value is not allowed.
+ * Parameter names are URL encoded by default. Specify {@link #encoded() encoded=true} to change
+ * this behavior.
+ * <pre><code>
+ * &#64;GET("/friends")
+ * Call&lt;ResponseBody&gt; friends(@QueryName(encoded=true) String filter);
+ * </code></pre>
+ * Calling with {@code foo.friends("name+age"))} yields {@code /friends?name+age}.
  *
  * @see Query
- * @see QueryName
+ * @see QueryMap
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface QueryMap {
-  /** Specifies whether parameter names and values are already URL encoded. */
+public @interface QueryName {
+  /**
+   * Specifies whether the parameter is already URL encoded.
+   */
   boolean encoded() default false;
 }
