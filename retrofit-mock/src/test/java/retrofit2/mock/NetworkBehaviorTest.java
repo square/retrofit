@@ -17,11 +17,15 @@ package retrofit2.mock;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import okhttp3.ResponseBody;
 import org.junit.Test;
+import retrofit2.Response;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class NetworkBehaviorTest {
@@ -72,6 +76,97 @@ public final class NetworkBehaviorTest {
     }
   }
 
+  @Test public void failureExceptionIsNotNull() {
+    try {
+      behavior.setFailureException(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("exception == null");
+    }
+  }
+
+  @Test public void errorRestrictsRange() {
+    try {
+      behavior.setErrorPercent(-13);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Error percentage must be between 0 and 100.");
+    }
+    try {
+      behavior.setErrorPercent(174);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Error percentage must be between 0 and 100.");
+    }
+  }
+
+  @Test public void errorFactoryIsNotNull() {
+    try {
+      behavior.setErrorFactory(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("errorFactory == null");
+    }
+  }
+
+  @Test public void errorFactoryCannotReturnNull() {
+    behavior.setErrorFactory(new Callable<Response<?>>() {
+      @Override public Response<?> call() throws Exception {
+        return null;
+      }
+    });
+    try {
+      behavior.createErrorResponse();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Error factory returned null.");
+    }
+  }
+
+  @Test public void errorFactoryCannotThrow() {
+    final RuntimeException broken = new RuntimeException("Broken");
+    behavior.setErrorFactory(new Callable<Response<?>>() {
+      @Override public Response<?> call() throws Exception {
+        throw broken;
+      }
+    });
+    try {
+      behavior.createErrorResponse();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Error factory threw an exception.");
+      assertThat(e.getCause()).isSameAs(broken);
+    }
+  }
+
+  @Test public void errorFactoryCannotReturnSuccess() {
+    behavior.setErrorFactory(new Callable<Response<?>>() {
+      @Override public Response<?> call() throws Exception {
+        return Response.success("Taco");
+      }
+    });
+    try {
+      behavior.createErrorResponse();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Error factory returned successful response.");
+    }
+  }
+
+  @Test public void errorFactoryCalledEachTime() {
+    behavior.setErrorFactory(new Callable<Response<?>>() {
+      private int code = 500;
+
+      @Override public Response<?> call() throws Exception {
+        return Response.error(code++, ResponseBody.create(null, new byte[0]));
+      }
+    });
+
+    assertEquals(500, behavior.createErrorResponse().code());
+    assertEquals(501, behavior.createErrorResponse().code());
+    assertEquals(502, behavior.createErrorResponse().code());
+  }
+
   @Test public void failurePercentageIsAccurate() {
     behavior.setFailurePercent(0);
     for (int i = 0; i < 10000; i++) {
@@ -86,6 +181,22 @@ public final class NetworkBehaviorTest {
       }
     }
     assertThat(failures).isEqualTo(2964); // ~3% of 100k
+  }
+
+  @Test public void errorPercentageIsAccurate() {
+    behavior.setErrorPercent(0);
+    for (int i = 0; i < 10000; i++) {
+      assertThat(behavior.calculateIsError()).isFalse();
+    }
+
+    behavior.setErrorPercent(3);
+    int errors = 0;
+    for (int i = 0; i < 100000; i++) {
+      if (behavior.calculateIsError()) {
+        errors += 1;
+      }
+    }
+    assertThat(errors).isEqualTo(2964); // ~3% of 100k
   }
 
   @Test public void delayVarianceIsAccurate() {
