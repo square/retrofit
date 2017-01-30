@@ -61,7 +61,15 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * by default.
    */
   public static RxJavaCallAdapterFactory create() {
-    return new RxJavaCallAdapterFactory(null);
+    return new RxJavaCallAdapterFactory(null, false);
+  }
+
+  /**
+   * Returns an instance which creates asynchronous observables. Applying
+   * {@link Observable#subscribeOn} has no effect on stream types created by this factory.
+   */
+  public static RxJavaCallAdapterFactory createAsync() {
+    return new RxJavaCallAdapterFactory(null, true);
   }
 
   /**
@@ -70,13 +78,15 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    */
   public static RxJavaCallAdapterFactory createWithScheduler(Scheduler scheduler) {
     if (scheduler == null) throw new NullPointerException("scheduler == null");
-    return new RxJavaCallAdapterFactory(scheduler);
+    return new RxJavaCallAdapterFactory(scheduler, false);
   }
 
   private final Scheduler scheduler;
+  private final boolean isAsync;
 
-  private RxJavaCallAdapterFactory(Scheduler scheduler) {
+  private RxJavaCallAdapterFactory(Scheduler scheduler, boolean isAsync) {
     this.scheduler = scheduler;
+    this.isAsync = isAsync;
   }
 
   @Override
@@ -89,7 +99,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
     }
 
     if (isCompletable) {
-      return new RxJavaCallAdapter(Void.class, scheduler, false, true, false, true);
+      return new RxJavaCallAdapter(Void.class, scheduler, isAsync, false, true, false, true);
     }
 
     boolean isResult = false;
@@ -121,6 +131,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
       isBody = true;
     }
 
-    return new RxJavaCallAdapter(responseType, scheduler, isResult, isBody, isSingle, false);
+    return new RxJavaCallAdapter(responseType, scheduler, isAsync, isResult, isBody, isSingle,
+        false);
   }
 }
