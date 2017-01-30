@@ -47,5 +47,9 @@ import java.util.Map;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface HeaderMap {
-
+  /**
+   * Specifies weather Iterable and Array values should be treated as multiple values.
+   * When {@code true}, separate header will be created for each item in the value collection.
+   **/
+  boolean multimap() default false;
 }

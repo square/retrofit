@@ -402,100 +402,35 @@ final class ServiceMethod<R, T> {
       } else if (annotation instanceof Query) {
         Query query = (Query) annotation;
         String name = query.value();
-        boolean encoded = query.encoded();
-
-        Class<?> rawParameterType = Utils.getRawType(type);
         gotQuery = true;
-        if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(p, rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter =
-              retrofit.stringConverter(iterableType, annotations);
-          return new ParameterHandler.Query<>(name, converter, encoded).iterable();
-        } else if (rawParameterType.isArray()) {
-          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-          Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
-          return new ParameterHandler.Query<>(name, converter, encoded).array();
-        } else {
-          Converter<?, String> converter =
-              retrofit.stringConverter(type, annotations);
-          return new ParameterHandler.Query<>(name, converter, encoded);
-        }
+
+        Converter<?, String> converter =
+            retrofit.stringConverter(getItemType(type, p), annotations);
+        return wrapParameterHandler(type, new ParameterHandler.NamedParameterHandler<>(
+            name, new ParameterHandler.Query<>(converter, query.encoded())));
 
       } else if (annotation instanceof QueryMap) {
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (!Map.class.isAssignableFrom(rawParameterType)) {
-          throw parameterError(p, "@QueryMap parameter type must be Map.");
-        }
-        Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
-        if (!(mapType instanceof ParameterizedType)) {
-          throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) mapType;
-        Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@QueryMap keys must be of type String: " + keyType);
-        }
-        Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
-        Converter<?, String> valueConverter =
-            retrofit.stringConverter(valueType, annotations);
-
-        return new ParameterHandler.QueryMap<>(valueConverter, ((QueryMap) annotation).encoded());
+        QueryMap queryMap = (QueryMap) annotation;
+        Type valueItemType = getMapValueItemType(type, queryMap.multimap(), annotation, p);
+        Converter<?, String> converter = retrofit.stringConverter(valueItemType, annotations);
+        return wrapMapParameterHandler(type, queryMap.multimap(),
+            new ParameterHandler.Query<>(converter, queryMap.encoded()), "Query");
 
       } else if (annotation instanceof Header) {
         Header header = (Header) annotation;
         String name = header.value();
 
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(p, rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter =
-              retrofit.stringConverter(iterableType, annotations);
-          return new ParameterHandler.Header<>(name, converter).iterable();
-        } else if (rawParameterType.isArray()) {
-          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-          Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
-          return new ParameterHandler.Header<>(name, converter).array();
-        } else {
-          Converter<?, String> converter =
-              retrofit.stringConverter(type, annotations);
-          return new ParameterHandler.Header<>(name, converter);
-        }
+        Converter<?, String> converter =
+            retrofit.stringConverter(getItemType(type, p), annotations);
+        return wrapParameterHandler(type, new ParameterHandler.NamedParameterHandler<>(
+            name, new ParameterHandler.Header<>(converter)));
 
       } else if (annotation instanceof HeaderMap) {
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (!Map.class.isAssignableFrom(rawParameterType)) {
-          throw parameterError(p, "@HeaderMap parameter type must be Map.");
-        }
-        Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
-        if (!(mapType instanceof ParameterizedType)) {
-          throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) mapType;
-        Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@HeaderMap keys must be of type String: " + keyType);
-        }
-        Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
-        Converter<?, String> valueConverter =
-            retrofit.stringConverter(valueType, annotations);
-
-        return new ParameterHandler.HeaderMap<>(valueConverter);
+        HeaderMap headerMap = (HeaderMap) annotation;
+        Type valueItemType = getMapValueItemType(type, headerMap.multimap(), annotation, p);
+        Converter<?, String> converter = retrofit.stringConverter(valueItemType, annotations);
+        return wrapMapParameterHandler(type, headerMap.multimap(),
+            new ParameterHandler.Header<>(converter), "Header");
 
       } else if (annotation instanceof Field) {
         if (!isFormEncoded) {
@@ -503,58 +438,24 @@ final class ServiceMethod<R, T> {
         }
         Field field = (Field) annotation;
         String name = field.value();
-        boolean encoded = field.encoded();
 
         gotField = true;
 
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(p, rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter =
-              retrofit.stringConverter(iterableType, annotations);
-          return new ParameterHandler.Field<>(name, converter, encoded).iterable();
-        } else if (rawParameterType.isArray()) {
-          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-          Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
-          return new ParameterHandler.Field<>(name, converter, encoded).array();
-        } else {
-          Converter<?, String> converter =
-              retrofit.stringConverter(type, annotations);
-          return new ParameterHandler.Field<>(name, converter, encoded);
-        }
+        Converter<?, String> converter =
+            retrofit.stringConverter(getItemType(type, p), annotations);
+        return wrapParameterHandler(type, new ParameterHandler.NamedParameterHandler<>(
+            name, new ParameterHandler.Field<>(converter, field.encoded())));
 
       } else if (annotation instanceof FieldMap) {
         if (!isFormEncoded) {
           throw parameterError(p, "@FieldMap parameters can only be used with form encoding.");
         }
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (!Map.class.isAssignableFrom(rawParameterType)) {
-          throw parameterError(p, "@FieldMap parameter type must be Map.");
-        }
-        Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
-        if (!(mapType instanceof ParameterizedType)) {
-          throw parameterError(p,
-              "Map must include generic types (e.g., Map<String, String>)");
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) mapType;
-        Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@FieldMap keys must be of type String: " + keyType);
-        }
-        Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
-        Converter<?, String> valueConverter =
-            retrofit.stringConverter(valueType, annotations);
-
         gotField = true;
-        return new ParameterHandler.FieldMap<>(valueConverter, ((FieldMap) annotation).encoded());
+        FieldMap fieldMap = (FieldMap) annotation;
+        Type valueItemType = getMapValueItemType(type, fieldMap.multimap(), annotation, p);
+        Converter<?, String> converter = retrofit.stringConverter(valueItemType, annotations);
+        return wrapMapParameterHandler(type, fieldMap.multimap(),
+            new ParameterHandler.Field<>(converter, ((FieldMap) annotation).encoded()), "Field");
 
       } else if (annotation instanceof Part) {
         if (!isMultipart) {
@@ -564,73 +465,25 @@ final class ServiceMethod<R, T> {
         gotPart = true;
 
         String partName = part.value();
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (partName.isEmpty()) {
-          if (Iterable.class.isAssignableFrom(rawParameterType)) {
-            if (!(type instanceof ParameterizedType)) {
-              throw parameterError(p, rawParameterType.getSimpleName()
-                  + " must include generic type (e.g., "
-                  + rawParameterType.getSimpleName()
-                  + "<String>)");
-            }
-            ParameterizedType parameterizedType = (ParameterizedType) type;
-            Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-            if (!MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
-              throw parameterError(p,
-                  "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
-            }
-            return ParameterHandler.RawPart.INSTANCE.iterable();
-          } else if (rawParameterType.isArray()) {
-            Class<?> arrayComponentType = rawParameterType.getComponentType();
-            if (!MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
-              throw parameterError(p,
-                  "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
-            }
-            return ParameterHandler.RawPart.INSTANCE.array();
-          } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
-            return ParameterHandler.RawPart.INSTANCE;
-          } else {
+        Type itemType = getItemType(type, p);
+
+        if (MultipartBody.Part.class.isAssignableFrom((Class<?>) itemType)) {
+          if (!partName.isEmpty()) {
+            throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                    + "include a part name in the annotation.");
+          }
+          return wrapParameterHandler(type, new ParameterHandler.RawPart());
+        } else {
+          if (partName.isEmpty()) {
             throw parameterError(p,
                 "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
           }
-        } else {
-          Headers headers =
-              Headers.of("Content-Disposition", "form-data; name=\"" + partName + "\"",
-                  "Content-Transfer-Encoding", part.encoding());
-
-          if (Iterable.class.isAssignableFrom(rawParameterType)) {
-            if (!(type instanceof ParameterizedType)) {
-              throw parameterError(p, rawParameterType.getSimpleName()
-                  + " must include generic type (e.g., "
-                  + rawParameterType.getSimpleName()
-                  + "<String>)");
-            }
-            ParameterizedType parameterizedType = (ParameterizedType) type;
-            Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-            if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
-              throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
-                  + "include a part name in the annotation.");
-            }
-            Converter<?, RequestBody> converter =
-                retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(headers, converter).iterable();
-          } else if (rawParameterType.isArray()) {
-            Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-            if (MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
-              throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
-                  + "include a part name in the annotation.");
-            }
-            Converter<?, RequestBody> converter =
-                retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(headers, converter).array();
-          } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
-            throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
-                + "include a part name in the annotation.");
-          } else {
-            Converter<?, RequestBody> converter =
-                retrofit.requestBodyConverter(type, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(headers, converter);
-          }
+          String encoding = part.encoding();
+          Converter<?, RequestBody> converter =
+              retrofit.requestBodyConverter(itemType, annotations, methodAnnotations);
+          return wrapParameterHandler(type, new ParameterHandler.NamedParameterHandler<>(partName,
+              new ParameterHandler.Part<>(encoding, converter))
+          );
         }
 
       } else if (annotation instanceof PartMap) {
@@ -638,32 +491,18 @@ final class ServiceMethod<R, T> {
           throw parameterError(p, "@PartMap parameters can only be used with multipart encoding.");
         }
         gotPart = true;
-        Class<?> rawParameterType = Utils.getRawType(type);
-        if (!Map.class.isAssignableFrom(rawParameterType)) {
-          throw parameterError(p, "@PartMap parameter type must be Map.");
-        }
-        Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
-        if (!(mapType instanceof ParameterizedType)) {
-          throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) mapType;
-
-        Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@PartMap keys must be of type String: " + keyType);
-        }
-
-        Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
+        PartMap partMap = (PartMap) annotation;
+        Type valueType = getMapValueItemType(type, partMap.multimap(), annotation, p);
         if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(valueType))) {
           throw parameterError(p, "@PartMap values cannot be MultipartBody.Part. "
               + "Use @Part List<Part> or a different value type instead.");
         }
 
-        Converter<?, RequestBody> valueConverter =
+        Converter<?, RequestBody> converter =
             retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
 
-        PartMap partMap = (PartMap) annotation;
-        return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
+        return wrapMapParameterHandler(type, partMap.multimap(),
+            new ParameterHandler.Part<>(partMap.encoding(), converter), "Part");
 
       } else if (annotation instanceof Body) {
         if (isFormEncoded || isMultipart) {
@@ -686,6 +525,89 @@ final class ServiceMethod<R, T> {
       }
 
       return null; // Not a Retrofit annotation.
+    }
+
+    private Type getItemType(Type type, int p) {
+      Class<?> rawParameterType = Utils.getRawType(type);
+      if (Iterable.class.isAssignableFrom(rawParameterType)) {
+        if (!(type instanceof ParameterizedType)) {
+          throw parameterError(p, rawParameterType.getSimpleName()
+              + " must include generic type (e.g., "
+              + rawParameterType.getSimpleName()
+              + "<String>)");
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        return Utils.getParameterUpperBound(0, parameterizedType);
+      } else if (rawParameterType.isArray()) {
+        return boxIfPrimitive(rawParameterType.getComponentType());
+      } else {
+        return type;
+      }
+    }
+
+    private Type getMapValueItemType(Type type, boolean multimap, Annotation annotation, int p) {
+      String annotationName = annotation.annotationType().getSimpleName();
+      Class<?> rawParameterType = Utils.getRawType(type);
+      if (!Map.class.isAssignableFrom(rawParameterType)) {
+        throw parameterError(p, String.format("@%1$s parameter type must be Map.",
+            annotationName));
+      }
+      Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
+      if (!(mapType instanceof ParameterizedType)) {
+        throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
+      }
+      ParameterizedType parameterizedType = (ParameterizedType) mapType;
+      Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
+      if (String.class != keyType) {
+        throw parameterError(p, String.format("@%1$s keys must be of type String: %2$s",
+            annotationName, keyType));
+      }
+      Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
+
+      if (multimap) {
+        Class<?> rawValueType = Utils.getRawType(valueType);
+        if (Iterable.class.isAssignableFrom(rawValueType)) {
+          if (!(valueType instanceof ParameterizedType)) {
+            throw parameterError(p, "@" + annotationName + " " + rawParameterType.getSimpleName()
+                + " value parameter must include generic type (e.g. "
+                + rawParameterType.getSimpleName() + "<String, "
+                + rawValueType.getSimpleName() + "<String>>).");
+          }
+          return Utils.getParameterUpperBound(0, (ParameterizedType) valueType);
+        } else if (rawValueType.isArray()) {
+          return boxIfPrimitive(rawValueType.getComponentType());
+        }
+      }
+      return valueType;
+    }
+
+    private ParameterHandler<?> wrapParameterHandler(Type type, ParameterHandler<?> handler) {
+      Class<?> rawParameterType = Utils.getRawType(type);
+      if (Iterable.class.isAssignableFrom(rawParameterType)) {
+        return handler.iterable();
+      } else if (rawParameterType.isArray()) {
+        return handler.array();
+      } else {
+        return handler;
+      }
+    }
+
+    private ParameterHandler<?> wrapMapParameterHandler(Type type, boolean multimap,
+        ParameterHandler.NamedValuesHandler<?> handler, String handlerName) {
+      Class<?> rawParameterType = Utils.getRawType(type);
+      Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
+      Type valueType = Utils.getParameterUpperBound(1, (ParameterizedType) mapType);
+      Class<?> rawValueType = Utils.getRawType(valueType);
+
+      ParameterHandler.NamedValuesHandler<?> wrappedHandler;
+      if (multimap && Iterable.class.isAssignableFrom(rawValueType)) {
+        wrappedHandler = handler.iterable();
+      } else if (multimap && rawValueType.isArray()) {
+        wrappedHandler = handler.array();
+      } else {
+        wrappedHandler = handler;
+      }
+      return new ParameterHandler.MapParameterHandler<>(wrappedHandler, handlerName);
     }
 
     private void validatePathName(int p, String name) {

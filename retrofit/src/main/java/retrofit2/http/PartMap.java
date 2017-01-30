@@ -53,4 +53,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface PartMap {
   /** The {@code Content-Transfer-Encoding} of the parts. */
   String encoding() default "binary";
+
+  /**
+   * Specifies weather Iterable and Array values should be treated as multiple values.
+   * When {@code true}, separate part will be created for each item in the value collection.
+   **/
+  boolean multimap() default false;
 }
