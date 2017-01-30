@@ -236,6 +236,7 @@ public final class MoshiConverterFactoryTest {
     Call<AnImplementation> call = serviceFailOnUnknown.anImplementation(new AnImplementation(null));
     try {
       call.execute();
+      fail();
     } catch (JsonDataException e) {
       assertThat(e).hasMessage("Cannot skip unexpected STRING at $.taco");
     }
