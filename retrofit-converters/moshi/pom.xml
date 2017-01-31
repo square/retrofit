@@ -23,12 +23,6 @@
       <groupId>com.squareup.moshi</groupId>
       <artifactId>moshi</artifactId>
     </dependency>
-    <!-- TODO remove this dependency once Moshi ships with 1.9.0 or newer. -->
-    <dependency>
-      <groupId>com.squareup.okio</groupId>
-      <artifactId>okio</artifactId>
-      <version>1.9.0</version>
-    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
