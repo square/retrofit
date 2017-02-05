@@ -94,6 +94,9 @@ public final class MoshiConverterFactory extends Converter.Factory {
     if (failOnUnknown) {
       adapter = adapter.failOnUnknown();
     }
+    if (serializeNulls) {
+      adapter = adapter.serializeNulls();
+    }
     return new MoshiResponseBodyConverter<>(adapter);
   }
 
@@ -106,7 +109,10 @@ public final class MoshiConverterFactory extends Converter.Factory {
     if (failOnUnknown) {
       adapter = adapter.failOnUnknown();
     }
-    return new MoshiRequestBodyConverter<>(adapter, serializeNulls);
+    if (serializeNulls) {
+      adapter = adapter.serializeNulls();
+    }
+    return new MoshiRequestBodyConverter<>(adapter);
   }
 
   private static Set<? extends Annotation> jsonAnnotations(Annotation[] annotations) {
