@@ -27,17 +27,14 @@ final class MoshiRequestBodyConverter<T> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
 
   private final JsonAdapter<T> adapter;
-  private final boolean serializeNulls;
 
-  MoshiRequestBodyConverter(JsonAdapter<T> adapter, boolean serializeNulls) {
+  MoshiRequestBodyConverter(JsonAdapter<T> adapter) {
     this.adapter = adapter;
-    this.serializeNulls = serializeNulls;
   }
 
   @Override public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonWriter.of(buffer);
-    writer.setSerializeNulls(serializeNulls);
     adapter.toJson(writer, value);
     return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
