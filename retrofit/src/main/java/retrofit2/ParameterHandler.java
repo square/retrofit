@@ -205,8 +205,9 @@ abstract class ParameterHandler<T> {
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Field map contained null value for key '" + entryKey + "'.");
+          continue;
+          // throw new IllegalArgumentException(
+          //     "Field map contained null value for key '" + entryKey + "'.");
         }
         builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
       }
