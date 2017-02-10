@@ -1,7 +1,7 @@
 Guava Adapter
 ==============
 
-An `Adapter` for adapting [Guava][1] types.
+An `Adapter` for adapting [Guava][1] `ListenableFuture`.
 
 
 Download
