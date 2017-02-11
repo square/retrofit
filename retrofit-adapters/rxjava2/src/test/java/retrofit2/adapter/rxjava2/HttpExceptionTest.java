@@ -16,6 +16,7 @@
 package retrofit2.adapter.rxjava2;
 
 import org.junit.Test;
+import retrofit2.HttpException;
 import retrofit2.Response;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +25,7 @@ import static org.junit.Assert.fail;
 public final class HttpExceptionTest {
   @Test public void response() {
     Response<String> response = Response.success("Hi");
-    HttpException exception = new HttpException(response);
+    retrofit2.HttpException exception = new HttpException(response);
     assertThat(exception.code()).isEqualTo(200);
     assertThat(exception.message()).isEqualTo("OK");
     assertThat(exception.response()).isSameAs(response);

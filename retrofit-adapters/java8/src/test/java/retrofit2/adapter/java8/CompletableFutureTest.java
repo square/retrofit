@@ -65,7 +65,7 @@ public final class CompletableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(HttpException.class)
+      assertThat(e.getCause()).isInstanceOf(retrofit2.HttpException.class)
           .hasMessage("HTTP 404 Client Error");
     }
   }

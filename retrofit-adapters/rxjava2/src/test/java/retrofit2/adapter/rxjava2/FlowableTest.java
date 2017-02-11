@@ -63,7 +63,7 @@ public final class FlowableTest {
 
     RecordingSubscriber<String> subscriber = subscriberRule.create();
     service.body().subscribe(subscriber);
-    subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
+    subscriber.assertError(retrofit2.HttpException.class, "HTTP 404 Client Error");
   }
 
   @Test public void bodyFailure() {

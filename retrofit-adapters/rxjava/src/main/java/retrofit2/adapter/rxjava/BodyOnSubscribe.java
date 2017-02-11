@@ -15,6 +15,7 @@
  */
 package retrofit2.adapter.rxjava;
 
+import retrofit2.HttpException;
 import retrofit2.Response;
 import rx.Observable.OnSubscribe;
 import rx.Subscriber;

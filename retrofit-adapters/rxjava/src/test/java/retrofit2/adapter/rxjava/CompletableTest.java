@@ -60,7 +60,7 @@ public final class CompletableTest {
 
     RecordingSubscriber<Void> subscriber = subscriberRule.create();
     service.completable().unsafeSubscribe(subscriber);
-    subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
+    subscriber.assertError(retrofit2.HttpException.class, "HTTP 404 Client Error");
   }
 
   @Test public void completableFailure() {

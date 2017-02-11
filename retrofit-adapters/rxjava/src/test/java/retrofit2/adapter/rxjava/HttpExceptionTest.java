@@ -16,6 +16,7 @@
 package retrofit2.adapter.rxjava;
 
 import org.junit.Test;
+import retrofit2.HttpException;
 import retrofit2.Response;
 
 import static org.assertj.core.api.Assertions.assertThat;
