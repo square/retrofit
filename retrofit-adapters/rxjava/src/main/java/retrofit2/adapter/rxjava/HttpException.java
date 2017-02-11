@@ -18,6 +18,7 @@ package retrofit2.adapter.rxjava;
 import retrofit2.Response;
 
 /** Exception for an unexpected, non-2xx HTTP response. */
+@Deprecated
 public final class HttpException extends retrofit2.HttpException {
   public HttpException(Response<?> response) {
     super(response);

@@ -63,7 +63,7 @@ public final class SingleTest {
 
     RecordingSingleObserver<String> observer = observerRule.create();
     service.body().subscribe(observer);
-    observer.assertError(HttpException.class, "HTTP 404 Client Error");
+    observer.assertError(retrofit2.HttpException.class, "HTTP 404 Client Error");
   }
 
   @Test public void bodyFailure() {

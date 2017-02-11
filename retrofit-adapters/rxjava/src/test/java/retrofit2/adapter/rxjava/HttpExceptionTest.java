@@ -32,7 +32,7 @@ public final class HttpExceptionTest {
 
   @Test public void nullResponseThrows() {
     try {
-      new HttpException(null);
+      new retrofit2.HttpException(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("response == null");

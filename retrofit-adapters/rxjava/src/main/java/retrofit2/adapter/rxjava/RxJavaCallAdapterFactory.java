@@ -42,7 +42,7 @@ import rx.Single;
  * parameter:
  * <ul>
  * <li>Direct body (e.g., {@code Observable<User>}) calls {@code onNext} with the deserialized body
- * for 2XX responses and calls {@code onError} with {@link HttpException} for non-2XX responses and
+ * for 2XX responses and calls {@code onError} with {@link retrofit2.HttpException} for non-2XX responses and
  * {@link IOException} for network errors.</li>
  * <li>Response wrapped body (e.g., {@code Observable<Response<User>>}) calls {@code onNext}
  * with a {@link Response} object for all HTTP responses and calls {@code onError} with

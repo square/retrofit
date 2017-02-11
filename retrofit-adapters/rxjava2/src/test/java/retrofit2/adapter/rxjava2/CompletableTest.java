@@ -59,7 +59,7 @@ public final class CompletableTest {
 
     RecordingCompletableObserver observer = observerRule.create();
     service.completable().subscribe(observer);
-    observer.assertError(HttpException.class, "HTTP 404 Client Error");
+    observer.assertError(retrofit2.HttpException.class, "HTTP 404 Client Error");
   }
 
   @Test public void completableFailure() {
