@@ -16,6 +16,7 @@
 package retrofit2.adapter.rxjava;
 
 import org.junit.Test;
+import retrofit2.HttpException;
 import retrofit2.Response;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +33,7 @@ public final class HttpExceptionTest {
 
   @Test public void nullResponseThrows() {
     try {
-      new retrofit2.HttpException(null);
+      new HttpException(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("response == null");
