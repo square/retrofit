@@ -3,6 +3,11 @@ RxJava Adapter
 
 An `Adapter` for adapting [RxJava 1.x][1] types.
 
+Available types:
+
+ * `Observable<T>`, `Observable<Response<T>>`, and `Observable<Result<T>>` where `T` is the body type.
+ * `Single<T>`, `Single<Response<T>>`, and `Single<Result<T>>`  where `T` is the body type.
+ * `Completable` where response bodies are discarded.
 
 Download
 --------

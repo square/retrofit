@@ -1,7 +1,7 @@
 Java8 Adapter
 ==============
 
-An `Adapter` for adapting [Java8][1] types.
+An `Adapter` for adapting [Java8][1] `CompletableFuture`.
 
 
 Download

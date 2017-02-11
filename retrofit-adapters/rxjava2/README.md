@@ -3,6 +3,13 @@ RxJava2 Adapter
 
 An `Adapter` for adapting [RxJava 2.x][1] types.
 
+Available types:
+
+ * `Observable<T>`, `Observable<Response<T>>`, and `Observable<Result<T>>` where `T` is the body type.
+ * `Flowable<T>`, `Flowable<Response<T>>` and `Flowable<Result<T>>` where `T` is the body type.
+ * `Single<T>`, `Single<Response<T>>`, and `Single<Result<T>>`  where `T` is the body type.
+ * `Maybe<T>`, `Maybe<Response<T>>`, and `Maybe<Result<T>>`  where `T` is the body type.
+ * `Completable` where response bodies are discarded.
 
 Download
 --------
