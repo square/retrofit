@@ -64,6 +64,7 @@ public final class MaybeTest {
 
     RecordingMaybeObserver<String> observer = observerRule.create();
     service.body().subscribe(observer);
+    // Required for backwards compatibility.
     observer.assertError(HttpException.class, "HTTP 404 Client Error");
   }
 
