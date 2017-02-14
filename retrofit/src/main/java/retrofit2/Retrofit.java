@@ -133,7 +133,7 @@ public final class Retrofit {
         new InvocationHandler() {
           private final Platform platform = Platform.get();
 
-          @Override public Object invoke(Object proxy, Method method, Object... args)
+          @Override public Object invoke(Object proxy, Method method, Object[] args)
               throws Throwable {
             // If the method is a method from Object then defer to normal invocation.
             if (method.getDeclaringClass() == Object.class) {
