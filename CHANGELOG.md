@@ -13,7 +13,7 @@ Version 2.2.0 *(2017-02-21)*
  * New: The Moshi converter factory now offers methods for enabling null serialization and lenient
    parsing.
  * New: Add `createAsync()` to RxJava 1.x call adapter factory which executes requests using
-   `Call.enqueue()` using the underlying HTTP client's asynchrouns support.
+   `Call.enqueue()` using the underlying HTTP client's asynchronous support.
  * New: `NetworkBehavior` now allows setting an error percentage and returns HTTP errors when triggered.
  * `HttpException` has been moved into the main artifact and should be used instead of the versions
    embedded in each adapter (which have been deprecated).
