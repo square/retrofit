@@ -282,6 +282,8 @@ final class ServiceMethod<R, T> {
         throw methodError("Only one HTTP method is allowed. Found: %s and %s.",
             this.httpMethod, httpMethod);
       }
+      if (null == httpMethod) return;
+
       this.httpMethod = httpMethod;
       this.hasBody = hasBody;
 
