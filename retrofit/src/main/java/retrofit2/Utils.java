@@ -381,7 +381,7 @@ final class Utils {
       this.typeArguments = typeArguments.clone();
 
       for (Type typeArgument : this.typeArguments) {
-        if (typeArgument == null) throw new NullPointerException();
+        checkNotNull(typeArgument, "typeArgument == null");
         checkNotPrimitive(typeArgument);
       }
     }
