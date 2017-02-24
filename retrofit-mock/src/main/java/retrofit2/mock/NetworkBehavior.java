@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -202,7 +201,7 @@ public final class NetworkBehavior {
     return MILLISECONDS.convert(callDelayMs, unit);
   }
 
-  private void checkPercentageValidity(int percentage,String message) {
+  private void checkPercentageValidity(int percentage, String message) {
     if (percentage < 0 || percentage > 100) {
       throw new IllegalArgumentException(message);
     }
