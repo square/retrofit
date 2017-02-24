@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -94,9 +95,7 @@ public final class NetworkBehavior {
 
   /** Set the plus-or-minus variance percentage of the network round trip delay. */
   public void setVariancePercent(int variancePercent) {
-    if (variancePercent < 0 || variancePercent > 100) {
-      throw new IllegalArgumentException("Variance percentage must be between 0 and 100.");
-    }
+    checkPercentageValidity(variancePercent, "Variance percentage must be between 0 and 100.");
     this.variancePercent = variancePercent;
   }
 
@@ -107,9 +106,7 @@ public final class NetworkBehavior {
 
   /** Set the percentage of calls to {@link #calculateIsFailure()} that return {@code true}. */
   public void setFailurePercent(int failurePercent) {
-    if (failurePercent < 0 || failurePercent > 100) {
-      throw new IllegalArgumentException("Failure percentage must be between 0 and 100.");
-    }
+    checkPercentageValidity(failurePercent, "Failure percentage must be between 0 and 100.");
     this.failurePercent = failurePercent;
   }
 
@@ -143,9 +140,7 @@ public final class NetworkBehavior {
 
   /** Set the percentage of calls to {@link #calculateIsError()} that return {@code true}. */
   public void setErrorPercent(int errorPercent) {
-    if (errorPercent < 0 || errorPercent > 100) {
-      throw new IllegalArgumentException("Error percentage must be between 0 and 100.");
-    }
+    checkPercentageValidity(errorPercent, "Error percentage must be between 0 and 100.");
     this.errorPercent = errorPercent;
   }
 
@@ -205,5 +200,11 @@ public final class NetworkBehavior {
     float delayPercent = lowerBound + (random.nextFloat() * bound); // 0.8 + (rnd * 0.4)
     long callDelayMs = (long) (delayMs * delayPercent);
     return MILLISECONDS.convert(callDelayMs, unit);
+  }
+
+  private void checkPercentageValidity(int percentage,String message) {
+    if (percentage < 0 || percentage > 100) {
+      throw new IllegalArgumentException(message);
+    }
   }
 }

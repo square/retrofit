@@ -200,9 +200,7 @@ final class OkHttpCall<T> implements Call<T> {
       } finally {
         rawBody.close();
       }
-    }
-
-    if (code == 204 || code == 205) {
+    } else if (code == 204 || code == 205) {
       rawBody.close();
       return Response.success(null, rawResponse);
     }
