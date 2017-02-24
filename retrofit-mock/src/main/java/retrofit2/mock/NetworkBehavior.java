@@ -201,7 +201,7 @@ public final class NetworkBehavior {
     return MILLISECONDS.convert(callDelayMs, unit);
   }
 
-  private void checkPercentageValidity(int percentage, String message) {
+  private static void checkPercentageValidity(int percentage, String message) {
     if (percentage < 0 || percentage > 100) {
       throw new IllegalArgumentException(message);
     }
