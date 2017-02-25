@@ -20,7 +20,6 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 
-import static com.sun.xml.internal.ws.api.message.Packet.Status.Request;
 import static retrofit2.Utils.checkNotNull;
 
 /** An HTTP response. */
