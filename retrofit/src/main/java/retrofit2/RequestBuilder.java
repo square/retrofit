@@ -26,7 +26,6 @@ import okhttp3.RequestBody;
 import okio.Buffer;
 import okio.BufferedSink;
 
-import static com.sun.xml.internal.ws.api.message.Packet.Status.Request;
 import static retrofit2.Utils.checkNotNull;
 
 final class RequestBuilder {
