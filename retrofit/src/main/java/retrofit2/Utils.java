@@ -37,7 +37,7 @@ final class Utils {
   }
 
   static Class<?> getRawType(Type type) {
-    if (type == null) throw new NullPointerException("type == null");
+    checkNotNull(type, "type == null");
 
     if (type instanceof Class<?>) {
       // Type is a normal class.

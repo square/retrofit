@@ -15,10 +15,12 @@
  */
 package retrofit2;
 
+import static retrofit2.Utils.checkNotNull;
+
 /** Exception for an unexpected, non-2xx HTTP response. */
 public class HttpException extends Exception {
   private static String getMessage(Response<?> response) {
-    if (response == null) throw new NullPointerException("response == null");
+    checkNotNull(response, "response == null");
     return "HTTP " + response.code() + " " + response.message();
   }
 
