@@ -188,7 +188,6 @@ final class Utils {
         if (toResolve == typeVariable) {
           return toResolve;
         }
-
       } else if (toResolve instanceof Class && ((Class<?>) toResolve).isArray()) {
         Class<?> original = (Class<?>) toResolve;
         Type componentType = original.getComponentType();
@@ -242,7 +241,6 @@ final class Utils {
           }
         }
         return original;
-
       } else {
         return toResolve;
       }
@@ -376,14 +374,14 @@ final class Utils {
         throw new IllegalArgumentException();
       }
 
-      this.ownerType = ownerType;
-      this.rawType = rawType;
-      this.typeArguments = typeArguments.clone();
-
-      for (Type typeArgument : this.typeArguments) {
+      for (Type typeArgument : typeArguments) {
         checkNotNull(typeArgument, "typeArgument == null");
         checkNotPrimitive(typeArgument);
       }
+
+      this.ownerType = ownerType;
+      this.rawType = rawType;
+      this.typeArguments = typeArguments.clone();
     }
 
     @Override public Type[] getActualTypeArguments() {
