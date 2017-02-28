@@ -16,6 +16,7 @@
 package retrofit2;
 
 import java.io.IOException;
+
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
@@ -23,6 +24,8 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
+
+import static retrofit2.Utils.checkNotNull;
 
 final class OkHttpCall<T> implements Call<T> {
   private final ServiceMethod<T, ?> serviceMethod;
@@ -177,9 +180,7 @@ final class OkHttpCall<T> implements Call<T> {
   private okhttp3.Call createRawCall() throws IOException {
     Request request = serviceMethod.toRequest(args);
     okhttp3.Call call = serviceMethod.callFactory.newCall(request);
-    if (call == null) {
-      throw new NullPointerException("Call.Factory returned null.");
-    }
+    checkNotNull(call, "Call.Factory returned null.");
     return call;
   }
 
@@ -201,7 +202,6 @@ final class OkHttpCall<T> implements Call<T> {
         rawBody.close();
       }
     }
-
     if (code == 204 || code == 205) {
       rawBody.close();
       return Response.success(null, rawResponse);
