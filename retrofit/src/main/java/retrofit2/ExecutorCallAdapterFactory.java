@@ -29,14 +29,13 @@ final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public CallAdapter<?, ?> get(final Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != Call.class) {
       return null;
     }
-    final Type responseType = Utils.getCallResponseType(returnType);
     return new CallAdapter<Object, Call<?>>() {
       @Override public Type responseType() {
-        return responseType;
+        return Utils.getCallResponseType(returnType);
       }
 
       @Override public Call<Object> adapt(Call<Object> call) {
