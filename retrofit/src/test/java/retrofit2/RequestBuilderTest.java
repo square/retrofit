@@ -35,6 +35,7 @@ import okhttp3.ResponseBody;
 import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Test;
+import retrofit2.helpers.NullObjectConverterFactory;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -2578,6 +2579,84 @@ public final class RequestBuilderTest {
     assertThat(readBody.indexOf("secondParam")).isLessThan(readBody.indexOf("thirdParam"));
   }
 
+  @Test public void queryParamsSkippedIfConvertedToNull() throws Exception {
+    class Example {
+      @GET("/query") Call<ResponseBody> queryPath(@Query("a") Object a) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+        .addConverterFactory(new NullObjectConverterFactory());
+
+    Request request = buildRequest(Example.class, retrofitBuilder, "Ignored");
+
+    assertThat(request.url().toString()).doesNotContain("Ignored");
+  }
+
+  @Test public void queryParamMapsConvertedToNullShouldError() throws Exception {
+    class Example {
+      @GET("/query") Call<ResponseBody> queryPath(@QueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+        .addConverterFactory(new NullObjectConverterFactory());
+
+    Map<String, String> queryMap = Collections.singletonMap("kit", "kat");
+
+    try {
+      buildRequest(Example.class, retrofitBuilder, queryMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining(
+          "Query map value 'kat' converted to null by retrofit2.helpers.NullObjectConverterFactory$1 for key 'kit'.");
+    }
+  }
+
+  @Test public void fieldParamsSkippedIfConvertedToNull() throws Exception {
+    class Example {
+      @FormUrlEncoded
+      @POST("/query") Call<ResponseBody> queryPath(@Field("a") Object a) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+        .addConverterFactory(new NullObjectConverterFactory());
+
+    Request request = buildRequest(Example.class, retrofitBuilder, "Ignored");
+
+    assertThat(request.url().toString()).doesNotContain("Ignored");
+  }
+
+  @Test public void fieldParamMapsConvertedToNullShouldError() throws Exception {
+    class Example {
+      @FormUrlEncoded
+      @POST("/query") Call<ResponseBody> queryPath(@FieldMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+        .addConverterFactory(new NullObjectConverterFactory());
+
+    Map<String, String> queryMap = Collections.singletonMap("kit", "kat");
+
+    try {
+      buildRequest(Example.class, retrofitBuilder, queryMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining(
+          "Field map value 'kat' converted to null by retrofit2.helpers.NullObjectConverterFactory$1 for key 'kit'.");
+    }
+  }
+
   private static void assertBody(RequestBody body, String expected) {
     assertThat(body).isNotNull();
     Buffer buffer = new Buffer();
@@ -2589,7 +2668,7 @@ public final class RequestBuilderTest {
     }
   }
 
-  static <T> Request buildRequest(Class<T> cls, Object... args) {
+  static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
     final AtomicReference<Request> requestRef = new AtomicReference<>();
     okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
       @Override public okhttp3.Call newCall(Request request) {
@@ -2598,11 +2677,7 @@ public final class RequestBuilderTest {
       }
     };
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://example.com/")
-        .addConverterFactory(new ToStringConverterFactory())
-        .callFactory(callFactory)
-        .build();
+    Retrofit retrofit = builder.callFactory(callFactory).build();
 
     Method method = TestingUtils.onlyMethod(cls);
     //noinspection unchecked
@@ -2620,5 +2695,13 @@ public final class RequestBuilderTest {
     } catch (Exception e) {
       throw new AssertionError(e);
     }
+  }
+
+  static <T> Request buildRequest(Class<T> cls, Object... args) {
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(new ToStringConverterFactory());
+
+    return buildRequest(cls, retrofitBuilder, args);
   }
 }
