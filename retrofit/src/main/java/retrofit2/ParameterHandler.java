@@ -69,7 +69,12 @@ abstract class ParameterHandler<T> {
 
     @Override void apply(RequestBuilder builder, T value) throws IOException {
       if (value == null) return; // Skip null values.
-      builder.addHeader(name, valueConverter.convert(value));
+
+      String headerValue = valueConverter.convert(value);
+
+      if (headerValue == null) return; // Skip converted but null values
+
+      builder.addHeader(name, headerValue);
     }
   }
 
@@ -106,7 +111,12 @@ abstract class ParameterHandler<T> {
 
     @Override void apply(RequestBuilder builder, T value) throws IOException {
       if (value == null) return; // Skip null values.
-      builder.addQueryParam(name, valueConverter.convert(value), encoded);
+
+      String queryValue = valueConverter.convert(value);
+
+      if (queryValue == null) return; // Skip converted but null values
+
+      builder.addQueryParam(name, queryValue, encoded);
     }
   }
 
@@ -149,7 +159,15 @@ abstract class ParameterHandler<T> {
           throw new IllegalArgumentException(
               "Query map contained null value for key '" + entryKey + "'.");
         }
-        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
+
+        String convertedEntryValue = valueConverter.convert(entryValue);
+
+        if (convertedEntryValue == null) {
+          throw new IllegalArgumentException(
+              "Query map contained null value for key '" + entryKey + "'.");
+        }
+
+        builder.addQueryParam(entryKey, convertedEntryValue, encoded);
       }
     }
   }
@@ -194,7 +212,12 @@ abstract class ParameterHandler<T> {
 
     @Override void apply(RequestBuilder builder, T value) throws IOException {
       if (value == null) return; // Skip null values.
-      builder.addFormField(name, valueConverter.convert(value), encoded);
+
+      String fieldValue = valueConverter.convert(value);
+
+      if (fieldValue == null) return; // Skip null converted values
+
+      builder.addFormField(name, fieldValue, encoded);
     }
   }
 
@@ -222,7 +245,15 @@ abstract class ParameterHandler<T> {
           throw new IllegalArgumentException(
               "Field map contained null value for key '" + entryKey + "'.");
         }
-        builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
+
+        String fieldEntry = valueConverter.convert(entryValue);
+
+        if (fieldEntry == null) {
+          throw new IllegalArgumentException(
+              "Field map contained null value for key '" + entryKey + "'.");
+        }
+
+        builder.addFormField(entryKey, fieldEntry, encoded);
       }
     }
   }
