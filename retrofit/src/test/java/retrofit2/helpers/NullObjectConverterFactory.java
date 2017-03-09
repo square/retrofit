@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 /**
  * Always converts strings to null
  */
-public class NullObjectConverterFactory extends ToStringConverterFactory {
+public final class NullObjectConverterFactory extends ToStringConverterFactory {
     @Override
     public Converter<?, String> stringConverter(final Type type, final Annotation[] annotations, final Retrofit retrofit) {
         return new Converter<Object, String>() {

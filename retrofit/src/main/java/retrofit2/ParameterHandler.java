@@ -72,7 +72,7 @@ abstract class ParameterHandler<T> {
 
       String headerValue = valueConverter.convert(value);
 
-      if (headerValue == null) return; // Skip converted but null values
+      if (headerValue == null) return; // Skip converted but null values.
 
       builder.addHeader(name, headerValue);
     }

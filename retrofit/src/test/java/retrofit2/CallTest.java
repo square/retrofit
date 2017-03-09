@@ -18,7 +18,6 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,7 +35,6 @@ import okio.ForwardingSource;
 import okio.Okio;
 import org.junit.Rule;
 import org.junit.Test;
-import retrofit2.helpers.NullObjectConverterFactory;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -63,8 +61,6 @@ public final class CallTest {
     @GET("/") @Streaming Call<ResponseBody> getStreamingBody();
     @POST("/") Call<String> postString(@Body String body);
     @POST("/{a}") Call<String> postRequestBody(@Path("a") Object a);
-    @POST("/query") Call<String> queryPath(@Query("a") Object a);
-    @POST("/query") Call<String> queryPathMap(@QueryMap Map<String, String> a);
   }
 
   @Test public void http200Sync() throws IOException {
@@ -984,67 +980,5 @@ public final class CallTest {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
-  }
-
-  @Test public void queryParamsSkippedIfConvertedToNull() throws IOException, InterruptedException {
-    Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(server.url("/"))
-            .addConverterFactory(new NullObjectConverterFactory())
-            .build();
-    Service example = retrofit.create(Service.class);
-
-    server.enqueue(new MockResponse().setBody("Hi"));
-
-    final AtomicReference<Response<String>> responseRef = new AtomicReference<>();
-
-    final CountDownLatch latch = new CountDownLatch(1);
-    example.queryPath("Ignored").enqueue(new Callback<String>() {
-      @Override public void onResponse(final Call<String> call, final Response<String> response) {
-        if(call.request().url().toString().contains("Ignored")){
-          fail();
-        }
-
-        responseRef.set(response);
-        latch.countDown();
-      }
-
-      @Override public void onFailure(final Call<String> call, final Throwable t) {
-        latch.countDown();
-      }
-    });
-
-    assertTrue(latch.await(10, SECONDS));
-    assertThat(responseRef.get().isSuccessful()).isTrue();
-  }
-
-  @Test public void queryParamMapsConvertedToNullShouldError() throws IOException, InterruptedException {
-    Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(server.url("/"))
-            .addConverterFactory(new NullObjectConverterFactory())
-            .build();
-    Service example = retrofit.create(Service.class);
-
-    server.enqueue(new MockResponse().setBody("Hi"));
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-
-    final HashMap<String, String> queryMap = new HashMap<String, String>() {{
-      put("Ignored", "Always Null");
-    }};
-
-    final CountDownLatch latch = new CountDownLatch(1);
-    example.queryPathMap(queryMap).enqueue(new Callback<String>() {
-      @Override public void onResponse(final Call<String> call, final Response<String> response) {
-        latch.countDown();
-      }
-
-      @Override public void onFailure(final Call<String> call, final Throwable t) {
-        throwableRef.set(t);
-        latch.countDown();
-      }
-    });
-
-    assertTrue(latch.await(10, SECONDS));
-    assertThat(throwableRef.get()).isNotNull();
   }
 }
