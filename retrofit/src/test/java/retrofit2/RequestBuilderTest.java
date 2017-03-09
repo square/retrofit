@@ -2591,9 +2591,7 @@ public final class RequestBuilderTest {
 
     Request request = buildRequest(Example.class, retrofitBuilder, "Ignored");
 
-    if(request.url().toString().contains("Ignored")){
-      fail();
-    }
+    assertThat(request.url().toString()).doesNotContain("Ignored");
   }
 
   @Test public void queryParamMapsConvertedToNullShouldError() throws IOException, InterruptedException {
@@ -2605,7 +2603,7 @@ public final class RequestBuilderTest {
             .baseUrl("http://example.com")
             .addConverterFactory(new NullObjectConverterFactory());
 
-    final HashMap<String, String> queryMap = new HashMap<String, String>() {{
+    final Map<String, String> queryMap = new LinkedHashMap<String, String>() {{
       put("Ignored", "Always Null");
     }};
 
@@ -2613,7 +2611,7 @@ public final class RequestBuilderTest {
       buildRequest(Example.class, retrofitBuilder, queryMap);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageContaining("Query map contained null value for key");
+      assertThat(e).hasMessageContaining("Query map contained null value for key 'Ignored'");
     }
   }
 

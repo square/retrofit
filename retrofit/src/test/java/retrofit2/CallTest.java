@@ -18,7 +18,6 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,8 +39,6 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
 import retrofit2.http.Streaming;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
