@@ -381,7 +381,7 @@ final class Utils {
       this.typeArguments = typeArguments.clone();
 
       for (Type typeArgument : this.typeArguments) {
-        if (typeArgument == null) throw new NullPointerException();
+        checkNotNull(typeArgument, "typeArgument == null");
         checkNotPrimitive(typeArgument);
       }
     }
@@ -407,9 +407,9 @@ final class Utils {
     }
 
     @Override public String toString() {
+      if (typeArguments.length == 0) return typeToString(rawType);
       StringBuilder result = new StringBuilder(30 * (typeArguments.length + 1));
       result.append(typeToString(rawType));
-      if (typeArguments.length == 0) return result.toString();
       result.append("<").append(typeToString(typeArguments[0]));
       for (int i = 1; i < typeArguments.length; i++) {
         result.append(", ").append(typeToString(typeArguments[i]));

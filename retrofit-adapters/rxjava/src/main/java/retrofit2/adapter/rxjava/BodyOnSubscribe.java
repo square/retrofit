@@ -30,7 +30,7 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
   }
 
   @Override public void call(Subscriber<? super T> subscriber) {
-    upstream.call(new BodySubscriber<>(subscriber));
+    upstream.call(new BodySubscriber<T>(subscriber));
   }
 
   private static class BodySubscriber<R> extends Subscriber<Response<R>> {

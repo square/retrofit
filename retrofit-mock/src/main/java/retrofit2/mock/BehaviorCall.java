@@ -79,6 +79,11 @@ final class BehaviorCall<T> implements Call<T> {
           if (delaySleep()) {
             callback.onFailure(BehaviorCall.this, behavior.failureException());
           }
+        } else if (behavior.calculateIsError()) {
+          if (delaySleep()) {
+            //noinspection unchecked An error response has no body.
+            callback.onResponse(BehaviorCall.this, (Response<T>) behavior.createErrorResponse());
+          }
         } else {
           delegate.enqueue(new Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
