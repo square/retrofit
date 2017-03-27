@@ -242,6 +242,7 @@ final class Utils {
           }
         }
         return original;
+
       } else {
         return toResolve;
       }
