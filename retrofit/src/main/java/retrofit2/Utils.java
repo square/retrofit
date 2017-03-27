@@ -376,14 +376,14 @@ final class Utils {
         throw new IllegalArgumentException();
       }
 
-      this.ownerType = ownerType;
-      this.rawType = rawType;
-      this.typeArguments = typeArguments.clone();
-
-      for (Type typeArgument : this.typeArguments) {
+      for (Type typeArgument : typeArguments) {
         checkNotNull(typeArgument, "typeArgument == null");
         checkNotPrimitive(typeArgument);
       }
+
+      this.ownerType = ownerType;
+      this.rawType = rawType;
+      this.typeArguments = typeArguments.clone();
     }
 
     @Override public Type[] getActualTypeArguments() {
