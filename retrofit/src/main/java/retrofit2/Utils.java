@@ -188,6 +188,7 @@ final class Utils {
         if (toResolve == typeVariable) {
           return toResolve;
         }
+
       } else if (toResolve instanceof Class && ((Class<?>) toResolve).isArray()) {
         Class<?> original = (Class<?>) toResolve;
         Type componentType = original.getComponentType();
