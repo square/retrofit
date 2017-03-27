@@ -16,7 +16,7 @@
 package retrofit2;
 
 /** Exception for an unexpected, non-2xx HTTP response. */
-public class HttpException extends Exception {
+public class HttpException extends RuntimeException {
   private static String getMessage(Response<?> response) {
     if (response == null) throw new NullPointerException("response == null");
     return "HTTP " + response.code() + " " + response.message();
