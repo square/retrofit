@@ -18,21 +18,25 @@ package retrofit2.adapter.rxjava;
 import java.lang.reflect.Type;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
+import retrofit2.Response;
 import rx.Observable;
+import rx.Observable.OnSubscribe;
 import rx.Scheduler;
 
 final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
   private final Type responseType;
   private final Scheduler scheduler;
+  private final boolean isAsync;
   private final boolean isResult;
   private final boolean isBody;
   private final boolean isSingle;
   private final boolean isCompletable;
 
-  RxJavaCallAdapter(Type responseType, Scheduler scheduler, boolean isResult, boolean isBody,
-      boolean isSingle, boolean isCompletable) {
+  RxJavaCallAdapter(Type responseType, Scheduler scheduler, boolean isAsync, boolean isResult,
+      boolean isBody, boolean isSingle, boolean isCompletable) {
     this.responseType = responseType;
     this.scheduler = scheduler;
+    this.isAsync = isAsync;
     this.isResult = isResult;
     this.isBody = isBody;
     this.isSingle = isSingle;
@@ -44,16 +48,19 @@ final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
   }
 
   @Override public Object adapt(Call<R> call) {
-    ResponseCallable<R> resultCallable = new ResponseCallable<>(call);
+    OnSubscribe<Response<R>> callFunc = isAsync
+        ? new CallEnqueueOnSubscribe<>(call)
+        : new CallExecuteOnSubscribe<>(call);
 
-    Observable<?> observable;
+    OnSubscribe<?> func;
     if (isResult) {
-      observable = Observable.fromCallable(new ResultCallable<>(resultCallable));
+      func = new ResultOnSubscribe<>(callFunc);
     } else if (isBody) {
-      observable = Observable.fromCallable(new BodyCallable<>(resultCallable));
+      func = new BodyOnSubscribe<>(callFunc);
     } else {
-      observable = Observable.fromCallable(resultCallable);
+      func = callFunc;
     }
+    Observable<?> observable = Observable.create(func);
 
     if (scheduler != null) {
       observable = observable.subscribeOn(scheduler);

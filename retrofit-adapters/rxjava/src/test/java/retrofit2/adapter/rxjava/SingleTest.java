@@ -65,6 +65,7 @@ public final class SingleTest {
 
     RecordingSubscriber<String> subscriber = subscriberRule.create();
     service.body().unsafeSubscribe(subscriber);
+    // Required for backwards compatibility.
     subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
   }
 

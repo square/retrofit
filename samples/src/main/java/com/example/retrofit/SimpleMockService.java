@@ -26,7 +26,7 @@ public final class SimpleMockService {
     private final BehaviorDelegate<GitHub> delegate;
     private final Map<String, Map<String, List<Contributor>>> ownerRepoContributors;
 
-    public MockGitHub(BehaviorDelegate<GitHub> delegate) {
+    MockGitHub(BehaviorDelegate<GitHub> delegate) {
       this.delegate = delegate;
       ownerRepoContributors = new LinkedHashMap<>();
 
@@ -50,7 +50,7 @@ public final class SimpleMockService {
       return delegate.returningResponse(response).contributors(owner, repo);
     }
 
-    public void addContributor(String owner, String repo, String name, int contributions) {
+    void addContributor(String owner, String repo, String name, int contributions) {
       Map<String, List<Contributor>> repoContributors = ownerRepoContributors.get(owner);
       if (repoContributors == null) {
         repoContributors = new LinkedHashMap<>();
