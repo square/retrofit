@@ -22,13 +22,24 @@ import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.*;
 import retrofit2.http.Headers;
-
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import retrofit2.http.Multipart;
+import retrofit2.http.OPTIONS;
+import retrofit2.http.PATCH;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Part;
+import retrofit2.http.PartMap;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
+import retrofit2.http.QueryName;
+import retrofit2.http.Url;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -1030,11 +1041,11 @@ public final class RequestBuilderTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList(1, 2, null, "three");
+    List<Object> values = Arrays.<Object>asList(1, 2, null, "three", "1");
     Request request = buildRequest(Example.class, values);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three&key=1");
     assertThat(request.body()).isNull();
   }
 
@@ -1046,11 +1057,11 @@ public final class RequestBuilderTest {
       }
     }
 
-    Object[] values = { 1, 2, null, "three" };
+    Object[] values = { 1, 2, null, "three", "1" };
     Request request = buildRequest(Example.class, new Object[] { values });
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=three&key=1");
     assertThat(request.body()).isNull();
   }
 
@@ -1062,11 +1073,98 @@ public final class RequestBuilderTest {
       }
     }
 
-    int[] values = { 1, 2, 3 };
+    int[] values = { 1, 2, 3, 1 };
     Request request = buildRequest(Example.class, new Object[] { values });
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=3");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?key=1&key=2&key=3&key=1");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryNameParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryName String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "pong");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?pong");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithEncodedQueryNameParam() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryName(encoded = true) String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "p%20o%20n%20g");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?p%20o%20n%20g");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void queryNameParamOptionalOmitsQuery() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryName String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, new Object[] { null });
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+  }
+
+  @Test public void getWithQueryNameParamList() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryName List<Object> keys) {
+        return null;
+      }
+    }
+
+    List<Object> values = Arrays.<Object>asList(1, 2, null, "three", "1");
+    Request request = buildRequest(Example.class, values);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?1&2&three&1");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryNameParamArray() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryName Object[] keys) {
+        return null;
+      }
+    }
+
+    Object[] values = { 1, 2, null, "three", "1" };
+    Request request = buildRequest(Example.class, new Object[] { values });
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?1&2&three&1");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryNameParamPrimitiveArray() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryName int[] keys) {
+        return null;
+      }
+    }
+
+    int[] values = { 1, 2, 3, 1 };
+    Request request = buildRequest(Example.class, new Object[] { values });
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/?1&2&3&1");
     assertThat(request.body()).isNull();
   }
 

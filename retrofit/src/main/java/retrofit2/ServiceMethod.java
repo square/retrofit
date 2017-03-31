@@ -30,6 +30,36 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.http.Body;
+import retrofit2.http.DELETE;
+import retrofit2.http.Field;
+import retrofit2.http.FieldMap;
+import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
+import retrofit2.http.HEAD;
+import retrofit2.http.HTTP;
+import retrofit2.http.Header;
+import retrofit2.http.HeaderMap;
+import retrofit2.http.Multipart;
+import retrofit2.http.OPTIONS;
+import retrofit2.http.PATCH;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Part;
+import retrofit2.http.PartMap;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
+import retrofit2.http.QueryName;
+import retrofit2.http.Url;
+
 
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<R, T> {
@@ -128,7 +158,7 @@ final class ServiceMethod<R, T> {
     Converter<ResponseBody, T> responseConverter;
     CallAdapter<T, R> callAdapter;
 
-    public Builder(Retrofit retrofit, Method method) {
+    Builder(Retrofit retrofit, Method method) {
       this.retrofit = retrofit;
       this.method = method;
       this.methodAnnotations = method.getAnnotations();
@@ -419,6 +449,35 @@ final class ServiceMethod<R, T> {
           Converter<?, String> converter =
               retrofit.stringConverter(type, annotations);
           return new ParameterHandler.Query<>(name, converter, encoded);
+        }
+
+      } else if (annotation instanceof QueryName) {
+        QueryName query = (QueryName) annotation;
+        boolean encoded = query.encoded();
+
+        Class<?> rawParameterType = Utils.getRawType(type);
+        gotQuery = true;
+        if (Iterable.class.isAssignableFrom(rawParameterType)) {
+          if (!(type instanceof ParameterizedType)) {
+            throw parameterError(p, rawParameterType.getSimpleName()
+                + " must include generic type (e.g., "
+                + rawParameterType.getSimpleName()
+                + "<String>)");
+          }
+          ParameterizedType parameterizedType = (ParameterizedType) type;
+          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+          Converter<?, String> converter =
+              retrofit.stringConverter(iterableType, annotations);
+          return new ParameterHandler.QueryName<>(converter, encoded).iterable();
+        } else if (rawParameterType.isArray()) {
+          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+          Converter<?, String> converter =
+              retrofit.stringConverter(arrayComponentType, annotations);
+          return new ParameterHandler.QueryName<>(converter, encoded).array();
+        } else {
+          Converter<?, String> converter =
+              retrofit.stringConverter(type, annotations);
+          return new ParameterHandler.QueryName<>(converter, encoded);
         }
 
       } else if (annotation instanceof QueryMap) {

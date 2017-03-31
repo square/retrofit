@@ -17,6 +17,7 @@ package retrofit2.converter.moshi;
 
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
@@ -120,6 +121,7 @@ public final class MoshiConverterFactoryTest {
   private Service service;
   private Service serviceLenient;
   private Service serviceNulls;
+  private Service serviceFailOnUnknown;
 
   @Before public void setUp() {
     Moshi moshi = new Moshi.Builder()
@@ -139,6 +141,7 @@ public final class MoshiConverterFactoryTest {
     MoshiConverterFactory factory = MoshiConverterFactory.create(moshi);
     MoshiConverterFactory factoryLenient = factory.asLenient();
     MoshiConverterFactory factoryNulls = factory.withNullSerialization();
+    MoshiConverterFactory factoryFailOnUnknown = factory.failOnUnknown();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(factory)
@@ -151,9 +154,14 @@ public final class MoshiConverterFactoryTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(factoryNulls)
         .build();
+    Retrofit retrofitFailOnUnknown = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(factoryFailOnUnknown)
+        .build();
     service = retrofit.create(Service.class);
     serviceLenient = retrofitLenient.create(Service.class);
     serviceNulls = retrofitNulls.create(Service.class);
+    serviceFailOnUnknown = retrofitFailOnUnknown.create(Service.class);
   }
 
   @Test public void anInterface() throws IOException, InterruptedException {
@@ -220,6 +228,18 @@ public final class MoshiConverterFactoryTest {
     Call<AnImplementation> call = serviceNulls.anImplementation(new AnImplementation(null));
     call.execute();
     assertEquals("{\"theName\":null}", server.takeRequest().getBody().readUtf8());
+  }
+
+  @Test public void failOnUnknown() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("{\"taco\":\"delicious\"}"));
+
+    Call<AnImplementation> call = serviceFailOnUnknown.anImplementation(new AnImplementation(null));
+    try {
+      call.execute();
+      fail();
+    } catch (JsonDataException e) {
+      assertThat(e).hasMessage("Cannot skip unexpected STRING at $.taco");
+    }
   }
 
   @Test public void utf8BomSkipped() throws IOException {

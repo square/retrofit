@@ -24,6 +24,8 @@ import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 
+import static retrofit2.Utils.checkNotNull;
+
 final class OkHttpCall<T> implements Call<T> {
   private final ServiceMethod<T, ?> serviceMethod;
   private final Object[] args;
@@ -69,7 +71,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public void enqueue(final Callback<T> callback) {
-    if (callback == null) throw new NullPointerException("callback == null");
+    checkNotNull(callback, "callback == null");
 
     okhttp3.Call call;
     Throwable failure;

@@ -23,6 +23,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import static retrofit2.Utils.checkNotNull;
+
 final class RequestBuilder {
   private static final char[] HEX_DIGITS =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -69,7 +71,7 @@ final class RequestBuilder {
   }
 
   void setRelativeUrl(Object relativeUrl) {
-    if (relativeUrl == null) throw new NullPointerException("@Url parameter is null.");
+    checkNotNull(relativeUrl, "@Url parameter is null.");
     this.relativeUrl = relativeUrl.toString();
   }
 
