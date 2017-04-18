@@ -126,7 +126,9 @@ final class CallArbiter<T> extends AtomicInteger implements Subscription, Produc
       return;
     }
     try {
-      subscriber.onCompleted();
+      if (!isUnsubscribed()) {
+        subscriber.onCompleted();
+      }
     } catch (Throwable t) {
       Exceptions.throwIfFatal(t);
       RxJavaPlugins.getInstance().getErrorHandler().handleError(t);
@@ -138,7 +140,9 @@ final class CallArbiter<T> extends AtomicInteger implements Subscription, Produc
 
     if (!isUnsubscribed()) {
       try {
-        subscriber.onError(t);
+        if (!isUnsubscribed()) {
+          subscriber.onError(t);
+        }
       } catch (Throwable inner) {
         Exceptions.throwIfFatal(inner);
         CompositeException composite = new CompositeException(t, inner);
