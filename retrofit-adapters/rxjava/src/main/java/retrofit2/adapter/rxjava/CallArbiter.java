@@ -140,9 +140,7 @@ final class CallArbiter<T> extends AtomicInteger implements Subscription, Produc
 
     if (!isUnsubscribed()) {
       try {
-        if (!isUnsubscribed()) {
-          subscriber.onError(t);
-        }
+        subscriber.onError(t);
       } catch (Throwable inner) {
         Exceptions.throwIfFatal(inner);
         CompositeException composite = new CompositeException(t, inner);
