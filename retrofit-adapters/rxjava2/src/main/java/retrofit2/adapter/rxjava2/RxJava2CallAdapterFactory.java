@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.CallAdapter;
 import retrofit2.HttpException;
 import retrofit2.Response;
@@ -59,7 +62,7 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates synchronous observables that do not operate on any scheduler
    * by default.
    */
-  public static RxJava2CallAdapterFactory create() {
+  public static @NotNull RxJava2CallAdapterFactory create() {
     return new RxJava2CallAdapterFactory(null, false);
   }
 
@@ -67,7 +70,7 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates asynchronous observables. Applying
    * {@link Observable#subscribeOn} has no effect on stream types created by this factory.
    */
-  public static RxJava2CallAdapterFactory createAsync() {
+  public static @NotNull RxJava2CallAdapterFactory createAsync() {
     return new RxJava2CallAdapterFactory(null, true);
   }
 
@@ -75,7 +78,8 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates synchronous observables that
    * {@linkplain Observable#subscribeOn(Scheduler) subscribe on} {@code scheduler} by default.
    */
-  public static RxJava2CallAdapterFactory createWithScheduler(Scheduler scheduler) {
+  public static @NotNull RxJava2CallAdapterFactory createWithScheduler(
+      @NotNull Scheduler scheduler) {
     if (scheduler == null) throw new NullPointerException("scheduler == null");
     return new RxJava2CallAdapterFactory(scheduler, false);
   }
@@ -89,7 +93,8 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public @Nullable CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
+      Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
 
     if (rawType == Completable.class) {

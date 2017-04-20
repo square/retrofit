@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -49,7 +52,7 @@ import retrofit2.Retrofit;
  * </ul>
  */
 public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
-  public static GuavaCallAdapterFactory create() {
+  public static @NotNull GuavaCallAdapterFactory create() {
     return new GuavaCallAdapterFactory();
   }
 
@@ -57,7 +60,8 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public @Nullable CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
+      Retrofit retrofit) {
     if (getRawType(returnType) != ListenableFuture.class) {
       return null;
     }
@@ -92,7 +96,7 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public ListenableFuture<R> adapt(final Call<R> call) {
+    @Override public ListenableFuture<R> adapt(final @NotNull Call<R> call) {
       return new AbstractFuture<R>() {
         {
           call.enqueue(new Callback<R>() {

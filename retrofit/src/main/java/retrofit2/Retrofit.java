@@ -29,6 +29,8 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
@@ -124,7 +126,7 @@ public final class Retrofit {
    * </pre>
    */
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
-  public <T> T create(final Class<T> service) {
+  public @NotNull <T> T create(final @NotNull Class<T> service) {
     Utils.validateServiceInterface(service);
     if (validateEagerly) {
       eagerlyValidateMethods(service);
@@ -177,12 +179,12 @@ public final class Retrofit {
    * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
    * Typically an instance of {@link OkHttpClient}.
    */
-  public okhttp3.Call.Factory callFactory() {
+  public @NotNull okhttp3.Call.Factory callFactory() {
     return callFactory;
   }
 
   /** The API base URL. */
-  public HttpUrl baseUrl() {
+  public @NotNull HttpUrl baseUrl() {
     return baseUrl;
   }
 
@@ -190,7 +192,7 @@ public final class Retrofit {
    * Returns a list of the factories tried when creating a
    * {@linkplain #callAdapter(Type, Annotation[])} call adapter}.
    */
-  public List<CallAdapter.Factory> callAdapterFactories() {
+  public @NotNull List<CallAdapter.Factory> callAdapterFactories() {
     return adapterFactories;
   }
 
@@ -200,7 +202,8 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no call adapter available for {@code type}.
    */
-  public CallAdapter<?, ?> callAdapter(Type returnType, Annotation[] annotations) {
+  public @NotNull CallAdapter<?, ?> callAdapter(@NotNull Type returnType,
+      @NotNull Annotation[] annotations) {
     return nextCallAdapter(null, returnType, annotations);
   }
 
@@ -210,8 +213,8 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no call adapter available for {@code type}.
    */
-  public CallAdapter<?, ?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
-      Annotation[] annotations) {
+  public @NotNull CallAdapter<?, ?> nextCallAdapter(@Nullable CallAdapter.Factory skipPast,
+      @NotNull Type returnType, @NotNull Annotation[] annotations) {
     checkNotNull(returnType, "returnType == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -246,7 +249,7 @@ public final class Retrofit {
    * {@linkplain #responseBodyConverter(Type, Annotation[]) response body converter}, or a
    * {@linkplain #stringConverter(Type, Annotation[]) string converter}.
    */
-  public List<Converter.Factory> converterFactories() {
+  public @NotNull List<Converter.Factory> converterFactories() {
     return converterFactories;
   }
 
@@ -256,8 +259,8 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<T, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
+  public @NotNull <T> Converter<T, RequestBody> requestBodyConverter(@NotNull Type type,
+      @NotNull Annotation[] parameterAnnotations, @NotNull Annotation[] methodAnnotations) {
     return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
   }
 
@@ -267,8 +270,10 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
-      Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
+  public @NotNull <T> Converter<T, RequestBody> nextRequestBodyConverter(
+      @Nullable Converter.Factory skipPast,
+      @NotNull Type type, @NotNull Annotation[] parameterAnnotations,
+      @NotNull Annotation[] methodAnnotations) {
     checkNotNull(type, "type == null");
     checkNotNull(parameterAnnotations, "parameterAnnotations == null");
     checkNotNull(methodAnnotations, "methodAnnotations == null");
@@ -307,7 +312,8 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<ResponseBody, T> responseBodyConverter(Type type, Annotation[] annotations) {
+  public @NotNull <T> Converter<ResponseBody, T> responseBodyConverter(@NotNull Type type,
+      @NotNull Annotation[] annotations) {
     return nextResponseBodyConverter(null, type, annotations);
   }
 
@@ -317,8 +323,9 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<ResponseBody, T> nextResponseBodyConverter(Converter.Factory skipPast,
-      Type type, Annotation[] annotations) {
+  public @NotNull <T> Converter<ResponseBody, T> nextResponseBodyConverter(
+      @Nullable Converter.Factory skipPast,
+      @NotNull Type type, @NotNull Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -353,7 +360,8 @@ public final class Retrofit {
    * Returns a {@link Converter} for {@code type} to {@link String} from the available
    * {@linkplain #converterFactories() factories}.
    */
-  public <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
+  public @NotNull <T> Converter<T, String> stringConverter(@NotNull Type type,
+      @NotNull Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
@@ -375,11 +383,11 @@ public final class Retrofit {
    * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null},
    * in which case callbacks should be made synchronously on the background thread.
    */
-  public Executor callbackExecutor() {
+  public @NotNull Executor callbackExecutor() {
     return callbackExecutor;
   }
 
-  public Builder newBuilder() {
+  public @NotNull Builder newBuilder() {
     return new Builder(this);
   }
 
@@ -426,7 +434,7 @@ public final class Retrofit {
      * <p>
      * This is a convenience method for calling {@link #callFactory}.
      */
-    public Builder client(OkHttpClient client) {
+    public @NotNull Builder client(@NotNull OkHttpClient client) {
       return callFactory(checkNotNull(client, "client == null"));
     }
 
@@ -435,7 +443,7 @@ public final class Retrofit {
      * <p>
      * Note: Calling {@link #client} automatically sets this value.
      */
-    public Builder callFactory(okhttp3.Call.Factory factory) {
+    public @NotNull Builder callFactory(@NotNull okhttp3.Call.Factory factory) {
       this.callFactory = checkNotNull(factory, "factory == null");
       return this;
     }
@@ -445,7 +453,7 @@ public final class Retrofit {
      *
      * @see #baseUrl(HttpUrl)
      */
-    public Builder baseUrl(String baseUrl) {
+    public @NotNull Builder baseUrl(@NotNull String baseUrl) {
       checkNotNull(baseUrl, "baseUrl == null");
       HttpUrl httpUrl = HttpUrl.parse(baseUrl);
       if (httpUrl == null) {
@@ -504,7 +512,7 @@ public final class Retrofit {
      * Endpoint: //github.com/square/retrofit/<br>
      * Result: http://github.com/square/retrofit/ (note the scheme stays 'http')
      */
-    public Builder baseUrl(HttpUrl baseUrl) {
+    public @NotNull Builder baseUrl(@NotNull HttpUrl baseUrl) {
       checkNotNull(baseUrl, "baseUrl == null");
       List<String> pathSegments = baseUrl.pathSegments();
       if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
@@ -515,7 +523,7 @@ public final class Retrofit {
     }
 
     /** Add converter factory for serialization and deserialization of objects. */
-    public Builder addConverterFactory(Converter.Factory factory) {
+    public @NotNull Builder addConverterFactory(@NotNull Converter.Factory factory) {
       converterFactories.add(checkNotNull(factory, "factory == null"));
       return this;
     }
@@ -524,7 +532,7 @@ public final class Retrofit {
      * Add a call adapter factory for supporting service method return types other than {@link
      * Call}.
      */
-    public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
+    public @NotNull Builder addCallAdapterFactory(@NotNull CallAdapter.Factory factory) {
       adapterFactories.add(checkNotNull(factory, "factory == null"));
       return this;
     }
@@ -536,7 +544,7 @@ public final class Retrofit {
      * Note: {@code executor} is not used for {@linkplain #addCallAdapterFactory custom method
      * return types}.
      */
-    public Builder callbackExecutor(Executor executor) {
+    public @NotNull Builder callbackExecutor(@NotNull Executor executor) {
       this.callbackExecutor = checkNotNull(executor, "executor == null");
       return this;
     }
@@ -545,7 +553,7 @@ public final class Retrofit {
      * When calling {@link #create} on the resulting {@link Retrofit} instance, eagerly validate
      * the configuration of all methods in the supplied interface.
      */
-    public Builder validateEagerly(boolean validateEagerly) {
+    public @NotNull Builder validateEagerly(boolean validateEagerly) {
       this.validateEagerly = validateEagerly;
       return this;
     }
@@ -556,7 +564,7 @@ public final class Retrofit {
      * Note: If neither {@link #client} nor {@link #callFactory} is called a default {@link
      * OkHttpClient} will be created and used.
      */
-    public Retrofit build() {
+    public @NotNull Retrofit build() {
       if (baseUrl == null) {
         throw new IllegalStateException("Base URL required.");
       }

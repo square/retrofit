@@ -17,6 +17,7 @@ package retrofit2;
 
 import java.io.IOException;
 import okhttp3.Request;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An invocation of a Retrofit method that sends a request to a webserver and returns a response.
@@ -39,13 +40,13 @@ public interface Call<T> extends Cloneable {
    * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request
    * or decoding the response.
    */
-  Response<T> execute() throws IOException;
+  @NotNull Response<T> execute() throws IOException;
 
   /**
    * Asynchronously send the request and notify {@code callback} of its response or if an error
    * occurred talking to the server, creating the request, or processing the response.
    */
-  void enqueue(Callback<T> callback);
+  void enqueue(@NotNull Callback<T> callback);
 
   /**
    * Returns true if this call has been either {@linkplain #execute() executed} or {@linkplain
@@ -66,8 +67,8 @@ public interface Call<T> extends Cloneable {
    * Create a new, identical call to this one which can be enqueued or executed even if this call
    * has already been.
    */
-  Call<T> clone();
+  @NotNull Call<T> clone();
 
   /** The original HTTP request. */
-  Request request();
+  @NotNull Request request();
 }
