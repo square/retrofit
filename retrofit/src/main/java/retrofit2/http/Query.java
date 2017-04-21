@@ -15,9 +15,12 @@
  */
 package retrofit2.http;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Type;
+import retrofit2.Retrofit;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -25,7 +28,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Query parameter appended to the URL.
  * <p>
- * Values are converted to strings using {@link String#valueOf(Object)} and then URL encoded.
+ * Values are converted to strings using {@link Retrofit#stringConverter(Type, Annotation[])}
+ * (or {@link Object#toString()}, if no matching string converter is installed)
+ * and then URL encoded.
  * {@code null} values are ignored. Passing a {@link java.util.List List} or array will result in a
  * query parameter for each non-{@code null} item.
  * <p>
