@@ -17,22 +17,24 @@
 package retrofit2.adapter.rxjava2;
 
 import com.google.common.reflect.TypeToken;
-import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.List;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Test;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Completable;
+import retrofit2.http.GET;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.net.SocketTimeoutException;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -270,5 +272,33 @@ public class RxJava2CallAdapterFactoryTest {
       assertThat(e).hasMessage(
           "Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
+  }
+
+  @Test public void ioExceptionPropagatesToOnError() {
+    OkHttpClient timeoutClient = new OkHttpClient.Builder()
+            .addInterceptor(new Interceptor() {
+              @Override
+              public okhttp3.Response intercept(Chain chain) throws IOException {
+                throw new SocketTimeoutException("Shouldn't crash!");
+              }
+            })
+            .build();
+
+    retrofit = new Retrofit.Builder()
+            .baseUrl("http://localhost:1")
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(factory)
+            .client(timeoutClient)
+            .build();
+
+    Service timeoutService = retrofit.create(Service.class);
+
+    timeoutService.getThing().test()
+            .assertError(SocketTimeoutException.class);
+  }
+
+  interface Service {
+    @GET("/path")
+    Flowable<Response<String>> getThing();
   }
 }
