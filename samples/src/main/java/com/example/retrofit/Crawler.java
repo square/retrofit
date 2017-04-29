@@ -77,7 +77,7 @@ public final class Crawler {
         // Enqueue its links for visiting.
         for (String link : page.links) {
           HttpUrl linkUrl = base.resolve(link);
-          if (linkUrl != null && !fetchedUrls.add(linkUrl)) {
+          if (linkUrl != null && fetchedUrls.add(linkUrl)) {
             crawlPage(linkUrl);
           }
         }
