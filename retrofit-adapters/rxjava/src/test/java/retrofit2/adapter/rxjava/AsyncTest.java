@@ -24,11 +24,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Completable;
+import rx.Observable;
 import rx.exceptions.CompositeException;
 import rx.exceptions.Exceptions;
+import rx.functions.Action1;
 import rx.observers.AsyncCompletableSubscriber;
 import rx.observers.TestSubscriber;
 import rx.plugins.RxJavaErrorHandler;
@@ -45,6 +49,7 @@ public final class AsyncTest {
 
   interface Service {
     @GET("/") Completable completable();
+    @GET("/") Observable<Response<Void>> responseObservable();
   }
 
   private Service service;
@@ -139,5 +144,23 @@ public final class AsyncTest {
     //noinspection ThrowableResultOfMethodCallIgnored
     CompositeException composite = (CompositeException) pluginRef.get();
     assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
+  }
+
+  @Test public void unsubscribeShouldRespectRxLifecycle() throws InterruptedException {
+    server.enqueue(new MockResponse());
+
+    final TestSubscriber<Response<Void>> subscriber = new TestSubscriber<>();
+    service.responseObservable()
+            .doOnNext(new Action1<Response<Void>>() {
+              @Override
+              public void call(Response<Void> voidResponse) {
+                subscriber.unsubscribe();
+              }
+            })
+            .subscribe(subscriber);
+
+    subscriber.awaitTerminalEvent(1, SECONDS);
+    subscriber.assertNoErrors();
+    subscriber.assertNotCompleted();
   }
 }
