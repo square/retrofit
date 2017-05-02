@@ -15,16 +15,20 @@
  */
 package retrofit2.http;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Type;
+import retrofit2.Retrofit;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Named replacement in a URL path segment. Values are converted to string using
- * {@link String#valueOf(Object)} and URL encoded.
+ * Named replacement in a URL path segment. Values are converted to strings using
+ * {@link Retrofit#stringConverter(Type, Annotation[])} (or {@link Object#toString()},
+ * if no matching string converter is installed) and then URL encoded.
  * <p>
  * Simple example:
  * <pre><code>
