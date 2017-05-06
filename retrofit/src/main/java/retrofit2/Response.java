@@ -19,13 +19,15 @@ import okhttp3.Headers;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static retrofit2.Utils.checkNotNull;
 
 /** An HTTP response. */
 public final class Response<T> {
   /** Create a synthetic successful response with {@code body} as the deserialized body. */
-  public static <T> Response<T> success(T body) {
+  public static @NotNull <T> Response<T> success(@Nullable T body) {
     return success(body, new okhttp3.Response.Builder() //
         .code(200)
         .message("OK")
@@ -38,7 +40,7 @@ public final class Response<T> {
    * Create a synthetic successful response using {@code headers} with {@code body} as the
    * deserialized body.
    */
-  public static <T> Response<T> success(T body, Headers headers) {
+  public static @NotNull <T> Response<T> success(@Nullable T body, @NotNull Headers headers) {
     checkNotNull(headers, "headers == null");
     return success(body, new okhttp3.Response.Builder() //
         .code(200)
@@ -53,7 +55,8 @@ public final class Response<T> {
    * Create a successful response from {@code rawResponse} with {@code body} as the deserialized
    * body.
    */
-  public static <T> Response<T> success(T body, okhttp3.Response rawResponse) {
+  public static @NotNull <T> Response<T> success(@Nullable T body,
+      @NotNull okhttp3.Response rawResponse) {
     checkNotNull(rawResponse, "rawResponse == null");
     if (!rawResponse.isSuccessful()) {
       throw new IllegalArgumentException("rawResponse must be successful response");
@@ -65,7 +68,7 @@ public final class Response<T> {
    * Create a synthetic error response with an HTTP status code of {@code code} and {@code body}
    * as the error body.
    */
-  public static <T> Response<T> error(int code, ResponseBody body) {
+  public static @NotNull <T> Response<T> error(int code, @NotNull ResponseBody body) {
     if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new okhttp3.Response.Builder() //
         .code(code)
@@ -75,7 +78,8 @@ public final class Response<T> {
   }
 
   /** Create an error response from {@code rawResponse} with {@code body} as the error body. */
-  public static <T> Response<T> error(ResponseBody body, okhttp3.Response rawResponse) {
+  public static @NotNull <T> Response<T> error(@Nullable ResponseBody body,
+      @NotNull okhttp3.Response rawResponse) {
     checkNotNull(body, "body == null");
     checkNotNull(rawResponse, "rawResponse == null");
     if (rawResponse.isSuccessful()) {
@@ -95,7 +99,7 @@ public final class Response<T> {
   }
 
   /** The raw response from the HTTP client. */
-  public okhttp3.Response raw() {
+  public @NotNull okhttp3.Response raw() {
     return rawResponse;
   }
 
@@ -105,12 +109,12 @@ public final class Response<T> {
   }
 
   /** HTTP status message or null if unknown. */
-  public String message() {
+  public @Nullable String message() {
     return rawResponse.message();
   }
 
   /** HTTP headers. */
-  public Headers headers() {
+  public @NotNull Headers headers() {
     return rawResponse.headers();
   }
 
@@ -120,12 +124,12 @@ public final class Response<T> {
   }
 
   /** The deserialized response body of a {@linkplain #isSuccessful() successful} response. */
-  public T body() {
+  public @Nullable T body() {
     return body;
   }
 
   /** The raw response body of an {@linkplain #isSuccessful() unsuccessful} response. */
-  public ResponseBody errorBody() {
+  public @Nullable ResponseBody errorBody() {
     return errorBody;
   }
 

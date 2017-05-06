@@ -16,16 +16,19 @@
 package retrofit2.adapter.rxjava2;
 
 import java.io.IOException;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.Response;
 
 /** The result of executing an HTTP request. */
 public final class Result<T> {
-  public static <T> Result<T> error(Throwable error) {
+  public static @NotNull <T> Result<T> error(@Nullable Throwable error) {
     if (error == null) throw new NullPointerException("error == null");
     return new Result<>(null, error);
   }
 
-  public static <T> Result<T> response(Response<T> response) {
+  public static @NotNull <T> Result<T> response(@NotNull Response<T> response) {
     if (response == null) throw new NullPointerException("response == null");
     return new Result<>(response, null);
   }
@@ -42,7 +45,7 @@ public final class Result<T> {
    * The response received from executing an HTTP request. Only present when {@link #isError()} is
    * false, null otherwise.
    */
-  public Response<T> response() {
+  public @Nullable Response<T> response() {
     return response;
   }
 
@@ -54,7 +57,7 @@ public final class Result<T> {
    * remote server. Any other exception type indicates an unexpected failure and should be
    * considered fatal (configuration error, programming error, etc.).
    */
-  public Throwable error() {
+  public @Nullable Throwable error() {
     return error;
   }
 

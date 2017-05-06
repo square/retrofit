@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.CallAdapter;
 import retrofit2.HttpException;
 import retrofit2.Response;
@@ -61,7 +64,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates synchronous observables that do not operate on any scheduler
    * by default.
    */
-  public static RxJavaCallAdapterFactory create() {
+  public static @NotNull RxJavaCallAdapterFactory create() {
     return new RxJavaCallAdapterFactory(null, false);
   }
 
@@ -69,7 +72,7 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates asynchronous observables. Applying
    * {@link Observable#subscribeOn} has no effect on stream types created by this factory.
    */
-  public static RxJavaCallAdapterFactory createAsync() {
+  public static @NotNull RxJavaCallAdapterFactory createAsync() {
     return new RxJavaCallAdapterFactory(null, true);
   }
 
@@ -77,7 +80,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates synchronous observables that
    * {@linkplain Observable#subscribeOn(Scheduler) subscribe on} {@code scheduler} by default.
    */
-  public static RxJavaCallAdapterFactory createWithScheduler(Scheduler scheduler) {
+  public static @NotNull RxJavaCallAdapterFactory createWithScheduler(
+      @NotNull Scheduler scheduler) {
     if (scheduler == null) throw new NullPointerException("scheduler == null");
     return new RxJavaCallAdapterFactory(scheduler, false);
   }
@@ -91,7 +95,8 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public @Nullable CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
+      Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
     boolean isSingle = rawType == Single.class;
     boolean isCompletable = "rx.Completable".equals(rawType.getCanonicalName());

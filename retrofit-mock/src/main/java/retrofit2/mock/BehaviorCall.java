@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.Request;
+import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -43,15 +44,15 @@ final class BehaviorCall<T> implements Call<T> {
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
-  @Override public Call<T> clone() {
+  @Override public @NotNull Call<T> clone() {
     return new BehaviorCall<>(behavior, backgroundExecutor, delegate.clone());
   }
 
-  @Override public Request request() {
+  @Override public @NotNull Request request() {
     return delegate.request();
   }
 
-  @Override public void enqueue(final Callback<T> callback) {
+  @Override public void enqueue(final @NotNull Callback<T> callback) {
     if (callback == null) throw new NullPointerException("callback == null");
 
     synchronized (this) {
@@ -107,7 +108,7 @@ final class BehaviorCall<T> implements Call<T> {
     return executed;
   }
 
-  @Override public Response<T> execute() throws IOException {
+  @Override public @NotNull Response<T> execute() throws IOException {
     final AtomicReference<Response<T>> responseRef = new AtomicReference<>();
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);

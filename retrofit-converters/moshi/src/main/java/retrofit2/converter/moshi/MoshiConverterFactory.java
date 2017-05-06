@@ -25,6 +25,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
@@ -44,12 +46,12 @@ import static java.util.Collections.unmodifiableSet;
  */
 public final class MoshiConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link Moshi} instance for conversion. */
-  public static MoshiConverterFactory create() {
+  public static @NotNull MoshiConverterFactory create() {
     return create(new Moshi.Builder().build());
   }
 
   /** Create an instance using {@code moshi} for conversion. */
-  public static MoshiConverterFactory create(Moshi moshi) {
+  public static @NotNull MoshiConverterFactory create(@NotNull Moshi moshi) {
     if (moshi == null) throw new NullPointerException("moshi == null");
     return new MoshiConverterFactory(moshi, false, false, false);
   }
@@ -68,25 +70,25 @@ public final class MoshiConverterFactory extends Converter.Factory {
   }
 
   /** Return a new factory which uses {@linkplain JsonAdapter#lenient() lenient} adapters. */
-  public MoshiConverterFactory asLenient() {
+  public @NotNull MoshiConverterFactory asLenient() {
     return new MoshiConverterFactory(moshi, true, failOnUnknown, serializeNulls);
   }
 
   /**
    * Return a new factory which uses {@link JsonAdapter#failOnUnknown()} adapters.
    */
-  public MoshiConverterFactory failOnUnknown() {
+  public @NotNull MoshiConverterFactory failOnUnknown() {
     return new MoshiConverterFactory(moshi, lenient, true, serializeNulls);
   }
 
   /** Return a new factory which includes null values into the serialized JSON. */
-  public MoshiConverterFactory withNullSerialization() {
+  public @NotNull MoshiConverterFactory withNullSerialization() {
     return new MoshiConverterFactory(moshi, lenient, failOnUnknown, true);
   }
 
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(@NotNull Type type,
+      @NotNull Annotation[] annotations, Retrofit retrofit) {
     JsonAdapter<?> adapter = moshi.adapter(type, jsonAnnotations(annotations));
     if (lenient) {
       adapter = adapter.lenient();
@@ -100,8 +102,9 @@ public final class MoshiConverterFactory extends Converter.Factory {
     return new MoshiResponseBodyConverter<>(adapter);
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(@NotNull Type type,
+      @NotNull Annotation[] parameterAnnotations, @NotNull Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     JsonAdapter<?> adapter = moshi.adapter(type, jsonAnnotations(parameterAnnotations));
     if (lenient) {
       adapter = adapter.lenient();

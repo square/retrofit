@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.Request;
+import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,19 +30,19 @@ public final class Calls {
    * Invokes {@code callable} once for the returned {@link Call} and once for each instance that is
    * obtained from {@linkplain Call#clone() cloning} the returned {@link Call}.
    */
-  public static <T> Call<T> defer(Callable<Call<T>> callable) {
+  public static @NotNull <T> Call<T> defer(@NotNull Callable<Call<T>> callable) {
     return new DeferredCall<>(callable);
   }
 
-  public static <T> Call<T> response(T successValue) {
+  public static @NotNull <T> Call<T> response(T successValue) {
     return new FakeCall<>(Response.success(successValue), null);
   }
 
-  public static <T> Call<T> response(Response<T> response) {
+  public static @NotNull <T> Call<T> response(@NotNull Response<T> response) {
     return new FakeCall<>(response, null);
   }
 
-  public static <T> Call<T> failure(IOException failure) {
+  public static @NotNull <T> Call<T> failure(@NotNull IOException failure) {
     return new FakeCall<>(null, failure);
   }
 
@@ -63,7 +64,7 @@ public final class Calls {
       this.error = error;
     }
 
-    @Override public Response<T> execute() throws IOException {
+    @Override public @NotNull Response<T> execute() throws IOException {
       if (!executed.compareAndSet(false, true)) {
         throw new IllegalStateException("Already executed");
       }
@@ -76,7 +77,7 @@ public final class Calls {
       throw error;
     }
 
-    @Override public void enqueue(Callback<T> callback) {
+    @Override public void enqueue(@NotNull Callback<T> callback) {
       if (callback == null) {
         throw new NullPointerException("callback == null");
       }
@@ -104,11 +105,11 @@ public final class Calls {
       return canceled.get();
     }
 
-    @Override public Call<T> clone() {
+    @Override public @NotNull Call<T> clone() {
       return new FakeCall<>(response, error);
     }
 
-    @Override public Request request() {
+    @Override public @NotNull Request request() {
       if (response != null) {
         return response.raw().request();
       }
@@ -124,7 +125,7 @@ public final class Calls {
       this.callable = callable;
     }
 
-    private synchronized Call<T> getDelegate() {
+    private synchronized @NotNull Call<T> getDelegate() {
       Call<T> delegate = this.delegate;
       if (delegate == null) {
         try {
@@ -139,11 +140,11 @@ public final class Calls {
       return delegate;
     }
 
-    @Override public Response<T> execute() throws IOException {
+    @Override public @NotNull Response<T> execute() throws IOException {
       return getDelegate().execute();
     }
 
-    @Override public void enqueue(Callback<T> callback) {
+    @Override public void enqueue(@NotNull Callback<T> callback) {
       getDelegate().enqueue(callback);
     }
 
@@ -159,11 +160,11 @@ public final class Calls {
       return getDelegate().isCanceled();
     }
 
-    @Override public Call<T> clone() {
+    @Override public @NotNull Call<T> clone() {
       return new DeferredCall<>(callable);
     }
 
-    @Override public Request request() {
+    @Override public @NotNull Request request() {
       return getDelegate().request();
     }
   }

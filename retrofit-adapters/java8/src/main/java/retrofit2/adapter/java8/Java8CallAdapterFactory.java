@@ -20,6 +20,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -48,7 +51,7 @@ import retrofit2.Retrofit;
  * </ul>
  */
 public final class Java8CallAdapterFactory extends CallAdapter.Factory {
-  public static Java8CallAdapterFactory create() {
+  public static @NotNull Java8CallAdapterFactory create() {
     return new Java8CallAdapterFactory();
   }
 
@@ -56,7 +59,8 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public @Nullable CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
+      Retrofit retrofit) {
     if (getRawType(returnType) != CompletableFuture.class) {
       return null;
     }

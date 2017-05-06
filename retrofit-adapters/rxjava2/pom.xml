@@ -23,6 +23,11 @@
       <groupId>io.reactivex.rxjava2</groupId>
       <artifactId>rxjava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations-java5</artifactId>
+      <version>${annotations.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>

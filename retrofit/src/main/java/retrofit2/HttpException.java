@@ -15,6 +15,9 @@
  */
 package retrofit2;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import static retrofit2.Utils.checkNotNull;
 
 /** Exception for an unexpected, non-2xx HTTP response. */
@@ -28,7 +31,7 @@ public class HttpException extends RuntimeException {
   private final String message;
   private final transient Response<?> response;
 
-  public HttpException(Response<?> response) {
+  public HttpException(@NotNull Response<?> response) {
     super(getMessage(response));
     this.code = response.code();
     this.message = response.message();
@@ -41,14 +44,14 @@ public class HttpException extends RuntimeException {
   }
 
   /** HTTP status message. */
-  public String message() {
+  public @NotNull String message() {
     return message;
   }
 
   /**
    * The full HTTP response. This may be null if the exception was serialized.
    */
-  public Response<?> response() {
+  public @Nullable Response<?> response() {
     return response;
   }
 }
