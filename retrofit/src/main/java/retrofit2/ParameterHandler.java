@@ -93,6 +93,25 @@ abstract class ParameterHandler<T> {
     }
   }
 
+  static final class Head<T> extends ParameterHandler<T> {
+    private final String name;
+    private final Converter<T, String> valueConverter;
+
+    Head(String name, Converter<T, String> valueConverter) {
+      this.name = checkNotNull(name, "name == null");
+      this.valueConverter = valueConverter;
+    }
+
+    @Override void apply(RequestBuilder builder, T value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException(
+                "Path parameter \"" + name + "\" value must not be null.");
+      }
+      builder.addHeaderParams(name, valueConverter.convert(value));
+    }
+  }
+
+
   static final class Query<T> extends ParameterHandler<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
