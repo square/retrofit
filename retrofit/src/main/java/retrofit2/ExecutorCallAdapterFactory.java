@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
+
 import okhttp3.Request;
 
 import static retrofit2.Utils.checkNotNull;
