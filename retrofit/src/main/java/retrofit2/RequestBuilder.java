@@ -15,16 +15,13 @@
  */
 package retrofit2;
 
-import java.io.IOException;
-import okhttp3.FormBody;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import okio.Buffer;
 import okio.BufferedSink;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 
 import static retrofit2.Utils.checkNotNull;
 
@@ -46,9 +43,10 @@ final class RequestBuilder {
   private MultipartBody.Builder multipartBuilder;
   private FormBody.Builder formBuilder;
   private RequestBody body;
+  private JSONObject jsonBuilder;
 
   RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart, boolean isJsonBody) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -67,6 +65,8 @@ final class RequestBuilder {
       // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBody.Builder();
       multipartBuilder.setType(MultipartBody.FORM);
+    } else if (isJsonBody) {
+      jsonBuilder = new JSONObject();
     }
   }
 
@@ -170,6 +170,15 @@ final class RequestBuilder {
     }
   }
 
+  void addJsonParam(String key, Object value, boolean encoded) {
+    // TODO: 02/12/2016 encoded passed
+    try {
+      jsonBuilder.put(key, value);
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
   void addPart(Headers headers, RequestBody body) {
     multipartBuilder.addPart(headers, body);
   }
@@ -203,6 +212,8 @@ final class RequestBuilder {
         body = formBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
+      } else if (jsonBuilder != null) {
+        body = RequestBody.create(MediaType.parse("application/json"), jsonBuilder.toString());
       } else if (hasBody) {
         // Body is absent, make an empty body.
         body = RequestBody.create(null, new byte[0]);

@@ -15,38 +15,19 @@
  */
 package retrofit2;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
+import retrofit2.http.*;
 import retrofit2.http.Headers;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.net.URI;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import retrofit2.http.Multipart;
 import retrofit2.http.OPTIONS;
 import retrofit2.http.PATCH;
@@ -2169,6 +2150,33 @@ public final class RequestBuilderTest {
     }
     Request request = buildRequest(Example.class, "bar", "pong");
     assertBody(request.body(), "foo=bar&ping=pong");
+  }
+
+  @Test public void simpleJsonEncoded() {
+    class Example {
+      @JsonEncoded //
+      @POST("/foo") //
+      Call<ResponseBody> method(@Key("foo") String foo, @Key("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", "pong");
+    assertBody(request.body(), "{\"ping\":\"pong\",\"foo\":\"bar\"}");
+  }
+
+  @Test public void simpleJsonMapEncoded() {
+    class Example {
+      @JsonEncoded //
+      @POST("/foo") //
+      Call<ResponseBody> method(@KeyMap Map<String, Object> jsonMap) {
+        return null;
+      }
+    }
+    Map<String, Object> json = new HashMap<>();
+    json.put("foo", "bar");
+    json.put("ping", "pong");
+    Request request = buildRequest(Example.class, json);
+    assertBody(request.body(), "{\"ping\":\"pong\",\"foo\":\"bar\"}");
   }
 
   @Test public void formEncodedWithEncodedNameFieldParam() {
