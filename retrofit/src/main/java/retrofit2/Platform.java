@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
+import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
@@ -47,11 +48,11 @@ class Platform {
     return new Platform();
   }
 
-  Executor defaultCallbackExecutor() {
+  @Nullable Executor defaultCallbackExecutor() {
     return null;
   }
 
-  CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
+  CallAdapter.Factory defaultCallAdapterFactory(@Nullable Executor callbackExecutor) {
     if (callbackExecutor != null) {
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
@@ -62,8 +63,8 @@ class Platform {
     return false;
   }
 
-  Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object, Object... args)
-      throws Throwable {
+  @Nullable Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
+      @Nullable Object... args) throws Throwable {
     throw new UnsupportedOperationException();
   }
 
@@ -74,7 +75,7 @@ class Platform {
     }
 
     @Override Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
-        Object... args) throws Throwable {
+        @Nullable Object... args) throws Throwable {
       // Because the service interface might not be public, we need to use a MethodHandle lookup
       // that ignores the visibility of the declaringClass.
       Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
@@ -91,7 +92,8 @@ class Platform {
       return new MainThreadExecutor();
     }
 
-    @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
+    @Override CallAdapter.Factory defaultCallAdapterFactory(@Nullable Executor callbackExecutor) {
+      if (callbackExecutor == null) throw new AssertionError();
       return new ExecutorCallAdapterFactory(callbackExecutor);
     }
 

@@ -26,6 +26,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
+import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
@@ -280,7 +281,7 @@ final class Utils {
     }
   }
 
-  static <T> T checkNotNull(T object, String message) {
+  static <T> T checkNotNull(@Nullable T object, String message) {
     if (object == null) {
       throw new NullPointerException(message);
     }

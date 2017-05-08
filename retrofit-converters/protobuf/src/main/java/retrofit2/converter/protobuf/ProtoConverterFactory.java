@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -40,13 +41,13 @@ public final class ProtoConverterFactory extends Converter.Factory {
   }
 
   /** Create an instance which uses {@code registry} when deserializing. */
-  public static ProtoConverterFactory createWithRegistry(ExtensionRegistryLite registry) {
+  public static ProtoConverterFactory createWithRegistry(@Nullable ExtensionRegistryLite registry) {
     return new ProtoConverterFactory(registry);
   }
 
-  private final ExtensionRegistryLite registry;
+  private final @Nullable ExtensionRegistryLite registry;
 
-  private ProtoConverterFactory(ExtensionRegistryLite registry) {
+  private ProtoConverterFactory(@Nullable ExtensionRegistryLite registry) {
     this.registry = registry;
   }
 

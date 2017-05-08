@@ -47,7 +47,9 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
   }
 
   /** Create an instance using {@code serializer} for non-strict conversion. */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static SimpleXmlConverterFactory createNonStrict(Serializer serializer) {
+    if (serializer == null) throw new NullPointerException("serializer == null");
     return new SimpleXmlConverterFactory(serializer, false);
   }
 
@@ -55,7 +57,6 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
   private final boolean strict;
 
   private SimpleXmlConverterFactory(Serializer serializer, boolean strict) {
-    if (serializer == null) throw new NullPointerException("serializer == null");
     this.serializer = serializer;
     this.strict = strict;
   }

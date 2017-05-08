@@ -20,15 +20,16 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 import java.io.IOException;
+import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 
 final class ProtoResponseBodyConverter<T extends MessageLite>
     implements Converter<ResponseBody, T> {
   private final Parser<T> parser;
-  private final ExtensionRegistryLite registry;
+  private final @Nullable ExtensionRegistryLite registry;
 
-  ProtoResponseBodyConverter(Parser<T> parser, ExtensionRegistryLite registry) {
+  ProtoResponseBodyConverter(Parser<T> parser, @Nullable ExtensionRegistryLite registry) {
     this.parser = parser;
     this.registry = registry;
   }

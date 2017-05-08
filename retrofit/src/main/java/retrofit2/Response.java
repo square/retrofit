@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import javax.annotation.Nullable;
 import okhttp3.Headers;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -25,7 +26,7 @@ import static retrofit2.Utils.checkNotNull;
 /** An HTTP response. */
 public final class Response<T> {
   /** Create a synthetic successful response with {@code body} as the deserialized body. */
-  public static <T> Response<T> success(T body) {
+  public static <T> Response<T> success(@Nullable T body) {
     return success(body, new okhttp3.Response.Builder() //
         .code(200)
         .message("OK")
@@ -38,7 +39,7 @@ public final class Response<T> {
    * Create a synthetic successful response using {@code headers} with {@code body} as the
    * deserialized body.
    */
-  public static <T> Response<T> success(T body, Headers headers) {
+  public static <T> Response<T> success(@Nullable T body, Headers headers) {
     checkNotNull(headers, "headers == null");
     return success(body, new okhttp3.Response.Builder() //
         .code(200)
@@ -53,7 +54,7 @@ public final class Response<T> {
    * Create a successful response from {@code rawResponse} with {@code body} as the deserialized
    * body.
    */
-  public static <T> Response<T> success(T body, okhttp3.Response rawResponse) {
+  public static <T> Response<T> success(@Nullable T body, okhttp3.Response rawResponse) {
     checkNotNull(rawResponse, "rawResponse == null");
     if (!rawResponse.isSuccessful()) {
       throw new IllegalArgumentException("rawResponse must be successful response");
@@ -85,10 +86,11 @@ public final class Response<T> {
   }
 
   private final okhttp3.Response rawResponse;
-  private final T body;
-  private final ResponseBody errorBody;
+  private final @Nullable T body;
+  private final @Nullable ResponseBody errorBody;
 
-  private Response(okhttp3.Response rawResponse, T body, ResponseBody errorBody) {
+  private Response(okhttp3.Response rawResponse, @Nullable T body,
+      @Nullable ResponseBody errorBody) {
     this.rawResponse = rawResponse;
     this.body = body;
     this.errorBody = errorBody;
@@ -120,12 +122,12 @@ public final class Response<T> {
   }
 
   /** The deserialized response body of a {@linkplain #isSuccessful() successful} response. */
-  public T body() {
+  public @Nullable T body() {
     return body;
   }
 
   /** The raw response body of an {@linkplain #isSuccessful() unsuccessful} response. */
-  public ResponseBody errorBody() {
+  public @Nullable ResponseBody errorBody() {
     return errorBody;
   }
 

@@ -18,6 +18,7 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
+import javax.annotation.Nullable;
 import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -25,11 +26,12 @@ import okhttp3.RequestBody;
 import static retrofit2.Utils.checkNotNull;
 
 abstract class ParameterHandler<T> {
-  abstract void apply(RequestBuilder builder, T value) throws IOException;
+  abstract void apply(RequestBuilder builder, @Nullable T value) throws IOException;
 
   final ParameterHandler<Iterable<T>> iterable() {
     return new ParameterHandler<Iterable<T>>() {
-      @Override void apply(RequestBuilder builder, Iterable<T> values) throws IOException {
+      @Override void apply(RequestBuilder builder, @Nullable Iterable<T> values)
+          throws IOException {
         if (values == null) return; // Skip null values.
 
         for (T value : values) {
@@ -41,7 +43,7 @@ abstract class ParameterHandler<T> {
 
   final ParameterHandler<Object> array() {
     return new ParameterHandler<Object>() {
-      @Override void apply(RequestBuilder builder, Object values) throws IOException {
+      @Override void apply(RequestBuilder builder, @Nullable Object values) throws IOException {
         if (values == null) return; // Skip null values.
 
         for (int i = 0, size = Array.getLength(values); i < size; i++) {
@@ -53,7 +55,8 @@ abstract class ParameterHandler<T> {
   }
 
   static final class RelativeUrl extends ParameterHandler<Object> {
-    @Override void apply(RequestBuilder builder, Object value) {
+    @Override void apply(RequestBuilder builder, @Nullable Object value) {
+      checkNotNull(value, "@Url parameter is null.");
       builder.setRelativeUrl(value);
     }
   }
@@ -67,7 +70,7 @@ abstract class ParameterHandler<T> {
       this.valueConverter = valueConverter;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addHeader(name, valueConverter.convert(value));
     }
@@ -84,7 +87,7 @@ abstract class ParameterHandler<T> {
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) {
         throw new IllegalArgumentException(
             "Path parameter \"" + name + "\" value must not be null.");
@@ -104,7 +107,7 @@ abstract class ParameterHandler<T> {
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addQueryParam(name, valueConverter.convert(value), encoded);
     }
@@ -119,7 +122,7 @@ abstract class ParameterHandler<T> {
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addQueryParam(nameConverter.convert(value), null, encoded);
     }
@@ -134,7 +137,8 @@ abstract class ParameterHandler<T> {
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+        throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Query map was null.");
       }
@@ -161,7 +165,8 @@ abstract class ParameterHandler<T> {
       this.valueConverter = valueConverter;
     }
 
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+        throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Header map was null.");
       }
@@ -192,7 +197,7 @@ abstract class ParameterHandler<T> {
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, T value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) return; // Skip null values.
       builder.addFormField(name, valueConverter.convert(value), encoded);
     }
@@ -207,7 +212,8 @@ abstract class ParameterHandler<T> {
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+        throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Field map was null.");
       }
@@ -236,7 +242,7 @@ abstract class ParameterHandler<T> {
       this.converter = converter;
     }
 
-    @Override void apply(RequestBuilder builder, T value) {
+    @Override void apply(RequestBuilder builder, @Nullable T value) {
       if (value == null) return; // Skip null values.
 
       RequestBody body;
@@ -255,7 +261,8 @@ abstract class ParameterHandler<T> {
     private RawPart() {
     }
 
-    @Override void apply(RequestBuilder builder, MultipartBody.Part value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable MultipartBody.Part value)
+        throws IOException {
       if (value != null) { // Skip null values.
         builder.addPart(value);
       }
@@ -271,7 +278,8 @@ abstract class ParameterHandler<T> {
       this.transferEncoding = transferEncoding;
     }
 
-    @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+        throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Part map was null.");
       }
@@ -303,7 +311,7 @@ abstract class ParameterHandler<T> {
       this.converter = converter;
     }
 
-    @Override void apply(RequestBuilder builder, T value) {
+    @Override void apply(RequestBuilder builder, @Nullable T value) {
       if (value == null) {
         throw new IllegalArgumentException("Body parameter value must not be null.");
       }
