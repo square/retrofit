@@ -19,13 +19,14 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 
 final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   private final Type responseType;
-  private final Scheduler scheduler;
+  private final @Nullable Scheduler scheduler;
   private final boolean isAsync;
   private final boolean isResult;
   private final boolean isBody;
@@ -34,8 +35,8 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   private final boolean isMaybe;
   private final boolean isCompletable;
 
-  RxJava2CallAdapter(Type responseType, Scheduler scheduler, boolean isAsync, boolean isResult,
-      boolean isBody, boolean isFlowable, boolean isSingle, boolean isMaybe,
+  RxJava2CallAdapter(Type responseType, @Nullable Scheduler scheduler, boolean isAsync,
+      boolean isResult, boolean isBody, boolean isFlowable, boolean isSingle, boolean isMaybe,
       boolean isCompletable) {
     this.responseType = responseType;
     this.scheduler = scheduler;

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import retrofit2.CallAdapter;
 import retrofit2.HttpException;
 import retrofit2.Response;
@@ -77,15 +78,16 @@ public final class RxJavaCallAdapterFactory extends CallAdapter.Factory {
    * Returns an instance which creates synchronous observables that
    * {@linkplain Observable#subscribeOn(Scheduler) subscribe on} {@code scheduler} by default.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static RxJavaCallAdapterFactory createWithScheduler(Scheduler scheduler) {
     if (scheduler == null) throw new NullPointerException("scheduler == null");
     return new RxJavaCallAdapterFactory(scheduler, false);
   }
 
-  private final Scheduler scheduler;
+  private final @Nullable Scheduler scheduler;
   private final boolean isAsync;
 
-  private RxJavaCallAdapterFactory(Scheduler scheduler, boolean isAsync) {
+  private RxJavaCallAdapterFactory(@Nullable Scheduler scheduler, boolean isAsync) {
     this.scheduler = scheduler;
     this.isAsync = isAsync;
   }

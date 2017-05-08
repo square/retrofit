@@ -51,6 +51,7 @@ final class BehaviorCall<T> implements Call<T> {
     return delegate.request();
   }
 
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   @Override public void enqueue(final Callback<T> callback) {
     if (callback == null) throw new NullPointerException("callback == null");
 

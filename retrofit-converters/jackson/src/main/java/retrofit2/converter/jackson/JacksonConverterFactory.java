@@ -41,14 +41,15 @@ public final class JacksonConverterFactory extends Converter.Factory {
   }
 
   /** Create an instance using {@code mapper} for conversion. */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static JacksonConverterFactory create(ObjectMapper mapper) {
+    if (mapper == null) throw new NullPointerException("mapper == null");
     return new JacksonConverterFactory(mapper);
   }
 
   private final ObjectMapper mapper;
 
   private JacksonConverterFactory(ObjectMapper mapper) {
-    if (mapper == null) throw new NullPointerException("mapper == null");
     this.mapper = mapper;
   }
 

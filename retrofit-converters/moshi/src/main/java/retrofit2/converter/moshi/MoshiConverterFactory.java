@@ -49,6 +49,7 @@ public final class MoshiConverterFactory extends Converter.Factory {
   }
 
   /** Create an instance using {@code moshi} for conversion. */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static MoshiConverterFactory create(Moshi moshi) {
     if (moshi == null) throw new NullPointerException("moshi == null");
     return new MoshiConverterFactory(moshi, false, false, false);

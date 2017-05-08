@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -93,7 +94,7 @@ final class ServiceMethod<R, T> {
   }
 
   /** Builds an HTTP request from method arguments. */
-  Request toRequest(Object... args) throws IOException {
+  Request toRequest(@Nullable Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
         contentType, hasBody, isFormEncoded, isMultipart);
 

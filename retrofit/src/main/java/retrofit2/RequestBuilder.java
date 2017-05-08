@@ -16,6 +16,7 @@
 package retrofit2;
 
 import java.io.IOException;
+import javax.annotation.Nullable;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -26,8 +27,6 @@ import okhttp3.RequestBody;
 import okio.Buffer;
 import okio.BufferedSink;
 
-import static retrofit2.Utils.checkNotNull;
-
 final class RequestBuilder {
   private static final char[] HEX_DIGITS =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -36,19 +35,20 @@ final class RequestBuilder {
   private final String method;
 
   private final HttpUrl baseUrl;
-  private String relativeUrl;
-  private HttpUrl.Builder urlBuilder;
+  private @Nullable String relativeUrl;
+  private @Nullable HttpUrl.Builder urlBuilder;
 
   private final Request.Builder requestBuilder;
-  private MediaType contentType;
+  private @Nullable MediaType contentType;
 
   private final boolean hasBody;
-  private MultipartBody.Builder multipartBuilder;
-  private FormBody.Builder formBuilder;
-  private RequestBody body;
+  private @Nullable MultipartBody.Builder multipartBuilder;
+  private @Nullable FormBody.Builder formBuilder;
+  private @Nullable RequestBody body;
 
-  RequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
-      MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+  RequestBuilder(String method, HttpUrl baseUrl, @Nullable String relativeUrl,
+      @Nullable Headers headers, @Nullable MediaType contentType, boolean hasBody,
+      boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -71,7 +71,6 @@ final class RequestBuilder {
   }
 
   void setRelativeUrl(Object relativeUrl) {
-    checkNotNull(relativeUrl, "@Url parameter is null.");
     this.relativeUrl = relativeUrl.toString();
   }
 
@@ -144,7 +143,7 @@ final class RequestBuilder {
     }
   }
 
-  void addQueryParam(String name, String value, boolean encoded) {
+  void addQueryParam(String name, @Nullable String value, boolean encoded) {
     if (relativeUrl != null) {
       // Do a one-time combination of the built relative URL and the base URL.
       urlBuilder = baseUrl.newBuilder(relativeUrl);
@@ -156,12 +155,15 @@ final class RequestBuilder {
     }
 
     if (encoded) {
+      //noinspection ConstantConditions Checked to be non-null by above 'if' block.
       urlBuilder.addEncodedQueryParameter(name, value);
     } else {
+      //noinspection ConstantConditions Checked to be non-null by above 'if' block.
       urlBuilder.addQueryParameter(name, value);
     }
   }
 
+  @SuppressWarnings("ConstantConditions") // Only called when isFormEncoded was true.
   void addFormField(String name, String value, boolean encoded) {
     if (encoded) {
       formBuilder.addEncoded(name, value);
@@ -170,10 +172,12 @@ final class RequestBuilder {
     }
   }
 
+  @SuppressWarnings("ConstantConditions") // Only called when isMultipart was true.
   void addPart(Headers headers, RequestBody body) {
     multipartBuilder.addPart(headers, body);
   }
 
+  @SuppressWarnings("ConstantConditions") // Only called when isMultipart was true.
   void addPart(MultipartBody.Part part) {
     multipartBuilder.addPart(part);
   }
@@ -189,6 +193,7 @@ final class RequestBuilder {
       url = urlBuilder.build();
     } else {
       // No query parameters triggered builder creation, just combine the relative URL and base URL.
+      //noinspection ConstantConditions Non-null if urlBuilder is null.
       url = baseUrl.resolve(relativeUrl);
       if (url == null) {
         throw new IllegalArgumentException(

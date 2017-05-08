@@ -54,6 +54,7 @@ public final class NetworkBehavior {
    * Create an instance with default behavior which uses {@code random} to control variance and
    * failure calculation.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static NetworkBehavior create(Random random) {
     if (random == null) throw new NullPointerException("random == null");
     return new NetworkBehavior(random);
@@ -120,6 +121,7 @@ public final class NetworkBehavior {
    * It is a best practice to remove the stack trace from {@code exception} since it can
    * misleadingly point to code unrelated to this class.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public void setFailureException(Throwable exception) {
     if (exception == null) {
       throw new NullPointerException("exception == null");
@@ -147,6 +149,7 @@ public final class NetworkBehavior {
    * Set the error response factory to be used when an error is triggered. This factory may only
    * return responses for which {@link Response#isSuccessful()} returns false.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public void setErrorFactory(Callable<Response<?>> errorFactory) {
     if (errorFactory == null) {
       throw new NullPointerException("errorFactory == null");

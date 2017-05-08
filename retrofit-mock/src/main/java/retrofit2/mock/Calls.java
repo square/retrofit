@@ -18,6 +18,7 @@ package retrofit2.mock;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -55,7 +56,7 @@ public final class Calls {
     private final AtomicBoolean canceled = new AtomicBoolean();
     private final AtomicBoolean executed = new AtomicBoolean();
 
-    FakeCall(Response<T> response, IOException error) {
+    FakeCall(@Nullable Response<T> response, @Nullable IOException error) {
       if ((response == null) == (error == null)) {
         throw new AssertionError("Only one of response or error can be set.");
       }
@@ -76,6 +77,7 @@ public final class Calls {
       throw error;
     }
 
+    @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
     @Override public void enqueue(Callback<T> callback) {
       if (callback == null) {
         throw new NullPointerException("callback == null");
