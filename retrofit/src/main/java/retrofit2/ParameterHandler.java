@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Map;
@@ -262,15 +263,27 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, RequestBody> valueConverter;
-    private final String transferEncoding;
+  static final class FilePart extends ParameterHandler<File> {
+    private final String name;
 
-    PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
-      this.valueConverter = valueConverter;
-      this.transferEncoding = transferEncoding;
+    FilePart(String name) {
+      this.name = name;
     }
 
+    @Override void apply(RequestBuilder builder, File value) throws IOException {
+      apply(builder, name, value);
+    }
+
+    static void apply(RequestBuilder builder, String name, File value) {
+      if (value != null) { // Skip null values.
+        builder.addPart(MultipartBody.Part.createFormData(name,
+                value.getName(),
+                RequestBody.create(null, value)));
+      }
+    }
+  }
+
+  abstract static class BasePartMap<T> extends ParameterHandler<Map<String, T>> {
     @Override void apply(RequestBuilder builder, Map<String, T> value) throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Part map was null.");
@@ -286,13 +299,36 @@ abstract class ParameterHandler<T> {
           throw new IllegalArgumentException(
               "Part map contained null value for key '" + entryKey + "'.");
         }
-
-        Headers headers = Headers.of(
-            "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
-            "Content-Transfer-Encoding", transferEncoding);
-
-        builder.addPart(headers, valueConverter.convert(entryValue));
+        applyEntry(builder, entryKey, entryValue);
       }
+    }
+
+    abstract void applyEntry(RequestBuilder builder, String key, T value) throws IOException;
+  }
+
+  static final class FilePartMap extends BasePartMap<File> {
+    static final FilePartMap INSTANCE = new FilePartMap();
+
+    @Override void applyEntry(RequestBuilder builder, String key, File value) throws IOException {
+      FilePart.apply(builder, key, value);
+    }
+  }
+
+  static final class PartMap<T> extends BasePartMap<T> {
+    private final Converter<T, RequestBody> valueConverter;
+    private final String transferEncoding;
+
+    PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
+      this.valueConverter = valueConverter;
+      this.transferEncoding = transferEncoding;
+    }
+
+    @Override void applyEntry(RequestBuilder builder, String key, T value) throws IOException {
+      Headers headers = Headers.of(
+          "Content-Disposition", "form-data; name=\"" + key + "\"",
+          "Content-Transfer-Encoding", transferEncoding);
+
+      builder.addPart(headers, valueConverter.convert(value));
     }
   }
 

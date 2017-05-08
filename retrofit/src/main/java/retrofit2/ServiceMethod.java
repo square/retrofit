@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -619,6 +620,8 @@ final class ServiceMethod<R, T> {
             return ParameterHandler.RawPart.INSTANCE.array();
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             return ParameterHandler.RawPart.INSTANCE;
+          } else if (File.class.isAssignableFrom(rawParameterType)) {
+            throw parameterError(p, "File parts must have defined name.");
           } else {
             throw parameterError(p,
                 "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
@@ -656,6 +659,8 @@ final class ServiceMethod<R, T> {
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
                 + "include a part name in the annotation.");
+          } else if (File.class.isAssignableFrom(rawParameterType)) {
+            return new ParameterHandler.FilePart(partName);
           } else {
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(type, annotations, methodAnnotations);
@@ -687,6 +692,9 @@ final class ServiceMethod<R, T> {
         if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(valueType))) {
           throw parameterError(p, "@PartMap values cannot be MultipartBody.Part. "
               + "Use @Part List<Part> or a different value type instead.");
+        }
+        if (File.class.isAssignableFrom(Utils.getRawType(valueType))) {
+          return ParameterHandler.FilePartMap.INSTANCE;
         }
 
         Converter<?, RequestBody> valueConverter =

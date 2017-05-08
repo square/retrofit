@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -2156,6 +2157,82 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e.getMessage()).isEqualTo("Multipart body must have at least one part.");
+    }
+  }
+
+  @Test public void multipartWithFileContents() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/")
+      Call<ResponseBody> method(@Part("filepart") File content) { return null; }
+    }
+
+    File multipartFile = File.createTempFile("multipartFileTest", ".txt");
+
+    Request request = buildRequest(Example.class, multipartFile);
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+            .contains("name=\"filepart\"; filename=\"" + multipartFile.getName() + "\"");
+  }
+
+  @Test public void multipartMapWithFiles() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar")
+      Call<ResponseBody> method(@PartMap Map<String, File> files) { return null; }
+    }
+
+    Map<String, File> fileMap = new HashMap<>(3);
+    fileMap.put("file[0]", File.createTempFile("multipartFileTest", ".txt"));
+    fileMap.put("file[1]", File.createTempFile("multipartFileTest", ".txt"));
+    fileMap.put("file[2]", File.createTempFile("multipartFileTest", ".txt"));
+
+    Request request = buildRequest(Example.class, fileMap);
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"file[0]\"; filename=\"" + fileMap.get("file[0]").getName() + "\"")
+        .contains("name=\"file[1]\"; filename=\"" + fileMap.get("file[1]").getName() + "\"")
+        .contains("name=\"file[2]\"; filename=\"" + fileMap.get("file[2]").getName() + "\"");
+  }
+
+  @Test public void multipartFileContentsNullValue() throws IOException {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/")
+      Call<ResponseBody> method(@Part("text") String text, @Part("filepart") File content) { return null; }
+    }
+
+    Request request = buildRequest(Example.class, "param", (File) null);
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("name=\"text\"")
+        .doesNotContain("name=\"filepart\"");
+  }
+
+  @Test public void multipartFileContentsWithoutPartName() {
+    class Example {
+      @Multipart
+      @POST("/foo/bar/")
+      Call<ResponseBody> method(@Part File content) { return null; }
+    }
+
+    try {
+      buildRequest(Example.class, null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).isEqualTo("File parts must have defined name. (parameter #1)\n    for method Example.method");
     }
   }
 
