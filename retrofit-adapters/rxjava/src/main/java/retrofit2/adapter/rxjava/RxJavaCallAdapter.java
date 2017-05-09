@@ -71,18 +71,8 @@ final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
       return observable.toSingle();
     }
     if (isCompletable) {
-      return CompletableHelper.toCompletable(observable);
-    }
-    return observable;
-  }
-
-  /**
-   * Separate static class defers classloading and bytecode verification since Completable is not an
-   * RxJava stable API yet.
-   */
-  private static final class CompletableHelper {
-    static Object toCompletable(Observable<?> observable) {
       return observable.toCompletable();
     }
+    return observable;
   }
 }
