@@ -16,8 +16,10 @@
 
   <modules>
     <module>gson</module>
+    <module>guava</module>
     <module>protobuf</module>
     <module>jackson</module>
+    <module>java8</module>
     <module>wire</module>
     <module>simplexml</module>
     <module>scalars</module>
