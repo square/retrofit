@@ -76,7 +76,7 @@ public final class NetworkBehavior {
   private NetworkBehavior(Random random) {
     this.random = random;
 
-    failureException = new IOException("Mock failure!");
+    failureException = new IOException("Mock random network failure!");
     failureException.setStackTrace(new StackTraceElement[0]);
   }
 
