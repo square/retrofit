@@ -70,6 +70,7 @@ public final class Response<T> {
     if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new okhttp3.Response.Builder() //
         .code(code)
+        .message("Response.error()")
         .protocol(Protocol.HTTP_1_1)
         .request(new Request.Builder().url("http://localhost/").build())
         .build());
