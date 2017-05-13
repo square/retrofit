@@ -33,7 +33,8 @@ public final class NetworkBehaviorTest {
 
   @Test public void defaultThrowable() {
     Throwable t = behavior.failureException();
-    assertThat(t).isExactlyInstanceOf(IOException.class).hasMessage("Mock failure!");
+    assertThat(t).isInstanceOf(IOException.class)
+        .isExactlyInstanceOf(MockRetrofitIOException.class);
     assertThat(t.getStackTrace()).isEmpty();
   }
 
