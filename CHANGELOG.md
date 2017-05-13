@@ -1,6 +1,33 @@
 Change Log
 ==========
 
+Version 2.3.0 *(2017-05-13)*
+----------------------------
+
+ *  **Retrofit now uses `@Nullable` to annotate all possibly-null values.** We've
+    added a compile-time dependency on the JSR 305 annotations. This is a
+    [provided][maven_provided] dependency and does not need to be included in
+    your build configuration, `.jar` file, or `.apk`. We use
+    `@ParametersAreNonnullByDefault` and all parameters and return types are
+    never null unless explicitly annotated `@Nullable`.
+
+    **Warning: this release is source-incompatible for Kotlin users.**
+    Nullability was previously ambiguous and lenient but now the compiler will
+    enforce strict null checks.
+
+ * New: Converters added for Java 8's and Guava's `Optional` which wrap a potentially-nullable
+   response body. These converters still rely on normal serialization library converters for parsing
+   the response bytes into an object.
+ * New: String converters that return `null` for an `@Query` or `@Field` parameter are now skipped.
+ * New: The mock module's `NetworkBehavior` now throws a custom subclass of `IOException` to more
+   clearly indicate the exception's source.
+ * RxJava 1.x converter updated to 1.3.0 which stabalizes the use of `Completable`.
+ * Fix: Add explicit handling for `OnCompleteFailedExceptoin`, `OnErrorFailedExceptoin`, and
+   `OnErrorNotImplementedException` for RxJava 1.x to ensure they're correct deliered to the
+   plugins/hooks for handling.
+ * Fix: `NoSuchElementException` thrown when unsubscribing from an RxJava 1.x `Single`.
+
+
 Version 2.2.0 *(2017-02-21)*
 ----------------------------
 
