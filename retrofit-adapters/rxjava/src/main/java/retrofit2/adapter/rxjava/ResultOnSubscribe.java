@@ -20,6 +20,9 @@ import rx.Observable.OnSubscribe;
 import rx.Subscriber;
 import rx.exceptions.CompositeException;
 import rx.exceptions.Exceptions;
+import rx.exceptions.OnCompletedFailedException;
+import rx.exceptions.OnErrorFailedException;
+import rx.exceptions.OnErrorNotImplementedException;
 import rx.plugins.RxJavaPlugins;
 
 final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
@@ -51,6 +54,10 @@ final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
       } catch (Throwable t) {
         try {
           subscriber.onError(t);
+        } catch (OnCompletedFailedException
+            | OnErrorFailedException
+            | OnErrorNotImplementedException e) {
+          RxJavaPlugins.getInstance().getErrorHandler().handleError(e);
         } catch (Throwable inner) {
           Exceptions.throwIfFatal(inner);
           CompositeException composite = new CompositeException(t, inner);

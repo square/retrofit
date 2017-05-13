@@ -29,6 +29,7 @@ import retrofit2.http.GET;
 import rx.Completable;
 import rx.exceptions.CompositeException;
 import rx.exceptions.Exceptions;
+import rx.exceptions.OnErrorFailedException;
 import rx.observers.AsyncCompletableSubscriber;
 import rx.observers.TestSubscriber;
 import rx.plugins.RxJavaErrorHandler;
@@ -38,6 +39,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public final class AsyncTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -135,9 +137,45 @@ public final class AsyncTest {
       }
     });
 
-    latch.await(1, SECONDS);
-    //noinspection ThrowableResultOfMethodCallIgnored
+    assertTrue(latch.await(1, SECONDS));
     CompositeException composite = (CompositeException) pluginRef.get();
+    assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
+  }
+
+  @Test public void bodyThrowingInOnSafeSubscriberErrorDeliveredToPlugin()
+      throws InterruptedException {
+    server.enqueue(new MockResponse().setResponseCode(404));
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    final AtomicReference<Throwable> pluginRef = new AtomicReference<>();
+    RxJavaPlugins.getInstance().registerErrorHandler(new RxJavaErrorHandler() {
+      @Override public void handleError(Throwable throwable) {
+        if (throwable instanceof OnErrorFailedException) {
+          if (!pluginRef.compareAndSet(null, throwable)) {
+            throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
+          }
+          latch.countDown();
+        }
+      }
+    });
+
+    final TestSubscriber<Void> subscriber = new TestSubscriber<>();
+    final RuntimeException e = new RuntimeException();
+    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+    service.completable().subscribe(new AsyncCompletableSubscriber() {
+      @Override public void onCompleted() {
+        subscriber.onCompleted();
+      }
+
+      @Override public void onError(Throwable t) {
+        errorRef.set(t);
+        throw e;
+      }
+    });
+
+    assertTrue(latch.await(1, SECONDS));
+    OnErrorFailedException failed = (OnErrorFailedException) pluginRef.get();
+    CompositeException composite = (CompositeException) failed.getCause();
     assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
   }
 }
