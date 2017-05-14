@@ -21,9 +21,9 @@ Version 2.3.0 *(2017-05-13)*
  * New: String converters that return `null` for an `@Query` or `@Field` parameter are now skipped.
  * New: The mock module's `NetworkBehavior` now throws a custom subclass of `IOException` to more
    clearly indicate the exception's source.
- * RxJava 1.x converter updated to 1.3.0 which stabalizes the use of `Completable`.
- * Fix: Add explicit handling for `OnCompleteFailedExceptoin`, `OnErrorFailedException`, and
-   `OnErrorNotImplementedException` for RxJava 1.x to ensure they're correct deliered to the
+ * RxJava 1.x converter updated to 1.3.0 which stabilizes the use of `Completable`.
+ * Fix: Add explicit handling for `OnCompleteFailedException`, `OnErrorFailedException`, and
+   `OnErrorNotImplementedException` for RxJava 1.x to ensure they're correct delivered to the
    plugins/hooks for handling.
  * Fix: `NoSuchElementException` thrown when unsubscribing from an RxJava 1.x `Single`.
 
