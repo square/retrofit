@@ -26,7 +26,15 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 
 Retrofit requires at minimum Java 7 or Android 2.3.
 
-
+ProGuard
+--------
+If you are using Proguard in your project add the following lines to your configuration:
+```
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+```
 
 License
 =======
