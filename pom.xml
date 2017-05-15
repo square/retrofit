@@ -194,6 +194,38 @@
     </dependencies>
   </dependencyManagement>
 
+  <profiles>
+    <!-- Ekstazi (www.ekstazi.org) profile to optimize regression testing -->
+    <profile>
+      <id>ekstazi</id>
+      <activation>
+        <property>
+          <name>ekstazi</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.ekstazi</groupId>
+            <artifactId>ekstazi-maven-plugin</artifactId>
+            <version>4.5.2</version>
+            <configuration>
+              <forcefailing>true</forcefailing>
+            </configuration>
+            <executions>
+              <execution>
+                <id>ekstazi</id>
+                <goals>
+                  <goal>select</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <pluginManagement>
       <plugins>
