@@ -918,6 +918,41 @@ public final class RetrofitTest {
     assertThat(nonMatchingFactory2.called).isTrue();
   }
 
+  @Test public void requestConverterFactorySkippedNoMatchThrows() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter.Factory factory1 = spy(new Converter.Factory() {
+      @Override
+      public Converter<?, RequestBody> requestBodyConverter(Type returnType,
+          Annotation[] annotations, Retrofit retrofit) {
+        return null;
+      }
+    });
+
+    Converter.Factory factory2 = spy(new Converter.Factory() {
+      @Override
+      public Converter<?, RequestBody> requestBodyConverter(Type type,
+          Annotation[] annotations, Retrofit retrofit) {
+        return null;
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory1)
+        .addConverterFactory(factory2)
+        .build();
+
+    try {
+      retrofit.nextRequestBodyConverter(factory1, type, annotations);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Could not locate RequestBody converter for class java.lang.String. Tried:");
+      assertThat(e).hasMessageContaining("Skipped:");
+    }
+  }
+
   @Test public void responseConverterFactoryQueried() {
     Type type = String.class;
     Annotation[] annotations = new Annotation[0];
@@ -992,6 +1027,41 @@ public final class RetrofitTest {
 
     assertThat(nonMatchingFactory1.called).isFalse();
     assertThat(nonMatchingFactory2.called).isTrue();
+  }
+
+  @Test public void responseConverterFactorySkippedNoMatchThrows() {
+    Type type = String.class;
+    Annotation[] annotations = new Annotation[0];
+
+    Converter.Factory factory1 = spy(new Converter.Factory() {
+      @Override
+      public Converter<ResponseBody, ?> responseBodyConverter(Type returnType,
+          Annotation[] annotations, Retrofit retrofit) {
+        return null;
+      }
+    });
+
+    Converter.Factory factory2 = spy(new Converter.Factory() {
+      @Override
+      public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+          Annotation[] annotations, Retrofit retrofit) {
+        return null;
+      }
+    });
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory1)
+        .addConverterFactory(factory2)
+        .build();
+
+    try {
+      retrofit.nextResponseBodyConverter(factory1, type, annotations);
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageStartingWith(
+          "Could not locate ResponseBody converter for class java.lang.String. Tried:");
+      assertThat(e).hasMessageContaining("Skipped:");
+    }
   }
 
   @Test public void stringConverterFactoryQueried() {
