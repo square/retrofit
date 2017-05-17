@@ -27,6 +27,15 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 Retrofit requires at minimum Java 7 or Android 2.3.
 
 
+ProGuard
+--------
+
+If you are using ProGuard you might need to add the following options:
+```
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+```
+
 
 License
 =======
