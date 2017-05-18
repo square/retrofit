@@ -7,7 +7,7 @@ package retrofit2;
  */
 public class RetryHelper {
   private static final int DEFAULT_RETRIES = 1;
-  private static int SUCCESS= 200;
+  private static int SUCCESS = 200;
 
   /**
    * Method with custom retry counts
