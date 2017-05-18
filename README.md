@@ -32,8 +32,12 @@ ProGuard
 
 If you are using ProGuard you might need to add the following options:
 ```
+-dontnote retrofit2.Platform
+-dontwarn retrofit2.Platform$Java8
 -dontwarn okio.**
 -dontwarn javax.annotation.**
+-keepattributes Signature
+-keepattributes Exceptions
 ```
 
 
