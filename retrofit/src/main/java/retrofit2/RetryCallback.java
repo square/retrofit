@@ -1,4 +1,4 @@
-package harsh.dalwadi.retrofitretryhelper;
+package retrofit2;
 
 import retrofit2.Call;
 import retrofit2.Response;

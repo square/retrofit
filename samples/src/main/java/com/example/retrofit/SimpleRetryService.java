@@ -24,6 +24,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
+import retrofit2.CustomCallback;
+import retrofit2.RetryCall;
+import retrofit2.RetryHelper;
+
+
 public final class SimpleService {
   public static final String API_URL = "https://api.github.com";
 
