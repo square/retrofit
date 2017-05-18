@@ -21,6 +21,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.CustomCallback;
 import retrofit2.Retrofit;
+import retrofit2.Response;
 import retrofit2.RetryHelper;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
@@ -63,15 +64,15 @@ public final class SimpleRetryService {
     // Fetch and print a list of the contributors to the library.
     RetryHelper.setSuccessCode(200);
 
-    RetryHelper.enqueueRetry(responseCall, 3, new CustomCallback<List<Contributor>>() {
+    RetryHelper.enqueueRetry(call, 3, new CustomCallback<List<Contributor>>() {
       @Override
       public void onFailResponse(int errorCode, Call<List<Contributor>> call, Response<List<Contributor>> response) {
-        Log.e(TAG, "onFailResponse() called with: errorCode = [" + errorCode + "], call = [" + call + "], response = [" + response + "]");
+        System.out.println("onFailResponse() called with: errorCode = [" + errorCode + "], call = [" + call + "], response = [" + response + "]");
       }
 
       @Override
       public void onResponse(Call<List<Contributor>> call, Response<List<Contributor>> response) {
-        Log.e(TAG, "Success" + response.code());
+        System.out.println("Success" + response.code());
         for (Contributor contributor : contributors) {
           System.out.println(contributor.login + " (" + contributor.contributions + ")");
         }
@@ -79,7 +80,7 @@ public final class SimpleRetryService {
 
       @Override
       public void onFailure(Call<List<Contributor>> call, Throwable t) {
-        Log.e(TAG, "onFailure: " + t.getMessage());
+        System.out.println("onFailure: " + t.getMessage());
       }
     });
 
