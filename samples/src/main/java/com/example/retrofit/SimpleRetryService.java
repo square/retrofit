@@ -27,7 +27,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 
 
-public final class SimpleService {
+public final class SimpleRetryService {
   public static final String API_URL = "https://api.github.com";
 
   public static class Contributor {
