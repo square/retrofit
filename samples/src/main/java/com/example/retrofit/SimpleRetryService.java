@@ -66,8 +66,10 @@ public final class SimpleRetryService {
 
     RetryHelper.enqueueRetry(call, 3, new CustomCallback<List<Contributor>>() {
       @Override
-      public void onFailResponse(int errorCode, Call<List<Contributor>> call, Response<List<Contributor>> response) {
-        System.out.println("onFailResponse() called with: errorCode = [" + errorCode + "], call = [" + call + "], response = [" + response + "]");
+      public void onFailResponse(int errorCode, Call<List<Contributor>> call,
+                                 Response<List<Contributor>> response) {
+        System.out.println("onFailResponse() called with: errorCode = ["
+                + errorCode + "], call = [" + call + "], response = [" + response + "]");
       }
 
       @Override
