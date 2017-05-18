@@ -17,7 +17,7 @@ class RetryCallback<T> implements CustomCallback<T> {
       if (retryCount++ < totalRetries) {
         retry();
       } else {
-        onFinalFail(response.code(),call,response);
+        onFinalFail(response.code(), call, response);
       }
     } else {
       onFinalResponse(call, response);

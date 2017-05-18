@@ -12,25 +12,26 @@ public class RetryHelper {
   /**
    * Method with custom retry counts
    */
-  public static <T> void enqueueRetry(Call<T> call, final int retryCount, final CustomCallback<T> callback) {
+  public static <T> void enqueueRetry(Call<T> call, final int retryCount,
+                                      final CustomCallback<T> callback) {
 
     call.enqueue(new RetryCallback<T>(call, retryCount) {
       @Override
-     public void onFinalFail(int errorCode, Call<T> call, Response<T> response) {
-       callback.onFailResponse(errorCode, call, response);
-     }
+      public void onFinalFail(int errorCode, Call<T> call, Response<T> response) {
+        callback.onFailResponse(errorCode, call, response);
+      }
 
-     @Override
-     public void onFinalResponse(Call<T> call, Response<T> response) {
-       callback.onResponse(call, response);
-     }
+      @Override
+      public void onFinalResponse(Call<T> call, Response<T> response) {
+        callback.onResponse(call, response);
+      }
 
-     @Override
-     public void onFinalFailure(Call<T> call, Throwable t) {
+      @Override
+      public void onFinalFailure(Call<T> call, Throwable t) {
         callback.onFailure(call, t);
-     }
-     });
-   }
+      }
+    });
+  }
 
   /**
    * if you are go with default retry counts
