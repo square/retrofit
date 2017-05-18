@@ -1,8 +1,8 @@
 package retrofit2;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import Call;
+import Callback;
+import Response;
 
 public interface CustomCallback<T> extends Callback<T> {
   /**

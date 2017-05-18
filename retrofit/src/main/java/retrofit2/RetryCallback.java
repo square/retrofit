@@ -1,7 +1,7 @@
 package retrofit2;
 
-import retrofit2.Call;
-import retrofit2.Response;
+import Call;
+import Response;
 
 class RetryCallback<T> implements CustomCallback<T> {
   private int totalRetries = 0;

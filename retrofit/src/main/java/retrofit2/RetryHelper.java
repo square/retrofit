@@ -1,7 +1,7 @@
 package retrofit2;
 
-import retrofit2.Call;
-import retrofit2.Response;
+import Call;
+import Response;
 
 /**
  * we can use this class directly to access the network calls when you
