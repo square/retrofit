@@ -1,8 +1,5 @@
 package retrofit2;
 
-import Call;
-import Response;
-
 /**
  * we can use this class directly to access the network calls when you
  * are facing problem with different error code then success code and in that

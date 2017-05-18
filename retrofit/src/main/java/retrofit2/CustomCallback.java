@@ -1,9 +1,5 @@
 package retrofit2;
 
-import Call;
-import Callback;
-import Response;
-
 public interface CustomCallback<T> extends Callback<T> {
   /**
    * Invoked when a network fluctuation occurred talking to the server

@@ -1,8 +1,5 @@
 package retrofit2;
 
-import Call;
-import Response;
-
 class RetryCallback<T> implements CustomCallback<T> {
   private int totalRetries = 0;
   private static final String TAG = RetryCallback.class.getSimpleName();
