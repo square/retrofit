@@ -20,8 +20,8 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.CustomCallback;
-import retrofit2.Retrofit;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.RetryHelper;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
@@ -73,7 +73,7 @@ public final class SimpleRetryService {
       @Override
       public void onResponse(Call<List<Contributor>> call, Response<List<Contributor>> response) {
         System.out.println("Success" + response.code());
-        for (Contributor contributor : contributors) {
+        for (Contributor contributor : response.body()) {
           System.out.println(contributor.login + " (" + contributor.contributions + ")");
         }
       }
