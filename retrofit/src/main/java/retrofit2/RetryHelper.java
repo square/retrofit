@@ -22,7 +22,7 @@ package retrofit2;
  */
 public class RetryHelper {
   private static final int DEFAULT_RETRIES = 1;
-  private static int SUCCESS = 200;
+  private static int success = 200;
 
   /**
    * Method with custom retry counts
@@ -56,7 +56,7 @@ public class RetryHelper {
   }
 
   static boolean isCallSuccess(Response response) {
-    return response.code() == SUCCESS;
+    return response.code() == success;
   }
 
   /**
@@ -65,7 +65,7 @@ public class RetryHelper {
    * @return Success code
    */
   public static int getSuccessCode() {
-    return SUCCESS;
+    return success;
   }
 
   /**
@@ -74,7 +74,7 @@ public class RetryHelper {
    * @param successCode
    */
   public static void setSuccessCode(int successCode) {
-    RetryHelper.SUCCESS = successCode;
+    RetryHelper.success = successCode;
   }
 
 }
