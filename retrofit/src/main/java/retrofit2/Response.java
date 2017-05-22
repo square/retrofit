@@ -117,7 +117,7 @@ public final class Response<T> {
     return rawResponse.headers();
   }
 
-  /** Returns true if {@link #code()} is in the range [200..300). */
+  /** Returns true if {@link #code()} is in the range [200..300]. */
   public boolean isSuccessful() {
     return rawResponse.isSuccessful();
   }
