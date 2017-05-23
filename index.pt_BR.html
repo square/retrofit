@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Retrofit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Client HTTP fortemente tipado para Android and Java">
+    <link href="static/bootstrap-combined.min.css" rel="stylesheet">
+    <link href="static/app.css" rel="stylesheet">
+    <link href="static/app-theme.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300italic,100,100italic,300" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]><script src="static/html5shiv.min.js"></script><![endif]-->
+  </head>
+  <body data-target=".content-nav">
+    <header>
+      <div class="container">
+        <div class="row">
+          <div class="span5">
+            <h1>Retrofit</h1>
+          </div>
+          <div class="span7">
+            <menu>
+              <ul>
+                <li><a href="#download" class="menu download">Baixe a <span class="version-tag">Última Versão</span></a></li>
+                <li><a href="http://github.com/square/retrofit" data-title="View GitHub Project" class="menu github"><img src="static/icon-github.png" alt="GitHub"/></a></li>
+                <li><a href="http://square.github.io/" data-title="Square Open Source Portal" class="menu square"><img src="static/icon-square.png" alt="Square"/></a></li>
+              </ul>
+            </menu>
+          </div>
+        </div>
+      </div>
+    </header>
+    <section id="subtitle">
+      <div class="container">
+        <div class="row">
+          <div class="span12">
+            <h2>Um <strong>HTTP client</strong> fortemente tipado para Android e Java<!-- e Samsung! --></h2>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="body">
+      <div class="container">
+        <div class="row">
+          <div class="span9">
+            <section id="introduction">
+              <h3>Introdução</h3>
+              <p>Retrofit faz de sua API HTTP A  uma interface Java.</p>
+              <pre class="prettyprint">public interface GitHubService {
+  @GET("usuarios/{usuario}/repos")
+  Call&lt;List&lt;Repo>> listarRepos(@Path("usuario") String usuario);
+}</pre>
+              <p>A classe <code>Retrofit</code> gera uma implementação da interface <code>GitHubService</code>.</p>
+              <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
+    .baseUrl("https://api.github.com/")
+    .build();
+
+GitHubService service = retrofit.create(GitHubService.class);</pre>
+              <p>Cada <code>Chamada</code> do <code>GitHubService</code> criado pode fazer um request HTTP síncrono ou assíncrono do webserver remoto.</p>
+              <pre class="prettyprint">Call&lt;List&lt;Repo>> repos = service.listRepos("octocat");</pre>
+              <p>Use anotações para descrever o request HTTP:</p>
+              <ul>
+                <li>Suporte de substituição de parâmetro de URL e parâmetro de query</li>
+                <li>Conversão de objetos para requerir body (JSON, protocolos de transferência)</li>
+                <li>Upload de arquivos e dados</li>
+              </ul>
+              <p><em>Nota:</em> Este site ainda está em processo de ser expandido para as novas APIs 2.0.</p>
+            </section>
+
+            <section id="api-declaration">
+              <h3>Declaração da API</h3>
+              <p>Anotações em métodos da interface e seus parâmetros indicam como uma request será manuseada.</p>
+
+              <h4>Método da Request</h4>
+              <p>Todo método deve possuir uma anotação HTTP que fornece o método da request e a URL relativa. Existem cinco anotações contruídas: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, e <code>HEAD</code>. A URL relativa do recurso é especificada na anotação.</p>
+              <pre class="prettyprint">@GET("usuarios/list")</pre>
+              <p>Você pode especificar os parâmetros da busca na URL.</p>
+              <pre class="prettyprint">@GET("usuarios/list?sort=desc")</pre>
+
+              <h4>Manipulação de URL</h4>
+              <p>Um request pode ser atualizado dinamicamente usando blocos de substituição e parâmetros no método. Um bloco de substituição é uma string alfanumérica cercado por <code>{</code> e <code>}</code>. Um parâmetro correspondente deve ser anotado com <code>@Path</code> usando a mesma string.</p>
+              <pre class="prettyprint">@GET("grupo/{id}/usuarios")
+Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo);</pre>
+              <p>Parâmetros de query também podem ser adicionados.</p>
+              <pre class="prettyprint">@GET("grupo/{id}/usuarios")
+Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @Query("sort") String sort);</pre>
+              <p>Para combinações de parâmetros de query complexos um <code>Map</code> pode ser utilizado.</p>
+              <pre class="prettyprint">@GET("grupo/{id}/usuarios")
+Call&lt;List&lt;Usuario>> groupList(@Path("id") int idDoGrupo, @QueryMap Map&lt;String, String&gt; options);</pre>
+
+              <h4>Request Body</h4>
+
+              <p>Um objeto pode ser especificado para a utilização como o corpo de uma requisição HTTP com a anotação <code>@Body</code>.</p>
+              <pre class="prettyprint">@POST("usuarios/novo")
+Call&lt;Usuario> criarUsuario(@Body Usuario usuario);</pre>
+              <p>O objeto também será convertido usando um conversor especificado na instância do <code>Retrofit</code>. Se nenhum conversor for utilizado, somente <code>RequestBody</code> poderá ser utilizado.</p>
+
+              <h4>Form Encoded e Multipart</h4>
+              <p>Métodos também podem ser declarados para enviar dados form-encoded e multipart.</p>
+              <p>Dados form-encoded são enviados quando a anotação <code>@FormUrlEncoded</code> está presente no método. Cada par key-value é anotado com <code>@Field</code> contendo o nome e o objeto que fornece o valor.</p> 
+              <pre class="prettyprint">@FormUrlEncoded
+@POST("usuario/editar")
+
+Call&lt;Usuario> updateUsuario(@Field("primeiro_nome") String primeiro, @Field("ultimo_nome") String ultimo);</pre>
+              <p>Multipart requests são usadas quando <code>@Multipart</code> está presente no método. Partes são declaradas usando a anotação <code>@Part</code> .</p>
+              <pre class="prettyprint">@Multipart
+@PUT("usuario/foto")
+Call&lt;Usuario> updateUsuario(@Part("foto") RequestBody foto, @Part("descricao") RequestBody descricao);</pre>
+              <p>Partes do multipart usam um conversor do <code>Retrofit</code> ou elas podem implementar <code>RequestBody</code> para manusear sua própria serialização.</p>
+
+              <h4>Manipulação de cabeçalho</h4>
+              <p>Você pode estabelecer cabeçalhos estáticos para um método utilizando a anotação <code>@Headers</code> .</p>
+
+              <pre class="prettyprint">@Headers("Cache-Control: max-age=640000")
+@GET("widget/list")
+Call&lt;List&lt;Widget>> widgetList();</pre>
+              <pre class="prettyprint">@Headers({
+    "Accept: application/vnd.github.v3.full+json",
+    "User-Agent: Retrofit-Sample-App"
+})
+@GET("usuarios/{username}")
+Call&lt;Usuario> getUsuario(@Path("username") String username);</pre>
+              <p>Note que cabeçalhos não sobreescrevem outros. Todos os cabeçalhos com o mesmo nome serão inclusos na request.</p>
+              <p>Um cabeçalho de uma request pode ser atualizado dinâmicamente usando a anotação <code>@Header</code> . Um parâmetro correspondente deve ser fornecido para <code>@Header</code>. Se o valor é nulo, o cabeçalho será omitido. De outra forma, <code>toString</code> será chamado no valor, e o resultado será usado.</p>
+              <pre class="prettyprint">@GET("usuario")
+Call&lt;Usuario> getUsuario(@Header("Autorizacao") String autorizacao)</pre>
+              <p>Cabeçalhos que precisam ser utilizados em todas requests podem ser especificados utilizando um <a href="https://github.com/square/okhttp/wiki/Interceptors">interceptador OkHttp</a>.
+
+              <h4>Síncrono vs. Assincrono</h4>
+              <p>Instâncias de <code>Call</code> podem ser executadas tanto sincronamente ou assincronamente. Cada instância só pode ser utilizada uma vez, mas chamar <code>clone()</code> gerará uma nova instância que pode ser utilizada.</p>
+              <p>No Android, callbacks serão executados no thread principal. Na JVM, callbacks acontecerão no mesmo thread que foi executado request HTTP.</p>
+            </section>
+
+            <section id="restadapter-configuration">
+              <h3>Configuração do Retrofit</h3>
+              <p><code>Retrofit</code> é a classe cujas interfaces de API interfaces são transformadas em objetos chamáveis. Por default, Retrofit te dará defaults para sua plataforma mas permitirá customização.</p>
+
+              <h4>Conversores</h4>
+              <p>Por default, o Retrofit só pode deserializar corpos HTTP no tipo OkHttp's <code>ResponseBody</code> e só pode aceitar seus tipos <code>RequestBody</code> por <code>@Body</code>.</p>
+              <p>Conversores podem ser adicionados para suportar outros tipos. Seis módulos de bibliotecas de serialização populares adaptam para a sua conveniencia.</p>
+              <ul>
+                <li><a href="https://github.com/google/gson">Gson</a>: <code>com.squareup.retrofit2:converter-gson</code></li>
+                <li><a href="http://wiki.fasterxml.com/JacksonHome">Jackson</a>: <code>com.squareup.retrofit2:converter-jackson</code></li>
+                <li><a href="https://github.com/square/moshi/">Moshi</a>: <code>com.squareup.retrofit2:converter-moshi</code></li>
+                <li><a href="https://developers.google.com/protocol-buffers/">Protobuf</a>: <code>com.squareup.retrofit2:converter-protobuf</code></li>
+                <li><a href="https://github.com/square/wire">Wire</a>: <code>com.squareup.retrofit2:converter-wire</code></li>
+                <li><a href="http://simple.sourceforge.net/">Simple XML</a>: <code>com.squareup.retrofit2:converter-simplexml</code></li>
+                <li>Scalars (primitives, boxed, and String): <code>com.squareup.retrofit2:converter-scalars</code></li>
+              </ul>
+              <p>Aqui está um exemplo utilizando a classe <code>GsonConverterFactory</code> para gerar uma implementação da interface <code>GitHubService</code> que utiliza Gson para sua deserialização.</p>
+              <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
+    .baseUrl("https://api.github.com")
+    .addConverterFactory(GsonConverterFactory.create())
+    .build();
+
+GitHubService service = retrofit.create(GitHubService.class);</pre>
+              <h4>Conversores personalizados</h4>
+              <p>Se você precisar se comunicar com uma API que usa um formato de conteúdo que o Retrofit não suporta fora da caixa (e.g. YAML, txt, formato personalizado) ou se você desejar usar uma biblioteca diferente para implementar um formato existente, você pode criar facilmente seu próprio conversor. Crie uma classe que extende de <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit/Converter.java"><code>Converter.Factory</code> class</a> e passe em uma instância quando construir seu adaptador.</p>
+            </section>
+
+            <section id="download">
+              <h3>Download</h3>
+              <p><a href="https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
+              <p>O código-fonte para o Retrofit e o website está <a href="http://github.com/square/retrofit">disponível no Github</a>.</p>
+              <h4>Maven</h4>
+              <pre class="prettyprint">&lt;dependency>
+  &lt;groupId>com.squareup.retrofit2&lt;/groupId>
+  &lt;artifactId>retrofit&lt;/artifactId>
+  &lt;version><span class="version pln"><em>(insert latest version)</em></span>&lt;/version>
+&lt;/dependency></pre>
+              <h4>Gradle</h4>
+              <pre class="prettyprint">
+compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
+</pre>
+              <p>Retrofit requer no mínimo Java 7 ou Android 2.3.</p>
+
+              <h4>ProGuard</h4>
+              <p>Se você estiver usando Proguard no seu projeto adicione as seguintes linhas na sua configuração:</p>
+              <pre class="prettyprint">
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+</pre>
+            </section>
+
+            <section id="contributing">
+
+              <h3>Contribuindo</h3>
+              <p>Se você gostaria de contribuir com código você pode via GitHub dando um fork no repositório e enviando um pull request.</p>
+              <p>Quando for enviar um código, por favor certifique-se de seguir as convenções existentes e estilo para mander o mais legível possível. Por favor, também tenha certeza de que seu código compila rodando <code>mvn clean verify</code>.</p>
+              <p>Antes de seu código ser aceito no projeto, você deve assinar também o acordo <a href="http://squ.re/sign-the-cla">Individual Contributor License Agreement (CLA)</a>.</p>
+
+            </section>
+
+            <section id="license">
+              <h3>Licença</h3>
+              <pre>Copyright 2013 Square, Inc.
+
+Licenciado sob a licença do Apache, Versão 2.0 (a "Licença");
+você não pode usar este arquivo exceto em conformidade com a Licença.
+Você pode obter uma cópia da Licença em
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+A menos que seja exigido pela lei aplicável ou acordado por escrito, software
+distribuído sob a Licença é distribuído na base "AS IS",
+SEM GARANTIAS OU CONDIÇÕES DE QUALQUER NATUREZA, evidente ou implícita. 
+Veja a Licença para as permissões específicas da linguagem e as limitações
+sob a licença.</pre>
+            </section>
+          </div>
+          <div class="span3">
+            <div class="content-nav" data-spy="affix" data-offset-top="80">
+              <ul class="nav nav-tabs nav-stacked primary">
+                <li><a href="#introduction">Introdução</a></li>
+                <li><a href="#api-declaration">Declaração da API</a></li>
+                <li><a href="#restadapter-configuration">Configuração do Retrofit</a></li>
+                <li><a href="#download">Download</a></li>
+                <li><a href="#contributing">Contribuindo</a></li>
+                <li><a href="#license">Licença</a></li>
+              </ul>
+              <ul class="nav nav-pills nav-stacked secondary">
+                <li><a href="2.x/retrofit/">Javadoc</a></li>
+                <li><a href="http://stackoverflow.com/questions/tagged/retrofit?sort=active">StackOverflow</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span12 logo">
+            <a href="https://squareup.com"><img src="static/logo-square.png" alt="Square, Inc."/></a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="static/bootstrap.min.js"></script>
+    <script src="static/jquery.smooth-scroll.min.js"></script>
+    <script src="static/jquery-maven-artifact.min.js"></script>
+    <script src="static/prettify.js"></script>
+    <script type="text/javascript">
+      $(function() {
+        // Syntax highlight code blocks.
+        prettyPrint();
+
+        // Spy on scroll position for real-time updating of current section.
+        $('body').scrollspy();
+
+        // Use smooth-scroll for internal links.
+        $('a').smoothScroll();
+
+        // Enable tooltips on the header nav image items.
+        $('.menu').tooltip({
+          placement: 'bottom',
+          trigger: 'hover',
+          container: 'body',
+          delay: {
+            show: 500,
+            hide: 0
+          }
+        });
+
+        // Look up the latest version of the library.
+        $.fn.artifactVersion('com.squareup.retrofit2', 'retrofit', function(version, url) {
+          $('.version').text(version);
+          $('.version-tag').text('v' + version);
+          $('.version-href').attr('href', url);
+        });
+      });
+
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-40704740-4', 'github.io');
+      ga('send', 'pageview');
+    </script>
+  </body>
+</html>
