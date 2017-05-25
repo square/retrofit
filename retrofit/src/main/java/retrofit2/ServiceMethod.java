@@ -36,6 +36,7 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
+import retrofit2.http.DefaultFieldMap;
 import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
@@ -76,6 +77,7 @@ final class ServiceMethod<R, T> {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final String[] defaultFieldMaps;
   private final ParameterHandler<?>[] parameterHandlers;
 
   ServiceMethod(Builder<R, T> builder) {
@@ -91,12 +93,20 @@ final class ServiceMethod<R, T> {
     this.isFormEncoded = builder.isFormEncoded;
     this.isMultipart = builder.isMultipart;
     this.parameterHandlers = builder.parameterHandlers;
+    this.defaultFieldMaps = builder.defaultFieldMaps;
   }
 
   /** Builds an HTTP request from method arguments. */
   Request toRequest(@Nullable Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
         contentType, hasBody, isFormEncoded, isMultipart);
+
+    if (defaultFieldMaps != null) {
+      for (String fieldMap : defaultFieldMaps) {
+        String[] splitFieldMap = fieldMap.split("=");
+        requestBuilder.addFormField(splitFieldMap[0], splitFieldMap[1], true);
+      }
+    }
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
@@ -145,6 +155,7 @@ final class ServiceMethod<R, T> {
     String relativeUrl;
     Headers headers;
     MediaType contentType;
+    String[] defaultFieldMaps;
     Set<String> relativeUrlParamNames;
     ParameterHandler<?>[] parameterHandlers;
     Converter<ResponseBody, T> responseConverter;
@@ -216,7 +227,9 @@ final class ServiceMethod<R, T> {
       if (isMultipart && !gotPart) {
         throw methodError("Multipart method must contain at least one @Part.");
       }
-
+      if (!isFormEncoded && defaultFieldMaps != null) {
+        throw methodError("@DefaultFieldMap parameters can only be used with form encoding.");
+      }
       return new ServiceMethod<>(this);
     }
 
@@ -275,6 +288,12 @@ final class ServiceMethod<R, T> {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isFormEncoded = true;
+      } else if (annotation instanceof DefaultFieldMap) {
+        defaultFieldMaps = ((DefaultFieldMap) annotation).value();
+        if (defaultFieldMaps.length == 0) {
+          throw methodError("@DefaultFieldMap annotation is empty.");
+        }
+        verifyDefaultFieldMap(defaultFieldMaps);
       }
     }
 
@@ -327,6 +346,17 @@ final class ServiceMethod<R, T> {
         }
       }
       return builder.build();
+    }
+
+    private void verifyDefaultFieldMap(String[] fieldMaps) {
+      for (String fieldMap : fieldMaps) {
+        int equal = fieldMap.indexOf("=");
+        if (equal == -1 || equal == 0 || equal == fieldMap.length() - 1) {
+          throw methodError(
+              "@DefaultFieldMap value must be in the form \"name=value. Found: \"%s\"", fieldMap);
+        }
+      }
+      gotField = true;
     }
 
     private ParameterHandler<?> parseParameter(
