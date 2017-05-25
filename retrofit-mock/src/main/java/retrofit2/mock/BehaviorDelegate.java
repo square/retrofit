@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.concurrent.ExecutorService;
+import javax.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
@@ -46,7 +47,7 @@ public final class BehaviorDelegate<T> {
     this.service = service;
   }
 
-  public T returningResponse(Object response) {
+  public T returningResponse(@Nullable Object response) {
     return returning(Calls.response(response));
   }
 
