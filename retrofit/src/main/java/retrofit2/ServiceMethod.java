@@ -56,6 +56,8 @@ import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 import retrofit2.http.QueryName;
 import retrofit2.http.Url;
+import retrofit2.http.SimpleJSON;
+import retrofit2.http.SimpleJSONField;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<R, T> {
@@ -76,6 +78,7 @@ final class ServiceMethod<R, T> {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final boolean isSimpleJSON;
   private final ParameterHandler<?>[] parameterHandlers;
 
   ServiceMethod(Builder<R, T> builder) {
@@ -90,13 +93,14 @@ final class ServiceMethod<R, T> {
     this.hasBody = builder.hasBody;
     this.isFormEncoded = builder.isFormEncoded;
     this.isMultipart = builder.isMultipart;
+    this.isSimpleJSON = builder.isSimpleJSON;
     this.parameterHandlers = builder.parameterHandlers;
   }
 
   /** Builds an HTTP request from method arguments. */
   Request toRequest(@Nullable Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
-        contentType, hasBody, isFormEncoded, isMultipart);
+        contentType, hasBody, isFormEncoded, isMultipart, isSimpleJSON);
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
@@ -132,6 +136,7 @@ final class ServiceMethod<R, T> {
     final Type[] parameterTypes;
 
     Type responseType;
+    boolean gotSimpleJSONField;
     boolean gotField;
     boolean gotPart;
     boolean gotBody;
@@ -140,6 +145,7 @@ final class ServiceMethod<R, T> {
     boolean gotUrl;
     String httpMethod;
     boolean hasBody;
+    boolean isSimpleJSON;
     boolean isFormEncoded;
     boolean isMultipart;
     String relativeUrl;
@@ -185,6 +191,10 @@ final class ServiceMethod<R, T> {
           throw methodError("FormUrlEncoded can only be specified on HTTP methods with "
               + "request body (e.g., @POST).");
         }
+        if (isSimpleJSON) {
+          throw methodError("SimpleJSON can only be specified on HTTP methods with "
+                  + "request body (e.g., @POST).");
+        }
       }
 
       int parameterCount = parameterAnnotationsArray.length;
@@ -215,6 +225,9 @@ final class ServiceMethod<R, T> {
       }
       if (isMultipart && !gotPart) {
         throw methodError("Multipart method must contain at least one @Part.");
+      }
+      if (isSimpleJSON && !gotSimpleJSONField) {
+        throw methodError("SimpleJSON method must contain at least one @SimpleJSONField.");
       }
 
       return new ServiceMethod<>(this);
@@ -266,15 +279,20 @@ final class ServiceMethod<R, T> {
         }
         headers = parseHeaders(headersToParse);
       } else if (annotation instanceof Multipart) {
-        if (isFormEncoded) {
+        if (isFormEncoded || isSimpleJSON) {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isMultipart = true;
       } else if (annotation instanceof FormUrlEncoded) {
-        if (isMultipart) {
+        if (isMultipart || isSimpleJSON) {
           throw methodError("Only one encoding annotation is allowed.");
         }
         isFormEncoded = true;
+      } else if (annotation instanceof SimpleJSON) {
+        if (isMultipart || isFormEncoded) {
+          throw methodError("Only one encoding annotation is allowed.");
+        }
+        isSimpleJSON = true;
       }
     }
 
@@ -697,9 +715,9 @@ final class ServiceMethod<R, T> {
         return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
 
       } else if (annotation instanceof Body) {
-        if (isFormEncoded || isMultipart) {
+        if (isFormEncoded || isMultipart || isSimpleJSON) {
           throw parameterError(p,
-              "@Body parameters cannot be used with form or multi-part encoding.");
+              "@Body parameters cannot be used with form or SimpleJSON or multi-part encoding.");
         }
         if (gotBody) {
           throw parameterError(p, "Multiple @Body method annotations found.");
@@ -714,6 +732,39 @@ final class ServiceMethod<R, T> {
         }
         gotBody = true;
         return new ParameterHandler.Body<>(converter);
+      } else if (annotation instanceof SimpleJSONField) {
+        if (!isSimpleJSON) {
+          throw parameterError(p,
+                  "@SimpleJSONField parameters can only be used with SimpleJSON encoding.");
+        }
+        SimpleJSONField simpleJSONField = (SimpleJSONField) annotation;
+        String name = simpleJSONField.value();
+
+        Class<?> rawParameterType = Utils.getRawType(type);
+        gotSimpleJSONField = true;
+        if (Iterable.class.isAssignableFrom(rawParameterType)) {
+          if (!(type instanceof ParameterizedType)) {
+            throw parameterError(p, rawParameterType.getSimpleName()
+                    + " must include generic type (e.g., "
+                    + rawParameterType.getSimpleName()
+                    + "<String>)");
+          }
+          ParameterizedType parameterizedType = (ParameterizedType) type;
+          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+          Converter<?, String> converter =
+                  retrofit.stringConverter(iterableType, annotations);
+          return new ParameterHandler.SimpleJSONField<>(name, converter).iterable();
+        } else if (rawParameterType.isArray()) {
+          Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
+          Converter<?, String> converter =
+                  retrofit.stringConverter(arrayComponentType, annotations);
+          return new ParameterHandler.SimpleJSONField<>(name, converter).array();
+        } else {
+          Converter<?, String> converter =
+                  retrofit.stringConverter(type, annotations);
+          return new ParameterHandler.SimpleJSONField<>(name, converter);
+        }
+
       }
 
       return null; // Not a Retrofit annotation.

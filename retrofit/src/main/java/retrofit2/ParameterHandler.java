@@ -360,4 +360,23 @@ abstract class ParameterHandler<T> {
       builder.setBody(body);
     }
   }
+
+  static final class SimpleJSONField<T> extends ParameterHandler<T> {
+    private final String name;
+    private final Converter<T, String> valueConverter;
+
+    SimpleJSONField(String name, Converter<T, String> valueConverter) {
+      this.name = checkNotNull(name, "name == null");
+      this.valueConverter = valueConverter;
+    }
+
+    @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
+      if (value == null) return; // Skip null values.
+
+      String strValue = valueConverter.convert(value);
+      if (strValue == null) return; // Skip converted but null values
+
+      builder.addJSONField(name, strValue);
+    }
+  }
 }
