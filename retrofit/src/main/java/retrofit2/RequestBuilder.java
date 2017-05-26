@@ -16,9 +16,9 @@
 package retrofit2;
 
 import java.io.IOException;
+import java.util.HashMap;
 import javax.annotation.Nullable;
 
-import android.util.Log;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -28,8 +28,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okio.Buffer;
 import okio.BufferedSink;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 final class RequestBuilder {
   private static final char[] HEX_DIGITS =
@@ -52,7 +50,7 @@ final class RequestBuilder {
   private @Nullable MultipartBody.Builder multipartBuilder;
   private @Nullable FormBody.Builder formBuilder;
   private @Nullable RequestBody body;
-  private @Nullable JSONObject jsonObject;
+  private @Nullable HashMap<String, Object> jsonMap;
 
   RequestBuilder(String method, HttpUrl baseUrl, @Nullable String relativeUrl,
       @Nullable Headers headers, @Nullable MediaType contentType, boolean hasBody,
@@ -77,7 +75,7 @@ final class RequestBuilder {
       multipartBuilder.setType(MultipartBody.FORM);
     } else if (isSimpleJSON) {
       // Will be set to 'body' in 'build'.
-      jsonObject = new JSONObject();
+      jsonMap = new HashMap<String, Object>();
     }
   }
 
@@ -184,12 +182,8 @@ final class RequestBuilder {
   }
 
   @SuppressWarnings("ConstantConditions") // Only called when isSimpleJSON was true.
-  void addJSONField(String name, String value) {
-    try {
-      jsonObject.put(name, value);
-    } catch (JSONException e) {
-      Log.e(getClass().getSimpleName(), "addJSONField()", e);
-    }
+  void addJSONField(String name, Object value) {
+    jsonMap.put(name, value);
   }
 
   @SuppressWarnings("ConstantConditions") // Only called when isMultipart was true.
@@ -228,9 +222,8 @@ final class RequestBuilder {
         body = formBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
-      } else if (jsonObject != null) {
-        String json = jsonObject.toString();
-        body = RequestBody.create(CONTENT_TYPE_JSON, json);
+      } else if (jsonMap != null) {
+        body = RequestBody.create(CONTENT_TYPE_JSON, Utils.toJSONString(jsonMap));
       } else if (hasBody) {
         // Body is absent, make an empty body.
         body = RequestBody.create(null, new byte[0]);
