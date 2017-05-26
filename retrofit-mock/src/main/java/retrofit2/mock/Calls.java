@@ -34,7 +34,7 @@ public final class Calls {
     return new DeferredCall<>(callable);
   }
 
-  public static <T> Call<T> response(T successValue) {
+  public static <T> Call<T> response(@Nullable T successValue) {
     return new FakeCall<>(Response.success(successValue), null);
   }
 
