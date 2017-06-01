@@ -25,4 +25,23 @@
     <module>scalars</module>
     <module>moshi</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>nano</id>
+      <modules>
+        <module>protobuf-nano</module>
+      </modules>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+              <classifier>nano</classifier>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
