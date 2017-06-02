@@ -36,8 +36,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * Behavior can be applied to a Retrofit interface with {@link MockRetrofit}. Behavior can also
  * be applied elsewhere using {@link #calculateDelay(TimeUnit)} and {@link #calculateIsFailure()}.
  * <p>
- * By default, instances of this class will use a 2 second delay with 40% variance and failures
- * will occur 3% of the time.
+ * By default, instances of this class will use a 2 second delay with 40% variance. Failures
+ * will occur 3% of the time. HTTP errors will occur 0% of the time.
  */
 public final class NetworkBehavior {
   private static final int DEFAULT_DELAY_MS = 2000; // Network calls will take 2 seconds.
