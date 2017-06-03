@@ -25,7 +25,9 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import okio.Buffer;
@@ -493,5 +495,49 @@ final class Utils {
       if (upperBound == Object.class) return "?";
       return "? extends " + typeToString(upperBound);
     }
+  }
+
+  /**
+   * convert Map to JSON string
+   */
+  public static String toJSONString(Map<String, Object> map) {
+    if (null == map || map.isEmpty()) {
+      return "{}";
+    }
+
+    StringBuilder jsonStringBuilder = new StringBuilder("{");
+
+    Set<String> keys = map.keySet();
+
+    for (String key : keys) {
+      if ("".equals(key) || null == key) {
+        continue;
+      }
+
+      Object value = map.get(key);
+      if (null == value) {
+        continue;
+      }
+
+      jsonStringBuilder.append("\"").append(key).append("\":");
+
+      Class clazz = value.getClass();
+      if (clazz == Integer.class
+              || clazz == Float.class
+              || clazz == Double.class
+              || clazz == Long.class
+              || clazz == Short.class
+              || clazz == Boolean.class) {
+        jsonStringBuilder.append(value).append(",");
+      } else {
+        jsonStringBuilder.append("\"").append(value).append("\"").append(",");
+      }
+    }
+    String result = jsonStringBuilder.toString();
+    if (result.endsWith(",")) {
+      result = result.substring(0, result.length() - 1);
+    }
+    result += "}";
+    return result;
   }
 }

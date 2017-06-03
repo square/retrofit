@@ -37,29 +37,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import retrofit2.helpers.NullObjectConverterFactory;
 import retrofit2.helpers.ToStringConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.Headers;
-import retrofit2.http.Multipart;
-import retrofit2.http.OPTIONS;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.QueryName;
-import retrofit2.http.Url;
+import retrofit2.http.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -132,6 +110,24 @@ public final class RequestBuilderTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
           "Only one encoding annotation is allowed.\n    for method Example.method");
+    }
+  }
+
+  @Test public void onlyOneEncodingIsAllowedSimpleJSONFirst() {
+    class Example {
+      @SimpleJSON //
+      @Multipart //
+      @POST("/") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    try {
+      buildRequest(Example.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+              "Only one encoding annotation is allowed.\n    for method Example.method");
     }
   }
 
@@ -677,7 +673,7 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "@Body parameters cannot be used with form or multi-part encoding. (parameter #2)\n    for method Example.method");
+          "@Body parameters cannot be used with form or SimpleJSON or multi-part encoding. (parameter #2)\n    for method Example.method");
     }
   }
 

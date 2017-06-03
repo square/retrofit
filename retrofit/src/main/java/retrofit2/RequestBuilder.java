@@ -16,7 +16,9 @@
 package retrofit2;
 
 import java.io.IOException;
+import java.util.HashMap;
 import javax.annotation.Nullable;
+
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -32,6 +34,9 @@ final class RequestBuilder {
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
   private static final String PATH_SEGMENT_ALWAYS_ENCODE_SET = " \"<>^`{}|\\?#";
 
+  private static final MediaType CONTENT_TYPE_JSON =
+          MediaType.parse("application/json;charset=UTF-8");
+
   private final String method;
 
   private final HttpUrl baseUrl;
@@ -45,10 +50,11 @@ final class RequestBuilder {
   private @Nullable MultipartBody.Builder multipartBuilder;
   private @Nullable FormBody.Builder formBuilder;
   private @Nullable RequestBody body;
+  private @Nullable HashMap<String, Object> jsonMap;
 
   RequestBuilder(String method, HttpUrl baseUrl, @Nullable String relativeUrl,
       @Nullable Headers headers, @Nullable MediaType contentType, boolean hasBody,
-      boolean isFormEncoded, boolean isMultipart) {
+      boolean isFormEncoded, boolean isMultipart, boolean isSimpleJSON) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -67,6 +73,9 @@ final class RequestBuilder {
       // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBody.Builder();
       multipartBuilder.setType(MultipartBody.FORM);
+    } else if (isSimpleJSON) {
+      // Will be set to 'body' in 'build'.
+      jsonMap = new HashMap<String, Object>();
     }
   }
 
@@ -172,6 +181,11 @@ final class RequestBuilder {
     }
   }
 
+  @SuppressWarnings("ConstantConditions") // Only called when isSimpleJSON was true.
+  void addJSONField(String name, Object value) {
+    jsonMap.put(name, value);
+  }
+
   @SuppressWarnings("ConstantConditions") // Only called when isMultipart was true.
   void addPart(Headers headers, RequestBody body) {
     multipartBuilder.addPart(headers, body);
@@ -208,6 +222,8 @@ final class RequestBuilder {
         body = formBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
+      } else if (jsonMap != null) {
+        body = RequestBody.create(CONTENT_TYPE_JSON, Utils.toJSONString(jsonMap));
       } else if (hasBody) {
         // Body is absent, make an empty body.
         body = RequestBody.create(null, new byte[0]);
