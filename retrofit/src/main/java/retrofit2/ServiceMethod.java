@@ -625,9 +625,10 @@ final class ServiceMethod<R, T> {
                 "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
           }
         } else {
-          Headers headers =
-              Headers.of("Content-Disposition", "form-data; name=\"" + partName + "\"",
-                  "Content-Transfer-Encoding", part.encoding());
+          Headers headers = parseHeaders(part.headers()).newBuilder()
+                .add("Content-Disposition", "form-data; name=\"" + partName + "\"")
+                .add("Content-Transfer-Encoding", part.encoding())
+                .build();
 
           if (Iterable.class.isAssignableFrom(rawParameterType)) {
             if (!(type instanceof ParameterizedType)) {

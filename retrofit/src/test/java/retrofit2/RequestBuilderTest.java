@@ -2160,6 +2160,59 @@ public final class RequestBuilderTest {
     }
   }
 
+  @Test public void multipartWithPartHeaders() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part(value = "ping", headers = "foo: bar") String ping,
+                                @Part(value = "kit", headers = {"tic: tock", "how: now"})
+                                RequestBody kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", RequestBody.create(
+        MediaType.parse("text/plain"), "kat"));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+        .contains("foo: bar")
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong\r\n--");
+
+    assertThat(bodyString)
+        .contains("tic: tock")
+        .contains("how: now")
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"kit\"")
+        .contains("\r\nkat\r\n--");
+  }
+
+  @Test public void multipartWithValidHeaders() throws IOException {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part(value = "ping", headers = "foo bar") String ping) {
+        return null;
+      }
+    }
+    try {
+      Request request = buildRequest(Example.class, "pong");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("@Headers value must be in the form \"Name: Value\". Found: \"foo bar\"\n" +
+          "    for method Example.method");
+    }
+  }
+
   @Test public void simpleFormEncoded() {
     class Example {
       @FormUrlEncoded //

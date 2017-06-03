@@ -40,6 +40,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Values may be {@code null} which will omit them from the request body.
  * <p>
+ * Headers can specified with {@link #headers() headers}. Usage mirrors
+ * {@link Headers Headers}.
+ * <p>
  * <pre><code>
  * &#64;Multipart
  * &#64;POST("/")
@@ -61,4 +64,5 @@ public @interface Part {
   String value() default "";
   /** The {@code Content-Transfer-Encoding} of this part. */
   String encoding() default "binary";
+  String[] headers() default {};
 }
