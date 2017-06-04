@@ -121,7 +121,13 @@ Call&lt;User> getUser(@Path("username") String username);</pre>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
               <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
-
+                <p>A request can mix static headers with dynamic headers.</p>
+                <pre class="prettyprint">@Headers({
+    "Accept: application/vnd.github.v3.full+json",
+    "User-Agent: Retrofit-Sample-App"
+})
+@GET("users/{username}")
+Call&lt;User> getUser(@Header("Authorization") String authorization, @Path("username") String username);</pre>
               <h4>Synchronous vs. Asynchronous</h4>
               <p><code>Call</code> instances can be executed either synchronously or asynchronously. Each instance can only be used once, but calling <code>clone()</code> will create a new instance that can be used.</p>
               <p>On Android, callbacks will be executed on the main thread. On the JVM, callbacks will happen on the same thread that executed the HTTP request.</p>
