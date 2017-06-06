@@ -220,7 +220,7 @@ final class OkHttpCall<T> implements Call<T> {
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was
       // a runtime exception.
-      catchingBody.throwIfCaught();
+      catchingBody.throwIfCaught(rawBody);
       throw e;
     }
   }
@@ -268,6 +268,18 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
+  static final class CatchException extends IOException {
+    private ResponseBody body;
+
+    public CatchException(ResponseBody rawBody) {
+      this.body = body;
+    }
+
+    public ResponseBody getBody() {
+      return body;
+    }
+  }
+
   static final class ExceptionCatchingRequestBody extends ResponseBody {
     private final ResponseBody delegate;
     IOException thrownException;
@@ -301,9 +313,9 @@ final class OkHttpCall<T> implements Call<T> {
       delegate.close();
     }
 
-    void throwIfCaught() throws IOException {
+    void throwIfCaught(ResponseBody rawBody) throws IOException {
       if (thrownException != null) {
-        throw thrownException;
+        throw new CatchException(rawBody);
       }
     }
   }
