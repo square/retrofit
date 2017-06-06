@@ -16,7 +16,7 @@
 package retrofit2.converter.gson;
 
 import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -32,18 +32,20 @@ final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
   private static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private final Gson gson;
-  private final TypeAdapter<T> adapter;
+  private final GsonAdapterProvider adapterProvider;
+  private final TypeToken<T> typeToken;
 
-  GsonRequestBodyConverter(Gson gson, TypeAdapter<T> adapter) {
+  GsonRequestBodyConverter(Gson gson, GsonAdapterProvider adapterProvider, TypeToken<T> typeToken) {
     this.gson = gson;
-    this.adapter = adapter;
+    this.adapterProvider = adapterProvider;
+    this.typeToken = typeToken;
   }
 
   @Override public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
     Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
     JsonWriter jsonWriter = gson.newJsonWriter(writer);
-    adapter.write(jsonWriter, value);
+    adapterProvider.get(typeToken).write(jsonWriter, value);
     jsonWriter.close();
     return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
