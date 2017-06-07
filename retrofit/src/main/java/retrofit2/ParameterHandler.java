@@ -17,6 +17,7 @@ package retrofit2;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import okhttp3.Headers;
@@ -174,6 +175,35 @@ abstract class ParameterHandler<T> {
         }
 
         builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+      }
+    }
+  }
+
+  static final class QueryList<T> extends ParameterHandler<List<KeyValue<String, T>>> {
+    private final Converter<T, String> valueConverter;
+    private final boolean encoded;
+
+    QueryList(Converter<T, String> valueConverter, boolean encoded) {
+      this.valueConverter = valueConverter;
+      this.encoded = encoded;
+    }
+
+    void apply(RequestBuilder builder, List<KeyValue<String, T>> value) throws IOException {
+      if (value == null) {
+        throw new IllegalArgumentException("Query list was null.");
+      }
+
+      for (KeyValue<String, T> item : value) {
+        String entryKey = item.getKey();
+        if (entryKey == null) {
+          throw new IllegalArgumentException("Query list item contained null key.");
+        }
+        T entryValue = item.getValue();
+        if (entryValue == null) {
+          throw new IllegalArgumentException(
+              "Query map contained null value for key '" + entryKey + "'.");
+        }
+        builder.addQueryParam(entryKey, valueConverter.convert(entryValue), encoded);
       }
     }
   }
