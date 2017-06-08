@@ -38,6 +38,9 @@ If you are using ProGuard you might need to add the following options:
 -dontwarn javax.annotation.**
 -keepattributes Signature
 -keepattributes Exceptions
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
 ```
 
 
