@@ -48,7 +48,20 @@ final class BodyObservable<T> extends Observable<T> {
 
     @Override public void onNext(Response<R> response) {
       if (response.isSuccessful()) {
-        observer.onNext(response.body());
+        R body = response.body();
+        int code = response.code();
+        if (code == 204 || code == 205) {
+          //NO CONTENT - [DELETE]
+          if (body == null){
+              onComplete();
+          }
+          return;
+        }
+        if (body == null){
+          observer.onError(new RuntimeException("Response Body not allow Null"));
+          return;
+        }
+        observer.onNext(body);
       } else {
         terminated = true;
         Throwable t = new HttpException(response);
