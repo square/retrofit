@@ -136,32 +136,43 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
+  static final class QueryMap<K, V> extends ParameterHandler<Map<K, V>> {
+    private final Converter<K, String> keyConverter;
+    private final Converter<V, String> valueConverter;
     private final boolean encoded;
 
-    QueryMap(Converter<T, String> valueConverter, boolean encoded) {
+    QueryMap(Converter<K, String> keyConverter, Converter<V, String> valueConverter,
+             boolean encoded) {
+      this.keyConverter = keyConverter;
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+    @Override void apply(RequestBuilder builder, @Nullable Map<K, V> value)
         throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Query map was null.");
       }
 
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
+      for (Map.Entry<K, V> entry : value.entrySet()) {
+        K entryKey = entry.getKey();
         if (entryKey == null) {
           throw new IllegalArgumentException("Query map contained null key.");
         }
-        T entryValue = entry.getValue();
+        V entryValue = entry.getValue();
         if (entryValue == null) {
           throw new IllegalArgumentException(
               "Query map contained null value for key '" + entryKey + "'.");
         }
 
+        String convertedEntryKey = keyConverter.convert(entryKey);
+        if (convertedEntryKey == null) {
+          throw new IllegalArgumentException("Query map key '"
+              + entryKey
+              + "' converted to null by "
+              + keyConverter.getClass().getName()
+              + ".");
+        }
         String convertedEntryValue = valueConverter.convert(entryValue);
         if (convertedEntryValue == null) {
           throw new IllegalArgumentException("Query map value '"
@@ -173,35 +184,57 @@ abstract class ParameterHandler<T> {
               + "'.");
         }
 
-        builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+        builder.addQueryParam(convertedEntryKey, convertedEntryValue, encoded);
       }
     }
   }
 
-  static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
+  static final class HeaderMap<K, V> extends ParameterHandler<Map<K, V>> {
+    private final Converter<K, String> nameConverter;
+    private final Converter<V, String> valueConverter;
 
-    HeaderMap(Converter<T, String> valueConverter) {
+    HeaderMap(Converter<K, String> nameConverter, Converter<V, String> valueConverter) {
+      this.nameConverter = nameConverter;
       this.valueConverter = valueConverter;
     }
 
-    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+    @Override void apply(RequestBuilder builder, @Nullable Map<K, V> value)
         throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Header map was null.");
       }
 
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String headerName = entry.getKey();
+      for (Map.Entry<K, V> entry : value.entrySet()) {
+        K headerName = entry.getKey();
         if (headerName == null) {
           throw new IllegalArgumentException("Header map contained null key.");
         }
-        T headerValue = entry.getValue();
+        V headerValue = entry.getValue();
         if (headerValue == null) {
           throw new IllegalArgumentException(
               "Header map contained null value for key '" + headerName + "'.");
         }
-        builder.addHeader(headerName, valueConverter.convert(headerValue));
+
+        String convertedHeaderName = nameConverter.convert(headerName);
+        if (convertedHeaderName == null) {
+          throw new IllegalArgumentException("Header map key '"
+              + headerName
+              + "' converted to null by "
+              + nameConverter.getClass().getName()
+              + ".");
+        }
+        String convertedHeaderValue = valueConverter.convert(headerValue);
+        if (convertedHeaderValue == null) {
+          throw new IllegalArgumentException("Header map value '"
+              + headerValue
+              + "' converted to null by "
+              + valueConverter.getClass().getName()
+              + " for key '"
+              + headerName
+              + "'.");
+        }
+
+        builder.addHeader(convertedHeaderName, convertedHeaderValue);
       }
     }
   }
@@ -227,34 +260,45 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
+  static final class FieldMap<K, V> extends ParameterHandler<Map<K, V>> {
+    private final Converter<K, String> keyConverter;
+    private final Converter<V, String> valueConverter;
     private final boolean encoded;
 
-    FieldMap(Converter<T, String> valueConverter, boolean encoded) {
+    FieldMap(Converter<K, String> keyConverter, Converter<V, String> valueConverter,
+             boolean encoded) {
+      this.keyConverter = keyConverter;
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
-    @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
+    @Override void apply(RequestBuilder builder, @Nullable Map<K, V> value)
         throws IOException {
       if (value == null) {
         throw new IllegalArgumentException("Field map was null.");
       }
 
-      for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
+      for (Map.Entry<K, V> entry : value.entrySet()) {
+        K entryKey = entry.getKey();
         if (entryKey == null) {
           throw new IllegalArgumentException("Field map contained null key.");
         }
-        T entryValue = entry.getValue();
+        V entryValue = entry.getValue();
         if (entryValue == null) {
           throw new IllegalArgumentException(
               "Field map contained null value for key '" + entryKey + "'.");
         }
 
-        String fieldEntry = valueConverter.convert(entryValue);
-        if (fieldEntry == null) {
+        String fieldEntryKey = keyConverter.convert(entryKey);
+        if (fieldEntryKey == null) {
+          throw new IllegalArgumentException("Field map key '"
+              + entryKey
+              + "' converted to null by "
+              + keyConverter.getClass().getName()
+              + ".");
+        }
+        String fieldEntryValue = valueConverter.convert(entryValue);
+        if (fieldEntryValue == null) {
           throw new IllegalArgumentException("Field map value '"
               + entryValue
               + "' converted to null by "
@@ -264,7 +308,7 @@ abstract class ParameterHandler<T> {
               + "'.");
         }
 
-        builder.addFormField(entryKey, fieldEntry, encoded);
+        builder.addFormField(fieldEntryKey, fieldEntryValue, encoded);
       }
     }
   }
