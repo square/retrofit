@@ -4,6 +4,26 @@ Java8 Adapter
 An `Adapter` for adapting [Java8][1] `CompletableFuture`.
 
 
+Usage
+-----
+
+Add `Java8CallAdapterFactory` as a `Call` adapter when building your `Retrofit` instance:
+```java
+Retrofit retrofit = new Retrofit.Builder()
+    .baseUrl("https://example.com/")
+    .addCallAdapterFactory(Java8CallAdapterFactory.create())
+    .build();
+```
+
+Your service methods can now use `CompletableFuture` as their return type.
+```java
+interface MyService {
+  @GET("/user")
+  CompletableFuture<User> getUser();
+}
+```
+
+
 Download
 --------
 
