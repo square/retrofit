@@ -64,6 +64,7 @@
     <wire.version>2.2.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.4.0</moshi.version>
+    <thrifty.version>0.4.2</thrifty.version>
 
     <!-- Sample Dependencies -->
     <jsoup.version>1.7.3</jsoup.version>
@@ -155,6 +156,11 @@
         <groupId>com.squareup.moshi</groupId>
         <artifactId>moshi</artifactId>
         <version>${moshi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.microsoft.thrifty</groupId>
+        <artifactId>thrifty-runtime</artifactId>
+        <version>${thrifty.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
