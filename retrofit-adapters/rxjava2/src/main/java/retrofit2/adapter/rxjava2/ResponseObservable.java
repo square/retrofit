@@ -10,24 +10,24 @@ import retrofit2.Response;
 
 
 /**
- * Created by jspiner on 2017. 7. 12..
+ * @author JSpiner (jspiner@naver.com)
  */
-public class ResponseObservable<T> extends Observable<T> {
+public class ResponseObservable<T> extends Observable<Response<T>> {
     private final Observable<Response<T>> upstream;
 
     ResponseObservable(Observable<Response<T>> upstream) {
         this.upstream = upstream;
     }
 
-    @Override protected void subscribeActual(Observer<? super T> observer) {
-        upstream.subscribe(new ResponseObservable.BodyObserver<T>(observer));
+    @Override protected void subscribeActual(Observer<? super Response<T>> observer) {
+        upstream.subscribe(new ResponseObservable.ResponseObserver<T>(observer));
     }
 
-    private static class BodyObserver<R> implements Observer<Response<R>> {
-        private final Observer<? super R> observer;
+    private static class ResponseObserver<R> implements Observer<Response<R>> {
+        private final Observer<? super Response<R>> observer;
         private boolean terminated;
 
-        BodyObserver(Observer<? super R> observer) {
+        ResponseObserver(Observer<? super Response<R>> observer) {
             this.observer = observer;
         }
 
@@ -37,7 +37,7 @@ public class ResponseObservable<T> extends Observable<T> {
 
         @Override public void onNext(Response<R> response) {
             if (response.isSuccessful()) {
-                observer.onNext(response.body());
+                observer.onNext(response);
             } else {
                 terminated = true;
                 Throwable t = new HttpException(response);

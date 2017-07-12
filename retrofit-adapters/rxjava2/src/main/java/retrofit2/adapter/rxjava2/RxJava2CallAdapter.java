@@ -28,6 +28,7 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   private final Type responseType;
   private final @Nullable Scheduler scheduler;
   private final boolean isAsync;
+  private final boolean isResponseObservable;
   private final boolean isResult;
   private final boolean isBody;
   private final boolean isFlowable;
@@ -36,11 +37,12 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   private final boolean isCompletable;
 
   RxJava2CallAdapter(Type responseType, @Nullable Scheduler scheduler, boolean isAsync,
-      boolean isResult, boolean isBody, boolean isFlowable, boolean isSingle, boolean isMaybe,
+      boolean isResponseObservable, boolean isResult, boolean isBody, boolean isFlowable, boolean isSingle, boolean isMaybe,
       boolean isCompletable) {
     this.responseType = responseType;
     this.scheduler = scheduler;
     this.isAsync = isAsync;
+    this.isResponseObservable = isResponseObservable;
     this.isResult = isResult;
     this.isBody = isBody;
     this.isFlowable = isFlowable;
@@ -59,7 +61,10 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
         : new CallExecuteObservable<>(call);
 
     Observable<?> observable;
-    if (isResult) {
+    if (isResponseObservable){
+      observable = new ResponseObservable<>(responseObservable);
+    }
+    else if (isResult) {
       observable = new ResultObservable<>(responseObservable);
     } else if (isBody) {
       observable = new BodyObservable<>(responseObservable);

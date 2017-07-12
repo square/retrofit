@@ -17,6 +17,7 @@ package retrofit2.adapter.rxjava2;
 
 import io.reactivex.Observable;
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
@@ -36,6 +37,7 @@ public final class ObservableTest {
   interface Service {
     @GET("/") Observable<String> body();
     @GET("/") Observable<Response<String>> response();
+    @GET("/") ResponseObservable<String> response2();
     @GET("/") Observable<Result<String>> result();
   }
 
@@ -51,6 +53,15 @@ public final class ObservableTest {
   }
 
   @Test public void bodySuccess200() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    RecordingObserver<String> observer = observerRule.create();
+    service.body().subscribe(observer);
+    observer.assertValue("Hi").assertComplete();
+  }
+
+
+  @Test public void rxBodySuccess200() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     RecordingObserver<String> observer = observerRule.create();
