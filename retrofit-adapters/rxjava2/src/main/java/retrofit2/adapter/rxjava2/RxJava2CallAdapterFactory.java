@@ -97,14 +97,16 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
     if (rawType == Completable.class) {
       // Completable is not parameterized (which is what the rest of this method deals with) so it
       // can only be created with a single configuration.
-      return new RxJava2CallAdapter(Void.class, scheduler, isAsync, false, true, false, false,
-          false, true);
+      return new RxJava2CallAdapter(Void.class, scheduler, isAsync, false, false, true,
+          false, false, false, true);
     }
 
     boolean isFlowable = rawType == Flowable.class;
     boolean isSingle = rawType == Single.class;
     boolean isMaybe = rawType == Maybe.class;
-    if (rawType != Observable.class && !isFlowable && !isSingle && !isMaybe) {
+    boolean isResponseObservable = rawType == ResponseObservable.class;
+    if (rawType != Observable.class && !isResponseObservable && !isFlowable && !isSingle
+            && !isMaybe) {
       return null;
     }
 
@@ -139,7 +141,7 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
       isBody = true;
     }
 
-    return new RxJava2CallAdapter(responseType, scheduler, isAsync, isResult, isBody, isFlowable,
-        isSingle, isMaybe, false);
+    return new RxJava2CallAdapter(responseType, scheduler, isAsync, isResponseObservable, isResult,
+        isBody, isFlowable, isSingle, isMaybe, false);
   }
 }
