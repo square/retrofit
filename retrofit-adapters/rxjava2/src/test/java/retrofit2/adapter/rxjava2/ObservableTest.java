@@ -18,6 +18,9 @@ package retrofit2.adapter.rxjava2;
 import io.reactivex.Observable;
 import java.io.IOException;
 
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
@@ -38,6 +41,7 @@ public final class ObservableTest {
     @GET("/") Observable<String> body();
     @GET("/") Observable<Response<String>> response();
     @GET("/") Observable<Result<String>> result();
+    @GET("/") ResponseObservable<String> responseObservable();
   }
 
   private Service service;
@@ -134,4 +138,31 @@ public final class ObservableTest {
     assertThat(result.error()).isInstanceOf(IOException.class);
     observer.assertComplete();
   }
+
+  @Test public void responseObservableSuccess200() {
+    server.enqueue(new MockResponse());
+
+    RecordingObserver<Response<String>> observer = observerRule.create();
+    service.responseObservable().subscribe(observer);
+    assertThat(observer.takeValue().isSuccessful()).isTrue();
+    observer.assertComplete();
+  }
+
+  @Test public void responseObservableSuccess404() {
+    server.enqueue(new MockResponse().setResponseCode(404));
+
+    RecordingObserver<Response<String>> observer = observerRule.create();
+    service.responseObservable().subscribe(observer);
+    assertThat(observer.takeValue().isSuccessful()).isFalse();
+    observer.assertComplete();
+  }
+
+  @Test public void responseObservableFailure() {
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+    RecordingObserver<Response<String>> observer = observerRule.create();
+    service.responseObservable().subscribe(observer);
+    observer.assertError(IOException.class);
+  }
+
 }

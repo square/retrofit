@@ -25,7 +25,6 @@ public class ResponseObservable<T> extends Observable<Response<T>> {
 
     private static class ResponseObserver<R> implements Observer<Response<R>> {
         private final Observer<? super Response<R>> observer;
-        private boolean terminated;
 
         ResponseObserver(Observer<? super Response<R>> observer) {
             this.observer = observer;
@@ -36,37 +35,21 @@ public class ResponseObservable<T> extends Observable<Response<T>> {
         }
 
         @Override public void onNext(Response<R> response) {
-            if (response.isSuccessful()) {
-                observer.onNext(response);
-            } else {
-                terminated = true;
-                Throwable t = new HttpException(response);
-                try {
-                    observer.onError(t);
-                } catch (Throwable inner) {
-                    Exceptions.throwIfFatal(inner);
-                    RxJavaPlugins.onError(new CompositeException(t, inner));
-                }
-            }
+            observer.onNext(response);
         }
 
         @Override public void onComplete() {
-            if (!terminated) {
-                observer.onComplete();
-            }
+            observer.onComplete();
         }
 
         @Override public void onError(Throwable throwable) {
-            if (!terminated) {
+            try {
                 observer.onError(throwable);
-            } else {
-                // This should never happen! onNext handles and forwards errors automatically.
-                Throwable broken = new AssertionError(
-                        "This should never happen! Report as a bug with the full stacktrace.");
-                //noinspection UnnecessaryInitCause Two-arg AssertionError constructor is 1.7+ only.
-                broken.initCause(throwable);
-                RxJavaPlugins.onError(broken);
+            } catch (Throwable inner) {
+                Exceptions.throwIfFatal(inner);
+                RxJavaPlugins.onError(new CompositeException(throwable, inner));
             }
+            return;
         }
     }
 }
