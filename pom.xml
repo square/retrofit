@@ -63,7 +63,7 @@
     <jackson.version>2.7.2</jackson.version>
     <wire.version>2.2.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
-    <moshi.version>1.4.0</moshi.version>
+    <moshi.version>1.5.0</moshi.version>
 
     <!-- Sample Dependencies -->
     <jsoup.version>1.7.3</jsoup.version>
