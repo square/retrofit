@@ -34,6 +34,8 @@ If you are using ProGuard you might need to add the following options:
 ```
 -dontwarn okio.**
 -dontwarn javax.annotation.**
+-dontwarn javax.annotation.Nullable
+-dontwarn javax.annotation.ParametersAreNonnullByDefault
 ```
 
 
