@@ -104,9 +104,9 @@ final class RecordingCompletableObserver implements CompletableObserver {
       return new Statement() {
         @Override public void evaluate() throws Throwable {
           base.evaluate();
-          for (RecordingCompletableObserver subscriber : subscribers) {
+          subscribers.forEach(subscriber -> {
             subscriber.assertNoEvents();
-          }
+          });
         }
       };
     }

@@ -120,9 +120,9 @@ final class RecordingMaybeObserver<T> implements MaybeObserver<T> {
       return new Statement() {
         @Override public void evaluate() throws Throwable {
           base.evaluate();
-          for (RecordingMaybeObserver<?> subscriber : subscribers) {
+          subscribers.forEach(subscriber -> {
             subscriber.assertNoEvents();
-          }
+          });
         }
       };
     }
