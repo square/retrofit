@@ -136,9 +136,9 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
       return new Statement() {
         @Override public void evaluate() throws Throwable {
           base.evaluate();
-          for (RecordingSubscriber<?> subscriber : subscribers) {
+          subscribers.forEach(subscriber -> {
             subscriber.assertNoEvents();
-          }
+          });
         }
       };
     }

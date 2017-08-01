@@ -126,9 +126,9 @@ final class RecordingObserver<T> implements Observer<T> {
       return new Statement() {
         @Override public void evaluate() throws Throwable {
           base.evaluate();
-          for (RecordingObserver<?> subscriber : subscribers) {
+          subscribers.forEach(subscriber -> {
             subscriber.assertNoEvents();
-          }
+          });
         }
       };
     }

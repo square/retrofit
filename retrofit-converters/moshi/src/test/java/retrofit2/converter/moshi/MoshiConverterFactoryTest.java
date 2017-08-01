@@ -128,11 +128,9 @@ public final class MoshiConverterFactoryTest {
         .add(new JsonAdapter.Factory() {
           @Override public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations,
               Moshi moshi) {
-            for (Annotation annotation : annotations) {
-              if (!annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
-                throw new AssertionError("Non-@JsonQualifier annotation: " + annotation);
-              }
-            }
+            annotations.stream().filter(annotation -> !annotation.annotationType().isAnnotationPresent(JsonQualifier.class)).forEach(annotation -> {
+              throw new AssertionError("Non-@JsonQualifier annotation: " + annotation);
+            });
             return null;
           }
         })
