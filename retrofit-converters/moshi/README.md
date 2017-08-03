@@ -1,3 +1,6 @@
+
+
+
 Moshi Converter
 ===============
 
@@ -22,6 +25,20 @@ or [Gradle][3]:
 ```groovy
 compile 'com.squareup.retrofit2:converter-moshi:latest.version'
 ```
+Using with Kotlin
+--------
+In order to use this converter properly with Kotlin, add moshi-kotlin:
+
+    compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
+
+Add KotlinJsonAdapterFactory to the Moshi instance and don't use the default one:
+
+    val moshi = Moshi.Builder()
+                    .add(KotlinJsonAdapterFactory())
+                    .build()
+    
+    Retrofit.Builder().addConverterFactory(MoshiConverterFactory.create(moshi))
+
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
