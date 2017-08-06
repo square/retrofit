@@ -38,7 +38,7 @@ public class CallExecuteObservableTest {
 
 
   @Test
-  public void dontcloneCallIfNotExecuted() throws Exception {
+  public void dontCloneCallIfNotExecuted() throws Exception {
     CallExecuteObservable<String> callExecuteObservable = new CallExecuteObservable<>(nonExecutedCall);
     Call<String> nonClonedCalled = callExecuteObservable.cloneCallIfAlreadyExecuted(nonExecutedCall);
     assertThat(nonClonedCalled.isExecuted()).isFalse();
