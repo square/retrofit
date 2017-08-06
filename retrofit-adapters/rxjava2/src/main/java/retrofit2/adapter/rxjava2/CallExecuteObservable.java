@@ -31,8 +31,7 @@ final class CallExecuteObservable<T> extends Observable<Response<T>> {
     this.originalCall = originalCall;
   }
 
-  @Override
-  protected void subscribeActual(Observer<? super Response<T>> observer) {
+  @Override protected void subscribeActual(Observer<? super Response<T>> observer) {
     Call<T> call = originalCall;
     call = cloneCallIfAlreadyExecuted(call);
     observer.onSubscribe(new CallDisposable(call));
@@ -76,13 +75,11 @@ final class CallExecuteObservable<T> extends Observable<Response<T>> {
       this.call = call;
     }
 
-    @Override
-    public void dispose() {
+    @Override public void dispose() {
       call.cancel();
     }
 
-    @Override
-    public boolean isDisposed() {
+    @Override public boolean isDisposed() {
       return call.isCanceled();
     }
   }
