@@ -32,8 +32,10 @@ final class CallExecuteObservable<T> extends Observable<Response<T>> {
   }
 
   @Override protected void subscribeActual(Observer<? super Response<T>> observer) {
-    // Since Call is a one-shot type, clone it for each new observer.
-    Call<T> call = originalCall.clone();
+    // Since Call is a one-shot type, clone it for each new observer when already executed.
+    Call<T> call = originalCall.isExecuted()
+        ? originalCall.clone()
+        : originalCall;
     observer.onSubscribe(new CallDisposable(call));
 
     boolean terminated = false;
