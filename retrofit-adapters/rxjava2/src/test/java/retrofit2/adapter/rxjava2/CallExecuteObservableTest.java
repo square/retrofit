@@ -27,7 +27,7 @@ public final class CallExecuteObservableTest {
   private static final String RESPONSE = "RESPONSE";
 
   @Test
-  public void callExcutedObservableCanBeSubscribedToMultipleTimes() throws Exception {
+  public void callExcutedObservableCanBeSubscribedToMultipleTimes(){
     Call<String> call = Calls.response(RESPONSE);
     CallExecuteObservable<String> callExecuteObservable = new CallExecuteObservable<>(call);
     assertThat(call.isExecuted()).isFalse();
