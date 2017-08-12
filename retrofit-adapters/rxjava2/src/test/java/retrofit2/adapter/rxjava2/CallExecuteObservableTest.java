@@ -15,41 +15,36 @@
  */
 package retrofit2.adapter.rxjava2;
 
-import org.junit.Before;
+import io.reactivex.observers.TestObserver;
 import org.junit.Test;
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.mock.Calls;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CallExecuteObservableTest {
-
-  private Call<String> executedCall;
-  private Call<String> nonExecutedCall;
-
-
-  @Before
-  public void setUp() throws Exception {
-    executedCall = Calls.response("executed");
-    executedCall.execute();
-    nonExecutedCall = Calls.response("nonExecuted");
-
-  }
-
+  private static final String RESPONSE = "RESPONSE";
 
   @Test
-  public void dontCloneCallIfNotExecuted() throws Exception {
-    CallExecuteObservable<String> callExecuteObservable = new CallExecuteObservable<>(nonExecutedCall);
-    Call<String> nonClonedCalled = callExecuteObservable.cloneCallIfAlreadyExecuted(nonExecutedCall);
-    assertThat(nonClonedCalled.isExecuted()).isFalse();
-    assertThat(nonExecutedCall).isEqualTo(nonClonedCalled);
+  public void callExcutedObservableCanBeSubscribedToMultipleTimes() throws Exception {
+    Call<String> call = Calls.response(RESPONSE);
+    CallExecuteObservable<String> callExecuteObservable = new CallExecuteObservable<>(call);
+    assertThat(call.isExecuted()).isFalse();
+
+    //subscribing to a CallExecuteObservable should execute the call
+    subscribeAndAssertSuccess(callExecuteObservable);
+    assertThat(call.isExecuted()).isTrue();
+
+    //subscribing second time should succeed even when call already executed
+    subscribeAndAssertSuccess(callExecuteObservable);
   }
 
-  @Test
-  public void cloneCallIfAlreadyExecuted() throws Exception {
-    CallExecuteObservable<String> callExecuteObservable = new CallExecuteObservable<>(executedCall);
-    Call<String> clonedCall = callExecuteObservable.cloneCallIfAlreadyExecuted(executedCall);
-    assertThat(clonedCall.isExecuted()).isFalse();
-    assertThat(executedCall).isNotEqualTo(clonedCall);
+  private void subscribeAndAssertSuccess(CallExecuteObservable<String> callExecuteObservable) {
+    TestObserver<Response<String>> testSubscriber = new TestObserver<>();
+    callExecuteObservable.subscribeActual(testSubscriber);
+    testSubscriber.assertNoErrors()
+        .assertComplete()
+        .assertValueCount(1);
   }
 }
