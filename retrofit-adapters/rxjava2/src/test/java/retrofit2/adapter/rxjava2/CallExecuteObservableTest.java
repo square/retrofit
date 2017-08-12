@@ -23,7 +23,7 @@ import retrofit2.mock.Calls;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CallExecuteObservableTest {
+public final class CallExecuteObservableTest {
   private static final String RESPONSE = "RESPONSE";
 
   @Test
