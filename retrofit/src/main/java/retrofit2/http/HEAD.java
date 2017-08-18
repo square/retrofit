@@ -35,5 +35,5 @@ public @interface HEAD {
    * See {@linkplain retrofit2.Retrofit.Builder#baseUrl(HttpUrl) base URL} for details of how
    * this is resolved against a base URL to create the full endpoint URL.
    */
-  String value() default "";
+  String value() default ".";
 }
