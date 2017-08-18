@@ -51,6 +51,6 @@ public @interface HTTP {
    * See {@linkplain retrofit2.Retrofit.Builder#baseUrl(HttpUrl) base URL} for details of how
    * this is resolved against a base URL to create the full endpoint URL.
    */
-  String path() default "";
+  String path() default ".";
   boolean hasBody() default false;
 }
