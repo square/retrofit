@@ -104,7 +104,7 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
     boolean isFlowable = rawType == Flowable.class;
     boolean isSingle = rawType == Single.class;
     boolean isMaybe = rawType == Maybe.class;
-    if (rawType != Observable.class && !isFlowable && !isSingle && !isMaybe) {
+    if (!Observable.class.isAssignableFrom(rawType) && !isFlowable && !isSingle && !isMaybe) {
       return null;
     }
 
