@@ -171,6 +171,37 @@ public final class RetrofitTest {
     assertSame(callFactory, two.callFactory());
   }
 
+  @Test public void builtInConvertersAbsentInCloneBuilder() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    assertEquals(retrofit.converterFactories().size() - 1,
+        retrofit.newBuilder().converterFactories().size());
+  }
+
+  @Test public void builtInConvertersAddedOnBuild() {
+    Retrofit.Builder builder = new Retrofit.Builder();
+    Retrofit retrofit = builder
+        .baseUrl(server.url("/"))
+        .build();
+
+    assertEquals(builder.converterFactories().size() + 1, retrofit.converterFactories().size());
+  }
+
+  @Test public void builtInConvertersRemainFirstInClone() {
+    Retrofit one = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(mock(Converter.Factory.class))
+        .build();
+    Retrofit two = one.newBuilder()
+        .addConverterFactory(mock(Converter.Factory.class))
+        .build();
+
+    assertEquals(one.converterFactories().size() + 1, two.converterFactories().size());
+    assertTrue(two.converterFactories().get(0) instanceof BuiltInConverters);
+  }
+
   @Test public void responseTypeCannotBeRetrofitResponse() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
