@@ -180,19 +180,6 @@ public final class RetrofitTest {
     assertEquals(0, retrofit.newBuilder().converterFactories().size());
   }
 
-  @Test public void builtInConvertersRemainFirstInClone() {
-    Retrofit one = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(mock(Converter.Factory.class))
-        .build();
-    Retrofit two = one.newBuilder()
-        .addConverterFactory(mock(Converter.Factory.class))
-        .build();
-
-    assertEquals(one.converterFactories().size() + 1, two.converterFactories().size());
-    assertTrue(two.converterFactories().get(0) instanceof BuiltInConverters);
-  }
-
   @Test public void responseTypeCannotBeRetrofitResponse() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
