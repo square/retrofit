@@ -63,6 +63,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 public final class RetrofitTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -858,6 +859,23 @@ public final class RetrofitTest {
     List<Converter.Factory> converterFactories = retrofit.converterFactories();
     assertThat(converterFactories).hasSize(1);
     assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverters.class);
+  }
+
+  @Test public void builtInConvertersAddedOnBuild() {
+    Converter<ResponseBody, Void> converter = mock(Converter.class);
+    Converter.Factory factory = mock(Converter.Factory.class);
+    Annotation[] annotations = new Annotation[0];
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory)
+        .build();
+
+    doReturn(converter).when(factory).responseBodyConverter(Void.class, annotations, retrofit);
+
+    retrofit.responseBodyConverter(Void.class, annotations);
+
+    verifyZeroInteractions(factory);
   }
 
   @Test public void requestConverterFactoryQueried() {
