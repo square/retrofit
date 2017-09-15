@@ -176,8 +176,7 @@ public final class RetrofitTest {
         .baseUrl(server.url("/"))
         .build();
 
-    assertEquals(retrofit.converterFactories().size() - 1,
-        retrofit.newBuilder().converterFactories().size());
+    assertEquals(0, retrofit.newBuilder().converterFactories().size());
   }
 
   @Test public void builtInConvertersAddedOnBuild() {
