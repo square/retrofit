@@ -179,15 +179,6 @@ public final class RetrofitTest {
     assertEquals(0, retrofit.newBuilder().converterFactories().size());
   }
 
-  @Test public void builtInConvertersAddedOnBuild() {
-    Retrofit.Builder builder = new Retrofit.Builder();
-    Retrofit retrofit = builder
-        .baseUrl(server.url("/"))
-        .build();
-
-    assertEquals(builder.converterFactories().size() + 1, retrofit.converterFactories().size());
-  }
-
   @Test public void builtInConvertersRemainFirstInClone() {
     Retrofit one = new Retrofit.Builder()
         .baseUrl(server.url("/"))
