@@ -848,7 +848,7 @@ public final class RetrofitTest {
     assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverters.class);
   }
 
-  @Test public void builtInConvertersAddedOnBuild() {
+  @Test public void builtInConvertersFirstInClone() {
     Converter<ResponseBody, Void> converter = mock(Converter.class);
     Converter.Factory factory = mock(Converter.Factory.class);
     Annotation[] annotations = new Annotation[0];
@@ -860,7 +860,7 @@ public final class RetrofitTest {
 
     doReturn(converter).when(factory).responseBodyConverter(Void.class, annotations, retrofit);
 
-    retrofit.responseBodyConverter(Void.class, annotations);
+    retrofit.newBuilder().build().responseBodyConverter(Void.class, annotations);
 
     verifyZeroInteractions(factory);
   }
