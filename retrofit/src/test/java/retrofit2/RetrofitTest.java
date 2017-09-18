@@ -1224,6 +1224,14 @@ public final class RetrofitTest {
     assertThat(nonMatchingFactory.called).isTrue();
   }
 
+  @Test public void platformAwareAdapterAbsentInCloneBuilder() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    assertEquals(0, retrofit.newBuilder().adapterFactories().size());
+  }
+
   @Test public void callbackExecutorNullThrows() {
     try {
       new Retrofit.Builder().callbackExecutor(null);

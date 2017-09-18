@@ -542,6 +542,11 @@ public final class Retrofit {
       return this;
     }
 
+    /** Returns a modifiable list of call adapter factories. */
+    public List<CallAdapter.Factory> adapterFactories() {
+      return this.adapterFactories;
+    }
+
     /** Returns a modifiable list of converter factories. */
     public List<Converter.Factory> converterFactories() {
       return this.converterFactories;
