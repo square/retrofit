@@ -587,7 +587,8 @@ public final class Retrofit {
       adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 
       // Make a defensive copy of the converters.
-      List<Converter.Factory> converterFactories = new ArrayList<>(1 + this.converterFactories.size());
+      List<Converter.Factory> converterFactories =
+          new ArrayList<>(1 + this.converterFactories.size());
 
       // Add the built-in converter factory first. This prevents overriding its behavior but also
       // ensures correct behavior when using converters that consume all types.
