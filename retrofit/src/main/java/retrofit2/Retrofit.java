@@ -543,7 +543,7 @@ public final class Retrofit {
     }
 
     /** Returns a modifiable list of call adapter factories. */
-    public List<CallAdapter.Factory> adapterFactories() {
+    public List<CallAdapter.Factory> callAdapterFactories() {
       return this.adapterFactories;
     }
 

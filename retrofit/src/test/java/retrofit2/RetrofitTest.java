@@ -1229,7 +1229,7 @@ public final class RetrofitTest {
         .baseUrl(server.url("/"))
         .build();
 
-    assertEquals(0, retrofit.newBuilder().adapterFactories().size());
+    assertEquals(0, retrofit.newBuilder().callAdapterFactories().size());
   }
 
   @Test public void callbackExecutorNullThrows() {
