@@ -5,6 +5,7 @@ Type-safe HTTP client for Android and Java by Square, Inc.
 
 For more information please see [the website][1].
 
+***Don't support interface inheritance***
 
 Download
 --------
