@@ -19,5 +19,6 @@
     <module>java8</module>
     <module>rxjava</module>
     <module>rxjava2</module>
+    <module>scala</module>
   </modules>
 </project>
