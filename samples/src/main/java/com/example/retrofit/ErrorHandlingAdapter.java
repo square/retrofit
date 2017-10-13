@@ -180,7 +180,7 @@ public final class ErrorHandlingAdapter {
       }
 
       @Override public void networkError(IOException e) {
-        System.err.println("NETOWRK ERROR " + e.getMessage());
+        System.err.println("NETWORK ERROR " + e.getMessage());
       }
 
       @Override public void unexpectedError(Throwable t) {
