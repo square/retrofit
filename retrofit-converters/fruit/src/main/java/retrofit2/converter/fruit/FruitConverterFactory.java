@@ -14,25 +14,25 @@ import java.lang.reflect.Type;
 
 public class FruitConverterFactory extends Converter.Factory {
 
-    private Fruit mPicker;
+  private Fruit mPicker;
 
-    public static FruitConverterFactory create(Fruit fruit) {
-        return new FruitConverterFactory(fruit);
-    }
+  public static FruitConverterFactory create(Fruit fruit) {
+    return new FruitConverterFactory(fruit);
+  }
 
-    public static FruitConverterFactory create() {
-        return new FruitConverterFactory(new Fruit());
-    }
+  public static FruitConverterFactory create() {
+    return new FruitConverterFactory(new Fruit());
+  }
 
 
-    private FruitConverterFactory(Fruit fruit) {
-        mPicker = fruit;
-    }
+  private FruitConverterFactory(Fruit fruit) {
+    mPicker = fruit;
+  }
 
-    @Override
-    public Converter<ResponseBody, ?> responseBodyConverter(
-            Type type, Annotation[] annotations, Retrofit retrofit) {
-        return new FruitResponseBodyConverter<>(mPicker, type);
-    }
+  @Override
+  public Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
+    return new FruitResponseBodyConverter<>(mPicker, type);
+  }
 
 }

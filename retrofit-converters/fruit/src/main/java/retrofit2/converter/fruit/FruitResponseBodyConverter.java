@@ -13,20 +13,21 @@ import java.lang.reflect.Type;
  */
 
 public class FruitResponseBodyConverter<T> implements Converter<ResponseBody, T> {
-    private Fruit mPicker;
-    private Type mType;
+  private Fruit mPicker;
+  private Type mType;
 
-    FruitResponseBodyConverter(Fruit fruit, Type type) {
-        mPicker = fruit;
-        mType = type;
-    }
+  FruitResponseBodyConverter(Fruit fruit, Type type) {
+    mPicker = fruit;
+    mType = type;
+  }
 
-    @Override public T convert(ResponseBody value) throws IOException {
-        try {
-            String response = value.string();
-            return mPicker.fromHtml(response, mType);
-        } finally {
-            value.close();
-        }
+  @Override
+  public T convert(ResponseBody value) throws IOException {
+    try {
+      String response = value.string();
+      return mPicker.fromHtml(response, mType);
+    } finally {
+      value.close();
     }
+  }
 }
