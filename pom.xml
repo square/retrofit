@@ -64,6 +64,7 @@
     <wire.version>2.2.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.5.0</moshi.version>
+    <fruit.version>1.0.4</fruit.version>
 
     <!-- Sample Dependencies -->
     <jsoup.version>1.7.3</jsoup.version>
@@ -155,6 +156,11 @@
         <groupId>com.squareup.moshi</groupId>
         <artifactId>moshi</artifactId>
         <version>${moshi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>me.ghui</groupId>
+        <artifactId>Fruit</artifactId>
+        <version>${fruit.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
