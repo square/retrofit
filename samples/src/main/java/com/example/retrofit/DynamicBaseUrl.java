@@ -67,7 +67,7 @@ public final class DynamicBaseUrl {
         .build();
 
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://www.coca-cola.com/")
+        .baseUrl("http://www.github.com/")
         .callFactory(okHttpClient)
         .build();
 
