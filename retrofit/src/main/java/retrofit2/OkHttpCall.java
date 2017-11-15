@@ -37,7 +37,7 @@ final class OkHttpCall<T> implements Call<T> {
   @GuardedBy("this")
   private @Nullable okhttp3.Call rawCall;
   @GuardedBy("this")
-  private @Nullable Throwable creationFailure; // Either a RuntimeException or IOException.
+  private @Nullable Throwable creationFailure; // Either a RuntimeException, Error, or IOException.
   @GuardedBy("this")
   private boolean executed;
 
@@ -59,13 +59,15 @@ final class OkHttpCall<T> implements Call<T> {
     if (creationFailure != null) {
       if (creationFailure instanceof IOException) {
         throw new RuntimeException("Unable to create request.", creationFailure);
-      } else {
+      } else if (creationFailure instanceof RuntimeException) {
         throw (RuntimeException) creationFailure;
+      } else {
+        throw (Error) creationFailure;
       }
     }
     try {
       return (rawCall = createRawCall()).request();
-    } catch (RuntimeException e) {
+    } catch (RuntimeException | Error e) {
       creationFailure = e;
       throw e;
     } catch (IOException e) {
@@ -153,8 +155,10 @@ final class OkHttpCall<T> implements Call<T> {
       if (creationFailure != null) {
         if (creationFailure instanceof IOException) {
           throw (IOException) creationFailure;
-        } else {
+        } else if (creationFailure instanceof RuntimeException) {
           throw (RuntimeException) creationFailure;
+        } else {
+          throw (Error) creationFailure;
         }
       }
 
@@ -162,7 +166,7 @@ final class OkHttpCall<T> implements Call<T> {
       if (call == null) {
         try {
           call = rawCall = createRawCall();
-        } catch (IOException | RuntimeException e) {
+        } catch (IOException | RuntimeException | Error e) {
           creationFailure = e;
           throw e;
         }
