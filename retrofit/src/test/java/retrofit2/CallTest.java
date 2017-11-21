@@ -790,16 +790,16 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.execute();
       fail();
-    } catch (AssertionError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -885,16 +885,16 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (AssertionError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.request();
       fail();
-    } catch (AssertionError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -996,8 +996,8 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1126,8 +1126,8 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -1153,16 +1153,16 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (OutOfMemoryError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (OutOfMemoryError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
   }
@@ -1197,16 +1197,16 @@ public final class CallTest {
       });
       assertThat(callsFailureSynchronously.get()).isFalse();
       fail();
-    } catch (OutOfMemoryError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (OutOfMemoryError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (OutOfMemoryError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
   }
@@ -1232,16 +1232,16 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (OutOfMemoryError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (OutOfMemoryError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError expected) {
-      assertThat(expected).hasMessage("Broken!");
+    } catch (OutOfMemoryError e) {
+      assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
   }
