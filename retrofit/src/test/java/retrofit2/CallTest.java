@@ -1131,7 +1131,42 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void unrecoverableErrorsAreNotCaughtForCallback() throws Exception {
+  @Test public void unrecoverableErrorsAreNotCaughtRequest() throws Exception {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse());
+
+    final AtomicInteger writeCount = new AtomicInteger();
+    Object a = new Object() {
+      @Override public String toString() {
+        writeCount.incrementAndGet();
+        throw new OutOfMemoryError("Broken!");
+      }
+    };
+    Call<String> call = service.postRequestBody(a);
+
+    try {
+      call.request();
+      fail();
+    } catch (OutOfMemoryError expected) {
+      assertThat(expected).hasMessage("Broken!");
+    }
+    assertThat(writeCount.get()).isEqualTo(1);
+
+    try {
+      call.request();
+      fail();
+    } catch (OutOfMemoryError expected) {
+      assertThat(expected).hasMessage("Broken!");
+    }
+    assertThat(writeCount.get()).isEqualTo(2);
+  }
+
+  @Test public void unrecoverableErrorsAreNotCaughtEnqueue() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -1161,6 +1196,42 @@ public final class CallTest {
     } catch (OutOfMemoryError expected) {
       assertThat(expected).hasMessage("Broken!");
     }
+    assertThat(writeCount.get()).isEqualTo(1);
+
+    try {
+      call.request();
+      fail();
+    } catch (OutOfMemoryError expected) {
+      assertThat(expected).hasMessage("Broken!");
+    }
+    assertThat(writeCount.get()).isEqualTo(2);
+  }
+
+  @Test public void unrecoverableErrorsAreNotCaughtExecute() throws Exception {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse());
+
+    final AtomicInteger writeCount = new AtomicInteger();
+    Object a = new Object() {
+      @Override public String toString() {
+        writeCount.incrementAndGet();
+        throw new OutOfMemoryError("Broken!");
+      }
+    };
+    Call<String> call = service.postRequestBody(a);
+
+    try {
+      call.execute();
+      fail();
+    } catch (OutOfMemoryError expected) {
+      assertThat(expected).hasMessage("Broken!");
+    }
+    assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.request();

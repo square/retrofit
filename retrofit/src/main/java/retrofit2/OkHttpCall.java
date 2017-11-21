@@ -69,6 +69,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       return (rawCall = createRawCall()).request();
     } catch (RuntimeException | Error e) {
+      throwIfFatal(e); // Do not assign a fatal error to creationFailure.
       creationFailure = e;
       throw e;
     } catch (IOException e) {
@@ -169,6 +170,7 @@ final class OkHttpCall<T> implements Call<T> {
         try {
           call = rawCall = createRawCall();
         } catch (IOException | RuntimeException | Error e) {
+          throwIfFatal(e); //  Do not assign a fatal error to creationFailure.
           creationFailure = e;
           throw e;
         }
