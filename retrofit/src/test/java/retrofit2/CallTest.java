@@ -768,7 +768,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void requestThrowingErrorBeforeExecuteFailsExecute() throws IOException {
+  @Test public void requestThrowingRecoverableErrorBeforeExecuteFailsExecute() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -781,7 +781,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new OutOfMemoryError("Broken!");
+        throw new AssertionError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -789,16 +789,16 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+    } catch (AssertionError expected) {
+      assertThat(expected).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.execute();
       fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+    } catch (AssertionError expected) {
+      assertThat(expected).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -863,7 +863,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void requestAfterExecuteThrowingAlsoThrowsForErrors() throws IOException {
+  @Test public void requestAfterExecuteThrowingAlsoThrowsForRecoverableErrors() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -876,7 +876,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new OutOfMemoryError("Broken!");
+        throw new AssertionError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -884,16 +884,16 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+    } catch (AssertionError expected) {
+      assertThat(expected).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+    } catch (AssertionError expected) {
+      assertThat(expected).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -973,7 +973,7 @@ public final class CallTest {
     assertTrue(latch.await(10, SECONDS));
   }
 
-  @Test public void requestThrowingErrorBeforeEnqueueFailsEnqueue()
+  @Test public void requestThrowingRecoverableErrorBeforeEnqueueFailsEnqueue()
       throws IOException, InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -987,7 +987,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new OutOfMemoryError("Broken!");
+        throw new AssertionError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -995,8 +995,8 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+    } catch (AssertionError expected) {
+      assertThat(expected).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1006,7 +1006,7 @@ public final class CallTest {
       }
 
       @Override public void onFailure(Call<String> call, Throwable t) {
-        assertThat(t).isExactlyInstanceOf(OutOfMemoryError.class).hasMessage("Broken!");
+        assertThat(t).isExactlyInstanceOf(AssertionError.class).hasMessage("Broken!");
         assertThat(writeCount.get()).isEqualTo(1);
         latch.countDown();
       }
@@ -1090,8 +1090,48 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void requestAfterEnqueueFailingThrowsForErrors() throws IOException,
+  @Test public void requestAfterEnqueueFailingThrowsForRecoverableErrors() throws IOException,
       InterruptedException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse());
+
+    final AtomicInteger writeCount = new AtomicInteger();
+    Object a = new Object() {
+      @Override public String toString() {
+        writeCount.incrementAndGet();
+        throw new AssertionError("Broken!");
+      }
+    };
+    Call<String> call = service.postRequestBody(a);
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<String>() {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
+      }
+
+      @Override public void onFailure(Call<String> call, Throwable t) {
+        assertThat(t).isExactlyInstanceOf(AssertionError.class).hasMessage("Broken!");
+        assertThat(writeCount.get()).isEqualTo(1);
+        latch.countDown();
+      }
+    });
+    assertTrue(latch.await(10, SECONDS));
+
+    try {
+      call.request();
+      fail();
+    } catch (AssertionError expected) {
+      assertThat(expected).hasMessage("Broken!");
+    }
+    assertThat(writeCount.get()).isEqualTo(1);
+  }
+
+  @Test public void unrecoverableErrorsAreNotCaughtForCallback() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -1109,25 +1149,25 @@ public final class CallTest {
     };
     Call<String> call = service.postRequestBody(a);
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Call<String> call, Response<String> response) {
-      }
+    try {
+      call.enqueue(new Callback<String>() {
+        @Override public void onResponse(Call<String> call, Response<String> response) {
+        }
 
-      @Override public void onFailure(Call<String> call, Throwable t) {
-        assertThat(t).isExactlyInstanceOf(OutOfMemoryError.class).hasMessage("Broken!");
-        assertThat(writeCount.get()).isEqualTo(1);
-        latch.countDown();
-      }
-    });
-    assertTrue(latch.await(10, SECONDS));
+        @Override public void onFailure(Call<String> call, Throwable t) {
+        }
+      });
+      fail();
+    } catch (OutOfMemoryError expected) {
+      assertThat(expected).hasMessage("Broken!");
+    }
 
     try {
       call.request();
       fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+    } catch (OutOfMemoryError expected) {
+      assertThat(expected).hasMessage("Broken!");
     }
-    assertThat(writeCount.get()).isEqualTo(1);
+    assertThat(writeCount.get()).isEqualTo(2);
   }
 }
