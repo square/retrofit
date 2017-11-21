@@ -495,7 +495,8 @@ final class Utils {
     }
   }
 
-  // github.com/ReactiveX/RxJava/blob/2.x/src/main/java/io/reactivex/exceptions/Exceptions.java#L66
+  // https://github.com/ReactiveX/RxJava/blob/6a44e5d0543a48f1c378dc833a155f3f71333bc2/
+  // src/main/java/io/reactivex/exceptions/Exceptions.java#L66
   static void throwIfFatal(Throwable t) {
     if (t instanceof VirtualMachineError) {
       throw (VirtualMachineError) t;

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.Interceptor;
@@ -1185,13 +1186,16 @@ public final class CallTest {
     Call<String> call = service.postRequestBody(a);
 
     try {
+      final AtomicBoolean callsFailureSynchronously = new AtomicBoolean();
       call.enqueue(new Callback<String>() {
         @Override public void onResponse(Call<String> call, Response<String> response) {
         }
 
         @Override public void onFailure(Call<String> call, Throwable t) {
+          callsFailureSynchronously.set(true); // Will not be called for unrecoverable errors.
         }
       });
+      assertThat(callsFailureSynchronously.get()).isFalse();
       fail();
     } catch (OutOfMemoryError expected) {
       assertThat(expected).hasMessage("Broken!");
