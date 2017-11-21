@@ -769,7 +769,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void requestThrowingRecoverableErrorBeforeExecuteFailsExecute() throws IOException {
+  @Test public void requestThrowingNonFatalErrorBeforeExecuteFailsExecute() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -864,7 +864,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void requestAfterExecuteThrowingAlsoThrowsForRecoverableErrors() throws IOException {
+  @Test public void requestAfterExecuteThrowingAlsoThrowsForNonFatalErrors() throws IOException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -974,7 +974,7 @@ public final class CallTest {
     assertTrue(latch.await(10, SECONDS));
   }
 
-  @Test public void requestThrowingRecoverableErrorBeforeEnqueueFailsEnqueue()
+  @Test public void requestThrowingNonFatalErrorBeforeEnqueueFailsEnqueue()
       throws IOException, InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -1091,7 +1091,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void requestAfterEnqueueFailingThrowsForRecoverableErrors() throws IOException,
+  @Test public void requestAfterEnqueueFailingThrowsForNonFatalErrors() throws IOException,
       InterruptedException {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -1132,7 +1132,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
-  @Test public void unrecoverableErrorsAreNotCaughtRequest() throws Exception {
+  @Test public void fatalErrorsAreNotCaughtRequest() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -1167,7 +1167,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(2);
   }
 
-  @Test public void unrecoverableErrorsAreNotCaughtEnqueue() throws Exception {
+  @Test public void fatalErrorsAreNotCaughtEnqueue() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
@@ -1192,7 +1192,7 @@ public final class CallTest {
         }
 
         @Override public void onFailure(Call<String> call, Throwable t) {
-          callsFailureSynchronously.set(true); // Will not be called for unrecoverable errors.
+          callsFailureSynchronously.set(true); // Will not be called for fatal errors.
         }
       });
       assertThat(callsFailureSynchronously.get()).isFalse();
@@ -1211,7 +1211,7 @@ public final class CallTest {
     assertThat(writeCount.get()).isEqualTo(2);
   }
 
-  @Test public void unrecoverableErrorsAreNotCaughtExecute() throws Exception {
+  @Test public void fatalErrorsAreNotCaughtExecute() throws Exception {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory())
