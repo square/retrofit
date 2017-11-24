@@ -782,7 +782,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new AssertionError("Broken!");
+        throw new Error("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -790,7 +790,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError e) {
+    } catch (Error e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -798,7 +798,7 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (AssertionError e) {
+    } catch (Error e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -877,7 +877,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new AssertionError("Broken!");
+        throw new Error("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -885,7 +885,7 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (AssertionError e) {
+    } catch (Error e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -893,7 +893,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError e) {
+    } catch (Error e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -988,7 +988,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new AssertionError("Broken!");
+        throw new Error("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -996,7 +996,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError e) {
+    } catch (Error e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -1007,7 +1007,7 @@ public final class CallTest {
       }
 
       @Override public void onFailure(Call<String> call, Throwable t) {
-        assertThat(t).isExactlyInstanceOf(AssertionError.class).hasMessage("Broken!");
+        assertThat(t).isExactlyInstanceOf(Error.class).hasMessage("Broken!");
         assertThat(writeCount.get()).isEqualTo(1);
         latch.countDown();
       }
@@ -1105,7 +1105,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new AssertionError("Broken!");
+        throw new Error("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -1116,7 +1116,7 @@ public final class CallTest {
       }
 
       @Override public void onFailure(Call<String> call, Throwable t) {
-        assertThat(t).isExactlyInstanceOf(AssertionError.class).hasMessage("Broken!");
+        assertThat(t).isExactlyInstanceOf(Error.class).hasMessage("Broken!");
         assertThat(writeCount.get()).isEqualTo(1);
         latch.countDown();
       }
@@ -1126,7 +1126,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (AssertionError e) {
+    } catch (Error e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
