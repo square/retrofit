@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -44,6 +45,7 @@ import retrofit2.http.Streaming;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.spy;
@@ -1129,5 +1131,135 @@ public final class CallTest {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
+  }
+
+  @Test public void callbackSuppressesWhenOnResponseThrows() throws InterruptedException {
+    final AtomicReference<Throwable> callbackThrowable = new AtomicReference<>();
+    CountDownLatch latch = new CountDownLatch(1);
+
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/"))
+        .callFactory(new CallbackErrorReportingCallFactory(callbackThrowable, latch))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse());
+
+    Call<String> call = service.getString();
+
+    call.enqueue(new Callback<String>() {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
+        throw new RuntimeException("Broken!");
+      }
+
+      @Override public void onFailure(Call<String> call, Throwable t) {
+        throw new AssertionError();
+      }
+    });
+    assertTrue(latch.await(10, SECONDS));
+    assertNull(callbackThrowable.get());
+  }
+
+  @Test public void callbackSuppressesWhenOnFailureThrows() throws InterruptedException {
+    final AtomicReference<Throwable> callbackThrowable = new AtomicReference<>();
+    CountDownLatch latch = new CountDownLatch(1);
+
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/"))
+        .callFactory(new CallbackErrorReportingCallFactory(callbackThrowable, latch))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    Call<String> call = service.getString();
+
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+
+    call.enqueue(new Callback<String>() {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void onFailure(Call<String> call, Throwable t) {
+        throw new RuntimeException("Broken!");
+      }
+    });
+    assertTrue(latch.await(10, SECONDS));
+    assertNull(callbackThrowable.get());
+  }
+
+  private static final class CallbackErrorReportingCallFactory implements okhttp3.Call.Factory {
+    private final AtomicReference<Throwable> callbackThrowable;
+    private final CountDownLatch latch;
+    final OkHttpClient client = new OkHttpClient();
+
+    CallbackErrorReportingCallFactory(AtomicReference<Throwable> callbackThrowable,
+        CountDownLatch latch) {
+      this.callbackThrowable = callbackThrowable;
+      this.latch = latch;
+    }
+
+    @Override public okhttp3.Call newCall(Request request) {
+      return new Call(callbackThrowable, latch, client.newCall(request));
+    }
+
+    private static final class Call implements okhttp3.Call {
+      final AtomicReference<Throwable> callbackThrowable;
+      final CountDownLatch latch;
+      private final okhttp3.Call delegate;
+
+      Call(AtomicReference<Throwable> callbackThrowable, CountDownLatch latch,
+          okhttp3.Call delegate) {
+        this.callbackThrowable = callbackThrowable;
+        this.latch = latch;
+        this.delegate = delegate;
+      }
+
+      @Override public Request request() {
+        return delegate.request();
+      }
+
+      @Override public okhttp3.Response execute() throws IOException {
+        return delegate.execute();
+      }
+
+      @Override public void enqueue(final okhttp3.Callback callback) {
+        delegate.enqueue(new okhttp3.Callback() {
+          @Override public void onFailure(okhttp3.Call call, IOException e) {
+            try {
+              callback.onFailure(call, e);
+            } catch (Throwable t) {
+              callbackThrowable.set(t);
+            }
+            latch.countDown();
+          }
+
+          @Override public void onResponse(okhttp3.Call call, okhttp3.Response response)
+              throws IOException {
+            try {
+              callback.onResponse(call, response);
+            } catch (Throwable t) {
+              callbackThrowable.set(t);
+            }
+            latch.countDown();
+          }
+        });
+      }
+
+      @Override public void cancel() {
+        delegate.cancel();
+      }
+
+      @Override public boolean isExecuted() {
+        return delegate.isExecuted();
+      }
+
+      @Override public boolean isCanceled() {
+        return delegate.isCanceled();
+      }
+
+      @SuppressWarnings("CloneDoesntCallSuperClone") @Override public okhttp3.Call clone() {
+        return new Call(callbackThrowable, latch, delegate.clone());
+      }
+    }
   }
 }
