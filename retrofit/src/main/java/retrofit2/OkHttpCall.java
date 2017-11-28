@@ -27,6 +27,7 @@ import okio.ForwardingSource;
 import okio.Okio;
 
 import static retrofit2.Utils.checkNotNull;
+import static retrofit2.Utils.throwIfFatal;
 
 final class OkHttpCall<T> implements Call<T> {
   private final ServiceMethod<T, ?> serviceMethod;
@@ -36,8 +37,8 @@ final class OkHttpCall<T> implements Call<T> {
 
   @GuardedBy("this")
   private @Nullable okhttp3.Call rawCall;
-  @GuardedBy("this")
-  private @Nullable Throwable creationFailure; // Either a RuntimeException, Error, or IOException.
+  @GuardedBy("this") // Either a RuntimeException, non-fatal Error, or IOException.
+  private @Nullable Throwable creationFailure;
   @GuardedBy("this")
   private boolean executed;
 
@@ -68,6 +69,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       return (rawCall = createRawCall()).request();
     } catch (RuntimeException | Error e) {
+      throwIfFatal(e); // Do not assign a fatal error to creationFailure.
       creationFailure = e;
       throw e;
     } catch (IOException e) {
@@ -92,6 +94,7 @@ final class OkHttpCall<T> implements Call<T> {
         try {
           call = rawCall = createRawCall();
         } catch (Throwable t) {
+          throwIfFatal(t);
           failure = creationFailure = t;
         }
       }
@@ -167,6 +170,7 @@ final class OkHttpCall<T> implements Call<T> {
         try {
           call = rawCall = createRawCall();
         } catch (IOException | RuntimeException | Error e) {
+          throwIfFatal(e); //  Do not assign a fatal error to creationFailure.
           creationFailure = e;
           throw e;
         }
