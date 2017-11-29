@@ -1,0 +1,2 @@
+buildCmd: "mvn compile"
+testCmd: "mvn test"
