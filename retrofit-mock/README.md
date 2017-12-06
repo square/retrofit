@@ -1,7 +1,7 @@
 Mock Web Server
 ==============
 
-An mock web server for mocking HTTP responses from a server, and simulating network behaviour.
+A mock web server for mocking HTTP responses from a server, and simulating network behaviour.
 
 Download
 --------
