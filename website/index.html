@@ -120,6 +120,9 @@ Call&lt;User> getUser(@Path("username") String username);</pre>
               <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted. Otherwise, <code>toString</code> will be called on the value, and the result used.</p>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
+              <p>Similar to query parameters, for complex header combinations, a <code>Map</code> can be used.
+			  <pre class="prettyprint">@GET("user")
+Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
               <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
 
               <h4>Synchronous vs. Asynchronous</h4>
