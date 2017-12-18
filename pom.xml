@@ -46,6 +46,7 @@
 
     <!-- Compilation -->
     <java.version>1.7</java.version>
+    <kotlin.version>1.1.51</kotlin.version>
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
@@ -57,6 +58,7 @@
     <rxjava2.version>2.0.0</rxjava2.version>
     <guava.version>19.0</guava.version>
     <scala.version>2.12.3</scala.version>
+    <coroutines.version>0.19.3</coroutines.version>
 
     <!-- Converter Dependencies -->
     <gson.version>2.8.2</gson.version>
@@ -196,6 +198,16 @@
         <groupId>org.robolectric</groupId>
         <artifactId>robolectric</artifactId>
         <version>${robolectric.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-stdlib</artifactId>
+        <version>${kotlin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlinx</groupId>
+        <artifactId>kotlinx-coroutines-core</artifactId>
+        <version>${coroutines.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
