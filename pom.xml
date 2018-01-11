@@ -65,6 +65,7 @@
     <wire.version>2.2.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
     <moshi.version>1.5.0</moshi.version>
+    <jaxb.version>2.2.12</jaxb.version><!-- 2.3.0 breaks due to https://github.com/mojohaus/animal-sniffer/issues/29 -->
 
     <!-- Sample Dependencies -->
     <jsoup.version>1.7.3</jsoup.version>
@@ -156,6 +157,11 @@
         <groupId>com.squareup.moshi</groupId>
         <artifactId>moshi</artifactId>
         <version>${moshi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>${jaxb.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
