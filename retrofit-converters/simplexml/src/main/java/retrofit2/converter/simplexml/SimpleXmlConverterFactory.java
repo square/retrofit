@@ -29,7 +29,10 @@ import retrofit2.Retrofit;
  * <p>
  * This converter only applies for class types. Parameterized types (e.g., {@code List<Foo>}) are
  * not handled.
+ *
+ * @deprecated we recommend switching to the JAXB converter.
  */
+@Deprecated
 public final class SimpleXmlConverterFactory extends Converter.Factory {
   /** Create an instance using a default {@link Persister} instance for conversion. */
   public static SimpleXmlConverterFactory create() {
