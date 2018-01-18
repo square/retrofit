@@ -184,6 +184,10 @@ compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert l
 -keepattributes Signature
 # Retain declared checked exceptions for use by a Proxy instance.
 -keepattributes Exceptions
+# Retain service method parameters.
+-keepclassmembernames,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
 </pre>
             <p>Retrofit uses <a href="https://github.com/square/okio">Okio</a> under the hood, so you may want to look at its <a href="https://github.com/square/okio#proguard">ProGuard rules</a> as well.</p>
             </section>
