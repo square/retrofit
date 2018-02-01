@@ -16,19 +16,24 @@
 package retrofit2;
 
 /** HTTP response codes. */
-public interface HttpResponseCode {
+public final class HttpResponseCode {
 	
 	// 2xx codes
-	int OK = 200;
-	int CREATED = 201;
-	int ACCEPTED = 202;
-	int UNAUTHORIZED = 203;
-	int NO_CONTENT = 204;
-	int RESET = 205;
-	int PARTIAL_CONTENT = 206;
+	public static final int OK = 200;
+	public static final int CREATED = 201;
+	public static final int ACCEPTED = 202;
+	public static final int UNAUTHORIZED = 203;
+	public static final int NO_CONTENT = 204;
+	public static final int RESET = 205;
+	public static final int PARTIAL_CONTENT = 206;
 	// 3xx codes
-	int PROXY_SWITCH = 306;
+	public static final int PROXY_SWITCH = 306;
 	// 4xx codes
-	int INVALID_REQUEST = 400;
-	int NOT_FOUND = 404;
+	public static final int INVALID_REQUEST = 400;
+	public static final int NOT_FOUND = 404;
+	
+	private HttpResponseCode() {
+		// no instances
+	}
 }
+
