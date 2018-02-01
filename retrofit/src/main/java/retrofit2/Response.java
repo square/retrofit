@@ -21,6 +21,8 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 
+import static retrofit2.HttpResponseCode.OK;
+import static retrofit2.HttpResponseCode.INVALID_REQUEST;
 import static retrofit2.Utils.checkNotNull;
 
 /** An HTTP response. */
@@ -28,7 +30,7 @@ public final class Response<T> {
   /** Create a synthetic successful response with {@code body} as the deserialized body. */
   public static <T> Response<T> success(@Nullable T body) {
     return success(body, new okhttp3.Response.Builder() //
-        .code(200)
+        .code(OK)
         .message("OK")
         .protocol(Protocol.HTTP_1_1)
         .request(new Request.Builder().url("http://localhost/").build())
@@ -42,7 +44,7 @@ public final class Response<T> {
   public static <T> Response<T> success(@Nullable T body, Headers headers) {
     checkNotNull(headers, "headers == null");
     return success(body, new okhttp3.Response.Builder() //
-        .code(200)
+        .code(OK)
         .message("OK")
         .protocol(Protocol.HTTP_1_1)
         .headers(headers)
@@ -67,7 +69,7 @@ public final class Response<T> {
    * as the error body.
    */
   public static <T> Response<T> error(int code, ResponseBody body) {
-    if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
+    if (code < INVALID_REQUEST) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new okhttp3.Response.Builder() //
         .code(code)
         .message("Response.error()")
