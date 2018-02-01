@@ -17,7 +17,6 @@ package retrofit2;
 
 /** HTTP response codes. */
 public final class HttpResponseCode {
-	
   // 2xx codes
   public static final int OK = 200;
   public static final int CREATED = 201;
@@ -33,7 +32,7 @@ public final class HttpResponseCode {
   public static final int NOT_FOUND = 404;
 
   private HttpResponseCode() {
-  	// no instances
+    // no instances
   }
 }
 
