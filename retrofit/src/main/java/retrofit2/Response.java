@@ -21,7 +21,8 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 
-import static retrofit2.HttpResponseCode.*;
+import static retrofit2.HttpResponseCode.OK;
+import static retrofit2.HttpResponseCode.INVALID_REQUEST;
 import static retrofit2.Utils.checkNotNull;
 
 /** An HTTP response. */
