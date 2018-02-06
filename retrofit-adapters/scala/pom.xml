@@ -75,7 +75,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>retrofit2.converter.scala</Automatic-Module-Name>
+              <Automatic-Module-Name>retrofit2.adapter.scala</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>
