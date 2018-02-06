@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.scala;
+package retrofit2.adapter.scala;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
