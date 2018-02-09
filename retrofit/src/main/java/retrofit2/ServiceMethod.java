@@ -166,7 +166,7 @@ final class ServiceMethod<R, T> {
             + Utils.getRawType(responseType).getName()
             + "' is not a valid response body type. Did you mean ResponseBody?");
       }
-      responseConverter = createResponseConverter();
+      responseConverter = new DeferredResponseBodyConverter();
 
       for (Annotation annotation : methodAnnotations) {
         parseMethodAnnotation(annotation);
@@ -730,12 +730,25 @@ final class ServiceMethod<R, T> {
       }
     }
 
-    private Converter<ResponseBody, T> createResponseConverter() {
+    Converter<ResponseBody, T> createResponseConverter() {
       Annotation[] annotations = method.getAnnotations();
       try {
         return retrofit.responseBodyConverter(responseType, annotations);
       } catch (RuntimeException e) { // Wide exception range because factories are user code.
         throw methodError(e, "Unable to create converter for %s", responseType);
+      }
+    }
+
+    final class DeferredResponseBodyConverter implements Converter<ResponseBody, T> {
+      private volatile @Nullable Converter<ResponseBody, T> delegate;
+
+      @Override public T convert(ResponseBody value) throws IOException {
+        Converter<ResponseBody, T> delegate = this.delegate;
+        if (delegate == null) {
+          delegate = createResponseConverter();
+          this.delegate = delegate;
+        }
+        return delegate.convert(value);
       }
     }
 

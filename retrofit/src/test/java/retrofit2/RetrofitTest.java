@@ -68,6 +68,9 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 public final class RetrofitTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
+  interface Service {
+    @GET("/") Call<String> get();
+  }
   interface CallMethod {
     @GET("/") Call<String> disallowed();
     @POST("/") Call<ResponseBody> disallowed(@Body String body);
@@ -368,7 +371,7 @@ public final class RetrofitTest {
     }
   }
 
-  @Test public void methodAnnotationsPassedToResponseBodyConverter() {
+  @Test public void methodAnnotationsPassedToResponseBodyConverter() throws IOException {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyConverterFactory extends Converter.Factory {
       @Override
@@ -383,7 +386,10 @@ public final class RetrofitTest {
         .addConverterFactory(new MyConverterFactory())
         .build();
     Annotated annotated = retrofit.create(Annotated.class);
-    annotated.method(); // Trigger internal setup.
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    annotated.method().execute(); // Trigger internal setup.
 
     Annotation[] annotations = annotationsRef.get();
     assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
@@ -505,7 +511,7 @@ public final class RetrofitTest {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     try {
-      example.disallowed();
+      example.disallowed().execute();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(""
@@ -1365,5 +1371,42 @@ public final class RetrofitTest {
     assertEquals("b", response2.body());
 
     assertEquals("/?i=201", server.takeRequest().getPath());
+  }
+
+  @Test public void responseBodyConverterIsCreatedAfterCallExecution() throws Exception {
+    final AtomicReference<Thread> converterFactoryThreadReference = new AtomicReference<>();
+    final class MyConverterFactory extends Converter.Factory {
+      private final ToStringConverterFactory delegate = new ToStringConverterFactory();
+
+      @Override
+      public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
+        converterFactoryThreadReference.set(Thread.currentThread());
+        return delegate.responseBodyConverter(type, annotations, retrofit);
+      }
+    }
+    Thread callerThread = Thread.currentThread();
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new MyConverterFactory())
+        .build();
+    Service service = retrofit.create(Service.class);
+    Call<String> call = service.get();
+    assertThat(converterFactoryThreadReference.get()).isNull();
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<String>() {
+      @Override public void onResponse(Call<String> call, Response<String> response) {
+        latch.countDown();
+      }
+
+      @Override public void onFailure(Call<String> call, Throwable t) {
+        throw new AssertionError();
+      }
+    });
+    assertTrue(latch.await(2, TimeUnit.SECONDS));
+    assertThat(converterFactoryThreadReference.get()).isNotEqualTo(callerThread);
   }
 }
