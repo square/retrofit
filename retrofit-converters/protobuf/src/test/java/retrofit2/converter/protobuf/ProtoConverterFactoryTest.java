@@ -109,7 +109,7 @@ public final class ProtoConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
     try {
-      service.wrongClass();
+      service.wrongClass().execute();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(""
@@ -128,7 +128,7 @@ public final class ProtoConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
     try {
-      service.wrongType();
+      service.wrongType().execute();
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(""
