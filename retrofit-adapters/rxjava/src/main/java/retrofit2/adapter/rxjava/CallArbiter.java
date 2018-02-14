@@ -37,6 +37,7 @@ final class CallArbiter<T> extends AtomicInteger implements Subscription, Produc
   private final Call<T> call;
   private final Subscriber<? super Response<T>> subscriber;
 
+  private volatile boolean unsubscribed;
   private volatile Response<T> response;
 
   CallArbiter(Call<T> call, Subscriber<? super Response<T>> subscriber) {
@@ -47,11 +48,12 @@ final class CallArbiter<T> extends AtomicInteger implements Subscription, Produc
   }
 
   @Override public void unsubscribe() {
+    unsubscribed = true;
     call.cancel();
   }
 
   @Override public boolean isUnsubscribed() {
-    return call.isCanceled();
+    return unsubscribed;
   }
 
   @Override public void request(long amount) {
