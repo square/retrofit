@@ -120,6 +120,9 @@ Call&lt;User> getUser(@Path("username") String username);</pre>
               <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted. Otherwise, <code>toString</code> will be called on the value, and the result used.</p>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
+              <p>Similar to query parameters, for complex header combinations, a <code>Map</code> can be used.
+			  <pre class="prettyprint">@GET("user")
+Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
               <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
 
               <h4>Synchronous vs. Asynchronous</h4>
@@ -173,14 +176,14 @@ compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert l
               <h4>ProGuard</h4>
               <p>If you are using ProGuard in your project add the following lines to your configuration:</p>
               <pre class="prettyprint">
-# Platform calls Class.forName on types which do not exist on Android to determine platform.
--dontnote retrofit2.Platform
-# Platform used when running on Java 8 VMs. Will not be used at runtime.
--dontwarn retrofit2.Platform$Java8
 # Retain generic type information for use by reflection by converters and adapters.
 -keepattributes Signature
-# Retain declared checked exceptions for use by a Proxy instance.
--keepattributes Exceptions
+# Retain service method parameters.
+-keepclassmembernames,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+# Ignore annotation used for build tooling.
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
 </pre>
             <p>Retrofit uses <a href="https://github.com/square/okio">Okio</a> under the hood, so you may want to look at its <a href="https://github.com/square/okio#proguard">ProGuard rules</a> as well.</p>
             </section>

@@ -1,6 +1,14 @@
 Simple XML Converter
 ====================
 
+Deprecated – Please switch to the JAXB Converter
+------------------------------------------------
+
+The Simple XML project is no longer maintained. We recommend switching to the
+[JAXB converter](https://github.com/square/retrofit/tree/master/retrofit-converters/jaxb).
+
+-----
+
 A `Converter` which uses [Simple][1] for XML serialization.
 
 A default `Serializer` instance will be created or one can be configured and passed to the

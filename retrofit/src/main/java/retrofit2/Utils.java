@@ -494,4 +494,16 @@ final class Utils {
       return "? extends " + typeToString(upperBound);
     }
   }
+
+  // https://github.com/ReactiveX/RxJava/blob/6a44e5d0543a48f1c378dc833a155f3f71333bc2/
+  // src/main/java/io/reactivex/exceptions/Exceptions.java#L66
+  static void throwIfFatal(Throwable t) {
+    if (t instanceof VirtualMachineError) {
+      throw (VirtualMachineError) t;
+    } else if (t instanceof ThreadDeath) {
+      throw (ThreadDeath) t;
+    } else if (t instanceof LinkageError) {
+      throw (LinkageError) t;
+    }
+  }
 }

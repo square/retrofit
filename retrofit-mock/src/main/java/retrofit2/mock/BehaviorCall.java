@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.concurrent.GuardedBy;
 import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,7 +35,8 @@ final class BehaviorCall<T> implements Call<T> {
 
   private volatile Future<?> task;
   volatile boolean canceled;
-  private volatile boolean executed;
+  @GuardedBy("this")
+  private boolean executed;
 
   BehaviorCall(NetworkBehavior behavior, ExecutorService backgroundExecutor, Call<T> delegate) {
     this.behavior = behavior;

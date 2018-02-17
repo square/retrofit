@@ -242,7 +242,7 @@ public final class Retrofit {
   }
 
   /**
-   * Returns a list of the factories tried when creating a
+   * Returns an unmodifiable list of the factories tried when creating a
    * {@linkplain #requestBodyConverter(Type, Annotation[], Annotation[]) request body converter}, a
    * {@linkplain #responseBodyConverter(Type, Annotation[]) response body converter}, or a
    * {@linkplain #stringConverter(Type, Annotation[]) string converter}.
@@ -402,9 +402,6 @@ public final class Retrofit {
 
     Builder(Platform platform) {
       this.platform = platform;
-      // Add the built-in converter factory first. This prevents overriding its behavior but also
-      // ensures correct behavior when using converters that consume all types.
-      converterFactories.add(new BuiltInConverters());
     }
 
     public Builder() {
@@ -416,6 +413,8 @@ public final class Retrofit {
       callFactory = retrofit.callFactory;
       baseUrl = retrofit.baseUrl;
       converterFactories.addAll(retrofit.converterFactories);
+      // BuiltInConverters instance added by build().
+      converterFactories.remove(0);
       adapterFactories.addAll(retrofit.adapterFactories);
       // Remove the default, platform-aware call adapter added by build().
       adapterFactories.remove(adapterFactories.size() - 1);
@@ -543,6 +542,16 @@ public final class Retrofit {
       return this;
     }
 
+    /** Returns a modifiable list of call adapter factories. */
+    public List<CallAdapter.Factory> callAdapterFactories() {
+      return this.adapterFactories;
+    }
+
+    /** Returns a modifiable list of converter factories. */
+    public List<Converter.Factory> converterFactories() {
+      return this.converterFactories;
+    }
+
     /**
      * When calling {@link #create} on the resulting {@link Retrofit} instance, eagerly validate
      * the configuration of all methods in the supplied interface.
@@ -578,7 +587,13 @@ public final class Retrofit {
       adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 
       // Make a defensive copy of the converters.
-      List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
+      List<Converter.Factory> converterFactories =
+          new ArrayList<>(1 + this.converterFactories.size());
+
+      // Add the built-in converter factory first. This prevents overriding its behavior but also
+      // ensures correct behavior when using converters that consume all types.
+      converterFactories.add(new BuiltInConverters());
+      converterFactories.addAll(this.converterFactories);
 
       return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
           callbackExecutor, validateEagerly);

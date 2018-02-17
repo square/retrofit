@@ -63,6 +63,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 public final class RetrofitTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -169,6 +170,14 @@ public final class RetrofitTest {
     assertSame(baseUrl, two.baseUrl());
     assertSame(executor, two.callbackExecutor());
     assertSame(callFactory, two.callFactory());
+  }
+
+  @Test public void builtInConvertersAbsentInCloneBuilder() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    assertEquals(0, retrofit.newBuilder().converterFactories().size());
   }
 
   @Test public void responseTypeCannotBeRetrofitResponse() {
@@ -839,6 +848,23 @@ public final class RetrofitTest {
     assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverters.class);
   }
 
+  @Test public void builtInConvertersFirstInClone() {
+    Converter<ResponseBody, Void> converter = mock(Converter.class);
+    Converter.Factory factory = mock(Converter.Factory.class);
+    Annotation[] annotations = new Annotation[0];
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .addConverterFactory(factory)
+        .build();
+
+    doReturn(converter).when(factory).responseBodyConverter(Void.class, annotations, retrofit);
+
+    retrofit.newBuilder().build().responseBodyConverter(Void.class, annotations);
+
+    verifyZeroInteractions(factory);
+  }
+
   @Test public void requestConverterFactoryQueried() {
     Type type = String.class;
     Annotation[] parameterAnnotations = new Annotation[0];
@@ -1196,6 +1222,14 @@ public final class RetrofitTest {
     assertThat(delegatingFactory1.called).isTrue();
     assertThat(delegatingFactory2.called).isTrue();
     assertThat(nonMatchingFactory.called).isTrue();
+  }
+
+  @Test public void platformAwareAdapterAbsentInCloneBuilder() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    assertEquals(0, retrofit.newBuilder().callAdapterFactories().size());
   }
 
   @Test public void callbackExecutorNullThrows() {

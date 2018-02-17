@@ -46,7 +46,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Call&lt;ResponseBody&gt; friends(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
  * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("group", "coworker+bowling"))} yields
- * {@code /search?group=coworker+bowling}.
+ * {@code /friends?group=coworker+bowling}.
  * <p>
  * A {@code null} value for the map, as a key, or as a value is not allowed.
  *
