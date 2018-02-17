@@ -17,6 +17,7 @@ package retrofit2.converter.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -32,9 +33,11 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 public final class GsonConverterFactoryTest {
   interface AnInterface {
@@ -50,6 +53,27 @@ public final class GsonConverterFactoryTest {
 
     @Override public String getName() {
       return theName;
+    }
+  }
+
+  static final class Value {
+    static final TypeAdapter<Value> BROKEN_ADAPTER = new TypeAdapter<Value>() {
+      @Override public void write(JsonWriter out, Value value) {
+        throw new AssertionError();
+      }
+
+      @Override public Value read(JsonReader reader) throws IOException {
+        reader.beginObject();
+        reader.nextName();
+        String theName = reader.nextString();
+        return new Value(theName);
+      }
+    };
+
+    final String theName;
+
+    Value(String theName) {
+      this.theName = theName;
     }
   }
 
@@ -80,6 +104,7 @@ public final class GsonConverterFactoryTest {
   interface Service {
     @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+    @GET("/") Call<Value> value();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
@@ -89,6 +114,7 @@ public final class GsonConverterFactoryTest {
   @Before public void setUp() {
     Gson gson = new GsonBuilder()
         .registerTypeAdapter(AnInterface.class, new AnInterfaceAdapter())
+        .registerTypeAdapter(Value.class, Value.BROKEN_ADAPTER)
         .setLenient()
         .create();
     Retrofit retrofit = new Retrofit.Builder()
@@ -140,5 +166,17 @@ public final class GsonConverterFactoryTest {
     Response<AnImplementation> response =
         service.anImplementation(new AnImplementation("value")).execute();
     assertThat(response.body().getName()).isNull();
+  }
+
+  @Test public void requireFullResponseDocumentConsumption() throws Exception {
+    server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
+
+    Call<Value> call = service.value();
+    try {
+      call.execute();
+      fail();
+    } catch (JsonIOException e) {
+      assertThat(e).hasMessage("JSON document was not fully consumed.");
+    }
   }
 }
