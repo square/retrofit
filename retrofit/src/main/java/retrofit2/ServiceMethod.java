@@ -31,7 +31,6 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
-import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Body;
@@ -64,8 +63,8 @@ final class ServiceMethod<R, T> {
   static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
   static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
 
-  final okhttp3.Call.Factory callFactory;
-  final CallAdapter<R, T> callAdapter;
+  private final okhttp3.Call.Factory callFactory;
+  private final CallAdapter<R, T> callAdapter;
 
   private final HttpUrl baseUrl;
   private final Converter<ResponseBody, R> responseConverter;
@@ -94,7 +93,7 @@ final class ServiceMethod<R, T> {
   }
 
   /** Builds an HTTP request from method arguments. */
-  Request toRequest(@Nullable Object... args) throws IOException {
+  okhttp3.Call toCall(@Nullable Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
         contentType, hasBody, isFormEncoded, isMultipart);
 
@@ -111,7 +110,11 @@ final class ServiceMethod<R, T> {
       handlers[p].apply(requestBuilder, args[p]);
     }
 
-    return requestBuilder.build();
+    return callFactory.newCall(requestBuilder.build());
+  }
+
+  T adapt(Call<R> call) {
+    return callAdapter.adapt(call);
   }
 
   /** Builds a method return value from an HTTP response body. */
