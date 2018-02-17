@@ -41,6 +41,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -69,6 +70,14 @@ public final class MoshiConverterFactoryTest {
 
     @Override public String getName() {
       return theName;
+    }
+  }
+
+  static final class Value {
+    final String theName;
+
+    Value(String theName) {
+      this.theName = theName;
     }
   }
 
@@ -106,11 +115,19 @@ public final class MoshiConverterFactoryTest {
       }
       throw new AssertionError("Found: " + string);
     }
+
+    @FromJson public Value readWithoutEndingObject(JsonReader reader) throws IOException {
+      reader.beginObject();
+      reader.nextName();
+      String theName = reader.nextString();
+      return new Value(theName);
+    }
   }
 
   interface Service {
     @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
     @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
+    @GET("/") Call<Value> value();
 
     @POST("/") @Qualifier @NonQualifer //
     Call<String> annotations(@Body @Qualifier @NonQualifer String body);
@@ -267,6 +284,18 @@ public final class MoshiConverterFactoryTest {
       call.execute();
       fail();
     } catch (IOException expected) {
+    }
+  }
+
+  @Test public void requireFullResponseDocumentConsumption() throws Exception {
+    server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
+
+    Call<Value> call = service.value();
+    try {
+      call.execute();
+      fail();
+    } catch (JsonDataException e) {
+      assertThat(e).hasMessage("JSON document was not fully consumed.");
     }
   }
 }

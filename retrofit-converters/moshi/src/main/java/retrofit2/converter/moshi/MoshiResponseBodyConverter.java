@@ -16,6 +16,8 @@
 package retrofit2.converter.moshi;
 
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonDataException;
+import com.squareup.moshi.JsonReader;
 import java.io.IOException;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
@@ -39,7 +41,12 @@ final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> 
       if (source.rangeEquals(0, UTF8_BOM)) {
         source.skip(UTF8_BOM.size());
       }
-      return adapter.fromJson(source);
+      JsonReader reader = JsonReader.of(source);
+      T result = adapter.fromJson(reader);
+      if (reader.peek() != JsonReader.Token.END_DOCUMENT) {
+        throw new JsonDataException("JSON document was not fully consumed.");
+      }
+      return result;
     } finally {
       value.close();
     }
