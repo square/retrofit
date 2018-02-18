@@ -146,7 +146,7 @@ public final class Retrofit {
             ServiceMethod<Object, Object> serviceMethod =
                 (ServiceMethod<Object, Object>) loadServiceMethod(method);
             OkHttpCall<Object> okHttpCall = new OkHttpCall<>(serviceMethod, args);
-            return serviceMethod.callAdapter.adapt(okHttpCall);
+            return serviceMethod.adapt(okHttpCall);
           }
         });
   }

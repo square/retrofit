@@ -2684,7 +2684,7 @@ public final class RequestBuilderTest {
     ServiceMethod<T, Call<T>> serviceMethod =
         (ServiceMethod<T, Call<T>>) retrofit.loadServiceMethod(method);
     Call<T> okHttpCall = new OkHttpCall<>(serviceMethod, args);
-    Call<T> call = serviceMethod.callAdapter.adapt(okHttpCall);
+    Call<T> call = serviceMethod.adapt(okHttpCall);
     try {
       call.execute();
       throw new AssertionError();
