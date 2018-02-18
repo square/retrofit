@@ -586,8 +586,8 @@ public final class Retrofit {
       }
 
       // Make a defensive copy of the adapters and add the default Call adapter.
-      List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.callAdapterFactories);
-      adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
+      List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
+      callAdapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories =
@@ -599,7 +599,7 @@ public final class Retrofit {
       converterFactories.addAll(this.converterFactories);
 
       return new Retrofit(callFactory, baseUrl, unmodifiableList(converterFactories),
-          unmodifiableList(adapterFactories), callbackExecutor, validateEagerly);
+          unmodifiableList(callAdapterFactories), callbackExecutor, validateEagerly);
     }
   }
 }
