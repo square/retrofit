@@ -63,17 +63,17 @@ public final class Retrofit {
   final okhttp3.Call.Factory callFactory;
   final HttpUrl baseUrl;
   final List<Converter.Factory> converterFactories;
-  final List<CallAdapter.Factory> adapterFactories;
+  final List<CallAdapter.Factory> callAdapterFactories;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
 
   Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
-      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
+      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> callAdapterFactories,
       @Nullable Executor callbackExecutor, boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
-    this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
-    this.adapterFactories = unmodifiableList(adapterFactories); // Defensive copy at call site.
+    this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
+    this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
   }
@@ -192,7 +192,7 @@ public final class Retrofit {
    * {@linkplain #callAdapter(Type, Annotation[])} call adapter}.
    */
   public List<CallAdapter.Factory> callAdapterFactories() {
-    return adapterFactories;
+    return callAdapterFactories;
   }
 
   /**
@@ -216,9 +216,9 @@ public final class Retrofit {
     checkNotNull(returnType, "returnType == null");
     checkNotNull(annotations, "annotations == null");
 
-    int start = adapterFactories.indexOf(skipPast) + 1;
-    for (int i = start, count = adapterFactories.size(); i < count; i++) {
-      CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
+    int start = callAdapterFactories.indexOf(skipPast) + 1;
+    for (int i = start, count = callAdapterFactories.size(); i < count; i++) {
+      CallAdapter<?, ?> adapter = callAdapterFactories.get(i).get(returnType, annotations, this);
       if (adapter != null) {
         return adapter;
       }
@@ -230,13 +230,13 @@ public final class Retrofit {
     if (skipPast != null) {
       builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
-        builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
+        builder.append("\n   * ").append(callAdapterFactories.get(i).getClass().getName());
       }
       builder.append('\n');
     }
     builder.append("  Tried:");
-    for (int i = start, count = adapterFactories.size(); i < count; i++) {
-      builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
+    for (int i = start, count = callAdapterFactories.size(); i < count; i++) {
+      builder.append("\n   * ").append(callAdapterFactories.get(i).getClass().getName());
     }
     throw new IllegalArgumentException(builder.toString());
   }
@@ -396,7 +396,7 @@ public final class Retrofit {
     private @Nullable okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
     private final List<Converter.Factory> converterFactories = new ArrayList<>();
-    private final List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
+    private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
     private @Nullable Executor callbackExecutor;
     private boolean validateEagerly;
 
@@ -412,12 +412,15 @@ public final class Retrofit {
       platform = Platform.get();
       callFactory = retrofit.callFactory;
       baseUrl = retrofit.baseUrl;
+
       converterFactories.addAll(retrofit.converterFactories);
-      // BuiltInConverters instance added by build().
+      // Remove the default BuiltInConverters instance added by build().
       converterFactories.remove(0);
-      adapterFactories.addAll(retrofit.adapterFactories);
+
+      callAdapterFactories.addAll(retrofit.callAdapterFactories);
       // Remove the default, platform-aware call adapter added by build().
-      adapterFactories.remove(adapterFactories.size() - 1);
+      callAdapterFactories.remove(callAdapterFactories.size() - 1);
+
       callbackExecutor = retrofit.callbackExecutor;
       validateEagerly = retrofit.validateEagerly;
     }
@@ -526,7 +529,7 @@ public final class Retrofit {
      * Call}.
      */
     public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
-      adapterFactories.add(checkNotNull(factory, "factory == null"));
+      callAdapterFactories.add(checkNotNull(factory, "factory == null"));
       return this;
     }
 
@@ -544,7 +547,7 @@ public final class Retrofit {
 
     /** Returns a modifiable list of call adapter factories. */
     public List<CallAdapter.Factory> callAdapterFactories() {
-      return this.adapterFactories;
+      return this.callAdapterFactories;
     }
 
     /** Returns a modifiable list of converter factories. */
@@ -583,7 +586,7 @@ public final class Retrofit {
       }
 
       // Make a defensive copy of the adapters and add the default Call adapter.
-      List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
+      List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.callAdapterFactories);
       adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 
       // Make a defensive copy of the converters.
@@ -595,8 +598,8 @@ public final class Retrofit {
       converterFactories.add(new BuiltInConverters());
       converterFactories.addAll(this.converterFactories);
 
-      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
-          callbackExecutor, validateEagerly);
+      return new Retrofit(callFactory, baseUrl, unmodifiableList(converterFactories),
+          unmodifiableList(adapterFactories), callbackExecutor, validateEagerly);
     }
   }
 }
