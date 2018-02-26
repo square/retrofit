@@ -30,7 +30,7 @@
 
   <name>Retrofit (Parent)</name>
   <description>Type-safe HTTP client for Android and Java by Square, Inc.</description>
-  <url>http://github.com/square/retrofit/</url>
+  <url>https://github.com/square/retrofit/</url>
 
   <modules>
     <module>retrofit</module>
@@ -78,7 +78,7 @@
   </properties>
 
   <scm>
-    <url>http://github.com/square/retrofit</url>
+    <url>https://github.com/square/retrofit</url>
     <connection>scm:git:git://github.com/square/retrofit.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/square/retrofit.git</developerConnection>
     <tag>HEAD</tag>
@@ -86,19 +86,19 @@
 
   <issueManagement>
     <system>GitHub Issues</system>
-    <url>http://github.com/square/retrofit/issues</url>
+    <url>https://github.com/square/retrofit/issues</url>
   </issueManagement>
 
   <licenses>
     <license>
       <name>Apache 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
     </license>
   </licenses>
 
   <organization>
     <name>Square, Inc.</name>
-    <url>http://squareup.com</url>
+    <url>https://squareup.com</url>
   </organization>
 
   <dependencyManagement>
