@@ -367,7 +367,7 @@ Version 1.5.0 *(2014-03-20)*
  * Fix: Support empty HTTP response status reason.
  * If an `ErrorHandler` is supplied it will be invoked for `Callback` and `Observable` methods.
  * HTTP `PATCH` method using `HttpUrlConnection` is no longer supported. Add the
-   [OkHttp](http://square.github.io/okhttp) jar to your project if you need this behavior.
+   [OkHttp](https://square.github.io/okhttp) jar to your project if you need this behavior.
  * Custom `Client` implementations should no longer set `Content-Type` or `Content-Length` headers
    based on the `TypedInput` body of the `Request`. These headers will now be added automatically
    as part of the standard `Request` header list.
@@ -420,7 +420,7 @@ Version 1.2.2 *(2013-09-12)*
 Version 1.2.1 *(2013-08-30)*
 ----------------------------
 
- * New: Converter for [Wire protocol buffers](http://github.com/square/wire)!
+ * New: Converter for [Wire protocol buffers](https://github.com/square/wire)!
 
 
 Version 1.2.0 *(2013-08-23)*
