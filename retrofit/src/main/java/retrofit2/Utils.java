@@ -312,9 +312,9 @@ final class Utils {
     // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
     // Android (http://b.android.com/58753) but it forces composition of API declarations which is
     // the recommended pattern.
-    if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
-    }
+    //if (service.getInterfaces().length > 0) {
+    //  throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
+    //}
   }
 
   static Type getParameterUpperBound(int index, ParameterizedType type) {
