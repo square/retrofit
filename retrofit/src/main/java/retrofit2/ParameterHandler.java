@@ -297,8 +297,7 @@ abstract class ParameterHandler<T> {
     private RawPart() {
     }
 
-    @Override void apply(RequestBuilder builder, @Nullable MultipartBody.Part value)
-        throws IOException {
+    @Override void apply(RequestBuilder builder, @Nullable MultipartBody.Part value) {
       if (value != null) { // Skip null values.
         builder.addPart(value);
       }

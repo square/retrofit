@@ -110,8 +110,7 @@ final class OkHttpCall<T> implements Call<T> {
     }
 
     call.enqueue(new okhttp3.Callback() {
-      @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse)
-          throws IOException {
+      @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse) {
         Response<T> response;
         try {
           response = parseResponse(rawResponse);

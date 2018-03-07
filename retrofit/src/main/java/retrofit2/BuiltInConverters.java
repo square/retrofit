@@ -49,7 +49,7 @@ final class BuiltInConverters extends Converter.Factory {
   static final class VoidResponseBodyConverter implements Converter<ResponseBody, Void> {
     static final VoidResponseBodyConverter INSTANCE = new VoidResponseBodyConverter();
 
-    @Override public Void convert(ResponseBody value) throws IOException {
+    @Override public Void convert(ResponseBody value) {
       value.close();
       return null;
     }
@@ -58,7 +58,7 @@ final class BuiltInConverters extends Converter.Factory {
   static final class RequestBodyConverter implements Converter<RequestBody, RequestBody> {
     static final RequestBodyConverter INSTANCE = new RequestBodyConverter();
 
-    @Override public RequestBody convert(RequestBody value) throws IOException {
+    @Override public RequestBody convert(RequestBody value) {
       return value;
     }
   }
@@ -67,7 +67,7 @@ final class BuiltInConverters extends Converter.Factory {
       implements Converter<ResponseBody, ResponseBody> {
     static final StreamingResponseBodyConverter INSTANCE = new StreamingResponseBodyConverter();
 
-    @Override public ResponseBody convert(ResponseBody value) throws IOException {
+    @Override public ResponseBody convert(ResponseBody value) {
       return value;
     }
   }
