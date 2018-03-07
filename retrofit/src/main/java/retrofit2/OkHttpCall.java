@@ -110,8 +110,7 @@ final class OkHttpCall<T> implements Call<T> {
     }
 
     call.enqueue(new okhttp3.Callback() {
-      @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse)
-          throws IOException {
+      @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse) {
         Response<T> response;
         try {
           response = parseResponse(rawResponse);
@@ -119,7 +118,12 @@ final class OkHttpCall<T> implements Call<T> {
           callFailure(e);
           return;
         }
-        callSuccess(response);
+
+        try {
+          callback.onResponse(OkHttpCall.this, response);
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
       }
 
       @Override public void onFailure(okhttp3.Call call, IOException e) {
@@ -129,14 +133,6 @@ final class OkHttpCall<T> implements Call<T> {
       private void callFailure(Throwable e) {
         try {
           callback.onFailure(OkHttpCall.this, e);
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-      }
-
-      private void callSuccess(Response<T> response) {
-        try {
-          callback.onResponse(OkHttpCall.this, response);
         } catch (Throwable t) {
           t.printStackTrace();
         }
