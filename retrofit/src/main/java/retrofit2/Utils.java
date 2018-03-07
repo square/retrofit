@@ -155,11 +155,11 @@ final class Utils {
     throw new NoSuchElementException();
   }
 
-  private static boolean equal(Object a, Object b) {
+  private static boolean equal(@Nullable Object a, @Nullable Object b) {
     return a == b || (a != null && a.equals(b));
   }
 
-  static int hashCodeOrZero(Object o) {
+  static int hashCodeOrZero(@Nullable Object o) {
     return o != null ? o.hashCode() : 0;
   }
 
@@ -330,7 +330,7 @@ final class Utils {
     return paramType;
   }
 
-  static boolean hasUnresolvableType(Type type) {
+  static boolean hasUnresolvableType(@Nullable Type type) {
     if (type instanceof Class<?>) {
       return false;
     }
@@ -370,7 +370,7 @@ final class Utils {
     private final Type rawType;
     private final Type[] typeArguments;
 
-    ParameterizedTypeImpl(Type ownerType, Type rawType, Type... typeArguments) {
+    ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type... typeArguments) {
       // Require an owner type if the raw type needs it.
       if (rawType instanceof Class<?>
           && (ownerType == null) != (((Class<?>) rawType).getEnclosingClass() == null)) {
