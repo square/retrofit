@@ -82,7 +82,9 @@ final class Utils {
       if (!(b instanceof ParameterizedType)) return false;
       ParameterizedType pa = (ParameterizedType) a;
       ParameterizedType pb = (ParameterizedType) b;
-      return equal(pa.getOwnerType(), pb.getOwnerType())
+      Object ownerA = pa.getOwnerType();
+      Object ownerB = pb.getOwnerType();
+      return (ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB)))
           && pa.getRawType().equals(pb.getRawType())
           && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
@@ -153,14 +155,6 @@ final class Utils {
       if (toFind.equals(array[i])) return i;
     }
     throw new NoSuchElementException();
-  }
-
-  private static boolean equal(@Nullable Object a, @Nullable Object b) {
-    return a == b || (a != null && a.equals(b));
-  }
-
-  static int hashCodeOrZero(@Nullable Object o) {
-    return o != null ? o.hashCode() : 0;
   }
 
   static String typeToString(Type type) {
@@ -404,7 +398,9 @@ final class Utils {
     }
 
     @Override public int hashCode() {
-      return Arrays.hashCode(typeArguments) ^ rawType.hashCode() ^ hashCodeOrZero(ownerType);
+      return Arrays.hashCode(typeArguments)
+          ^ rawType.hashCode()
+          ^ (ownerType != null ? ownerType.hashCode() : 0);
     }
 
     @Override public String toString() {
