@@ -19,7 +19,7 @@ Download [the latest JAR][2] or grab via Maven:
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.retrofit2:retrofit:2.3.0'
+implementation 'com.squareup.retrofit2:retrofit:2.3.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
