@@ -1,6 +1,22 @@
 Change Log
 ==========
 
+Version 2.4.0 *(2018-03-12)*
+----------------------------
+
+ * New: `Retrofit.Builder` exposes mutable lists of the added converter and call adapter factories.
+ * New: Call adapter added for Scala's `Future`.
+ * New: Converter for JAXB replaces the now-deprecated converter for Simple XML Framework.
+ * New: Add Java 9 automatic module names for each artifact corresponding to their root package.
+ * Fix: Do not swallow `Error`s from callbacks (usually `OutOfMemoryException`).
+ * Fix: Moshi and Gson converters now assert that the full response was consumed. This prevents
+   hiding bugs in faulty adapters which might not have consumed the full JSON input which would
+   then cause failures on the next request over that connection.
+ * Fix: Do not conflate OkHttp `Call` cancelation with RxJava unsubscription/disposal. Prior to
+   this change, canceling of a `Call` would prevent a cancelation exception from propagating down
+   the Rx stream.
+
+
 Version 2.3.0 *(2017-05-13)*
 ----------------------------
 
