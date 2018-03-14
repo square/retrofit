@@ -8,7 +8,7 @@ Version 2.4.0 *(2018-03-14)*
  * New: Call adapter added for Scala's `Future`.
  * New: Converter for JAXB replaces the now-deprecated converter for Simple XML Framework.
  * New: Add Java 9 automatic module names for each artifact corresponding to their root package.
- * Fix: Do not swallow `Error`s from callbacks (usually `OutOfMemoryException`).
+ * Fix: Do not swallow `Error`s from callbacks (usually `OutOfMemoryError`).
  * Fix: Moshi and Gson converters now assert that the full response was consumed. This prevents
    hiding bugs in faulty adapters which might not have consumed the full JSON input which would
    then cause failures on the next request over that connection.
