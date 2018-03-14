@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-Version 2.4.0 *(2018-03-12)*
+Version 2.4.0 *(2018-03-14)*
 ----------------------------
 
  * New: `Retrofit.Builder` exposes mutable lists of the added converter and call adapter factories.
