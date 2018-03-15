@@ -1024,7 +1024,7 @@ public final class RetrofitTest {
     Type type = Object.class;
     Annotation[] annotations = new Annotation[0];
 
-    Converter<?, String> expectedAdapter = mock(Converter.class);
+    Converter<?, String> expectedConverter = mock(Converter.class);
     Converter.Factory factory = mock(Converter.Factory.class);
 
     Retrofit retrofit = new Retrofit.Builder()
@@ -1032,10 +1032,10 @@ public final class RetrofitTest {
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).stringConverter(type, annotations, retrofit);
+    doReturn(expectedConverter).when(factory).stringConverter(type, annotations, retrofit);
 
-    Converter<?, String> actualAdapter = retrofit.stringConverter(type, annotations);
-    assertThat(actualAdapter).isSameAs(expectedAdapter);
+    Converter<?, String> actualConverter = retrofit.stringConverter(type, annotations);
+    assertThat(actualConverter).isSameAs(expectedConverter);
 
     verify(factory).stringConverter(type, annotations, retrofit);
     verifyNoMoreInteractions(factory);
