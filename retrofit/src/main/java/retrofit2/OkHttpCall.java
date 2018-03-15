@@ -115,6 +115,7 @@ final class OkHttpCall<T> implements Call<T> {
         try {
           response = parseResponse(rawResponse);
         } catch (Throwable e) {
+          throwIfFatal(e);
           callFailure(e);
           return;
         }
