@@ -33,7 +33,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okio.Buffer;
-import org.junit.Ignore;
 import org.junit.Test;
 import retrofit2.helpers.NullObjectConverterFactory;
 import retrofit2.helpers.ToStringConverterFactory;
@@ -2386,6 +2385,28 @@ public final class RequestBuilderTest {
     assertThat(headers.size()).isEqualTo(2);
     assertThat(headers.get("ping")).isEqualTo("pong");
     assertThat(headers.get("kit")).isEqualTo("kat");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void headersDoNotOverwriteEachOther() {
+    class Example {
+      @GET("/foo/bar/")
+      @Headers({
+          "ping: pong",
+          "kit: kat",
+          "kit: -kat",
+      })
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("GET");
+    okhttp3.Headers headers = request.headers();
+    assertThat(headers.size()).isEqualTo(3);
+    assertThat(headers.get("ping")).isEqualTo("pong");
+    assertThat(headers.values("kit")).containsOnly("kat", "-kat");
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
