@@ -6,6 +6,7 @@ A `Converter` which uses [JAXB][1] for serialization to and from XML.
 A default `JAXBContext` instance will be created or one can be configured and passed
 to `JaxbConverterFactory.create()` to further control the serialization.
 
+**Note that JAXB does not work on Android.**
 
 Download
 --------
