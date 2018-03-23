@@ -39,6 +39,8 @@ final class SimpleXmlRequestBodyConverter<T> implements Converter<T, RequestBody
       OutputStreamWriter osw = new OutputStreamWriter(buffer.outputStream(), CHARSET);
       serializer.write(value, osw);
       osw.flush();
+    } catch (RuntimeException | IOException e) {
+      throw e;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
