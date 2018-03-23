@@ -15,7 +15,6 @@
  */
 package retrofit.converter.guava;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import okhttp3.ResponseBody;
@@ -27,7 +26,7 @@ final class AlwaysNullConverterFactory extends Converter.Factory {
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
     return new Converter<ResponseBody, Object>() {
-      @Override public Object convert(ResponseBody value) throws IOException {
+      @Override public Object convert(ResponseBody value) {
         return null;
       }
     };
