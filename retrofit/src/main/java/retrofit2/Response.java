@@ -40,7 +40,9 @@ public final class Response<T> {
    * {@code body} as the deserialized body.
    */
   public static <T> Response<T> success(int code, @Nullable T body) {
-    if (code < 200 || code >= 300) throw new IllegalArgumentException("code < 200 or >= 300: " + code);
+    if (code < 200 || code >= 300) {
+      throw new IllegalArgumentException("code < 200 or >= 300: " + code);
+    }
     return success(body, new okhttp3.Response.Builder() //
             .code(code)
             .message("Response.success()")
