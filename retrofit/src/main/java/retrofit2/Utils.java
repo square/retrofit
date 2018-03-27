@@ -35,6 +35,7 @@ final class Utils {
 
   private Utils() {
     // No instances.
+    throw new IllegalStateException("No instances!");
   }
 
   static Class<?> getRawType(Type type) {
