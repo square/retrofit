@@ -36,6 +36,22 @@ public final class Response<T> {
   }
 
   /**
+   * Create a synthetic successful response with an HTTP status code of {@code code} and
+   * {@code body} as the deserialized body.
+   */
+  public static <T> Response<T> success(int code, @Nullable T body) {
+    if (code < 200 || code >= 300) {
+      throw new IllegalArgumentException("code < 200 or >= 300: " + code);
+    }
+    return success(body, new okhttp3.Response.Builder() //
+        .code(code)
+        .message("Response.success()")
+        .protocol(Protocol.HTTP_1_1)
+        .request(new Request.Builder().url("http://localhost/").build())
+        .build());
+  }
+
+  /**
    * Create a synthetic successful response using {@code headers} with {@code body} as the
    * deserialized body.
    */
