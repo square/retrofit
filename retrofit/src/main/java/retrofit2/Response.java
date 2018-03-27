@@ -44,11 +44,11 @@ public final class Response<T> {
       throw new IllegalArgumentException("code < 200 or >= 300: " + code);
     }
     return success(body, new okhttp3.Response.Builder() //
-            .code(code)
-            .message("Response.success()")
-            .protocol(Protocol.HTTP_1_1)
-            .request(new Request.Builder().url("http://localhost/").build())
-            .build());
+        .code(code)
+        .message("Response.success()")
+        .protocol(Protocol.HTTP_1_1)
+        .request(new Request.Builder().url("http://localhost/").build())
+        .build());
   }
 
   /**
