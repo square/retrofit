@@ -18,6 +18,7 @@ package retrofit2.adapter.rxjava2;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
+import io.reactivex.plugins.RxJavaPlugins;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
 import retrofit2.Call;
@@ -83,6 +84,6 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
     if (isCompletable) {
       return observable.ignoreElements();
     }
-    return observable;
+    return RxJavaPlugins.onAssembly(observable);
   }
 }
