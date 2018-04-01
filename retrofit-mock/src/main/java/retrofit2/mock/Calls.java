@@ -42,7 +42,7 @@ public final class Calls {
     return new FakeCall<>(response, null);
   }
 
-  public static <T> Call<T> failure(IOException failure) {
+  public static <T> Call<T> failure(Exception failure) {
     return new FakeCall<>(null, failure);
   }
 
@@ -52,11 +52,11 @@ public final class Calls {
 
   static final class FakeCall<T> implements Call<T> {
     private final Response<T> response;
-    private final IOException error;
+    private final Exception error;
     private final AtomicBoolean canceled = new AtomicBoolean();
     private final AtomicBoolean executed = new AtomicBoolean();
 
-    FakeCall(@Nullable Response<T> response, @Nullable IOException error) {
+    FakeCall(@Nullable Response<T> response, @Nullable Exception error) {
       if ((response == null) == (error == null)) {
         throw new AssertionError("Only one of response or error can be set.");
       }
@@ -74,7 +74,11 @@ public final class Calls {
       if (response != null) {
         return response;
       }
-      throw error;
+      if (error instanceof IOException) {
+        throw (IOException) error;
+      } else {
+        throw new IOException(error);
+      }
     }
 
     @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
@@ -131,10 +135,8 @@ public final class Calls {
       if (delegate == null) {
         try {
           delegate = callable.call();
-        } catch (IOException e) {
-          delegate = failure(e);
         } catch (Exception e) {
-          throw new IllegalStateException("Callable threw unrecoverable exception", e);
+          delegate = failure(e);
         }
         this.delegate = delegate;
       }

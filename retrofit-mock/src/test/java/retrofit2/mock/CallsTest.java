@@ -22,6 +22,7 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -155,6 +156,19 @@ public final class CallsTest {
     assertTrue(taco.isExecuted());
   }
 
+  @Test public void failureExecuteWrapsInIOException() {
+    NullPointerException failure = new NullPointerException("Hey");
+    Call<Object> taco = Calls.failure(failure);
+    assertFalse(taco.isExecuted());
+    try {
+      taco.execute();
+      fail();
+    } catch (IOException e) {
+      assertSame(failure, e.getCause());
+    }
+    assertTrue(taco.isExecuted());
+  }
+
   @Test public void failureEnqueue() {
     IOException failure = new IOException("Hey");
     Call<Object> taco = Calls.failure(failure);
@@ -255,6 +269,23 @@ public final class CallsTest {
       }
 
       @Override public void onFailure(Call<Object> call, Throwable t) {
+        failureRef.set(t);
+      }
+    });
+    assertSame(failure, failureRef.get());
+  }
+
+  @Test public void deferredThrowEnqueueDeliversException() {
+    final Exception failure = new Exception("Hey");
+    final AtomicReference<Throwable> failureRef = new AtomicReference<>();
+    Calls.failure(failure).enqueue(new Callback<Object>() {
+      @Override
+      public void onResponse(Call<Object> call, Response<Object> response) {
+        fail();
+      }
+
+      @Override
+      public void onFailure(Call<Object> call, Throwable t) {
         failureRef.set(t);
       }
     });
