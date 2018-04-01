@@ -42,7 +42,20 @@ public final class Calls {
     return new FakeCall<>(response, null);
   }
 
+  /** Creates a failed {@link Call} from {@code failure}. */
   public static <T> Call<T> failure(IOException failure) {
+    // TODO delete this overload in Retrofit 3.0.
+    return new FakeCall<>(null, failure);
+  }
+
+  /**
+   * Creates a failed {@link Call} from {@code failure}.
+   * <p>
+   * Note: When invoking {@link Call#execute() execute()} on the returned {@link Call}, if
+   * {@code failure} is a {@link RuntimeException}, {@link Error}, or {@link IOException} subtype
+   * it is thrown directly. Otherwise it is "sneaky thrown" despite not being declared.
+   */
+  public static <T> Call<T> failure(Throwable failure) {
     return new FakeCall<>(null, failure);
   }
 
@@ -52,11 +65,11 @@ public final class Calls {
 
   static final class FakeCall<T> implements Call<T> {
     private final Response<T> response;
-    private final IOException error;
+    private final Throwable error;
     private final AtomicBoolean canceled = new AtomicBoolean();
     private final AtomicBoolean executed = new AtomicBoolean();
 
-    FakeCall(@Nullable Response<T> response, @Nullable IOException error) {
+    FakeCall(@Nullable Response<T> response, @Nullable Throwable error) {
       if ((response == null) == (error == null)) {
         throw new AssertionError("Only one of response or error can be set.");
       }
@@ -74,7 +87,12 @@ public final class Calls {
       if (response != null) {
         return response;
       }
-      throw error;
+      throw FakeCall.<Error>sneakyThrow2(error);
+    }
+
+    @SuppressWarnings("unchecked") // Intentionally abusing this feature.
+    private static <T extends Throwable> T sneakyThrow2(Throwable t) throws T {
+      throw (T) t;
     }
 
     @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
@@ -131,10 +149,8 @@ public final class Calls {
       if (delegate == null) {
         try {
           delegate = callable.call();
-        } catch (IOException e) {
-          delegate = failure(e);
         } catch (Exception e) {
-          throw new IllegalStateException("Callable threw unrecoverable exception", e);
+          delegate = failure(e);
         }
         this.delegate = delegate;
       }
