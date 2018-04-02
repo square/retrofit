@@ -47,9 +47,10 @@ public final class Calls {
   }
 
   /**
-   * Creates a failed {@link Call} from the provided {@code failure}. If {@code failure} is a {@link RuntimeException},
-   * {@link Error} or {@link IOException} subtype it is thrown with a cast. Otherwise the {@code failure} is
-   * "sneaky thrown" via {@linkplain Calls#sneakyThrow(Throwable)}.
+   * Creates a failed {@link Call} from the provided {@code failure}. If {@code failure} is a
+   * {@link RuntimeException}, {@link Error} or {@link IOException} subtype it is thrown with a
+   * cast. Otherwise the {@code failure} is "sneaky thrown" via
+   * {@linkplain Calls#sneakyThrow(Throwable)}.
    */
   public static <T> Call<T> failure(Throwable failure) {
     return new FakeCall<>(null, failure);
@@ -94,7 +95,8 @@ public final class Calls {
       }
 
       sneakyThrow(error);
-      throw new RuntimeException("error is a checked exception and should have been thrown by sneakyThrow()");
+      throw new RuntimeException(
+          "error is a checked exception and should have been thrown by sneakyThrow()");
     }
 
     @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
@@ -197,8 +199,8 @@ public final class Calls {
     Calls.<Error>sneakyThrow2(t);
   }
 
-  @SuppressWarnings("unchecked")
-  private static <T extends Throwable> void sneakyThrow2(Throwable t) throws T {
+  @SuppressWarnings("unchecked") private static <T extends Throwable> void sneakyThrow2(Throwable t)
+      throws T {
     throw (T) t;
   }
 }

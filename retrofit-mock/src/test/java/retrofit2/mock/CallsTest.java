@@ -281,13 +281,11 @@ public final class CallsTest {
     final RuntimeException failure = new RuntimeException("Hey");
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     Calls.failure(failure).enqueue(new Callback<Object>() {
-      @Override
-      public void onResponse(Call<Object> call, Response<Object> response) {
+      @Override public void onResponse(Call<Object> call, Response<Object> response) {
         fail();
       }
 
-      @Override
-      public void onFailure(Call<Object> call, Throwable t) {
+      @Override public void onFailure(Call<Object> call, Throwable t) {
         failureRef.set(t);
       }
     });
