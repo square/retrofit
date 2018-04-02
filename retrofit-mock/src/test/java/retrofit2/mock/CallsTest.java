@@ -15,13 +15,16 @@
  */
 package retrofit2.mock;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -155,6 +158,19 @@ public final class CallsTest {
     assertTrue(taco.isExecuted());
   }
 
+  @Test public void failureExecuteCheckedException() {
+    CertificateException failure = new CertificateException("Hey");
+    Call<Object> taco = Calls.failure(failure);
+    assertFalse(taco.isExecuted());
+    try {
+      taco.execute();
+      fail();
+    } catch (Throwable e) {
+      assertSame(failure, e);
+    }
+    assertTrue(taco.isExecuted());
+  }
+
   @Test public void failureEnqueue() {
     IOException failure = new IOException("Hey");
     Call<Object> taco = Calls.failure(failure);
@@ -250,6 +266,21 @@ public final class CallsTest {
     });
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     failing.enqueue(new Callback<Object>() {
+      @Override public void onResponse(Call<Object> call, Response<Object> response) {
+        fail();
+      }
+
+      @Override public void onFailure(Call<Object> call, Throwable t) {
+        failureRef.set(t);
+      }
+    });
+    assertSame(failure, failureRef.get());
+  }
+
+  @Test public void deferredThrowUncheckedExceptionEnqueue() {
+    final RuntimeException failure = new RuntimeException("Hey");
+    final AtomicReference<Throwable> failureRef = new AtomicReference<>();
+    Calls.failure(failure).enqueue(new Callback<Object>() {
       @Override public void onResponse(Call<Object> call, Response<Object> response) {
         fail();
       }
