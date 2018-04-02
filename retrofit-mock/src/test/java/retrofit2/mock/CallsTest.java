@@ -15,7 +15,9 @@
  */
 package retrofit2.mock;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
@@ -156,15 +158,15 @@ public final class CallsTest {
     assertTrue(taco.isExecuted());
   }
 
-  @Test public void failureExecuteWrapsInIOException() {
-    NullPointerException failure = new NullPointerException("Hey");
+  @Test public void failureExecuteCheckedException() {
+    CertificateException failure = new CertificateException("Hey");
     Call<Object> taco = Calls.failure(failure);
     assertFalse(taco.isExecuted());
     try {
       taco.execute();
       fail();
-    } catch (IOException e) {
-      assertSame(failure, e.getCause());
+    } catch (Throwable e) {
+      assertSame(failure, e);
     }
     assertTrue(taco.isExecuted());
   }
@@ -275,8 +277,8 @@ public final class CallsTest {
     assertSame(failure, failureRef.get());
   }
 
-  @Test public void deferredThrowEnqueueDeliversException() {
-    final Exception failure = new Exception("Hey");
+  @Test public void deferredThrowUncheckedExceptionEnqueue() {
+    final RuntimeException failure = new RuntimeException("Hey");
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     Calls.failure(failure).enqueue(new Callback<Object>() {
       @Override

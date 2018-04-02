@@ -42,7 +42,16 @@ public final class Calls {
     return new FakeCall<>(response, null);
   }
 
-  public static <T> Call<T> failure(Exception failure) {
+  public static <T> Call<T> failure(IOException failure) {
+    return new FakeCall<>(null, failure);
+  }
+
+  /**
+   * Creates a failed {@link Call} from the provided {@code failure}. If {@code failure} is a {@link RuntimeException},
+   * {@link Error} or {@link IOException} subtype it is thrown with a cast. Otherwise the {@code failure} is
+   * "sneaky thrown" via {@linkplain Calls#sneakyThrow(Throwable)}.
+   */
+  public static <T> Call<T> failure(Throwable failure) {
     return new FakeCall<>(null, failure);
   }
 
@@ -52,11 +61,11 @@ public final class Calls {
 
   static final class FakeCall<T> implements Call<T> {
     private final Response<T> response;
-    private final Exception error;
+    private final Throwable error;
     private final AtomicBoolean canceled = new AtomicBoolean();
     private final AtomicBoolean executed = new AtomicBoolean();
 
-    FakeCall(@Nullable Response<T> response, @Nullable Exception error) {
+    FakeCall(@Nullable Response<T> response, @Nullable Throwable error) {
       if ((response == null) == (error == null)) {
         throw new AssertionError("Only one of response or error can be set.");
       }
@@ -76,9 +85,16 @@ public final class Calls {
       }
       if (error instanceof IOException) {
         throw (IOException) error;
-      } else {
-        throw new IOException(error);
       }
+      if (error instanceof RuntimeException) {
+        throw (RuntimeException) error;
+      }
+      if (error instanceof Error) {
+        throw (Error) error;
+      }
+
+      sneakyThrow(error);
+      throw new RuntimeException("error is a checked exception and should have been thrown by sneakyThrow()");
     }
 
     @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
@@ -170,5 +186,19 @@ public final class Calls {
     @Override public Request request() {
       return getDelegate().request();
     }
+  }
+
+  /**
+   * Throws {@code t}, even if the declared throws clause doesn't permit it.
+   * This is a terrible – but terribly convenient – hack that makes it easy to
+   * catch and rethrow exceptions after cleanup. See Java Puzzlers #43.
+   */
+  private static void sneakyThrow(Throwable t) {
+    Calls.<Error>sneakyThrow2(t);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T extends Throwable> void sneakyThrow2(Throwable t) throws T {
+    throw (T) t;
   }
 }
