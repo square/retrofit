@@ -146,4 +146,55 @@ public final class JaxbConverterFactoryTest {
     Response<Contact> response = call.execute();
     assertThat(response.body().name).isEqualTo("Jenny");
   }
+
+  @Test public void externalEntity() throws Exception {
+    server.enqueue(new MockResponse()
+        .setBody(""
+            + "<?xml version=\"1.0\" ?>"
+            + "<!DOCTYPE contact["
+            + "  <!ENTITY secret SYSTEM \"" + server.url("/secret.txt") + "\">"
+            + "]>"
+            + "<contact>"
+            + "<name>&secret;</name>"
+            + "</contact>"));
+    server.enqueue(new MockResponse()
+        .setBody("hello"));
+
+    Call<Contact> call = service.getXml();
+    try {
+      Response<Contact> response = call.execute();
+      response.body();
+      fail();
+    } catch (RuntimeException expected) {
+      assertThat(expected).hasMessageContaining("ParseError");
+    }
+
+    assertThat(server.getRequestCount()).isEqualTo(1);
+  }
+
+  @Test public void externalDtd() throws Exception {
+    server.enqueue(new MockResponse()
+        .setBody(""
+            + "<?xml version=\"1.0\" ?>"
+            + "<!DOCTYPE contact SYSTEM \"" + server.url("/contact.dtd") + "\">"
+            + "<contact>"
+            + "<name>&secret;</name>"
+            + "</contact>"));
+    server.enqueue(new MockResponse()
+        .setBody(""
+            + "<!ELEMENT contact (name)>\n"
+            + "<!ELEMENT name (#PCDATA)>\n"
+            + "<!ENTITY secret \"hello\">"));
+
+    Call<Contact> call = service.getXml();
+    try {
+      Response<Contact> response = call.execute();
+      response.body();
+      fail();
+    } catch (RuntimeException expected) {
+      assertThat(expected).hasMessageContaining("ParseError");
+    }
+
+    assertThat(server.getRequestCount()).isEqualTo(1);
+  }
 }

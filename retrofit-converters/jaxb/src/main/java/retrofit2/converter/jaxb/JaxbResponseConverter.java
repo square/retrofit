@@ -33,6 +33,10 @@ final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
   JaxbResponseConverter(JAXBContext context, Class<T> type) {
     this.context = context;
     this.type = type;
+
+    // Prevent XML External Entity attacks (XXE).
+    xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+    xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
