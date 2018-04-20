@@ -45,7 +45,7 @@ import retrofit2.http.Url;
 
 /** A simple web crawler that uses a Retrofit service to turn URLs into webpages. */
 public final class Crawler {
-  private final Set<HttpUrl> fetchedUrls = Collections.synchronizedSet(
+  final Set<HttpUrl> fetchedUrls = Collections.synchronizedSet(
       new LinkedHashSet<HttpUrl>());
   private final ConcurrentHashMap<String, AtomicInteger> hostnames = new ConcurrentHashMap<>();
   private final PageService pageService;

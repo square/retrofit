@@ -32,7 +32,7 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
   private final long initialRequest;
   private final Deque<Notification<T>> events = new ArrayDeque<>();
 
-  private RecordingSubscriber(long initialRequest) {
+  RecordingSubscriber(long initialRequest) {
     this.initialRequest = initialRequest;
   }
 

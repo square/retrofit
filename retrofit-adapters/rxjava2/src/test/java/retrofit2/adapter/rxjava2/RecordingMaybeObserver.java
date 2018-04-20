@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 final class RecordingMaybeObserver<T> implements MaybeObserver<T> {
   private final Deque<Notification<T>> events = new ArrayDeque<>();
 
-  private RecordingMaybeObserver() {
+  RecordingMaybeObserver() {
   }
 
   @Override public void onSubscribe(Disposable disposable) {

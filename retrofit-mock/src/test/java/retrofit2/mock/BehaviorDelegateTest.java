@@ -41,7 +41,7 @@ public final class BehaviorDelegateTest {
     Call<String> failure();
   }
 
-  private final IOException mockFailure = new IOException("Timeout!");
+  final IOException mockFailure = new IOException("Timeout!");
   private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
   private DoWorkService service;
 

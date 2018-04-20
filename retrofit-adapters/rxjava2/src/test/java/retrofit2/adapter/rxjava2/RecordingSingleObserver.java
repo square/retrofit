@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 final class RecordingSingleObserver<T> implements SingleObserver<T> {
   private final Deque<Notification<T>> events = new ArrayDeque<>();
 
-  private RecordingSingleObserver() {
+  RecordingSingleObserver() {
   }
 
   @Override public void onSubscribe(Disposable disposable) {
