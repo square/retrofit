@@ -98,7 +98,7 @@ public final class AsyncTest {
     });
 
     latch.await(1, SECONDS);
-    assertThat(errorRef.get()).isSameAs(e);
+    assertThat(errorRef.get()).hasCause(e);
   }
 
   @Test public void bodyThrowingInOnErrorDeliveredToPlugin() throws InterruptedException {
