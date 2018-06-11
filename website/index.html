@@ -173,19 +173,9 @@ implementation 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(i
 </pre>
               <p>Retrofit requires at minimum Java 7 or Android 2.3.</p>
 
-              <h4>ProGuard</h4>
-              <p>If you are using ProGuard in your project add the following lines to your configuration:</p>
-              <pre class="prettyprint">
-# Retain generic type information for use by reflection by converters and adapters.
--keepattributes Signature
-# Retain service method parameters.
--keepclassmembernames,allowobfuscation interface * {
-    @retrofit2.http.* <methods>;
-}
-# Ignore annotation used for build tooling.
--dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
-</pre>
-            <p>Retrofit uses <a href="https://github.com/square/okio">Okio</a> under the hood, so you may want to look at its <a href="https://github.com/square/okio#proguard">ProGuard rules</a> as well.</p>
+              <h4>R8 / ProGuard</h4>
+              <p>If you are using R8 or ProGuard add the options from <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/rules.pro">this file</a>.</p>
+              <p>You might also need rules for OkHttp and Okio which are dependencies of this library.</p>
             </section>
 
             <section id="contributing">
