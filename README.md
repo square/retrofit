@@ -39,6 +39,10 @@ If you are using ProGuard you need to add the following options:
     @retrofit2.http.* <methods>;
 }
 # Ignore annotation used for build tooling.
+-dontnote retrofit2.Platform
+-dontwarn retrofit2.Platform$Java8
+-dontwarn okio.**
+-dontwarn javax.annotation.**
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
 ```
 
