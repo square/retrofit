@@ -118,8 +118,8 @@ final class ServiceMethod<ResponseT, ReturnT> {
     return callFactory.newCall(requestBuilder.build());
   }
 
-  ReturnT adapt(Call<ResponseT> call) {
-    return callAdapter.adapt(call);
+  ReturnT invoke(@Nullable Object[] args) {
+    return callAdapter.adapt(new OkHttpCall<>(this, args));
   }
 
   /** Builds a method return value from an HTTP response body. */

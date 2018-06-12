@@ -2701,10 +2701,7 @@ public final class RequestBuilderTest {
 
     Method method = TestingUtils.onlyMethod(cls);
     //noinspection unchecked
-    ServiceMethod<T, Call<T>> serviceMethod =
-        (ServiceMethod<T, Call<T>>) retrofit.loadServiceMethod(method);
-    Call<T> okHttpCall = new OkHttpCall<>(serviceMethod, args);
-    Call<T> call = serviceMethod.adapt(okHttpCall);
+    Call<T> call = (Call<T>) retrofit.loadServiceMethod(method).invoke(args);
     try {
       call.execute();
       throw new AssertionError();

@@ -143,10 +143,7 @@ public final class Retrofit {
             if (platform.isDefaultMethod(method)) {
               return platform.invokeDefaultMethod(method, service, proxy, args);
             }
-            ServiceMethod<Object, Object> serviceMethod =
-                (ServiceMethod<Object, Object>) loadServiceMethod(method);
-            OkHttpCall<Object> okHttpCall = new OkHttpCall<>(serviceMethod, args);
-            return serviceMethod.adapt(okHttpCall);
+            return loadServiceMethod(method).invoke(args);
           }
         });
   }
