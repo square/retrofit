@@ -58,6 +58,10 @@ import retrofit2.http.Url;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class ServiceMethod<R, T> {
+  static <R, T> ServiceMethod<R, T> parseAnnotations(Retrofit retrofit, Method method) {
+    return new ServiceMethod.Builder<R, T>(retrofit, method).build();
+  }
+
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
   static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
@@ -127,7 +131,7 @@ final class ServiceMethod<R, T> {
    * requires potentially-expensive reflection so it is best to build each service method only once
    * and reuse it. Builders cannot be reused.
    */
-  static final class Builder<T, R> {
+  private static final class Builder<T, R> {
     final Retrofit retrofit;
     final Method method;
     final Annotation[] methodAnnotations;
@@ -161,7 +165,7 @@ final class ServiceMethod<R, T> {
       this.parameterAnnotationsArray = method.getParameterAnnotations();
     }
 
-    public ServiceMethod build() {
+    ServiceMethod<T, R> build() {
       callAdapter = createCallAdapter();
       responseType = callAdapter.responseType();
       if (responseType == Response.class || responseType == okhttp3.Response.class) {

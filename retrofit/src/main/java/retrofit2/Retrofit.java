@@ -167,7 +167,7 @@ public final class Retrofit {
     synchronized (serviceMethodCache) {
       result = serviceMethodCache.get(method);
       if (result == null) {
-        result = new ServiceMethod.Builder<>(this, method).build();
+        result = ServiceMethod.parseAnnotations(this, method);
         serviceMethodCache.put(method, result);
       }
     }
