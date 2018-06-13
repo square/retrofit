@@ -16,7 +16,9 @@
 package retrofit2;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.Arrays;
@@ -536,12 +538,12 @@ public final class RequestBuilderTest {
   @Test public void getWithHeaderMap() {
     class Example {
       @GET("/search")
-      Call<ResponseBody> method(@HeaderMap Map<String, Object> headers) {
+      Call<ResponseBody> method(@HeaderMap Map<Object, Object> headers) {
         return null;
       }
     }
 
-    Map<String, Object> headers = new LinkedHashMap<>();
+    Map<Object, Object> headers = new LinkedHashMap<>();
     headers.put("Accept", "text/plain");
     headers.put("Accept-Charset", "utf-8");
 
@@ -623,6 +625,54 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Header map contained null key.");
+    }
+  }
+
+  @Test public void headerMapsConvertedToNullShouldError() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+      .baseUrl("http://example.com")
+      .addConverterFactory(NullableConverterFactory.except("Kit"));
+
+    Map<String, String> headers = new LinkedHashMap<>();
+    headers.put("Kit", "kat");
+
+    try {
+      buildRequest(Example.class, retrofitBuilder, headers);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Header map value 'kat' converted to null by "
+        + "retrofit2.RequestBuilderTest$NullableConverterFactory$1 for key 'Kit'.");
+    }
+  }
+
+  @Test public void headerMapKeysConvertedToNullShouldError() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+        .addConverterFactory(NullableConverterFactory.only("Kit"));
+
+    Map<String, String> headers = new LinkedHashMap<>();
+    headers.put("Kit", "kat");
+
+    try {
+      buildRequest(Example.class, retrofitBuilder, headers);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Header map key 'Kit' converted to null by "
+          + "retrofit2.RequestBuilderTest$NullableConverterFactory$1.");
     }
   }
 
@@ -1190,12 +1240,12 @@ public final class RequestBuilderTest {
   @Test public void getWithQueryParamMap() {
     class Example {
       @GET("/foo/bar/") //
-      Call<ResponseBody> method(@QueryMap Map<String, Object> query) {
+      Call<ResponseBody> method(@QueryMap Map<Object, Object> query) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<>();
+    Map<Object, Object> params = new LinkedHashMap<>();
     params.put("kit", "kat");
     params.put("ping", "pong");
 
@@ -1209,12 +1259,12 @@ public final class RequestBuilderTest {
   @Test public void getWithEncodedQueryParamMap() {
     class Example {
       @GET("/foo/bar/") //
-      Call<ResponseBody> method(@QueryMap(encoded = true) Map<String, Object> query) {
+      Call<ResponseBody> method(@QueryMap(encoded = true) Map<Object, Object> query) {
         return null;
       }
     }
 
-    Map<String, Object> params = new LinkedHashMap<>();
+    Map<Object, Object> params = new LinkedHashMap<>();
     params.put("kit", "k%20t");
     params.put("pi%20ng", "p%20g");
 
@@ -2241,12 +2291,12 @@ public final class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Call<ResponseBody> method(@FieldMap(encoded = true) Map<String, Object> fieldMap) {
+      Call<ResponseBody> method(@FieldMap(encoded = true) Map<Object, Object> fieldMap) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    Map<Object, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("k%20it", "k%20at");
     fieldMap.put("pin%20g", "po%20ng");
 
@@ -2258,12 +2308,12 @@ public final class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/foo") //
-      Call<ResponseBody> method(@FieldMap Map<String, Object> fieldMap) {
+      Call<ResponseBody> method(@FieldMap Map<Object, Object> fieldMap) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    Map<Object, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
     fieldMap.put("ping", "pong");
 
@@ -2275,7 +2325,7 @@ public final class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/") //
-      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+      Call<ResponseBody> method(@FieldMap Map<Object, Object> a) {
         return null;
       }
     }
@@ -2292,12 +2342,12 @@ public final class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/") //
-      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+      Call<ResponseBody> method(@FieldMap Map<Object, Object> a) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    Map<Object, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
     fieldMap.put(null, "pong");
 
@@ -2313,12 +2363,12 @@ public final class RequestBuilderTest {
     class Example {
       @FormUrlEncoded //
       @POST("/") //
-      Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+      Call<ResponseBody> method(@FieldMap Map<Object, Object> a) {
         return null;
       }
     }
 
-    Map<String, Object> fieldMap = new LinkedHashMap<>();
+    Map<Object, Object> fieldMap = new LinkedHashMap<>();
     fieldMap.put("kit", "kat");
     fieldMap.put("foo", null);
 
@@ -2624,7 +2674,30 @@ public final class RequestBuilderTest {
 
     Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
         .baseUrl("http://example.com")
-        .addConverterFactory(new NullObjectConverterFactory());
+        .addConverterFactory(NullableConverterFactory.only("kat"));
+
+    Map<String, String> queryMap = Collections.singletonMap("kit", "kat");
+
+    try {
+      buildRequest(Example.class, retrofitBuilder, queryMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Query map value 'kat' converted to null by "
+            + "retrofit2.RequestBuilderTest$NullableConverterFactory$1 for key 'kit'.");
+    }
+  }
+
+  @Test public void queryParamMapKeysConvertedToNullShouldError() throws Exception {
+    class Example {
+      @GET("/query") Call<ResponseBody> queryPath(@QueryMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+      .addConverterFactory(NullableConverterFactory.only("kit"));
 
     Map<String, String> queryMap = Collections.singletonMap("kit", "kat");
 
@@ -2633,7 +2706,8 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageContaining(
-          "Query map value 'kat' converted to null by retrofit2.helpers.NullObjectConverterFactory$1 for key 'kit'.");
+          "Query map key 'kit' converted to null by "
+            + "retrofit2.RequestBuilderTest$NullableConverterFactory$1.");
     }
   }
 
@@ -2664,7 +2738,7 @@ public final class RequestBuilderTest {
 
     Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
         .baseUrl("http://example.com")
-        .addConverterFactory(new NullObjectConverterFactory());
+        .addConverterFactory(NullableConverterFactory.except("kit"));
 
     Map<String, String> queryMap = Collections.singletonMap("kit", "kat");
 
@@ -2673,7 +2747,30 @@ public final class RequestBuilderTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageContaining(
-          "Field map value 'kat' converted to null by retrofit2.helpers.NullObjectConverterFactory$1 for key 'kit'.");
+          "Field map value 'kat' converted to null by retrofit2.RequestBuilderTest$NullableConverterFactory$1 for key 'kit'.");
+    }
+  }
+
+  @Test public void fieldParamMapKeysConvertedToNullShouldError() throws Exception {
+    class Example {
+      @FormUrlEncoded
+      @POST("/query") Call<ResponseBody> queryPath(@FieldMap Map<String, String> a) {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+        .baseUrl("http://example.com")
+        .addConverterFactory(NullableConverterFactory.except("kat"));
+
+    Map<String, String> queryMap = Collections.singletonMap("kit", "kat");
+
+    try {
+      buildRequest(Example.class, retrofitBuilder, queryMap);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining(
+          "Field map key 'kit' converted to null by retrofit2.RequestBuilderTest$NullableConverterFactory$1.");
     }
   }
 
@@ -2720,5 +2817,32 @@ public final class RequestBuilderTest {
         .addConverterFactory(new ToStringConverterFactory());
 
     return buildRequest(cls, retrofitBuilder, args);
+  }
+
+  private static final class NullableConverterFactory extends Converter.Factory {
+    private final Object nullValue;
+    private final boolean isNullWhenEquals;
+
+    static Converter.Factory only(Object nullValue) {
+      return new NullableConverterFactory(nullValue, true);
+    }
+
+    static Converter.Factory except(Object nullValue) {
+      return new NullableConverterFactory(nullValue, false);
+    }
+
+    private NullableConverterFactory(Object nullValue, boolean isNullWhenEquals) {
+      this.nullValue = nullValue;
+      this.isNullWhenEquals = isNullWhenEquals;
+    }
+
+    @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+                                                          Retrofit retrofit) {
+      return new Converter<Object, String>() {
+        @Override public String convert(Object value) throws IOException {
+          return nullValue.equals(value) == isNullWhenEquals ? null : String.valueOf(value);
+        }
+      };
+    }
   }
 }

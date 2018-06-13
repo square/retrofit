@@ -479,14 +479,14 @@ final class ServiceMethod<ResponseT, ReturnT> {
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@QueryMap keys must be of type String: " + keyType);
-        }
+        Converter<?, String> keyConverter =
+            retrofit.stringConverter(keyType, annotations);
         Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
         Converter<?, String> valueConverter =
             retrofit.stringConverter(valueType, annotations);
 
-        return new ParameterHandler.QueryMap<>(valueConverter, ((QueryMap) annotation).encoded());
+        return new ParameterHandler.QueryMap<>(keyConverter, valueConverter,
+            ((QueryMap) annotation).encoded());
 
       } else if (annotation instanceof Header) {
         Header header = (Header) annotation;
@@ -527,14 +527,13 @@ final class ServiceMethod<ResponseT, ReturnT> {
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@HeaderMap keys must be of type String: " + keyType);
-        }
+        Converter<?, String> keyConverter =
+            retrofit.stringConverter(keyType, annotations);
         Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
         Converter<?, String> valueConverter =
             retrofit.stringConverter(valueType, annotations);
 
-        return new ParameterHandler.HeaderMap<>(valueConverter);
+        return new ParameterHandler.HeaderMap<>(keyConverter, valueConverter);
 
       } else if (annotation instanceof Field) {
         if (!isFormEncoded) {
@@ -585,15 +584,15 @@ final class ServiceMethod<ResponseT, ReturnT> {
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
-        if (String.class != keyType) {
-          throw parameterError(p, "@FieldMap keys must be of type String: " + keyType);
-        }
+        Converter<?, String> keyConverter =
+            retrofit.stringConverter(keyType, annotations);
         Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
         Converter<?, String> valueConverter =
             retrofit.stringConverter(valueType, annotations);
 
         gotField = true;
-        return new ParameterHandler.FieldMap<>(valueConverter, ((FieldMap) annotation).encoded());
+        return new ParameterHandler.FieldMap<>(keyConverter, valueConverter,
+            ((FieldMap) annotation).encoded());
 
       } else if (annotation instanceof Part) {
         if (!isMultipart) {
