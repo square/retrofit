@@ -57,17 +57,22 @@ import retrofit2.http.QueryName;
 import retrofit2.http.Url;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
-final class ServiceMethod<R, T> {
+final class ServiceMethod<ResponseT, ReturnT> {
+  static <ResponseT, ReturnT> ServiceMethod<ResponseT, ReturnT> parseAnnotations(Retrofit retrofit,
+      Method method) {
+    return new ServiceMethod.Builder<ResponseT, ReturnT>(retrofit, method).build();
+  }
+
   // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
   static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
   static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
   static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
 
   private final okhttp3.Call.Factory callFactory;
-  private final CallAdapter<R, T> callAdapter;
+  private final CallAdapter<ResponseT, ReturnT> callAdapter;
 
   private final HttpUrl baseUrl;
-  private final Converter<ResponseBody, R> responseConverter;
+  private final Converter<ResponseBody, ResponseT> responseConverter;
   private final String httpMethod;
   private final String relativeUrl;
   private final Headers headers;
@@ -77,7 +82,7 @@ final class ServiceMethod<R, T> {
   private final boolean isMultipart;
   private final ParameterHandler<?>[] parameterHandlers;
 
-  ServiceMethod(Builder<R, T> builder) {
+  ServiceMethod(Builder<ResponseT, ReturnT> builder) {
     this.callFactory = builder.retrofit.callFactory();
     this.callAdapter = builder.callAdapter;
     this.baseUrl = builder.retrofit.baseUrl();
@@ -113,12 +118,12 @@ final class ServiceMethod<R, T> {
     return callFactory.newCall(requestBuilder.build());
   }
 
-  T adapt(Call<R> call) {
-    return callAdapter.adapt(call);
+  ReturnT invoke(@Nullable Object[] args) {
+    return callAdapter.adapt(new OkHttpCall<>(this, args));
   }
 
   /** Builds a method return value from an HTTP response body. */
-  R toResponse(ResponseBody body) throws IOException {
+  ResponseT toResponse(ResponseBody body) throws IOException {
     return responseConverter.convert(body);
   }
 
@@ -127,7 +132,7 @@ final class ServiceMethod<R, T> {
    * requires potentially-expensive reflection so it is best to build each service method only once
    * and reuse it. Builders cannot be reused.
    */
-  static final class Builder<T, R> {
+  private static final class Builder<ResponseT, ReturnT> {
     final Retrofit retrofit;
     final Method method;
     final Annotation[] methodAnnotations;
@@ -150,8 +155,8 @@ final class ServiceMethod<R, T> {
     MediaType contentType;
     Set<String> relativeUrlParamNames;
     ParameterHandler<?>[] parameterHandlers;
-    Converter<ResponseBody, T> responseConverter;
-    CallAdapter<T, R> callAdapter;
+    Converter<ResponseBody, ResponseT> responseConverter;
+    CallAdapter<ResponseT, ReturnT> callAdapter;
 
     Builder(Retrofit retrofit, Method method) {
       this.retrofit = retrofit;
@@ -161,7 +166,7 @@ final class ServiceMethod<R, T> {
       this.parameterAnnotationsArray = method.getParameterAnnotations();
     }
 
-    public ServiceMethod build() {
+    ServiceMethod<ResponseT, ReturnT> build() {
       callAdapter = createCallAdapter();
       responseType = callAdapter.responseType();
       if (responseType == Response.class || responseType == okhttp3.Response.class) {
@@ -223,7 +228,7 @@ final class ServiceMethod<R, T> {
       return new ServiceMethod<>(this);
     }
 
-    private CallAdapter<T, R> createCallAdapter() {
+    private CallAdapter<ResponseT, ReturnT> createCallAdapter() {
       Type returnType = method.getGenericReturnType();
       if (Utils.hasUnresolvableType(returnType)) {
         throw methodError(
@@ -235,7 +240,7 @@ final class ServiceMethod<R, T> {
       Annotation[] annotations = method.getAnnotations();
       try {
         //noinspection unchecked
-        return (CallAdapter<T, R>) retrofit.callAdapter(returnType, annotations);
+        return (CallAdapter<ResponseT, ReturnT>) retrofit.callAdapter(returnType, annotations);
       } catch (RuntimeException e) { // Wide exception range because factories are user code.
         throw methodError(e, "Unable to create call adapter for %s", returnType);
       }
@@ -733,7 +738,7 @@ final class ServiceMethod<R, T> {
       }
     }
 
-    private Converter<ResponseBody, T> createResponseConverter() {
+    private Converter<ResponseBody, ResponseT> createResponseConverter() {
       Annotation[] annotations = method.getAnnotations();
       try {
         return retrofit.responseBodyConverter(responseType, annotations);
