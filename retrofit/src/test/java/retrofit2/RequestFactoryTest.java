@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -65,7 +64,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
-public final class RequestBuilderTest {
+public final class RequestFactoryTest {
   private static final MediaType TEXT_PLAIN = MediaType.parse("text/plain");
 
   @Test public void customMethodNoBody() {
@@ -2689,10 +2688,8 @@ public final class RequestBuilderTest {
   }
 
   static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
-    final AtomicReference<Request> requestRef = new AtomicReference<>();
     okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
       @Override public okhttp3.Call newCall(Request request) {
-        requestRef.set(request);
         throw new UnsupportedOperationException("Not implemented");
       }
     };
@@ -2700,13 +2697,8 @@ public final class RequestBuilderTest {
     Retrofit retrofit = builder.callFactory(callFactory).build();
 
     Method method = TestingUtils.onlyMethod(cls);
-    //noinspection unchecked
-    Call<T> call = (Call<T>) retrofit.loadServiceMethod(method).invoke(args);
     try {
-      call.execute();
-      throw new AssertionError();
-    } catch (UnsupportedOperationException ignored) {
-      return requestRef.get();
+      return RequestFactory.parseAnnotations(retrofit, method).create(args);
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
