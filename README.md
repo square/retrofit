@@ -31,7 +31,7 @@ R8 / ProGuard
 -------------
 
 If you are using R8 or ProGuard add the options from
-[this file](https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/rules.pro).
+[this file](https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro).
 
 You might also need rules for OkHttp and Okio which are dependencies of this library.
 
