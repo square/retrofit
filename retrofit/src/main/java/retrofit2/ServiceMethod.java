@@ -15,7 +15,6 @@
  */
 package retrofit2;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -41,18 +40,9 @@ final class ServiceMethod<ResponseT, ReturnT> {
     responseConverter = builder.responseConverter;
   }
 
-  /** Builds an HTTP request from method arguments. */
-  okhttp3.Call toCall(@Nullable Object[] args) throws IOException {
-    return callFactory.newCall(requestFactory.create(args));
-  }
-
   ReturnT invoke(@Nullable Object[] args) {
-    return callAdapter.adapt(new OkHttpCall<>(this, args));
-  }
-
-  /** Builds a method return value from an HTTP response body. */
-  ResponseT toResponse(ResponseBody body) throws IOException {
-    return responseConverter.convert(body);
+    return callAdapter.adapt(
+        new OkHttpCall<>(requestFactory, args, callFactory, responseConverter));
   }
 
   /**
