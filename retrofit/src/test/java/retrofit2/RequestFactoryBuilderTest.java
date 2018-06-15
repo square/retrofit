@@ -20,7 +20,8 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class ServiceMethodTest {
+// TODO this test is far too white box, migrate to black box.
+public final class RequestFactoryBuilderTest {
   @Test public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
@@ -41,7 +42,7 @@ public final class ServiceMethodTest {
   }
 
   private static void expectParams(String path, String... expected) {
-    Set<String> calculated = ServiceMethod.parsePathParameters(path);
+    Set<String> calculated = RequestFactory.Builder.parsePathParameters(path);
     assertThat(calculated).containsExactly(expected);
   }
 }
