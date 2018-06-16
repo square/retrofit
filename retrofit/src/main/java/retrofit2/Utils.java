@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -35,6 +36,29 @@ final class Utils {
 
   private Utils() {
     // No instances.
+  }
+
+  static RuntimeException methodError(Method method, String message, Object... args) {
+    return methodError(method, null, message, args);
+  }
+
+  static RuntimeException methodError(Method method, @Nullable Throwable cause, String message,
+      Object... args) {
+    message = String.format(message, args);
+    return new IllegalArgumentException(message
+        + "\n    for method "
+        + method.getDeclaringClass().getSimpleName()
+        + "."
+        + method.getName(), cause);
+  }
+
+  static RuntimeException parameterError(Method method,
+      Throwable cause, int p, String message, Object... args) {
+    return methodError(method, cause, message + " (parameter #" + (p + 1) + ")", args);
+  }
+
+  static RuntimeException parameterError(Method method, int p, String message, Object... args) {
+    return methodError(method, message + " (parameter #" + (p + 1) + ")", args);
   }
 
   static Class<?> getRawType(Type type) {
