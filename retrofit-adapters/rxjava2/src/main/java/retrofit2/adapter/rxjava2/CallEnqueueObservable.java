@@ -37,7 +37,9 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
     Call<T> call = originalCall.clone();
     CallCallback<T> callback = new CallCallback<>(call, observer);
     observer.onSubscribe(callback);
-    call.enqueue(callback);
+    if (!callback.isDisposed()) {
+      call.enqueue(callback);
+    }
   }
 
   private static final class CallCallback<T> implements Disposable, Callback<T> {
