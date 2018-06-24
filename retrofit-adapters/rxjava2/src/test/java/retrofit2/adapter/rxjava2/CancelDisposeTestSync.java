@@ -17,9 +17,9 @@ package retrofit2.adapter.rxjava2;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
-import java.util.List;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
+import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
@@ -27,11 +27,11 @@ import org.junit.Test;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
 
-public final class CancelDisposeTest {
+import static org.junit.Assert.*;
+
+public final class CancelDisposeTestSync {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
@@ -45,32 +45,16 @@ public final class CancelDisposeTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .callFactory(client)
         .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void disposeCancelsCall() {
-    Disposable disposable = service.go().subscribe();
-    List<Call> calls = client.dispatcher().runningCalls();
-    assertEquals(1, calls.size());
-    disposable.dispose();
-    assertTrue(calls.get(0).isCanceled());
-  }
-
-  @Test public void disposeBeforeEnqueueDoesNotEnqueue() {
+  @Test public void disposeBeforeExecuteDoesNotEnqueue() {
+    server.enqueue(new MockResponse().setBody("Hi"));
     service.go().test(true);
-    List<Call> calls = client.dispatcher().runningCalls();
-    assertEquals(0, calls.size());
-  }
-
-  @Test public void cancelDoesNotDispose() {
-    Disposable disposable = service.go().subscribe();
-    List<Call> calls = client.dispatcher().runningCalls();
-    assertEquals(1, calls.size());
-    calls.get(0).cancel();
-    assertFalse(disposable.isDisposed());
+    assertEquals(0, server.getRequestCount());
   }
 }
 
