@@ -21,6 +21,8 @@ import java.lang.reflect.Type;
 import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 
+import static retrofit2.Utils.methodError;
+
 /** Adapts an invocation of an interface method into an HTTP call. */
 final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT> {
   private final RequestFactory requestFactory;
@@ -65,14 +67,14 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
       callAdapter = createCallAdapter();
       responseType = callAdapter.responseType();
       if (responseType == Response.class || responseType == okhttp3.Response.class) {
-        throw methodError("'"
+        throw methodError(method, "'"
             + Utils.getRawType(responseType).getName()
             + "' is not a valid response body type. Did you mean ResponseBody?");
       }
       responseConverter = createResponseConverter();
 
       if (requestFactory.httpMethod.equals("HEAD") && !Void.class.equals(responseType)) {
-        throw methodError("HEAD method must use Void as response type.");
+        throw methodError(method, "HEAD method must use Void as response type.");
       }
 
       return new HttpServiceMethod<>(this);
@@ -81,18 +83,18 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
     private CallAdapter<ResponseT, ReturnT> createCallAdapter() {
       Type returnType = method.getGenericReturnType();
       if (Utils.hasUnresolvableType(returnType)) {
-        throw methodError(
+        throw methodError(method,
             "Method return type must not include a type variable or wildcard: %s", returnType);
       }
       if (returnType == void.class) {
-        throw methodError("Service methods cannot return void.");
+        throw methodError(method, "Service methods cannot return void.");
       }
       Annotation[] annotations = method.getAnnotations();
       try {
         //noinspection unchecked
         return (CallAdapter<ResponseT, ReturnT>) retrofit.callAdapter(returnType, annotations);
       } catch (RuntimeException e) { // Wide exception range because factories are user code.
-        throw methodError(e, "Unable to create call adapter for %s", returnType);
+        throw methodError(method, e, "Unable to create call adapter for %s", returnType);
       }
     }
 
@@ -101,21 +103,8 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
       try {
         return retrofit.responseBodyConverter(responseType, annotations);
       } catch (RuntimeException e) { // Wide exception range because factories are user code.
-        throw methodError(e, "Unable to create converter for %s", responseType);
+        throw methodError(method, e, "Unable to create converter for %s", responseType);
       }
-    }
-
-    private RuntimeException methodError(String message, Object... args) {
-      return methodError(null, message, args);
-    }
-
-    private RuntimeException methodError(Throwable cause, String message, Object... args) {
-      message = String.format(message, args);
-      return new IllegalArgumentException(message
-          + "\n    for method "
-          + method.getDeclaringClass().getSimpleName()
-          + "."
-          + method.getName(), cause);
     }
   }
 }
