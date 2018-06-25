@@ -218,7 +218,7 @@ final class OkHttpCall<T> implements Call<T> {
       return Response.success(null, rawResponse);
     }
 
-    ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
+    ExceptionCatchingResponseBody catchingBody = new ExceptionCatchingResponseBody(rawBody);
     try {
       T body = responseConverter.convert(catchingBody);
       return Response.success(body, rawResponse);
@@ -273,11 +273,11 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
-  static final class ExceptionCatchingRequestBody extends ResponseBody {
+  static final class ExceptionCatchingResponseBody extends ResponseBody {
     private final ResponseBody delegate;
     IOException thrownException;
 
-    ExceptionCatchingRequestBody(ResponseBody delegate) {
+    ExceptionCatchingResponseBody(ResponseBody delegate) {
       this.delegate = delegate;
     }
 
