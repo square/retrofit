@@ -36,6 +36,9 @@ final class CallExecuteObservable<T> extends Observable<Response<T>> {
     Call<T> call = originalCall.clone();
     CallDisposable disposable = new CallDisposable(call);
     observer.onSubscribe(disposable);
+    if (disposable.isDisposed()) {
+      return;
+    }
 
     boolean terminated = false;
     try {
