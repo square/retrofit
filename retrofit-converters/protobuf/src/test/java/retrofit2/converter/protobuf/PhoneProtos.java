@@ -43,7 +43,7 @@ public final class PhoneProtos {
       // @@protoc_insertion_point(message_implements:retrofit2.converter.protobuf.Phone)
       PhoneOrBuilder {
     // Use Phone.newBuilder() to construct.
-    private Phone(com.google.protobuf.GeneratedMessage.ExtendableBuilder<retrofit2.converter.protobuf.PhoneProtos.Phone, ?> builder) {
+    Phone(com.google.protobuf.GeneratedMessage.ExtendableBuilder<retrofit2.converter.protobuf.PhoneProtos.Phone, ?> builder) {
       super(builder);
     }
     private Phone() {
@@ -55,7 +55,7 @@ public final class PhoneProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Phone(
+    Phone(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -108,9 +108,9 @@ public final class PhoneProtos {
               retrofit2.converter.protobuf.PhoneProtos.Phone.class, retrofit2.converter.protobuf.PhoneProtos.Phone.Builder.class);
     }
 
-    private int bitField0_;
+    int bitField0_;
     public static final int NUMBER_FIELD_NUMBER = 1;
-    private volatile java.lang.Object number_;
+    volatile java.lang.Object number_;
     /**
      * <code>optional string number = 1;</code>
      */
@@ -329,11 +329,11 @@ public final class PhoneProtos {
       }
 
       // Construct using retrofit2.converter.protobuf.PhoneProtos.Phone.newBuilder()
-      private Builder() {
+      Builder() {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
+      Builder(
           com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
@@ -611,9 +611,9 @@ public final class PhoneProtos {
           .newFileScopedGeneratedExtension(
         java.lang.Boolean.class,
         null);
-  private static final com.google.protobuf.Descriptors.Descriptor
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_retrofit2_converter_protobuf_Phone_descriptor;
-  private static final 
+  static final
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_retrofit2_converter_protobuf_Phone_fieldAccessorTable;
 
@@ -621,7 +621,7 @@ public final class PhoneProtos {
       getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
+  static  com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {

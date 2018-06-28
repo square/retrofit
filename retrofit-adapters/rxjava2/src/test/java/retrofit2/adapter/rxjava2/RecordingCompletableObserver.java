@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 final class RecordingCompletableObserver implements CompletableObserver {
   private final Deque<Notification<?>> events = new ArrayDeque<>();
 
-  private RecordingCompletableObserver() {
+  RecordingCompletableObserver() {
   }
 
   @Override public void onSubscribe(Disposable disposable) {

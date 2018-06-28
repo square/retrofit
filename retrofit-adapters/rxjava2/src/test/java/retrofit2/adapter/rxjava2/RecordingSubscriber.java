@@ -35,7 +35,7 @@ final class RecordingSubscriber<T> implements Subscriber<T> {
 
   private Subscription subscription;
 
-  private RecordingSubscriber(long initialRequest) {
+  RecordingSubscriber(long initialRequest) {
     this.initialRequest = initialRequest;
   }
 
