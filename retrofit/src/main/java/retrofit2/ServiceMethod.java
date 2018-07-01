@@ -16,10 +16,22 @@
 package retrofit2;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import javax.annotation.Nullable;
+
+import static retrofit2.Utils.methodError;
 
 abstract class ServiceMethod<T> {
   static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
+    Type returnType = method.getGenericReturnType();
+    if (Utils.hasUnresolvableType(returnType)) {
+      throw methodError(method,
+          "Method return type must not include a type variable or wildcard: %s", returnType);
+    }
+    if (returnType == void.class) {
+      throw methodError(method, "Service methods cannot return void.");
+    }
+
     return new HttpServiceMethod.Builder<Object, T>(retrofit, method).build();
   }
 
