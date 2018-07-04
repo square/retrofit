@@ -18,7 +18,7 @@ Download [the latest JAR][1] or grab via [Maven][2]:
 ```
 or [Gradle][2]:
 ```groovy
-compile 'com.squareup.retrofit2:converter-java8:latest.version'
+implementation 'com.squareup.retrofit2:converter-java8:latest.version'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
