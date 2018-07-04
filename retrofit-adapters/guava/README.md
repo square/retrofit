@@ -37,7 +37,7 @@ Download [the latest JAR][2] or grab via [Maven][3]:
 ```
 or [Gradle][3]:
 ```groovy
-compile 'com.squareup.retrofit2:adapter-guava:latest.version'
+implementation 'com.squareup.retrofit2:adapter-guava:latest.version'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
