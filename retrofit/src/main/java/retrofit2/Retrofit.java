@@ -61,16 +61,19 @@ public final class Retrofit {
   private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
 
   final okhttp3.Call.Factory callFactory;
+  final okhttp3.WebSocket.Factory webSocketFactory;
   final HttpUrl baseUrl;
   final List<Converter.Factory> converterFactories;
   final List<CallAdapter.Factory> callAdapterFactories;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
 
-  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
-      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> callAdapterFactories,
-      @Nullable Executor callbackExecutor, boolean validateEagerly) {
+  Retrofit(okhttp3.Call.Factory callFactory, okhttp3.WebSocket.Factory webSocketFactory,
+      HttpUrl baseUrl, List<Converter.Factory> converterFactories,
+      List<CallAdapter.Factory> callAdapterFactories, @Nullable Executor callbackExecutor,
+      boolean validateEagerly) {
     this.callFactory = callFactory;
+    this.webSocketFactory = webSocketFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
     this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
@@ -370,6 +373,52 @@ public final class Retrofit {
     return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
   }
 
+  public <T> Converter<T, RequestBody> outgoingMessageConverter(Type type,
+      Annotation[] annotations) {
+    checkNotNull(type, "type == null");
+    checkNotNull(annotations, "annotations == null");
+
+    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+      Converter<?, RequestBody> converter =
+          converterFactories.get(i).outgoingMessageConverter(type, annotations, this);
+      if (converter != null) {
+        //noinspection unchecked
+        return (Converter<T, RequestBody>) converter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate outgoing message converter for ")
+        .append(type)
+        .append(".\n  Tried:");
+    for (Converter.Factory converterFactory : converterFactories) {
+      builder.append("\n   * ").append(converterFactory.getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
+  }
+
+  public <T> Converter<ResponseBody, T> incomingMessageConverter(Type type,
+      Annotation[] annotations) {
+    checkNotNull(type, "type == null");
+    checkNotNull(annotations, "annotations == null");
+
+    for (int i = 0, count = converterFactories.size(); i < count; i++) {
+      Converter<ResponseBody, ?> converter =
+          converterFactories.get(i).incomingMessageConverter(type, annotations, this);
+      if (converter != null) {
+        //noinspection unchecked
+        return (Converter<ResponseBody, T>) converter;
+      }
+    }
+
+    StringBuilder builder = new StringBuilder("Could not locate incoming message converter for ")
+        .append(type)
+        .append(".\n  Tried:");
+    for (Converter.Factory converterFactory : converterFactories) {
+      builder.append("\n   * ").append(converterFactory.getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
+  }
+
   /**
    * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null},
    * in which case callbacks should be made synchronously on the background thread.
@@ -391,6 +440,7 @@ public final class Retrofit {
   public static final class Builder {
     private final Platform platform;
     private @Nullable okhttp3.Call.Factory callFactory;
+    private @Nullable okhttp3.WebSocket.Factory webSocketFactory;
     private HttpUrl baseUrl;
     private final List<Converter.Factory> converterFactories = new ArrayList<>();
     private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
@@ -408,6 +458,7 @@ public final class Retrofit {
     Builder(Retrofit retrofit) {
       platform = Platform.get();
       callFactory = retrofit.callFactory;
+      webSocketFactory = retrofit.webSocketFactory;
       baseUrl = retrofit.baseUrl;
 
       converterFactories.addAll(retrofit.converterFactories);
@@ -425,10 +476,11 @@ public final class Retrofit {
     /**
      * The HTTP client used for requests.
      * <p>
-     * This is a convenience method for calling {@link #callFactory}.
+     * This is a convenience method for calling {@link #callFactory} and {@link #webSocketFactory}.
      */
     public Builder client(OkHttpClient client) {
-      return callFactory(checkNotNull(client, "client == null"));
+      checkNotNull(client, "client == null");
+      return callFactory(client).webSocketFactory(client);
     }
 
     /**
@@ -438,6 +490,16 @@ public final class Retrofit {
      */
     public Builder callFactory(okhttp3.Call.Factory factory) {
       this.callFactory = checkNotNull(factory, "factory == null");
+      return this;
+    }
+
+    /**
+     * Specify a custom call factory for creating {@link Call} instances.
+     * <p>
+     * Note: Calling {@link #client} automatically sets this value.
+     */
+    public Builder webSocketFactory(okhttp3.WebSocket.Factory factory) {
+      this.webSocketFactory = checkNotNull(factory, "factory == null");
       return this;
     }
 
@@ -573,8 +635,15 @@ public final class Retrofit {
       }
 
       okhttp3.Call.Factory callFactory = this.callFactory;
-      if (callFactory == null) {
-        callFactory = new OkHttpClient();
+      okhttp3.WebSocket.Factory webSocketFactory = this.webSocketFactory;
+      if (callFactory == null || webSocketFactory == null) {
+        OkHttpClient client = new OkHttpClient();
+        if (callFactory == null) {
+          callFactory = client;
+        }
+        if (webSocketFactory == null) {
+          webSocketFactory = client;
+        }
       }
 
       Executor callbackExecutor = this.callbackExecutor;
@@ -595,8 +664,9 @@ public final class Retrofit {
       converterFactories.add(new BuiltInConverters());
       converterFactories.addAll(this.converterFactories);
 
-      return new Retrofit(callFactory, baseUrl, unmodifiableList(converterFactories),
-          unmodifiableList(callAdapterFactories), callbackExecutor, validateEagerly);
+      return new Retrofit(callFactory, webSocketFactory, baseUrl,
+          unmodifiableList(converterFactories), unmodifiableList(callAdapterFactories),
+          callbackExecutor, validateEagerly);
     }
   }
 }

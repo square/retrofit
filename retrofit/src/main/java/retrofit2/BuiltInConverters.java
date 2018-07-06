@@ -18,8 +18,10 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import okio.ByteString;
 import retrofit2.http.Streaming;
 
 final class BuiltInConverters extends Converter.Factory {
@@ -42,6 +44,30 @@ final class BuiltInConverters extends Converter.Factory {
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
       return RequestBodyConverter.INSTANCE;
+    }
+    return null;
+  }
+
+  @Nullable @Override
+  public Converter<?, RequestBody> outgoingMessageConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    if (type == String.class) {
+      return StringOutgoingMessageConverter.INSTANCE;
+    }
+    if (type == ByteString.class) {
+      return ByteStringOutgoingMessageConverter.INSTANCE;
+    }
+    return null;
+  }
+
+  @Nullable @Override
+  public Converter<ResponseBody, ?> incomingMessageConverter(Type type, Annotation[] annotations,
+      Retrofit retrofit) {
+    if (type == String.class) {
+      return StringIncomingMessageConverter.INSTANCE;
+    }
+    if (type == ByteString.class) {
+      return ByteStringIncomingMessageConverter.INSTANCE;
     }
     return null;
   }
@@ -91,6 +117,42 @@ final class BuiltInConverters extends Converter.Factory {
 
     @Override public String convert(Object value) {
       return value.toString();
+    }
+  }
+
+  static final class StringOutgoingMessageConverter implements Converter<String, RequestBody> {
+    static final StringOutgoingMessageConverter INSTANCE = new StringOutgoingMessageConverter();
+
+    @Override public RequestBody convert(String value) {
+      return RequestBody.create(STRING_MESSAGE, value);
+    }
+  }
+
+  static final class StringIncomingMessageConverter implements Converter<ResponseBody, String> {
+    static final StringIncomingMessageConverter INSTANCE = new StringIncomingMessageConverter();
+
+    @Override public String convert(ResponseBody value) throws IOException {
+      return value.string();
+    }
+  }
+
+  static final class ByteStringOutgoingMessageConverter
+      implements Converter<ByteString, RequestBody> {
+    static final ByteStringOutgoingMessageConverter INSTANCE =
+        new ByteStringOutgoingMessageConverter();
+
+    @Override public RequestBody convert(ByteString value) {
+      return RequestBody.create(BYTESTRING_MESSAGE, value);
+    }
+  }
+
+  static final class ByteStringIncomingMessageConverter
+      implements Converter<ResponseBody, ByteString> {
+    static final ByteStringIncomingMessageConverter INSTANCE =
+        new ByteStringIncomingMessageConverter();
+
+    @Override public ByteString convert(ResponseBody value) throws IOException {
+      return value.source().readByteString();
     }
   }
 }

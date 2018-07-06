@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
+import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Body;
@@ -39,6 +40,9 @@ import retrofit2.http.QueryMap;
  * into the {@link Retrofit} instance.
  */
 public interface Converter<F, T> {
+  MediaType STRING_MESSAGE = MediaType.parse("application/vnd+retrofit.ws+string");
+  MediaType BYTESTRING_MESSAGE = MediaType.parse("application/vnd+retrofit.ws+bytestring");
+
   T convert(F value) throws IOException;
 
   /** Creates {@link Converter} instances based on a type and target usage. */
@@ -74,6 +78,16 @@ public interface Converter<F, T> {
      */
     public @Nullable Converter<?, String> stringConverter(Type type, Annotation[] annotations,
         Retrofit retrofit) {
+      return null;
+    }
+
+    public @Nullable Converter<?, RequestBody> outgoingMessageConverter(Type type,
+        Annotation[] annotations, Retrofit retrofit) {
+      return null;
+    }
+
+    public @Nullable Converter<ResponseBody, ?> incomingMessageConverter(Type type,
+        Annotation[] annotations, Retrofit retrofit) {
       return null;
     }
 
