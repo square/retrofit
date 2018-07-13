@@ -65,7 +65,7 @@ import static org.junit.Assert.fail;
 
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
 public final class RequestFactoryTest {
-  private static final MediaType TEXT_PLAIN = MediaType.parse("text/plain");
+  private static final MediaType TEXT_PLAIN = MediaType.get("text/plain");
 
   @Test public void customMethodNoBody() {
     class Example {
@@ -89,7 +89,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("CUSTOM2");
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo");
@@ -742,7 +742,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
@@ -757,7 +757,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("PUT");
     assertThat(request.headers().size()).isZero();
@@ -772,7 +772,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.method()).isEqualTo("PATCH");
     assertThat(request.headers().size()).isZero();
@@ -1322,10 +1322,10 @@ public final class RequestFactoryTest {
       }
     }
 
-    Request request = buildRequest(Example.class, HttpUrl.parse("http://example.com/foo/bar/"));
+    Request request = buildRequest(Example.class, HttpUrl.get("http://example.com/foo/bar/"));
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
-    assertThat(request.url()).isEqualTo(HttpUrl.parse("http://example.com/foo/bar/"));
+    assertThat(request.url()).isEqualTo(HttpUrl.get("http://example.com/foo/bar/"));
     assertThat(request.body()).isNull();
   }
 
@@ -1470,7 +1470,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, "http://example.com/foo/bar", body);
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
@@ -1561,7 +1561,7 @@ public final class RequestFactoryTest {
     }
 
     Request request = buildRequest(Example.class, "pong", RequestBody.create(
-        MediaType.parse("text/plain"), "kat"));
+        TEXT_PLAIN, "kat"));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
@@ -1886,7 +1886,7 @@ public final class RequestFactoryTest {
     }
 
     Request request = buildRequest(Example.class, "pong", RequestBody.create(
-        MediaType.parse("text/plain"), "kat"));
+        TEXT_PLAIN, "kat"));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
@@ -2484,7 +2484,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
   }
@@ -2497,13 +2497,14 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     try {
       buildRequest(Example.class, body);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Malformed content type: hello, world!\n"
           + "    for method Example.method");
+      assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class); // OkHttp's cause.
     }
   }
 
@@ -2526,7 +2527,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "Plain");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "Plain");
     Request request = buildRequest(Example.class, "text/not-plain", body);
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
   }
@@ -2538,12 +2539,13 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    RequestBody body = RequestBody.create(MediaType.parse("text/plain"), "hi");
+    RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     try {
       buildRequest(Example.class, "hello, world!", body);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Malformed content type: hello, world!");
+      assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class); // OkHttp's cause.
     }
   }
 

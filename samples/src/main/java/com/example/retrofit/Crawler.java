@@ -100,7 +100,7 @@ public final class Crawler {
         .build();
 
     Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(HttpUrl.parse("https://example.com/"))
+        .baseUrl(HttpUrl.get("https://example.com/"))
         .addConverterFactory(PageAdapter.FACTORY)
         .client(okHttpClient)
         .build();
@@ -108,7 +108,7 @@ public final class Crawler {
     PageService pageService = retrofit.create(PageService.class);
 
     Crawler crawler = new Crawler(pageService);
-    crawler.crawlPage(HttpUrl.parse(args[0]));
+    crawler.crawlPage(HttpUrl.get(args[0]));
   }
 
   interface PageService {

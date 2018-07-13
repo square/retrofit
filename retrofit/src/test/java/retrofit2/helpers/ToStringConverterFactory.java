@@ -25,7 +25,7 @@ import retrofit2.Converter;
 import retrofit2.Retrofit;
 
 public class ToStringConverterFactory extends Converter.Factory {
-  static final MediaType MEDIA_TYPE = MediaType.parse("text/plain");
+  static final MediaType MEDIA_TYPE = MediaType.get("text/plain");
 
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,

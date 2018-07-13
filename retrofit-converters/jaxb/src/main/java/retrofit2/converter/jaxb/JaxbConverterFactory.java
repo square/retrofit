@@ -32,7 +32,7 @@ import retrofit2.Retrofit;
  * ignored.
  */
 public final class JaxbConverterFactory extends Converter.Factory {
-  static final MediaType XML = MediaType.parse("application/xml; charset=utf-8");
+  static final MediaType XML = MediaType.get("application/xml; charset=utf-8");
 
   /** Create an instance using a default {@link JAXBContext} instance for conversion. */
   public static JaxbConverterFactory create() {
