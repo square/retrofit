@@ -448,11 +448,7 @@ public final class Retrofit {
      */
     public Builder baseUrl(String baseUrl) {
       checkNotNull(baseUrl, "baseUrl == null");
-      HttpUrl httpUrl = HttpUrl.parse(baseUrl);
-      if (httpUrl == null) {
-        throw new IllegalArgumentException("Illegal URL: " + baseUrl);
-      }
-      return baseUrl(httpUrl);
+      return baseUrl(HttpUrl.get(baseUrl));
     }
 
     /**

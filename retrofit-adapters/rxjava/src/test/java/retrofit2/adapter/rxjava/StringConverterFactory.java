@@ -39,7 +39,7 @@ final class StringConverterFactory extends Converter.Factory {
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     return new Converter<String, RequestBody>() {
       @Override public RequestBody convert(String value) throws IOException {
-        return RequestBody.create(MediaType.parse("text/plain"), value);
+        return RequestBody.create(MediaType.get("text/plain"), value);
       }
     };
   }

@@ -275,11 +275,11 @@ final class RequestFactory {
         String headerName = header.substring(0, colon);
         String headerValue = header.substring(colon + 1).trim();
         if ("Content-Type".equalsIgnoreCase(headerName)) {
-          MediaType type = MediaType.parse(headerValue);
-          if (type == null) {
-            throw methodError(method, "Malformed content type: %s", headerValue);
+          try {
+            contentType = MediaType.get(headerValue);
+          } catch (IllegalArgumentException e) {
+            throw methodError(method, e, "Malformed content type: %s", headerValue);
           }
-          contentType = type;
         } else {
           builder.add(headerName, headerValue);
         }

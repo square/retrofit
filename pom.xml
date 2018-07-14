@@ -49,7 +49,7 @@
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
-    <okhttp.version>3.10.0</okhttp.version>
+    <okhttp.version>3.11.0</okhttp.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
 
     <!-- Adapter Dependencies -->
