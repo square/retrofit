@@ -22,8 +22,8 @@
             <menu>
               <ul>
                 <li><a href="#download" class="menu download">Download <span class="version-tag">Latest</span></a></li>
-                <li><a href="http://github.com/square/retrofit" data-title="View GitHub Project" class="menu github"><img src="static/icon-github.png" alt="GitHub"/></a></li>
-                <li><a href="http://square.github.io/" data-title="Square Open Source Portal" class="menu square"><img src="static/icon-square.png" alt="Square"/></a></li>
+                <li><a href="https://github.com/square/retrofit" data-title="View GitHub Project" class="menu github"><img src="static/icon-github.png" alt="GitHub"/></a></li>
+                <li><a href="https://square.github.io/" data-title="Square Open Source Portal" class="menu square"><img src="static/icon-square.png" alt="Square"/></a></li>
               </ul>
             </menu>
           </div>
@@ -120,6 +120,9 @@ Call&lt;User> getUser(@Path("username") String username);</pre>
               <p>A request Header can be updated dynamically using the <code>@Header</code> annotation. A corresponding parameter must be provided to the <code>@Header</code>. If the value is null, the header will be omitted. Otherwise, <code>toString</code> will be called on the value, and the result used.</p>
               <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
+              <p>Similar to query parameters, for complex header combinations, a <code>Map</code> can be used.
+			  <pre class="prettyprint">@GET("user")
+Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
               <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
 
               <h4>Synchronous vs. Asynchronous</h4>
@@ -157,7 +160,7 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
             <section id="download">
               <h3>Download</h3>
               <p><a href="https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
-              <p>The source code to the Retrofit, its samples, and this website is <a href="http://github.com/square/retrofit">available on GitHub</a>.</p>
+              <p>The source code to the Retrofit, its samples, and this website is <a href="https://github.com/square/retrofit">available on GitHub</a>.</p>
               <h4>Maven</h4>
               <pre class="prettyprint">&lt;dependency>
   &lt;groupId>com.squareup.retrofit2&lt;/groupId>
@@ -166,30 +169,20 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
 &lt;/dependency></pre>
               <h4>Gradle</h4>
               <pre class="prettyprint">
-compile 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
+implementation 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(insert latest version)</em></span>'
 </pre>
               <p>Retrofit requires at minimum Java 7 or Android 2.3.</p>
 
-              <h4>ProGuard</h4>
-              <p>If you are using ProGuard in your project add the following lines to your configuration:</p>
-              <pre class="prettyprint">
-# Platform calls Class.forName on types which do not exist on Android to determine platform.
--dontnote retrofit2.Platform
-# Platform used when running on Java 8 VMs. Will not be used at runtime.
--dontwarn retrofit2.Platform$Java8
-# Retain generic type information for use by reflection by converters and adapters.
--keepattributes Signature
-# Retain declared checked exceptions for use by a Proxy instance.
--keepattributes Exceptions
-</pre>
-            <p>Retrofit uses <a href="https://github.com/square/okio">Okio</a> under the hood, so you may want to look at its <a href="https://github.com/square/okio#proguard">ProGuard rules</a> as well.</p>
+              <h4>R8 / ProGuard</h4>
+              <p>If you are using R8 or ProGuard add the options from <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro">this file</a>.</p>
+              <p>You might also need rules for OkHttp and Okio which are dependencies of this library.</p>
             </section>
 
             <section id="contributing">
               <h3>Contributing</h3>
               <p>If you would like to contribute code you can do so through GitHub by forking the repository and sending a pull request.</p>
               <p>When submitting code, please make every effort to follow existing conventions and style in order to keep the code as readable as possible. Please also make sure your code compiles by running <code>mvn clean verify</code>.</p>
-              <p>Before your code can be accepted into the project you must also sign the <a href="http://squ.re/sign-the-cla">Individual Contributor License Agreement (CLA)</a>.</p>
+              <p>Before your code can be accepted into the project you must also sign the <a href="https://squ.re/sign-the-cla">Individual Contributor License Agreement (CLA)</a>.</p>
             </section>
 
             <section id="license">
@@ -221,7 +214,7 @@ limitations under the License.</pre>
               </ul>
               <ul class="nav nav-pills nav-stacked secondary">
                 <li><a href="2.x/retrofit/">Javadoc</a></li>
-                <li><a href="http://stackoverflow.com/questions/tagged/retrofit?sort=active">StackOverflow</a></li>
+                <li><a href="https://stackoverflow.com/questions/tagged/retrofit?sort=active">StackOverflow</a></li>
               </ul>
             </div>
           </div>
