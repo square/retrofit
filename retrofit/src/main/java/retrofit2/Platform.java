@@ -88,6 +88,14 @@ class Platform {
   }
 
   static class Android extends Platform {
+    @IgnoreJRERequirement // Guarded by API check.
+    @Override boolean isDefaultMethod(Method method) {
+      if (Build.VERSION.SDK_INT < 24) {
+        return false;
+      }
+      return method.isDefault();
+    }
+
     @Override public Executor defaultCallbackExecutor() {
       return new MainThreadExecutor();
     }
