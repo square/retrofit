@@ -127,6 +127,8 @@ final class RequestFactory {
     boolean gotBody;
     boolean gotPath;
     boolean gotQuery;
+    boolean gotQueryName;
+    boolean gotQueryMap;
     boolean gotUrl;
     String httpMethod;
     boolean hasBody;
@@ -322,7 +324,13 @@ final class RequestFactory {
           throw parameterError(method, p, "@Path parameters may not be used with @Url.");
         }
         if (gotQuery) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @Query");
+          throw parameterError(method, p, "A @Url parameter must not come after a @Query.");
+        }
+        if (gotQueryName) {
+          throw parameterError(method, p, "A @Url parameter must not come after a @QueryName.");
+        }
+        if (gotQueryMap) {
+          throw parameterError(method, p, "A @Url parameter must not come after a @QueryMap.");
         }
         if (relativeUrl != null) {
           throw parameterError(method, p, "@Url cannot be used with @%s URL", httpMethod);
@@ -343,6 +351,12 @@ final class RequestFactory {
       } else if (annotation instanceof Path) {
         if (gotQuery) {
           throw parameterError(method, p, "A @Path parameter must not come after a @Query.");
+        }
+        if (gotQueryName) {
+          throw parameterError(method, p, "A @Path parameter must not come after a @QueryName.");
+        }
+        if (gotQueryMap) {
+          throw parameterError(method, p, "A @Path parameter must not come after a @QueryMap.");
         }
         if (gotUrl) {
           throw parameterError(method, p, "@Path parameters may not be used with @Url.");
@@ -395,7 +409,7 @@ final class RequestFactory {
         boolean encoded = query.encoded();
 
         Class<?> rawParameterType = Utils.getRawType(type);
-        gotQuery = true;
+        gotQueryName = true;
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
           if (!(type instanceof ParameterizedType)) {
             throw parameterError(method, p, rawParameterType.getSimpleName()
@@ -421,6 +435,7 @@ final class RequestFactory {
 
       } else if (annotation instanceof QueryMap) {
         Class<?> rawParameterType = Utils.getRawType(type);
+        gotQueryMap = true;
         if (!Map.class.isAssignableFrom(rawParameterType)) {
           throw parameterError(method, p, "@QueryMap parameter type must be Map.");
         }
