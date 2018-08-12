@@ -1005,6 +1005,40 @@ public final class RequestFactoryTest {
     }
   }
 
+  @Test public void getWithQueryNameThenPathThrows() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Call<ResponseBody> method(@QueryName String kit, @Path("ping") String ping) {
+        throw new AssertionError();
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "kat", "pong");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("A @Path parameter must not come after a @QueryName. (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithQueryMapThenPathThrows() {
+    class Example {
+      @GET("/foo/bar/{ping}/") //
+      Call<ResponseBody> method(@QueryMap Map<String, String> queries, @Path("ping") String ping) {
+        throw new AssertionError();
+      }
+    }
+
+    try {
+      buildRequest(Example.class, Collections.singletonMap("kit", "kat"), "pong");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("A @Path parameter must not come after a @QueryMap. (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
   @Test public void getWithPathAndQueryQuestionMarkParam() {
     class Example {
       @GET("/foo/bar/{ping}/") //
@@ -1444,7 +1478,41 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, "hey", "foo/bar/");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("A @Url parameter must not come after a @Query (parameter #2)\n"
+      assertThat(e).hasMessage("A @Url parameter must not come after a @Query. (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithQueryNameThenUrlThrows() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@QueryName String name, @Url String url) {
+        throw new AssertionError();
+      }
+    }
+
+    try {
+      buildRequest(Example.class, Collections.singletonMap("kit", "kat"), "foo/bar/");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("A @Url parameter must not come after a @QueryName. (parameter #2)\n"
+          + "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithQueryMapThenUrlThrows() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@QueryMap Map<String, String> queries, @Url String url) {
+        throw new AssertionError();
+      }
+    }
+
+    try {
+      buildRequest(Example.class, Collections.singletonMap("kit", "kat"), "foo/bar/");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("A @Url parameter must not come after a @QueryMap. (parameter #2)\n"
           + "    for method Example.method");
     }
   }
