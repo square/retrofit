@@ -46,6 +46,7 @@
 
     <!-- Compilation -->
     <java.version>1.7</java.version>
+    <kotlin.version>1.2.60</kotlin.version>
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
@@ -107,6 +108,11 @@
         <groupId>com.google.android</groupId>
         <artifactId>android</artifactId>
         <version>${android.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-stdlib</artifactId>
+        <version>${kotlin.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.mojo</groupId>
