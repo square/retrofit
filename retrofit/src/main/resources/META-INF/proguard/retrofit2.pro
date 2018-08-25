@@ -1,5 +1,5 @@
-# Retain generic type information for use by reflection by converters and adapters.
--keepattributes Signature
+# Retrofit does reflection on generic parameters and InnerClass is required to use Signature.
+-keepattributes Signature, InnerClasses
 
 # Retain service method parameters when optimizing.
 -keepclassmembers,allowshrinking,allowobfuscation interface * {
