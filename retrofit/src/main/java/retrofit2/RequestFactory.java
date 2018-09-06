@@ -171,18 +171,7 @@ final class RequestFactory {
       int parameterCount = parameterAnnotationsArray.length;
       parameterHandlers = new ParameterHandler<?>[parameterCount];
       for (int p = 0; p < parameterCount; p++) {
-        Type parameterType = parameterTypes[p];
-        if (Utils.hasUnresolvableType(parameterType)) {
-          throw parameterError(method, p,
-              "Parameter type must not include a type variable or wildcard: %s", parameterType);
-        }
-
-        Annotation[] parameterAnnotations = parameterAnnotationsArray[p];
-        if (parameterAnnotations == null) {
-          throw parameterError(method, p, "No Retrofit annotation found.");
-        }
-
-        parameterHandlers[p] = parseParameter(p, parameterType, parameterAnnotations);
+        parameterHandlers[p] = parseParameter(p, parameterTypes[p], parameterAnnotationsArray[p]);
       }
 
       if (relativeUrl == null && !gotUrl) {
@@ -290,21 +279,24 @@ final class RequestFactory {
     }
 
     private ParameterHandler<?> parseParameter(
-        int p, Type parameterType, Annotation[] annotations) {
+        int p, Type parameterType, @Nullable Annotation[] annotations) {
       ParameterHandler<?> result = null;
-      for (Annotation annotation : annotations) {
-        ParameterHandler<?> annotationAction = parseParameterAnnotation(
-            p, parameterType, annotations, annotation);
+      if (annotations != null) {
+        for (Annotation annotation : annotations) {
+          ParameterHandler<?> annotationAction =
+              parseParameterAnnotation(p, parameterType, annotations, annotation);
 
-        if (annotationAction == null) {
-          continue;
+          if (annotationAction == null) {
+            continue;
+          }
+
+          if (result != null) {
+            throw parameterError(method, p,
+                "Multiple Retrofit annotations found, only one allowed.");
+          }
+
+          result = annotationAction;
         }
-
-        if (result != null) {
-          throw parameterError(method, p, "Multiple Retrofit annotations found, only one allowed.");
-        }
-
-        result = annotationAction;
       }
 
       if (result == null) {
@@ -317,6 +309,7 @@ final class RequestFactory {
     private ParameterHandler<?> parseParameterAnnotation(
         int p, Type type, Annotation[] annotations, Annotation annotation) {
       if (annotation instanceof Url) {
+        validateResolvableType(p, type);
         if (gotUrl) {
           throw parameterError(method, p, "Multiple @Url method annotations found.");
         }
@@ -349,6 +342,7 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof Path) {
+        validateResolvableType(p, type);
         if (gotQuery) {
           throw parameterError(method, p, "A @Path parameter must not come after a @Query.");
         }
@@ -375,6 +369,7 @@ final class RequestFactory {
         return new ParameterHandler.Path<>(name, converter, path.encoded());
 
       } else if (annotation instanceof Query) {
+        validateResolvableType(p, type);
         Query query = (Query) annotation;
         String name = query.value();
         boolean encoded = query.encoded();
@@ -405,6 +400,7 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof QueryName) {
+        validateResolvableType(p, type);
         QueryName query = (QueryName) annotation;
         boolean encoded = query.encoded();
 
@@ -434,6 +430,7 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof QueryMap) {
+        validateResolvableType(p, type);
         Class<?> rawParameterType = Utils.getRawType(type);
         gotQueryMap = true;
         if (!Map.class.isAssignableFrom(rawParameterType)) {
@@ -456,6 +453,7 @@ final class RequestFactory {
         return new ParameterHandler.QueryMap<>(valueConverter, ((QueryMap) annotation).encoded());
 
       } else if (annotation instanceof Header) {
+        validateResolvableType(p, type);
         Header header = (Header) annotation;
         String name = header.value();
 
@@ -484,6 +482,7 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof HeaderMap) {
+        validateResolvableType(p, type);
         Class<?> rawParameterType = Utils.getRawType(type);
         if (!Map.class.isAssignableFrom(rawParameterType)) {
           throw parameterError(method, p, "@HeaderMap parameter type must be Map.");
@@ -505,6 +504,7 @@ final class RequestFactory {
         return new ParameterHandler.HeaderMap<>(valueConverter);
 
       } else if (annotation instanceof Field) {
+        validateResolvableType(p, type);
         if (!isFormEncoded) {
           throw parameterError(method, p, "@Field parameters can only be used with form encoding.");
         }
@@ -539,6 +539,7 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof FieldMap) {
+        validateResolvableType(p, type);
         if (!isFormEncoded) {
           throw parameterError(method, p,
               "@FieldMap parameters can only be used with form encoding.");
@@ -565,6 +566,7 @@ final class RequestFactory {
         return new ParameterHandler.FieldMap<>(valueConverter, ((FieldMap) annotation).encoded());
 
       } else if (annotation instanceof Part) {
+        validateResolvableType(p, type);
         if (!isMultipart) {
           throw parameterError(method, p,
               "@Part parameters can only be used with multipart encoding.");
@@ -646,6 +648,7 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof PartMap) {
+        validateResolvableType(p, type);
         if (!isMultipart) {
           throw parameterError(method, p,
               "@PartMap parameters can only be used with multipart encoding.");
@@ -680,6 +683,7 @@ final class RequestFactory {
         return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
 
       } else if (annotation instanceof Body) {
+        validateResolvableType(p, type);
         if (isFormEncoded || isMultipart) {
           throw parameterError(method, p,
               "@Body parameters cannot be used with form or multi-part encoding.");
@@ -700,6 +704,13 @@ final class RequestFactory {
       }
 
       return null; // Not a Retrofit annotation.
+    }
+
+    private void validateResolvableType(int p, Type type) {
+      if (Utils.hasUnresolvableType(type)) {
+        throw parameterError(method, p,
+            "Parameter type must not include a type variable or wildcard: %s", type);
+      }
     }
 
     private void validatePathName(int p, String name) {
