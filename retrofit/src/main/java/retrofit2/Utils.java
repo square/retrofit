@@ -348,6 +348,14 @@ final class Utils {
     return paramType;
   }
 
+  static Type getParameterLowerBound(int index, ParameterizedType type) {
+    Type paramType = type.getActualTypeArguments()[index];
+    if (paramType instanceof WildcardType) {
+      return ((WildcardType) paramType).getLowerBounds()[0];
+    }
+    return paramType;
+  }
+
   static boolean hasUnresolvableType(@Nullable Type type) {
     if (type instanceof Class<?>) {
       return false;

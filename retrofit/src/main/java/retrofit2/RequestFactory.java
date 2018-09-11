@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import kotlin.coroutines.Continuation;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -75,6 +76,7 @@ final class RequestFactory {
   private final boolean isFormEncoded;
   private final boolean isMultipart;
   private final ParameterHandler<?>[] parameterHandlers;
+  final boolean isKotlinSuspendFunction;
 
   RequestFactory(Builder builder) {
     method = builder.method;
@@ -87,6 +89,7 @@ final class RequestFactory {
     isFormEncoded = builder.isFormEncoded;
     isMultipart = builder.isMultipart;
     parameterHandlers = builder.parameterHandlers;
+    isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
   }
 
   okhttp3.Request create(Object[] args) throws IOException {
@@ -101,6 +104,11 @@ final class RequestFactory {
 
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl,
         headers, contentType, hasBody, isFormEncoded, isMultipart);
+
+    if (isKotlinSuspendFunction) {
+      // The Continuation is the last parameter and the handlers array contains null at that index.
+      argumentCount--;
+    }
 
     List<Object> argumentList = new ArrayList<>(argumentCount);
     for (int p = 0; p < argumentCount; p++) {
@@ -147,6 +155,7 @@ final class RequestFactory {
     MediaType contentType;
     Set<String> relativeUrlParamNames;
     ParameterHandler<?>[] parameterHandlers;
+    boolean isKotlinSuspendFunction;
 
     Builder(Retrofit retrofit, Method method) {
       this.retrofit = retrofit;
@@ -178,8 +187,9 @@ final class RequestFactory {
 
       int parameterCount = parameterAnnotationsArray.length;
       parameterHandlers = new ParameterHandler<?>[parameterCount];
-      for (int p = 0; p < parameterCount; p++) {
-        parameterHandlers[p] = parseParameter(p, parameterTypes[p], parameterAnnotationsArray[p]);
+      for (int p = 0, lastParameter = parameterCount - 1; p < parameterCount; p++) {
+        parameterHandlers[p] =
+            parseParameter(p, parameterTypes[p], parameterAnnotationsArray[p], p == lastParameter);
       }
 
       if (relativeUrl == null && !gotUrl) {
@@ -287,7 +297,7 @@ final class RequestFactory {
     }
 
     private ParameterHandler<?> parseParameter(
-        int p, Type parameterType, @Nullable Annotation[] annotations) {
+        int p, Type parameterType, @Nullable Annotation[] annotations, boolean allowContinuation) {
       ParameterHandler<?> result = null;
       if (annotations != null) {
         for (Annotation annotation : annotations) {
@@ -308,6 +318,15 @@ final class RequestFactory {
       }
 
       if (result == null) {
+        if (allowContinuation) {
+          try {
+            if (Utils.getRawType(parameterType) == Continuation.class) {
+              isKotlinSuspendFunction = true;
+              return null;
+            }
+          } catch (NoClassDefFoundError ignored) {
+          }
+        }
         throw parameterError(method, p, "No Retrofit annotation found.");
       }
 

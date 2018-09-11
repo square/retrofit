@@ -17,9 +17,14 @@ package retrofit2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
+import kotlin.coroutines.Continuation;
+import okhttp3.Call;
 import okhttp3.ResponseBody;
 
+import static retrofit2.Utils.getRawType;
 import static retrofit2.Utils.methodError;
 
 /** Adapts an invocation of an interface method into an HTTP call. */
@@ -31,13 +36,32 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
    */
   static <ResponseT, ReturnT> HttpServiceMethod<ResponseT, ReturnT> parseAnnotations(
       Retrofit retrofit, Method method, RequestFactory requestFactory) {
-    CallAdapter<ResponseT, ReturnT> callAdapter = createCallAdapter(retrofit, method);
-    Type responseType = callAdapter.responseType();
-    if (responseType == Response.class || responseType == okhttp3.Response.class) {
+    CallAdapter<ResponseT, ReturnT> callAdapter = null;
+    boolean continuationWantsResponse = false;
+    Type responseType;
+    if (requestFactory.isKotlinSuspendFunction) {
+      Type[] parameterTypes = method.getGenericParameterTypes();
+      Type continuationType = parameterTypes[parameterTypes.length - 1];
+      responseType = Utils.getParameterLowerBound(0, (ParameterizedType) continuationType);
+      if (getRawType(responseType) == Response.class && responseType instanceof ParameterizedType) {
+        // Unwrap the actual body type from Response<T>.
+        responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
+        continuationWantsResponse = true;
+      }
+    } else {
+      callAdapter = createCallAdapter(retrofit, method);
+      responseType = callAdapter.responseType();
+    }
+
+    if (responseType == okhttp3.Response.class) {
       throw methodError(method, "'"
-          + Utils.getRawType(responseType).getName()
+          + getRawType(responseType).getName()
           + "' is not a valid response body type. Did you mean ResponseBody?");
     }
+    if (responseType == Response.class) {
+      throw methodError(method, "Response must include generic type (e.g., Response<String>)");
+    }
+    // TODO support Unit for Kotlin?
     if (requestFactory.httpMethod.equals("HEAD") && !Void.class.equals(responseType)) {
       throw methodError(method, "HEAD method must use Void as response type.");
     }
@@ -46,7 +70,8 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
         createResponseConverter(retrofit, method, responseType);
 
     okhttp3.Call.Factory callFactory = retrofit.callFactory;
-    return new HttpServiceMethod<>(requestFactory, callFactory, callAdapter, responseConverter);
+    return new HttpServiceMethod<>(requestFactory, callFactory, callAdapter,
+        continuationWantsResponse, responseConverter);
   }
 
   private static <ResponseT, ReturnT> CallAdapter<ResponseT, ReturnT> createCallAdapter(
@@ -73,20 +98,41 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
 
   private final RequestFactory requestFactory;
   private final okhttp3.Call.Factory callFactory;
-  private final CallAdapter<ResponseT, ReturnT> callAdapter;
+  /** Null indicates a Kotlin coroutine service method. */
+  private final @Nullable CallAdapter<ResponseT, ReturnT> callAdapter;
+  /**
+   * True if the coroutine continuation should receive the full Response object. Only meaningful
+   * when {@link #callAdapter} is null.
+   */
+  private final boolean continuationWantsResponse;
   private final Converter<ResponseBody, ResponseT> responseConverter;
 
-  private HttpServiceMethod(RequestFactory requestFactory, okhttp3.Call.Factory callFactory,
-      CallAdapter<ResponseT, ReturnT> callAdapter,
+  private HttpServiceMethod(RequestFactory requestFactory, Call.Factory callFactory,
+      @Nullable CallAdapter<ResponseT, ReturnT> callAdapter, boolean continuationWantsResponse,
       Converter<ResponseBody, ResponseT> responseConverter) {
     this.requestFactory = requestFactory;
     this.callFactory = callFactory;
     this.callAdapter = callAdapter;
+    this.continuationWantsResponse = continuationWantsResponse;
     this.responseConverter = responseConverter;
   }
 
   @Override ReturnT invoke(Object[] args) {
-    return callAdapter.adapt(
-        new OkHttpCall<>(requestFactory, args, callFactory, responseConverter));
+    OkHttpCall<ResponseT> call =
+        new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
+
+    if (callAdapter != null) {
+      return callAdapter.adapt(call);
+    }
+
+    //noinspection ConstantConditions Suspension functions always have arguments.
+    Object continuation = args[args.length - 1];
+    if (continuationWantsResponse) {
+      //noinspection unchecked Guaranteed by parseAnnotations above.
+      return (ReturnT) KotlinExtensions.awaitResponse(call,
+          (Continuation<Response<ResponseT>>) continuation);
+    }
+    //noinspection unchecked Guaranteed by parseAnnotations above.
+    return (ReturnT) KotlinExtensions.await(call, (Continuation<ResponseT>) continuation);
   }
 }

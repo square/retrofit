@@ -29,6 +29,11 @@
       <artifactId>kotlin-stdlib</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-core</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>org.codehaus.mojo</groupId>
