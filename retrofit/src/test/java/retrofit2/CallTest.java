@@ -47,8 +47,6 @@ import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public final class CallTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -367,58 +365,6 @@ public final class CallTest {
 
     assertThat(failureRef.get()).isInstanceOf(UnsupportedOperationException.class)
         .hasMessage("I am broken!");
-  }
-
-  @Test public void http204SkipsConverter() throws IOException {
-    final Converter<ResponseBody, String> converter = spy(new Converter<ResponseBody, String>() {
-      @Override public String convert(ResponseBody value) throws IOException {
-        return value.string();
-      }
-    });
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ToStringConverterFactory() {
-          @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
-              Annotation[] annotations, Retrofit retrofit) {
-            return converter;
-          }
-        })
-        .build();
-    Service example = retrofit.create(Service.class);
-
-    server.enqueue(new MockResponse().setStatus("HTTP/1.1 204 Nothin"));
-
-    Response<String> response = example.getString().execute();
-    assertThat(response.code()).isEqualTo(204);
-    assertThat(response.body()).isNull();
-    verifyNoMoreInteractions(converter);
-  }
-
-  @Test public void http205SkipsConverter() throws IOException {
-    final Converter<ResponseBody, String> converter = spy(new Converter<ResponseBody, String>() {
-      @Override public String convert(ResponseBody value) throws IOException {
-        return value.string();
-      }
-    });
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ToStringConverterFactory() {
-          @Override
-          public Converter<ResponseBody, ?> responseBodyConverter(Type type,
-              Annotation[] annotations, Retrofit retrofit) {
-            return converter;
-          }
-        })
-        .build();
-    Service example = retrofit.create(Service.class);
-
-    server.enqueue(new MockResponse().setStatus("HTTP/1.1 205 Nothin"));
-
-    Response<String> response = example.getString().execute();
-    assertThat(response.code()).isEqualTo(205);
-    assertThat(response.body()).isNull();
-    verifyNoMoreInteractions(converter);
   }
 
   @Test public void executeCallOnce() throws IOException {
