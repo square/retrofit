@@ -47,6 +47,19 @@ public final class KotlinUnitTest {
     assertThat(response.body()).isSameAs(Unit.INSTANCE);
   }
 
+  @Test public void unitSucceedsOnEmptyResponse() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setResponseCode(204));
+
+    Response<Unit> response = example.empty().execute();
+    assertThat(response.isSuccessful()).isTrue();
+    assertThat(response.body()).isSameAs(Unit.INSTANCE);
+  }
+
   @Ignore("This is implicitly tested by integration tests of the adapters and converters")
   @Test public void unitMissingFromClasspath() {
   }
