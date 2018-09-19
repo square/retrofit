@@ -415,9 +415,12 @@ public final class Retrofit {
       // Remove the default BuiltInConverters instance added by build().
       converterFactories.remove(0);
 
-      callAdapterFactories.addAll(retrofit.callAdapterFactories);
-      // Remove the default, platform-aware call adapter added by build().
-      callAdapterFactories.remove(callAdapterFactories.size() - 1);
+      // Do not add the default, platform-aware call adapters added by build().
+      for (int i = 0,
+          size = retrofit.callAdapterFactories.size() - platform.defaultCallAdapterFactoriesSize();
+          i < size; i++) {
+        callAdapterFactories.add(retrofit.callAdapterFactories.get(i));
+      }
 
       callbackExecutor = retrofit.callbackExecutor;
       validateEagerly = retrofit.validateEagerly;
@@ -581,7 +584,7 @@ public final class Retrofit {
 
       // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
-      callAdapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
+      callAdapterFactories.addAll(platform.defaultCallAdapterFactories(callbackExecutor));
 
       // Make a defensive copy of the converters.
       List<Converter.Factory> converterFactories =
