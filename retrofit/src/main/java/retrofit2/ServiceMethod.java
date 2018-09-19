@@ -17,7 +17,6 @@ package retrofit2;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import javax.annotation.Nullable;
 
 import static retrofit2.Utils.methodError;
 
@@ -37,5 +36,5 @@ abstract class ServiceMethod<T> {
     return HttpServiceMethod.parseAnnotations(retrofit, method, requestFactory);
   }
 
-  abstract T invoke(@Nullable Object[] args);
+  abstract T invoke(Object[] args);
 }

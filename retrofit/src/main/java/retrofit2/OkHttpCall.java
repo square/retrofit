@@ -31,7 +31,7 @@ import static retrofit2.Utils.throwIfFatal;
 
 final class OkHttpCall<T> implements Call<T> {
   private final RequestFactory requestFactory;
-  private final @Nullable Object[] args;
+  private final Object[] args;
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, T> responseConverter;
 
@@ -44,7 +44,7 @@ final class OkHttpCall<T> implements Call<T> {
   @GuardedBy("this")
   private boolean executed;
 
-  OkHttpCall(RequestFactory requestFactory, @Nullable Object[] args,
+  OkHttpCall(RequestFactory requestFactory, Object[] args,
       okhttp3.Call.Factory callFactory, Converter<ResponseBody, T> responseConverter) {
     this.requestFactory = requestFactory;
     this.args = args;

@@ -133,6 +133,7 @@ public final class Retrofit {
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new InvocationHandler() {
           private final Platform platform = Platform.get();
+          private final Object[] emptyArgs = new Object[0];
 
           @Override public Object invoke(Object proxy, Method method, @Nullable Object[] args)
               throws Throwable {
@@ -143,7 +144,7 @@ public final class Retrofit {
             if (platform.isDefaultMethod(method)) {
               return platform.invokeDefaultMethod(method, service, proxy, args);
             }
-            return loadServiceMethod(method).invoke(args);
+            return loadServiceMethod(method).invoke(args != null ? args : emptyArgs);
           }
         });
   }

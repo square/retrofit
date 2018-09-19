@@ -85,14 +85,14 @@ final class RequestFactory {
     parameterHandlers = builder.parameterHandlers;
   }
 
-  okhttp3.Request create(@Nullable Object[] args) throws IOException {
+  okhttp3.Request create(Object[] args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
         contentType, hasBody, isFormEncoded, isMultipart);
 
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
-    int argumentCount = args != null ? args.length : 0;
+    int argumentCount = args.length;
     if (argumentCount != handlers.length) {
       throw new IllegalArgumentException("Argument count (" + argumentCount
           + ") doesn't match expected count (" + handlers.length + ")");
