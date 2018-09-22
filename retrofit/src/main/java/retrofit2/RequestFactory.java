@@ -21,8 +21,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -98,15 +99,18 @@ final class RequestFactory {
           + ") doesn't match expected count (" + handlers.length + ")");
     }
 
-    Invocation invocation = new Invocation(method, Arrays.asList(args));
-    RequestBuilder requestBuilder = new RequestBuilder(invocation, httpMethod, baseUrl, relativeUrl,
+    RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl,
         headers, contentType, hasBody, isFormEncoded, isMultipart);
 
+    List<Object> argumentList = new ArrayList<>(argumentCount);
     for (int p = 0; p < argumentCount; p++) {
+      argumentList.add(args[p]);
       handlers[p].apply(requestBuilder, args[p]);
     }
 
-    return requestBuilder.build();
+    return requestBuilder.get()
+        .tag(Invocation.class, new Invocation(method, argumentList))
+        .build();
   }
 
   /**

@@ -46,14 +46,13 @@ final class RequestBuilder {
   private @Nullable FormBody.Builder formBuilder;
   private @Nullable RequestBody body;
 
-  RequestBuilder(Invocation invocation, String method, HttpUrl baseUrl,
+  RequestBuilder(String method, HttpUrl baseUrl,
       @Nullable String relativeUrl, @Nullable Headers headers, @Nullable MediaType contentType,
       boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
-    this.requestBuilder = new Request.Builder()
-        .tag(Invocation.class, invocation);
+    this.requestBuilder = new Request.Builder();
     this.contentType = contentType;
     this.hasBody = hasBody;
 
@@ -187,7 +186,7 @@ final class RequestBuilder {
     this.body = body;
   }
 
-  Request build() {
+  Request.Builder get() {
     HttpUrl url;
     HttpUrl.Builder urlBuilder = this.urlBuilder;
     if (urlBuilder != null) {
@@ -226,8 +225,7 @@ final class RequestBuilder {
 
     return requestBuilder
         .url(url)
-        .method(method, body)
-        .build();
+        .method(method, body);
   }
 
   private static class ContentTypeOverridingRequestBody extends RequestBody {

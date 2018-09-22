@@ -58,7 +58,7 @@ public final class InvocationTest {
 
   @Test public void nullMethod() {
     try {
-      new Invocation(null, Arrays.asList("one", "two"));
+      Invocation.of(null, Arrays.asList("one", "two"));
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessage("method == null");
@@ -67,7 +67,7 @@ public final class InvocationTest {
 
   @Test public void nullArguments() {
     try {
-      new Invocation(Example.class.getDeclaredMethods()[0], null);
+      Invocation.of(Example.class.getDeclaredMethods()[0], null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessage("arguments == null");
@@ -76,7 +76,7 @@ public final class InvocationTest {
 
   @Test public void argumentsAreImmutable() {
     List<String> mutableList = new ArrayList<>(Arrays.asList("one", "two"));
-    Invocation invocation = new Invocation(Example.class.getDeclaredMethods()[0], mutableList);
+    Invocation invocation = Invocation.of(Example.class.getDeclaredMethods()[0], mutableList);
     mutableList.add("three");
     assertThat(invocation.arguments()).isEqualTo(Arrays.asList("one", "two"));
     try {

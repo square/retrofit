@@ -50,15 +50,19 @@ import static retrofit2.Utils.checkNotNull;
  * types for parameters!
  */
 public final class Invocation {
+  public static Invocation of(Method method, List<?> arguments) {
+    checkNotNull(method, "method == null");
+    checkNotNull(arguments, "arguments == null");
+    return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
+  }
+
   private final Method method;
   private final List<?> arguments;
 
-  public Invocation(Method method, List<?> arguments) {
-    checkNotNull(method, "method == null");
-    checkNotNull(arguments, "arguments == null");
-
+  /** Trusted constructor assumes ownership of {@code arguments}. */
+  Invocation(Method method, List<?> arguments) {
     this.method = method;
-    this.arguments = Collections.unmodifiableList(new ArrayList<>(arguments)); // Immutable copy.
+    this.arguments = Collections.unmodifiableList(arguments);
   }
 
   public Method method() {
