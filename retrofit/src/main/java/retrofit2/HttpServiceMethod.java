@@ -18,7 +18,6 @@ package retrofit2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 
 import static retrofit2.Utils.methodError;
@@ -86,7 +85,7 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
     this.responseConverter = responseConverter;
   }
 
-  @Override ReturnT invoke(@Nullable Object[] args) {
+  @Override ReturnT invoke(Object[] args) {
     return callAdapter.adapt(
         new OkHttpCall<>(requestFactory, args, callFactory, responseConverter));
   }
