@@ -46,13 +46,14 @@ final class RequestBuilder {
   private @Nullable FormBody.Builder formBuilder;
   private @Nullable RequestBody body;
 
-  RequestBuilder(String method, HttpUrl baseUrl, @Nullable String relativeUrl,
-      @Nullable Headers headers, @Nullable MediaType contentType, boolean hasBody,
-      boolean isFormEncoded, boolean isMultipart) {
+  RequestBuilder(Invocation invocation, String method, HttpUrl baseUrl,
+      @Nullable String relativeUrl, @Nullable Headers headers, @Nullable MediaType contentType,
+      boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
-    this.requestBuilder = new Request.Builder();
+    this.requestBuilder = new Request.Builder()
+        .tag(Invocation.class, invocation);
     this.contentType = contentType;
     this.hasBody = hasBody;
 
