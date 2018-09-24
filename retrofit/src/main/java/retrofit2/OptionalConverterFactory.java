@@ -13,43 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit.converter.java8;
+package retrofit2;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
-import retrofit2.Converter;
-import retrofit2.Retrofit;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /**
- * @deprecated Retrofit includes support for Optional. This no longer needs to be added to the
- * Retrofit instance explicitly.
- * <p>
  * A {@linkplain Converter.Factory converter} for {@code Optional<T>} which delegates to another
  * converter to deserialize {@code T} and then wraps it into {@link Optional}.
  */
-@Deprecated
-public final class Java8OptionalConverterFactory extends Converter.Factory {
-  public static Java8OptionalConverterFactory create() {
-    return new Java8OptionalConverterFactory();
-  }
+@IgnoreJRERequirement
+final class OptionalConverterFactory extends Converter.Factory {
+  static final Converter.Factory INSTANCE = new OptionalConverterFactory();
 
-  private Java8OptionalConverterFactory() {
-  }
-
-  @Nullable @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(type) != Optional.class) {
       return null;
     }
 
     Type innerType = getParameterUpperBound(0, (ParameterizedType) type);
     Converter<ResponseBody, Object> delegate =
-        retrofit.nextResponseBodyConverter(this, innerType, annotations);
+        retrofit.responseBodyConverter(innerType, annotations);
     return new OptionalConverter<>(delegate);
+  }
+
+  @IgnoreJRERequirement
+  static final class OptionalConverter<T> implements Converter<ResponseBody, Optional<T>> {
+    final Converter<ResponseBody, T> delegate;
+
+    OptionalConverter(Converter<ResponseBody, T> delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override public Optional<T> convert(ResponseBody value) throws IOException {
+      return Optional.ofNullable(delegate.convert(value));
+    }
   }
 }

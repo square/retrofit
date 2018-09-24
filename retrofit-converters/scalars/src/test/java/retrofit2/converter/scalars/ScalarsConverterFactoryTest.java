@@ -26,7 +26,6 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -93,7 +92,8 @@ public final class ScalarsConverterFactoryTest {
           + "Could not locate RequestBody converter for class java.lang.Object.\n"
           + "  Tried:\n"
           + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.converter.scalars.ScalarsConverterFactory");
+          + "   * retrofit2.converter.scalars.ScalarsConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
   }
 
@@ -232,7 +232,8 @@ public final class ScalarsConverterFactoryTest {
           + "Could not locate ResponseBody converter for class java.lang.Object.\n"
           + "  Tried:\n"
           + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.converter.scalars.ScalarsConverterFactory");
+          + "   * retrofit2.converter.scalars.ScalarsConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
   }
 

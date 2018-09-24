@@ -411,9 +411,12 @@ public final class Retrofit {
       callFactory = retrofit.callFactory;
       baseUrl = retrofit.baseUrl;
 
-      converterFactories.addAll(retrofit.converterFactories);
-      // Remove the default BuiltInConverters instance added by build().
-      converterFactories.remove(0);
+      // Do not add the default BuiltIntConverters and platform-aware converters added by build().
+      for (int i = 1,
+          size = retrofit.converterFactories.size() - platform.defaultConverterFactoriesSize();
+          i < size; i++) {
+        converterFactories.add(retrofit.converterFactories.get(i));
+      }
 
       // Do not add the default, platform-aware call adapters added by build().
       for (int i = 0,
@@ -587,13 +590,14 @@ public final class Retrofit {
       callAdapterFactories.addAll(platform.defaultCallAdapterFactories(callbackExecutor));
 
       // Make a defensive copy of the converters.
-      List<Converter.Factory> converterFactories =
-          new ArrayList<>(1 + this.converterFactories.size());
+      List<Converter.Factory> converterFactories = new ArrayList<>(
+          1 + this.converterFactories.size() + platform.defaultConverterFactoriesSize());
 
       // Add the built-in converter factory first. This prevents overriding its behavior but also
       // ensures correct behavior when using converters that consume all types.
       converterFactories.add(new BuiltInConverters());
       converterFactories.addAll(this.converterFactories);
+      converterFactories.addAll(platform.defaultConverterFactories());
 
       return new Retrofit(callFactory, baseUrl, unmodifiableList(converterFactories),
           unmodifiableList(callAdapterFactories), callbackExecutor, validateEagerly);
