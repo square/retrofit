@@ -364,6 +364,7 @@ public final class RetrofitTest {
       assertThat(e.getCause()).hasMessage(""
           + "Could not locate call adapter for java.util.concurrent.Future<java.lang.String>.\n"
           + "  Tried:\n"
+          + "   * retrofit2.CompletableFutureCallAdapterFactory\n"
           + "   * retrofit2.DefaultCallAdapterFactory");
     }
   }
@@ -1183,6 +1184,7 @@ public final class RetrofitTest {
           + "Could not locate call adapter for class java.lang.String.\n"
           + "  Tried:\n"
           + "   * retrofit2.helpers.NonMatchingCallAdapterFactory\n"
+          + "   * retrofit2.CompletableFutureCallAdapterFactory\n"
           + "   * retrofit2.DefaultCallAdapterFactory");
     }
 
@@ -1215,6 +1217,7 @@ public final class RetrofitTest {
           + "   * retrofit2.helpers.DelegatingCallAdapterFactory\n"
           + "  Tried:\n"
           + "   * retrofit2.helpers.NonMatchingCallAdapterFactory\n"
+          + "   * retrofit2.CompletableFutureCallAdapterFactory\n"
           + "   * retrofit2.DefaultCallAdapterFactory");
     }
 

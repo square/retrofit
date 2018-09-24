@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.adapter.java8;
+package retrofit2;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
-import retrofit2.Call;
-import retrofit2.CallAdapter;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /**
- * @deprecated Retrofit includes support for CompletableFuture. This no longer needs to be added to
- * the Retrofit instance explicitly.
- *
  * A {@linkplain CallAdapter.Factory call adapter} which creates Java 8 futures.
  * <p>
  * Adding this class to {@link Retrofit} allows you to return {@link CompletableFuture} from
@@ -50,14 +43,9 @@ import retrofit2.Retrofit;
  * errors</li>
  * </ul>
  */
-@Deprecated
-public final class Java8CallAdapterFactory extends CallAdapter.Factory {
-  public static Java8CallAdapterFactory create() {
-    return new Java8CallAdapterFactory();
-  }
-
-  private Java8CallAdapterFactory() {
-  }
+@IgnoreJRERequirement
+final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
+  static final CallAdapter.Factory INSTANCE = new CompletableFutureCallAdapterFactory();
 
   @Override
   public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
@@ -84,6 +72,7 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
     return new ResponseCallAdapter<>(responseType);
   }
 
+  @IgnoreJRERequirement
   private static final class BodyCallAdapter<R> implements CallAdapter<R, CompletableFuture<R>> {
     private final Type responseType;
 
@@ -123,6 +112,7 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
     }
   }
 
+  @IgnoreJRERequirement
   private static final class ResponseCallAdapter<R>
       implements CallAdapter<R, CompletableFuture<Response<R>>> {
     private final Type responseType;
