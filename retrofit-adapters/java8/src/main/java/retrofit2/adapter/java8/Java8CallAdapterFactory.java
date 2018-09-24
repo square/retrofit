@@ -29,7 +29,7 @@ import retrofit2.Retrofit;
 /**
  * @deprecated Retrofit includes support for CompletableFuture. This no longer needs to be added to
  * the Retrofit instance explicitly.
- *
+ * <p>
  * A {@linkplain CallAdapter.Factory call adapter} which creates Java 8 futures.
  * <p>
  * Adding this class to {@link Retrofit} allows you to return {@link CompletableFuture} from
