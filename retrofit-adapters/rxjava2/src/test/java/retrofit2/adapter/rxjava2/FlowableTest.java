@@ -184,4 +184,19 @@ public final class FlowableTest {
     subscriber.request(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP or notifications.
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Flowable<String> observable = service.body();
+
+    RecordingSubscriber<Object> subscriber1 = subscriberRule.create();
+    observable.subscribe(subscriber1);
+    subscriber1.assertValue("Hi").assertComplete();
+
+    RecordingSubscriber<Object> subscriber2 = subscriberRule.create();
+    observable.subscribe(subscriber2);
+    subscriber2.assertValue("Hey").assertComplete();
+  }
 }
