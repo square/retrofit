@@ -71,4 +71,19 @@ public final class CompletableTest {
     service.completable().unsafeSubscribe(subscriber);
     subscriber.assertError(IOException.class);
   }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Completable observable = service.completable();
+
+    RecordingSubscriber<String> subscriber1 = subscriberRule.create();
+    observable.subscribe(subscriber1);
+    subscriber1.assertCompleted();
+
+    RecordingSubscriber<String> subscriber2 = subscriberRule.create();
+    observable.subscribe(subscriber2);
+    subscriber2.assertCompleted();
+  }
 }

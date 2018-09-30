@@ -191,4 +191,19 @@ public final class ObservableTest {
     subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Observable<String> observable = service.body();
+
+    RecordingSubscriber<String> subscriber1 = subscriberRule.create();
+    observable.subscribe(subscriber1);
+    subscriber1.assertValue("Hi").assertCompleted();
+
+    RecordingSubscriber<String> subscriber2 = subscriberRule.create();
+    observable.subscribe(subscriber2);
+    subscriber2.assertValue("Hey").assertCompleted();
+  }
 }
