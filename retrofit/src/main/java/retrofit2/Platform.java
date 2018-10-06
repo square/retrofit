@@ -27,6 +27,7 @@ import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
@@ -67,6 +68,14 @@ class Platform {
 
   int defaultCallAdapterFactoriesSize() {
     return 1;
+  }
+
+  List<? extends Converter.Factory> defaultConverterFactories() {
+    return emptyList();
+  }
+
+  int defaultConverterFactoriesSize() {
+    return 0;
   }
 
   boolean isDefaultMethod(Method method) {
@@ -110,6 +119,14 @@ class Platform {
 
     @Override int defaultCallAdapterFactoriesSize() {
       return 2;
+    }
+
+    @Override List<? extends Converter.Factory> defaultConverterFactories() {
+      return singletonList(OptionalConverterFactory.INSTANCE);
+    }
+
+    @Override int defaultConverterFactoriesSize() {
+      return 1;
     }
   }
 

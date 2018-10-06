@@ -493,7 +493,8 @@ public final class RetrofitTest {
       assertThat(e.getCause()).hasMessage(""
           + "Could not locate RequestBody converter for class java.lang.String.\n"
           + "  Tried:\n"
-          + "   * retrofit2.BuiltInConverters");
+          + "   * retrofit2.BuiltInConverters\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
   }
 
@@ -515,7 +516,8 @@ public final class RetrofitTest {
       assertThat(e.getCause()).hasMessage(""
           + "Could not locate ResponseBody converter for class java.lang.String.\n"
           + "  Tried:\n"
-          + "   * retrofit2.BuiltInConverters");
+          + "   * retrofit2.BuiltInConverters\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
   }
 
@@ -844,7 +846,7 @@ public final class RetrofitTest {
         .baseUrl("http://example.com/")
         .build();
     List<Converter.Factory> converterFactories = retrofit.converterFactories();
-    assertThat(converterFactories).hasSize(1);
+    assertThat(converterFactories).hasSize(2);
     assertThat(converterFactories.get(0)).isInstanceOf(BuiltInConverters.class);
   }
 
@@ -908,7 +910,8 @@ public final class RetrofitTest {
           + "Could not locate RequestBody converter for class java.lang.String.\n"
           + "  Tried:\n"
           + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.helpers.NonMatchingConverterFactory");
+          + "   * retrofit2.helpers.NonMatchingConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
 
     assertThat(nonMatchingFactory.called).isTrue();
@@ -937,7 +940,8 @@ public final class RetrofitTest {
           + "   * retrofit2.BuiltInConverters\n"
           + "   * retrofit2.helpers.NonMatchingConverterFactory\n"
           + "  Tried:\n"
-          + "   * retrofit2.helpers.NonMatchingConverterFactory");
+          + "   * retrofit2.helpers.NonMatchingConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
 
     assertThat(nonMatchingFactory1.called).isFalse();
@@ -984,7 +988,8 @@ public final class RetrofitTest {
           + "Could not locate ResponseBody converter for class java.lang.String.\n"
           + "  Tried:\n"
           + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.helpers.NonMatchingConverterFactory");
+          + "   * retrofit2.helpers.NonMatchingConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
 
     assertThat(nonMatchingFactory.called).isTrue();
@@ -1013,7 +1018,8 @@ public final class RetrofitTest {
           + "   * retrofit2.BuiltInConverters\n"
           + "   * retrofit2.helpers.NonMatchingConverterFactory\n"
           + "  Tried:\n"
-          + "   * retrofit2.helpers.NonMatchingConverterFactory");
+          + "   * retrofit2.helpers.NonMatchingConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
 
     assertThat(nonMatchingFactory1.called).isFalse();
