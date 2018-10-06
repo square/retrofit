@@ -53,7 +53,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
     this.context = context;
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
       return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type);
@@ -61,7 +61,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
     return null;
   }
 
-  @Override public Converter<ResponseBody, ?> responseBodyConverter(
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
       return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type);

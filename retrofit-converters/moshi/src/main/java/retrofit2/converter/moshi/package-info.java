@@ -1,4 +1,2 @@
-@ParametersAreNonnullByDefault
+@retrofit2.internal.EverythingIsNonNull
 package retrofit2.converter.moshi;
-
-import javax.annotation.ParametersAreNonnullByDefault;

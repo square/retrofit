@@ -19,6 +19,7 @@ import com.squareup.wire.Message;
 import com.squareup.wire.ProtoAdapter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -37,9 +38,8 @@ public final class WireConverterFactory extends Converter.Factory {
   private WireConverterFactory() {
   }
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
     }
@@ -52,8 +52,7 @@ public final class WireConverterFactory extends Converter.Factory {
     return new WireResponseBodyConverter<>(adapter);
   }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;

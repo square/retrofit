@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -54,9 +54,8 @@ public final class ScalaCallAdapterFactory extends CallAdapter.Factory {
   private ScalaCallAdapterFactory() {
   }
 
-  @Override
-  public CallAdapter<?, ?> get(@Nonnull Type returnType, @Nonnull Annotation[] annotations,
-      @Nonnull Retrofit retrofit) {
+  @Override public @Nullable CallAdapter<?, ?> get(
+      Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != Future.class) {
       return null;
     }

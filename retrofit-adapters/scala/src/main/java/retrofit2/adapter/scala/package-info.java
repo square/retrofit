@@ -1,2 +1,2 @@
 @retrofit2.internal.EverythingIsNonNull
-package retrofit.converter.guava;
+package retrofit2.adapter.scala;

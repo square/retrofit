@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -48,8 +49,7 @@ public final class ChunkingConverter {
    * present on {@code @Body} params.
    */
   static class ChunkingConverterFactory extends Converter.Factory {
-    @Override
-    public Converter<?, RequestBody> requestBodyConverter(Type type,
+    @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
         Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
       boolean isBody = false;
       boolean isChunked = false;

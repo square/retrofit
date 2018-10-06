@@ -51,9 +51,8 @@ public final class ProtoConverterFactory extends Converter.Factory {
     this.registry = registry;
   }
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
     }
@@ -84,8 +83,7 @@ public final class ProtoConverterFactory extends Converter.Factory {
     return new ProtoResponseBodyConverter<>(parser, registry);
   }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
