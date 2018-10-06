@@ -17,12 +17,17 @@ package retrofit.converter.guava;
 
 import com.google.common.base.Optional;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import javax.annotation.Nullable;
+import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.Call;
+import retrofit2.Converter;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
@@ -60,5 +65,32 @@ public final class GuavaOptionalConverterFactoryTest {
 
     Object body = service.object().execute().body();
     assertThat(body).isNull();
+  }
+
+  @Test public void delegates() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new Converter.Factory() {
+          @Nullable @Override public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+              Annotation[] annotations, Retrofit retrofit) {
+            if (getRawType(type) != Object.class) {
+              return null;
+            }
+            return new Converter<ResponseBody, Object>() {
+              @Override public Object convert(ResponseBody value) {
+                return null;
+              }
+            };
+          }
+        })
+        .addConverterFactory(GuavaOptionalConverterFactory.create())
+        .build();
+
+    server.enqueue(new MockResponse());
+
+    Service service = retrofit.create(Service.class);
+    Optional<Object> optional = service.optional().execute().body();
+    assertThat(optional).isNotNull();
+    assertThat(optional.isPresent()).isFalse();
   }
 }
