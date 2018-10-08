@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -56,8 +57,8 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
   private GuavaCallAdapterFactory() {
   }
 
-  @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  @Override public @Nullable CallAdapter<?, ?> get(
+      Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != ListenableFuture.class) {
       return null;
     }

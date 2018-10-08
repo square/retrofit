@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /**
@@ -47,8 +48,8 @@ import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
   static final CallAdapter.Factory INSTANCE = new CompletableFutureCallAdapterFactory();
 
-  @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  @Override public @Nullable CallAdapter<?, ?> get(
+      Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != CompletableFuture.class) {
       return null;
     }

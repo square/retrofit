@@ -18,6 +18,7 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import kotlin.Unit;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -27,9 +28,8 @@ final class BuiltInConverters extends Converter.Factory {
   /** Not volatile because we don't mind multiple threads discovering this. */
   private boolean checkForKotlinUnit = true;
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type == ResponseBody.class) {
       return Utils.isAnnotationPresent(annotations, Streaming.class)
           ? StreamingResponseBodyConverter.INSTANCE
@@ -50,8 +50,7 @@ final class BuiltInConverters extends Converter.Factory {
     return null;
   }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
       return RequestBodyConverter.INSTANCE;

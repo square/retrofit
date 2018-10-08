@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -271,8 +272,8 @@ public final class RetrofitTest {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     final AtomicBoolean adapterCalled = new AtomicBoolean();
     class MyCallAdapterFactory extends CallAdapter.Factory {
-      @Override public CallAdapter<?, ?> get(final Type returnType, Annotation[] annotations,
-          Retrofit retrofit) {
+      @Override public @Nullable CallAdapter<?, ?> get(
+          final Type returnType, Annotation[] annotations, Retrofit retrofit) {
         factoryCalled.set(true);
         if (getRawType(returnType) != Call.class) {
           return null;
@@ -302,8 +303,8 @@ public final class RetrofitTest {
 
   @Test public void customCallAdapter() {
     class GreetingCallAdapterFactory extends CallAdapter.Factory {
-      @Override public CallAdapter<Object, String> get(Type returnType, Annotation[] annotations,
-          Retrofit retrofit) {
+      @Override public @Nullable CallAdapter<Object, String> get(
+          Type returnType, Annotation[] annotations, Retrofit retrofit) {
         if (getRawType(returnType) != String.class) {
           return null;
         }
@@ -331,8 +332,8 @@ public final class RetrofitTest {
   @Test public void methodAnnotationsPassedToCallAdapter() {
     final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
     class MyCallAdapterFactory extends CallAdapter.Factory {
-      @Override public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
-          Retrofit retrofit) {
+      @Override public @Nullable CallAdapter<?, ?> get(
+          Type returnType, Annotation[] annotations, Retrofit retrofit) {
         annotationsRef.set(annotations);
         return null;
       }
@@ -443,8 +444,8 @@ public final class RetrofitTest {
   @Test public void stringConverterCalledForString() {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     class MyConverterFactory extends Converter.Factory {
-      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
-          Retrofit retrofit) {
+      @Override public @Nullable Converter<?, String> stringConverter(
+          Type type, Annotation[] annotations, Retrofit retrofit) {
         factoryCalled.set(true);
         return null;
       }
@@ -462,8 +463,8 @@ public final class RetrofitTest {
   @Test public void stringConverterReturningNullResultsInDefault() {
     final AtomicBoolean factoryCalled = new AtomicBoolean();
     class MyConverterFactory extends Converter.Factory {
-      @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
-          Retrofit retrofit) {
+      @Override public @Nullable Converter<?, String> stringConverter(
+          Type type, Annotation[] annotations, Retrofit retrofit) {
         factoryCalled.set(true);
         return null;
       }

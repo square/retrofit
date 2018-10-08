@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -47,8 +48,8 @@ public final class JsonQueryParameters {
       this.delegateFactory = delegateFactory;
     }
 
-    @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
-        Retrofit retrofit) {
+    @Override public @Nullable Converter<?, String> stringConverter(
+        Type type, Annotation[] annotations, Retrofit retrofit) {
       for (Annotation annotation : annotations) {
         if (annotation instanceof Json) {
           // NOTE: If you also have a JSON converter factory installed in addition to this factory,

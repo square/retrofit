@@ -1,4 +1,2 @@
-@ParametersAreNonnullByDefault
+@retrofit2.internal.EverythingIsNonNull
 package retrofit.converter.java8;
-
-import javax.annotation.ParametersAreNonnullByDefault;

@@ -90,8 +90,8 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
     this.isAsync = isAsync;
   }
 
-  @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  @Override public @Nullable CallAdapter<?, ?> get(
+      Type returnType, Annotation[] annotations, Retrofit retrofit) {
     Class<?> rawType = getRawType(returnType);
 
     if (rawType == Completable.class) {

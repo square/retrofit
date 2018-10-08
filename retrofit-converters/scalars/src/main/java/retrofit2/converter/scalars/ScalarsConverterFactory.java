@@ -17,6 +17,7 @@ package retrofit2.converter.scalars;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -43,7 +44,7 @@ public final class ScalarsConverterFactory extends Converter.Factory {
   private ScalarsConverterFactory() {
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (type == String.class
         || type == boolean.class
@@ -67,9 +68,8 @@ public final class ScalarsConverterFactory extends Converter.Factory {
     return null;
   }
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type == String.class) {
       return StringResponseBodyConverter.INSTANCE;
     }
