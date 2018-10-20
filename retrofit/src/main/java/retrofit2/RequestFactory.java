@@ -455,10 +455,22 @@ final class RequestFactory {
           throw parameterError(method, p, "@QueryMap keys must be of type String: " + keyType);
         }
         Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
-        Converter<?, String> valueConverter =
-            retrofit.stringConverter(valueType, annotations);
+        Converter<?, String> valueConverter = null;
+        Converter<?, String> listValueConverter = null;
+        if (List.class == valueType) {
+          Type listType = Utils.getSupertype(valueType, Utils.getRawType(valueType), List.class);
+          if (!(listType instanceof ParameterizedType)) {
+            throw parameterError(method, p,
+                    "List must include generic types (e.g. Map<String, List<String>>");
+          }
+          ParameterizedType valueParameterizeType = (ParameterizedType) listType;
+          Type l2ValueType = Utils.getParameterUpperBound(0, valueParameterizeType);
+          listValueConverter = retrofit.stringConverter(l2ValueType, annotations);
+        } else {
+          valueConverter = retrofit.stringConverter(valueType, annotations);
+        }
 
-        return new ParameterHandler.QueryMap<>(valueConverter, ((QueryMap) annotation).encoded());
+        return new ParameterHandler.QueryMap<>(valueConverter, listValueConverter, ((QueryMap) annotation).encoded());
 
       } else if (annotation instanceof Header) {
         validateResolvableType(p, type);

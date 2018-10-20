@@ -17,6 +17,7 @@ package retrofit2;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import okhttp3.Headers;
@@ -136,12 +137,14 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
+  static final class QueryMap<T, S> extends ParameterHandler<Map<String, T>> {
+    @Nullable private final Converter<T, String> valueConverter;
+    @Nullable private final Converter<S, String> listValueConverter;
     private final boolean encoded;
 
-    QueryMap(Converter<T, String> valueConverter, boolean encoded) {
+    QueryMap(@Nullable Converter<T, String> valueConverter, @Nullable Converter<S, String> listValueConverter, boolean encoded) {
       this.valueConverter = valueConverter;
+      this.listValueConverter = listValueConverter;
       this.encoded = encoded;
     }
 
@@ -162,18 +165,35 @@ abstract class ParameterHandler<T> {
               "Query map contained null value for key '" + entryKey + "'.");
         }
 
-        String convertedEntryValue = valueConverter.convert(entryValue);
-        if (convertedEntryValue == null) {
-          throw new IllegalArgumentException("Query map value '"
-              + entryValue
-              + "' converted to null by "
-              + valueConverter.getClass().getName()
-              + " for key '"
-              + entryKey
-              + "'.");
-        }
+        if (entryValue instanceof List && listValueConverter != null) {
+          List<S> entryValueList = (List<S>) entryValue;    //TODO there's got to be a safer way to do this
+          for (S item :entryValueList) {
+            String convertedEntryValue = listValueConverter.convert(item);
+            if (convertedEntryValue == null) {
+              throw new IllegalArgumentException("Query map in list value '"
+                      + item
+                      + "' converted to null by "
+                      + listValueConverter.getClass().getName()
+                      + " for key '"
+                      + entryKey
+                      + "'.");
+            }
+            builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+          }
+        } else if (valueConverter != null) {
+          String convertedEntryValue = valueConverter.convert(entryValue);
+          if (convertedEntryValue == null) {
+            throw new IllegalArgumentException("Query map value '"
+                    + entryValue
+                    + "' converted to null by "
+                    + valueConverter.getClass().getName()
+                    + " for key '"
+                    + entryKey
+                    + "'.");
+          }
 
-        builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+          builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+        }
       }
     }
   }
