@@ -22,6 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -67,9 +68,8 @@ final class AnnotatedConverters {
       this.factories = new LinkedHashMap<>(factories);
     }
 
-    @Override
-    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-        Retrofit retrofit) {
+    @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+        Type type, Annotation[] annotations, Retrofit retrofit) {
       for (Annotation annotation : annotations) {
         Converter.Factory factory = factories.get(annotation.annotationType());
         if (factory != null) {
@@ -79,7 +79,7 @@ final class AnnotatedConverters {
       return null;
     }
 
-    @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+    @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
         Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
       for (Annotation annotation : parameterAnnotations) {
         Converter.Factory factory = factories.get(annotation.annotationType());

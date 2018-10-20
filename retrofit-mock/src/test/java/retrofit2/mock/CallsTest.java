@@ -15,7 +15,6 @@
  */
 package retrofit2.mock;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.Callable;
@@ -24,7 +23,6 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;

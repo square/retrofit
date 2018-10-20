@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -60,9 +61,8 @@ public final class JsonAndXmlConverters {
       this.xmlFactory = xmlFactory;
     }
 
-    @Override
-    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-        Retrofit retrofit) {
+    @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+        Type type, Annotation[] annotations, Retrofit retrofit) {
       for (Annotation annotation : annotations) {
         if (annotation instanceof Json) {
           return jsonFactory.responseBodyConverter(type, annotations, retrofit);
@@ -74,7 +74,7 @@ public final class JsonAndXmlConverters {
       return null;
     }
 
-    @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+    @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
         Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
       for (Annotation annotation : parameterAnnotations) {
         if (annotation instanceof Json) {

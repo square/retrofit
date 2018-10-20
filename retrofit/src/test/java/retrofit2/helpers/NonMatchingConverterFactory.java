@@ -17,6 +17,7 @@ package retrofit2.helpers;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -25,21 +26,20 @@ import retrofit2.Retrofit;
 public final class NonMatchingConverterFactory extends Converter.Factory {
   public boolean called;
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     called = true;
     return null;
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     called = true;
     return null;
   }
 
-  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<?, String> stringConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     called = true;
     return null;
   }

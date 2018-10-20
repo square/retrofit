@@ -94,7 +94,8 @@ public final class WireConverterFactoryTest {
           + "Could not locate ResponseBody converter for class java.lang.String.\n"
           + "  Tried:\n"
           + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.converter.wire.WireConverterFactory");
+          + "   * retrofit2.converter.wire.WireConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
   }
 
@@ -113,7 +114,8 @@ public final class WireConverterFactoryTest {
           + "Could not locate ResponseBody converter for java.util.List<java.lang.String>.\n"
           + "  Tried:\n"
           + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.converter.wire.WireConverterFactory");
+          + "   * retrofit2.converter.wire.WireConverterFactory\n"
+          + "   * retrofit2.OptionalConverterFactory");
     }
   }
 

@@ -132,7 +132,9 @@ public final class Calls {
       if (response != null) {
         return response.raw().request();
       }
-      return new Request.Builder().url("http://localhost").build();
+      return new Request.Builder()
+          .url("http://localhost")
+          .build();
     }
   }
 

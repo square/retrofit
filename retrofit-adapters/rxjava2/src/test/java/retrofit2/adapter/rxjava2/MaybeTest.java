@@ -16,6 +16,7 @@
 package retrofit2.adapter.rxjava2;
 
 import io.reactivex.Maybe;
+import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
@@ -24,8 +25,6 @@ import org.junit.Test;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
-
-import java.io.IOException;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,5 +128,20 @@ public final class MaybeTest {
     Result<String> result = observer.takeValue();
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
+  }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Maybe<String> observable = service.body();
+
+    RecordingMaybeObserver<Object> observer1 = observerRule.create();
+    observable.subscribe(observer1);
+    observer1.assertValue("Hi");
+
+    RecordingMaybeObserver<Object> observer2 = observerRule.create();
+    observable.subscribe(observer2);
+    observer2.assertValue("Hey");
   }
 }

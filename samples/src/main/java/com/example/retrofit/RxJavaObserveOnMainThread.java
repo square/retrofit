@@ -17,6 +17,7 @@ package com.example.retrofit;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
@@ -48,8 +49,8 @@ public final class RxJavaObserveOnMainThread {
       this.scheduler = scheduler;
     }
 
-    @Override
-    public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+    @Override public @Nullable CallAdapter<?, ?> get(
+        Type returnType, Annotation[] annotations, Retrofit retrofit) {
       if (getRawType(returnType) != Observable.class) {
         return null; // Ignore non-Observable types.
       }

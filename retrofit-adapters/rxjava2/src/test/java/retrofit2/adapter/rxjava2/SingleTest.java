@@ -129,4 +129,19 @@ public final class SingleTest {
     assertThat(result.isError()).isTrue();
     assertThat(result.error()).isInstanceOf(IOException.class);
   }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Single<String> observable = service.body();
+
+    RecordingSingleObserver<Object> observer1 = observerRule.create();
+    observable.subscribe(observer1);
+    observer1.assertValue("Hi");
+
+    RecordingSingleObserver<Object> observer2 = observerRule.create();
+    observable.subscribe(observer2);
+    observer2.assertValue("Hey");
+  }
 }

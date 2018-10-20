@@ -18,6 +18,7 @@ package retrofit2.helpers;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -27,9 +28,8 @@ import retrofit2.Retrofit;
 public class ToStringConverterFactory extends Converter.Factory {
   static final MediaType MEDIA_TYPE = MediaType.get("text/plain");
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (String.class.equals(type)) {
       return new Converter<ResponseBody, String>() {
         @Override public String convert(ResponseBody value) throws IOException {
@@ -40,7 +40,7 @@ public class ToStringConverterFactory extends Converter.Factory {
     return null;
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (String.class.equals(type)) {
       return new Converter<String, RequestBody>() {

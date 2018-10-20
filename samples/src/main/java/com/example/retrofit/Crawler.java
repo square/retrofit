@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.HttpUrl;
@@ -127,7 +128,7 @@ public final class Crawler {
 
   static final class PageAdapter implements Converter<ResponseBody, Page> {
     static final Converter.Factory FACTORY = new Converter.Factory() {
-      @Override public Converter<ResponseBody, ?> responseBodyConverter(
+      @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
           Type type, Annotation[] annotations, Retrofit retrofit) {
         if (type == Page.class) return new PageAdapter();
         return null;

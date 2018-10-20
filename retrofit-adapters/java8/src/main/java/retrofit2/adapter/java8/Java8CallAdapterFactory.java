@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -27,6 +28,9 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 /**
+ * @deprecated Retrofit includes support for CompletableFuture. This no longer needs to be added to
+ * the Retrofit instance explicitly.
+ * <p>
  * A {@linkplain CallAdapter.Factory call adapter} which creates Java 8 futures.
  * <p>
  * Adding this class to {@link Retrofit} allows you to return {@link CompletableFuture} from
@@ -47,6 +51,7 @@ import retrofit2.Retrofit;
  * errors</li>
  * </ul>
  */
+@Deprecated
 public final class Java8CallAdapterFactory extends CallAdapter.Factory {
   public static Java8CallAdapterFactory create() {
     return new Java8CallAdapterFactory();
@@ -55,8 +60,8 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
   private Java8CallAdapterFactory() {
   }
 
-  @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  @Override public @Nullable CallAdapter<?, ?> get(
+      Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != CompletableFuture.class) {
       return null;
     }

@@ -36,16 +36,15 @@ public final class GuavaOptionalConverterFactory extends Converter.Factory {
   private GuavaOptionalConverterFactory() {
   }
 
-  @Nullable @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(type) != Optional.class) {
       return null;
     }
 
     Type innerType = getParameterUpperBound(0, (ParameterizedType) type);
     Converter<ResponseBody, Object> delegate =
-        retrofit.nextResponseBodyConverter(this, innerType, annotations);
+        retrofit.responseBodyConverter(innerType, annotations);
     return new OptionalConverter<>(delegate);
   }
 }

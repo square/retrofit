@@ -149,4 +149,19 @@ public final class ObservableTest {
       RxJavaPlugins.reset();
     }
   }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Observable<String> observable = service.body();
+
+    RecordingObserver<String> observer1 = observerRule.create();
+    observable.subscribe(observer1);
+    observer1.assertValue("Hi").assertComplete();
+
+    RecordingObserver<String> observer2 = observerRule.create();
+    observable.subscribe(observer2);
+    observer2.assertValue("Hey").assertComplete();
+  }
 }

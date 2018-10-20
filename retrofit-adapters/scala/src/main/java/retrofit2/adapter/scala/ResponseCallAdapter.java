@@ -16,7 +16,6 @@
 package retrofit2.adapter.scala;
 
 import java.lang.reflect.Type;
-import javax.annotation.Nonnull;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -35,15 +34,15 @@ final class ResponseCallAdapter<T> implements CallAdapter<T, Future<Response<T>>
     return responseType;
   }
 
-  @Override public Future<Response<T>> adapt(@Nonnull Call<T> call) {
+  @Override public Future<Response<T>> adapt(Call<T> call) {
     Promise<Response<T>> promise = Promise.apply();
 
     call.enqueue(new Callback<T>() {
-      @Override public void onResponse(@Nonnull Call<T> call, @Nonnull Response<T> response) {
+      @Override public void onResponse(Call<T> call, Response<T> response) {
         promise.success(response);
       }
 
-      @Override public void onFailure(@Nonnull Call<T> call, @Nonnull Throwable t) {
+      @Override public void onFailure(Call<T> call, Throwable t) {
         promise.failure(t);
       }
     });

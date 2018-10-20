@@ -21,9 +21,15 @@ import android.os.Looper;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
 
 class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -52,11 +58,24 @@ class Platform {
     return null;
   }
 
-  CallAdapter.Factory defaultCallAdapterFactory(@Nullable Executor callbackExecutor) {
+  List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
+      @Nullable Executor callbackExecutor) {
     if (callbackExecutor != null) {
-      return new ExecutorCallAdapterFactory(callbackExecutor);
+      return singletonList(new ExecutorCallAdapterFactory(callbackExecutor));
     }
-    return DefaultCallAdapterFactory.INSTANCE;
+    return singletonList(DefaultCallAdapterFactory.INSTANCE);
+  }
+
+  int defaultCallAdapterFactoriesSize() {
+    return 1;
+  }
+
+  List<? extends Converter.Factory> defaultConverterFactories() {
+    return emptyList();
+  }
+
+  int defaultConverterFactoriesSize() {
+    return 0;
   }
 
   boolean isDefaultMethod(Method method) {
@@ -85,6 +104,30 @@ class Platform {
           .bindTo(object)
           .invokeWithArguments(args);
     }
+
+    @Override List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      List<CallAdapter.Factory> factories = new ArrayList<>(2);
+      factories.add(CompletableFutureCallAdapterFactory.INSTANCE);
+      if (callbackExecutor != null) {
+        factories.add(new ExecutorCallAdapterFactory(callbackExecutor));
+      } else {
+        factories.add(DefaultCallAdapterFactory.INSTANCE);
+      }
+      return unmodifiableList(factories);
+    }
+
+    @Override int defaultCallAdapterFactoriesSize() {
+      return 2;
+    }
+
+    @Override List<? extends Converter.Factory> defaultConverterFactories() {
+      return singletonList(OptionalConverterFactory.INSTANCE);
+    }
+
+    @Override int defaultConverterFactoriesSize() {
+      return 1;
+    }
   }
 
   static class Android extends Platform {
@@ -100,9 +143,10 @@ class Platform {
       return new MainThreadExecutor();
     }
 
-    @Override CallAdapter.Factory defaultCallAdapterFactory(@Nullable Executor callbackExecutor) {
+    @Override List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
       if (callbackExecutor == null) throw new AssertionError();
-      return new ExecutorCallAdapterFactory(callbackExecutor);
+      return singletonList(new ExecutorCallAdapterFactory(callbackExecutor));
     }
 
     static class MainThreadExecutor implements Executor {

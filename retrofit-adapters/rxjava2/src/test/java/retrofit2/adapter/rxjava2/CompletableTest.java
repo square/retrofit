@@ -70,4 +70,19 @@ public final class CompletableTest {
     service.completable().subscribe(observer);
     observer.assertError(IOException.class);
   }
+
+  @Test public void subscribeTwice() {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hey"));
+
+    Completable observable = service.completable();
+
+    RecordingCompletableObserver observer1 = observerRule.create();
+    observable.subscribe(observer1);
+    observer1.assertComplete();
+
+    RecordingCompletableObserver observer2 = observerRule.create();
+    observable.subscribe(observer2);
+    observer2.assertComplete();
+  }
 }

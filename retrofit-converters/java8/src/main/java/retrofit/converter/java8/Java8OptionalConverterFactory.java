@@ -25,9 +25,13 @@ import retrofit2.Converter;
 import retrofit2.Retrofit;
 
 /**
+ * @deprecated Retrofit includes support for Optional. This no longer needs to be added to the
+ * Retrofit instance explicitly.
+ * <p>
  * A {@linkplain Converter.Factory converter} for {@code Optional<T>} which delegates to another
  * converter to deserialize {@code T} and then wraps it into {@link Optional}.
  */
+@Deprecated
 public final class Java8OptionalConverterFactory extends Converter.Factory {
   public static Java8OptionalConverterFactory create() {
     return new Java8OptionalConverterFactory();
@@ -36,16 +40,15 @@ public final class Java8OptionalConverterFactory extends Converter.Factory {
   private Java8OptionalConverterFactory() {
   }
 
-  @Nullable @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(type) != Optional.class) {
       return null;
     }
 
     Type innerType = getParameterUpperBound(0, (ParameterizedType) type);
     Converter<ResponseBody, Object> delegate =
-        retrofit.nextResponseBodyConverter(this, innerType, annotations);
+        retrofit.responseBodyConverter(innerType, annotations);
     return new OptionalConverter<>(delegate);
   }
 }
