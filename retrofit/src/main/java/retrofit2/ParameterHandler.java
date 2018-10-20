@@ -56,8 +56,7 @@ abstract class ParameterHandler<T> {
   }
 
   static final class RelativeUrl extends ParameterHandler<Object> {
-    @Override
-    void apply(RequestBuilder builder, @Nullable Object value) {
+    @Override void apply(RequestBuilder builder, @Nullable Object value) {
       checkNotNull(value, "@Url parameter is null.");
       builder.setRelativeUrl(value);
     }
