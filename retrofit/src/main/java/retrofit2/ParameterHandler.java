@@ -56,7 +56,8 @@ abstract class ParameterHandler<T> {
   }
 
   static final class RelativeUrl extends ParameterHandler<Object> {
-    @Override void apply(RequestBuilder builder, @Nullable Object value) {
+    @Override
+    void apply(RequestBuilder builder, @Nullable Object value) {
       checkNotNull(value, "@Url parameter is null.");
       builder.setRelativeUrl(value);
     }
@@ -142,7 +143,8 @@ abstract class ParameterHandler<T> {
     @Nullable private final Converter<S, String> listValueConverter;
     private final boolean encoded;
 
-    QueryMap(@Nullable Converter<T, String> valueConverter, @Nullable Converter<S, String> listValueConverter, boolean encoded) {
+    QueryMap(@Nullable Converter<T, String> valueConverter,
+             @Nullable Converter<S, String> listValueConverter, boolean encoded) {
       this.valueConverter = valueConverter;
       this.listValueConverter = listValueConverter;
       this.encoded = encoded;
@@ -166,7 +168,7 @@ abstract class ParameterHandler<T> {
         }
 
         if (entryValue instanceof List && listValueConverter != null) {
-          List<S> entryValueList = (List<S>) entryValue;    //TODO there's got to be a safer way to do this
+          List<S> entryValueList = (List<S>) entryValue;
           for (S item :entryValueList) {
             String convertedEntryValue = listValueConverter.convert(item);
             if (convertedEntryValue == null) {
