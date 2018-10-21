@@ -16,6 +16,7 @@
 package retrofit2;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import okhttp3.FormBody;
 import okhttp3.Headers;
@@ -31,6 +32,21 @@ final class RequestBuilder {
   private static final char[] HEX_DIGITS =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
   private static final String PATH_SEGMENT_ALWAYS_ENCODE_SET = " \"<>^`{}|\\?#";
+
+  /**
+   * Matches strings that contain {@code .} or {@code ..} as a complete path segment. This also
+   * matches dots in their percent-encoded form, {@code %2E}.
+   *
+   * <p>It is okay to have these strings within a larger path segment (like {@code a..z} or {@code
+   * index.html}) but when alone they have a special meaning. A single dot resolves to no path
+   * segment so {@code /one/./three/} becomes {@code /one/three/}. A double-dot pops the preceding
+   * directory, so {@code /one/../three/} becomes {@code /three/}.
+   *
+   * <p>We forbid these in Retrofit paths because they're likely to have the unintended effect.
+   * For example, passing {@code ..} to {@code DELETE /account/book/{isbn}/} yields {@code DELETE
+   * /account/}.
+   */
+  private static final Pattern PATH_TRAVERSAL = Pattern.compile("(.*/)?(\\.|%2e|%2E){1,2}(/.*)?");
 
   private final String method;
 
@@ -91,7 +107,13 @@ final class RequestBuilder {
       // The relative URL is cleared when the first query parameter is set.
       throw new AssertionError();
     }
-    relativeUrl = relativeUrl.replace("{" + name + "}", canonicalizeForPath(value, encoded));
+    String replacement = canonicalizeForPath(value, encoded);
+    String newRelativeUrl = relativeUrl.replace("{" + name + "}", replacement);
+    if (PATH_TRAVERSAL.matcher(newRelativeUrl).matches()) {
+      throw new IllegalArgumentException(
+          "@Path parameters shouldn't perform path traversal ('.' or '..'): " + value);
+    }
+    relativeUrl = newRelativeUrl;
   }
 
   private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
