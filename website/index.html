@@ -155,6 +155,21 @@ Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
 GitHubService service = retrofit.create(GitHubService.class);</pre>
               <h4>Custom Converters</h4>
               <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that extends the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit2/Converter.java"><code>Converter.Factory</code> class</a> and pass in an instance when building your adapter.</p>
+
+              <h4>Call Adapaters</h4>
+              <p>Retrofit ships with a default adapter for executing Call instances. The child modules contained herein are additional adapters for other popular execution mechanisms.</p>
+              <p>To use, supply an instance of your desired adapter when building your Retrofit instance.</p>
+              <ul>
+                <li><a href="https://github.com/google/guava/wiki/ListenableFutureExplained">Guava ListendableFuture</a>: <code>GuavaCallAdapterFactory</code></li>
+                <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html">Java8 CompletableFuture</a>: <code>Java8CallAdapterFactory</code></li>
+                <li><a href="https://github.com/ReactiveX/RxJava/tree/1.x">RxJava</a>: <code>RxJavaCallAdapterFactory</code></li>
+                <li><a href="https://github.com/ReactiveX/RxJava/tree/2.x">RxJava2</a>: <code>RxJava2CallAdapterFactory</code></li>
+                <li><a href="https://github.com/ReactiveX/RxJava/tree/2.x">Scala Future</a>: <code>ScalaCallAdapterFactory</code></li>
+              </ul>
+              <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
+    .baseUrl("https://api.example.com")
+    .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+    .build();</pre>
             </section>
 
             <section id="download">
