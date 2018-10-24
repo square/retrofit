@@ -157,6 +157,12 @@ GitHubService service = retrofit.create(GitHubService.class);</pre>
               <p>If you need to communicate with an API that uses a content-format that Retrofit does not support out of the box (e.g. YAML, txt, custom format) or you wish to use a different library to implement an existing format, you can easily create your own converter. Create a class that extends the <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/java/retrofit2/Converter.java"><code>Converter.Factory</code> class</a> and pass in an instance when building your adapter.</p>
             </section>
 
+            <section id="testing">
+              <h3>Retrofit Testing</h3>
+              <h4>MockRetrofit</h4>
+              <p><code>MockRetrofit</code> allows you to mock out the network behavior for testing. Usage examples can be found at <a href="https://github.com/square/retrofit/blob/master/samples/src/main/java/com/example/retrofit/SimpleMockService.java">SimpleMockService</a></p>
+            </section>
+
             <section id="download">
               <h3>Download</h3>
               <p><a href="https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=retrofit&v=LATEST" class="dl version-href">&darr; <span class="version-tag">Latest</span> JAR</a></p>
