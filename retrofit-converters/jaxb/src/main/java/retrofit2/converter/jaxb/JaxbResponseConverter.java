@@ -16,6 +16,8 @@
 package retrofit2.converter.jaxb;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -29,10 +31,12 @@ final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
   final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
   final JAXBContext context;
   final Class<T> type;
+  final Map<String, Object> unmarshallerProperties;
 
-  JaxbResponseConverter(JAXBContext context, Class<T> type) {
+  JaxbResponseConverter(JAXBContext context, Class<T> type, Map<String, Object> unmarshallerProperties) {
     this.context = context;
     this.type = type;
+    this.unmarshallerProperties = unmarshallerProperties;
 
     // Prevent XML External Entity attacks (XXE).
     xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
@@ -42,6 +46,13 @@ final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
   @Override public T convert(ResponseBody value) throws IOException {
     try {
       Unmarshaller unmarshaller = context.createUnmarshaller();
+      if (!unmarshallerProperties.isEmpty()) {
+        Set<String> keys = unmarshallerProperties.keySet();
+        for (String key : keys) {
+          unmarshaller.setProperty(key, unmarshallerProperties.get(key));
+        }
+      }
+
       XMLStreamReader streamReader = xmlInputFactory.createXMLStreamReader(value.charStream());
       return unmarshaller.unmarshal(streamReader, type).getValue();
     } catch (JAXBException | XMLStreamException e) {

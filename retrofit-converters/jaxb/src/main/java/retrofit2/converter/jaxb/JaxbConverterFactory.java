@@ -17,9 +17,13 @@ package retrofit2.converter.jaxb;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -46,17 +50,38 @@ public final class JaxbConverterFactory extends Converter.Factory {
     return new JaxbConverterFactory(context);
   }
 
+  /** Create an instance using {@code context}, {@code marshaller}, and {@code unmarshaller} for conversion. */
+  @SuppressWarnings("ConstantConditions")
+  public static JaxbConverterFactory create(JAXBContext context, Map<String, Object> marshallerProperties,
+       Map<String, Object> unmarshallerProperties) {
+    if (context == null) throw new NullPointerException("context == null");
+    if (marshallerProperties == null) throw new NullPointerException("marshallerProperties == null");
+    if (unmarshallerProperties == null) throw new NullPointerException("unmarshallerProperties == null");
+    return new JaxbConverterFactory(context, marshallerProperties, unmarshallerProperties);
+  }
+
   /** If null, a new JAXB context will be created for each type to be converted. */
   private final @Nullable JAXBContext context;
+  private final @Nullable Map<String, Object> marshallerProperties;
+  private final @Nullable Map<String, Object> unmarshallerProperties;
 
   private JaxbConverterFactory(@Nullable JAXBContext context) {
     this.context = context;
+    this.marshallerProperties = new HashMap<>();
+    this. unmarshallerProperties = new HashMap<>();
+  }
+
+  private JaxbConverterFactory(@Nullable JAXBContext context, @Nullable Map<String, Object> marshallerProperties,
+      @Nullable Map<String, Object> unmarshallerProperties) {
+    this.context = context;
+    this.marshallerProperties = marshallerProperties;
+    this.unmarshallerProperties = unmarshallerProperties;
   }
 
   @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type);
+      return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type, marshallerProperties);
     }
     return null;
   }
@@ -64,7 +89,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
   @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type);
+      return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type, unmarshallerProperties);
     }
     return null;
   }

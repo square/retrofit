@@ -16,6 +16,8 @@
 package retrofit2.converter.jaxb;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -30,16 +32,24 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
   final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
   final JAXBContext context;
   final Class<T> type;
+  final Map<String, Object> marshallerProperties;
 
-  JaxbRequestConverter(JAXBContext context, Class<T> type) {
+  JaxbRequestConverter(JAXBContext context, Class<T> type, Map<String, Object> marshallerProperties) {
     this.context = context;
     this.type = type;
+    this.marshallerProperties = marshallerProperties;
   }
 
   @Override public RequestBody convert(final T value) throws IOException {
     Buffer buffer = new Buffer();
     try {
       Marshaller marshaller = context.createMarshaller();
+      if (!marshallerProperties.isEmpty()) {
+        Set<String> keys = marshallerProperties.keySet();
+        for (String key : keys) {
+          marshaller.setProperty(key, marshallerProperties.get(key));
+        }
+      }
 
       XMLStreamWriter xmlWriter = xmlOutputFactory.createXMLStreamWriter(
           buffer.outputStream(), JaxbConverterFactory.XML.charset().name());

@@ -16,7 +16,12 @@
 package retrofit2.converter.jaxb;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -46,6 +51,14 @@ public final class JaxbConverterFactoryTest {
       + "</phone_number>"
       + "</contact>";
 
+  static final String SAMPLE_CONTACT_XML_WITHOUT_HEADER = ""
+      + "<contact>"
+      + "<name>Jenny</name>"
+      + "<phone_number type=\"MOBILE\">"
+      + "<number>867-5309</number>"
+      + "</phone_number>"
+      + "</contact>";
+
   interface Service {
     @POST("/") Call<Void> postXml(@Body Contact contact);
     @GET("/") Call<Contact> getXml();
@@ -54,31 +67,57 @@ public final class JaxbConverterFactoryTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
+  private Service serviceWithUserSuppliedMarshallingProperties;
 
-  @Before public void setUp() {
+  @Before public void setUp() throws JAXBException {
     JaxbConverterFactory factory = JaxbConverterFactory.create();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(factory)
         .build();
     service = retrofit.create(Service.class);
+
+    JAXBContext jaxbContextNoHeader = JAXBContext.newInstance(SAMPLE_CONTACT.getClass());
+    Map<String, Object> marshallerProperties = new HashMap<>();
+    marshallerProperties.put(Marshaller.JAXB_FRAGMENT, true);
+    Map<String, Object> unmarshallerProperties = new HashMap<>();
+    JaxbConverterFactory factoryNoHeader =
+            JaxbConverterFactory.create(jaxbContextNoHeader, marshallerProperties, unmarshallerProperties);
+    Retrofit retrofitNoHeader = new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(factoryNoHeader)
+            .build();
+    serviceWithUserSuppliedMarshallingProperties = retrofitNoHeader.create(Service.class);
   }
 
   @Test public void xmlRequestBody() throws Exception {
-    server.enqueue(new MockResponse());
+    executeXmlRequestBodyTest(service, SAMPLE_CONTACT_XML);
+  }
 
+  @Test public void xmlRequestBodyWithMarshallerProperties() throws Exception {
+    executeXmlRequestBodyTest(serviceWithUserSuppliedMarshallingProperties, SAMPLE_CONTACT_XML_WITHOUT_HEADER);
+  }
+
+  private <T extends Service> void executeXmlRequestBodyTest(T service, String comparisonXml) throws Exception {
+    server.enqueue(new MockResponse());
     Call<Void> call = service.postXml(SAMPLE_CONTACT);
     call.execute();
-
     RecordedRequest request = server.takeRequest();
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=utf-8");
-    assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_XML);
+    assertThat(request.getBody().readUtf8()).isEqualTo(comparisonXml);
   }
 
   @Test public void xmlResponseBody() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody(SAMPLE_CONTACT_XML));
+    executeXmlResponseBodyTest(service, SAMPLE_CONTACT_XML);
+  }
 
+  @Test public void xmlResponseBodyWithUnmarshallerProperties() throws Exception {
+    executeXmlResponseBodyTest(serviceWithUserSuppliedMarshallingProperties, SAMPLE_CONTACT_XML_WITHOUT_HEADER);
+  }
+
+  private <T extends Service> void executeXmlResponseBodyTest(T service, String bodyXml) throws Exception {
+    server.enqueue(new MockResponse()
+        .setBody(bodyXml));
     Call<Contact> call = service.getXml();
     Response<Contact> response = call.execute();
     assertThat(response.body()).isEqualTo(SAMPLE_CONTACT);
