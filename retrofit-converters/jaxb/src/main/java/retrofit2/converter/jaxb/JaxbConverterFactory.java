@@ -22,8 +22,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -38,25 +36,41 @@ import retrofit2.Retrofit;
 public final class JaxbConverterFactory extends Converter.Factory {
   static final MediaType XML = MediaType.get("application/xml; charset=utf-8");
 
-  /** Create an instance using a default {@link JAXBContext} instance for conversion. */
+  /** Create an instance using a default {@link JAXBContext} instance for conversion.
+   *
+   * @return JaxbConverterFactory
+   */
   public static JaxbConverterFactory create() {
     return new JaxbConverterFactory(null);
   }
 
-  /** Create an instance using {@code context} for conversion. */
+  /** Create an instance using {@code context} for conversion.
+   * @param context JAXBContext
+   *
+   * @return JaxbConverterFactory
+   */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static JaxbConverterFactory create(JAXBContext context) {
     if (context == null) throw new NullPointerException("context == null");
     return new JaxbConverterFactory(context);
   }
 
-  /** Create an instance using {@code context}, {@code marshaller}, and {@code unmarshaller} for conversion. */
+  /** Create an instance using {@code context}, {@code marshaller}, and {@code unmarshaller} for
+   * conversion.
+   * @param context JAXBContext
+   * @param marshallerProperties Map
+   * @param unmarshallerProperties Map
+   *
+   * @return JaxbConverterFactory
+   */
   @SuppressWarnings("ConstantConditions")
-  public static JaxbConverterFactory create(JAXBContext context, Map<String, Object> marshallerProperties,
-       Map<String, Object> unmarshallerProperties) {
+  public static JaxbConverterFactory create(JAXBContext context,
+       Map<String, Object> marshallerProperties, Map<String, Object> unmarshallerProperties) {
     if (context == null) throw new NullPointerException("context == null");
-    if (marshallerProperties == null) throw new NullPointerException("marshallerProperties == null");
-    if (unmarshallerProperties == null) throw new NullPointerException("unmarshallerProperties == null");
+    if (marshallerProperties == null)
+      throw new NullPointerException("marshallerProperties == null");
+    if (unmarshallerProperties == null)
+      throw new NullPointerException("unmarshallerProperties == null");
     return new JaxbConverterFactory(context, marshallerProperties, unmarshallerProperties);
   }
 
@@ -68,10 +82,11 @@ public final class JaxbConverterFactory extends Converter.Factory {
   private JaxbConverterFactory(@Nullable JAXBContext context) {
     this.context = context;
     this.marshallerProperties = new HashMap<>();
-    this. unmarshallerProperties = new HashMap<>();
+    this.unmarshallerProperties = new HashMap<>();
   }
 
-  private JaxbConverterFactory(@Nullable JAXBContext context, @Nullable Map<String, Object> marshallerProperties,
+  private JaxbConverterFactory(@Nullable JAXBContext context,
+      @Nullable Map<String, Object> marshallerProperties,
       @Nullable Map<String, Object> unmarshallerProperties) {
     this.context = context;
     this.marshallerProperties = marshallerProperties;
@@ -81,7 +96,8 @@ public final class JaxbConverterFactory extends Converter.Factory {
   @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
       Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type, marshallerProperties);
+      return new JaxbRequestConverter<>(contextForType((Class<?>) type),
+              (Class<?>) type, marshallerProperties);
     }
     return null;
   }
@@ -89,7 +105,8 @@ public final class JaxbConverterFactory extends Converter.Factory {
   @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type, unmarshallerProperties);
+      return new JaxbResponseConverter<>(contextForType((Class<?>) type),
+              (Class<?>) type, unmarshallerProperties);
     }
     return null;
   }

@@ -34,7 +34,8 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
   final Class<T> type;
   final Map<String, Object> marshallerProperties;
 
-  JaxbRequestConverter(JAXBContext context, Class<T> type, Map<String, Object> marshallerProperties) {
+  JaxbRequestConverter(JAXBContext context, Class<T> type,
+      Map<String, Object> marshallerProperties) {
     this.context = context;
     this.type = type;
     this.marshallerProperties = marshallerProperties;
