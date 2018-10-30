@@ -37,6 +37,7 @@
     <module>retrofit-adapters</module>
     <module>retrofit-converters</module>
     <module>retrofit-mock</module>
+    <module>bom</module>
     <module>samples</module>
   </modules>
 
