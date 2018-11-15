@@ -68,6 +68,7 @@ public final class GuavaOptionalConverterFactoryTest {
   }
 
   @Test public void delegates() throws IOException {
+    final Object object = new Object();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new Converter.Factory() {
@@ -78,7 +79,7 @@ public final class GuavaOptionalConverterFactoryTest {
             }
             return new Converter<ResponseBody, Object>() {
               @Override public Object convert(ResponseBody value) {
-                return null;
+                return object;
               }
             };
           }
@@ -91,6 +92,6 @@ public final class GuavaOptionalConverterFactoryTest {
     Service service = retrofit.create(Service.class);
     Optional<Object> optional = service.optional().execute().body();
     assertThat(optional).isNotNull();
-    assertThat(optional.isPresent()).isFalse();
+    assertThat(optional.get()).isSameAs(object);
   }
 }
