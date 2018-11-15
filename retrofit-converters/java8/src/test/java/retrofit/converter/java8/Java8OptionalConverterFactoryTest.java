@@ -68,6 +68,7 @@ public final class Java8OptionalConverterFactoryTest {
   }
 
   @Test public void delegates() throws IOException {
+    Object object = new Object();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new Converter.Factory() {
@@ -76,11 +77,7 @@ public final class Java8OptionalConverterFactoryTest {
             if (getRawType(type) != Object.class) {
               return null;
             }
-            return new Converter<ResponseBody, Object>() {
-              @Override public Object convert(ResponseBody value) {
-                return null;
-              }
-            };
+            return value -> object;
           }
         })
         .addConverterFactory(Java8OptionalConverterFactory.create())
@@ -91,6 +88,6 @@ public final class Java8OptionalConverterFactoryTest {
     Service service = retrofit.create(Service.class);
     Optional<Object> optional = service.optional().execute().body();
     assertThat(optional).isNotNull();
-    assertThat(optional.isPresent()).isFalse();
+    assertThat(optional.get()).isSameAs(object);
   }
 }
