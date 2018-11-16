@@ -24,11 +24,7 @@ import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-/**
- * A {@linkplain Converter.Factory converter} for {@code Optional<T>} which delegates to another
- * converter to deserialize {@code T} and then wraps it into {@link Optional}.
- */
-@IgnoreJRERequirement
+@IgnoreJRERequirement // Only added when Optional is available (Java 8+ / Android API 24+).
 final class OptionalConverterFactory extends Converter.Factory {
   static final Converter.Factory INSTANCE = new OptionalConverterFactory();
 
