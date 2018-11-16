@@ -21,13 +21,16 @@ import okhttp3.ResponseBody;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 import retrofit2.http.GET;
 import retrofit2.http.Url;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.robolectric.annotation.Config.NEWEST_SDK;
 import static retrofit2.RequestFactoryTest.buildRequest;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(sdk = NEWEST_SDK)
 @SuppressWarnings({"UnusedParameters", "unused"}) // Parameters inspected reflectively.
 public final class RequestFactoryAndroidTest {
   @Test public void getWithAndroidUriUrl() {

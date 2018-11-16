@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
@@ -147,6 +148,16 @@ class Platform {
         @Nullable Executor callbackExecutor) {
       if (callbackExecutor == null) throw new AssertionError();
       return singletonList(new ExecutorCallAdapterFactory(callbackExecutor));
+    }
+
+    @Override List<? extends Converter.Factory> defaultConverterFactories() {
+      return Build.VERSION.SDK_INT >= 24
+          ? singletonList(OptionalConverterFactory.INSTANCE)
+          : Collections.<Converter.Factory>emptyList();
+    }
+
+    @Override int defaultConverterFactoriesSize() {
+      return Build.VERSION.SDK_INT >= 24 ? 1 : 0;
     }
 
     static class MainThreadExecutor implements Executor {
