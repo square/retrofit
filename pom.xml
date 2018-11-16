@@ -65,7 +65,7 @@
     <jackson.version>2.9.4</jackson.version>
     <wire.version>2.2.0</wire.version>
     <simplexml.version>2.7.1</simplexml.version>
-    <moshi.version>1.5.0</moshi.version>
+    <moshi.version>1.8.0</moshi.version>
     <jaxb.version>2.2.12</jaxb.version><!-- 2.3.0 breaks due to https://github.com/mojohaus/animal-sniffer/issues/29 -->
 
     <!-- Sample Dependencies -->
