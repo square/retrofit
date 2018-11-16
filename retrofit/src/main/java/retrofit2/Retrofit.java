@@ -392,7 +392,7 @@ public final class Retrofit {
   public static final class Builder {
     private final Platform platform;
     private @Nullable okhttp3.Call.Factory callFactory;
-    private HttpUrl baseUrl;
+    private @Nullable HttpUrl baseUrl;
     private final List<Converter.Factory> converterFactories = new ArrayList<>();
     private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
     private @Nullable Executor callbackExecutor;

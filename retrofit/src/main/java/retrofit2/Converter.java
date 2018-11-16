@@ -39,7 +39,7 @@ import retrofit2.http.QueryMap;
  * into the {@link Retrofit} instance.
  */
 public interface Converter<F, T> {
-  T convert(F value) throws IOException;
+  @Nullable T convert(F value) throws IOException;
 
   /** Creates {@link Converter} instances based on a type and target usage. */
   abstract class Factory {

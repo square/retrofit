@@ -252,10 +252,10 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   static final class NoContentResponseBody extends ResponseBody {
-    private final MediaType contentType;
+    private final @Nullable MediaType contentType;
     private final long contentLength;
 
-    NoContentResponseBody(MediaType contentType, long contentLength) {
+    NoContentResponseBody(@Nullable MediaType contentType, long contentLength) {
       this.contentType = contentType;
       this.contentLength = contentLength;
     }
@@ -275,7 +275,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   static final class ExceptionCatchingResponseBody extends ResponseBody {
     private final ResponseBody delegate;
-    IOException thrownException;
+    @Nullable IOException thrownException;
 
     ExceptionCatchingResponseBody(ResponseBody delegate) {
       this.delegate = delegate;
