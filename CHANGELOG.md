@@ -6,7 +6,7 @@ Version 2.5.0 *(2018-11-18)*
 
  * New: Built-in support for Kotlin's `Unit` type. This behaves the same as Java's `Void` where the body
    content is ignored and immediately discarded.
- * New: Build-in support for Java 8's `Optional` and `CompletableFuture` types. Previously the 'converter-java8'
+ * New: Built-in support for Java 8's `Optional` and `CompletableFuture` types. Previously the 'converter-java8'
    and 'adapter-java8' dependencies were needed and explicitly adding `Java8OptionalConverterFactory` and/or
    `Java8CallAdapterFactory` to your `Retrofit.Builder` in order to use these types. Support is now built-in and
    those types and their artifacts are marked as deprecated.
