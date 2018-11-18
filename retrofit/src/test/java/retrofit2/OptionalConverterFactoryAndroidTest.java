@@ -31,9 +31,10 @@ import retrofit2.http.GET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.robolectric.annotation.Config.NEWEST_SDK;
+import static org.robolectric.annotation.Config.NONE;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = NEWEST_SDK)
+@Config(sdk = NEWEST_SDK, manifest = NONE)
 public final class OptionalConverterFactoryAndroidTest {
   interface Service {
     @GET("/") Call<Optional<Object>> optional();
