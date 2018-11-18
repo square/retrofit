@@ -75,7 +75,7 @@
     <junit.version>4.12</junit.version>
     <assertj.version>1.7.0</assertj.version>
     <mockito.version>1.9.5</mockito.version>
-    <robolectric.version>3.2</robolectric.version>
+    <robolectric.version>3.8</robolectric.version>
   </properties>
 
   <scm>
