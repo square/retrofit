@@ -2,7 +2,7 @@ Change Log
 ==========
 
 Version 2.5.0 *(2018-11-18)*
-============================
+----------------------------
 
  * New: Built-in support for Kotlin's `Unit` type. This behaves the same as Java's `Void` where the body
    content is ignored and immediately discarded.
