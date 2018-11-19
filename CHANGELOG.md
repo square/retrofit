@@ -16,7 +16,7 @@ Version 2.5.0 *(2018-11-18)*
  * New: Kotlin extension for `Retrofit` which allows you call `create` passing the interface type only as
    a generic parameter (e.g., `retrofit.create<MyService>()`).
  * New: Added `Response.success` overload which allows specifying a custom 2xx status code.
- * New: Added `Call.failure` overload which allows passing any `Throwable` subtype.
+ * New: Added `Calls.failure` overload which allows passing any `Throwable` subtype.
  * New: Minimal R8 rules now ship inside the jar requiring no client configuration in the common case.
  * Fix: Do not propagate fatal errors to the callback. They are sent to the thread's uncaught
    exception handler.
