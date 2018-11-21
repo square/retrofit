@@ -116,13 +116,13 @@ final class RequestBuilder {
     relativeUrl = newRelativeUrl;
   }
 
-  private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
+  private String canonicalizeForPath(String input, boolean alreadyEncoded) {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
       if (codePoint < 0x20 || codePoint >= 0x7f
           || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
-          || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
+          || (!alreadyEncoded && !"GET".equals(method) && (codePoint == '/' || codePoint == '%'))) {
         // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
         out.writeUtf8(input, 0, i);
