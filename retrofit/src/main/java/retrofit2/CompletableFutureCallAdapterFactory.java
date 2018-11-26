@@ -15,7 +15,6 @@
  */
 package retrofit2;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -23,28 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-/**
- * A {@linkplain CallAdapter.Factory call adapter} which creates Java 8 futures.
- * <p>
- * Adding this class to {@link Retrofit} allows you to return {@link CompletableFuture} from
- * service methods.
- * <pre><code>
- * interface MyService {
- *   &#64;GET("user/me")
- *   CompletableFuture&lt;User&gt; getUser()
- * }
- * </code></pre>
- * There are two configurations supported for the {@code CompletableFuture} type parameter:
- * <ul>
- * <li>Direct body (e.g., {@code CompletableFuture<User>}) returns the deserialized body for 2XX
- * responses, sets {@link retrofit2.HttpException HttpException} errors for non-2XX responses, and
- * sets {@link IOException} for network errors.</li>
- * <li>Response wrapped body (e.g., {@code CompletableFuture<Response<User>>}) returns a
- * {@link Response} object for all HTTP responses and sets {@link IOException} for network
- * errors</li>
- * </ul>
- */
-@IgnoreJRERequirement
+@IgnoreJRERequirement // Only added when CompletableFuture is available (Java 8+ / Android API 24+).
 final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
   static final CallAdapter.Factory INSTANCE = new CompletableFutureCallAdapterFactory();
 

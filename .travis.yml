@@ -18,8 +18,6 @@ branches:
 notifications:
   email: false
 
-sudo: false
-
 cache:
   directories:
     - $HOME/.m2

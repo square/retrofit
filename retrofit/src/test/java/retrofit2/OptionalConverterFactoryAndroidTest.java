@@ -22,12 +22,20 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 import retrofit2.helpers.ObjectInstanceConverterFactory;
 import retrofit2.http.GET;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+import static org.robolectric.annotation.Config.NEWEST_SDK;
+import static org.robolectric.annotation.Config.NONE;
 
-public final class OptionalConverterFactoryTest {
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = NEWEST_SDK, manifest = NONE)
+public final class OptionalConverterFactoryAndroidTest {
   interface Service {
     @GET("/") Call<Optional<Object>> optional();
     @GET("/") Call<Object> object();
@@ -45,12 +53,25 @@ public final class OptionalConverterFactoryTest {
     service = retrofit.create(Service.class);
   }
 
-  @Test public void optional() throws IOException {
+  @Config(sdk = 24)
+  @Test public void optionalApi24() throws IOException {
     server.enqueue(new MockResponse());
 
     Optional<Object> optional = service.optional().execute().body();
     assertThat(optional).isNotNull();
     assertThat(optional.get()).isSameAs(ObjectInstanceConverterFactory.VALUE);
+  }
+
+  @Config(sdk = 21)
+  @Test public void optionalPreApi24() {
+    try {
+      service.optional();
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Unable to create converter for java.util.Optional<java.lang.Object>\n"
+              + "    for method Service.optional");
+    }
   }
 
   @Test public void onlyMatchesOptional() throws IOException {

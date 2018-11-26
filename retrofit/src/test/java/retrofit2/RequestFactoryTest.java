@@ -1717,6 +1717,8 @@ public final class RequestFactoryTest {
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
+    assertThat(body.contentType().toString()).startsWith("multipart/form-data; boundary=");
+
     Buffer buffer = new Buffer();
     body.writeTo(buffer);
     String bodyString = buffer.readUtf8();
@@ -2316,7 +2318,9 @@ public final class RequestFactoryTest {
       }
     }
     Request request = buildRequest(Example.class, "bar", "pong");
-    assertBody(request.body(), "foo=bar&ping=pong");
+    RequestBody body = request.body();
+    assertBody(body, "foo=bar&ping=pong");
+    assertThat(body.contentType().toString()).isEqualTo("application/x-www-form-urlencoded");
   }
 
   @Test public void formEncodedWithEncodedNameFieldParam() {
@@ -2636,6 +2640,36 @@ public final class RequestFactoryTest {
     }
     RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
+    assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
+  }
+
+  @Test public void contentTypeAnnotationHeaderOverridesFormEncoding() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      @Headers("Content-Type: text/not-plain") //
+      Call<ResponseBody> method(@Field("foo") String foo, @Field("ping") String ping) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "bar", "pong");
+    assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
+  }
+
+  @Test public void contentTypeAnnotationHeaderOverridesMultipart() {
+    class Example {
+      @Multipart //
+      @POST("/foo/bar/") //
+      @Headers("Content-Type: text/not-plain") //
+      Call<ResponseBody> method(@Part("ping") String ping, @Part("kit") RequestBody kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", RequestBody.create(
+        TEXT_PLAIN, "kat"));
+
+    RequestBody body = request.body();
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
   }
 

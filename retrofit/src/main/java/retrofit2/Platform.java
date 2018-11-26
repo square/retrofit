@@ -22,11 +22,13 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
@@ -146,7 +148,24 @@ class Platform {
     @Override List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
         @Nullable Executor callbackExecutor) {
       if (callbackExecutor == null) throw new AssertionError();
-      return singletonList(new ExecutorCallAdapterFactory(callbackExecutor));
+      ExecutorCallAdapterFactory executorFactory = new ExecutorCallAdapterFactory(callbackExecutor);
+      return Build.VERSION.SDK_INT >= 24
+        ? asList(CompletableFutureCallAdapterFactory.INSTANCE, executorFactory)
+        : singletonList(executorFactory);
+    }
+
+    @Override int defaultCallAdapterFactoriesSize() {
+      return Build.VERSION.SDK_INT >= 24 ? 2 : 1;
+    }
+
+    @Override List<? extends Converter.Factory> defaultConverterFactories() {
+      return Build.VERSION.SDK_INT >= 24
+          ? singletonList(OptionalConverterFactory.INSTANCE)
+          : Collections.<Converter.Factory>emptyList();
+    }
+
+    @Override int defaultConverterFactoriesSize() {
+      return Build.VERSION.SDK_INT >= 24 ? 1 : 0;
     }
 
     static class MainThreadExecutor implements Executor {

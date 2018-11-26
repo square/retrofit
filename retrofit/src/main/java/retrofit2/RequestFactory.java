@@ -69,9 +69,9 @@ final class RequestFactory {
   private final Method method;
   private final HttpUrl baseUrl;
   final String httpMethod;
-  private final String relativeUrl;
-  private final Headers headers;
-  private final MediaType contentType;
+  private final @Nullable String relativeUrl;
+  private final @Nullable Headers headers;
+  private final @Nullable MediaType contentType;
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
@@ -146,16 +146,17 @@ final class RequestFactory {
     boolean gotQueryName;
     boolean gotQueryMap;
     boolean gotUrl;
-    String httpMethod;
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
-    String relativeUrl;
-    Headers headers;
-    MediaType contentType;
-    Set<String> relativeUrlParamNames;
-    ParameterHandler<?>[] parameterHandlers;
     boolean isKotlinSuspendFunction;
+
+    @Nullable String relativeUrl;
+    @Nullable Headers headers;
+    @Nullable MediaType contentType;
+    @Nullable Set<String> relativeUrlParamNames;
+    @Nullable ParameterHandler<?>[] parameterHandlers;
+    @Nullable String httpMethod;
 
     Builder(Retrofit retrofit, Method method) {
       this.retrofit = retrofit;
@@ -333,6 +334,7 @@ final class RequestFactory {
       return result;
     }
 
+    @Nullable
     private ParameterHandler<?> parseParameterAnnotation(
         int p, Type type, Annotation[] annotations, Annotation annotation) {
       if (annotation instanceof Url) {
