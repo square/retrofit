@@ -1,14 +1,14 @@
 Guava Converter
 ===============
 
-A `Converter` which supports Guava's `Optional<T>` by delegating to other converters for `T`
+A `Converter` which supports [Guava][1]'s `Optional<T>` by delegating to other converters for `T`
 and then wrapping it into `Optional`.
 
 
 Download
 --------
 
-Download [the latest JAR][1] or grab via [Maven][2]:
+Download [the latest JAR][2] or grab via [Maven][3]:
 ```xml
 <dependency>
   <groupId>com.squareup.retrofit2</groupId>
@@ -24,7 +24,7 @@ implementation 'com.squareup.retrofit2:converter-guava:latest.version'
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
 
-
- [1]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=converter-guava&v=LATEST
- [2]: http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.squareup.retrofit2%22%20a%3A%22converter-guava%22
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+[1]: https://github.com/google/guava
+[2]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&amp;amp;a=converter-guava&amp;amp;v=LATEST
+[3]: http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.squareup.retrofit2%22%20a%3A%22converter-guava%22
+[snap]: https://oss.sonatype.org/content/repositories/snapshots/
