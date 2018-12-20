@@ -16,7 +16,7 @@ Download [the latest JAR][2] or grab via [Maven][3]:
   <version>latest.version</version>
 </dependency>
 ```
-or [Gradle][2]:
+or [Gradle][3]:
 ```groovy
 implementation 'com.squareup.retrofit2:converter-guava:latest.version'
 ```
