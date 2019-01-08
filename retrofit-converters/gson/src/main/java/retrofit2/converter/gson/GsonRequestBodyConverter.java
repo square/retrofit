@@ -43,6 +43,7 @@ final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
     Buffer buffer = new Buffer();
     Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
     JsonWriter jsonWriter = gson.newJsonWriter(writer);
+    jsonWriter.setHtmlSafe(gson.htmlSafe());
     adapter.write(jsonWriter, value);
     jsonWriter.close();
     return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
