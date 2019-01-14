@@ -25,21 +25,25 @@ import retrofit2.Response;
 
 final class BodyObservable<T> extends Observable<T> {
   private final Observable<Response<T>> upstream;
+  private final boolean errorOnNoContent;
 
-  BodyObservable(Observable<Response<T>> upstream) {
+  BodyObservable(Observable<Response<T>> upstream, boolean errorOnNoContent) {
     this.upstream = upstream;
+    this.errorOnNoContent = errorOnNoContent;
   }
 
   @Override protected void subscribeActual(Observer<? super T> observer) {
-    upstream.subscribe(new BodyObserver<T>(observer));
+    upstream.subscribe(new BodyObserver<T>(observer, errorOnNoContent));
   }
 
   private static class BodyObserver<R> implements Observer<Response<R>> {
     private final Observer<? super R> observer;
+    private final boolean errorOnNoContent;
     private boolean terminated;
 
-    BodyObserver(Observer<? super R> observer) {
+    BodyObserver(Observer<? super R> observer, boolean errorOnNoContent) {
       this.observer = observer;
+      this.errorOnNoContent = errorOnNoContent;
     }
 
     @Override public void onSubscribe(Disposable disposable) {
@@ -47,11 +51,18 @@ final class BodyObservable<T> extends Observable<T> {
     }
 
     @Override public void onNext(Response<R> response) {
-      if (response.isSuccessful()) {
+      boolean noContent = errorOnNoContent
+          && (response.code() == 204 || response.code() == 205);
+      if (response.isSuccessful() && !noContent) {
         observer.onNext(response.body());
       } else {
         terminated = true;
-        Throwable t = new HttpException(response);
+        Throwable t;
+        if (noContent) {
+          t = new NoContentException(response);
+        } else {
+          t = new HttpException(response);
+        }
         try {
           observer.onError(t);
         } catch (Throwable inner) {

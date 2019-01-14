@@ -67,6 +67,22 @@ public final class SingleTest {
     observer.assertError(HttpException.class, "HTTP 404 Client Error");
   }
 
+  @Test public void bodySuccess204() {
+    server.enqueue(new MockResponse().setResponseCode(204));
+
+    RecordingSingleObserver<String> observer = observerRule.create();
+    service.body().subscribe(observer);
+    observer.assertError(NoContentException.class, "HTTP 204 OK");
+  }
+
+  @Test public void bodySuccess205() {
+    server.enqueue(new MockResponse().setResponseCode(205));
+
+    RecordingSingleObserver<String> observer = observerRule.create();
+    service.body().subscribe(observer);
+    observer.assertError(NoContentException.class, "HTTP 205 OK");
+  }
+
   @Test public void bodyFailure() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 

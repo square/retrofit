@@ -54,6 +54,22 @@ public final class CompletableTest {
     observer.assertComplete();
   }
 
+  @Test public void completableSuccess204() {
+    server.enqueue(new MockResponse().setResponseCode(204));
+
+    RecordingCompletableObserver observer = observerRule.create();
+    service.completable().subscribe(observer);
+    observer.assertComplete();
+  }
+
+  @Test public void completableSuccess205() {
+    server.enqueue(new MockResponse().setResponseCode(205));
+
+    RecordingCompletableObserver observer = observerRule.create();
+    service.completable().subscribe(observer);
+    observer.assertComplete();
+  }
+
   @Test public void completableSuccess404() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
