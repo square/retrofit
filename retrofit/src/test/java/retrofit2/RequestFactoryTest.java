@@ -1456,8 +1456,9 @@ public final class RequestFactoryTest {
     try {
       buildRequest(Example.class, (HttpUrl) null);
       fail();
-    } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("@Url parameter is null.");
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("@Url parameter is null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
