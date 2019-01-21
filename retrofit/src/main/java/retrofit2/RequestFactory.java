@@ -459,7 +459,8 @@ final class RequestFactory {
         Converter<?, String> valueConverter =
             retrofit.stringConverter(valueType, annotations);
 
-        return new ParameterHandler.QueryMap<>(method, p, valueConverter, ((QueryMap) annotation).encoded());
+        return new ParameterHandler.QueryMap<>(method, p,
+                valueConverter, ((QueryMap) annotation).encoded());
 
       } else if (annotation instanceof Header) {
         validateResolvableType(p, type);
@@ -572,7 +573,8 @@ final class RequestFactory {
             retrofit.stringConverter(valueType, annotations);
 
         gotField = true;
-        return new ParameterHandler.FieldMap<>(method, p, valueConverter, ((FieldMap) annotation).encoded());
+        return new ParameterHandler.FieldMap<>(method, p,
+                valueConverter, ((FieldMap) annotation).encoded());
 
       } else if (annotation instanceof Part) {
         validateResolvableType(p, type);

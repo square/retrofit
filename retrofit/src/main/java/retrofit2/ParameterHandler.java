@@ -65,9 +65,9 @@ abstract class ParameterHandler<T> {
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Object value) {
-      try{
+      try {
         checkNotNull(value, "@Url parameter is null.");
-      }catch (NullPointerException npe){
+      } catch (NullPointerException npe) {
         throw Utils.parameterError(method, npe, p, "@Url parameter is null.");
       }
       builder.setRelativeUrl(value);
@@ -111,7 +111,8 @@ abstract class ParameterHandler<T> {
 
     @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) {
-        throw Utils.parameterError(method, p, "Path parameter \"" + name + "\" value must not be null.");
+        throw Utils.parameterError(method, p,
+                "Path parameter \"" + name + "\" value must not be null.");
       }
       builder.addPathParam(name, valueConverter.convert(value), encoded);
     }
@@ -197,7 +198,7 @@ abstract class ParameterHandler<T> {
       }
     }
 
-    private void throwParameterError(String message){
+    private void throwParameterError(String message) {
       throw Utils.parameterError(method, p, message);
     }
   }
@@ -233,7 +234,7 @@ abstract class ParameterHandler<T> {
       }
     }
 
-    private void throwParameterError(String message){
+    private void throwParameterError(String message) {
       throw Utils.parameterError(method, p, message);
     }
   }
@@ -304,7 +305,7 @@ abstract class ParameterHandler<T> {
       }
     }
 
-    private void throwParameterError(String message){
+    private void throwParameterError(String message) {
       throw Utils.parameterError(method, p, message);
     }
   }
@@ -354,7 +355,8 @@ abstract class ParameterHandler<T> {
     private final Method method;
     private final int p;
 
-    PartMap(Method method, int p, Converter<T, RequestBody> valueConverter, String transferEncoding) {
+    PartMap(Method method, int p,
+            Converter<T, RequestBody> valueConverter, String transferEncoding) {
       this.valueConverter = valueConverter;
       this.transferEncoding = transferEncoding;
       this.method = method;
@@ -386,7 +388,7 @@ abstract class ParameterHandler<T> {
       }
     }
 
-    private void throwParameterError(String message){
+    private void throwParameterError(String message) {
       throw Utils.parameterError(method, p, message);
     }
   }
