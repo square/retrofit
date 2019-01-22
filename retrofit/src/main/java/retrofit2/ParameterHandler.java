@@ -65,7 +65,7 @@ abstract class ParameterHandler<T> {
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Object value) {
-      if(value == null){
+      if (value == null) {
         throw Utils.parameterError(method, p, "@Url parameter is null.");
       }
       builder.setRelativeUrl(value);
@@ -174,16 +174,17 @@ abstract class ParameterHandler<T> {
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throwParameterError("Query map contained null key.");
+          throw Utils.parameterError(method, p, "Query map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throwParameterError("Query map contained null value for key '" + entryKey + "'.");
+          throw Utils.parameterError(method, p,
+                  "Query map contained null value for key '" + entryKey + "'.");
         }
 
         String convertedEntryValue = valueConverter.convert(entryValue);
         if (convertedEntryValue == null) {
-          throwParameterError("Query map value '"
+          throw Utils.parameterError(method, p, "Query map value '"
               + entryValue
               + "' converted to null by "
               + valueConverter.getClass().getName()
@@ -194,10 +195,6 @@ abstract class ParameterHandler<T> {
 
         builder.addQueryParam(entryKey, convertedEntryValue, encoded);
       }
-    }
-
-    private void throwParameterError(String message) {
-      throw Utils.parameterError(method, p, message);
     }
   }
 
@@ -215,25 +212,21 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throwParameterError("Header map was null.");
+        throw Utils.parameterError(method, p, "Header map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String headerName = entry.getKey();
         if (headerName == null) {
-          throwParameterError("Header map contained null key.");
+          throw Utils.parameterError(method, p, "Header map contained null key.");
         }
         T headerValue = entry.getValue();
         if (headerValue == null) {
-          throwParameterError(
-              "Header map contained null value for key '" + headerName + "'.");
+          throw Utils.parameterError(method, p,
+                  "Header map contained null value for key '" + headerName + "'.");
         }
         builder.addHeader(headerName, valueConverter.convert(headerValue));
       }
-    }
-
-    private void throwParameterError(String message) {
-      throw Utils.parameterError(method, p, message);
     }
   }
 
@@ -274,23 +267,23 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throwParameterError("Field map was null.");
+        throw Utils.parameterError(method, p, "Field map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throwParameterError("Field map contained null key.");
+          throw Utils.parameterError(method, p, "Field map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throwParameterError(
-              "Field map contained null value for key '" + entryKey + "'.");
+          throw Utils.parameterError(method, p,
+                  "Field map contained null value for key '" + entryKey + "'.");
         }
 
         String fieldEntry = valueConverter.convert(entryValue);
         if (fieldEntry == null) {
-          throwParameterError("Field map value '"
+          throw Utils.parameterError(method, p, "Field map value '"
               + entryValue
               + "' converted to null by "
               + valueConverter.getClass().getName()
@@ -301,10 +294,6 @@ abstract class ParameterHandler<T> {
 
         builder.addFormField(entryKey, fieldEntry, encoded);
       }
-    }
-
-    private void throwParameterError(String message) {
-      throw Utils.parameterError(method, p, message);
     }
   }
 
@@ -364,18 +353,18 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throwParameterError("Part map was null.");
+        throw Utils.parameterError(method, p, "Part map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throwParameterError("Part map contained null key.");
+          throw Utils.parameterError(method, p, "Part map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throwParameterError(
-              "Part map contained null value for key '" + entryKey + "'.");
+          throw Utils.parameterError(method, p,
+                  "Part map contained null value for key '" + entryKey + "'.");
         }
 
         Headers headers = Headers.of(
@@ -384,10 +373,6 @@ abstract class ParameterHandler<T> {
 
         builder.addPart(headers, valueConverter.convert(entryValue));
       }
-    }
-
-    private void throwParameterError(String message) {
-      throw Utils.parameterError(method, p, message);
     }
   }
 
@@ -414,6 +399,5 @@ abstract class ParameterHandler<T> {
       }
       builder.setBody(body);
     }
-
   }
 }
