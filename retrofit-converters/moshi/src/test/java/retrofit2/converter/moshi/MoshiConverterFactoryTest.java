@@ -118,7 +118,7 @@ public final class MoshiConverterFactoryTest {
 
     @FromJson public Value readWithoutEndingObject(JsonReader reader) throws IOException {
       reader.beginObject();
-      reader.nextName();
+      reader.skipName();
       String theName = reader.nextString();
       return new Value(theName);
     }
@@ -255,7 +255,7 @@ public final class MoshiConverterFactoryTest {
       call.execute();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("Cannot skip unexpected STRING at $.taco");
+      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.");
     }
   }
 
