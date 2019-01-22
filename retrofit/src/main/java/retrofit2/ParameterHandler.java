@@ -65,10 +65,8 @@ abstract class ParameterHandler<T> {
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Object value) {
-      try {
-        checkNotNull(value, "@Url parameter is null.");
-      } catch (NullPointerException npe) {
-        throw Utils.parameterError(method, npe, p, "@Url parameter is null.");
+      if(value == null){
+        throw Utils.parameterError(method, p, "@Url parameter is null.");
       }
       builder.setRelativeUrl(value);
     }
