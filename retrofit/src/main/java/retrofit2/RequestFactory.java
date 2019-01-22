@@ -344,7 +344,7 @@ final class RequestFactory {
             || type == String.class
             || type == URI.class
             || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()))) {
-          return new ParameterHandler.RelativeUrl();
+          return new ParameterHandler.RelativeUrl(method, p);
         } else {
           throw parameterError(method, p,
               "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type.");
@@ -375,7 +375,7 @@ final class RequestFactory {
         validatePathName(p, name);
 
         Converter<?, String> converter = retrofit.stringConverter(type, annotations);
-        return new ParameterHandler.Path<>(name, converter, path.encoded());
+        return new ParameterHandler.Path<>(method, p, name, converter, path.encoded());
 
       } else if (annotation instanceof Query) {
         validateResolvableType(p, type);
@@ -459,7 +459,8 @@ final class RequestFactory {
         Converter<?, String> valueConverter =
             retrofit.stringConverter(valueType, annotations);
 
-        return new ParameterHandler.QueryMap<>(valueConverter, ((QueryMap) annotation).encoded());
+        return new ParameterHandler.QueryMap<>(method, p,
+                valueConverter, ((QueryMap) annotation).encoded());
 
       } else if (annotation instanceof Header) {
         validateResolvableType(p, type);
@@ -510,7 +511,7 @@ final class RequestFactory {
         Converter<?, String> valueConverter =
             retrofit.stringConverter(valueType, annotations);
 
-        return new ParameterHandler.HeaderMap<>(valueConverter);
+        return new ParameterHandler.HeaderMap<>(method, p, valueConverter);
 
       } else if (annotation instanceof Field) {
         validateResolvableType(p, type);
@@ -572,7 +573,8 @@ final class RequestFactory {
             retrofit.stringConverter(valueType, annotations);
 
         gotField = true;
-        return new ParameterHandler.FieldMap<>(valueConverter, ((FieldMap) annotation).encoded());
+        return new ParameterHandler.FieldMap<>(method, p,
+                valueConverter, ((FieldMap) annotation).encoded());
 
       } else if (annotation instanceof Part) {
         validateResolvableType(p, type);
@@ -634,7 +636,7 @@ final class RequestFactory {
             }
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(headers, converter).iterable();
+            return new ParameterHandler.Part<>(method, p, headers, converter).iterable();
           } else if (rawParameterType.isArray()) {
             Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
             if (MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
@@ -644,7 +646,7 @@ final class RequestFactory {
             }
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(headers, converter).array();
+            return new ParameterHandler.Part<>(method, p, headers, converter).array();
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             throw parameterError(method, p,
                 "@Part parameters using the MultipartBody.Part must not "
@@ -652,7 +654,7 @@ final class RequestFactory {
           } else {
             Converter<?, RequestBody> converter =
                 retrofit.requestBodyConverter(type, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(headers, converter);
+            return new ParameterHandler.Part<>(method, p, headers, converter);
           }
         }
 
@@ -689,7 +691,7 @@ final class RequestFactory {
             retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
 
         PartMap partMap = (PartMap) annotation;
-        return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
+        return new ParameterHandler.PartMap<>(method, p, valueConverter, partMap.encoding());
 
       } else if (annotation instanceof Body) {
         validateResolvableType(p, type);
@@ -709,7 +711,7 @@ final class RequestFactory {
           throw parameterError(method, e, p, "Unable to create @Body converter for %s", type);
         }
         gotBody = true;
-        return new ParameterHandler.Body<>(converter);
+        return new ParameterHandler.Body<>(method, p, converter);
       }
 
       return null; // Not a Retrofit annotation.

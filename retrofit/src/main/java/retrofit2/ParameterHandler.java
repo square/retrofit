@@ -17,6 +17,7 @@ package retrofit2;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.Map;
 import javax.annotation.Nullable;
 import okhttp3.Headers;
@@ -55,8 +56,18 @@ abstract class ParameterHandler<T> {
   }
 
   static final class RelativeUrl extends ParameterHandler<Object> {
+    private final Method method;
+    private final int p;
+
+    RelativeUrl(Method method, int p) {
+      this.method = method;
+      this.p = p;
+    }
+
     @Override void apply(RequestBuilder builder, @Nullable Object value) {
-      checkNotNull(value, "@Url parameter is null.");
+      if (value == null) {
+        throw Utils.parameterError(method, p, "@Url parameter is null.");
+      }
       builder.setRelativeUrl(value);
     }
   }
@@ -81,11 +92,16 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Path<T> extends ParameterHandler<T> {
+    private final Method method;
+    private final int p;
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    Path(String name, Converter<T, String> valueConverter, boolean encoded) {
+
+    Path(Method method, int p, String name, Converter<T, String> valueConverter, boolean encoded) {
+      this.method = method;
+      this.p = p;
       this.name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
@@ -93,8 +109,8 @@ abstract class ParameterHandler<T> {
 
     @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
       if (value == null) {
-        throw new IllegalArgumentException(
-            "Path parameter \"" + name + "\" value must not be null.");
+        throw Utils.parameterError(method, p,
+                "Path parameter \"" + name + "\" value must not be null.");
       }
       builder.addPathParam(name, valueConverter.convert(value), encoded);
     }
@@ -137,10 +153,14 @@ abstract class ParameterHandler<T> {
   }
 
   static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Method method;
+    private final int p;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    QueryMap(Converter<T, String> valueConverter, boolean encoded) {
+    QueryMap(Method method, int p, Converter<T, String> valueConverter, boolean encoded) {
+      this.method = method;
+      this.p = p;
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
@@ -148,23 +168,23 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throw new IllegalArgumentException("Query map was null.");
+        throw Utils.parameterError(method, p, "Query map was null");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throw new IllegalArgumentException("Query map contained null key.");
+          throw Utils.parameterError(method, p, "Query map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Query map contained null value for key '" + entryKey + "'.");
+          throw Utils.parameterError(method, p,
+                  "Query map contained null value for key '" + entryKey + "'.");
         }
 
         String convertedEntryValue = valueConverter.convert(entryValue);
         if (convertedEntryValue == null) {
-          throw new IllegalArgumentException("Query map value '"
+          throw Utils.parameterError(method, p, "Query map value '"
               + entryValue
               + "' converted to null by "
               + valueConverter.getClass().getName()
@@ -179,27 +199,31 @@ abstract class ParameterHandler<T> {
   }
 
   static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Method method;
+    private final int p;
     private final Converter<T, String> valueConverter;
 
-    HeaderMap(Converter<T, String> valueConverter) {
+    HeaderMap(Method method, int p, Converter<T, String> valueConverter) {
+      this.method = method;
+      this.p = p;
       this.valueConverter = valueConverter;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throw new IllegalArgumentException("Header map was null.");
+        throw Utils.parameterError(method, p, "Header map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String headerName = entry.getKey();
         if (headerName == null) {
-          throw new IllegalArgumentException("Header map contained null key.");
+          throw Utils.parameterError(method, p, "Header map contained null key.");
         }
         T headerValue = entry.getValue();
         if (headerValue == null) {
-          throw new IllegalArgumentException(
-              "Header map contained null value for key '" + headerName + "'.");
+          throw Utils.parameterError(method, p,
+                  "Header map contained null value for key '" + headerName + "'.");
         }
         builder.addHeader(headerName, valueConverter.convert(headerValue));
       }
@@ -228,10 +252,14 @@ abstract class ParameterHandler<T> {
   }
 
   static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Method method;
+    private final int p;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    FieldMap(Converter<T, String> valueConverter, boolean encoded) {
+    FieldMap(Method method, int p, Converter<T, String> valueConverter, boolean encoded) {
+      this.method = method;
+      this.p = p;
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
@@ -239,23 +267,23 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throw new IllegalArgumentException("Field map was null.");
+        throw Utils.parameterError(method, p, "Field map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throw new IllegalArgumentException("Field map contained null key.");
+          throw Utils.parameterError(method, p, "Field map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Field map contained null value for key '" + entryKey + "'.");
+          throw Utils.parameterError(method, p,
+                  "Field map contained null value for key '" + entryKey + "'.");
         }
 
         String fieldEntry = valueConverter.convert(entryValue);
         if (fieldEntry == null) {
-          throw new IllegalArgumentException("Field map value '"
+          throw Utils.parameterError(method, p, "Field map value '"
               + entryValue
               + "' converted to null by "
               + valueConverter.getClass().getName()
@@ -270,10 +298,14 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Part<T> extends ParameterHandler<T> {
+    private final Method method;
+    private final int p;
     private final Headers headers;
     private final Converter<T, RequestBody> converter;
 
-    Part(Headers headers, Converter<T, RequestBody> converter) {
+    Part(Method method, int p, Headers headers, Converter<T, RequestBody> converter) {
+      this.method = method;
+      this.p = p;
       this.headers = headers;
       this.converter = converter;
     }
@@ -285,7 +317,7 @@ abstract class ParameterHandler<T> {
       try {
         body = converter.convert(value);
       } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+        throw Utils.parameterError(method, p, "Unable to convert " + value + " to RequestBody", e);
       }
       builder.addPart(headers, body);
     }
@@ -305,10 +337,15 @@ abstract class ParameterHandler<T> {
   }
 
   static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
+    private final Method method;
+    private final int p;
     private final Converter<T, RequestBody> valueConverter;
     private final String transferEncoding;
 
-    PartMap(Converter<T, RequestBody> valueConverter, String transferEncoding) {
+    PartMap(Method method, int p,
+            Converter<T, RequestBody> valueConverter, String transferEncoding) {
+      this.method = method;
+      this.p = p;
       this.valueConverter = valueConverter;
       this.transferEncoding = transferEncoding;
     }
@@ -316,18 +353,18 @@ abstract class ParameterHandler<T> {
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
         throws IOException {
       if (value == null) {
-        throw new IllegalArgumentException("Part map was null.");
+        throw Utils.parameterError(method, p, "Part map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throw new IllegalArgumentException("Part map contained null key.");
+          throw Utils.parameterError(method, p, "Part map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
-          throw new IllegalArgumentException(
-              "Part map contained null value for key '" + entryKey + "'.");
+          throw Utils.parameterError(method, p,
+                  "Part map contained null value for key '" + entryKey + "'.");
         }
 
         Headers headers = Headers.of(
@@ -340,21 +377,25 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Body<T> extends ParameterHandler<T> {
+    private final Method method;
+    private final int p;
     private final Converter<T, RequestBody> converter;
 
-    Body(Converter<T, RequestBody> converter) {
+    Body(Method method, int p, Converter<T, RequestBody> converter) {
+      this.method = method;
+      this.p = p;
       this.converter = converter;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable T value) {
       if (value == null) {
-        throw new IllegalArgumentException("Body parameter value must not be null.");
+        throw Utils.parameterError(method, p, "Body parameter value must not be null.");
       }
       RequestBody body;
       try {
         body = converter.convert(value);
       } catch (IOException e) {
-        throw new RuntimeException("Unable to convert " + value + " to RequestBody", e);
+        throw Utils.parameterError(method, e, p, "Unable to convert " + value + " to RequestBody");
       }
       builder.setBody(body);
     }
