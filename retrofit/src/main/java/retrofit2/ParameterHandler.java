@@ -94,19 +94,19 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Path<T> extends ParameterHandler<T> {
+    private final Method method;
+    private final int p;
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
-    private final Method method;
-    private final int p;
 
 
     Path(Method method, int p, String name, Converter<T, String> valueConverter, boolean encoded) {
+      this.method = method;
+      this.p = p;
       this.name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
-      this.method = method;
-      this.p = p;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable T value) throws IOException {
@@ -155,16 +155,16 @@ abstract class ParameterHandler<T> {
   }
 
   static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
     private final Method method;
     private final int p;
+    private final Converter<T, String> valueConverter;
+    private final boolean encoded;
 
     QueryMap(Method method, int p, Converter<T, String> valueConverter, boolean encoded) {
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
       this.method = method;
       this.p = p;
+      this.valueConverter = valueConverter;
+      this.encoded = encoded;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
@@ -204,14 +204,14 @@ abstract class ParameterHandler<T> {
   }
 
   static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
     private final Method method;
     private final int p;
+    private final Converter<T, String> valueConverter;
 
     HeaderMap(Method method, int p, Converter<T, String> valueConverter) {
-      this.valueConverter = valueConverter;
       this.method = method;
       this.p = p;
+      this.valueConverter = valueConverter;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
@@ -261,16 +261,16 @@ abstract class ParameterHandler<T> {
   }
 
   static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, String> valueConverter;
-    private final boolean encoded;
     private final Method method;
     private final int p;
+    private final Converter<T, String> valueConverter;
+    private final boolean encoded;
 
     FieldMap(Method method, int p, Converter<T, String> valueConverter, boolean encoded) {
-      this.valueConverter = valueConverter;
-      this.encoded = encoded;
       this.method = method;
       this.p = p;
+      this.valueConverter = valueConverter;
+      this.encoded = encoded;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
@@ -311,16 +311,16 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Part<T> extends ParameterHandler<T> {
-    private final Headers headers;
-    private final Converter<T, RequestBody> converter;
     private final Method method;
     private final int p;
+    private final Headers headers;
+    private final Converter<T, RequestBody> converter;
 
     Part(Method method, int p, Headers headers, Converter<T, RequestBody> converter) {
-      this.headers = headers;
-      this.converter = converter;
       this.method = method;
       this.p = p;
+      this.headers = headers;
+      this.converter = converter;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable T value) {
@@ -350,17 +350,17 @@ abstract class ParameterHandler<T> {
   }
 
   static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
-    private final Converter<T, RequestBody> valueConverter;
-    private final String transferEncoding;
     private final Method method;
     private final int p;
+    private final Converter<T, RequestBody> valueConverter;
+    private final String transferEncoding;
 
     PartMap(Method method, int p,
             Converter<T, RequestBody> valueConverter, String transferEncoding) {
-      this.valueConverter = valueConverter;
-      this.transferEncoding = transferEncoding;
       this.method = method;
       this.p = p;
+      this.valueConverter = valueConverter;
+      this.transferEncoding = transferEncoding;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable Map<String, T> value)
@@ -394,14 +394,14 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Body<T> extends ParameterHandler<T> {
-    private final Converter<T, RequestBody> converter;
     private final Method method;
     private final int p;
+    private final Converter<T, RequestBody> converter;
 
     Body(Method method, int p, Converter<T, RequestBody> converter) {
-      this.converter = converter;
       this.method = method;
       this.p = p;
+      this.converter = converter;
     }
 
     @Override void apply(RequestBuilder builder, @Nullable T value) {
