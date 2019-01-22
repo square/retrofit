@@ -46,6 +46,8 @@ final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
       return unmarshaller.unmarshal(streamReader, type).getValue();
     } catch (JAXBException | XMLStreamException e) {
       throw new RuntimeException(e);
+    } finally {
+      value.close();
     }
   }
 }
