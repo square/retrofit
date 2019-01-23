@@ -64,6 +64,7 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
           observer.onComplete();
         }
       } catch (Throwable t) {
+        Exceptions.throwIfFatal(t);
         if (terminated) {
           RxJavaPlugins.onError(t);
         } else if (!disposed) {

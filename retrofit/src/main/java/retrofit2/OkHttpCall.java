@@ -128,7 +128,8 @@ final class OkHttpCall<T> implements Call<T> {
         try {
           callback.onResponse(OkHttpCall.this, response);
         } catch (Throwable t) {
-          t.printStackTrace();
+          throwIfFatal(t);
+          t.printStackTrace(); // TODO this is not great
         }
       }
 
@@ -140,7 +141,8 @@ final class OkHttpCall<T> implements Call<T> {
         try {
           callback.onFailure(OkHttpCall.this, e);
         } catch (Throwable t) {
-          t.printStackTrace();
+          throwIfFatal(t);
+          t.printStackTrace(); // TODO this is not great
         }
       }
     });
