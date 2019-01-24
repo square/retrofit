@@ -144,8 +144,6 @@ public final class Retrofit {
             }
             if (platform.isDefaultMethod(method)) {
               return platform.invokeDefaultMethod(method, service, proxy, args);
-            } else if (Modifier.isStatic(method.getModifiers())) {
-              return method.invoke(null, args);
             }
             return loadServiceMethod(method).invoke(args != null ? args : emptyArgs);
           }
