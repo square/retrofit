@@ -35,29 +35,7 @@ import okio.Buffer;
 import org.junit.Test;
 import retrofit2.helpers.NullObjectConverterFactory;
 import retrofit2.helpers.ToStringConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.Headers;
-import retrofit2.http.Multipart;
-import retrofit2.http.OPTIONS;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.QueryName;
-import retrofit2.http.Url;
+import retrofit2.http.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -2534,6 +2512,24 @@ public final class RequestFactoryTest {
     Buffer buffer = new Buffer();
     request.body().writeTo(buffer);
     assertThat(buffer.readUtf8()).isEqualTo("hello=world");
+  }
+
+  @Test public void simpleDefaultFormEncoded() {
+    class Example {
+      @FormUrlEncoded //
+      @POST("/foo") //
+      @DefaultParameters(fields = {
+        @DefaultField(name = "foo", value = "bar"),
+        @DefaultField(name = "ping", value = "pong")
+      })
+      Call<ResponseBody> method(@Field(value = "John") String person) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "Doe");
+    RequestBody body = request.body();
+    assertBody(body, "John=Doe&foo=bar&ping=pong");
+    assertThat(body.contentType().toString()).isEqualTo("application/x-www-form-urlencoded");
   }
 
   @Test public void simpleHeaders() {

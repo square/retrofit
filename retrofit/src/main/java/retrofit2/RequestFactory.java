@@ -35,6 +35,8 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.http.Body;
+import retrofit2.http.DefaultField;
+import retrofit2.http.DefaultParameters;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
@@ -74,6 +76,7 @@ final class RequestFactory {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final @Nullable DefaultParameterHandler[] defaultParameterHandlers;
   private final ParameterHandler<?>[] parameterHandlers;
 
   RequestFactory(Builder builder) {
@@ -87,6 +90,7 @@ final class RequestFactory {
     isFormEncoded = builder.isFormEncoded;
     isMultipart = builder.isMultipart;
     parameterHandlers = builder.parameterHandlers;
+    defaultParameterHandlers = builder.defaultParameterHandlers;
   }
 
   okhttp3.Request create(Object[] args) throws IOException {
@@ -106,6 +110,12 @@ final class RequestFactory {
     for (int p = 0; p < argumentCount; p++) {
       argumentList.add(args[p]);
       handlers[p].apply(requestBuilder, args[p]);
+    }
+
+    if (defaultParameterHandlers != null) {
+      for (DefaultParameterHandler defaultParameterHandler: defaultParameterHandlers) {
+        defaultParameterHandler.apply(requestBuilder);
+      }
     }
 
     return requestBuilder.get()
@@ -147,6 +157,7 @@ final class RequestFactory {
     @Nullable MediaType contentType;
     @Nullable Set<String> relativeUrlParamNames;
     @Nullable ParameterHandler<?>[] parameterHandlers;
+    @Nullable DefaultParameterHandler[] defaultParameterHandlers;
 
     Builder(Retrofit retrofit, Method method) {
       this.retrofit = retrofit;
@@ -232,6 +243,8 @@ final class RequestFactory {
           throw methodError(method, "Only one encoding annotation is allowed.");
         }
         isFormEncoded = true;
+      } else if (annotation instanceof DefaultParameters) {
+        defaultParameterHandlers = parseRequestDefaultParameters((DefaultParameters) annotation);
       }
     }
 
@@ -284,6 +297,20 @@ final class RequestFactory {
         }
       }
       return builder.build();
+    }
+
+    private DefaultParameterHandler[] parseRequestDefaultParameters(DefaultParameters annotation) {
+      DefaultField[] fields = annotation.fields();
+      if (fields.length > 0) {
+        gotField = true;
+      }
+      DefaultParameterHandler[] defaultParameterHandlers
+              = new DefaultParameterHandler[fields.length];
+      for (int i = 0; i < fields.length; i++) {
+        defaultParameterHandlers[i] = new DefaultParameterHandler.DefaultField(
+                fields[i].name(), fields[i].value(), fields[i].encoded());
+      }
+      return defaultParameterHandlers;
     }
 
     private ParameterHandler<?> parseParameter(
