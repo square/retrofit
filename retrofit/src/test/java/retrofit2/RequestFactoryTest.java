@@ -488,7 +488,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, new Object[] { null });
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Query map was null.");
+      assertThat(e).hasMessage("Query map was null (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -508,7 +509,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, queryParams);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Query map contained null key.");
+      assertThat(e).hasMessage("Query map contained null key. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -528,7 +530,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, queryParams);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Query map contained null value for key 'kit'.");
+      assertThat(e).hasMessage("Query map contained null value for key 'kit'. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -601,7 +604,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, (Map<String, String>) null);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Header map was null.");
+      assertThat(e).hasMessage("Header map was null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -621,7 +625,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, headers);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Header map contained null key.");
+      assertThat(e).hasMessage("Header map contained null key. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -641,7 +646,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, headers);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Header map contained null value for key 'Accept-Charset'.");
+      assertThat(e).hasMessage("Header map contained null value for key 'Accept-Charset'. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -971,7 +977,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, new Object[] { null });
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Path parameter \"ping\" value must not be null.");
+      assertThat(e.getMessage()).isEqualTo("Path parameter \"ping\" value must not be null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -1456,8 +1463,9 @@ public final class RequestFactoryTest {
     try {
       buildRequest(Example.class, (HttpUrl) null);
       fail();
-    } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("@Url parameter is null.");
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("@Url parameter is null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -1682,7 +1690,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, new Object[] { null });
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Body parameter value must not be null.");
+      assertThat(e.getMessage()).isEqualTo("Body parameter value must not be null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -2182,7 +2191,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, new Object[] { null });
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Part map was null.");
+      assertThat(e).hasMessage("Part map was null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -2203,7 +2213,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, params);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Part map contained null key.");
+      assertThat(e).hasMessage("Part map contained null key. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -2224,7 +2235,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, params);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Part map contained null value for key 'kit'.");
+      assertThat(e).hasMessage("Part map contained null value for key 'kit'. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -2437,7 +2449,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, new Object[] { null });
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Field map was null.");
+      assertThat(e).hasMessage("Field map was null. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -2458,7 +2471,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, fieldMap);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Field map contained null key.");
+      assertThat(e).hasMessage("Field map contained null key. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
@@ -2479,7 +2493,8 @@ public final class RequestFactoryTest {
       buildRequest(Example.class, fieldMap);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Field map contained null value for key 'foo'.");
+      assertThat(e).hasMessage("Field map contained null value for key 'foo'. (parameter #1)\n" +
+              "    for method Example.method");
     }
   }
 
