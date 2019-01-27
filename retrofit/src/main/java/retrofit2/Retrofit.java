@@ -18,6 +18,7 @@ package retrofit2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -152,7 +153,7 @@ public final class Retrofit {
   private void eagerlyValidateMethods(Class<?> service) {
     Platform platform = Platform.get();
     for (Method method : service.getDeclaredMethods()) {
-      if (!platform.isDefaultMethod(method)) {
+      if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
         loadServiceMethod(method);
       }
     }

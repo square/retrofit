@@ -16,7 +16,7 @@
 package retrofit2;
 
 // TODO this test doesn't play nice in the IDE because it relies on Java 8 language features.
-public final class Java8DefaultMethodsTest {
+public final class Java8DefaultStaticMethodsInValidationTest {
   //@Rule public final MockWebServer server = new MockWebServer();
   //
   //interface Example {
@@ -25,21 +25,18 @@ public final class Java8DefaultMethodsTest {
   //  default Call<String> user() {
   //    return user("hey");
   //  }
+  //
+  //  static String staticMethod() {
+  //    return "Hi";
+  //  }
   //}
   //
   //@Test public void test() throws IOException {
-  //  server.enqueue(new MockResponse().setBody("Hi"));
-  //  server.enqueue(new MockResponse().setBody("Hi"));
-  //
   //  Retrofit retrofit = new Retrofit.Builder()
   //      .baseUrl(server.url("/"))
   //      .addConverterFactory(new ToStringConverterFactory())
+  //      .validateEagerly(true)
   //      .build();
   //  Example example = retrofit.create(Example.class);
-  //
-  //  Response<String> response = example.user().execute();
-  //  assertThat(response.body()).isEqualTo("Hi");
-  //  Response<String> response2 = example.user("Hi").execute();
-  //  assertThat(response2.body()).isEqualTo("Hi");
   //}
 }
