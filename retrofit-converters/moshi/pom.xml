@@ -22,6 +22,12 @@
     <dependency>
       <groupId>com.squareup.moshi</groupId>
       <artifactId>moshi</artifactId>
+      <exclusions>
+      	<exclusion>
+      		<groupId>com.squareup.okio</groupId>
+      		<artifactId>okio</artifactId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
