@@ -31,7 +31,7 @@
 <dependency>
     	<groupId>com.squareup.okio</groupId>
       		<artifactId>okio</artifactId>
-      		<version>1.15.0</version>
+      		<version>2.2.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
