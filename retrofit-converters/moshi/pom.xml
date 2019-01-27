@@ -28,7 +28,11 @@
       <artifactId>jsr305</artifactId>
       <scope>provided</scope>
     </dependency>
-
+<dependency>
+    	<groupId>com.squareup.okio</groupId>
+      		<artifactId>okio</artifactId>
+      		<version>1.15.0</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
