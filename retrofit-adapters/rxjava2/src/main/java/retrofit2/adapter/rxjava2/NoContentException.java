@@ -16,6 +16,7 @@
 package retrofit2.adapter.rxjava2;
 
 import io.reactivex.Completable;
+import javax.annotation.Nullable;
 import retrofit2.Response;
 
 /** Exception for an unexpected, 204/205 HTTP response when not used with {@link Completable}. */
@@ -51,6 +52,7 @@ public final class NoContentException extends RuntimeException {
   /**
    * The full HTTP response. This may be null if the exception was serialized.
    */
+  @Nullable
   public Response<?> response() {
     return response;
   }
