@@ -18,17 +18,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>retrofit</artifactId>
       <version>${project.version}</version>
-      <exclusions>
-      	<exclusion>
-      		<groupId>com.squareup.okio</groupId>
-      		<artifactId>okio</artifactId>
-      	</exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-    	<groupId>com.squareup.okio</groupId>
-      	<artifactId>okio</artifactId>
-      	<version>1.16.0</version>
     </dependency>
     <dependency>
       <groupId>com.squareup.moshi</groupId>
