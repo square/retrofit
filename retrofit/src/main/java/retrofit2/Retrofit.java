@@ -136,8 +136,8 @@ public final class Retrofit {
           private final Platform platform = Platform.get();
           private final Object[] emptyArgs = new Object[0];
 
-          @Override public Object invoke(Object proxy, Method method, @Nullable Object[] args)
-              throws Throwable {
+          @Override public @Nullable Object invoke(Object proxy, Method method,
+              @Nullable Object[] args) throws Throwable {
             // If the method is a method from Object then defer to normal invocation.
             if (method.getDeclaringClass() == Object.class) {
               return method.invoke(this, args);
