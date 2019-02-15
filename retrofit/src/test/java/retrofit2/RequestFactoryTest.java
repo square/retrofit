@@ -57,8 +57,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 import retrofit2.http.QueryName;
+import retrofit2.http.Tag;
 import retrofit2.http.Url;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -2250,7 +2252,7 @@ public final class RequestFactoryTest {
     }
 
     try {
-      buildRequest(Example.class, Collections.emptyList());
+      buildRequest(Example.class, emptyList());
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
@@ -2874,6 +2876,63 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageContaining(
           "Field map value 'kat' converted to null by retrofit2.helpers.NullObjectConverterFactory$1 for key 'kit'.");
+    }
+  }
+
+  @Test public void tag() {
+    class Example {
+      @GET("/") Call<ResponseBody> method(@Tag String tag) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "tagValue");
+    assertThat(request.tag(String.class)).isEqualTo("tagValue");
+  }
+
+  @Test public void tagGeneric() {
+    class Example {
+      @GET("/") Call<ResponseBody> method(@Tag List<String> tag) {
+        return null;
+      }
+    }
+
+    List<String> strings = Arrays.asList("tag", "value");
+    Request request = buildRequest(Example.class, strings);
+    assertThat(request.tag(List.class)).isSameAs(strings);
+  }
+
+  @Test public void tagDuplicateFails() {
+    class Example {
+      @GET("/") Call<ResponseBody> method(@Tag String one, @Tag String two) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "one", "two");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Tag type java.lang.String is duplicate of parameter #1 and would always overwrite its value. (parameter #2)\n"
+              + "    for method Example.method");
+    }
+  }
+
+  @Test public void tagGenericDuplicateFails() {
+    class Example {
+      @GET("/") Call<ResponseBody> method(@Tag List<String> one, @Tag List<Long> two) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, emptyList(), emptyList());
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "@Tag type java.util.List is duplicate of parameter #1 and would always overwrite its value. (parameter #2)\n"
+              + "    for method Example.method");
     }
   }
 
