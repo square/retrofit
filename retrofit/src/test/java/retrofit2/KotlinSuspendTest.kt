@@ -15,11 +15,16 @@
  */
 package retrofit2
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST
+import okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Rule
@@ -180,5 +185,32 @@ class KotlinSuspendTest {
     runBlocking { example.params("1", "2", "3") }
     val request = server.takeRequest()
     assertThat(request.path).isEqualTo("/1/2/3")
+  }
+
+  @Test fun cancelationWorks() {
+    lateinit var call: okhttp3.Call
+
+    val okHttpClient = OkHttpClient()
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .callFactory {
+          val newCall = okHttpClient.newCall(it)
+          call = newCall
+          newCall
+        }
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    // This leaves the connection open indefinitely allowing us to cancel without racing a body.
+    server.enqueue(MockResponse().setSocketPolicy(NO_RESPONSE))
+
+    val deferred = GlobalScope.async { example.body() }
+
+    // This will block until the server has received the request ensuring it's in flight.
+    server.takeRequest()
+
+    deferred.cancel()
+    assertTrue(call.isCanceled)
   }
 }
