@@ -208,6 +208,10 @@ final class RequestBuilder {
     this.body = body;
   }
 
+  <T> void addTag(Class<T> cls, @Nullable T value) {
+    requestBuilder.tag(cls, value);
+  }
+
   Request.Builder get() {
     HttpUrl url;
     HttpUrl.Builder urlBuilder = this.urlBuilder;

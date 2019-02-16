@@ -400,4 +400,16 @@ abstract class ParameterHandler<T> {
       builder.setBody(body);
     }
   }
+
+  static final class Tag<T> extends ParameterHandler<T> {
+    final Class<T> cls;
+
+    Tag(Class<T> cls) {
+      this.cls = cls;
+    }
+
+    @Override void apply(RequestBuilder builder, @Nullable T value) {
+      builder.addTag(cls, value);
+    }
+  }
 }

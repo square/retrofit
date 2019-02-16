@@ -56,6 +56,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 import retrofit2.http.QueryName;
+import retrofit2.http.Tag;
 import retrofit2.http.Url;
 
 import static retrofit2.Utils.methodError;
@@ -731,6 +732,24 @@ final class RequestFactory {
         }
         gotBody = true;
         return new ParameterHandler.Body<>(method, p, converter);
+
+      } else if (annotation instanceof Tag) {
+        validateResolvableType(p, type);
+
+        Class<?> tagType = Utils.getRawType(type);
+        for (int i = p - 1; i >= 0; i--) {
+          ParameterHandler<?> otherHandler = parameterHandlers[i];
+          if (otherHandler instanceof ParameterHandler.Tag
+              && ((ParameterHandler.Tag) otherHandler).cls.equals(tagType)) {
+            throw parameterError(method, p, "@Tag type "
+                + tagType.getName()
+                + " is duplicate of parameter #"
+                + (i + 1)
+                + " and would always overwrite its value.");
+          }
+        }
+
+        return new ParameterHandler.Tag<>(tagType);
       }
 
       return null; // Not a Retrofit annotation.
