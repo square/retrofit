@@ -28,6 +28,7 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 import javax.annotation.Nullable;
+import kotlin.Metadata;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
@@ -533,5 +534,14 @@ final class Utils {
     } else if (t instanceof LinkageError) {
       throw (LinkageError) t;
     }
+  }
+
+  static boolean isKotlinMethodReturnTypeNullable(Method method) {
+    Metadata metadata = method.getDeclaringClass().getAnnotation(Metadata.class);
+    String[] data1 = metadata.d1();
+    String[] data2 = metadata.d2();
+    // Find the entry for method
+    // Determine if return type is nullable or not
+    return false;
   }
 }

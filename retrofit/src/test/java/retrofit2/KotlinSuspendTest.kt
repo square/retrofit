@@ -21,7 +21,6 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.helpers.ToStringConverterFactory
@@ -111,7 +110,6 @@ class KotlinSuspendTest {
     }
   }
 
-  @Ignore("Not working yet")
   @Test fun bodyNullable() {
     val retrofit = Retrofit.Builder()
         .baseUrl(server.url("/"))

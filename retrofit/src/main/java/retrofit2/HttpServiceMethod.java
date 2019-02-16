@@ -49,10 +49,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
       } else {
-        // TODO figure out if type is nullable or not
-        // Metadata metadata = method.getDeclaringClass().getAnnotation(Metadata.class)
-        // Find the entry for method
-        // Determine if return type is nullable or not
+        continuationBodyNullable = Utils.isKotlinMethodReturnTypeNullable(method);
       }
     } else {
       callAdapter = createCallAdapter(retrofit, method);
@@ -68,8 +65,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
       throw methodError(method, "Response must include generic type (e.g., Response<String>)");
     }
     // TODO support Unit for Kotlin?
-    if (requestFactory.httpMethod.equals("HEAD") && !Void.class.equals(responseType)) {
-      throw methodError(method, "HEAD method must use Void as response type.");
+    if (requestFactory.httpMethod.equals("HEAD")) {
+      if (Void.class.equals(responseType)) {
+        throw methodError(method, "HEAD method must use Void as response type.");
+      }
     }
 
     Converter<ResponseBody, ResponseT> responseConverter =
