@@ -107,6 +107,14 @@ final class RecordingMaybeObserver<T> implements MaybeObserver<T> {
     assertThat(events).as("Unconsumed events found!").isEmpty();
   }
 
+  public void assertComplete() {
+    Notification<T> notification = takeNotification();
+    assertThat(notification.isOnComplete())
+        .as("Expected onCompleted event but was " + notification)
+        .isTrue();
+    assertNoEvents();
+  }
+
   public static final class Rule implements TestRule {
     final List<RecordingMaybeObserver<?>> subscribers = new ArrayList<>();
 

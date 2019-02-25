@@ -72,7 +72,7 @@ public final class MaybeTest {
 
     RecordingMaybeObserver<String> observer = observerRule.create();
     service.body().subscribe(observer);
-    observer.assertError(NoContentException.class, "HTTP 204 OK");
+    observer.assertComplete();
   }
 
   @Test public void bodySuccess205() {
@@ -80,7 +80,7 @@ public final class MaybeTest {
 
     RecordingMaybeObserver<String> observer = observerRule.create();
     service.body().subscribe(observer);
-    observer.assertError(NoContentException.class, "HTTP 205 OK");
+    observer.assertComplete();
   }
 
   @Test public void bodyFailure() {

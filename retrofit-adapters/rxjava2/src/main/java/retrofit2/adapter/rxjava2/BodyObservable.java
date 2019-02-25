@@ -51,11 +51,10 @@ final class BodyObservable<T> extends Observable<T> {
     }
 
     @Override public void onNext(Response<R> response) {
-      boolean noContent = errorOnNoContent
-          && (response.code() == 204 || response.code() == 205);
+      boolean noContent = response.code() == 204 || response.code() == 205;
       if (response.isSuccessful() && !noContent) {
         observer.onNext(response.body());
-      } else {
+      } else if (!noContent || errorOnNoContent) {
         terminated = true;
         Throwable t;
         if (noContent) {

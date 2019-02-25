@@ -72,7 +72,7 @@ public final class FlowableTest {
 
     RecordingSubscriber<String> subscriber = subscriberRule.create();
     service.body().subscribe(subscriber);
-    subscriber.assertError(NoContentException.class, "HTTP 204 OK");
+    subscriber.assertComplete();
   }
 
   @Test public void bodySuccess205() {
@@ -80,7 +80,7 @@ public final class FlowableTest {
 
     RecordingSubscriber<String> subscriber = subscriberRule.create();
     service.body().subscribe(subscriber);
-    subscriber.assertError(NoContentException.class, "HTTP 205 OK");
+    subscriber.assertComplete();
   }
 
   @Test public void bodyFailure() {

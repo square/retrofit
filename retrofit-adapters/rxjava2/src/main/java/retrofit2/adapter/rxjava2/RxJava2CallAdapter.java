@@ -63,7 +63,7 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
     if (isResult) {
       observable = new ResultObservable<>(responseObservable);
     } else if (isBody) {
-      observable = new BodyObservable<>(responseObservable, !isCompletable);
+      observable = new BodyObservable<>(responseObservable, isSingle);
     } else {
       observable = responseObservable;
     }
