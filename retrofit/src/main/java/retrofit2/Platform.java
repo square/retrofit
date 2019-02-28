@@ -62,10 +62,7 @@ class Platform {
 
   List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
       @Nullable Executor callbackExecutor) {
-    if (callbackExecutor != null) {
-      return singletonList(new ExecutorCallAdapterFactory(callbackExecutor));
-    }
-    return singletonList(DefaultCallAdapterFactory.INSTANCE);
+    return singletonList(new DefaultCallAdapterFactory(callbackExecutor));
   }
 
   int defaultCallAdapterFactoriesSize() {
@@ -111,11 +108,7 @@ class Platform {
         @Nullable Executor callbackExecutor) {
       List<CallAdapter.Factory> factories = new ArrayList<>(2);
       factories.add(CompletableFutureCallAdapterFactory.INSTANCE);
-      if (callbackExecutor != null) {
-        factories.add(new ExecutorCallAdapterFactory(callbackExecutor));
-      } else {
-        factories.add(DefaultCallAdapterFactory.INSTANCE);
-      }
+      factories.add(new DefaultCallAdapterFactory(callbackExecutor));
       return unmodifiableList(factories);
     }
 
@@ -148,7 +141,7 @@ class Platform {
     @Override List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
         @Nullable Executor callbackExecutor) {
       if (callbackExecutor == null) throw new AssertionError();
-      ExecutorCallAdapterFactory executorFactory = new ExecutorCallAdapterFactory(callbackExecutor);
+      DefaultCallAdapterFactory executorFactory = new DefaultCallAdapterFactory(callbackExecutor);
       return Build.VERSION.SDK_INT >= 24
         ? asList(CompletableFutureCallAdapterFactory.INSTANCE, executorFactory)
         : singletonList(executorFactory);
