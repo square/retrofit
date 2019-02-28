@@ -140,7 +140,7 @@ public final class Calls {
 
   static final class DeferredCall<T> implements Call<T> {
     private final Callable<Call<T>> callable;
-    private Call<T> delegate;
+    private @Nullable Call<T> delegate;
 
     DeferredCall(Callable<Call<T>> callable) {
       this.callable = callable;

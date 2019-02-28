@@ -18,6 +18,7 @@ package retrofit2.mock;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.annotation.Nullable;
 import retrofit2.Retrofit;
 
 public final class MockRetrofit {
@@ -50,8 +51,8 @@ public final class MockRetrofit {
 
   public static final class Builder {
     private final Retrofit retrofit;
-    private NetworkBehavior behavior;
-    private ExecutorService executor;
+    private @Nullable NetworkBehavior behavior;
+    private @Nullable ExecutorService executor;
 
     @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
     public Builder(Retrofit retrofit) {
