@@ -77,6 +77,9 @@ public final class RetrofitTest {
     @GET("/") Call<okhttp3.Response> badType2();
 
     @GET("/") Call<ResponseBody> getResponseBody();
+    @SkipCallbackExecutor
+    @GET("/") Call<ResponseBody> getResponseBodySkippedExecutor();
+
     @GET("/") Call<Void> getVoid();
     @POST("/") Call<ResponseBody> postRequestBody(@Body RequestBody body);
     @GET("/") Call<ResponseBody> queryString(@Query("foo") String foo);
@@ -1339,6 +1342,62 @@ public final class RetrofitTest {
 
     verify(executor).execute(any(Runnable.class));
     verifyNoMoreInteractions(executor);
+  }
+
+  @Test public void skippedCallbackExecutorNotUsedForSuccess() throws InterruptedException {
+    Executor executor = new Executor() {
+      @Override public void execute(Runnable command) {
+        fail();
+      }
+    };
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .callbackExecutor(executor)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.getResponseBodySkippedExecutor();
+
+    server.enqueue(new MockResponse());
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<ResponseBody>() {
+      @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        latch.countDown();
+      }
+
+      @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
+        t.printStackTrace();
+      }
+    });
+    assertTrue(latch.await(2, TimeUnit.SECONDS));
+  }
+
+  @Test public void skippedCallbackExecutorNotUsedForFailure() throws InterruptedException {
+    Executor executor = new Executor() {
+      @Override public void execute(Runnable command) {
+        fail();
+      }
+    };
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .callbackExecutor(executor)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.getResponseBodySkippedExecutor();
+
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AT_START));
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    call.enqueue(new Callback<ResponseBody>() {
+      @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
+        latch.countDown();
+      }
+    });
+    assertTrue(latch.await(2, TimeUnit.SECONDS));
   }
 
   /** Confirm that Retrofit encodes parameters when the call is executed, and not earlier. */

@@ -383,14 +383,6 @@ final class Utils {
         + "GenericArrayType, but <" + type + "> is of type " + className);
   }
 
-  static Type getCallResponseType(Type returnType) {
-    if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-    return getParameterUpperBound(0, (ParameterizedType) returnType);
-  }
-
   private static final class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;
     private final Type rawType;

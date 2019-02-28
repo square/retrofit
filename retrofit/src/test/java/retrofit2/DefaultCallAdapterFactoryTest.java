@@ -33,7 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SuppressWarnings("unchecked")
-public final class ExecutorCallAdapterFactoryTest {
+public final class DefaultCallAdapterFactoryTest {
   private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
   private final Retrofit retrofit = new Retrofit.Builder()
@@ -45,7 +45,7 @@ public final class ExecutorCallAdapterFactoryTest {
       runnable.run();
     }
   });
-  private final CallAdapter.Factory factory = new ExecutorCallAdapterFactory(callbackExecutor);
+  private final CallAdapter.Factory factory = new DefaultCallAdapterFactory(callbackExecutor);
 
   @Test public void rawTypeThrows() {
     try {
