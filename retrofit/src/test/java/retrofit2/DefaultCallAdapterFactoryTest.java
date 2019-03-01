@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
 import okhttp3.Request;
+import okio.Timeout;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -157,6 +158,10 @@ public final class DefaultCallAdapterFactoryTest {
 
     @Override public boolean isCanceled() {
       return false;
+    }
+
+    @Override public Timeout timeout() {
+      return Timeout.NONE;
     }
 
     @Override public Call<String> clone() {

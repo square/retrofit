@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import okhttp3.Request;
+import okio.Timeout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -124,6 +125,10 @@ public final class Calls {
       return canceled.get();
     }
 
+    @Override public Timeout timeout() {
+      return Timeout.NONE;
+    }
+
     @Override public Call<T> clone() {
       return new FakeCall<>(response, error);
     }
@@ -140,7 +145,7 @@ public final class Calls {
 
   static final class DeferredCall<T> implements Call<T> {
     private final Callable<Call<T>> callable;
-    private Call<T> delegate;
+    private @Nullable Call<T> delegate;
 
     DeferredCall(Callable<Call<T>> callable) {
       this.callable = callable;
@@ -177,6 +182,10 @@ public final class Calls {
 
     @Override public boolean isCanceled() {
       return getDelegate().isCanceled();
+    }
+
+    @Override public Timeout timeout() {
+      return getDelegate().timeout();
     }
 
     @Override public Call<T> clone() {

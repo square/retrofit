@@ -20,8 +20,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import okhttp3.Request;
+import okio.Timeout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -33,7 +35,7 @@ final class BehaviorCall<T> implements Call<T> {
   final ExecutorService backgroundExecutor;
   final Call<T> delegate;
 
-  private volatile Future<?> task;
+  private volatile @Nullable Future<?> task;
   volatile boolean canceled;
   @GuardedBy("this")
   private boolean executed;
@@ -148,5 +150,9 @@ final class BehaviorCall<T> implements Call<T> {
 
   @Override public boolean isCanceled() {
     return canceled;
+  }
+
+  @Override public Timeout timeout() {
+    return Timeout.NONE; // TODO real instance and apply stuff
   }
 }

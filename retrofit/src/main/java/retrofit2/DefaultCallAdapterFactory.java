@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import okhttp3.Request;
+import okio.Timeout;
 
 import static retrofit2.Utils.checkNotNull;
 
@@ -110,6 +111,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
     @Override public boolean isCanceled() {
       return delegate.isCanceled();
+    }
+
+    @Override public Timeout timeout() {
+      return delegate.timeout();
     }
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.

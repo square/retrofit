@@ -25,7 +25,9 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
+import okio.Timeout;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static retrofit2.Utils.checkNotNull;
 import static retrofit2.Utils.throwIfFatal;
 
@@ -43,6 +45,8 @@ final class OkHttpCall<T> implements Call<T> {
   private @Nullable Throwable creationFailure;
   @GuardedBy("this")
   private boolean executed;
+  @GuardedBy("this")
+  private @Nullable Timeout timeout;
 
   OkHttpCall(RequestFactory requestFactory, Object[] args,
       okhttp3.Call.Factory callFactory, Converter<ResponseBody, T> responseConverter) {
@@ -72,7 +76,7 @@ final class OkHttpCall<T> implements Call<T> {
       }
     }
     try {
-      return (rawCall = createRawCall()).request();
+      return createRawCall().request();
     } catch (RuntimeException | Error e) {
       throwIfFatal(e); // Do not assign a fatal error to creationFailure.
       creationFailure = e;
@@ -97,7 +101,7 @@ final class OkHttpCall<T> implements Call<T> {
       failure = creationFailure;
       if (call == null && failure == null) {
         try {
-          call = rawCall = createRawCall();
+          call = createRawCall();
         } catch (Throwable t) {
           throwIfFatal(t);
           failure = creationFailure = t;
@@ -172,7 +176,7 @@ final class OkHttpCall<T> implements Call<T> {
       call = rawCall;
       if (call == null) {
         try {
-          call = rawCall = createRawCall();
+          call = createRawCall();
         } catch (IOException | RuntimeException | Error e) {
           throwIfFatal(e); //  Do not assign a fatal error to creationFailure.
           creationFailure = e;
@@ -188,12 +192,38 @@ final class OkHttpCall<T> implements Call<T> {
     return parseResponse(call.execute());
   }
 
+  @GuardedBy("this")
   private okhttp3.Call createRawCall() throws IOException {
     okhttp3.Call call = callFactory.newCall(requestFactory.create(args));
     if (call == null) {
       throw new NullPointerException("Call.Factory returned null.");
     }
+    Timeout timeout = this.timeout;
+    if (timeout != null) {
+      if (timeout.hasDeadline()) {
+        call.timeout().deadline(timeout.deadlineNanoTime(), NANOSECONDS);
+      }
+      call.timeout().timeout(timeout.timeoutNanos(), NANOSECONDS);
+      this.timeout = null;
+    }
+    rawCall = call;
     return call;
+  }
+
+  @Override public Timeout timeout() {
+    synchronized (this) {
+      okhttp3.Call call = rawCall;
+      if (call != null) {
+        return call.timeout();
+      }
+
+      Timeout timeout = this.timeout;
+      if (timeout != null) {
+        return timeout;
+      }
+
+      return (this.timeout = new Timeout());
+    }
   }
 
   Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {

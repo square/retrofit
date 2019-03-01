@@ -16,7 +16,9 @@
 package retrofit2;
 
 import java.io.IOException;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okio.Timeout;
 
 /**
  * An invocation of a Retrofit method that sends a request to a webserver and returns a response.
@@ -61,6 +63,16 @@ public interface Call<T> extends Cloneable {
 
   /** True if {@link #cancel()} was called. */
   boolean isCanceled();
+
+  /**
+   * Returns a timeout that spans the entire call: resolving DNS, connecting, writing the request
+   * body, server processing, and reading the response body. If the call requires redirects or
+   * retries all must complete within one timeout period.
+   * <p>
+   * Configure a default timeout on the {@link OkHttpClient} or the
+   * {@link okhttp3.Call.Factory Call.Factory} supplied to {@link Retrofit.Builder}.
+   */
+  Timeout timeout();
 
   /**
    * Create a new, identical call to this one which can be enqueued or executed even if this call
