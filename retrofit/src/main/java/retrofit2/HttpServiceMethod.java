@@ -21,7 +21,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
 import kotlin.coroutines.Continuation;
-import okhttp3.Call;
 import okhttp3.ResponseBody;
 
 import static retrofit2.Utils.getRawType;
@@ -36,14 +35,16 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
    */
   static <ResponseT, ReturnT> HttpServiceMethod<ResponseT, ReturnT> parseAnnotations(
       Retrofit retrofit, Method method, RequestFactory requestFactory) {
-    CallAdapter<ResponseT, ReturnT> callAdapter = null;
+    boolean isKotlinSuspendFunction = requestFactory.isKotlinSuspendFunction;
     boolean continuationWantsResponse = false;
     boolean continuationBodyNullable = false;
-    Type responseType;
-    if (requestFactory.isKotlinSuspendFunction) {
+
+    Annotation[] annotations = method.getAnnotations();
+    Type adapterType;
+    if (isKotlinSuspendFunction) {
       Type[] parameterTypes = method.getGenericParameterTypes();
-      Type continuationType = parameterTypes[parameterTypes.length - 1];
-      responseType = Utils.getParameterLowerBound(0, (ParameterizedType) continuationType);
+      Type responseType = Utils.getParameterLowerBound(0,
+          (ParameterizedType) parameterTypes[parameterTypes.length - 1]);
       if (getRawType(responseType) == Response.class && responseType instanceof ParameterizedType) {
         // Unwrap the actual body type from Response<T>.
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
@@ -54,11 +55,16 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         // Find the entry for method
         // Determine if return type is nullable or not
       }
+
+      adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
+      annotations = SkipCallbackExecutorImpl.ensurePresent(annotations);
     } else {
-      callAdapter = createCallAdapter(retrofit, method);
-      responseType = callAdapter.responseType();
+      adapterType = method.getGenericReturnType();
     }
 
+    CallAdapter<ResponseT, ReturnT> callAdapter =
+        createCallAdapter(retrofit, method, adapterType, annotations);
+    Type responseType = callAdapter.responseType();
     if (responseType == okhttp3.Response.class) {
       throw methodError(method, "'"
           + getRawType(responseType).getName()
@@ -76,23 +82,22 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         createResponseConverter(retrofit, method, responseType);
 
     okhttp3.Call.Factory callFactory = retrofit.callFactory;
-    if (callAdapter != null) {
-      return new CallAdapted<>(requestFactory, callFactory, callAdapter, responseConverter);
+    if (!isKotlinSuspendFunction) {
+      return new CallAdapted<>(requestFactory, callFactory, responseConverter, callAdapter);
     } else if (continuationWantsResponse) {
       //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>) new SuspendForResponse<>(requestFactory,
-          callFactory, responseConverter);
+          callFactory, responseConverter, (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter);
     } else {
       //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>) new SuspendForBody<>(requestFactory,
-          callFactory, responseConverter, continuationBodyNullable);
+          callFactory, responseConverter, (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter,
+          continuationBodyNullable);
     }
   }
 
   private static <ResponseT, ReturnT> CallAdapter<ResponseT, ReturnT> createCallAdapter(
-      Retrofit retrofit, Method method) {
-    Type returnType = method.getGenericReturnType();
-    Annotation[] annotations = method.getAnnotations();
+      Retrofit retrofit, Method method, Type returnType, Annotation[] annotations) {
     try {
       //noinspection unchecked
       return (CallAdapter<ResponseT, ReturnT>) retrofit.callAdapter(returnType, annotations);
@@ -115,7 +120,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, ResponseT> responseConverter;
 
-  HttpServiceMethod(RequestFactory requestFactory, Call.Factory callFactory,
+  HttpServiceMethod(RequestFactory requestFactory, okhttp3.Call.Factory callFactory,
       Converter<ResponseBody, ResponseT> responseConverter) {
     this.requestFactory = requestFactory;
     this.callFactory = callFactory;
@@ -123,33 +128,41 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
   }
 
   @Override final @Nullable ReturnT invoke(Object[] args) {
-    return adapt(new OkHttpCall<>(requestFactory, args, callFactory, responseConverter), args);
+    Call<ResponseT> call = new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
+    return adapt(call, args);
   }
 
-  protected abstract @Nullable ReturnT adapt(OkHttpCall<ResponseT> call, Object[] args);
+  protected abstract @Nullable ReturnT adapt(Call<ResponseT> call, Object[] args);
 
   static final class CallAdapted<ResponseT, ReturnT> extends HttpServiceMethod<ResponseT, ReturnT> {
     private final CallAdapter<ResponseT, ReturnT> callAdapter;
 
-    CallAdapted(RequestFactory requestFactory, Call.Factory callFactory,
-        CallAdapter<ResponseT, ReturnT> callAdapter,
-        Converter<ResponseBody, ResponseT> responseConverter) {
+    CallAdapted(RequestFactory requestFactory, okhttp3.Call.Factory callFactory,
+        Converter<ResponseBody, ResponseT> responseConverter,
+        CallAdapter<ResponseT, ReturnT> callAdapter) {
       super(requestFactory, callFactory, responseConverter);
       this.callAdapter = callAdapter;
     }
 
-    @Override protected ReturnT adapt(OkHttpCall<ResponseT> call, Object[] args) {
+    @Override protected ReturnT adapt(Call<ResponseT> call, Object[] args) {
       return callAdapter.adapt(call);
     }
   }
 
   static final class SuspendForResponse<ResponseT> extends HttpServiceMethod<ResponseT, Object> {
-    SuspendForResponse(RequestFactory requestFactory, Call.Factory callFactory,
-        Converter<ResponseBody, ResponseT> responseConverter) {
+    private final CallAdapter<ResponseT, Call<ResponseT>> callAdapter;
+
+    SuspendForResponse(RequestFactory requestFactory, okhttp3.Call.Factory callFactory,
+        Converter<ResponseBody, ResponseT> responseConverter,
+        CallAdapter<ResponseT, Call<ResponseT>> callAdapter) {
       super(requestFactory, callFactory, responseConverter);
+      this.callAdapter = callAdapter;
     }
 
-    @Override protected Object adapt(OkHttpCall<ResponseT> call, Object[] args) {
+    @Override protected Object adapt(Call<ResponseT> call, Object[] args) {
+      call = callAdapter.adapt(call);
+
+      //noinspection unchecked Checked by reflection inside RequestFactory.
       Continuation<Response<ResponseT>> continuation =
           (Continuation<Response<ResponseT>>) args[args.length - 1];
       return KotlinExtensions.awaitResponse(call, continuation);
@@ -157,15 +170,21 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
   }
 
   static final class SuspendForBody<ResponseT> extends HttpServiceMethod<ResponseT, Object> {
+    private final CallAdapter<ResponseT, Call<ResponseT>> callAdapter;
     private final boolean isNullable;
 
-    SuspendForBody(RequestFactory requestFactory, Call.Factory callFactory,
-        Converter<ResponseBody, ResponseT> responseConverter, boolean isNullable) {
+    SuspendForBody(RequestFactory requestFactory, okhttp3.Call.Factory callFactory,
+        Converter<ResponseBody, ResponseT> responseConverter,
+        CallAdapter<ResponseT, Call<ResponseT>> callAdapter, boolean isNullable) {
       super(requestFactory, callFactory, responseConverter);
+      this.callAdapter = callAdapter;
       this.isNullable = isNullable;
     }
 
-    @Override protected Object adapt(OkHttpCall<ResponseT> call, Object[] args) {
+    @Override protected Object adapt(Call<ResponseT> call, Object[] args) {
+      call = callAdapter.adapt(call);
+
+      //noinspection unchecked Checked by reflection inside RequestFactory.
       Continuation<ResponseT> continuation = (Continuation<ResponseT>) args[args.length - 1];
       return isNullable
           ? KotlinExtensions.awaitNullable(call, continuation)

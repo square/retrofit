@@ -383,7 +383,7 @@ final class Utils {
         + "GenericArrayType, but <" + type + "> is of type " + className);
   }
 
-  private static final class ParameterizedTypeImpl implements ParameterizedType {
+  static final class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;
     private final Type rawType;
     private final Type[] typeArguments;
