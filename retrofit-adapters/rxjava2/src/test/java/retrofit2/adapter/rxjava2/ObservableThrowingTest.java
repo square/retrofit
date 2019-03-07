@@ -93,7 +93,7 @@ public final class ObservableThrowingTest {
     });
 
     observer.assertAnyValue();
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
 
   }
 
@@ -161,7 +161,7 @@ public final class ObservableThrowingTest {
     });
 
     observer.assertAnyValue();
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test public void responseThrowingInOnErrorDeliveredToPlugin() {
@@ -228,7 +228,7 @@ public final class ObservableThrowingTest {
     });
 
     observer.assertAnyValue();
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test public void resultThrowingInOnErrorDeliveredToPlugin() {

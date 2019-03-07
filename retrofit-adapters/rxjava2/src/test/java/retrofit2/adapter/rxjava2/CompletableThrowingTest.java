@@ -74,7 +74,7 @@ public final class CompletableThrowingTest {
       }
     });
 
-    assertThat(errorRef.get()).isSameAs(e);
+    assertThat(errorRef.get()).hasCause(e);
   }
 
   @Test public void bodyThrowingInOnErrorDeliveredToPlugin() {

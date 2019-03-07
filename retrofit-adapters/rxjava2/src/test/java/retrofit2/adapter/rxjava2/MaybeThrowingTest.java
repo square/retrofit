@@ -80,7 +80,7 @@ public final class MaybeThrowingTest {
       }
     });
 
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test public void bodyThrowingInOnErrorDeliveredToPlugin() {
@@ -132,7 +132,7 @@ public final class MaybeThrowingTest {
       }
     });
 
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test public void responseThrowingInOnErrorDeliveredToPlugin() {
@@ -184,7 +184,7 @@ public final class MaybeThrowingTest {
       }
     });
 
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Ignore("Single's contract is onNext|onError so we have no way of triggering this case")
