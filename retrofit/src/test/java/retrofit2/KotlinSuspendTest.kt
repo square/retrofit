@@ -33,6 +33,8 @@ import retrofit2.helpers.ToStringConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import java.io.IOException
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 class KotlinSuspendTest {
   @get:Rule val server = MockWebServer()
@@ -212,5 +214,63 @@ class KotlinSuspendTest {
 
     deferred.cancel()
     assertTrue(call.isCanceled)
+  }
+
+  @Test fun doesNotUseCallbackExecutor() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .callbackExecutor { fail() }
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setBody("Hi"))
+
+    val body = runBlocking { example.body() }
+    assertThat(body).isEqualTo("Hi")
+  }
+
+  @Test fun usesCallAdapterForCall() {
+    val callAdapterFactory = object : CallAdapter.Factory() {
+      override fun get(returnType: Type, annotations: Array<Annotation>,
+          retrofit: Retrofit): CallAdapter<*, *>? {
+        if (getRawType(returnType) != Call::class.java) {
+          return null
+        }
+        if (getParameterUpperBound(0, returnType as ParameterizedType) != String::class.java) {
+          return null
+        }
+        return object : CallAdapter<String, Call<String>> {
+          override fun responseType() = String::class.java
+          override fun adapt(call: Call<String>): Call<String> {
+            return object : Call<String> by call {
+              override fun enqueue(callback: Callback<String>) {
+                call.enqueue(object : Callback<String> by callback {
+                  override fun onResponse(call: Call<String>, response: Response<String>) {
+                    if (response.isSuccessful) {
+                      callback.onResponse(call, Response.success(response.body()?.repeat(5)))
+                    } else {
+                      callback.onResponse(call, response)
+                    }
+                  }
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addCallAdapterFactory(callAdapterFactory)
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setBody("Hi"))
+
+    val body = runBlocking { example.body() }
+    assertThat(body).isEqualTo("HiHiHiHiHi")
   }
 }
