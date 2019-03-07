@@ -47,8 +47,6 @@ import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static retrofit2.TestingUtils.repeat;
 
 public final class CallTest {
@@ -371,11 +369,11 @@ public final class CallTest {
   }
 
   @Test public void http204SkipsConverter() throws IOException {
-    final Converter<ResponseBody, String> converter = spy(new Converter<ResponseBody, String>() {
-      @Override public String convert(ResponseBody value) throws IOException {
-        return value.string();
+    final Converter<ResponseBody, String> converter = new Converter<ResponseBody, String>() {
+      @Override public String convert(ResponseBody value) {
+        throw new AssertionError();
       }
-    });
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
@@ -393,15 +391,14 @@ public final class CallTest {
     Response<String> response = example.getString().execute();
     assertThat(response.code()).isEqualTo(204);
     assertThat(response.body()).isNull();
-    verifyNoMoreInteractions(converter);
   }
 
   @Test public void http205SkipsConverter() throws IOException {
-    final Converter<ResponseBody, String> converter = spy(new Converter<ResponseBody, String>() {
-      @Override public String convert(ResponseBody value) throws IOException {
-        return value.string();
+    final Converter<ResponseBody, String> converter = new Converter<ResponseBody, String>() {
+      @Override public String convert(ResponseBody value) {
+        throw new AssertionError();
       }
-    });
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new ToStringConverterFactory() {
@@ -419,7 +416,6 @@ public final class CallTest {
     Response<String> response = example.getString().execute();
     assertThat(response.code()).isEqualTo(205);
     assertThat(response.body()).isNull();
-    verifyNoMoreInteractions(converter);
   }
 
   @Test public void converterBodyDoesNotLeakContentInIntermediateBuffers() throws IOException {
