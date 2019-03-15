@@ -50,7 +50,7 @@
 
     <!-- Dependencies -->
     <android.version>4.1.1.4</android.version>
-    <okhttp.version>3.12.0</okhttp.version>
+    <okhttp.version>3.14.0</okhttp.version>
     <kotlinx.coroutines.version>1.1.0</kotlinx.coroutines.version>
     <animal.sniffer.version>1.14</animal.sniffer.version>
 
