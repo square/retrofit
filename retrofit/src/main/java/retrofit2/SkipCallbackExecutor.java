@@ -30,11 +30,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link Callback#onResponse(Call, Response) onResponse} or
  * {@link Callback#onFailure(Call, Throwable) onFailure} methods.
  *
- * <pre>{@code
- * @SkipCallbackExecutor
- * @Get("user/{id}/token")
- * Call<String> getToken(@Path("id") long id);
- * }</pre>
+ * <pre><code>
+ * &#64;SkipCallbackExecutor
+ * &#64;GET("user/{id}/token")
+ * Call&lt;String&gt; getToken(@Path("id") long id);
+ * </code></pre>
  *
  * This annotation can also be used when a {@link CallAdapter.Factory} <em>explicitly</em> delegates
  * to the built-in factory for {@link Call} via
