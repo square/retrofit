@@ -3,6 +3,10 @@ language: java
 jdk:
   - oraclejdk8
 
+# Ensure Javadoc and source jar generation is exercised.
+install: mvn install javadoc:jar source:jar -DskipTests=true -B -V
+script: mvn test -B
+
 after_success:
   - .buildscript/deploy_snapshot.sh
 
