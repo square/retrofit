@@ -55,6 +55,24 @@ abstract class ParameterHandler<T> {
     };
   }
 
+  static final class BaseUrl extends ParameterHandler<Object> {
+    private final Method method;
+    private final int p;
+
+    BaseUrl(Method method, int p) {
+      this.method = method;
+      this.p = p;
+    }
+
+    @Override
+    void apply(RequestBuilder builder, @Nullable Object value) {
+      if (value == null) {
+        throw Utils.parameterError(method, p, "@BaseUrl parameter is null.");
+      }
+      builder.setBaseUrl(value);
+    }
+  }
+
   static final class RelativeUrl extends ParameterHandler<Object> {
     private final Method method;
     private final int p;

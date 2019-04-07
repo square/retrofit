@@ -35,6 +35,7 @@ import okio.Buffer;
 import org.junit.Test;
 import retrofit2.helpers.NullObjectConverterFactory;
 import retrofit2.helpers.ToStringConverterFactory;
+import retrofit2.http.BaseUrl;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
@@ -1362,6 +1363,267 @@ public final class RequestFactoryTest {
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example2.com/foo/bar/");
     assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithJavaUriBaseUrl() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@BaseUrl URI url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, URI.create("http://dev.example.com/"));
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://dev.example.com/foo/bar");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithHttpUrlBaseUrl() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@BaseUrl HttpUrl url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, HttpUrl.get("http://dev.example.com/"));
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://dev.example.com/foo/bar");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithBaseUrlWithoutAnyOtherUrlThrows() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "http://dev.example.com/");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Missing either @GET URL or @Url parameter.\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithBaseUrlAndRelativeUrl() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "http://dev.example.com/");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://dev.example.com/foo/bar");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithBaseUrlAndAbsoluteUrl() {
+    class Example {
+      @GET("http://example.com/foo/bar")
+      Call<ResponseBody> method(@BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    // Should it log warning or throw exception that parameter is redundant in this case?
+    Request request = buildRequest(Example.class, "http://igno.red");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithBaseUrlBeforeUrl() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@BaseUrl String baseUrl, @Url String url) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "http://example.com/base", "http://example.com/full");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/full");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithBaseUrlAfterUrlThrows() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@Url String url, @BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "http://example.com/full", "http://example.com/base");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("A @BaseUrl parameter must not come after a @Url. (parameter #2)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithBaseUrlThenPath() {
+    class Example {
+      @GET("{path}")
+      Call<ResponseBody> method(@BaseUrl String baseUrl, @Path("path") String path) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "http://dev.example.com/", "foo");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://dev.example.com/foo");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithPathThenBaseUrlThrows() {
+    class Example {
+      @GET("{path}")
+      Call<ResponseBody> method(@Path("path") String path, @BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "foo", "http://example.com/base");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("A @BaseUrl parameter must not come after a @Path. (parameter #2)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithBaseUrlThenQuery() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@BaseUrl String baseUrl, @Query("hey") String query) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "http://dev.example.com/", "bar");
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://dev.example.com/foo/bar?hey=bar");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test public void getWithQueryThenBaseUrlThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@Query("hey") String query, @BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "foo", "http://dev.example.com/");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("A @BaseUrl parameter must not come after a @Query. (parameter #2)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithQueryNameThenBaseUrlThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@QueryName String queryName, @BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "http://dev.example.com/", "hi");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("A @BaseUrl parameter must not come after a @QueryName. (parameter #2)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithQueryMapThenBaseUrlThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@QueryMap Map<String, String> queryMap, @BaseUrl String baseUrl) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, Collections.singletonMap("foo", "bar"), "http://dev.example.com/");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("A @BaseUrl parameter must not come after a @QueryMap. (parameter #2)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithMultipleBaseUrlThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@BaseUrl String baseUrl1, @BaseUrl String baseUrl2) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "http://foo", "http://bar");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Multiple @BaseUrl method annotations found. (parameter #2)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithNullBaseUrlThrows() {
+    class Example {
+      @GET("foo/bar")
+      Call<ResponseBody> method(@BaseUrl String url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, (String) null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("@BaseUrl parameter is null. (parameter #1)\n" +
+              "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithNonStringBaseUrlThrows() {
+    class Example {
+      @GET
+      Call<ResponseBody> method(@BaseUrl Object url) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "http://dev.example.com/");
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+              "@BaseUrl must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type."
+                      + " (parameter #1)\n"
+                      + "    for method Example.method");
+    }
   }
 
   @Test public void getWithStringUrl() {

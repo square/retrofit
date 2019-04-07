@@ -50,7 +50,7 @@ final class RequestBuilder {
 
   private final String method;
 
-  private final HttpUrl baseUrl;
+  private HttpUrl baseUrl;
   private @Nullable String relativeUrl;
   private @Nullable HttpUrl.Builder urlBuilder;
 
@@ -84,6 +84,10 @@ final class RequestBuilder {
       multipartBuilder = new MultipartBody.Builder();
       multipartBuilder.setType(MultipartBody.FORM);
     }
+  }
+
+  void setBaseUrl(Object baseUrl) {
+    this.baseUrl = HttpUrl.get(baseUrl.toString());
   }
 
   void setRelativeUrl(Object relativeUrl) {
