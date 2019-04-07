@@ -16,7 +16,7 @@
 package retrofit2
 
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -207,12 +207,12 @@ class KotlinSuspendTest {
     // This leaves the connection open indefinitely allowing us to cancel without racing a body.
     server.enqueue(MockResponse().setSocketPolicy(NO_RESPONSE))
 
-    val deferred = GlobalScope.async { example.body() }
+    val job = GlobalScope.launch { example.body() }
 
     // This will block until the server has received the request ensuring it's in flight.
     server.takeRequest()
 
-    deferred.cancel()
+    job.cancel()
     assertTrue(call.isCanceled)
   }
 
