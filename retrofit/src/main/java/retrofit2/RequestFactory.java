@@ -512,6 +512,10 @@ final class RequestFactory {
         }
 
       } else if (annotation instanceof HeaderMap) {
+        if (type == Headers.class) {
+          return new ParameterHandler.Headers(method, p);
+        }
+
         validateResolvableType(p, type);
         Class<?> rawParameterType = Utils.getRawType(type);
         if (!Map.class.isAssignableFrom(rawParameterType)) {
