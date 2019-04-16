@@ -60,6 +60,7 @@ import retrofit2.http.QueryName;
 import retrofit2.http.Tag;
 import retrofit2.http.Url;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -650,6 +651,70 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Header map contained null value for key 'Accept-Charset'. (parameter #1)\n" +
               "    for method Example.method");
+    }
+  }
+
+  @Test public void getWithHeaders() {
+    class Example {
+      @GET("/search")
+      Call<ResponseBody> method(@HeaderMap okhttp3.Headers headers) {
+        throw new AssertionError();
+      }
+    }
+
+    okhttp3.Headers headers = new okhttp3.Headers.Builder()
+        .add("Accept", "text/plain")
+        .add("Accept", "application/json")
+        .add("Accept-Charset", "utf-8")
+        .build();
+
+    Request request = buildRequest(Example.class, headers);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/search");
+    assertThat(request.body()).isNull();
+    assertThat(request.headers().size()).isEqualTo(3);
+    assertThat(request.headers("Accept")).isEqualTo(asList("text/plain", "application/json"));
+    assertThat(request.header("Accept-Charset")).isEqualTo("utf-8");
+  }
+
+  @Test public void getWithHeadersAndHeaderMap() {
+    class Example {
+      @GET("/search")
+      Call<ResponseBody> method(@HeaderMap okhttp3.Headers headers,
+          @HeaderMap Map<String, Object> headerMap) {
+        throw new AssertionError();
+      }
+    }
+
+    okhttp3.Headers headers = new okhttp3.Headers.Builder()
+        .add("Accept", "text/plain")
+        .add("Accept-Charset", "utf-8")
+        .build();
+    Map<String, String> headerMap = Collections.singletonMap("Accept", "application/json");
+
+    Request request = buildRequest(Example.class, headers, headerMap);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/search");
+    assertThat(request.body()).isNull();
+    assertThat(request.headers().size()).isEqualTo(3);
+    assertThat(request.headers("Accept")).isEqualTo(asList("text/plain", "application/json"));
+    assertThat(request.header("Accept-Charset")).isEqualTo("utf-8");
+  }
+
+  @Test public void headersRejectsNull() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method(@HeaderMap okhttp3.Headers headers) {
+        throw new AssertionError();
+      }
+    }
+
+    try {
+      buildRequest(Example.class, (okhttp3.Headers) null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Headers parameter must not be null. (parameter #1)\n" +
+          "    for method Example.method");
     }
   }
 
@@ -1889,7 +1954,7 @@ public final class RequestFactoryTest {
 
     MultipartBody.Part part1 = MultipartBody.Part.createFormData("foo", "bar");
     MultipartBody.Part part2 = MultipartBody.Part.createFormData("kit", "kat");
-    Request request = buildRequest(Example.class, Arrays.asList(part1, part2));
+    Request request = buildRequest(Example.class, asList(part1, part2));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
@@ -1979,7 +2044,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    Request request = buildRequest(Example.class, Arrays.asList("pong1", "pong2"));
+    Request request = buildRequest(Example.class, asList("pong1", "pong2"));
     assertThat(request.method()).isEqualTo("POST");
     assertThat(request.headers().size()).isZero();
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
@@ -2622,7 +2687,7 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-    Request request = buildRequest(Example.class, Arrays.asList("bar", null, "baz"));
+    Request request = buildRequest(Example.class, asList("bar", null, "baz"));
     assertThat(request.method()).isEqualTo("GET");
     okhttp3.Headers headers = request.headers();
     assertThat(headers.size()).isEqualTo(2);
@@ -2897,7 +2962,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<String> strings = Arrays.asList("tag", "value");
+    List<String> strings = asList("tag", "value");
     Request request = buildRequest(Example.class, strings);
     assertThat(request.tag(List.class)).isSameAs(strings);
   }

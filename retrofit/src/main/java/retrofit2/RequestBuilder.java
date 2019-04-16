@@ -55,6 +55,7 @@ final class RequestBuilder {
   private @Nullable HttpUrl.Builder urlBuilder;
 
   private final Request.Builder requestBuilder;
+  private final Headers.Builder headersBuilder;
   private @Nullable MediaType contentType;
 
   private final boolean hasBody;
@@ -73,7 +74,9 @@ final class RequestBuilder {
     this.hasBody = hasBody;
 
     if (headers != null) {
-      requestBuilder.headers(headers);
+      headersBuilder = headers.newBuilder();
+    } else {
+      headersBuilder = new Headers.Builder();
     }
 
     if (isFormEncoded) {
@@ -98,8 +101,12 @@ final class RequestBuilder {
         throw new IllegalArgumentException("Malformed content type: " + value, e);
       }
     } else {
-      requestBuilder.addHeader(name, value);
+      headersBuilder.add(name, value);
     }
+  }
+
+  void addHeaders(Headers headers) {
+    headersBuilder.addAll(headers);
   }
 
   void addPathParam(String name, String value, boolean encoded) {
@@ -245,12 +252,13 @@ final class RequestBuilder {
       if (body != null) {
         body = new ContentTypeOverridingRequestBody(body, contentType);
       } else {
-        requestBuilder.addHeader("Content-Type", contentType.toString());
+        headersBuilder.add("Content-Type", contentType.toString());
       }
     }
 
     return requestBuilder
         .url(url)
+        .headers(headersBuilder.build())
         .method(method, body);
   }
 
