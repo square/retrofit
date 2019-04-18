@@ -31,7 +31,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Values are converted to strings using {@link Retrofit#stringConverter(Type, Annotation[])}
  * (or {@link Object#toString()}, if no matching string converter is installed)
  * and then URL encoded.
- * {@code null} values are ignored. Passing a {@link java.util.List List} or array will result in a
+ * {@code null} values can be ignored by annotating the parameter with Nullable.
+ * Passing a {@link java.util.List List} or array will result in a
  * query parameter for each non-{@code null} item.
  * <p>
  * Simple Example:
@@ -44,7 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Example with {@code null}:
  * <pre><code>
  * &#64;GET("/friends")
- * Call&lt;ResponseBody&gt; friends(@Query("group") String group);
+ * Call&lt;ResponseBody&gt; friends(@Query("group") @Nullable String group);
  * </code></pre>
  * Calling with {@code foo.friends(null)} yields {@code /friends}.
  * <p>
