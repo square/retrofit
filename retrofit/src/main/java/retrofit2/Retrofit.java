@@ -459,7 +459,7 @@ public final class Retrofit {
       checkNotNull(baseUrl, "baseUrl == null");
       return baseUrl(HttpUrl.get(baseUrl.toString()));
     }
-    
+
     /**
      * Set the API base URL.
      *
