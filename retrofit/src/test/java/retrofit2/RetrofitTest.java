@@ -20,6 +20,8 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -747,6 +749,14 @@ public final class RetrofitTest {
         .baseUrl(url)
         .build();
     assertThat(retrofit.baseUrl()).isSameAs(url);
+  }
+
+  @Test public void baseJavaUrlPropagated() throws MalformedURLException {
+    URL url = new URL("http://example.com/");
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(url)
+        .build();
+    assertThat(retrofit.baseUrl()).isEqualTo(HttpUrl.get("http://example.com/"));
   }
 
   @Test public void clientNullThrows() {

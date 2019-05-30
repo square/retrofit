@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -447,6 +448,16 @@ public final class Retrofit {
     public Builder callFactory(okhttp3.Call.Factory factory) {
       this.callFactory = checkNotNull(factory, "factory == null");
       return this;
+    }
+
+    /**
+     * Set the API base URL.
+     *
+     * @see #baseUrl(HttpUrl)
+     */
+    public Builder baseUrl(URL baseUrl) {
+      checkNotNull(baseUrl, "baseUrl == null");
+      return baseUrl(HttpUrl.get(baseUrl.toString()));
     }
 
     /**
