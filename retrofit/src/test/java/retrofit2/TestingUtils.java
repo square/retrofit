@@ -16,13 +16,20 @@
 package retrofit2;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
-public final class TestingUtils {
-  public static Method onlyMethod(Class c) {
+final class TestingUtils {
+  static Method onlyMethod(Class c) {
     Method[] declaredMethods = c.getDeclaredMethods();
     if (declaredMethods.length == 1) {
       return declaredMethods[0];
     }
     throw new IllegalArgumentException("More than one method declared.");
+  }
+
+  static String repeat(char c, int times) {
+    char[] cs = new char[times];
+    Arrays.fill(cs, c);
+    return new String(cs);
   }
 }

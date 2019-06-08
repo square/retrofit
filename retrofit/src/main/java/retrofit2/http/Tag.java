@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Square, Inc.
+ * Copyright (C) 2019 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,42 +15,25 @@
  */
 package retrofit2.http;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.lang.reflect.Type;
-import java.util.Map;
-import retrofit2.Retrofit;
 
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Adds headers specified in the {@link Map} or {@link okhttp3.Headers}.
- * <p>
- * Values in the map are converted to strings using
- * {@link Retrofit#stringConverter(Type, Annotation[])} (or {@link Object#toString()}, if no
- * matching string converter is installed).
- * <p>
- * Simple Example:
- * <pre>
- * &#64;GET("/search")
- * void list(@HeaderMap Map&lt;String, String&gt; headers);
- *
- * ...
- *
- * // The following call yields /search with headers
- * // Accept: text/plain and Accept-Charset: utf-8
- * foo.list(ImmutableMap.of("Accept", "text/plain", "Accept-Charset", "utf-8"));
- * </pre>
- *
- * @see Header
- * @see Headers
+ * Adds the argument instance as a request tag using the type as the key.
+ * <pre><code>
+ * &#64;GET("/")
+ * Call&lt;ResponseBody&gt; foo(@Tag String tag);
+ * </code></pre>
+ * Tag arguments may be {@code null} which will omit them from the request. Passing a parameterized
+ * type such as {@code List<String>} will use the raw type (i.e., {@code List.class}) as the key.
+ * Duplicate tag types are not allowed.
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface HeaderMap {
-
+public @interface Tag {
 }

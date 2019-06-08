@@ -20,7 +20,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.annotation.Nullable;
-import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
@@ -230,6 +229,23 @@ abstract class ParameterHandler<T> {
     }
   }
 
+  static final class Headers extends ParameterHandler<okhttp3.Headers> {
+    private final Method method;
+    private final int p;
+
+    Headers(Method method, int p) {
+      this.method = method;
+      this.p = p;
+    }
+
+    @Override void apply(RequestBuilder builder, @Nullable okhttp3.Headers headers) {
+      if (headers == null) {
+        throw Utils.parameterError(method, p, "Headers parameter must not be null.");
+      }
+      builder.addHeaders(headers);
+    }
+  }
+
   static final class Field<T> extends ParameterHandler<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
@@ -300,10 +316,10 @@ abstract class ParameterHandler<T> {
   static final class Part<T> extends ParameterHandler<T> {
     private final Method method;
     private final int p;
-    private final Headers headers;
+    private final okhttp3.Headers headers;
     private final Converter<T, RequestBody> converter;
 
-    Part(Method method, int p, Headers headers, Converter<T, RequestBody> converter) {
+    Part(Method method, int p, okhttp3.Headers headers, Converter<T, RequestBody> converter) {
       this.method = method;
       this.p = p;
       this.headers = headers;
@@ -367,7 +383,7 @@ abstract class ParameterHandler<T> {
                   "Part map contained null value for key '" + entryKey + "'.");
         }
 
-        Headers headers = Headers.of(
+        okhttp3.Headers headers = okhttp3.Headers.of(
             "Content-Disposition", "form-data; name=\"" + entryKey + "\"",
             "Content-Transfer-Encoding", transferEncoding);
 
@@ -398,6 +414,18 @@ abstract class ParameterHandler<T> {
         throw Utils.parameterError(method, e, p, "Unable to convert " + value + " to RequestBody");
       }
       builder.setBody(body);
+    }
+  }
+
+  static final class Tag<T> extends ParameterHandler<T> {
+    final Class<T> cls;
+
+    Tag(Class<T> cls) {
+      this.cls = cls;
+    }
+
+    @Override void apply(RequestBuilder builder, @Nullable T value) {
+      builder.addTag(cls, value);
     }
   }
 }

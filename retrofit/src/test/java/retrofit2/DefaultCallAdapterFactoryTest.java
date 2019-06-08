@@ -21,31 +21,27 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.Request;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SuppressWarnings("unchecked")
-public final class ExecutorCallAdapterFactoryTest {
+public final class DefaultCallAdapterFactoryTest {
   private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
   private final Retrofit retrofit = new Retrofit.Builder()
       .baseUrl("http://localhost:1")
       .build();
-  private final Callback<String> callback = mock(Callback.class);
-  private final Executor callbackExecutor = spy(new Executor() {
-    @Override public void execute(Runnable runnable) {
-      runnable.run();
+  private final CallAdapter.Factory factory = new DefaultCallAdapterFactory(new Executor() {
+    @Override public void execute(@NotNull Runnable command) {
+      command.run();
     }
   });
-  private final CallAdapter.Factory factory = new ExecutorCallAdapterFactory(callbackExecutor);
 
   @Test public void rawTypeThrows() {
     try {
@@ -74,68 +70,42 @@ public final class ExecutorCallAdapterFactoryTest {
         (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
     final Response<String> response = Response.success("Hi");
     Call<String> call = adapter.adapt(new EmptyCall() {
-      @Override public Response<String> execute() throws IOException {
+      @Override public Response<String> execute() {
         return response;
       }
     });
     assertThat(call.execute()).isSameAs(response);
   }
 
-  @Test public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    final Response<String> response = Response.success("Hi");
-    EmptyCall originalCall = new EmptyCall() {
-      @Override public void enqueue(Callback<String> callback) {
-        callback.onResponse(this, response);
-      }
-    };
-    Call<String> call = adapter.adapt(originalCall);
-    call.enqueue(callback);
-    verify(callbackExecutor).execute(any(Runnable.class));
-    verify(callback).onResponse(call, response);
-  }
-
-  @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    final Throwable throwable = new IOException();
-    EmptyCall originalCall = new EmptyCall() {
-      @Override public void enqueue(Callback<String> callback) {
-        callback.onFailure(this, throwable);
-      }
-    };
-    Call<String> call = adapter.adapt(originalCall);
-    call.enqueue(callback);
-    verify(callbackExecutor).execute(any(Runnable.class));
-    verifyNoMoreInteractions(callbackExecutor);
-    verify(callback).onFailure(call, throwable);
-    verifyNoMoreInteractions(callback);
-  }
-
   @Test public void adaptedCallCloneDeepCopy() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
     CallAdapter<String, Call<String>> adapter =
         (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    Call<String> delegate = mock(Call.class);
+    final AtomicBoolean cloned = new AtomicBoolean();
+    Call<String> delegate = new EmptyCall() {
+      @Override public Call<String> clone() {
+        cloned.set(true);
+        return this;
+      }
+    };
     Call<String> call = adapter.adapt(delegate);
-    Call<String> cloned = call.clone();
-    assertThat(cloned).isNotSameAs(call);
-    verify(delegate).clone();
-    verifyNoMoreInteractions(delegate);
+    assertThat(call.clone()).isNotSameAs(call);
+    assertTrue(cloned.get());
   }
 
   @Test public void adaptedCallCancel() {
     Type returnType = new TypeToken<Call<String>>() {}.getType();
     CallAdapter<String, Call<String>> adapter =
         (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    Call<String> delegate = mock(Call.class);
+    final AtomicBoolean canceled = new AtomicBoolean();
+    Call<String> delegate = new EmptyCall() {
+      @Override public void cancel() {
+        canceled.set(true);
+      }
+    };
     Call<String> call = adapter.adapt(delegate);
     call.cancel();
-    verify(delegate).cancel();
-    verifyNoMoreInteractions(delegate);
+    assertTrue(canceled.get());
   }
 
   static class EmptyCall implements Call<String> {

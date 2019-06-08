@@ -1,6 +1,45 @@
 Change Log
 ==========
 
+Version 2.6.0 *(2019-06-05)*
+----------------------------
+
+ * New: Support `suspend` modifier on functions for Kotlin! This allows you to express the asynchrony of HTTP requests
+   in an idiomatic fashion for the language.
+
+   ```kotlin
+   @GET("users/{id}")
+   suspend fun user(@Path("id") long id): User
+   ```
+
+   Behind the scenes this behaves as if defined as `fun user(...): Call<User>` and then invoked with `Call.enqueue`.
+   You can also return `Response<User>` for access to the response metadata.
+
+   Currently this integration only supports non-null response body types. Follow
+   [issue 3075](https://github.com/square/retrofit/issues/3075) for nullable type support.
+
+ * New: **`@Tag`** parameter annotation for setting tags on the underlying OkHttp `Request` object. These can be read
+   in `CallAdapter`s or OkHttp `Interceptor`s for tracing, analytics, varying behavior, and more.
+
+ * New: **`@SkipCallbackExecutor`** method annotation will result in your `Call` invoking its `Callback` on the
+   background thread on which the HTTP call was made.
+
+ * New: Support OkHttp's `Headers` type for `@HeaderMap` parameters.
+
+ * New: Add `Retrofit.Builder.baseUrl(URL)` overload.
+
+ * Fix: Add embedded R8/ProGuard rule which retains Retrofit interfaces (while still allowing obfuscation). This
+   is needed because R8 running in 'full mode' (i.e., not in ProGuard-compatibility mode) will see that there are
+   no subtypes of these interfaces and rewrite any code which references instances to null.
+ * Fix: Mark `HttpException.response()` as `@Nullable` as serializing the exception does not retain this instance.
+ * Fix: Fatal errors (such as stack overflows, out of memory, etc.) now propagate to the OkHttp `Dispatcher` thread
+   on which they are running.
+ * Fix: Ensure JAX-B converter closes the response body when an exception is thrown during deserialization.
+ * Fix: Ignore static methods when performing eager validation of interface methods.
+ * Fix: Ensure that calling `source()` twice on the `ResponseBody` passed to a `Converter` always returns the same
+   instance. Prior to the fix, intermediate buffering would cause response data to be lost.
+
+
 Version 2.5.0 *(2018-11-18)*
 ----------------------------
 

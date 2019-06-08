@@ -277,10 +277,21 @@ final class OkHttpCall<T> implements Call<T> {
 
   static final class ExceptionCatchingResponseBody extends ResponseBody {
     private final ResponseBody delegate;
+    private final BufferedSource delegateSource;
     @Nullable IOException thrownException;
 
     ExceptionCatchingResponseBody(ResponseBody delegate) {
       this.delegate = delegate;
+      this.delegateSource = Okio.buffer(new ForwardingSource(delegate.source()) {
+        @Override public long read(Buffer sink, long byteCount) throws IOException {
+          try {
+            return super.read(sink, byteCount);
+          } catch (IOException e) {
+            thrownException = e;
+            throw e;
+          }
+        }
+      });
     }
 
     @Override public MediaType contentType() {
@@ -292,16 +303,7 @@ final class OkHttpCall<T> implements Call<T> {
     }
 
     @Override public BufferedSource source() {
-      return Okio.buffer(new ForwardingSource(delegate.source()) {
-        @Override public long read(Buffer sink, long byteCount) throws IOException {
-          try {
-            return super.read(sink, byteCount);
-          } catch (IOException e) {
-            thrownException = e;
-            throw e;
-          }
-        }
-      });
+      return delegateSource;
     }
 
     @Override public void close() {

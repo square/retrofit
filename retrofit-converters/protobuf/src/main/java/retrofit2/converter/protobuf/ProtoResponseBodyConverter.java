@@ -36,7 +36,8 @@ final class ProtoResponseBodyConverter<T extends MessageLite>
 
   @Override public T convert(ResponseBody value) throws IOException {
     try {
-      return parser.parseFrom(value.byteStream(), registry);
+      return registry == null ? parser.parseFrom(value.byteStream())
+              : parser.parseFrom(value.byteStream(), registry);
     } catch (InvalidProtocolBufferException e) {
       throw new RuntimeException(e); // Despite extending IOException, this is data mismatch.
     } finally {

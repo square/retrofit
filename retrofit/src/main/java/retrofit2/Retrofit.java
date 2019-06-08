@@ -18,8 +18,10 @@ package retrofit2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -135,8 +137,8 @@ public final class Retrofit {
           private final Platform platform = Platform.get();
           private final Object[] emptyArgs = new Object[0];
 
-          @Override public Object invoke(Object proxy, Method method, @Nullable Object[] args)
-              throws Throwable {
+          @Override public @Nullable Object invoke(Object proxy, Method method,
+              @Nullable Object[] args) throws Throwable {
             // If the method is a method from Object then defer to normal invocation.
             if (method.getDeclaringClass() == Object.class) {
               return method.invoke(this, args);
@@ -152,7 +154,7 @@ public final class Retrofit {
   private void eagerlyValidateMethods(Class<?> service) {
     Platform platform = Platform.get();
     for (Method method : service.getDeclaredMethods()) {
-      if (!platform.isDefaultMethod(method)) {
+      if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
         loadServiceMethod(method);
       }
     }
@@ -446,6 +448,16 @@ public final class Retrofit {
     public Builder callFactory(okhttp3.Call.Factory factory) {
       this.callFactory = checkNotNull(factory, "factory == null");
       return this;
+    }
+
+    /**
+     * Set the API base URL.
+     *
+     * @see #baseUrl(HttpUrl)
+     */
+    public Builder baseUrl(URL baseUrl) {
+      checkNotNull(baseUrl, "baseUrl == null");
+      return baseUrl(HttpUrl.get(baseUrl.toString()));
     }
 
     /**

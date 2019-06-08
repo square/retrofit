@@ -20,6 +20,8 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +42,7 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.helpers.DelegatingCallAdapterFactory;
@@ -55,16 +58,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 public final class RetrofitTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -77,6 +74,9 @@ public final class RetrofitTest {
     @GET("/") Call<okhttp3.Response> badType2();
 
     @GET("/") Call<ResponseBody> getResponseBody();
+    @SkipCallbackExecutor
+    @GET("/") Call<ResponseBody> getResponseBodySkippedExecutor();
+
     @GET("/") Call<Void> getVoid();
     @POST("/") Call<ResponseBody> postRequestBody(@Body RequestBody body);
     @GET("/") Call<ResponseBody> queryString(@Query("foo") String foo);
@@ -144,11 +144,24 @@ public final class RetrofitTest {
   }
 
   @Test public void cloneSharesStatefulInstances() {
-    CallAdapter.Factory callAdapter = mock(CallAdapter.Factory.class);
-    Converter.Factory converter = mock(Converter.Factory.class);
+    CallAdapter.Factory callAdapter = new CallAdapter.Factory() {
+      @Nullable @Override
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        throw new AssertionError();
+      }
+    };
+    Converter.Factory converter = new Converter.Factory() {};
     HttpUrl baseUrl = server.url("/");
-    Executor executor = mock(Executor.class);
-    okhttp3.Call.Factory callFactory = mock(okhttp3.Call.Factory.class);
+    Executor executor = new Executor() {
+      @Override public void execute(@NotNull Runnable command) {
+        command.run();
+      }
+    };
+    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
+      @Override public okhttp3.Call newCall(Request request) {
+        throw new AssertionError();
+      }
+    };
 
     Retrofit one = new Retrofit.Builder()
         .addCallAdapterFactory(callAdapter)
@@ -158,8 +171,13 @@ public final class RetrofitTest {
         .callFactory(callFactory)
         .build();
 
-    CallAdapter.Factory callAdapter2 = mock(CallAdapter.Factory.class);
-    Converter.Factory converter2 = mock(Converter.Factory.class);
+    CallAdapter.Factory callAdapter2 = new CallAdapter.Factory() {
+      @Nullable @Override
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        throw new AssertionError();
+      }
+    };
+    Converter.Factory converter2 = new Converter.Factory() {};
     Retrofit two = one.newBuilder()
         .addCallAdapterFactory(callAdapter2)
         .addConverterFactory(converter2)
@@ -191,7 +209,7 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "'retrofit2.Response' is not a valid response body type. Did you mean ResponseBody?\n"
+          "Response must include generic type (e.g., Response<String>)\n"
               + "    for method CallMethod.badType1");
     }
   }
@@ -733,6 +751,14 @@ public final class RetrofitTest {
     assertThat(retrofit.baseUrl()).isSameAs(url);
   }
 
+  @Test public void baseJavaUrlPropagated() throws MalformedURLException {
+    URL url = new URL("http://example.com/");
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(url)
+        .build();
+    assertThat(retrofit.baseUrl()).isEqualTo(HttpUrl.get("http://example.com/"));
+  }
+
   @Test public void clientNullThrows() {
     try {
       new Retrofit.Builder().client(null);
@@ -750,7 +776,11 @@ public final class RetrofitTest {
   }
 
   @Test public void callFactoryPropagated() {
-    okhttp3.Call.Factory callFactory = mock(okhttp3.Call.Factory.class);
+    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
+      @Override public okhttp3.Call newCall(Request request) {
+        throw new AssertionError();
+      }
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .callFactory(callFactory)
@@ -768,11 +798,13 @@ public final class RetrofitTest {
   }
 
   @Test public void callFactoryUsed() throws IOException {
-    okhttp3.Call.Factory callFactory = spy(new okhttp3.Call.Factory() {
+    final AtomicBoolean called = new AtomicBoolean();
+    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
       @Override public okhttp3.Call newCall(Request request) {
+        called.set(true);
         return new OkHttpClient().newCall(request);
       }
-    });
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .callFactory(callFactory)
@@ -782,8 +814,7 @@ public final class RetrofitTest {
 
     CallMethod service = retrofit.create(CallMethod.class);
     service.getResponseBody().execute();
-    verify(callFactory).newCall(any(Request.class));
-    verifyNoMoreInteractions(callFactory);
+    assertTrue(called.get());
   }
 
   @Test public void callFactoryReturningNullThrows() throws IOException {
@@ -852,44 +883,47 @@ public final class RetrofitTest {
   }
 
   @Test public void builtInConvertersFirstInClone() {
-    Converter<ResponseBody, Void> converter = mock(Converter.class);
-    Converter.Factory factory = mock(Converter.Factory.class);
-    Annotation[] annotations = new Annotation[0];
+    Converter.Factory factory = new Converter.Factory() {
+      @Nullable @Override
+      public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
+        throw new AssertionError("User converter factory shouldn't be called for built-in types");
+      }
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(factory)
+        .build()
+        .newBuilder() // Do a newBuilder().builder() dance to force the internal list to clone.
         .build();
 
-    doReturn(converter).when(factory).responseBodyConverter(Void.class, annotations, retrofit);
-
-    retrofit.newBuilder().build().responseBodyConverter(Void.class, annotations);
-
-    verifyZeroInteractions(factory);
+    assertNotNull(retrofit.responseBodyConverter(Void.class, new Annotation[0]));
   }
 
   @Test public void requestConverterFactoryQueried() {
-    Type type = String.class;
-    Annotation[] parameterAnnotations = new Annotation[0];
-    Annotation[] methodAnnotations = new Annotation[1];
-
-    Converter<?, RequestBody> expectedAdapter = mock(Converter.class);
-    Converter.Factory factory = mock(Converter.Factory.class);
+    final Converter<?, RequestBody> expectedAdapter = new Converter<Object, RequestBody>() {
+      @Nullable @Override public RequestBody convert(Object value) {
+        throw new AssertionError();
+      }
+    };
+    Converter.Factory factory = new Converter.Factory() {
+      @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
+          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+        return String.class.equals(type)
+            ? expectedAdapter
+            : null;
+      }
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).requestBodyConverter(type, parameterAnnotations,
-        methodAnnotations, retrofit);
-
-    Converter<?, RequestBody> actualAdapter = retrofit.requestBodyConverter(type,
-        parameterAnnotations, methodAnnotations);
+    Converter<?, RequestBody> actualAdapter =
+        retrofit.requestBodyConverter(String.class, new Annotation[0], new Annotation[0]);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
-
-    verify(factory).requestBodyConverter(type, parameterAnnotations, methodAnnotations, retrofit);
-    verifyNoMoreInteractions(factory);
   }
 
   @Test public void requestConverterFactoryNoMatchThrows() {
@@ -950,24 +984,29 @@ public final class RetrofitTest {
   }
 
   @Test public void responseConverterFactoryQueried() {
-    Type type = String.class;
-    Annotation[] annotations = new Annotation[0];
-
-    Converter<ResponseBody, ?> expectedAdapter = mock(Converter.class);
-    Converter.Factory factory = mock(Converter.Factory.class);
+    final Converter<ResponseBody, ?> expectedAdapter = new Converter<ResponseBody, Object>() {
+      @Nullable @Override public Object convert(ResponseBody value) {
+        throw new AssertionError();
+      }
+    };
+    Converter.Factory factory = new Converter.Factory() {
+      @Nullable @Override
+      public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
+        return String.class.equals(type)
+            ? expectedAdapter
+            : null;
+      }
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).responseBodyConverter(type, annotations, retrofit);
-
-    Converter<ResponseBody, ?> actualAdapter = retrofit.responseBodyConverter(type, annotations);
+    Converter<ResponseBody, ?> actualAdapter =
+        retrofit.responseBodyConverter(String.class, new Annotation[0]);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
-
-    verify(factory).responseBodyConverter(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory);
   }
 
   @Test public void responseConverterFactoryNoMatchThrows() {
@@ -1028,28 +1067,33 @@ public final class RetrofitTest {
   }
 
   @Test public void stringConverterFactoryQueried() {
-    Type type = Object.class;
-    Annotation[] annotations = new Annotation[0];
-
-    Converter<?, String> expectedConverter = mock(Converter.class);
-    Converter.Factory factory = mock(Converter.Factory.class);
+    final Converter<?, String> expectedConverter = new Converter<Object, String>() {
+      @Nullable @Override public String convert(Object value) {
+        throw new AssertionError();
+      }
+    };
+    Converter.Factory factory = new Converter.Factory() {
+      @Nullable @Override
+      public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
+          Retrofit retrofit) {
+        return Object.class.equals(type)
+            ? expectedConverter
+            : null;
+      }
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(factory)
         .build();
 
-    doReturn(expectedConverter).when(factory).stringConverter(type, annotations, retrofit);
-
-    Converter<?, String> actualConverter = retrofit.stringConverter(type, annotations);
+    Converter<?, String> actualConverter =
+        retrofit.stringConverter(Object.class, new Annotation[0]);
     assertThat(actualConverter).isSameAs(expectedConverter);
-
-    verify(factory).stringConverter(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory);
   }
 
   @Test public void converterFactoryPropagated() {
-    Converter.Factory factory = mock(Converter.Factory.class);
+    Converter.Factory factory = new Converter.Factory() {};
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(factory)
@@ -1074,7 +1118,12 @@ public final class RetrofitTest {
   }
 
   @Test public void callAdapterFactoryPropagated() {
-    CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
+    CallAdapter.Factory factory = new CallAdapter.Factory() {
+      @Nullable @Override
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        throw new AssertionError();
+      }
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addCallAdapterFactory(factory)
@@ -1083,38 +1132,55 @@ public final class RetrofitTest {
   }
 
   @Test public void callAdapterFactoryQueried() {
-    Type type = String.class;
-    Annotation[] annotations = new Annotation[0];
-
-    CallAdapter<?, ?> expectedAdapter = mock(CallAdapter.class);
-    CallAdapter.Factory factory = mock(CallAdapter.Factory.class);
+    final CallAdapter<?, ?> expectedAdapter = new CallAdapter<Object, Object>() {
+      @Override public Type responseType() {
+        throw new AssertionError();
+      }
+      @Override public Object adapt(Call<Object> call) {
+        throw new AssertionError();
+      }
+    };
+    CallAdapter.Factory factory = new CallAdapter.Factory() {
+      @Nullable @Override
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        return String.class.equals(returnType)
+            ? expectedAdapter
+            : null;
+      }
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addCallAdapterFactory(factory)
         .build();
 
-    doReturn(expectedAdapter).when(factory).get(type, annotations, retrofit);
-
-    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
+    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(String.class, new Annotation[0]);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
-
-    verify(factory).get(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory);
   }
 
   @Test public void callAdapterFactoryQueriedCanDelegate() {
-    Type type = String.class;
-    Annotation[] annotations = new Annotation[0];
-
-    CallAdapter<?, ?> expectedAdapter = mock(CallAdapter.class);
-    CallAdapter.Factory factory2 = mock(CallAdapter.Factory.class);
-    CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
+    final CallAdapter<?, ?> expectedAdapter = new CallAdapter<Object, Object>() {
+      @Override public Type responseType() {
+        throw new AssertionError();
+      }
+      @Override public Object adapt(Call<Object> call) {
+        throw new AssertionError();
+      }
+    };
+    CallAdapter.Factory factory2 = new CallAdapter.Factory() {
       @Override
       public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        return expectedAdapter;
+      }
+    };
+    final AtomicBoolean factory1called = new AtomicBoolean();
+    CallAdapter.Factory factory1 = new CallAdapter.Factory() {
+      @Override
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        factory1called.set(true);
         return retrofit.nextCallAdapter(this, returnType, annotations);
       }
-    });
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
@@ -1122,35 +1188,45 @@ public final class RetrofitTest {
         .addCallAdapterFactory(factory2)
         .build();
 
-    doReturn(expectedAdapter).when(factory2).get(type, annotations, retrofit);
-
-    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
+    CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(String.class, new Annotation[0]);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
-
-    verify(factory1).get(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory1);
-    verify(factory2).get(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory2);
+    assertTrue(factory1called.get());
   }
 
   @Test public void callAdapterFactoryQueriedCanDelegateTwiceWithoutRecursion() {
     Type type = String.class;
     Annotation[] annotations = new Annotation[0];
 
-    CallAdapter<?, ?> expectedAdapter = mock(CallAdapter.class);
-    CallAdapter.Factory factory3 = mock(CallAdapter.Factory.class);
-    CallAdapter.Factory factory2 = spy(new CallAdapter.Factory() {
+    final CallAdapter<?, ?> expectedAdapter = new CallAdapter<Object, Object>() {
+      @Override public Type responseType() {
+        throw new AssertionError();
+      }
+      @Override public Object adapt(Call<Object> call) {
+        throw new AssertionError();
+      }
+    };
+    CallAdapter.Factory factory3 = new CallAdapter.Factory() {
       @Override
       public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
-        return retrofit.nextCallAdapter(this, returnType, annotations);
+        return expectedAdapter;
       }
-    });
-    CallAdapter.Factory factory1 = spy(new CallAdapter.Factory() {
+    };
+    final AtomicBoolean factory2called = new AtomicBoolean();
+    CallAdapter.Factory factory2 = new CallAdapter.Factory() {
       @Override
       public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        factory2called.set(true);
         return retrofit.nextCallAdapter(this, returnType, annotations);
       }
-    });
+    };
+    final AtomicBoolean factory1called = new AtomicBoolean();
+    CallAdapter.Factory factory1 = new CallAdapter.Factory() {
+      @Override
+      public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        factory1called.set(true);
+        return retrofit.nextCallAdapter(this, returnType, annotations);
+      }
+    };
 
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
@@ -1159,17 +1235,10 @@ public final class RetrofitTest {
         .addCallAdapterFactory(factory3)
         .build();
 
-    doReturn(expectedAdapter).when(factory3).get(type, annotations, retrofit);
-
     CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
     assertThat(actualAdapter).isSameAs(expectedAdapter);
-
-    verify(factory1).get(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory1);
-    verify(factory2).get(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory2);
-    verify(factory3).get(type, annotations, retrofit);
-    verifyNoMoreInteractions(factory3);
+    assertTrue(factory1called.get());
+    assertTrue(factory2called.get());
   }
 
   @Test public void callAdapterFactoryNoMatchThrows() {
@@ -1271,7 +1340,11 @@ public final class RetrofitTest {
   }
 
   @Test public void callbackExecutorPropagated() {
-    Executor executor = mock(Executor.class);
+    Executor executor = new Executor() {
+      @Override public void execute(@NotNull Runnable command) {
+        throw new AssertionError();
+      }
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .callbackExecutor(executor)
@@ -1280,17 +1353,89 @@ public final class RetrofitTest {
   }
 
   @Test public void callbackExecutorUsedForSuccess() throws InterruptedException {
-    Executor executor = spy(new Executor() {
+    final CountDownLatch runnableLatch = new CountDownLatch(1);
+    final AtomicReference<Runnable> runnableRef = new AtomicReference<>();
+    Executor executor = new Executor() {
       @Override public void execute(Runnable command) {
-        command.run();
+        runnableRef.set(command);
+        runnableLatch.countDown();
       }
-    });
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
     Call<ResponseBody> call = service.getResponseBody();
+
+    server.enqueue(new MockResponse());
+
+    final CountDownLatch callbackLatch = new CountDownLatch(1);
+    call.enqueue(new Callback<ResponseBody>() {
+      @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        callbackLatch.countDown();
+      }
+
+      @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
+        t.printStackTrace();
+      }
+    });
+
+    assertTrue(runnableLatch.await(2, TimeUnit.SECONDS));
+    assertEquals(1, callbackLatch.getCount()); // Callback not run yet.
+
+    runnableRef.get().run();
+    assertTrue(callbackLatch.await(2, TimeUnit.SECONDS));
+  }
+
+  @Test public void callbackExecutorUsedForFailure() throws InterruptedException {
+    final CountDownLatch runnableLatch = new CountDownLatch(1);
+    final AtomicReference<Runnable> runnableRef = new AtomicReference<>();
+    Executor executor = new Executor() {
+      @Override public void execute(Runnable command) {
+        runnableRef.set(command);
+        runnableLatch.countDown();
+      }
+    };
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .callbackExecutor(executor)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.getResponseBody();
+
+    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AT_START));
+
+    final CountDownLatch callbackLatch = new CountDownLatch(1);
+    call.enqueue(new Callback<ResponseBody>() {
+      @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        throw new AssertionError();
+      }
+
+      @Override public void onFailure(Call<ResponseBody> call, Throwable t) {
+        callbackLatch.countDown();
+      }
+    });
+
+    assertTrue(runnableLatch.await(2, TimeUnit.SECONDS));
+    assertEquals(1, callbackLatch.getCount()); // Callback not run yet.
+
+    runnableRef.get().run();
+    assertTrue(callbackLatch.await(2, TimeUnit.SECONDS));
+  }
+
+  @Test public void skippedCallbackExecutorNotUsedForSuccess() throws InterruptedException {
+    Executor executor = new Executor() {
+      @Override public void execute(Runnable command) {
+        fail();
+      }
+    };
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .callbackExecutor(executor)
+        .build();
+    CallMethod service = retrofit.create(CallMethod.class);
+    Call<ResponseBody> call = service.getResponseBodySkippedExecutor();
 
     server.enqueue(new MockResponse());
 
@@ -1305,23 +1450,20 @@ public final class RetrofitTest {
       }
     });
     assertTrue(latch.await(2, TimeUnit.SECONDS));
-
-    verify(executor).execute(any(Runnable.class));
-    verifyNoMoreInteractions(executor);
   }
 
-  @Test public void callbackExecutorUsedForFailure() throws InterruptedException {
-    Executor executor = spy(new Executor() {
+  @Test public void skippedCallbackExecutorNotUsedForFailure() throws InterruptedException {
+    Executor executor = new Executor() {
       @Override public void execute(Runnable command) {
-        command.run();
+        fail();
       }
-    });
+    };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .callbackExecutor(executor)
         .build();
     CallMethod service = retrofit.create(CallMethod.class);
-    Call<ResponseBody> call = service.getResponseBody();
+    Call<ResponseBody> call = service.getResponseBodySkippedExecutor();
 
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AT_START));
 
@@ -1336,9 +1478,6 @@ public final class RetrofitTest {
       }
     });
     assertTrue(latch.await(2, TimeUnit.SECONDS));
-
-    verify(executor).execute(any(Runnable.class));
-    verifyNoMoreInteractions(executor);
   }
 
   /** Confirm that Retrofit encodes parameters when the call is executed, and not earlier. */

@@ -288,7 +288,7 @@ final class Utils {
    * Returns the declaring class of {@code typeVariable}, or {@code null} if it was not declared by
    * a class.
    */
-  private static Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
+  private static @Nullable Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
     GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
     return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
   }
@@ -348,6 +348,14 @@ final class Utils {
     return paramType;
   }
 
+  static Type getParameterLowerBound(int index, ParameterizedType type) {
+    Type paramType = type.getActualTypeArguments()[index];
+    if (paramType instanceof WildcardType) {
+      return ((WildcardType) paramType).getLowerBounds()[0];
+    }
+    return paramType;
+  }
+
   static boolean hasUnresolvableType(@Nullable Type type) {
     if (type instanceof Class<?>) {
       return false;
@@ -375,16 +383,8 @@ final class Utils {
         + "GenericArrayType, but <" + type + "> is of type " + className);
   }
 
-  static Type getCallResponseType(Type returnType) {
-    if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-    return getParameterUpperBound(0, (ParameterizedType) returnType);
-  }
-
-  private static final class ParameterizedTypeImpl implements ParameterizedType {
-    private final Type ownerType;
+  static final class ParameterizedTypeImpl implements ParameterizedType {
+    private final @Nullable Type ownerType;
     private final Type rawType;
     private final Type[] typeArguments;
 
@@ -413,7 +413,7 @@ final class Utils {
       return rawType;
     }
 
-    @Override public Type getOwnerType() {
+    @Override public @Nullable Type getOwnerType() {
       return ownerType;
     }
 
@@ -471,7 +471,7 @@ final class Utils {
    */
   private static final class WildcardTypeImpl implements WildcardType {
     private final Type upperBound;
-    private final Type lowerBound;
+    private final @Nullable Type lowerBound;
 
     WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
       if (lowerBounds.length > 1) throw new IllegalArgumentException();
