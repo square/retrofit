@@ -1,0 +1,20 @@
+{
+  "success": {
+    "total": 1
+  },
+  "contents": {
+    "quotes": [
+      {
+        "quote": "I came from a real tough neighborhood. Once a guy pulled a knife on me. I knew he wasn't a professional, the knife had butter on it.",
+        "length": "132",
+        "author": "Rodney Dangerfield",
+        "tags": [
+          "funny",
+          "humor"
+        ],
+        "category": "funny",
+        "id": "3e_ZsKxPKu5SuuAa6Pa_0AeF"
+      }
+    ]
+  }
+}

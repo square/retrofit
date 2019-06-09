@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Retrofit Test Example</string>
+    <string name="retry">RETRY</string>
+    <string name="failed_to_load_quote">Failed to load quote</string>
+</resources>
