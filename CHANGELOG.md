@@ -9,7 +9,7 @@ Version 2.6.0 *(2019-06-05)*
 
    ```kotlin
    @GET("users/{id}")
-   suspend fun user(@Path("id") long id): User
+   suspend fun user(@Path("id") id: Long): User
    ```
 
    Behind the scenes this behaves as if defined as `fun user(...): Call<User>` and then invoked with `Call.enqueue`.
