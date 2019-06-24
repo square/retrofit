@@ -67,11 +67,8 @@ public final class NetworkBehavior {
   private volatile int failurePercent = DEFAULT_FAILURE_PERCENT;
   private volatile Throwable failureException;
   private volatile int errorPercent = DEFAULT_ERROR_PERCENT;
-  private volatile Callable<Response<?>> errorFactory = new Callable<Response<?>>() {
-    @Override public Response<?> call() {
-      return Response.error(500, ResponseBody.create(null, new byte[0]));
-    }
-  };
+  private volatile Callable<Response<?>> errorFactory =
+      () -> Response.error(500, ResponseBody.create(null, new byte[0]));
 
   private NetworkBehavior(Random random) {
     this.random = random;

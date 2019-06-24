@@ -20,7 +20,6 @@ import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.CompositeException;
 import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.Consumer;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -58,11 +57,9 @@ public final class CompletableThrowingTest {
     server.enqueue(new MockResponse());
 
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!errorRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!errorRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
       }
     });
 
@@ -81,11 +78,9 @@ public final class CompletableThrowingTest {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final AtomicReference<Throwable> pluginRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!pluginRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!pluginRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
       }
     });
 

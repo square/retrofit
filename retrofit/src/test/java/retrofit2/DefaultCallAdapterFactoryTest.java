@@ -20,10 +20,8 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.Request;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,11 +35,7 @@ public final class DefaultCallAdapterFactoryTest {
   private final Retrofit retrofit = new Retrofit.Builder()
       .baseUrl("http://localhost:1")
       .build();
-  private final CallAdapter.Factory factory = new DefaultCallAdapterFactory(new Executor() {
-    @Override public void execute(@NotNull Runnable command) {
-      command.run();
-    }
-  });
+  private final CallAdapter.Factory factory = new DefaultCallAdapterFactory(Runnable::run);
 
   @Test public void rawTypeThrows() {
     try {

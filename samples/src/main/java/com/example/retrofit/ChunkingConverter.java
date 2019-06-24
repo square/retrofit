@@ -49,7 +49,7 @@ public final class ChunkingConverter {
    * present on {@code @Body} params.
    */
   static class ChunkingConverterFactory extends Converter.Factory {
-    @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
+    @Override public @Nullable Converter<Object, RequestBody> requestBodyConverter(Type type,
         Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
       boolean isBody = false;
       boolean isChunked = false;
@@ -65,19 +65,17 @@ public final class ChunkingConverter {
       final Converter<Object, RequestBody> delegate =
           retrofit.nextRequestBodyConverter(this, type, parameterAnnotations, methodAnnotations);
       // Wrap it in a Converter which removes the content length from the delegate's body.
-      return new Converter<Object, RequestBody>() {
-        @Override public RequestBody convert(Object value) throws IOException {
-          final RequestBody realBody = delegate.convert(value);
-          return new RequestBody() {
-            @Override public MediaType contentType() {
-              return realBody.contentType();
-            }
+      return value -> {
+        final RequestBody realBody = delegate.convert(value);
+        return new RequestBody() {
+          @Override public MediaType contentType() {
+            return realBody.contentType();
+          }
 
-            @Override public void writeTo(BufferedSink sink) throws IOException {
-              realBody.writeTo(sink);
-            }
-          };
-        }
+          @Override public void writeTo(BufferedSink sink) throws IOException {
+            realBody.writeTo(sink);
+          }
+        };
       };
     }
   }

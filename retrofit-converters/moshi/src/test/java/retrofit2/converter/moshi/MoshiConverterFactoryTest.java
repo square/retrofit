@@ -16,7 +16,6 @@
 package retrofit2.converter.moshi;
 
 import com.squareup.moshi.FromJson;
-import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
@@ -26,9 +25,7 @@ import com.squareup.moshi.ToJson;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
-import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.util.Set;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -142,16 +139,13 @@ public final class MoshiConverterFactoryTest {
 
   @Before public void setUp() {
     Moshi moshi = new Moshi.Builder()
-        .add(new JsonAdapter.Factory() {
-          @Override public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations,
-              Moshi moshi) {
-            for (Annotation annotation : annotations) {
-              if (!annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
-                throw new AssertionError("Non-@JsonQualifier annotation: " + annotation);
-              }
+        .add((type, annotations, moshi1) -> {
+          for (Annotation annotation : annotations) {
+            if (!annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
+              throw new AssertionError("Non-@JsonQualifier annotation: " + annotation);
             }
-            return null;
           }
+          return null;
         })
         .add(new Adapters())
         .build();

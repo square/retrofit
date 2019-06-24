@@ -72,16 +72,12 @@ public final class GuavaOptionalConverterFactoryTest {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .addConverterFactory(new Converter.Factory() {
-          @Nullable @Override public Converter<ResponseBody, ?> responseBodyConverter(Type type,
+          @Nullable @Override public Converter<ResponseBody, Object> responseBodyConverter(Type type,
               Annotation[] annotations, Retrofit retrofit) {
             if (getRawType(type) != Object.class) {
               return null;
             }
-            return new Converter<ResponseBody, Object>() {
-              @Override public Object convert(ResponseBody value) {
-                return object;
-              }
-            };
+            return value -> object;
           }
         })
         .addConverterFactory(GuavaOptionalConverterFactory.create())

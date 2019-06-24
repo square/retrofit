@@ -18,7 +18,6 @@ package retrofit2.adapter.rxjava2;
 import io.reactivex.Completable;
 import io.reactivex.exceptions.CompositeException;
 import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.Consumer;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.io.IOException;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
@@ -60,16 +58,10 @@ public final class AsyncTest {
   private List<Throwable> uncaughtExceptions = new ArrayList<>();
 
   @Before public void setUp() {
-    ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
-      @Override public Thread newThread(Runnable r) {
-        Thread thread = new Thread(r);
-        thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-          @Override public void uncaughtException(Thread t, Throwable e) {
-            uncaughtExceptions.add(e);
-          }
-        });
-        return thread;
-      }
+    ExecutorService executorService = Executors.newCachedThreadPool(r -> {
+      Thread thread = new Thread(r);
+      thread.setUncaughtExceptionHandler((t, e) -> uncaughtExceptions.add(e));
+      return thread;
     });
 
     OkHttpClient client = new OkHttpClient.Builder()
@@ -113,13 +105,11 @@ public final class AsyncTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!errorRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-        }
-        latch.countDown();
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!errorRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
       }
+      latch.countDown();
     });
 
     TestObserver<Void> observer = new TestObserver<>();
@@ -139,13 +129,11 @@ public final class AsyncTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> pluginRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!pluginRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-        }
-        latch.countDown();
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!pluginRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
       }
+      latch.countDown();
     });
 
     TestObserver<Void> observer = new TestObserver<>();

@@ -16,8 +16,6 @@
 package retrofit2.mock;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.concurrent.ExecutorService;
@@ -55,15 +53,12 @@ public final class BehaviorDelegate<T> {
   public <R> T returning(Call<R> call) {
     final Call<R> behaviorCall = new BehaviorCall<>(behavior, executor, call);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class[] { service },
-        new InvocationHandler() {
-          @Override
-          public T invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            Type returnType = method.getGenericReturnType();
-            Annotation[] methodAnnotations = method.getAnnotations();
-            CallAdapter<R, T> callAdapter =
-                (CallAdapter<R, T>) retrofit.callAdapter(returnType, methodAnnotations);
-            return callAdapter.adapt(behaviorCall);
-          }
+        (proxy, method, args) -> {
+          Type returnType = method.getGenericReturnType();
+          Annotation[] methodAnnotations = method.getAnnotations();
+          CallAdapter<R, T> callAdapter =
+              (CallAdapter<R, T>) retrofit.callAdapter(returnType, methodAnnotations);
+          return callAdapter.adapt(behaviorCall);
         });
   }
 }
