@@ -83,8 +83,10 @@ public final class Response<T> {
    * as the error body.
    */
   public static <T> Response<T> error(int code, ResponseBody body) {
+    checkNotNull(body, "body == null");
     if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new okhttp3.Response.Builder() //
+        .body(new OkHttpCall.NoContentResponseBody(body.contentType(), body.contentLength()))
         .code(code)
         .message("Response.error()")
         .protocol(Protocol.HTTP_1_1)
