@@ -85,6 +85,7 @@ public final class Response<T> {
   public static <T> Response<T> error(int code, ResponseBody body) {
     if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new okhttp3.Response.Builder() //
+        .body(body)
         .code(code)
         .message("Response.error()")
         .protocol(Protocol.HTTP_1_1)

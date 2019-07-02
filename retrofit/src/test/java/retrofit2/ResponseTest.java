@@ -122,6 +122,7 @@ public final class ResponseTest {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     Response<?> response = Response.error(400, errorBody);
     assertThat(response.raw()).isNotNull();
+    assertThat(response.raw().body()).isNotNull();
     assertThat(response.code()).isEqualTo(400);
     assertThat(response.message()).isEqualTo("Response.error()");
     assertThat(response.headers().size()).isZero();
