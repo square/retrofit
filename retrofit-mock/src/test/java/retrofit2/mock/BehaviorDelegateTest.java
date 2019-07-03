@@ -209,13 +209,11 @@ public final class BehaviorDelegateTest {
 
     final Call<String> call = service.response();
 
-    new Thread(new Runnable() {
-      @Override public void run() {
-        try {
-          Thread.sleep(100);
-          call.cancel();
-        } catch (InterruptedException ignored) {
-        }
+    new Thread(() -> {
+      try {
+        Thread.sleep(100);
+        call.cancel();
+      } catch (InterruptedException ignored) {
       }
     }).start();
 

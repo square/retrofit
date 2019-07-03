@@ -26,7 +26,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Observable;
-import rx.functions.Action1;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -139,12 +138,7 @@ public final class ObservableTest {
 
     final RecordingSubscriber<Response<String>> subscriber = subscriberRule.create();
     service.response()
-        .doOnNext(new Action1<Response<String>>() {
-          @Override
-          public void call(Response<String> response) {
-            subscriber.unsubscribe();
-          }
-        })
+        .doOnNext(response -> subscriber.unsubscribe())
         .subscribe(subscriber);
 
     assertThat(subscriber.takeValue().body()).isEqualTo("Hi");

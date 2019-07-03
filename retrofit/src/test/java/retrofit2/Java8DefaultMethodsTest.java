@@ -15,31 +15,41 @@
  */
 package retrofit2;
 
-// TODO this test doesn't play nice in the IDE because it relies on Java 8 language features.
+import java.io.IOException;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Rule;
+import org.junit.Test;
+import retrofit2.helpers.ToStringConverterFactory;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 public final class Java8DefaultMethodsTest {
-  //@Rule public final MockWebServer server = new MockWebServer();
-  //
-  //interface Example {
-  //  @GET("/") Call<String> user(@Query("name") String name);
-  //
-  //  default Call<String> user() {
-  //    return user("hey");
-  //  }
-  //}
-  //
-  //@Test public void test() throws IOException {
-  //  server.enqueue(new MockResponse().setBody("Hi"));
-  //  server.enqueue(new MockResponse().setBody("Hi"));
-  //
-  //  Retrofit retrofit = new Retrofit.Builder()
-  //      .baseUrl(server.url("/"))
-  //      .addConverterFactory(new ToStringConverterFactory())
-  //      .build();
-  //  Example example = retrofit.create(Example.class);
-  //
-  //  Response<String> response = example.user().execute();
-  //  assertThat(response.body()).isEqualTo("Hi");
-  //  Response<String> response2 = example.user("Hi").execute();
-  //  assertThat(response2.body()).isEqualTo("Hi");
-  //}
+  @Rule public final MockWebServer server = new MockWebServer();
+
+  interface Example {
+    @GET("/") Call<String> user(@Query("name") String name);
+
+    default Call<String> user() {
+      return user("hey");
+    }
+  }
+
+  @Test public void test() throws IOException {
+    server.enqueue(new MockResponse().setBody("Hi"));
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Example example = retrofit.create(Example.class);
+
+    Response<String> response = example.user().execute();
+    assertThat(response.body()).isEqualTo("Hi");
+    Response<String> response2 = example.user("Hi").execute();
+    assertThat(response2.body()).isEqualTo("Hi");
+  }
 }

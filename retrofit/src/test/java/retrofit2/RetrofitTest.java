@@ -37,12 +37,10 @@ import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.helpers.DelegatingCallAdapterFactory;
@@ -152,15 +150,9 @@ public final class RetrofitTest {
     };
     Converter.Factory converter = new Converter.Factory() {};
     HttpUrl baseUrl = server.url("/");
-    Executor executor = new Executor() {
-      @Override public void execute(@NotNull Runnable command) {
-        command.run();
-      }
-    };
-    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
-      @Override public okhttp3.Call newCall(Request request) {
-        throw new AssertionError();
-      }
+    Executor executor = Runnable::run;
+    okhttp3.Call.Factory callFactory = request -> {
+      throw new AssertionError();
     };
 
     Retrofit one = new Retrofit.Builder()
@@ -441,11 +433,7 @@ public final class RetrofitTest {
           Retrofit retrofit) {
         annotationsRef.set(annotations);
 
-        return new Converter<Object, String>() {
-          @Override public String convert(Object value) throws IOException {
-            return String.valueOf(value);
-          }
-        };
+        return (Converter<Object, String>) String::valueOf;
       }
     }
     Retrofit retrofit = new Retrofit.Builder()
@@ -776,10 +764,8 @@ public final class RetrofitTest {
   }
 
   @Test public void callFactoryPropagated() {
-    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
-      @Override public okhttp3.Call newCall(Request request) {
-        throw new AssertionError();
-      }
+    okhttp3.Call.Factory callFactory = request -> {
+      throw new AssertionError();
     };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
@@ -799,11 +785,9 @@ public final class RetrofitTest {
 
   @Test public void callFactoryUsed() throws IOException {
     final AtomicBoolean called = new AtomicBoolean();
-    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
-      @Override public okhttp3.Call newCall(Request request) {
-        called.set(true);
-        return new OkHttpClient().newCall(request);
-      }
+    okhttp3.Call.Factory callFactory = request -> {
+      called.set(true);
+      return new OkHttpClient().newCall(request);
     };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -818,11 +802,7 @@ public final class RetrofitTest {
   }
 
   @Test public void callFactoryReturningNullThrows() throws IOException {
-    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
-      @Override public okhttp3.Call newCall(Request request) {
-        return null;
-      }
-    };
+    okhttp3.Call.Factory callFactory = request -> null;
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .callFactory(callFactory)
@@ -842,10 +822,8 @@ public final class RetrofitTest {
 
   @Test public void callFactoryThrowingPropagates() {
     final RuntimeException cause = new RuntimeException("Broken!");
-    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
-      @Override public okhttp3.Call newCall(Request request) {
-        throw cause;
-      }
+    okhttp3.Call.Factory callFactory = request -> {
+      throw cause;
     };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
@@ -1328,7 +1306,7 @@ public final class RetrofitTest {
 
   @Test public void callbackExecutorPropagatesDefaultAndroid() {
     final Executor executor = Executors.newSingleThreadExecutor();
-    Platform platform = new Platform() {
+    Platform platform = new Platform(true) {
       @Override Executor defaultCallbackExecutor() {
         return executor;
       }
@@ -1340,10 +1318,8 @@ public final class RetrofitTest {
   }
 
   @Test public void callbackExecutorPropagated() {
-    Executor executor = new Executor() {
-      @Override public void execute(@NotNull Runnable command) {
-        throw new AssertionError();
-      }
+    Executor executor = command -> {
+      throw new AssertionError();
     };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl("http://example.com/")
@@ -1355,11 +1331,9 @@ public final class RetrofitTest {
   @Test public void callbackExecutorUsedForSuccess() throws InterruptedException {
     final CountDownLatch runnableLatch = new CountDownLatch(1);
     final AtomicReference<Runnable> runnableRef = new AtomicReference<>();
-    Executor executor = new Executor() {
-      @Override public void execute(Runnable command) {
-        runnableRef.set(command);
-        runnableLatch.countDown();
-      }
+    Executor executor = command -> {
+      runnableRef.set(command);
+      runnableLatch.countDown();
     };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -1391,11 +1365,9 @@ public final class RetrofitTest {
   @Test public void callbackExecutorUsedForFailure() throws InterruptedException {
     final CountDownLatch runnableLatch = new CountDownLatch(1);
     final AtomicReference<Runnable> runnableRef = new AtomicReference<>();
-    Executor executor = new Executor() {
-      @Override public void execute(Runnable command) {
-        runnableRef.set(command);
-        runnableLatch.countDown();
-      }
+    Executor executor = command -> {
+      runnableRef.set(command);
+      runnableLatch.countDown();
     };
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
@@ -1425,11 +1397,7 @@ public final class RetrofitTest {
   }
 
   @Test public void skippedCallbackExecutorNotUsedForSuccess() throws InterruptedException {
-    Executor executor = new Executor() {
-      @Override public void execute(Runnable command) {
-        fail();
-      }
-    };
+    Executor executor = command -> fail();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .callbackExecutor(executor)
@@ -1453,11 +1421,7 @@ public final class RetrofitTest {
   }
 
   @Test public void skippedCallbackExecutorNotUsedForFailure() throws InterruptedException {
-    Executor executor = new Executor() {
-      @Override public void execute(Runnable command) {
-        fail();
-      }
-    };
+    Executor executor = command -> fail();
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .callbackExecutor(executor)

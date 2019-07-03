@@ -111,11 +111,7 @@ public final class NetworkBehaviorTest {
   }
 
   @Test public void errorFactoryCannotReturnNull() {
-    behavior.setErrorFactory(new Callable<Response<?>>() {
-      @Override public Response<?> call() throws Exception {
-        return null;
-      }
-    });
+    behavior.setErrorFactory(() -> null);
     try {
       behavior.createErrorResponse();
       fail();
@@ -126,10 +122,8 @@ public final class NetworkBehaviorTest {
 
   @Test public void errorFactoryCannotThrow() {
     final RuntimeException broken = new RuntimeException("Broken");
-    behavior.setErrorFactory(new Callable<Response<?>>() {
-      @Override public Response<?> call() throws Exception {
-        throw broken;
-      }
+    behavior.setErrorFactory(() -> {
+      throw broken;
     });
     try {
       behavior.createErrorResponse();
@@ -141,11 +135,7 @@ public final class NetworkBehaviorTest {
   }
 
   @Test public void errorFactoryCannotReturnSuccess() {
-    behavior.setErrorFactory(new Callable<Response<?>>() {
-      @Override public Response<?> call() throws Exception {
-        return Response.success("Taco");
-      }
-    });
+    behavior.setErrorFactory(() -> Response.success("Taco"));
     try {
       behavior.createErrorResponse();
       fail();

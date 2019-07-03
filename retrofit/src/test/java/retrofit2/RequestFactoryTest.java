@@ -3013,10 +3013,8 @@ public final class RequestFactoryTest {
   }
 
   static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
-    okhttp3.Call.Factory callFactory = new okhttp3.Call.Factory() {
-      @Override public okhttp3.Call newCall(Request request) {
-        throw new UnsupportedOperationException("Not implemented");
-      }
+    okhttp3.Call.Factory callFactory = request -> {
+      throw new UnsupportedOperationException("Not implemented");
     };
 
     Retrofit retrofit = builder.callFactory(callFactory).build();

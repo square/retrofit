@@ -20,8 +20,8 @@ import io.reactivex.MaybeObserver;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.CompositeException;
 import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.Consumer;
 import io.reactivex.plugins.RxJavaPlugins;
+import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
@@ -32,8 +32,6 @@ import org.junit.rules.TestRule;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,11 +62,9 @@ public final class MaybeThrowingTest {
     server.enqueue(new MockResponse());
 
     final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!throwableRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable);
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!throwableRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable);
       }
     });
 
@@ -87,11 +83,9 @@ public final class MaybeThrowingTest {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!throwableRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable);
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!throwableRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable);
       }
     });
 
@@ -116,11 +110,9 @@ public final class MaybeThrowingTest {
     server.enqueue(new MockResponse());
 
     final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!throwableRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable);
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!throwableRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable);
       }
     });
 
@@ -139,11 +131,9 @@ public final class MaybeThrowingTest {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
     final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!throwableRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable);
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!throwableRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable);
       }
     });
 
@@ -168,11 +158,9 @@ public final class MaybeThrowingTest {
     server.enqueue(new MockResponse());
 
     final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!throwableRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable);
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!throwableRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable);
       }
     });
 
@@ -192,11 +180,9 @@ public final class MaybeThrowingTest {
     server.enqueue(new MockResponse());
 
     final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
-      @Override public void accept(Throwable throwable) throws Exception {
-        if (!throwableRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable);
-        }
+    RxJavaPlugins.setErrorHandler(throwable -> {
+      if (!throwableRef.compareAndSet(null, throwable)) {
+        throw Exceptions.propagate(throwable);
       }
     });
 

@@ -13,7 +13,7 @@ Download [the latest JAR][2] or grab from Maven central at the coordinates `com.
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
-Retrofit requires at minimum Java 7 or Android 2.3.
+Retrofit requires at minimum Java 8+ or Android API 21+.
 
 
 R8 / ProGuard
