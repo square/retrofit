@@ -16,6 +16,7 @@
 package retrofit2;
 
 import java.io.IOException;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import okhttp3.MediaType;
@@ -26,7 +27,6 @@ import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 
-import static retrofit2.Utils.checkNotNull;
 import static retrofit2.Utils.throwIfFatal;
 
 final class OkHttpCall<T> implements Call<T> {
@@ -84,7 +84,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public void enqueue(final Callback<T> callback) {
-    checkNotNull(callback, "callback == null");
+    Objects.requireNonNull(callback, "callback == null");
 
     okhttp3.Call call;
     Throwable failure;

@@ -19,11 +19,10 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-
-import static retrofit2.Utils.checkNotNull;
 
 abstract class ParameterHandler<T> {
   abstract void apply(RequestBuilder builder, @Nullable T value) throws IOException;
@@ -76,7 +75,7 @@ abstract class ParameterHandler<T> {
     private final Converter<T, String> valueConverter;
 
     Header(String name, Converter<T, String> valueConverter) {
-      this.name = checkNotNull(name, "name == null");
+      this.name = Objects.requireNonNull(name, "name == null");
       this.valueConverter = valueConverter;
     }
 
@@ -101,7 +100,7 @@ abstract class ParameterHandler<T> {
     Path(Method method, int p, String name, Converter<T, String> valueConverter, boolean encoded) {
       this.method = method;
       this.p = p;
-      this.name = checkNotNull(name, "name == null");
+      this.name = Objects.requireNonNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
@@ -121,7 +120,7 @@ abstract class ParameterHandler<T> {
     private final boolean encoded;
 
     Query(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+      this.name = Objects.requireNonNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
@@ -252,7 +251,7 @@ abstract class ParameterHandler<T> {
     private final boolean encoded;
 
     Field(String name, Converter<T, String> valueConverter, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
+      this.name = Objects.requireNonNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
