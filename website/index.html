@@ -106,7 +106,7 @@ Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") 
               <p>Multipart parts use one of <code>Retrofit</code>'s converters or they can implement <code>RequestBody</code> to handle their own serialization.<br/>
               It can also create <code>Multipart</code> request body using <code>@Body</code> annotation.</p>
               <pre class="prettyprint">@Multipart
-@PUT("posts/create")
+@POST("posts/create")
 Call&lt;Post> createPost(@Body RequestBody post);</pre>
               <p>For the above scenario it needs to process <code>Post</code> model to Post <code>RequestBody</code>. An example is given bellow</p>
               <pre class="prettyprint">
