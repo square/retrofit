@@ -103,7 +103,22 @@ Call&lt;User> updateUser(@Field("first_name") String first, @Field("last_name") 
               <pre class="prettyprint">@Multipart
 @PUT("user/photo")
 Call&lt;User> updateUser(@Part("photo") RequestBody photo, @Part("description") RequestBody description);</pre>
-              <p>Multipart parts use one of <code>Retrofit</code>'s converters or they can implement <code>RequestBody</code> to handle their own serialization.</p>
+              <p>Multipart parts use one of <code>Retrofit</code>'s converters or they can implement <code>RequestBody</code> to handle their own serialization.<br/>
+              It can also create <code>Multipart</code> request body using <code>@Body</code> annotation.</p>
+              <pre class="prettyprint">@Multipart
+@PUT("posts/create")
+Call&lt;Post> createPost(@Body RequestBody post);</pre>
+              <p>For the above scenario it needs to process <code>Post</code> model to Post <code>RequestBody</code>. An example is given bellow</p>
+              <pre class="prettyprint">
+MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+builder.addFormDataPart("title", "Post title");
+builder.addFormDataPart("description", "Post description");
+builder.addFormDataPart("attachment", "attachment_name.jpg", RequestBody.create(
+    MediaType.parse(mimeType),
+    new File("jpg image path")
+));
+RequestBody post = builder.build(); </pre>
+
 
               <h4>Header Manipulation</h4>
               <p>You can set static headers for a method using the <code>@Headers</code> annotation.</p>
