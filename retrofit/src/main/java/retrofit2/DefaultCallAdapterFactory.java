@@ -19,11 +19,10 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import okhttp3.Request;
-
-import static retrofit2.Utils.checkNotNull;
 
 final class DefaultCallAdapterFactory extends CallAdapter.Factory {
   private final @Nullable Executor callbackExecutor;
@@ -70,7 +69,7 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public void enqueue(final Callback<T> callback) {
-      checkNotNull(callback, "callback == null");
+      Objects.requireNonNull(callback, "callback == null");
 
       delegate.enqueue(new Callback<T>() {
         @Override public void onResponse(Call<T> call, final Response<T> response) {

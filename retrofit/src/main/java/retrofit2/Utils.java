@@ -27,6 +27,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import okio.Buffer;
@@ -62,7 +63,7 @@ final class Utils {
   }
 
   static Class<?> getRawType(Type type) {
-    checkNotNull(type, "type == null");
+    Objects.requireNonNull(type, "type == null");
 
     if (type instanceof Class<?>) {
       // Type is a normal class.
@@ -299,13 +300,6 @@ final class Utils {
     }
   }
 
-  static <T> T checkNotNull(@Nullable T object, String message) {
-    if (object == null) {
-      throw new NullPointerException(message);
-    }
-    return object;
-  }
-
   /** Returns true if {@code annotations} contains an instance of {@code cls}. */
   static boolean isAnnotationPresent(Annotation[] annotations,
       Class<? extends Annotation> cls) {
@@ -396,7 +390,7 @@ final class Utils {
       }
 
       for (Type typeArgument : typeArguments) {
-        checkNotNull(typeArgument, "typeArgument == null");
+        Objects.requireNonNull(typeArgument, "typeArgument == null");
         checkNotPrimitive(typeArgument);
       }
 
