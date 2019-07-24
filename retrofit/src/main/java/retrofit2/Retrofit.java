@@ -22,7 +22,10 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -128,10 +131,7 @@ public final class Retrofit {
    */
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(final Class<T> service) {
-    Utils.validateServiceInterface(service);
-    if (validateEagerly) {
-      eagerlyValidateMethods(service);
-    }
+    validateServiceInterface(service);
     return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
         new InvocationHandler() {
           private final Platform platform = Platform.get();
@@ -151,11 +151,33 @@ public final class Retrofit {
         });
   }
 
-  private void eagerlyValidateMethods(Class<?> service) {
-    Platform platform = Platform.get();
-    for (Method method : service.getDeclaredMethods()) {
-      if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
-        loadServiceMethod(method);
+  private void validateServiceInterface(Class<?> service) {
+    if (!service.isInterface()) {
+      throw new IllegalArgumentException("API declarations must be interfaces.");
+    }
+
+    Deque<Class<?>> check = new ArrayDeque<>(1);
+    check.add(service);
+    while (!check.isEmpty()) {
+      Class<?> candidate = check.removeFirst();
+      if (candidate.getTypeParameters().length != 0) {
+        StringBuilder message = new StringBuilder("Type parameters are unsupported on ")
+            .append(candidate.getName());
+        if (candidate != service) {
+          message.append(" which is an interface of ")
+              .append(service.getName());
+        }
+        throw new IllegalArgumentException(message.toString());
+      }
+      Collections.addAll(check, candidate.getInterfaces());
+    }
+
+    if (validateEagerly) {
+      Platform platform = Platform.get();
+      for (Method method : service.getDeclaredMethods()) {
+        if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
+          loadServiceMethod(method);
+        }
       }
     }
   }

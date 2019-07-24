@@ -85,6 +85,10 @@ public final class RetrofitTest {
   }
   interface Extending extends CallMethod {
   }
+  interface TypeParam<T> {
+  }
+  interface ExtendingTypeParam extends TypeParam<String> {
+  }
   interface StringService {
     @GET("/") String get();
   }
@@ -129,15 +133,47 @@ public final class RetrofitTest {
     assertThat(example.toString()).isNotEmpty();
   }
 
-  @Test public void interfaceWithExtendIsNotSupported() {
+  @Test public void interfaceWithTypeParameterThrows() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .build();
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
     try {
-      retrofit.create(Extending.class);
+      retrofit.create(TypeParam.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("API interfaces must not extend other interfaces.");
+      assertThat(e).hasMessage("Type parameters are unsupported on retrofit2.RetrofitTest$TypeParam");
+    }
+  }
+
+  @Test public void interfaceWithExtend() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Extending extending = retrofit.create(Extending.class);
+    String result = extending.getResponseBody().execute().body().string();
+    assertEquals("Hi", result);
+  }
+
+  @Test public void interfaceWithExtendWithTypeParameterThrows() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    try {
+      retrofit.create(ExtendingTypeParam.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Type parameters are unsupported on retrofit2.RetrofitTest$TypeParam "
+              + "which is an interface of retrofit2.RetrofitTest$ExtendingTypeParam");
     }
   }
 
