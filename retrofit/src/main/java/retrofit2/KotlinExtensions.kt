@@ -19,6 +19,7 @@
 package retrofit2
 
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.yield
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -94,4 +95,9 @@ suspend fun <T : Any> Call<T>.awaitResponse(): Response<T> {
       }
     })
   }
+}
+
+internal suspend fun Exception.yieldAndThrow(): Nothing {
+  yield()
+  throw this
 }
