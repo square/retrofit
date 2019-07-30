@@ -1,7 +1,7 @@
 language: java
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 # Ensure Javadoc and source jar generation is exercised.
 install: mvn install javadoc:jar source:jar -DskipTests=true -B -V
