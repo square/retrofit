@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 2.6.1 *(2019-07-31)*
+----------------------------
+
+ * Fix: Avoid `IOException`s being wrapped in `UndeclaredThrowableException` in rare cases.
+ * Fix: Include no-content `ResponseBody` for responses created by `Response.error`.
+ * Fix: Update embedded R8/ProGuard rules to not warn about nested classes used for Kotlin extensions.
+
+
 Version 2.6.0 *(2019-06-05)*
 ----------------------------
 
