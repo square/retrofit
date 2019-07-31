@@ -6,7 +6,7 @@
 # https://benlimmer.com/2013/12/26/automatically-publish-javadoc-to-gh-pages-with-travis-ci/
 
 SLUG="square/retrofit"
-JDK="oraclejdk8"
+JDK="openjdk8"
 BRANCH="master"
 
 set -e
