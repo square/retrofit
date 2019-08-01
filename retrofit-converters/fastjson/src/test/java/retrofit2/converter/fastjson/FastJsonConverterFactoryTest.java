@@ -1,13 +1,25 @@
+/*
+ * Copyright (C) 2015 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit2.converter.fastjson;
 
 import com.alibaba.fastjson.annotation.JSONField;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
 import java.io.IOException;
-
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -19,12 +31,8 @@ import retrofit2.http.POST;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * @author Edwin.Wu edwin.wu05@gmail.com
- * @version 2019-08-01 11:30
- * @since JDK1.8
- */
 public class FastJsonConverterFactoryTest {
+
     interface AnInterface {
         @JSONField(name = "name")
         String getName();
@@ -118,5 +126,4 @@ public class FastJsonConverterFactoryTest {
         assertThat(request.getBody().readUtf8()).isEqualTo("{}"); // Null value was not serialized.
         assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
     }
-
 }

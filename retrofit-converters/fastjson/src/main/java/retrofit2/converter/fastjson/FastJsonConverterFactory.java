@@ -1,20 +1,27 @@
-package retrofit2.converter.fastjson;
-
-/**
- * @author Edwin.Wu edwin.wu05@gmail.com
- * @version 2019-08-01 10:38
- * @since JDK1.8
+/*
+ * Copyright (C) 2015 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+package retrofit2.converter.fastjson;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -27,12 +34,15 @@ import retrofit2.Retrofit;
  * handle all types. If you are mixing JSON serialization with something else (such as protocol
  * buffers), you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this
  * instance} last to allow the other converters a chance to see their types.
- *
- * @author Edwin.Wu edwin.wu05@gmail.com
- * @version 2019-08-01 11:29
- * @since JDK1.8
  */
-public class FastJsonConverterFactory extends Converter.Factory {
+public final class FastJsonConverterFactory extends Converter.Factory {
+    /**
+     * Create an default instance for conversion. Encoding to JSON and
+     * decoding from JSON (when no charset is specified by a header) will use UTF-8.
+     */
+    public static FastJsonConverterFactory create() {
+        return new FastJsonConverterFactory();
+    }
 
     private ParserConfig mParserConfig = ParserConfig.getGlobalInstance();
     private int featureValues = JSON.DEFAULT_PARSER_FEATURE;
@@ -40,16 +50,6 @@ public class FastJsonConverterFactory extends Converter.Factory {
 
     private SerializeConfig serializeConfig;
     private SerializerFeature[] serializerFeatures;
-
-    /**
-     * Create an default instance for conversion. Encoding to JSON and
-     * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-     *
-     * @return The instance of FastJsonConverterFactory
-     */
-    public static FastJsonConverterFactory create() {
-        return new FastJsonConverterFactory();
-    }
 
     private FastJsonConverterFactory() {
     }
