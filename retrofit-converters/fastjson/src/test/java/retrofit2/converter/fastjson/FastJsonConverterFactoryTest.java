@@ -17,6 +17,8 @@ import retrofit2.Retrofit;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Edwin.Wu edwin.wu05@gmail.com
  * @version 2019-08-01 11:30
