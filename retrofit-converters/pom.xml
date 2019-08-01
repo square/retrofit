@@ -19,6 +19,7 @@
     <module>guava</module>
     <module>protobuf</module>
     <module>jackson</module>
+    <module>fastjson</module>
     <module>java8</module>
     <module>wire</module>
     <module>simplexml</module>
