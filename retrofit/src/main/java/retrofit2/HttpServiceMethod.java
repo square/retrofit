@@ -165,7 +165,13 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
       //noinspection unchecked Checked by reflection inside RequestFactory.
       Continuation<Response<ResponseT>> continuation =
           (Continuation<Response<ResponseT>>) args[args.length - 1];
-      return KotlinExtensions.awaitResponse(call, continuation);
+
+      // See SuspendForBody for explanation about this try/catch.
+      try {
+        return KotlinExtensions.awaitResponse(call, continuation);
+      } catch (Exception e) {
+        return KotlinExtensions.yieldAndThrow(e, continuation);
+      }
     }
   }
 
