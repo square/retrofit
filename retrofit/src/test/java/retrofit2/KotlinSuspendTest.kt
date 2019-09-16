@@ -274,7 +274,7 @@ class KotlinSuspendTest {
     assertThat(body).isEqualTo("HiHiHiHiHi")
   }
 
-  @Test fun checkedExceptionsAreNotSynchronouslyThrown() = runBlocking {
+  @Test fun checkedExceptionsAreNotSynchronouslyThrownForBody() = runBlocking {
     val retrofit = Retrofit.Builder()
         .baseUrl("https://unresolved-host.com/")
         .addConverterFactory(ToStringConverterFactory())
@@ -289,6 +289,28 @@ class KotlinSuspendTest {
     repeat(10000) {
       try {
         example.body()
+        fail()
+      } catch (_: IOException) {
+        // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
+      }
+    }
+  }
+
+  @Test fun checkedExceptionsAreNotSynchronouslyThrownForResponse() = runBlocking {
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://unresolved-host.com/")
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.shutdown()
+
+    // The problematic behavior of the UnknownHostException being synchronously thrown is
+    // probabilistic based on thread preemption. Running a thousand times will almost always
+    // trigger it, so we run an order of magnitude more to be safe.
+    repeat(10000) {
+      try {
+        example.response()
         fail()
       } catch (_: IOException) {
         // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
