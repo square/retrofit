@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 2.6.2 *(2019-09-23)*
+----------------------------
+
+ * Fix: Avoid `IOException`s being wrapped in `UndeclaredThrowableException` in rare cases when using
+   `Response<..>` as a return type for Kotlin 'suspend' functions.
+
+
 Version 2.6.1 *(2019-07-31)*
 ----------------------------
 
