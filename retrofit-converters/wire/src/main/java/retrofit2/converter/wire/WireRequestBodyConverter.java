@@ -20,7 +20,7 @@ import com.squareup.wire.ProtoAdapter;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import okio.Buffer;
+import okio.BufferedSink;
 import retrofit2.Converter;
 
 final class WireRequestBodyConverter<T extends Message<T, ?>> implements Converter<T, RequestBody> {
@@ -32,10 +32,17 @@ final class WireRequestBodyConverter<T extends Message<T, ?>> implements Convert
     this.adapter = adapter;
   }
 
-  @Override
-  public RequestBody convert(T value) throws IOException {
-    Buffer buffer = new Buffer();
-    adapter.encode(buffer, value);
-    return RequestBody.create(MEDIA_TYPE, buffer.snapshot());
+  @Override public RequestBody convert(T value) {
+    return new RequestBody() {
+      @Override public MediaType contentType() {
+        return MEDIA_TYPE;
+      }
+
+      @Override public void writeTo(BufferedSink sink) throws IOException {
+        try (BufferedSink autoClosingSink = sink) {
+          adapter.encode(autoClosingSink, value);
+        }
+      }
+    };
   }
 }
