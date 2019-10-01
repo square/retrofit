@@ -20,7 +20,7 @@ import com.squareup.moshi.JsonWriter;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import okio.Buffer;
+import okio.BufferedSink;
 import retrofit2.Converter;
 
 final class MoshiRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -32,11 +32,17 @@ final class MoshiRequestBodyConverter<T> implements Converter<T, RequestBody> {
     this.adapter = adapter;
   }
 
-  @Override
-  public RequestBody convert(T value) throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
-    adapter.toJson(writer, value);
-    return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
+  @Override public RequestBody convert(final T value) {
+    return new RequestBody() {
+      @Override public MediaType contentType() {
+        return MEDIA_TYPE;
+      }
+
+      @Override public void writeTo(BufferedSink sink) throws IOException {
+        try (JsonWriter writer = JsonWriter.of(sink)) {
+          adapter.toJson(writer, value);
+        }
+      }
+    };
   }
 }
