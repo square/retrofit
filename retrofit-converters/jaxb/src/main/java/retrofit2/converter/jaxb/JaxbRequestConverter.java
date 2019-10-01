@@ -15,15 +15,15 @@
  */
 package retrofit2.converter.jaxb;
 
-import java.io.IOException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import okio.Buffer;
+import okio.BufferedSink;
 import retrofit2.Converter;
 
 final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
@@ -36,19 +36,27 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
     this.type = type;
   }
 
-  @Override
-  public RequestBody convert(final T value) throws IOException {
-    Buffer buffer = new Buffer();
-    try {
-      Marshaller marshaller = context.createMarshaller();
+  @Override public RequestBody convert(final T value) {
+    return new RequestBody() {
+      @Override public MediaType contentType() {
+        return JaxbConverterFactory.XML;
+      }
 
-      XMLStreamWriter xmlWriter =
-          xmlOutputFactory.createXMLStreamWriter(
-              buffer.outputStream(), JaxbConverterFactory.XML.charset().name());
-      marshaller.marshal(value, xmlWriter);
-    } catch (JAXBException | XMLStreamException e) {
-      throw new RuntimeException(e);
-    }
-    return RequestBody.create(JaxbConverterFactory.XML, buffer.readByteString());
+      @Override public void writeTo(BufferedSink sink) {
+        try {
+          Marshaller marshaller = context.createMarshaller();
+          XMLStreamWriter xmlWriter = xmlOutputFactory.createXMLStreamWriter(
+              sink.outputStream(), JaxbConverterFactory.XML.charset().name());
+          try {
+            marshaller.marshal(value, xmlWriter);
+            xmlWriter.flush();
+          } finally {
+            xmlWriter.close();
+          }
+        } catch (JAXBException | XMLStreamException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
   }
 }
