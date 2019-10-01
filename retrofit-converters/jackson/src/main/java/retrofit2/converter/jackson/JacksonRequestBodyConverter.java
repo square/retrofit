@@ -17,8 +17,10 @@ package retrofit2.converter.jackson;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import okio.BufferedSink;
 import retrofit2.Converter;
 
 final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -30,9 +32,17 @@ final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> 
     this.adapter = adapter;
   }
 
-  @Override
-  public RequestBody convert(T value) throws IOException {
-    byte[] bytes = adapter.writeValueAsBytes(value);
-    return RequestBody.create(MEDIA_TYPE, bytes);
+  @Override public RequestBody convert(T value) {
+    return new RequestBody() {
+      @Override public MediaType contentType() {
+        return MEDIA_TYPE;
+      }
+
+      @Override public void writeTo(BufferedSink bufferedSink) throws IOException {
+        try (OutputStream os = bufferedSink.outputStream()) {
+          adapter.writeValue(os, value);
+        }
+      }
+    };
   }
 }
