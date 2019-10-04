@@ -56,7 +56,7 @@
 
     <!-- Adapter Dependencies -->
     <rxjava.version>1.3.0</rxjava.version>
-    <rxjava2.version>2.0.0</rxjava2.version>
+    <rxjava2.version>2.1.3</rxjava2.version>
     <guava.version>19.0</guava.version>
     <scala.version>2.12.4</scala.version>
 

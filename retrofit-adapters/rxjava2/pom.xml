@@ -49,6 +49,12 @@
       <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.akarnokd</groupId>
+      <artifactId>rxjava2-extensions</artifactId>
+      <version>0.17.6</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
