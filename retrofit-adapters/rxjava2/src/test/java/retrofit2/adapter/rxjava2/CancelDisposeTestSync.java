@@ -46,6 +46,7 @@ public final class CancelDisposeTestSync {
     service = retrofit.create(Service.class);
   }
 
+  @SuppressWarnings("ResultOfMethodCallIgnored")
   @Test public void disposeBeforeExecuteDoesNotEnqueue() {
     service.go().test(true);
     assertEquals(0, server.getRequestCount());

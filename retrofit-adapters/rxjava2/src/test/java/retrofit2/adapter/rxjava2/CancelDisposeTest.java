@@ -59,6 +59,7 @@ public final class CancelDisposeTest {
     assertTrue(calls.get(0).isCanceled());
   }
 
+  @SuppressWarnings("ResultOfMethodCallIgnored")
   @Test public void disposeBeforeEnqueueDoesNotEnqueue() {
     service.go().test(true);
     List<Call> calls = client.dispatcher().runningCalls();
