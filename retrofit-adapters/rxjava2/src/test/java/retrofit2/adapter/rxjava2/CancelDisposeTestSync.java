@@ -47,7 +47,7 @@ public final class CancelDisposeTestSync {
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test public void disposeBeforeExecuteDoesNotEnqueue() {
+  @Test public void disposeBeforeExecuteDoesNotEnqueue() {
     service.go().test(true);
     assertEquals(0, server.getRequestCount());
   }
