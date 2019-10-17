@@ -101,3 +101,43 @@ internal suspend fun Exception.yieldAndThrow(): Nothing {
   yield()
   throw this
 }
+
+sealed class Result<T> {
+
+  val isFailure: Boolean
+    get() = this is Failure
+
+  val isSuccess: Boolean
+    get() = this is Success
+
+  @Throws(Throwable::class)
+  fun result(): Pair<Call<T>, Response<T>> {
+    if (this is Success) {
+      return Pair(call, response)
+    } else throw (this as Failure).error
+  }
+}
+
+data class Success<T>(val call: Call<T>, val response: Response<T>): Result<T>()
+data class Failure<T>(val call: Call<T>, val error: Throwable): Result<T>()
+
+inline fun <reified T> Call<T>.enqueue(crossinline result: (Result<T>) -> Unit) {
+  enqueue(object: Callback<T> {
+    override fun onFailure(call: Call<T>, error: Throwable) {
+      result(Failure(call, error))
+    }
+
+    override fun onResponse(call: Call<T>, response: Response<T>) {
+      result(Success(call, response))
+    }
+  })
+}
+
+inline fun <reified T> Call<T>.executeForResult(): Result<T> {
+  return try {
+    val response = execute()
+    Success(this, response)
+  } catch (e: Exception) {
+    Failure(this, e)
+  }
+}
