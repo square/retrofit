@@ -18,6 +18,7 @@ package retrofit2.converter.gson;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import java.io.IOException;
@@ -26,14 +27,20 @@ import retrofit2.Converter;
 
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   private final Gson gson;
-  private final TypeAdapter<T> adapter;
+  private final TypeToken<T> typeToken;
+  private TypeAdapter<T> adapter;
 
-  GsonResponseBodyConverter(Gson gson, TypeAdapter<T> adapter) {
+  GsonResponseBodyConverter(Gson gson, TypeToken<T> typeToken) {
     this.gson = gson;
-    this.adapter = adapter;
+    this.typeToken = typeToken;
   }
 
   @Override public T convert(ResponseBody value) throws IOException {
+    TypeAdapter<T> adapter = this.adapter;
+    if (adapter == null) {
+      adapter = gson.getAdapter(typeToken);
+      this.adapter = adapter;
+    }
     JsonReader jsonReader = gson.newJsonReader(value.charStream());
     try {
       T result = adapter.read(jsonReader);
