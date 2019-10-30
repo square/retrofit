@@ -61,7 +61,7 @@ public final class CompletableTest {
     RecordingSubscriber<Void> subscriber = subscriberRule.create();
     service.completable().unsafeSubscribe(subscriber);
     // Required for backwards compatibility.
-    subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
+    subscriber.assertError(HttpException.class, "HTTP 404 Client Error from " + server.url("/"));
   }
 
   @Test public void completableFailure() {

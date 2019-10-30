@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 public class HttpException extends RuntimeException {
   private static String getMessage(Response<?> response) {
     Objects.requireNonNull(response, "response == null");
-    return "HTTP " + response.code() + " " + response.message();
+    return "HTTP " + response.code() + " " + response.message() + " from " + response.raw().request().url();
   }
 
   private final int code;

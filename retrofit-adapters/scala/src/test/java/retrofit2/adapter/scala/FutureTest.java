@@ -72,7 +72,7 @@ public final class FutureTest {
       assertThat(e)
           .isInstanceOf(HttpException.class) // Required for backwards compatibility.
           .isInstanceOf(retrofit2.HttpException.class)
-          .hasMessage("HTTP 404 Client Error");
+          .hasMessage("HTTP 404 Client Error from " + server.url("/"));
     }
   }
 

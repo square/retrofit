@@ -66,7 +66,7 @@ public final class ObservableTest {
     RecordingSubscriber<String> subscriber = subscriberRule.create();
     service.body().unsafeSubscribe(subscriber);
     // Required for backwards compatibility.
-    subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
+    subscriber.assertError(HttpException.class, "HTTP 404 Client Error from " + server.url("/"));
   }
 
   @Test public void bodyFailure() {

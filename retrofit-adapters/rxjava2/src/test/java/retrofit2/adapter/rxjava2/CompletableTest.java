@@ -60,7 +60,7 @@ public final class CompletableTest {
     RecordingCompletableObserver observer = observerRule.create();
     service.completable().subscribe(observer);
     // Required for backwards compatibility.
-    observer.assertError(HttpException.class, "HTTP 404 Client Error");
+    observer.assertError(HttpException.class, "HTTP 404 Client Error from " + server.url("/"));
   }
 
   @Test public void completableFailure() {
