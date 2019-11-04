@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -117,8 +118,13 @@ final class RequestFactory {
       handlers[p].apply(requestBuilder, args[p]);
     }
 
+    CoroutineContext kotlinCoroutineContext = null;
+    if (isKotlinSuspendFunction) {
+      kotlinCoroutineContext = ((Continuation<?>) args[argumentCount]).getContext();
+    }
+
     return requestBuilder.get()
-        .tag(Invocation.class, new Invocation(method, argumentList))
+        .tag(Invocation.class, new Invocation(method, argumentList, kotlinCoroutineContext))
         .build();
   }
 

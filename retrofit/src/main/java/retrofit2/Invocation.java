@@ -15,6 +15,9 @@
  */
 package retrofit2;
 
+import kotlin.coroutines.CoroutineContext;
+
+import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,18 +53,24 @@ import java.util.Objects;
  */
 public final class Invocation {
   public static Invocation of(Method method, List<?> arguments) {
+    return Invocation.of(method, arguments, null);
+  }
+
+  public static Invocation of(Method method, List<?> arguments, @Nullable CoroutineContext kotlinCoroutineContext) {
     Objects.requireNonNull(method, "method == null");
     Objects.requireNonNull(arguments, "arguments == null");
-    return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
+    return new Invocation(method, new ArrayList<>(arguments), kotlinCoroutineContext); // Defensive copy of arguments.
   }
 
   private final Method method;
   private final List<?> arguments;
+  @Nullable private final CoroutineContext kotlinCoroutineContext;
 
   /** Trusted constructor assumes ownership of {@code arguments}. */
-  Invocation(Method method, List<?> arguments) {
+  Invocation(Method method, List<?> arguments, @Nullable CoroutineContext kotlinCoroutineContext) {
     this.method = method;
     this.arguments = Collections.unmodifiableList(arguments);
+    this.kotlinCoroutineContext = kotlinCoroutineContext;
   }
 
   public Method method() {
@@ -70,6 +79,10 @@ public final class Invocation {
 
   public List<?> arguments() {
     return arguments;
+  }
+
+  @Nullable public CoroutineContext kotlinCoroutineContext() {
+    return kotlinCoroutineContext;
   }
 
   @Override public String toString() {
