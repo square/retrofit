@@ -65,8 +65,7 @@ public final class RxJava2CallAdapterFactory extends CallAdapter.Factory {
   }
 
   /**
-   * Returns an instance which creates asynchronous observables. Applying
-   * {@link Observable#subscribeOn} has no effect on stream types created by this factory.
+   * Returns an instance which creates asynchronous observables.
    */
   public static RxJava2CallAdapterFactory createAsync() {
     return new RxJava2CallAdapterFactory(null, true);
