@@ -15,9 +15,11 @@
  */
 package retrofit2
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -35,6 +37,7 @@ import retrofit2.http.Path
 import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import kotlin.coroutines.CoroutineContext
 
 class KotlinSuspendTest {
   @get:Rule val server = MockWebServer()
@@ -283,15 +286,19 @@ class KotlinSuspendTest {
 
     server.shutdown()
 
-    // The problematic behavior of the UnknownHostException being synchronously thrown is
-    // probabilistic based on thread preemption. Running a thousand times will almost always
-    // trigger it, so we run an order of magnitude more to be safe.
-    repeat(10000) {
-      try {
-        example.body()
-        fail()
-      } catch (_: IOException) {
-        // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
+    // Run with a dispatcher that prevents yield from actually deferring work. An old workaround
+    // for this problem relied on yield, but it is not guaranteed to prevent direct execution.
+    withContext(DirectUnconfinedDispatcher) {
+      // The problematic behavior of the UnknownHostException being synchronously thrown is
+      // probabilistic based on thread preemption. Running a thousand times will almost always
+      // trigger it, so we run an order of magnitude more to be safe.
+      repeat(10000) {
+        try {
+          example.body()
+          fail()
+        } catch (_: IOException) {
+          // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
+        }
       }
     }
   }
@@ -305,16 +312,25 @@ class KotlinSuspendTest {
 
     server.shutdown()
 
-    // The problematic behavior of the UnknownHostException being synchronously thrown is
-    // probabilistic based on thread preemption. Running a thousand times will almost always
-    // trigger it, so we run an order of magnitude more to be safe.
-    repeat(10000) {
-      try {
-        example.response()
-        fail()
-      } catch (_: IOException) {
-        // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
+    // Run with a dispatcher that prevents yield from actually deferring work. An old workaround
+    // for this problem relied on yield, but it is not guaranteed to prevent direct execution.
+    withContext(DirectUnconfinedDispatcher) {
+      // The problematic behavior of the UnknownHostException being synchronously thrown is
+      // probabilistic based on thread preemption. Running a thousand times will almost always
+      // trigger it, so we run an order of magnitude more to be safe.
+      repeat(10000) {
+        try {
+          example.response()
+          fail()
+        } catch (_: IOException) {
+          // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
+        }
       }
     }
+  }
+
+  private object DirectUnconfinedDispatcher : CoroutineDispatcher() {
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean = false
+    override fun dispatch(context: CoroutineContext, block: Runnable) = block.run()
   }
 }
