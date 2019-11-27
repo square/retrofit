@@ -85,4 +85,26 @@ public final class InvocationTest {
     } catch (UnsupportedOperationException expected) {
     }
   }
+
+  @Test public void kotlinCoroutineContextNotInClasspath() {
+    Exception exception = null;
+    try {
+      Class.forName("kotlin.coroutines.CoroutineContext");
+    } catch (Exception e) {
+      exception = e;
+    }
+    assertThat(exception).isInstanceOf(ClassNotFoundException.class);
+
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://example.com/")
+        .callFactory(new OkHttpClient())
+        .build();
+
+    Example example = retrofit.create(Example.class);
+    RequestBody requestBody = RequestBody.create(MediaType.get("text/plain"), "three");
+    Call<ResponseBody> call = example.postMethod("one", "two", requestBody);
+
+    Invocation invocation = call.request().tag(Invocation.class);
+    assertThat(invocation.kotlinCoroutineContext()).isNull();
+  }
 }
