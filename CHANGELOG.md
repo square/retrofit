@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 2.6.3 *(2019-12-09)*
+----------------------------
+
+ * Fix: Change mechanism for avoiding `UndeclaredThrowableException` in rare cases from using `yield`
+   an explicit dispatch which ensures that it will work even on dispatchers which do not support yielding.
+
+
 Version 2.6.2 *(2019-09-23)*
 ----------------------------
 
