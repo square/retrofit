@@ -25,7 +25,7 @@
 
   <groupId>com.squareup.retrofit2</groupId>
   <artifactId>parent</artifactId>
-  <version>2.6.3</version>
+  <version>2.6.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Retrofit (Parent)</name>
