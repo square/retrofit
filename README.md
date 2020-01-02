@@ -9,7 +9,7 @@ For more information please see [the website][1].
 Download
 --------
 
-Download [the latest JAR][2] or grab from Maven central at the coordinates `com.squareup.retrofit2:retrofit:2.6.3`.
+Download [the latest JAR][2] or grab from Maven central at the coordinates `com.squareup.retrofit2:retrofit:2.6.4`.
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
