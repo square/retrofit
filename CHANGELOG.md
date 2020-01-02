@@ -12,6 +12,12 @@ See [this blog post](https://cashapp.github.io/2019-02-05/okhttp-3-13-requires-a
  * Fix: Ensure a non-null body is returned by `Response.error`.
 
 
+Version 2.6.4 *(2020-01-02)*
+----------------------------
+
+ * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
+
+
 Version 2.6.3 *(2019-12-09)*
 ----------------------------
 
