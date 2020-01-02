@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 2.7.1 *(2020-01-02)*
+----------------------------
+
+ * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
+
+
 Version 2.7.0 *(2019-12-09)*
 ----------------------------
 
