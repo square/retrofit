@@ -22,17 +22,21 @@ import javax.annotation.Nullable;
 public class HttpException extends RuntimeException {
   private static String getMessage(Response<?> response) {
     Objects.requireNonNull(response, "response == null");
-    return "HTTP " + response.code() + " " + response.message();
+    String maybeErrorBody = response.errorBody()
+        != null ? " " + response.errorBody().string() : "";
+    return "HTTP " + response.code() + " " + response.message() + maybeErrorBody;
   }
 
   private final int code;
   private final String message;
+  private final String errorBody;
   private final transient Response<?> response;
 
   public HttpException(Response<?> response) {
     super(getMessage(response));
     this.code = response.code();
     this.message = response.message();
+    this.errorBody = response.errorBody() != null ? response.errorBody().string() : "";
     this.response = response;
   }
 
@@ -45,6 +49,9 @@ public class HttpException extends RuntimeException {
   public String message() {
     return message;
   }
+
+  /** HTTP error body. */
+  public String errorBody() { return errorBody; }
 
   /**
    * The full HTTP response. This may be null if the exception was serialized.
