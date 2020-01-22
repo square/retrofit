@@ -149,7 +149,7 @@ Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
               </ul>
               <p>Here's an example of using the <code>GsonConverterFactory</code> class to generate an implementation of the <code>GitHubService</code> interface which uses Gson for its deserialization.</p>
               <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
-    .baseUrl("https://api.github.com")
+    .baseUrl("https://api.github.com/")
     .addConverterFactory(GsonConverterFactory.create())
     .build();
 
