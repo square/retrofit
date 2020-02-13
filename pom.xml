@@ -77,6 +77,8 @@
     <junit.version>4.12</junit.version>
     <assertj.version>3.13.2</assertj.version>
     <robolectric.version>3.8</robolectric.version><!-- 4.3 requires com.android.support:support-annotations:jar:28.0.0 -->
+    <xmlunitcore.version>2.2.1</xmlunitcore.version>
+    <xmlunitmatchers.version>2.2.1</xmlunitmatchers.version>
   </properties>
 
   <scm>

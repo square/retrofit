@@ -23,6 +23,8 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.xmlunit.diff.DefaultNodeMatcher;
+import org.xmlunit.diff.ElementSelectors;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -32,6 +34,8 @@ import retrofit2.http.POST;
 
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.xmlunit.matchers.CompareMatcher.isSimilarTo;
 
 public final class JaxbConverterFactoryTest {
   static final Contact SAMPLE_CONTACT = new Contact("Jenny",
@@ -72,7 +76,8 @@ public final class JaxbConverterFactoryTest {
 
     RecordedRequest request = server.takeRequest();
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=utf-8");
-    assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_XML);
+    assertThat(request.getBody().readUtf8(), isSimilarTo(SAMPLE_CONTACT_XML).ignoreWhitespace()
+                     .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText)));
   }
 
   @Test public void xmlResponseBody() throws Exception {
@@ -114,7 +119,8 @@ public final class JaxbConverterFactoryTest {
 
     RecordedRequest request = server.takeRequest();
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=utf-8");
-    assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_XML);
+    assertThat(request.getBody().readUtf8(), isSimilarTo(SAMPLE_CONTACT_XML).ignoreWhitespace()
+                   .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText)));
   }
 
   @Test public void malformedXml() throws Exception {

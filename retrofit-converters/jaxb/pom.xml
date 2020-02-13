@@ -44,6 +44,18 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.xmlunit</groupId>
+      <artifactId>xmlunit-core</artifactId>
+      <version>${xmlunitcore.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+       <groupId>org.xmlunit</groupId>
+       <artifactId>xmlunit-matchers</artifactId>
+       <version>${xmlunitmatchers.version}</version>
+       <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
