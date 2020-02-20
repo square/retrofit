@@ -62,7 +62,7 @@ import retrofit2.http.Url;
 import static retrofit2.Utils.methodError;
 import static retrofit2.Utils.parameterError;
 
-final class RequestFactory {
+final class RequestFactory implements SimpleRequestFactory {
   static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
     return new Builder(retrofit, method).build();
   }
@@ -93,7 +93,7 @@ final class RequestFactory {
     isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
   }
 
-  okhttp3.Request create(Object[] args) throws IOException {
+  public okhttp3.Request create(Object[] args) throws IOException {
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 

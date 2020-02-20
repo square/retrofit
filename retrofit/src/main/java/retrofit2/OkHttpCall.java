@@ -29,8 +29,8 @@ import okio.Okio;
 
 import static retrofit2.Utils.throwIfFatal;
 
-final class OkHttpCall<T> implements Call<T> {
-  private final RequestFactory requestFactory;
+public final class OkHttpCall<T> implements Call<T> {
+  private final SimpleRequestFactory requestFactory;
   private final Object[] args;
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, T> responseConverter;
@@ -44,7 +44,7 @@ final class OkHttpCall<T> implements Call<T> {
   @GuardedBy("this")
   private boolean executed;
 
-  OkHttpCall(RequestFactory requestFactory, Object[] args,
+  OkHttpCall(SimpleRequestFactory requestFactory, Object[] args,
       okhttp3.Call.Factory callFactory, Converter<ResponseBody, T> responseConverter) {
     this.requestFactory = requestFactory;
     this.args = args;
@@ -55,6 +55,15 @@ final class OkHttpCall<T> implements Call<T> {
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
     return new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
+  }
+
+  public OkHttpCall<T> clone(Request request) {
+    SimpleRequestFactory newRequestFactory = new SimpleRequestFactory() {
+      @Override public Request create(Object[] args) throws IOException {
+        return request;
+      }
+    };
+    return new OkHttpCall<>(newRequestFactory, args, callFactory, responseConverter);
   }
 
   @Override public synchronized Request request() {
