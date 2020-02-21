@@ -18,6 +18,9 @@ package retrofit2;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -48,9 +51,22 @@ class Platform {
   }
 
   private final boolean hasJava8Types;
+  private final boolean supportsInvokeSpecial;
 
   Platform(boolean hasJava8Types) {
     this.hasJava8Types = hasJava8Types;
+    if (hasJava8Types) {
+      boolean hasLookupPrivateChangedFromJava8 = false;
+      try {
+        Lookup.class.getDeclaredConstructor(Class.class, int.class);
+      } catch(NoSuchMethodException ex) {
+        hasLookupPrivateChangedFromJava8 = true;
+      }
+      supportsInvokeSpecial = hasLookupPrivateChangedFromJava8;
+    }
+    else {
+      this.supportsInvokeSpecial = false;
+    }
   }
 
   @Nullable Executor defaultCallbackExecutor() {
@@ -85,14 +101,22 @@ class Platform {
 
   @Nullable Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
       @Nullable Object... args) throws Throwable {
-    // Because the service interface might not be public, we need to use a MethodHandle lookup
-    // that ignores the visibility of the declaringClass.
-    Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
-    constructor.setAccessible(true);
-    return constructor.newInstance(declaringClass, -1 /* trusted */)
-        .unreflectSpecial(method, declaringClass)
-        .bindTo(object)
-        .invokeWithArguments(args);
+    MethodHandle handle;
+    if (!supportsInvokeSpecial) {
+      // Because the service interface might not be public, we need to use a MethodHandle lookup
+      // that ignores the visibility of the declaringClass.
+      Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
+      constructor.setAccessible(true);
+      handle = constructor.newInstance(declaringClass, -1 /* trusted */)
+              .unreflectSpecial(method, declaringClass);
+    }
+    else {
+      handle = MethodHandles.lookup()
+              .unreflectSpecial(method, declaringClass);
+    }
+    return handle
+            .bindTo(object)
+            .invokeWithArguments(args);
   }
 
   static final class Android extends Platform {
