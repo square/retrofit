@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 2.7.2 *(2020-02-24)*
+----------------------------
+
+ * Fix: Update to OkHttp 3.14.7 for compatibility with Android R (API 30).
+
+
 Version 2.7.1 *(2020-01-02)*
 ----------------------------
 
