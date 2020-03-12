@@ -64,14 +64,7 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public CompletableFuture<R> adapt(final Call<R> call) {
-      final CompletableFuture<R> future = new CompletableFuture<R>() {
-        @Override public boolean cancel(boolean mayInterruptIfRunning) {
-          if (mayInterruptIfRunning) {
-            call.cancel();
-          }
-          return super.cancel(mayInterruptIfRunning);
-        }
-      };
+      final CompletableFuture<R> future = new CallCancelCompletableFuture<>(call);
 
       call.enqueue(new Callback<R>() {
         @Override public void onResponse(Call<R> call, Response<R> response) {
@@ -105,14 +98,7 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public CompletableFuture<Response<R>> adapt(final Call<R> call) {
-      final CompletableFuture<Response<R>> future = new CompletableFuture<Response<R>>() {
-        @Override public boolean cancel(boolean mayInterruptIfRunning) {
-          if (mayInterruptIfRunning) {
-            call.cancel();
-          }
-          return super.cancel(mayInterruptIfRunning);
-        }
-      };
+      final CompletableFuture<Response<R>> future = new CallCancelCompletableFuture<>(call);
 
       call.enqueue(new Callback<R>() {
         @Override public void onResponse(Call<R> call, Response<R> response) {
@@ -125,6 +111,21 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
       });
 
       return future;
+    }
+  }
+
+  private static final class CallCancelCompletableFuture<T> extends CompletableFuture<T> {
+    private final Call<?> call;
+
+    CallCancelCompletableFuture(Call<?> call) {
+      this.call = call;
+    }
+
+    @Override public boolean cancel(boolean mayInterruptIfRunning) {
+      if (mayInterruptIfRunning) {
+        call.cancel();
+      }
+      return super.cancel(mayInterruptIfRunning);
     }
   }
 }
