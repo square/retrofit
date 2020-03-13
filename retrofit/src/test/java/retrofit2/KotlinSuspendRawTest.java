@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import kotlin.Result;
 import kotlin.coroutines.Continuation;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
@@ -33,10 +34,14 @@ public final class KotlinSuspendRawTest {
 
   interface Service {
     @GET("/")
-    Object body(Continuation<? super Response> response);
+    Object body(Continuation<? super Response> continuation);
+    @GET("/")
+    Object result(Continuation<? super Result> continuation);
+    @GET("/")
+    Object resultResponse(Continuation<? super Result<Response>> continuation);
   }
 
-  @Test public void raw() {
+  @Test public void body() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
         .build();
@@ -48,6 +53,36 @@ public final class KotlinSuspendRawTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Response must include generic type (e.g., Response<String>)\n"
           + "    for method Service.body");
+    }
+  }
+
+  @Test public void result() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    try {
+      service.result(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Result must include generic type (e.g., Result<String>)\n"
+          + "    for method Service.result");
+    }
+  }
+
+  @Test public void resultResponse() {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .build();
+    Service service = retrofit.create(Service.class);
+
+    try {
+      service.resultResponse(null);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Response must include generic type (e.g., Response<String>)\n"
+          + "    for method Service.resultResponse");
     }
   }
 }

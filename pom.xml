@@ -225,6 +225,11 @@
           <groupId>org.jetbrains.kotlin</groupId>
           <artifactId>kotlin-maven-plugin</artifactId>
           <version>${kotlin.version}</version>
+          <configuration>
+            <args>
+              <arg>-Xallow-result-return-type</arg>
+            </args>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

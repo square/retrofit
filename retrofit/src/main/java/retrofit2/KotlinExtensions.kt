@@ -28,41 +28,30 @@ import kotlin.coroutines.resumeWithException
 
 inline fun <reified T> Retrofit.create(): T = create(T::class.java)
 
-suspend fun <T : Any> Call<T>.await(): T {
-  return suspendCancellableCoroutine { continuation ->
-    continuation.invokeOnCancellation {
-      cancel()
-    }
-    enqueue(object : Callback<T> {
-      override fun onResponse(call: Call<T>, response: Response<T>) {
-        if (response.isSuccessful) {
-          val body = response.body()
-          if (body == null) {
-            val invocation = call.request().tag(Invocation::class.java)!!
-            val method = invocation.method()
-            val e = KotlinNullPointerException("Response from " +
-                method.declaringClass.name +
-                '.' +
-                method.name +
-                " was null but response body type was declared as non-null")
-            continuation.resumeWithException(e)
-          } else {
-            continuation.resume(body)
-          }
-        } else {
-          continuation.resumeWithException(HttpException(response))
-        }
-      }
-
-      override fun onFailure(call: Call<T>, t: Throwable) {
-        continuation.resumeWithException(t)
-      }
-    })
-  }
-}
+suspend fun <T : Any> Call<T>.await(): T = awaitResult().getOrThrow()
 
 @JvmName("awaitNullable")
-suspend fun <T : Any> Call<T?>.await(): T? {
+suspend fun <T : Any> Call<T?>.await(): T? = awaitResult().getOrThrow()
+
+suspend fun <T : Any> Call<T>.awaitResult(): Result<T> {
+  val result = (this as Call<T?>).awaitResult()
+  if (result.isSuccess && result.getOrNull() == null) {
+    val invocation = request().tag(Invocation::class.java)!!
+    val method = invocation.method()
+    val e = KotlinNullPointerException(
+        "Response from " +
+            method.declaringClass.name +
+            '.' +
+            method.name +
+            " was null but response body type was declared as non-null"
+    )
+    return Result.failure(e)
+  }
+  return result as Result<T>
+}
+
+@JvmName("awaitNullableResult")
+suspend fun <T : Any> Call<T?>.awaitResult(): Result<T?> {
   return suspendCancellableCoroutine { continuation ->
     continuation.invokeOnCancellation {
       cancel()
@@ -70,31 +59,33 @@ suspend fun <T : Any> Call<T?>.await(): T? {
     enqueue(object : Callback<T?> {
       override fun onResponse(call: Call<T?>, response: Response<T?>) {
         if (response.isSuccessful) {
-          continuation.resume(response.body())
+          continuation.resume(Result.success(response.body()))
         } else {
-          continuation.resumeWithException(HttpException(response))
+          continuation.resume(Result.failure(HttpException(response)))
         }
       }
 
       override fun onFailure(call: Call<T?>, t: Throwable) {
-        continuation.resumeWithException(t)
+        continuation.resume(Result.failure(t))
       }
     })
   }
 }
 
-suspend fun <T : Any> Call<T>.awaitResponse(): Response<T> {
+suspend fun <T : Any> Call<T>.awaitResponse(): Response<T> = awaitResponseResult().getOrThrow()
+
+suspend fun <T : Any> Call<T>.awaitResponseResult(): Result<Response<T>> {
   return suspendCancellableCoroutine { continuation ->
     continuation.invokeOnCancellation {
       cancel()
     }
     enqueue(object : Callback<T> {
       override fun onResponse(call: Call<T>, response: Response<T>) {
-        continuation.resume(response)
+        continuation.resume(Result.success(response))
       }
 
       override fun onFailure(call: Call<T>, t: Throwable) {
-        continuation.resumeWithException(t)
+        continuation.resume(Result.failure(t))
       }
     })
   }

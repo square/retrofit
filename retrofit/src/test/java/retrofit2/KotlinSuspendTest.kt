@@ -46,6 +46,8 @@ class KotlinSuspendTest {
     @GET("/") suspend fun body(): String
     @GET("/") suspend fun bodyNullable(): String?
     @GET("/") suspend fun response(): Response<String>
+    @GET("/") suspend fun resultBody(): Result<String>
+    @GET("/") suspend fun resultResponse(): Result<Response<String>>
 
     @GET("/{a}/{b}/{c}")
     suspend fun params(
@@ -176,6 +178,91 @@ class KotlinSuspendTest {
       fail()
     } catch (e: IOException) {
     }
+  }
+
+  @Test fun resultBody() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setBody("Hi"))
+
+    val result = runBlocking { example.resultBody() }
+    val body = result.getOrThrow()
+    assertThat(body).isEqualTo("Hi")
+  }
+
+  @Test fun resultBody404() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setResponseCode(404))
+
+    val result = runBlocking { example.resultBody() }
+    val exception = result.exceptionOrNull() as HttpException
+    assertThat(exception.code()).isEqualTo(404)
+  }
+
+  @Test fun resultBodyFailure() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST))
+
+    val result = runBlocking { example.resultBody() }
+    val exception = result.exceptionOrNull()
+    assertThat(exception).isInstanceOf(IOException::class.java)
+  }
+
+  @Test fun resultResponse() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setBody("Hi"))
+
+    val result = runBlocking { example.resultResponse() }
+    val response = result.getOrThrow()
+    assertThat(response.code()).isEqualTo(200)
+    assertThat(response.body()).isEqualTo("Hi")
+  }
+
+  @Test fun resultResponse404() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setResponseCode(404))
+
+    val result = runBlocking { example.resultResponse() }
+    val response = result.getOrThrow()
+    assertThat(response.code()).isEqualTo(404)
+  }
+
+  @Test fun resultResponseFailure() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST))
+
+    val result = runBlocking { example.resultResponse() }
+    val exception = result.exceptionOrNull()
+    assertThat(exception).isInstanceOf(IOException::class.java)
   }
 
   @Test fun params() {
