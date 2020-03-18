@@ -26,6 +26,7 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
+import okio.Timeout;
 
 import static retrofit2.Utils.throwIfFatal;
 
@@ -58,28 +59,48 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override public synchronized Request request() {
-    okhttp3.Call call = rawCall;
-    if (call != null) {
-      return call.request();
+    try {
+      return getRawCall().request();
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to create request.", e);
     }
+  }
+
+  @Override public synchronized Timeout timeout() {
+    try {
+      return getRawCall().timeout();
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to create call.", e);
+    }
+  }
+
+  /**
+   * Returns the raw call, initializing it if necessary. Throws if initializing the raw call throws,
+   * or has thrown in previous attempts to create it.
+   */
+  @GuardedBy("this")
+  private okhttp3.Call getRawCall() throws IOException {
+    okhttp3.Call call = rawCall;
+    if (call != null) return call;
+
+    // Re-throw previous failures if this isn't the first attempt.
     if (creationFailure != null) {
       if (creationFailure instanceof IOException) {
-        throw new RuntimeException("Unable to create request.", creationFailure);
+        throw (IOException) creationFailure;
       } else if (creationFailure instanceof RuntimeException) {
         throw (RuntimeException) creationFailure;
       } else {
         throw (Error) creationFailure;
       }
     }
+
+    // Create and remember either the success or the failure.
     try {
-      return (rawCall = createRawCall()).request();
-    } catch (RuntimeException | Error e) {
+      return rawCall = createRawCall();
+    } catch (RuntimeException | Error | IOException e) {
       throwIfFatal(e); // Do not assign a fatal error to creationFailure.
       creationFailure = e;
       throw e;
-    } catch (IOException e) {
-      creationFailure = e;
-      throw new RuntimeException("Unable to create request.", e);
     }
   }
 
@@ -159,26 +180,7 @@ final class OkHttpCall<T> implements Call<T> {
       if (executed) throw new IllegalStateException("Already executed.");
       executed = true;
 
-      if (creationFailure != null) {
-        if (creationFailure instanceof IOException) {
-          throw (IOException) creationFailure;
-        } else if (creationFailure instanceof RuntimeException) {
-          throw (RuntimeException) creationFailure;
-        } else {
-          throw (Error) creationFailure;
-        }
-      }
-
-      call = rawCall;
-      if (call == null) {
-        try {
-          call = rawCall = createRawCall();
-        } catch (IOException | RuntimeException | Error e) {
-          throwIfFatal(e); //  Do not assign a fatal error to creationFailure.
-          creationFailure = e;
-          throw e;
-        }
-      }
+      call = getRawCall();
     }
 
     if (canceled) {

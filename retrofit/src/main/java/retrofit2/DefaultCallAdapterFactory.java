@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import okhttp3.Request;
+import okio.Timeout;
 
 final class DefaultCallAdapterFactory extends CallAdapter.Factory {
   private final @Nullable Executor callbackExecutor;
@@ -112,6 +113,10 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
     @Override public Request request() {
       return delegate.request();
+    }
+
+    @Override public Timeout timeout() {
+      return delegate.timeout();
     }
   }
 }
