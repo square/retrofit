@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import okhttp3.Request;
+import okio.Timeout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -136,6 +137,10 @@ public final class Calls {
           .url("http://localhost")
           .build();
     }
+
+    @Override public Timeout timeout() {
+      return Timeout.NONE;
+    }
   }
 
   static final class DeferredCall<T> implements Call<T> {
@@ -185,6 +190,10 @@ public final class Calls {
 
     @Override public Request request() {
       return getDelegate().request();
+    }
+
+    @Override public Timeout timeout() {
+      return getDelegate().timeout();
     }
   }
 }
