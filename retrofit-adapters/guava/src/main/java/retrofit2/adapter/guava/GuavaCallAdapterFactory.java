@@ -94,27 +94,23 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public ListenableFuture<R> adapt(final Call<R> call) {
-      return new AbstractFuture<R>() {
-        {
-          call.enqueue(new Callback<R>() {
-            @Override public void onResponse(Call<R> call, Response<R> response) {
-              if (response.isSuccessful()) {
-                set(response.body());
-              } else {
-                setException(new HttpException(response));
-              }
-            }
+      CallCancelListenableFuture<R> future = new CallCancelListenableFuture<>(call);
 
-            @Override public void onFailure(Call<R> call, Throwable t) {
-              setException(t);
-            }
-          });
+      call.enqueue(new Callback<R>() {
+        @Override public void onResponse(Call<R> call, Response<R> response) {
+          if (response.isSuccessful()) {
+            future.set(response.body());
+          } else {
+            future.setException(new HttpException(response));
+          }
         }
 
-        @Override protected void interruptTask() {
-          call.cancel();
+        @Override public void onFailure(Call<R> call, Throwable t) {
+          future.setException(t);
         }
-      };
+      });
+
+      return future;
     }
   }
 
@@ -131,23 +127,39 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public ListenableFuture<Response<R>> adapt(final Call<R> call) {
-      return new AbstractFuture<Response<R>>() {
-        {
-          call.enqueue(new Callback<R>() {
-            @Override public void onResponse(Call<R> call, Response<R> response) {
-              set(response);
-            }
+      CallCancelListenableFuture<Response<R>> future = new CallCancelListenableFuture<>(call);
 
-            @Override public void onFailure(Call<R> call, Throwable t) {
-              setException(t);
-            }
-          });
+      call.enqueue(new Callback<R>() {
+        @Override public void onResponse(Call<R> call, Response<R> response) {
+          future.set(response);
         }
 
-        @Override protected void interruptTask() {
-          call.cancel();
+        @Override public void onFailure(Call<R> call, Throwable t) {
+          future.setException(t);
         }
-      };
+      });
+
+      return future;
+    }
+  }
+
+  private static final class CallCancelListenableFuture<T> extends AbstractFuture<T> {
+    private final Call<?> call;
+
+    CallCancelListenableFuture(Call<?> call) {
+      this.call = call;
+    }
+
+    @Override public boolean set(@org.checkerframework.checker.nullness.qual.Nullable T value) {
+      return super.set(value);
+    }
+
+    @Override public boolean setException(Throwable throwable) {
+      return super.setException(throwable);
+    }
+
+    @Override protected void interruptTask() {
+      call.cancel();
     }
   }
 }

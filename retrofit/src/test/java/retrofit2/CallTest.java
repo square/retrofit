@@ -16,9 +16,11 @@
 package retrofit2;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1247,5 +1249,59 @@ public final class CallTest {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
+  }
+
+  @Test public void timeoutExceeded() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse()
+        .setHeadersDelay(500, TimeUnit.MILLISECONDS));
+
+    Call<String> call = example.getString();
+    call.timeout().timeout(100, TimeUnit.MILLISECONDS);
+    try {
+      call.execute();
+      fail();
+    } catch (InterruptedIOException expected) {
+    }
+  }
+
+  @Test public void deadlineExceeded() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse()
+        .setHeadersDelay(500, TimeUnit.MILLISECONDS));
+
+    Call<String> call = example.getString();
+    call.timeout().deadline(100, TimeUnit.MILLISECONDS);
+    try {
+      call.execute();
+      fail();
+    } catch (InterruptedIOException expected) {
+    }
+  }
+
+  @Test public void timeoutEnabledButNotExceeded() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(new ToStringConverterFactory())
+        .build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse()
+        .setHeadersDelay(100, TimeUnit.MILLISECONDS));
+
+    Call<String> call = example.getString();
+    call.timeout().deadline(500, TimeUnit.MILLISECONDS);
+    Response<String> response = call.execute();
+    assertThat(response.isSuccessful()).isTrue();
   }
 }

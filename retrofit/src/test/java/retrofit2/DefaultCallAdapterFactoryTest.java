@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.Request;
+import okio.Timeout;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,6 +130,10 @@ public final class DefaultCallAdapterFactoryTest {
 
     @Override public Request request() {
       throw new UnsupportedOperationException();
+    }
+
+    @Override public Timeout timeout() {
+      return Timeout.NONE;
     }
   }
 }

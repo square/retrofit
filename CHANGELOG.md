@@ -1,6 +1,42 @@
 Change Log
 ==========
 
+Version 2.7.2 *(2020-02-24)*
+----------------------------
+
+ * Fix: Update to OkHttp 3.14.7 for compatibility with Android R (API 30).
+
+
+Version 2.7.1 *(2020-01-02)*
+----------------------------
+
+ * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
+
+
+Version 2.7.0 *(2019-12-09)*
+----------------------------
+
+**This release changes the minimum requirements to Java 8+ or Android 5+.**
+See [this blog post](https://cashapp.github.io/2019-02-05/okhttp-3-13-requires-android-5) for more information on the change.
+
+ * New: Upgrade to OkHttp 3.14.4. Please see [its changelog for 3.x](https://square.github.io/okhttp/changelog_3x/).
+ * Fix: Allow service interfaces to extend other interfaces.
+ * Fix: Ensure a non-null body is returned by `Response.error`.
+
+
+Version 2.6.4 *(2020-01-02)*
+----------------------------
+
+ * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
+
+
+Version 2.6.3 *(2019-12-09)*
+----------------------------
+
+ * Fix: Change mechanism for avoiding `UndeclaredThrowableException` in rare cases from using `yield`
+   an explicit dispatch which ensures that it will work even on dispatchers which do not support yielding.
+
+
 Version 2.6.2 *(2019-09-23)*
 ----------------------------
 

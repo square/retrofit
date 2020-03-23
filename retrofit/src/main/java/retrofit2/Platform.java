@@ -18,6 +18,7 @@ package retrofit2;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -48,9 +49,24 @@ class Platform {
   }
 
   private final boolean hasJava8Types;
+  private final @Nullable Constructor<Lookup> lookupConstructor;
 
   Platform(boolean hasJava8Types) {
     this.hasJava8Types = hasJava8Types;
+
+    Constructor<Lookup> lookupConstructor = null;
+    if (hasJava8Types) {
+      try {
+        // Because the service interface might not be public, we need to use a MethodHandle lookup
+        // that ignores the visibility of the declaringClass.
+        lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
+        lookupConstructor.setAccessible(true);
+      } catch (NoSuchMethodException ignored) {
+        // Assume JDK 14+ which contains a fix that allows a regular lookup to succeed.
+        // See https://bugs.openjdk.java.net/browse/JDK-8209005.
+      }
+    }
+    this.lookupConstructor = lookupConstructor;
   }
 
   @Nullable Executor defaultCallbackExecutor() {
@@ -85,11 +101,10 @@ class Platform {
 
   @Nullable Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
       @Nullable Object... args) throws Throwable {
-    // Because the service interface might not be public, we need to use a MethodHandle lookup
-    // that ignores the visibility of the declaringClass.
-    Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
-    constructor.setAccessible(true);
-    return constructor.newInstance(declaringClass, -1 /* trusted */)
+    Lookup lookup = lookupConstructor != null
+        ? lookupConstructor.newInstance(declaringClass, -1 /* trusted */)
+        : MethodHandles.lookup();
+    return lookup
         .unreflectSpecial(method, declaringClass)
         .bindTo(object)
         .invokeWithArguments(args);
