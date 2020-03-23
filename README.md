@@ -22,8 +22,8 @@ R8 / ProGuard
 If you are using R8 the shrinking and obfuscation rules are included automatically.
 
 ProGuard users must manually add the options from
-[this file](https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro).
-(Note: You might also need rules for OkHttp and Okio which are dependencies of this library)
+[retrofit2.pro][proguard file].
+You might also need [rules for OkHttp][okhttp proguard] and [Okio][okio proguard] which are dependencies of this library.
 
 
 License
@@ -47,3 +47,6 @@ License
  [1]: https://square.github.io/retrofit/
  [2]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=retrofit&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [proguard file]: https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro
+ [okhttp proguard]: https://square.github.io/okhttp/#r8-proguard
+ [okio proguard]: https://square.github.io/okio/#r8-proguard
