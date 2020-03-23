@@ -83,7 +83,7 @@ suspend fun <T : Any> Call<T?>.await(): T? {
   }
 }
 
-suspend fun <T : Any> Call<T>.awaitResponse(): Response<T> {
+suspend fun <T> Call<T>.awaitResponse(): Response<T> {
   return suspendCancellableCoroutine { continuation ->
     continuation.invokeOnCancellation {
       cancel()
