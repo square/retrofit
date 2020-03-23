@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 2.8.0 *(2020-03-23)*
+----------------------------
+
+ * New: Add `Call.timeout()` which returns the `okio.Timeout` of the full call.
+ * Fix: Change `Call.awaitResponse()` to accept a nullable response type.
+ * Fix: Support default methods on Java 14+. We had been working around a bug in earlier versions of
+   Java. That bug was fixed in Java 14, and the fix broke our workaround.
+
+
 Version 2.7.2 *(2020-02-24)*
 ----------------------------
 

@@ -83,7 +83,7 @@
     <url>https://github.com/square/retrofit</url>
     <connection>scm:git:git://github.com/square/retrofit.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/square/retrofit.git</developerConnection>
-    <tag>parent-2.7.0</tag>
+    <tag>parent-2.8.0</tag>
   </scm>
 
   <issueManagement>
