@@ -61,6 +61,9 @@ class Platform {
         // that ignores the visibility of the declaringClass.
         lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
         lookupConstructor.setAccessible(true);
+      } catch (NoClassDefFoundError ignored) {
+        // Android API 24 or 25 where Lookup doesn't exist. Calling default methods on non-public
+        // interfaces will fail, but there's nothing we can do about it.
       } catch (NoSuchMethodException ignored) {
         // Assume JDK 14+ which contains a fix that allows a regular lookup to succeed.
         // See https://bugs.openjdk.java.net/browse/JDK-8209005.
@@ -119,7 +122,16 @@ class Platform {
       return new MainThreadExecutor();
     }
 
-    static class MainThreadExecutor implements Executor {
+    @Nullable @Override Object invokeDefaultMethod(Method method, Class<?> declaringClass,
+        Object object, @Nullable Object... args) throws Throwable {
+      if (Build.VERSION.SDK_INT < 26) {
+        throw new UnsupportedOperationException(
+            "Calling default methods on API 24 and 25 is not supported");
+      }
+      return super.invokeDefaultMethod(method, declaringClass, object, args);
+    }
+
+    static final class MainThreadExecutor implements Executor {
       private final Handler handler = new Handler(Looper.getMainLooper());
 
       @Override public void execute(Runnable r) {
