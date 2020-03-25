@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 2.8.1 *(2020-03-25)*
+----------------------------
+
+ * Fix: Do not access `MethodHandles.Lookup` on Android API 24 and 25. The class is only available
+   on Android API 26 and higher.
+
+
 Version 2.8.0 *(2020-03-23)*
 ----------------------------
 
