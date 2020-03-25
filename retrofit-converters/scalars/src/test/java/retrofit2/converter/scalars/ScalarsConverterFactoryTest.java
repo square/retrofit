@@ -257,6 +257,7 @@ public final class ScalarsConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(""));
     try {
       service.charObject().execute();
+      fail();
     } catch (IOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 0");
     }
@@ -264,6 +265,7 @@ public final class ScalarsConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("bb"));
     try {
       service.charObject().execute();
+      fail();
     } catch (IOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 2");
     }

@@ -74,7 +74,7 @@ final class BehaviorCall<T> implements Call<T> {
           try {
             Thread.sleep(sleepMs);
           } catch (InterruptedException e) {
-            callback.onFailure(BehaviorCall.this, new IOException("canceled"));
+            callback.onFailure(BehaviorCall.this, new IOException("canceled", e));
             return false;
           }
         }
@@ -134,7 +134,7 @@ final class BehaviorCall<T> implements Call<T> {
     try {
       latch.await();
     } catch (InterruptedException e) {
-      throw new IOException("canceled");
+      throw new IOException("canceled", e);
     }
     Response<T> response = responseRef.get();
     if (response != null) return response;

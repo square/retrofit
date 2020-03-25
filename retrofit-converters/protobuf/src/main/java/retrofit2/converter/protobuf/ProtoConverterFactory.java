@@ -77,7 +77,7 @@ public final class ProtoConverterFactory extends Converter.Factory {
       } catch (NoSuchFieldException | IllegalAccessException e) {
         throw new IllegalArgumentException("Found a protobuf message but "
             + c.getName()
-            + " had no parser() method or PARSER field.");
+            + " had no parser() method or PARSER field.", e);
       }
     }
     return new ProtoResponseBodyConverter<>(parser, registry);

@@ -91,6 +91,7 @@ public final class JsonQueryParameters {
     Call<ResponseBody> example(@Json @Query("value") Filter value);
   }
 
+  @SuppressWarnings("UnusedVariable")
   public static void main(String... args) throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.start();

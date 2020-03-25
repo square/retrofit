@@ -16,6 +16,7 @@
 package retrofit2
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -329,6 +330,7 @@ class KotlinSuspendTest {
     }
   }
 
+  @Suppress("EXPERIMENTAL_OVERRIDE")
   private object DirectUnconfinedDispatcher : CoroutineDispatcher() {
     override fun isDispatchNeeded(context: CoroutineContext): Boolean = false
     override fun dispatch(context: CoroutineContext, block: Runnable) = block.run()

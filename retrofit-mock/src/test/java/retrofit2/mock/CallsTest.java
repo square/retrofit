@@ -163,7 +163,7 @@ public final class CallsTest {
     try {
       taco.execute();
       fail();
-    } catch (Throwable e) {
+    } catch (Exception e) {
       assertSame(failure, e);
     }
     assertTrue(taco.isExecuted());

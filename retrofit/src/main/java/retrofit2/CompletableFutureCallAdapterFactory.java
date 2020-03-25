@@ -64,23 +64,30 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public CompletableFuture<R> adapt(final Call<R> call) {
-      final CompletableFuture<R> future = new CallCancelCompletableFuture<>(call);
-
-      call.enqueue(new Callback<R>() {
-        @Override public void onResponse(Call<R> call, Response<R> response) {
-          if (response.isSuccessful()) {
-            future.complete(response.body());
-          } else {
-            future.completeExceptionally(new HttpException(response));
-          }
-        }
-
-        @Override public void onFailure(Call<R> call, Throwable t) {
-          future.completeExceptionally(t);
-        }
-      });
-
+      CompletableFuture<R> future = new CallCancelCompletableFuture<>(call);
+      call.enqueue(new BodyCallback(future));
       return future;
+    }
+
+    @IgnoreJRERequirement
+    private class BodyCallback implements Callback<R> {
+      private final CompletableFuture<R> future;
+
+      public BodyCallback(CompletableFuture<R> future) {
+        this.future = future;
+      }
+
+      @Override public void onResponse(Call<R> call, Response<R> response) {
+        if (response.isSuccessful()) {
+          future.complete(response.body());
+        } else {
+          future.completeExceptionally(new HttpException(response));
+        }
+      }
+
+      @Override public void onFailure(Call<R> call, Throwable t) {
+        future.completeExceptionally(t);
+      }
     }
   }
 
@@ -98,22 +105,30 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override public CompletableFuture<Response<R>> adapt(final Call<R> call) {
-      final CompletableFuture<Response<R>> future = new CallCancelCompletableFuture<>(call);
-
-      call.enqueue(new Callback<R>() {
-        @Override public void onResponse(Call<R> call, Response<R> response) {
-          future.complete(response);
-        }
-
-        @Override public void onFailure(Call<R> call, Throwable t) {
-          future.completeExceptionally(t);
-        }
-      });
-
+      CompletableFuture<Response<R>> future = new CallCancelCompletableFuture<>(call);
+      call.enqueue(new ResponseCallback(future));
       return future;
+    }
+
+    @IgnoreJRERequirement
+    private class ResponseCallback implements Callback<R> {
+      private final CompletableFuture<Response<R>> future;
+
+      public ResponseCallback(CompletableFuture<Response<R>> future) {
+        this.future = future;
+      }
+
+      @Override public void onResponse(Call<R> call, Response<R> response) {
+        future.complete(response);
+      }
+
+      @Override public void onFailure(Call<R> call, Throwable t) {
+        future.completeExceptionally(t);
+      }
     }
   }
 
+  @IgnoreJRERequirement
   private static final class CallCancelCompletableFuture<T> extends CompletableFuture<T> {
     private final Call<?> call;
 
