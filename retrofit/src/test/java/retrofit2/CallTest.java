@@ -787,7 +787,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new Error("Broken!");
+        throw new NonFatalError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -795,7 +795,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (Error e) {
+    } catch (NonFatalError e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -803,7 +803,7 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (Error e) {
+    } catch (NonFatalError e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -882,7 +882,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new Error("Broken!");
+        throw new NonFatalError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -890,7 +890,7 @@ public final class CallTest {
     try {
       call.execute();
       fail();
-    } catch (Error e) {
+    } catch (NonFatalError e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -898,7 +898,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (Error e) {
+    } catch (NonFatalError e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -993,7 +993,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new Error("Broken!");
+        throw new NonFatalError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -1001,7 +1001,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (Error e) {
+    } catch (NonFatalError e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
@@ -1012,7 +1012,7 @@ public final class CallTest {
       }
 
       @Override public void onFailure(Call<String> call, Throwable t) {
-        assertThat(t).isExactlyInstanceOf(Error.class).hasMessage("Broken!");
+        assertThat(t).isExactlyInstanceOf(NonFatalError.class).hasMessage("Broken!");
         assertThat(writeCount.get()).isEqualTo(1);
         latch.countDown();
       }
@@ -1110,7 +1110,7 @@ public final class CallTest {
     Object a = new Object() {
       @Override public String toString() {
         writeCount.incrementAndGet();
-        throw new Error("Broken!");
+        throw new NonFatalError("Broken!");
       }
     };
     Call<String> call = service.postRequestBody(a);
@@ -1121,7 +1121,7 @@ public final class CallTest {
       }
 
       @Override public void onFailure(Call<String> call, Throwable t) {
-        assertThat(t).isExactlyInstanceOf(Error.class).hasMessage("Broken!");
+        assertThat(t).isExactlyInstanceOf(NonFatalError.class).hasMessage("Broken!");
         assertThat(writeCount.get()).isEqualTo(1);
         latch.countDown();
       }
@@ -1131,7 +1131,7 @@ public final class CallTest {
     try {
       call.request();
       fail();
-    } catch (Error e) {
+    } catch (NonFatalError e) {
       assertThat(e).hasMessage("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);

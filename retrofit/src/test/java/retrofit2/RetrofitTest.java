@@ -121,7 +121,8 @@ public final class RetrofitTest {
     @GET("/") Call<String> method(@Query("i") AtomicInteger value);
   }
 
-  @SuppressWarnings("EqualsBetweenInconvertibleTypes") // We are explicitly testing this behavior.
+  // We are explicitly testing this behavior.
+  @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "EqualsIncompatibleType"})
   @Test public void objectMethodsStillWork() {
     Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(server.url("/"))
