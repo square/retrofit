@@ -234,7 +234,7 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
-  public void cancel() {
+  @Override public void cancel() {
     canceled = true;
 
     okhttp3.Call call;
