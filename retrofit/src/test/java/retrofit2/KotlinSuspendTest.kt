@@ -16,6 +16,7 @@
 package retrofit2
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -332,5 +333,25 @@ class KotlinSuspendTest {
   private object DirectUnconfinedDispatcher : CoroutineDispatcher() {
     override fun isDispatchNeeded(context: CoroutineContext): Boolean = false
     override fun dispatch(context: CoroutineContext, block: Runnable) = block.run()
+  }
+
+  @Test fun invocationTagTracksCoroutineContext() {
+    val retrofit = Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(ToStringConverterFactory())
+            .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse())
+
+    val coroutineName = CoroutineName("example")
+    val response = runBlocking {
+      withContext(coroutineName) {
+        example.response()
+      }
+    }
+    val invocation = response.raw().request().tag(Invocation::class.java)
+    val invocationContext = invocation!!.kotlinCoroutineContext()!!
+    assertThat(invocationContext[CoroutineName]).isSameAs(coroutineName)
   }
 }

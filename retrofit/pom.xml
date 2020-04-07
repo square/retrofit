@@ -114,6 +114,20 @@
           <excludePackageNames>retrofit2.internal</excludePackageNames>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M4</version>
+        <configuration>
+          <excludes>
+            <exclude>Kotlin*Test</exclude>
+          </excludes>
+          <classpathDependencyExcludes>
+            <classpathDependencyExclude>org.jetbrains.kotlin:kotlin-stdlib</classpathDependencyExclude>
+            <classpathDependencyExclude>org.jetbrains.kotlinx:kotlinx-coroutines-core</classpathDependencyExclude>
+          </classpathDependencyExcludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
