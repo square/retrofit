@@ -29,6 +29,7 @@ import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 public final class ScalarsConverterPrimitivesFactoryTest {
   interface Service {
@@ -96,6 +97,7 @@ public final class ScalarsConverterPrimitivesFactoryTest {
     server.enqueue(new MockResponse().setBody(""));
     try {
       service.charPrimitive();
+      fail();
     } catch (DirectCallIOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 0");
     }
@@ -103,6 +105,7 @@ public final class ScalarsConverterPrimitivesFactoryTest {
     server.enqueue(new MockResponse().setBody("bb"));
     try {
       service.charPrimitive();
+      fail();
     } catch (DirectCallIOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 2");
     }

@@ -29,6 +29,7 @@ import rx.schedulers.Schedulers;
 import static rx.schedulers.Schedulers.io;
 
 public final class RxJavaObserveOnMainThread {
+  @SuppressWarnings("UnusedVariable")
   public static void main(String... args) {
     Scheduler observeOn = Schedulers.computation(); // Or use mainThread() for Android.
 

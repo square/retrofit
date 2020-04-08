@@ -88,11 +88,12 @@ public final class Calls {
       if (response != null) {
         return response;
       }
-      throw FakeCall.<Error>sneakyThrow2(error);
+      throw FakeCall.<Error>sneakyThrow(error);
     }
 
-    @SuppressWarnings("unchecked") // Intentionally abusing this feature.
-    private static <T extends Throwable> T sneakyThrow2(Throwable t) throws T {
+    // Intentionally abusing this feature.
+    @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
+    private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
       throw (T) t;
     }
 

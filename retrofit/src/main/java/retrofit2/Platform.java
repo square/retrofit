@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -98,10 +99,12 @@ class Platform {
     return hasJava8Types ? 1 : 0;
   }
 
+  @IgnoreJRERequirement // Only called on API 24+.
   boolean isDefaultMethod(Method method) {
     return hasJava8Types && method.isDefault();
   }
 
+  @IgnoreJRERequirement // Only called on API 26+.
   @Nullable Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
       @Nullable Object... args) throws Throwable {
     Lookup lookup = lookupConstructor != null

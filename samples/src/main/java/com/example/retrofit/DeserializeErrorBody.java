@@ -36,7 +36,7 @@ public final class DeserializeErrorBody {
     // normal fields...
   }
 
-  static class Error {
+  static class ErrorBody {
     String message;
   }
 
@@ -62,11 +62,11 @@ public final class DeserializeErrorBody {
     // convert the error body and/or which type to use for conversion.
 
     // Look up a converter for the Error type on the Retrofit instance.
-    Converter<ResponseBody, Error> errorConverter =
-        retrofit.responseBodyConverter(Error.class, new Annotation[0]);
+    Converter<ResponseBody, ErrorBody> errorConverter =
+        retrofit.responseBodyConverter(ErrorBody.class, new Annotation[0]);
     // Convert the error body into our Error type.
-    Error error = errorConverter.convert(response.errorBody());
-    System.out.println("ERROR: " + error.message);
+    ErrorBody errorBody = errorConverter.convert(response.errorBody());
+    System.out.println("ERROR: " + errorBody.message);
 
     server.shutdown();
   }
