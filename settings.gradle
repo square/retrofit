@@ -1,0 +1,21 @@
+include ':retrofit'
+include ':retrofit-mock'
+
+include ':retrofit-adapters:guava'
+include ':retrofit-adapters:java8'
+include ':retrofit-adapters:rxjava'
+include ':retrofit-adapters:rxjava2'
+include ':retrofit-adapters:scala'
+
+include ':retrofit-converters:gson'
+include ':retrofit-converters:guava'
+include ':retrofit-converters:jackson'
+include ':retrofit-converters:java8'
+include ':retrofit-converters:jaxb'
+include ':retrofit-converters:moshi'
+include ':retrofit-converters:protobuf'
+include ':retrofit-converters:scalars'
+include ':retrofit-converters:simplexml'
+include ':retrofit-converters:wire'
+
+include ':samples'

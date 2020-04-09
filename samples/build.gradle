@@ -1,0 +1,14 @@
+apply plugin: 'java-library'
+
+dependencies {
+  implementation project(':retrofit')
+  implementation project(':retrofit-mock')
+  implementation project(':retrofit-converters:moshi')
+  implementation project(':retrofit-converters:gson')
+  implementation project(':retrofit-converters:simplexml')
+  implementation project(':retrofit-adapters:rxjava')
+  implementation deps.mockwebserver
+  implementation deps.guava
+  implementation deps.jsoup
+  compileOnly deps.findBugsAnnotations
+}

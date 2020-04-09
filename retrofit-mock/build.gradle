@@ -1,0 +1,20 @@
+apply plugin: 'java-library'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api project(':retrofit')
+  compileOnly deps.kotlinStdLib
+  compileOnly deps.findBugsAnnotations
+
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.kotlinStdLib
+  testImplementation deps.kotlinCoroutines
+}
+
+jar {
+  manifest {
+    attributes  'Automatic-Module-Name': 'retrofit2.mock'
+  }
+}

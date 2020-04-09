@@ -1,25 +1,9 @@
-# Eclipse
-.classpath
-.project
-.settings
-eclipsebin
-
-bin
-gen
+# Gradle
+.gradle
 build
-out
-lib
-
-target
-pom.xml.*
-release.properties
+/reports
+local.properties
 
 # Idea
 .idea
 *.iml
-classes
-
-obj
-
-#MacOS
-.DS_Store
