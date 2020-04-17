@@ -41,11 +41,14 @@ public final class ScalarsConverterFactory extends Converter.Factory {
     return new ScalarsConverterFactory();
   }
 
-  private ScalarsConverterFactory() {
-  }
+  private ScalarsConverterFactory() {}
 
-  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public @Nullable Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     if (type == String.class
         || type == boolean.class
         || type == Boolean.class
@@ -68,7 +71,8 @@ public final class ScalarsConverterFactory extends Converter.Factory {
     return null;
   }
 
-  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+  @Override
+  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type == String.class) {
       return StringResponseBodyConverter.INSTANCE;

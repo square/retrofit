@@ -46,8 +46,8 @@ import retrofit2.http.Url;
 
 /** A simple web crawler that uses a Retrofit service to turn URLs into webpages. */
 public final class Crawler {
-  private final Set<HttpUrl> fetchedUrls = Collections.synchronizedSet(
-      new LinkedHashSet<HttpUrl>());
+  private final Set<HttpUrl> fetchedUrls =
+      Collections.synchronizedSet(new LinkedHashSet<HttpUrl>());
   private final ConcurrentHashMap<String, AtomicInteger> hostnames = new ConcurrentHashMap<>();
   private final PageService pageService;
 
@@ -63,31 +63,36 @@ public final class Crawler {
     if (hostnameCount.incrementAndGet() > 100) return;
 
     // Asynchronously visit URL.
-    pageService.get(url).enqueue(new Callback<Page>() {
-      @Override public void onResponse(Call<Page> call, Response<Page> response) {
-        if (!response.isSuccessful()) {
-          System.out.println(call.request().url() + ": failed: " + response.code());
-          return;
-        }
+    pageService
+        .get(url)
+        .enqueue(
+            new Callback<Page>() {
+              @Override
+              public void onResponse(Call<Page> call, Response<Page> response) {
+                if (!response.isSuccessful()) {
+                  System.out.println(call.request().url() + ": failed: " + response.code());
+                  return;
+                }
 
-        // Print this page's URL and title.
-        Page page = response.body();
-        HttpUrl base = response.raw().request().url();
-        System.out.println(base + ": " + page.title);
+                // Print this page's URL and title.
+                Page page = response.body();
+                HttpUrl base = response.raw().request().url();
+                System.out.println(base + ": " + page.title);
 
-        // Enqueue its links for visiting.
-        for (String link : page.links) {
-          HttpUrl linkUrl = base.resolve(link);
-          if (linkUrl != null && fetchedUrls.add(linkUrl)) {
-            crawlPage(linkUrl);
-          }
-        }
-      }
+                // Enqueue its links for visiting.
+                for (String link : page.links) {
+                  HttpUrl linkUrl = base.resolve(link);
+                  if (linkUrl != null && fetchedUrls.add(linkUrl)) {
+                    crawlPage(linkUrl);
+                  }
+                }
+              }
 
-      @Override public void onFailure(Call<Page> call, Throwable t) {
-        System.out.println(call.request().url() + ": failed: " + t);
-      }
-    });
+              @Override
+              public void onFailure(Call<Page> call, Throwable t) {
+                System.out.println(call.request().url() + ": failed: " + t);
+              }
+            });
   }
 
   public static void main(String... args) throws Exception {
@@ -95,16 +100,18 @@ public final class Crawler {
     dispatcher.setMaxRequests(20);
     dispatcher.setMaxRequestsPerHost(1);
 
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
-        .dispatcher(dispatcher)
-        .connectionPool(new ConnectionPool(100, 30, TimeUnit.SECONDS))
-        .build();
+    OkHttpClient okHttpClient =
+        new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .connectionPool(new ConnectionPool(100, 30, TimeUnit.SECONDS))
+            .build();
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(HttpUrl.get("https://example.com/"))
-        .addConverterFactory(PageAdapter.FACTORY)
-        .client(okHttpClient)
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(HttpUrl.get("https://example.com/"))
+            .addConverterFactory(PageAdapter.FACTORY)
+            .client(okHttpClient)
+            .build();
 
     PageService pageService = retrofit.create(PageService.class);
 
@@ -113,7 +120,8 @@ public final class Crawler {
   }
 
   interface PageService {
-    @GET Call<Page> get(@Url HttpUrl url);
+    @GET
+    Call<Page> get(@Url HttpUrl url);
   }
 
   static class Page {
@@ -127,15 +135,18 @@ public final class Crawler {
   }
 
   static final class PageAdapter implements Converter<ResponseBody, Page> {
-    static final Converter.Factory FACTORY = new Converter.Factory() {
-      @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
-          Type type, Annotation[] annotations, Retrofit retrofit) {
-        if (type == Page.class) return new PageAdapter();
-        return null;
-      }
-    };
+    static final Converter.Factory FACTORY =
+        new Converter.Factory() {
+          @Override
+          public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+              Type type, Annotation[] annotations, Retrofit retrofit) {
+            if (type == Page.class) return new PageAdapter();
+            return null;
+          }
+        };
 
-    @Override public Page convert(ResponseBody responseBody) throws IOException {
+    @Override
+    public Page convert(ResponseBody responseBody) throws IOException {
       Document document = Jsoup.parse(responseBody.string());
       List<String> links = new ArrayList<>();
       for (Element element : document.select("a[href]")) {

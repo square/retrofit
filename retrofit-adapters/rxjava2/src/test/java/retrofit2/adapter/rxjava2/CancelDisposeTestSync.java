@@ -15,6 +15,8 @@
  */
 package retrofit2.adapter.rxjava2;
 
+import static org.junit.Assert.assertEquals;
+
 import io.reactivex.Observable;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockWebServer;
@@ -24,30 +26,32 @@ import org.junit.Test;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static org.junit.Assert.assertEquals;
-
 public final class CancelDisposeTestSync {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") Observable<String> go();
+    @GET("/")
+    Observable<String> go();
   }
 
   private final OkHttpClient client = new OkHttpClient();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-        .callFactory(client)
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .callFactory(client)
+            .build();
     service = retrofit.create(Service.class);
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
-  @Test public void disposeBeforeExecuteDoesNotEnqueue() {
+  @Test
+  public void disposeBeforeExecuteDoesNotEnqueue() {
     service.go().test(true);
     assertEquals(0, server.getRequestCount());
   }

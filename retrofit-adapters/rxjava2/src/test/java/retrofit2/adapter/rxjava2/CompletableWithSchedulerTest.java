@@ -27,25 +27,31 @@ import retrofit2.http.GET;
 
 public final class CompletableWithSchedulerTest {
   @Rule public final MockWebServer server = new MockWebServer();
-  @Rule public final RecordingCompletableObserver.Rule observerRule =
+
+  @Rule
+  public final RecordingCompletableObserver.Rule observerRule =
       new RecordingCompletableObserver.Rule();
 
   interface Service {
-    @GET("/") Completable completable();
+    @GET("/")
+    Completable completable();
   }
 
   private final TestScheduler scheduler = new TestScheduler();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void completableUsesScheduler() {
+  @Test
+  public void completableUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingCompletableObserver observer = observerRule.create();

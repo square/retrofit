@@ -32,7 +32,8 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
     this.originalCall = originalCall;
   }
 
-  @Override protected void subscribeActual(Observer<? super Response<T>> observer) {
+  @Override
+  protected void subscribeActual(Observer<? super Response<T>> observer) {
     // Since Call is a one-shot type, clone it for each new observer.
     Call<T> call = originalCall.clone();
     CallCallback<T> callback = new CallCallback<>(call, observer);
@@ -53,7 +54,8 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
       this.observer = observer;
     }
 
-    @Override public void onResponse(Call<T> call, Response<T> response) {
+    @Override
+    public void onResponse(Call<T> call, Response<T> response) {
       if (disposed) return;
 
       try {
@@ -78,7 +80,8 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
       }
     }
 
-    @Override public void onFailure(Call<T> call, Throwable t) {
+    @Override
+    public void onFailure(Call<T> call, Throwable t) {
       if (call.isCanceled()) return;
 
       try {
@@ -89,12 +92,14 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
       }
     }
 
-    @Override public void dispose() {
+    @Override
+    public void dispose() {
       disposed = true;
       call.cancel();
     }
 
-    @Override public boolean isDisposed() {
+    @Override
+    public boolean isDisposed() {
       return disposed;
     }
   }

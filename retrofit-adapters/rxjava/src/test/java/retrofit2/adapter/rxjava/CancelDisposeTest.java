@@ -15,6 +15,10 @@
  */
 package retrofit2.adapter.rxjava;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -27,31 +31,31 @@ import retrofit2.http.GET;
 import rx.Observable;
 import rx.Subscription;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 public final class CancelDisposeTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") Observable<String> go();
+    @GET("/")
+    Observable<String> go();
   }
 
   private final OkHttpClient client = new OkHttpClient();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.createAsync())
-        .callFactory(client)
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(RxJavaCallAdapterFactory.createAsync())
+            .callFactory(client)
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void disposeCancelsCall() {
+  @Test
+  public void disposeCancelsCall() {
     Subscription subscription = service.go().subscribe();
     List<Call> calls = client.dispatcher().runningCalls();
     assertEquals(1, calls.size());
@@ -59,7 +63,8 @@ public final class CancelDisposeTest {
     assertTrue(calls.get(0).isCanceled());
   }
 
-  @Test public void cancelDoesNotDispose() {
+  @Test
+  public void cancelDoesNotDispose() {
     Subscription subscription = service.go().subscribe();
     List<Call> calls = client.dispatcher().runningCalls();
     assertEquals(1, calls.size());
@@ -67,4 +72,3 @@ public final class CancelDisposeTest {
     assertFalse(subscription.isUnsubscribed());
   }
 }
-

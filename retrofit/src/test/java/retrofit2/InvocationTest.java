@@ -15,6 +15,9 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,9 +32,6 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class InvocationTest {
   interface Example {
     @POST("/{p1}") //
@@ -39,11 +39,13 @@ public final class InvocationTest {
         @Path("p1") String p1, @Query("p2") String p2, @Body RequestBody body);
   }
 
-  @Test public void invocationObjectOnCallAndRequestTag() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://example.com/")
-        .callFactory(new OkHttpClient())
-        .build();
+  @Test
+  public void invocationObjectOnCallAndRequestTag() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl("http://example.com/")
+            .callFactory(new OkHttpClient())
+            .build();
 
     Example example = retrofit.create(Example.class);
     RequestBody requestBody = RequestBody.create(MediaType.get("text/plain"), "three");
@@ -56,7 +58,8 @@ public final class InvocationTest {
     assertThat(invocation.arguments()).isEqualTo(Arrays.asList("one", "two", requestBody));
   }
 
-  @Test public void nullMethod() {
+  @Test
+  public void nullMethod() {
     try {
       Invocation.of(null, Arrays.asList("one", "two"));
       fail();
@@ -65,7 +68,8 @@ public final class InvocationTest {
     }
   }
 
-  @Test public void nullArguments() {
+  @Test
+  public void nullArguments() {
     try {
       Invocation.of(Example.class.getDeclaredMethods()[0], null);
       fail();
@@ -74,7 +78,8 @@ public final class InvocationTest {
     }
   }
 
-  @Test public void argumentsAreImmutable() {
+  @Test
+  public void argumentsAreImmutable() {
     List<String> mutableList = new ArrayList<>(Arrays.asList("one", "two"));
     Invocation invocation = Invocation.of(Example.class.getDeclaredMethods()[0], mutableList);
     mutableList.add("three");

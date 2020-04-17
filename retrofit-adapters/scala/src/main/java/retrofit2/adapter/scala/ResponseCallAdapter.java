@@ -30,22 +30,27 @@ final class ResponseCallAdapter<T> implements CallAdapter<T, Future<Response<T>>
     this.responseType = responseType;
   }
 
-  @Override public Type responseType() {
+  @Override
+  public Type responseType() {
     return responseType;
   }
 
-  @Override public Future<Response<T>> adapt(Call<T> call) {
+  @Override
+  public Future<Response<T>> adapt(Call<T> call) {
     Promise<Response<T>> promise = Promise.apply();
 
-    call.enqueue(new Callback<T>() {
-      @Override public void onResponse(Call<T> call, Response<T> response) {
-        promise.success(response);
-      }
+    call.enqueue(
+        new Callback<T>() {
+          @Override
+          public void onResponse(Call<T> call, Response<T> response) {
+            promise.success(response);
+          }
 
-      @Override public void onFailure(Call<T> call, Throwable t) {
-        promise.failure(t);
-      }
-    });
+          @Override
+          public void onFailure(Call<T> call, Throwable t) {
+            promise.failure(t);
+          }
+        });
 
     return promise.future();
   }

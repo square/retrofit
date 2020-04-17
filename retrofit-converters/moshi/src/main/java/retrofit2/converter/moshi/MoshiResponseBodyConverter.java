@@ -33,7 +33,8 @@ final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> 
     this.adapter = adapter;
   }
 
-  @Override public T convert(ResponseBody value) throws IOException {
+  @Override
+  public T convert(ResponseBody value) throws IOException {
     BufferedSource source = value.source();
     try {
       // Moshi has no document-level API so the responsibility of BOM skipping falls to whatever

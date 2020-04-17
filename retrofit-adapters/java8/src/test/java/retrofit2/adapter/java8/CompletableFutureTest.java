@@ -15,6 +15,10 @@
  */
 package retrofit2.adapter.java8;
 
+import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -27,37 +31,40 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class CompletableFutureTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") CompletableFuture<String> body();
-    @GET("/") CompletableFuture<Response<String>> response();
+    @GET("/")
+    CompletableFuture<String> body();
+
+    @GET("/")
+    CompletableFuture<Response<String>> response();
   }
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(Java8CallAdapterFactory.create())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(Java8CallAdapterFactory.create())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void bodySuccess200() throws Exception {
+  @Test
+  public void bodySuccess200() throws Exception {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     CompletableFuture<String> future = service.body();
     assertThat(future.get()).isEqualTo("Hi");
   }
 
-  @Test public void bodySuccess404() throws Exception {
+  @Test
+  public void bodySuccess404() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     CompletableFuture<String> future = service.body();
@@ -72,7 +79,8 @@ public final class CompletableFutureTest {
     }
   }
 
-  @Test public void bodyFailure() throws Exception {
+  @Test
+  public void bodyFailure() throws Exception {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
     CompletableFuture<String> future = service.body();
@@ -84,7 +92,8 @@ public final class CompletableFutureTest {
     }
   }
 
-  @Test public void responseSuccess200() throws Exception {
+  @Test
+  public void responseSuccess200() throws Exception {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     CompletableFuture<Response<String>> future = service.response();
@@ -93,7 +102,8 @@ public final class CompletableFutureTest {
     assertThat(response.body()).isEqualTo("Hi");
   }
 
-  @Test public void responseSuccess404() throws Exception {
+  @Test
+  public void responseSuccess404() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
     CompletableFuture<Response<String>> future = service.response();
@@ -102,7 +112,8 @@ public final class CompletableFutureTest {
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
-  @Test public void responseFailure() throws Exception {
+  @Test
+  public void responseFailure() throws Exception {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
     CompletableFuture<Response<String>> future = service.response();

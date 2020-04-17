@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -24,27 +26,28 @@ import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class DefaultMethodsTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Example {
-    @GET("/") Call<String> user(@Query("name") String name);
+    @GET("/")
+    Call<String> user(@Query("name") String name);
 
     default Call<String> user() {
       return user("hey");
     }
   }
 
-  @Test public void test() throws IOException {
+  @Test
+  public void test() throws IOException {
     server.enqueue(new MockResponse().setBody("Hi"));
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ToStringConverterFactory())
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ToStringConverterFactory())
+            .build();
     Example example = retrofit.create(Example.class);
 
     Response<String> response = example.user().execute();

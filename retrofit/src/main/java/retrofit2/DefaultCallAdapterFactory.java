@@ -32,7 +32,8 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @Override public @Nullable CallAdapter<?, ?> get(
+  @Override
+  public @Nullable CallAdapter<?, ?> get(
       Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != Call.class) {
       return null;
@@ -43,19 +44,20 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
     }
     final Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
 
-    final Executor executor = Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)
-        ? null
-        : callbackExecutor;
+    final Executor executor =
+        Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)
+            ? null
+            : callbackExecutor;
 
     return new CallAdapter<Object, Call<?>>() {
-      @Override public Type responseType() {
+      @Override
+      public Type responseType() {
         return responseType;
       }
 
-      @Override public Call<Object> adapt(Call<Object> call) {
-        return executor == null
-            ? call
-            : new ExecutorCallbackCall<>(executor, call);
+      @Override
+      public Call<Object> adapt(Call<Object> call) {
+        return executor == null ? call : new ExecutorCallbackCall<>(executor, call);
       }
     };
   }
@@ -69,53 +71,66 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
       this.delegate = delegate;
     }
 
-    @Override public void enqueue(final Callback<T> callback) {
+    @Override
+    public void enqueue(final Callback<T> callback) {
       Objects.requireNonNull(callback, "callback == null");
 
-      delegate.enqueue(new Callback<T>() {
-        @Override public void onResponse(Call<T> call, final Response<T> response) {
-          callbackExecutor.execute(() -> {
-            if (delegate.isCanceled()) {
-              // Emulate OkHttp's behavior of throwing/delivering an IOException on cancellation.
-              callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));
-            } else {
-              callback.onResponse(ExecutorCallbackCall.this, response);
+      delegate.enqueue(
+          new Callback<T>() {
+            @Override
+            public void onResponse(Call<T> call, final Response<T> response) {
+              callbackExecutor.execute(
+                  () -> {
+                    if (delegate.isCanceled()) {
+                      // Emulate OkHttp's behavior of throwing/delivering an IOException on
+                      // cancellation.
+                      callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));
+                    } else {
+                      callback.onResponse(ExecutorCallbackCall.this, response);
+                    }
+                  });
+            }
+
+            @Override
+            public void onFailure(Call<T> call, final Throwable t) {
+              callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackCall.this, t));
             }
           });
-        }
-
-        @Override public void onFailure(Call<T> call, final Throwable t) {
-          callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackCall.this, t));
-        }
-      });
     }
 
-    @Override public boolean isExecuted() {
+    @Override
+    public boolean isExecuted() {
       return delegate.isExecuted();
     }
 
-    @Override public Response<T> execute() throws IOException {
+    @Override
+    public Response<T> execute() throws IOException {
       return delegate.execute();
     }
 
-    @Override public void cancel() {
+    @Override
+    public void cancel() {
       delegate.cancel();
     }
 
-    @Override public boolean isCanceled() {
+    @Override
+    public boolean isCanceled() {
       return delegate.isCanceled();
     }
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
-    @Override public Call<T> clone() {
+    @Override
+    public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
     }
 
-    @Override public Request request() {
+    @Override
+    public Request request() {
       return delegate.request();
     }
 
-    @Override public Timeout timeout() {
+    @Override
+    public Timeout timeout() {
       return delegate.timeout();
     }
   }

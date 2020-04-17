@@ -15,6 +15,9 @@
  */
 package retrofit2.converter.jaxb;
 
+import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Collections;
 import javax.xml.bind.JAXBContext;
 import okhttp3.mockwebserver.MockResponse;
@@ -30,41 +33,42 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class JaxbConverterFactoryTest {
-  static final Contact SAMPLE_CONTACT = new Contact("Jenny",
-      Collections.singletonList(new PhoneNumber("867-5309", Type.MOBILE)));
+  static final Contact SAMPLE_CONTACT =
+      new Contact("Jenny", Collections.singletonList(new PhoneNumber("867-5309", Type.MOBILE)));
 
-  static final String SAMPLE_CONTACT_XML = ""
-      + "<?xml version=\"1.0\" ?>"
-      + "<contact>"
-      + "<name>Jenny</name>"
-      + "<phone_number type=\"MOBILE\">"
-      + "<number>867-5309</number>"
-      + "</phone_number>"
-      + "</contact>";
+  static final String SAMPLE_CONTACT_XML =
+      ""
+          + "<?xml version=\"1.0\" ?>"
+          + "<contact>"
+          + "<name>Jenny</name>"
+          + "<phone_number type=\"MOBILE\">"
+          + "<number>867-5309</number>"
+          + "</phone_number>"
+          + "</contact>";
 
   interface Service {
-    @POST("/") Call<Void> postXml(@Body Contact contact);
-    @GET("/") Call<Contact> getXml();
+    @POST("/")
+    Call<Void> postXml(@Body Contact contact);
+
+    @GET("/")
+    Call<Contact> getXml();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     JaxbConverterFactory factory = JaxbConverterFactory.create();
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(factory)
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void xmlRequestBody() throws Exception {
+  @Test
+  public void xmlRequestBody() throws Exception {
     server.enqueue(new MockResponse());
 
     Call<Void> call = service.postXml(SAMPLE_CONTACT);
@@ -75,22 +79,25 @@ public final class JaxbConverterFactoryTest {
     assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_XML);
   }
 
-  @Test public void xmlResponseBody() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody(SAMPLE_CONTACT_XML));
+  @Test
+  public void xmlResponseBody() throws Exception {
+    server.enqueue(new MockResponse().setBody(SAMPLE_CONTACT_XML));
 
     Call<Contact> call = service.getXml();
     Response<Contact> response = call.execute();
     assertThat(response.body()).isEqualTo(SAMPLE_CONTACT);
   }
 
-  @Test public void characterEncoding() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody(""
-            + "<?xml version=\"1.0\" ?>"
-            + "<contact>"
-            + "<name>Бронтозавр \uD83E\uDD95 ティラノサウルス・レックス &#129430;</name>"
-            + "</contact>"));
+  @Test
+  public void characterEncoding() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                ""
+                    + "<?xml version=\"1.0\" ?>"
+                    + "<contact>"
+                    + "<name>Бронтозавр \uD83E\uDD95 ティラノサウルス・レックス &#129430;</name>"
+                    + "</contact>"));
 
     Call<Contact> call = service.getXml();
     Response<Contact> response = call.execute();
@@ -98,13 +105,12 @@ public final class JaxbConverterFactoryTest {
         .isEqualTo("Бронтозавр \uD83E\uDD95 ティラノサウルス・レックス \uD83E\uDD96");
   }
 
-  @Test public void userSuppliedJaxbContext() throws Exception {
+  @Test
+  public void userSuppliedJaxbContext() throws Exception {
     JAXBContext context = JAXBContext.newInstance(Contact.class);
     JaxbConverterFactory factory = JaxbConverterFactory.create(context);
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(factory)
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse());
@@ -117,9 +123,9 @@ public final class JaxbConverterFactoryTest {
     assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_XML);
   }
 
-  @Test public void malformedXml() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody("This is not XML"));
+  @Test
+  public void malformedXml() throws Exception {
+    server.enqueue(new MockResponse().setBody("This is not XML"));
 
     Call<Contact> call = service.getXml();
     try {
@@ -130,35 +136,42 @@ public final class JaxbConverterFactoryTest {
     }
   }
 
-  @Test public void unrecognizedField() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody(""
-            + "<?xml version=\"1.0\" ?>"
-            + "<contact>"
-            + "<name>Jenny</name>"
-            + "<age>21</age>"
-            + "<phone_number type=\"FAX\">"
-            + "<number>867-5309</number>"
-            + "</phone_number>"
-            + "</contact>"));
+  @Test
+  public void unrecognizedField() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                ""
+                    + "<?xml version=\"1.0\" ?>"
+                    + "<contact>"
+                    + "<name>Jenny</name>"
+                    + "<age>21</age>"
+                    + "<phone_number type=\"FAX\">"
+                    + "<number>867-5309</number>"
+                    + "</phone_number>"
+                    + "</contact>"));
 
     Call<Contact> call = service.getXml();
     Response<Contact> response = call.execute();
     assertThat(response.body().name).isEqualTo("Jenny");
   }
 
-  @Test public void externalEntity() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody(""
-            + "<?xml version=\"1.0\" ?>"
-            + "<!DOCTYPE contact["
-            + "  <!ENTITY secret SYSTEM \"" + server.url("/secret.txt") + "\">"
-            + "]>"
-            + "<contact>"
-            + "<name>&secret;</name>"
-            + "</contact>"));
-    server.enqueue(new MockResponse()
-        .setBody("hello"));
+  @Test
+  public void externalEntity() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                ""
+                    + "<?xml version=\"1.0\" ?>"
+                    + "<!DOCTYPE contact["
+                    + "  <!ENTITY secret SYSTEM \""
+                    + server.url("/secret.txt")
+                    + "\">"
+                    + "]>"
+                    + "<contact>"
+                    + "<name>&secret;</name>"
+                    + "</contact>"));
+    server.enqueue(new MockResponse().setBody("hello"));
 
     Call<Contact> call = service.getXml();
     try {
@@ -172,19 +185,26 @@ public final class JaxbConverterFactoryTest {
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
 
-  @Test public void externalDtd() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody(""
-            + "<?xml version=\"1.0\" ?>"
-            + "<!DOCTYPE contact SYSTEM \"" + server.url("/contact.dtd") + "\">"
-            + "<contact>"
-            + "<name>&secret;</name>"
-            + "</contact>"));
-    server.enqueue(new MockResponse()
-        .setBody(""
-            + "<!ELEMENT contact (name)>\n"
-            + "<!ELEMENT name (#PCDATA)>\n"
-            + "<!ENTITY secret \"hello\">"));
+  @Test
+  public void externalDtd() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                ""
+                    + "<?xml version=\"1.0\" ?>"
+                    + "<!DOCTYPE contact SYSTEM \""
+                    + server.url("/contact.dtd")
+                    + "\">"
+                    + "<contact>"
+                    + "<name>&secret;</name>"
+                    + "</contact>"));
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                ""
+                    + "<!ELEMENT contact (name)>\n"
+                    + "<!ELEMENT name (#PCDATA)>\n"
+                    + "<!ENTITY secret \"hello\">"));
 
     Call<Contact> call = service.getXml();
     try {

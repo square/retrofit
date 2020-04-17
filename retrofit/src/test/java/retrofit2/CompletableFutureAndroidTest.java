@@ -15,6 +15,11 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+import static org.robolectric.annotation.Config.NEWEST_SDK;
+import static org.robolectric.annotation.Config.NONE;
+
 import java.util.concurrent.CompletableFuture;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -27,32 +32,31 @@ import org.robolectric.annotation.Config;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.robolectric.annotation.Config.NEWEST_SDK;
-import static org.robolectric.annotation.Config.NONE;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = NEWEST_SDK, manifest = NONE)
 public final class CompletableFutureAndroidTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") CompletableFuture<String> endpoint();
+    @GET("/")
+    CompletableFuture<String> endpoint();
   }
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ToStringConverterFactory())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ToStringConverterFactory())
+            .build();
     service = retrofit.create(Service.class);
   }
 
   @Config(sdk = 24)
-  @Test public void completableFutureApi24() throws Exception {
+  @Test
+  public void completableFutureApi24() throws Exception {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     CompletableFuture<String> future = service.endpoint();
@@ -60,14 +64,16 @@ public final class CompletableFutureAndroidTest {
   }
 
   @Config(sdk = 21)
-  @Test public void completableFuturePreApi24() {
+  @Test
+  public void completableFuturePreApi24() {
     try {
       service.endpoint();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Unable to create call adapter for java.util.concurrent.CompletableFuture<java.lang.String>\n"
-              + "    for method Service.endpoint");
+      assertThat(e)
+          .hasMessage(
+              "Unable to create call adapter for java.util.concurrent.CompletableFuture<java.lang.String>\n"
+                  + "    for method Service.endpoint");
     }
   }
 }

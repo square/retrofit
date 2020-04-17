@@ -16,6 +16,12 @@
 
 package retrofit2.mock;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -29,15 +35,10 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 public final class BehaviorDelegateTest {
   interface DoWorkService {
     Call<String> response();
+
     Call<String> failure();
   }
 
@@ -45,29 +46,31 @@ public final class BehaviorDelegateTest {
   private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
   private DoWorkService service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://example.com")
-        .build();
-    MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit)
-        .networkBehavior(behavior)
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit = new Retrofit.Builder().baseUrl("http://example.com").build();
+    MockRetrofit mockRetrofit =
+        new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build();
     final BehaviorDelegate<DoWorkService> delegate = mockRetrofit.create(DoWorkService.class);
 
-    service = new DoWorkService() {
-      @Override public Call<String> response() {
-        Call<String> response = Calls.response("Response!");
-        return delegate.returning(response).response();
-      }
+    service =
+        new DoWorkService() {
+          @Override
+          public Call<String> response() {
+            Call<String> response = Calls.response("Response!");
+            return delegate.returning(response).response();
+          }
 
-      @Override public Call<String> failure() {
-        Call<String> failure = Calls.failure(mockFailure);
-        return delegate.returning(failure).failure();
-      }
-    };
+          @Override
+          public Call<String> failure() {
+            Call<String> failure = Calls.failure(mockFailure);
+            return delegate.returning(failure).failure();
+          }
+        };
   }
 
-  @Test public void syncFailureThrowsAfterDelay() {
+  @Test
+  public void syncFailureThrowsAfterDelay() {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(100);
@@ -85,7 +88,8 @@ public final class BehaviorDelegateTest {
     }
   }
 
-  @Test public void asyncFailureTriggersFailureAfterDelay() throws InterruptedException {
+  @Test
+  public void asyncFailureTriggersFailureAfterDelay() throws InterruptedException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(100);
@@ -96,24 +100,28 @@ public final class BehaviorDelegateTest {
     final AtomicLong tookMs = new AtomicLong();
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Call<String> call, Response<String> response) {
-        throw new AssertionError();
-      }
+    call.enqueue(
+        new Callback<String>() {
+          @Override
+          public void onResponse(Call<String> call, Response<String> response) {
+            throw new AssertionError();
+          }
 
-      @Override public void onFailure(Call<String> call, Throwable t) {
-        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
-        failureRef.set(t);
-        latch.countDown();
-      }
-    });
+          @Override
+          public void onFailure(Call<String> call, Throwable t) {
+            tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+            failureRef.set(t);
+            latch.countDown();
+          }
+        });
     assertTrue(latch.await(1, SECONDS));
 
     assertThat(failureRef.get()).isSameAs(behavior.failureException());
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
   }
 
-  @Test public void syncSuccessReturnsAfterDelay() throws IOException {
+  @Test
+  public void syncSuccessReturnsAfterDelay() throws IOException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -128,7 +136,8 @@ public final class BehaviorDelegateTest {
     assertThat(tookMs).isGreaterThanOrEqualTo(100);
   }
 
-  @Test public void asyncSuccessCalledAfterDelay() throws InterruptedException, IOException {
+  @Test
+  public void asyncSuccessCalledAfterDelay() throws InterruptedException, IOException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -139,24 +148,28 @@ public final class BehaviorDelegateTest {
     final AtomicLong tookMs = new AtomicLong();
     final AtomicReference<String> actual = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Call<String> call, Response<String> response) {
-        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
-        actual.set(response.body());
-        latch.countDown();
-      }
+    call.enqueue(
+        new Callback<String>() {
+          @Override
+          public void onResponse(Call<String> call, Response<String> response) {
+            tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+            actual.set(response.body());
+            latch.countDown();
+          }
 
-      @Override public void onFailure(Call<String> call, Throwable t) {
-        throw new AssertionError();
-      }
-    });
+          @Override
+          public void onFailure(Call<String> call, Throwable t) {
+            throw new AssertionError();
+          }
+        });
     assertTrue(latch.await(1, SECONDS));
 
     assertThat(actual.get()).isEqualTo("Response!");
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
   }
 
-  @Test public void syncFailureThrownAfterDelay() {
+  @Test
+  public void syncFailureThrownAfterDelay() {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -174,7 +187,8 @@ public final class BehaviorDelegateTest {
     }
   }
 
-  @Test public void asyncFailureCalledAfterDelay() throws InterruptedException {
+  @Test
+  public void asyncFailureCalledAfterDelay() throws InterruptedException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -185,37 +199,43 @@ public final class BehaviorDelegateTest {
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
     final long startNanos = System.nanoTime();
-    call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Call<String> call, Response<String> response) {
-        throw new AssertionError();
-      }
+    call.enqueue(
+        new Callback<String>() {
+          @Override
+          public void onResponse(Call<String> call, Response<String> response) {
+            throw new AssertionError();
+          }
 
-      @Override public void onFailure(Call<String> call, Throwable t) {
-        tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
-        failureRef.set(t);
-        latch.countDown();
-      }
-    });
+          @Override
+          public void onFailure(Call<String> call, Throwable t) {
+            tookMs.set(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+            failureRef.set(t);
+            latch.countDown();
+          }
+        });
     assertTrue(latch.await(1, SECONDS));
 
     assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
     assertThat(failureRef.get()).isSameAs(mockFailure);
   }
 
-  @Test public void syncCanBeCanceled() throws IOException {
+  @Test
+  public void syncCanBeCanceled() throws IOException {
     behavior.setDelay(10, SECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
 
     final Call<String> call = service.response();
 
-    new Thread(() -> {
-      try {
-        Thread.sleep(100);
-        call.cancel();
-      } catch (InterruptedException ignored) {
-      }
-    }).start();
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(100);
+                call.cancel();
+              } catch (InterruptedException ignored) {
+              }
+            })
+        .start();
 
     try {
       call.execute();
@@ -225,7 +245,8 @@ public final class BehaviorDelegateTest {
     }
   }
 
-  @Test public void asyncCanBeCanceled() throws InterruptedException {
+  @Test
+  public void asyncCanBeCanceled() throws InterruptedException {
     behavior.setDelay(10, SECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -234,16 +255,19 @@ public final class BehaviorDelegateTest {
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Call<String> call, Response<String> response) {
-        latch.countDown();
-      }
+    call.enqueue(
+        new Callback<String>() {
+          @Override
+          public void onResponse(Call<String> call, Response<String> response) {
+            latch.countDown();
+          }
 
-      @Override public void onFailure(Call<String> call, Throwable t) {
-        failureRef.set(t);
-        latch.countDown();
-      }
-    });
+          @Override
+          public void onFailure(Call<String> call, Throwable t) {
+            failureRef.set(t);
+            latch.countDown();
+          }
+        });
 
     // TODO we shouldn't need to sleep
     Thread.sleep(100); // Ensure the task has started.
@@ -253,7 +277,8 @@ public final class BehaviorDelegateTest {
     assertThat(failureRef.get()).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
   }
 
-  @Test public void syncCanceledBeforeStart() throws IOException {
+  @Test
+  public void syncCanceledBeforeStart() throws IOException {
     behavior.setDelay(100, MILLISECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -269,7 +294,8 @@ public final class BehaviorDelegateTest {
     }
   }
 
-  @Test public void asyncCanBeCanceledBeforeStart() throws InterruptedException {
+  @Test
+  public void asyncCanBeCanceledBeforeStart() throws InterruptedException {
     behavior.setDelay(10, SECONDS);
     behavior.setVariancePercent(0);
     behavior.setFailurePercent(0);
@@ -279,16 +305,19 @@ public final class BehaviorDelegateTest {
 
     final AtomicReference<Throwable> failureRef = new AtomicReference<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    call.enqueue(new Callback<String>() {
-      @Override public void onResponse(Call<String> call, Response<String> response) {
-        latch.countDown();
-      }
+    call.enqueue(
+        new Callback<String>() {
+          @Override
+          public void onResponse(Call<String> call, Response<String> response) {
+            latch.countDown();
+          }
 
-      @Override public void onFailure(Call<String> call, Throwable t) {
-        failureRef.set(t);
-        latch.countDown();
-      }
-    });
+          @Override
+          public void onFailure(Call<String> call, Throwable t) {
+            failureRef.set(t);
+            latch.countDown();
+          }
+        });
 
     assertTrue(latch.await(1, SECONDS));
     assertThat(failureRef.get()).isExactlyInstanceOf(IOException.class).hasMessage("canceled");

@@ -30,23 +30,25 @@ import retrofit2.Retrofit;
 
 /**
  * A {@linkplain CallAdapter.Factory call adapter} which creates Guava futures.
- * <p>
- * Adding this class to {@link Retrofit} allows you to return {@link ListenableFuture} from service
- * methods.
+ *
+ * <p>Adding this class to {@link Retrofit} allows you to return {@link ListenableFuture} from
+ * service methods.
+ *
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
  *   ListenableFuture&lt;User&gt; getUser()
  * }
  * </code></pre>
+ *
  * There are two configurations supported for the {@code ListenableFuture} type parameter:
+ *
  * <ul>
- * <li>Direct body (e.g., {@code ListenableFuture<User>}) returns the deserialized body for 2XX
- * responses, sets {@link retrofit2.HttpException HttpException} errors for non-2XX responses, and
- * sets {@link IOException} for network errors.</li>
- * <li>Response wrapped body (e.g., {@code ListenableFuture<Response<User>>}) returns a
- * {@link Response} object for all HTTP responses and sets {@link IOException} for network
- * errors</li>
+ *   <li>Direct body (e.g., {@code ListenableFuture<User>}) returns the deserialized body for 2XX
+ *       responses, sets {@link retrofit2.HttpException HttpException} errors for non-2XX responses,
+ *       and sets {@link IOException} for network errors.
+ *   <li>Response wrapped body (e.g., {@code ListenableFuture<Response<User>>}) returns a {@link
+ *       Response} object for all HTTP responses and sets {@link IOException} for network errors
  * </ul>
  */
 public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
@@ -54,17 +56,18 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
     return new GuavaCallAdapterFactory();
   }
 
-  private GuavaCallAdapterFactory() {
-  }
+  private GuavaCallAdapterFactory() {}
 
-  @Override public @Nullable CallAdapter<?, ?> get(
+  @Override
+  public @Nullable CallAdapter<?, ?> get(
       Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != ListenableFuture.class) {
       return null;
     }
     if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalStateException("ListenableFuture return type must be parameterized"
-          + " as ListenableFuture<Foo> or ListenableFuture<? extends Foo>");
+      throw new IllegalStateException(
+          "ListenableFuture return type must be parameterized"
+              + " as ListenableFuture<Foo> or ListenableFuture<? extends Foo>");
     }
     Type innerType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
@@ -75,8 +78,8 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
 
     // Generic type is Response<T>. Extract T and create the Response version of the adapter.
     if (!(innerType instanceof ParameterizedType)) {
-      throw new IllegalStateException("Response must be parameterized"
-          + " as Response<Foo> or Response<? extends Foo>");
+      throw new IllegalStateException(
+          "Response must be parameterized" + " as Response<Foo> or Response<? extends Foo>");
     }
     Type responseType = getParameterUpperBound(0, (ParameterizedType) innerType);
     return new ResponseCallAdapter<>(responseType);
@@ -89,26 +92,31 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
       this.responseType = responseType;
     }
 
-    @Override public Type responseType() {
+    @Override
+    public Type responseType() {
       return responseType;
     }
 
-    @Override public ListenableFuture<R> adapt(final Call<R> call) {
+    @Override
+    public ListenableFuture<R> adapt(final Call<R> call) {
       CallCancelListenableFuture<R> future = new CallCancelListenableFuture<>(call);
 
-      call.enqueue(new Callback<R>() {
-        @Override public void onResponse(Call<R> call, Response<R> response) {
-          if (response.isSuccessful()) {
-            future.set(response.body());
-          } else {
-            future.setException(new HttpException(response));
-          }
-        }
+      call.enqueue(
+          new Callback<R>() {
+            @Override
+            public void onResponse(Call<R> call, Response<R> response) {
+              if (response.isSuccessful()) {
+                future.set(response.body());
+              } else {
+                future.setException(new HttpException(response));
+              }
+            }
 
-        @Override public void onFailure(Call<R> call, Throwable t) {
-          future.setException(t);
-        }
-      });
+            @Override
+            public void onFailure(Call<R> call, Throwable t) {
+              future.setException(t);
+            }
+          });
 
       return future;
     }
@@ -122,22 +130,27 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
       this.responseType = responseType;
     }
 
-    @Override public Type responseType() {
+    @Override
+    public Type responseType() {
       return responseType;
     }
 
-    @Override public ListenableFuture<Response<R>> adapt(final Call<R> call) {
+    @Override
+    public ListenableFuture<Response<R>> adapt(final Call<R> call) {
       CallCancelListenableFuture<Response<R>> future = new CallCancelListenableFuture<>(call);
 
-      call.enqueue(new Callback<R>() {
-        @Override public void onResponse(Call<R> call, Response<R> response) {
-          future.set(response);
-        }
+      call.enqueue(
+          new Callback<R>() {
+            @Override
+            public void onResponse(Call<R> call, Response<R> response) {
+              future.set(response);
+            }
 
-        @Override public void onFailure(Call<R> call, Throwable t) {
-          future.setException(t);
-        }
-      });
+            @Override
+            public void onFailure(Call<R> call, Throwable t) {
+              future.setException(t);
+            }
+          });
 
       return future;
     }
@@ -150,15 +163,18 @@ public final class GuavaCallAdapterFactory extends CallAdapter.Factory {
       this.call = call;
     }
 
-    @Override public boolean set(@org.checkerframework.checker.nullness.qual.Nullable T value) {
+    @Override
+    public boolean set(@org.checkerframework.checker.nullness.qual.Nullable T value) {
       return super.set(value);
     }
 
-    @Override public boolean setException(Throwable throwable) {
+    @Override
+    public boolean setException(Throwable throwable) {
       return super.setException(throwable);
     }
 
-    @Override protected void interruptTask() {
+    @Override
+    protected void interruptTask() {
       call.cancel();
     }
   }

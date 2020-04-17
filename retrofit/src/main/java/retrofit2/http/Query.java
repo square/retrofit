@@ -15,6 +15,9 @@
  */
 package retrofit2.http;
 
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -22,46 +25,50 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 import retrofit2.Retrofit;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 /**
  * Query parameter appended to the URL.
- * <p>
- * Values are converted to strings using {@link Retrofit#stringConverter(Type, Annotation[])}
- * (or {@link Object#toString()}, if no matching string converter is installed)
- * and then URL encoded.
+ *
+ * <p>Values are converted to strings using {@link Retrofit#stringConverter(Type, Annotation[])} (or
+ * {@link Object#toString()}, if no matching string converter is installed) and then URL encoded.
  * {@code null} values are ignored. Passing a {@link java.util.List List} or array will result in a
  * query parameter for each non-{@code null} item.
- * <p>
- * Simple Example:
+ *
+ * <p>Simple Example:
+ *
  * <pre><code>
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@Query("page") int page);
  * </code></pre>
+ *
  * Calling with {@code foo.friends(1)} yields {@code /friends?page=1}.
- * <p>
- * Example with {@code null}:
+ *
+ * <p>Example with {@code null}:
+ *
  * <pre><code>
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@Query("group") String group);
  * </code></pre>
+ *
  * Calling with {@code foo.friends(null)} yields {@code /friends}.
- * <p>
- * Array/Varargs Example:
+ *
+ * <p>Array/Varargs Example:
+ *
  * <pre><code>
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@Query("group") String... groups);
  * </code></pre>
- * Calling with {@code foo.friends("coworker", "bowling")} yields
- * {@code /friends?group=coworker&group=bowling}.
- * <p>
- * Parameter names and values are URL encoded by default. Specify {@link #encoded() encoded=true}
+ *
+ * Calling with {@code foo.friends("coworker", "bowling")} yields {@code
+ * /friends?group=coworker&group=bowling}.
+ *
+ * <p>Parameter names and values are URL encoded by default. Specify {@link #encoded() encoded=true}
  * to change this behavior.
+ *
  * <pre><code>
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@Query(value="group", encoded=true) String group);
  * </code></pre>
+ *
  * Calling with {@code foo.friends("foo+bar"))} yields {@code /friends?group=foo+bar}.
  *
  * @see QueryMap

@@ -52,8 +52,8 @@ public final class Result<T> {
   /**
    * The error experienced while attempting to execute an HTTP request. Only present when {@link
    * #isError()} is true, null otherwise.
-   * <p>
-   * If the error is an {@link IOException} then there was a problem with the transport to the
+   *
+   * <p>If the error is an {@link IOException} then there was a problem with the transport to the
    * remote server. Any other exception type indicates an unexpected failure and should be
    * considered fatal (configuration error, programming error, etc.).
    */
@@ -66,7 +66,8 @@ public final class Result<T> {
     return error != null;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     if (error != null) {
       return "Result{isError=true, error=\"" + error + "\"}";
     }

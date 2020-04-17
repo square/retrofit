@@ -39,13 +39,15 @@ final class Contact {
     this.phone_numbers = phoneNumbers;
   }
 
-  @Override public boolean equals(Object o) {
+  @Override
+  public boolean equals(Object o) {
     return o instanceof Contact
         && ((Contact) o).name.equals(name)
         && ((Contact) o).phone_numbers.equals(phone_numbers);
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return Arrays.asList(name, phone_numbers).hashCode();
   }
 }

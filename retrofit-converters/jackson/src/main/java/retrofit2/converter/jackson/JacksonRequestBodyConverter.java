@@ -30,7 +30,8 @@ final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> 
     this.adapter = adapter;
   }
 
-  @Override public RequestBody convert(T value) throws IOException {
+  @Override
+  public RequestBody convert(T value) throws IOException {
     byte[] bytes = adapter.writeValueAsBytes(value);
     return RequestBody.create(MEDIA_TYPE, bytes);
   }

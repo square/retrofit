@@ -32,7 +32,8 @@ final class WireRequestBodyConverter<T extends Message<T, ?>> implements Convert
     this.adapter = adapter;
   }
 
-  @Override public RequestBody convert(T value) throws IOException {
+  @Override
+  public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
     adapter.encode(buffer, value);
     return RequestBody.create(MEDIA_TYPE, buffer.snapshot());

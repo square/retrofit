@@ -26,28 +26,32 @@ import okhttp3.ResponseBody;
 public final class Response<T> {
   /** Create a synthetic successful response with {@code body} as the deserialized body. */
   public static <T> Response<T> success(@Nullable T body) {
-    return success(body, new okhttp3.Response.Builder() //
-        .code(200)
-        .message("OK")
-        .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://localhost/").build())
-        .build());
+    return success(
+        body,
+        new okhttp3.Response.Builder() //
+            .code(200)
+            .message("OK")
+            .protocol(Protocol.HTTP_1_1)
+            .request(new Request.Builder().url("http://localhost/").build())
+            .build());
   }
 
   /**
-   * Create a synthetic successful response with an HTTP status code of {@code code} and
-   * {@code body} as the deserialized body.
+   * Create a synthetic successful response with an HTTP status code of {@code code} and {@code
+   * body} as the deserialized body.
    */
   public static <T> Response<T> success(int code, @Nullable T body) {
     if (code < 200 || code >= 300) {
       throw new IllegalArgumentException("code < 200 or >= 300: " + code);
     }
-    return success(body, new okhttp3.Response.Builder() //
-        .code(code)
-        .message("Response.success()")
-        .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://localhost/").build())
-        .build());
+    return success(
+        body,
+        new okhttp3.Response.Builder() //
+            .code(code)
+            .message("Response.success()")
+            .protocol(Protocol.HTTP_1_1)
+            .request(new Request.Builder().url("http://localhost/").build())
+            .build());
   }
 
   /**
@@ -56,13 +60,15 @@ public final class Response<T> {
    */
   public static <T> Response<T> success(@Nullable T body, Headers headers) {
     Objects.requireNonNull(headers, "headers == null");
-    return success(body, new okhttp3.Response.Builder() //
-        .code(200)
-        .message("OK")
-        .protocol(Protocol.HTTP_1_1)
-        .headers(headers)
-        .request(new Request.Builder().url("http://localhost/").build())
-        .build());
+    return success(
+        body,
+        new okhttp3.Response.Builder() //
+            .code(200)
+            .message("OK")
+            .protocol(Protocol.HTTP_1_1)
+            .headers(headers)
+            .request(new Request.Builder().url("http://localhost/").build())
+            .build());
   }
 
   /**
@@ -78,19 +84,21 @@ public final class Response<T> {
   }
 
   /**
-   * Create a synthetic error response with an HTTP status code of {@code code} and {@code body}
-   * as the error body.
+   * Create a synthetic error response with an HTTP status code of {@code code} and {@code body} as
+   * the error body.
    */
   public static <T> Response<T> error(int code, ResponseBody body) {
     Objects.requireNonNull(body, "body == null");
     if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
-    return error(body, new okhttp3.Response.Builder() //
-        .body(new OkHttpCall.NoContentResponseBody(body.contentType(), body.contentLength()))
-        .code(code)
-        .message("Response.error()")
-        .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://localhost/").build())
-        .build());
+    return error(
+        body,
+        new okhttp3.Response.Builder() //
+            .body(new OkHttpCall.NoContentResponseBody(body.contentType(), body.contentLength()))
+            .code(code)
+            .message("Response.error()")
+            .protocol(Protocol.HTTP_1_1)
+            .request(new Request.Builder().url("http://localhost/").build())
+            .build());
   }
 
   /** Create an error response from {@code rawResponse} with {@code body} as the error body. */
@@ -107,8 +115,8 @@ public final class Response<T> {
   private final @Nullable T body;
   private final @Nullable ResponseBody errorBody;
 
-  private Response(okhttp3.Response rawResponse, @Nullable T body,
-      @Nullable ResponseBody errorBody) {
+  private Response(
+      okhttp3.Response rawResponse, @Nullable T body, @Nullable ResponseBody errorBody) {
     this.rawResponse = rawResponse;
     this.body = body;
     this.errorBody = errorBody;
@@ -149,7 +157,8 @@ public final class Response<T> {
     return errorBody;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return rawResponse.toString();
   }
 }

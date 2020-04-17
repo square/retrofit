@@ -18,8 +18,8 @@ package com.example.retrofit;
 import java.io.IOException;
 import java.util.List;
 import retrofit2.Call;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
@@ -38,17 +38,16 @@ public final class SimpleService {
 
   public interface GitHub {
     @GET("/repos/{owner}/{repo}/contributors")
-    Call<List<Contributor>> contributors(
-        @Path("owner") String owner,
-        @Path("repo") String repo);
+    Call<List<Contributor>> contributors(@Path("owner") String owner, @Path("repo") String repo);
   }
 
   public static void main(String... args) throws IOException {
     // Create a very simple REST adapter which points the GitHub API.
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(API_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(API_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
 
     // Create an instance of our GitHub API interface.
     GitHub github = retrofit.create(GitHub.class);

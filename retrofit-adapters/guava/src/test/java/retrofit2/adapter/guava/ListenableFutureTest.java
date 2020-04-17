@@ -15,6 +15,10 @@
  */
 package retrofit2.adapter.guava;
 
+import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -27,37 +31,40 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class ListenableFutureTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") ListenableFuture<String> body();
-    @GET("/") ListenableFuture<Response<String>> response();
+    @GET("/")
+    ListenableFuture<String> body();
+
+    @GET("/")
+    ListenableFuture<Response<String>> response();
   }
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(GuavaCallAdapterFactory.create())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(GuavaCallAdapterFactory.create())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void bodySuccess200() throws Exception {
+  @Test
+  public void bodySuccess200() throws Exception {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     ListenableFuture<String> future = service.body();
     assertThat(future.get()).isEqualTo("Hi");
   }
 
-  @Test public void bodySuccess404() throws Exception {
+  @Test
+  public void bodySuccess404() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     ListenableFuture<String> future = service.body();
@@ -72,7 +79,8 @@ public final class ListenableFutureTest {
     }
   }
 
-  @Test public void bodyFailure() throws Exception {
+  @Test
+  public void bodyFailure() throws Exception {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
     ListenableFuture<String> future = service.body();
@@ -84,7 +92,8 @@ public final class ListenableFutureTest {
     }
   }
 
-  @Test public void responseSuccess200() throws Exception {
+  @Test
+  public void responseSuccess200() throws Exception {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     ListenableFuture<Response<String>> future = service.response();
@@ -93,7 +102,8 @@ public final class ListenableFutureTest {
     assertThat(response.body()).isEqualTo("Hi");
   }
 
-  @Test public void responseSuccess404() throws Exception {
+  @Test
+  public void responseSuccess404() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
     ListenableFuture<Response<String>> future = service.response();
@@ -102,7 +112,8 @@ public final class ListenableFutureTest {
     assertThat(response.errorBody().string()).isEqualTo("Hi");
   }
 
-  @Test public void responseFailure() throws Exception {
+  @Test
+  public void responseFailure() throws Exception {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
     ListenableFuture<Response<String>> future = service.response();

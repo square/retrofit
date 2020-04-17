@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import static retrofit2.Utils.throwIfFatal;
+
 import java.io.IOException;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -28,8 +30,6 @@ import okio.ForwardingSource;
 import okio.Okio;
 import okio.Timeout;
 
-import static retrofit2.Utils.throwIfFatal;
-
 final class OkHttpCall<T> implements Call<T> {
   private final RequestFactory requestFactory;
   private final Object[] args;
@@ -40,13 +40,18 @@ final class OkHttpCall<T> implements Call<T> {
 
   @GuardedBy("this")
   private @Nullable okhttp3.Call rawCall;
+
   @GuardedBy("this") // Either a RuntimeException, non-fatal Error, or IOException.
   private @Nullable Throwable creationFailure;
+
   @GuardedBy("this")
   private boolean executed;
 
-  OkHttpCall(RequestFactory requestFactory, Object[] args,
-      okhttp3.Call.Factory callFactory, Converter<ResponseBody, T> responseConverter) {
+  OkHttpCall(
+      RequestFactory requestFactory,
+      Object[] args,
+      okhttp3.Call.Factory callFactory,
+      Converter<ResponseBody, T> responseConverter) {
     this.requestFactory = requestFactory;
     this.args = args;
     this.callFactory = callFactory;
@@ -54,11 +59,13 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
-  @Override public OkHttpCall<T> clone() {
+  @Override
+  public OkHttpCall<T> clone() {
     return new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
   }
 
-  @Override public synchronized Request request() {
+  @Override
+  public synchronized Request request() {
     try {
       return getRawCall().request();
     } catch (IOException e) {
@@ -66,7 +73,8 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
-  @Override public synchronized Timeout timeout() {
+  @Override
+  public synchronized Timeout timeout() {
     try {
       return getRawCall().timeout();
     } catch (IOException e) {
@@ -104,7 +112,8 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
-  @Override public void enqueue(final Callback<T> callback) {
+  @Override
+  public void enqueue(final Callback<T> callback) {
     Objects.requireNonNull(callback, "callback == null");
 
     okhttp3.Call call;
@@ -135,45 +144,50 @@ final class OkHttpCall<T> implements Call<T> {
       call.cancel();
     }
 
-    call.enqueue(new okhttp3.Callback() {
-      @Override public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse) {
-        Response<T> response;
-        try {
-          response = parseResponse(rawResponse);
-        } catch (Throwable e) {
-          throwIfFatal(e);
-          callFailure(e);
-          return;
-        }
+    call.enqueue(
+        new okhttp3.Callback() {
+          @Override
+          public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse) {
+            Response<T> response;
+            try {
+              response = parseResponse(rawResponse);
+            } catch (Throwable e) {
+              throwIfFatal(e);
+              callFailure(e);
+              return;
+            }
 
-        try {
-          callback.onResponse(OkHttpCall.this, response);
-        } catch (Throwable t) {
-          throwIfFatal(t);
-          t.printStackTrace(); // TODO this is not great
-        }
-      }
+            try {
+              callback.onResponse(OkHttpCall.this, response);
+            } catch (Throwable t) {
+              throwIfFatal(t);
+              t.printStackTrace(); // TODO this is not great
+            }
+          }
 
-      @Override public void onFailure(okhttp3.Call call, IOException e) {
-        callFailure(e);
-      }
+          @Override
+          public void onFailure(okhttp3.Call call, IOException e) {
+            callFailure(e);
+          }
 
-      private void callFailure(Throwable e) {
-        try {
-          callback.onFailure(OkHttpCall.this, e);
-        } catch (Throwable t) {
-          throwIfFatal(t);
-          t.printStackTrace(); // TODO this is not great
-        }
-      }
-    });
+          private void callFailure(Throwable e) {
+            try {
+              callback.onFailure(OkHttpCall.this, e);
+            } catch (Throwable t) {
+              throwIfFatal(t);
+              t.printStackTrace(); // TODO this is not great
+            }
+          }
+        });
   }
 
-  @Override public synchronized boolean isExecuted() {
+  @Override
+  public synchronized boolean isExecuted() {
     return executed;
   }
 
-  @Override public Response<T> execute() throws IOException {
+  @Override
+  public Response<T> execute() throws IOException {
     okhttp3.Call call;
 
     synchronized (this) {
@@ -202,9 +216,11 @@ final class OkHttpCall<T> implements Call<T> {
     ResponseBody rawBody = rawResponse.body();
 
     // Remove the body's source (the only stateful object) so we can pass the response along.
-    rawResponse = rawResponse.newBuilder()
-        .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
-        .build();
+    rawResponse =
+        rawResponse
+            .newBuilder()
+            .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
+            .build();
 
     int code = rawResponse.code();
     if (code < 200 || code >= 300) {
@@ -234,7 +250,8 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
-  @Override public void cancel() {
+  @Override
+  public void cancel() {
     canceled = true;
 
     okhttp3.Call call;
@@ -246,7 +263,8 @@ final class OkHttpCall<T> implements Call<T> {
     }
   }
 
-  @Override public boolean isCanceled() {
+  @Override
+  public boolean isCanceled() {
     if (canceled) {
       return true;
     }
@@ -264,15 +282,18 @@ final class OkHttpCall<T> implements Call<T> {
       this.contentLength = contentLength;
     }
 
-    @Override public MediaType contentType() {
+    @Override
+    public MediaType contentType() {
       return contentType;
     }
 
-    @Override public long contentLength() {
+    @Override
+    public long contentLength() {
       return contentLength;
     }
 
-    @Override public BufferedSource source() {
+    @Override
+    public BufferedSource source() {
       throw new IllegalStateException("Cannot read raw response body of a converted body.");
     }
   }
@@ -284,31 +305,38 @@ final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingResponseBody(ResponseBody delegate) {
       this.delegate = delegate;
-      this.delegateSource = Okio.buffer(new ForwardingSource(delegate.source()) {
-        @Override public long read(Buffer sink, long byteCount) throws IOException {
-          try {
-            return super.read(sink, byteCount);
-          } catch (IOException e) {
-            thrownException = e;
-            throw e;
-          }
-        }
-      });
+      this.delegateSource =
+          Okio.buffer(
+              new ForwardingSource(delegate.source()) {
+                @Override
+                public long read(Buffer sink, long byteCount) throws IOException {
+                  try {
+                    return super.read(sink, byteCount);
+                  } catch (IOException e) {
+                    thrownException = e;
+                    throw e;
+                  }
+                }
+              });
     }
 
-    @Override public MediaType contentType() {
+    @Override
+    public MediaType contentType() {
       return delegate.contentType();
     }
 
-    @Override public long contentLength() {
+    @Override
+    public long contentLength() {
       return delegate.contentLength();
     }
 
-    @Override public BufferedSource source() {
+    @Override
+    public BufferedSource source() {
       return delegateSource;
     }
 
-    @Override public void close() {
+    @Override
+    public void close() {
       delegate.close();
     }
 

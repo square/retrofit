@@ -32,8 +32,8 @@ import retrofit2.Retrofit;
 
 /**
  * Applies {@linkplain NetworkBehavior behavior} to responses and adapts them into the appropriate
- * return type using the {@linkplain Retrofit#callAdapterFactories() call adapters} of
- * {@link Retrofit}.
+ * return type using the {@linkplain Retrofit#callAdapterFactories() call adapters} of {@link
+ * Retrofit}.
  *
  * @see MockRetrofit#create(Class)
  */
@@ -43,8 +43,8 @@ public final class BehaviorDelegate<T> {
   private final ExecutorService executor;
   private final Class<T> service;
 
-  BehaviorDelegate(Retrofit retrofit, NetworkBehavior behavior, ExecutorService executor,
-      Class<T> service) {
+  BehaviorDelegate(
+      Retrofit retrofit, NetworkBehavior behavior, ExecutorService executor, Class<T> service) {
     this.retrofit = retrofit;
     this.behavior = behavior;
     this.executor = executor;
@@ -58,38 +58,42 @@ public final class BehaviorDelegate<T> {
   @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
   public <R> T returning(Call<R> call) {
     final Call<R> behaviorCall = new BehaviorCall<>(behavior, executor, call);
-    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class[] { service },
-        (proxy, method, args) -> {
-          ServiceMethodAdapterInfo adapterInfo = parseServiceMethodAdapterInfo(method);
+    return (T)
+        Proxy.newProxyInstance(
+            service.getClassLoader(),
+            new Class[] {service},
+            (proxy, method, args) -> {
+              ServiceMethodAdapterInfo adapterInfo = parseServiceMethodAdapterInfo(method);
 
-          Annotation[] methodAnnotations = method.getAnnotations();
-          CallAdapter<R, T> callAdapter =
-              (CallAdapter<R, T>) retrofit.callAdapter(adapterInfo.responseType, methodAnnotations);
+              Annotation[] methodAnnotations = method.getAnnotations();
+              CallAdapter<R, T> callAdapter =
+                  (CallAdapter<R, T>)
+                      retrofit.callAdapter(adapterInfo.responseType, methodAnnotations);
 
-          T adapted = callAdapter.adapt(behaviorCall);
-          if (!adapterInfo.isSuspend) {
-            return adapted;
-          }
+              T adapted = callAdapter.adapt(behaviorCall);
+              if (!adapterInfo.isSuspend) {
+                return adapted;
+              }
 
-          Call<Object> adaptedCall = (Call<Object>) adapted;
-          Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
-          try {
-            return adapterInfo.wantsResponse
-                ? KotlinExtensions.awaitResponse(adaptedCall, continuation)
-                : KotlinExtensions.await(adaptedCall, continuation);
-          } catch (Exception e) {
-            return KotlinExtensions.suspendAndThrow(e, continuation);
-          }
-        });
+              Call<Object> adaptedCall = (Call<Object>) adapted;
+              Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
+              try {
+                return adapterInfo.wantsResponse
+                    ? KotlinExtensions.awaitResponse(adaptedCall, continuation)
+                    : KotlinExtensions.await(adaptedCall, continuation);
+              } catch (Exception e) {
+                return KotlinExtensions.suspendAndThrow(e, continuation);
+              }
+            });
   }
 
   /**
    * Computes the adapter type of the method for lookup via {@link Retrofit#callAdapter} as well as
    * information on whether the method is a {@code suspend fun}.
-   * <p>
-   * In the case of a Kotlin {@code suspend fun}, the last parameter type is a {@code Continuation}
-   * whose parameter carries the actual response type. In this case, we return {@code Call<T>} where
-   * {@code T} is the body type.
+   *
+   * <p>In the case of a Kotlin {@code suspend fun}, the last parameter type is a {@code
+   * Continuation} whose parameter carries the actual response type. In this case, we return {@code
+   * Call<T>} where {@code T} is the body type.
    */
   private static ServiceMethodAdapterInfo parseServiceMethodAdapterInfo(Method method) {
     Type[] genericParameterTypes = method.getGenericParameterTypes();
@@ -129,15 +133,18 @@ public final class BehaviorDelegate<T> {
       this.bodyType = bodyType;
     }
 
-    @Override public Type[] getActualTypeArguments() {
-      return new Type[] { bodyType };
+    @Override
+    public Type[] getActualTypeArguments() {
+      return new Type[] {bodyType};
     }
 
-    @Override public Type getRawType() {
+    @Override
+    public Type getRawType() {
       return Call.class;
     }
 
-    @Override public @Nullable Type getOwnerType() {
+    @Override
+    public @Nullable Type getOwnerType() {
       return null;
     }
   }
@@ -145,10 +152,11 @@ public final class BehaviorDelegate<T> {
   static class ServiceMethodAdapterInfo {
     final boolean isSuspend;
     /**
-     * Whether the suspend function return type was {@code Response<T>}.
-     * Only meaningful if {@link #isSuspend} is true.
+     * Whether the suspend function return type was {@code Response<T>}. Only meaningful if {@link
+     * #isSuspend} is true.
      */
     final boolean wantsResponse;
+
     final Type responseType;
 
     ServiceMethodAdapterInfo(boolean isSuspend, boolean wantsResponse, Type responseType) {

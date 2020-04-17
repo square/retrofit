@@ -15,14 +15,14 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import kotlin.coroutines.Continuation;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.GET;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * This code path can only be tested from Java because Kotlin does not allow you specify a raw
@@ -36,18 +36,19 @@ public final class KotlinSuspendRawTest {
     Object body(Continuation<? super Response> response);
   }
 
-  @Test public void raw() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .build();
+  @Test
+  public void raw() {
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
     Service service = retrofit.create(Service.class);
 
     try {
       service.body(null);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Response must include generic type (e.g., Response<String>)\n"
-          + "    for method Service.body");
+      assertThat(e)
+          .hasMessage(
+              "Response must include generic type (e.g., Response<String>)\n"
+                  + "    for method Service.body");
     }
   }
 }

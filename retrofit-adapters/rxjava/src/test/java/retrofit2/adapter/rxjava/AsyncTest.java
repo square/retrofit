@@ -15,6 +15,12 @@
  */
 package retrofit2.adapter.rxjava;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,30 +41,29 @@ import rx.observers.TestSubscriber;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaPlugins;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 public final class AsyncTest {
   @Rule public final MockWebServer server = new MockWebServer();
   @Rule public final TestRule pluginsReset = new RxJavaPluginsResetRule();
 
   interface Service {
-    @GET("/") Completable completable();
+    @GET("/")
+    Completable completable();
   }
 
   private Service service;
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.createAsync())
-        .build();
+
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addCallAdapterFactory(RxJavaCallAdapterFactory.createAsync())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void success() throws InterruptedException {
+  @Test
+  public void success() throws InterruptedException {
     TestSubscriber<Void> subscriber = new TestSubscriber<>();
     service.completable().subscribe(subscriber);
     assertFalse(subscriber.awaitValueCount(1, 1, SECONDS));
@@ -68,8 +73,8 @@ public final class AsyncTest {
     subscriber.assertCompleted();
   }
 
-
-  @Test public void failure() throws InterruptedException {
+  @Test
+  public void failure() throws InterruptedException {
     TestSubscriber<Void> subscriber = new TestSubscriber<>();
     service.completable().subscribe(subscriber);
     assertFalse(subscriber.awaitValueCount(1, 1, SECONDS));
@@ -79,99 +84,125 @@ public final class AsyncTest {
     subscriber.assertError(IOException.class);
   }
 
-  @Test public void throwingInOnCompleteDeliveredToPlugin() throws InterruptedException {
+  @Test
+  public void throwingInOnCompleteDeliveredToPlugin() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    RxJavaPlugins.getInstance().registerErrorHandler(new RxJavaErrorHandler() {
-      @Override public void handleError(Throwable throwable) {
-        if (!errorRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-        }
-        latch.countDown();
-      }
-    });
+    RxJavaPlugins.getInstance()
+        .registerErrorHandler(
+            new RxJavaErrorHandler() {
+              @Override
+              public void handleError(Throwable throwable) {
+                if (!errorRef.compareAndSet(null, throwable)) {
+                  throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
+                }
+                latch.countDown();
+              }
+            });
 
     final TestSubscriber<Void> subscriber = new TestSubscriber<>();
     final RuntimeException e = new RuntimeException();
-    service.completable().unsafeSubscribe(new AsyncCompletableSubscriber() {
-      @Override public void onCompleted() {
-        throw e;
-      }
+    service
+        .completable()
+        .unsafeSubscribe(
+            new AsyncCompletableSubscriber() {
+              @Override
+              public void onCompleted() {
+                throw e;
+              }
 
-      @Override public void onError(Throwable t) {
-        subscriber.onError(t);
-      }
-    });
+              @Override
+              public void onError(Throwable t) {
+                subscriber.onError(t);
+              }
+            });
 
     latch.await(1, SECONDS);
     assertThat(errorRef.get()).isSameAs(e);
   }
 
-  @Test public void bodyThrowingInOnErrorDeliveredToPlugin() throws InterruptedException {
+  @Test
+  public void bodyThrowingInOnErrorDeliveredToPlugin() throws InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> pluginRef = new AtomicReference<>();
-    RxJavaPlugins.getInstance().registerErrorHandler(new RxJavaErrorHandler() {
-      @Override public void handleError(Throwable throwable) {
-        if (!pluginRef.compareAndSet(null, throwable)) {
-          throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-        }
-        latch.countDown();
-      }
-    });
+    RxJavaPlugins.getInstance()
+        .registerErrorHandler(
+            new RxJavaErrorHandler() {
+              @Override
+              public void handleError(Throwable throwable) {
+                if (!pluginRef.compareAndSet(null, throwable)) {
+                  throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
+                }
+                latch.countDown();
+              }
+            });
 
     final TestSubscriber<Void> subscriber = new TestSubscriber<>();
     final RuntimeException e = new RuntimeException();
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    service.completable().unsafeSubscribe(new AsyncCompletableSubscriber() {
-      @Override public void onCompleted() {
-        subscriber.onCompleted();
-      }
+    service
+        .completable()
+        .unsafeSubscribe(
+            new AsyncCompletableSubscriber() {
+              @Override
+              public void onCompleted() {
+                subscriber.onCompleted();
+              }
 
-      @Override public void onError(Throwable t) {
-        errorRef.set(t);
-        throw e;
-      }
-    });
+              @Override
+              public void onError(Throwable t) {
+                errorRef.set(t);
+                throw e;
+              }
+            });
 
     assertTrue(latch.await(1, SECONDS));
     CompositeException composite = (CompositeException) pluginRef.get();
     assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
   }
 
-  @Test public void bodyThrowingInOnSafeSubscriberErrorDeliveredToPlugin()
-      throws InterruptedException {
+  @Test
+  public void bodyThrowingInOnSafeSubscriberErrorDeliveredToPlugin() throws InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> pluginRef = new AtomicReference<>();
-    RxJavaPlugins.getInstance().registerErrorHandler(new RxJavaErrorHandler() {
-      @Override public void handleError(Throwable throwable) {
-        if (throwable instanceof OnErrorFailedException) {
-          if (!pluginRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-          }
-          latch.countDown();
-        }
-      }
-    });
+    RxJavaPlugins.getInstance()
+        .registerErrorHandler(
+            new RxJavaErrorHandler() {
+              @Override
+              public void handleError(Throwable throwable) {
+                if (throwable instanceof OnErrorFailedException) {
+                  if (!pluginRef.compareAndSet(null, throwable)) {
+                    throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
+                  }
+                  latch.countDown();
+                }
+              }
+            });
 
     final TestSubscriber<Void> subscriber = new TestSubscriber<>();
     final RuntimeException e = new RuntimeException();
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    service.completable().subscribe(new AsyncCompletableSubscriber() {
-      @Override public void onCompleted() {
-        subscriber.onCompleted();
-      }
+    service
+        .completable()
+        .subscribe(
+            new AsyncCompletableSubscriber() {
+              @Override
+              public void onCompleted() {
+                subscriber.onCompleted();
+              }
 
-      @Override public void onError(Throwable t) {
-        errorRef.set(t);
-        throw e;
-      }
-    });
+              @Override
+              public void onError(Throwable t) {
+                errorRef.set(t);
+                throw e;
+              }
+            });
 
     assertTrue(latch.await(1, SECONDS));
     OnErrorFailedException failed = (OnErrorFailedException) pluginRef.get();

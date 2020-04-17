@@ -30,21 +30,25 @@ public final class CompletableWithSchedulerTest {
   @Rule public final RecordingSubscriber.Rule subscriberRule = new RecordingSubscriber.Rule();
 
   interface Service {
-    @GET("/") Completable completable();
+    @GET("/")
+    Completable completable();
   }
 
   private final TestScheduler scheduler = new TestScheduler();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(scheduler))
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(scheduler))
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void completableUsesScheduler() {
+  @Test
+  public void completableUsesScheduler() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     RecordingSubscriber<String> subscriber = subscriberRule.create();

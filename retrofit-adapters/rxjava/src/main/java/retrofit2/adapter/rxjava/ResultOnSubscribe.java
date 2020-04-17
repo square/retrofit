@@ -32,7 +32,8 @@ final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
     this.upstream = upstream;
   }
 
-  @Override public void call(Subscriber<? super Result<T>> subscriber) {
+  @Override
+  public void call(Subscriber<? super Result<T>> subscriber) {
     upstream.call(new ResultSubscriber<T>(subscriber));
   }
 
@@ -44,11 +45,13 @@ final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
       this.subscriber = subscriber;
     }
 
-    @Override public void onNext(Response<R> response) {
+    @Override
+    public void onNext(Response<R> response) {
       subscriber.onNext(Result.response(response));
     }
 
-    @Override public void onError(Throwable throwable) {
+    @Override
+    public void onError(Throwable throwable) {
       try {
         subscriber.onNext(Result.<R>error(throwable));
       } catch (Throwable t) {
@@ -68,7 +71,8 @@ final class ResultOnSubscribe<T> implements OnSubscribe<Result<T>> {
       subscriber.onCompleted();
     }
 
-    @Override public void onCompleted() {
+    @Override
+    public void onCompleted() {
       subscriber.onCompleted();
     }
   }

@@ -25,13 +25,17 @@ import retrofit2.Retrofit;
 
 final class StringConverterFactory extends Converter.Factory {
   @Override
-  public Converter<ResponseBody, String> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  public Converter<ResponseBody, String> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     return ResponseBody::string;
   }
 
-  @Override public Converter<String, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public Converter<String, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     return value -> RequestBody.create(MediaType.get("text/plain"), value);
   }
 }

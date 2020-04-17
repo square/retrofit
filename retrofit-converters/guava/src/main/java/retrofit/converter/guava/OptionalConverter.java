@@ -27,7 +27,8 @@ final class OptionalConverter<T> implements Converter<ResponseBody, Optional<T>>
     this.delegate = delegate;
   }
 
-  @Override public Optional<T> convert(ResponseBody value) throws IOException {
+  @Override
+  public Optional<T> convert(ResponseBody value) throws IOException {
     return Optional.fromNullable(delegate.convert(value));
   }
 }

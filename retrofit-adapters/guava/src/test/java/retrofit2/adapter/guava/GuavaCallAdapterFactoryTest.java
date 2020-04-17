@@ -15,6 +15,9 @@
  */
 package retrofit2.adapter.guava;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.lang.annotation.Annotation;
@@ -28,9 +31,6 @@ import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class GuavaCallAdapterFactoryTest {
   private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
@@ -39,15 +39,18 @@ public final class GuavaCallAdapterFactoryTest {
   private final CallAdapter.Factory factory = GuavaCallAdapterFactory.create();
   private Retrofit retrofit;
 
-  @Before public void setUp() {
-    retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(factory)
-        .build();
+  @Before
+  public void setUp() {
+    retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(factory)
+            .build();
   }
 
-  @Test public void responseType() {
+  @Test
+  public void responseType() {
     Type bodyClass = new TypeToken<ListenableFuture<String>>() {}.getType();
     assertThat(factory.get(bodyClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
@@ -60,41 +63,47 @@ public final class GuavaCallAdapterFactoryTest {
     Type responseClass = new TypeToken<ListenableFuture<Response<String>>>() {}.getType();
     assertThat(factory.get(responseClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
-    Type responseWildcard = new TypeToken<ListenableFuture<Response<? extends String>>>() {}.getType();
+    Type responseWildcard =
+        new TypeToken<ListenableFuture<Response<? extends String>>>() {}.getType();
     assertThat(factory.get(responseWildcard, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
     Type resultClass = new TypeToken<ListenableFuture<Response<String>>>() {}.getType();
     assertThat(factory.get(resultClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
-    Type resultWildcard = new TypeToken<ListenableFuture<Response<? extends String>>>() {}.getType();
+    Type resultWildcard =
+        new TypeToken<ListenableFuture<Response<? extends String>>>() {}.getType();
     assertThat(factory.get(resultWildcard, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
   }
 
-  @Test public void nonListenableFutureReturnsNull() {
+  @Test
+  public void nonListenableFutureReturnsNull() {
     CallAdapter<?, ?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
     assertThat(adapter).isNull();
   }
 
-  @Test public void rawTypeThrows() {
+  @Test
+  public void rawTypeThrows() {
     Type observableType = new TypeToken<ListenableFuture>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "ListenableFuture return type must be parameterized as ListenableFuture<Foo> or ListenableFuture<? extends Foo>");
+      assertThat(e)
+          .hasMessage(
+              "ListenableFuture return type must be parameterized as ListenableFuture<Foo> or ListenableFuture<? extends Foo>");
     }
   }
 
-  @Test public void rawResponseTypeThrows() {
+  @Test
+  public void rawResponseTypeThrows() {
     Type observableType = new TypeToken<ListenableFuture<Response>>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+      assertThat(e)
+          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 }

@@ -31,24 +31,32 @@ public final class SingleWithSchedulerTest {
   @Rule public final RecordingSingleObserver.Rule observerRule = new RecordingSingleObserver.Rule();
 
   interface Service {
-    @GET("/") Single<String> body();
-    @GET("/") Single<Response<String>> response();
-    @GET("/") Single<Result<String>> result();
+    @GET("/")
+    Single<String> body();
+
+    @GET("/")
+    Single<Response<String>> response();
+
+    @GET("/")
+    Single<Result<String>> result();
   }
 
   private final TestScheduler scheduler = new TestScheduler();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void bodyUsesScheduler() {
+  @Test
+  public void bodyUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingSingleObserver<Object> observer = observerRule.create();
@@ -59,7 +67,8 @@ public final class SingleWithSchedulerTest {
     observer.assertAnyValue();
   }
 
-  @Test public void responseUsesScheduler() {
+  @Test
+  public void responseUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingSingleObserver<Object> observer = observerRule.create();
@@ -70,7 +79,8 @@ public final class SingleWithSchedulerTest {
     observer.assertAnyValue();
   }
 
-  @Test public void resultUsesScheduler() {
+  @Test
+  public void resultUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingSingleObserver<Object> observer = observerRule.create();

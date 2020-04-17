@@ -15,6 +15,8 @@
  */
 package retrofit2.mock;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -22,22 +24,22 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 /**
  * A simple emulation of the behavior of network calls.
- * <p>
- * This class models three properties of a network:
+ *
+ * <p>This class models three properties of a network:
+ *
  * <ul>
- * <li>Delay – the time it takes before a response is received (successful or otherwise).</li>
- * <li>Variance – the amount of fluctuation of the delay to be faster or slower.</li>
- * <li>Failure - the percentage of operations which fail (such as {@link IOException}).</li>
+ *   <li>Delay – the time it takes before a response is received (successful or otherwise).
+ *   <li>Variance – the amount of fluctuation of the delay to be faster or slower.
+ *   <li>Failure - the percentage of operations which fail (such as {@link IOException}).
  * </ul>
- * Behavior can be applied to a Retrofit interface with {@link MockRetrofit}. Behavior can also
- * be applied elsewhere using {@link #calculateDelay(TimeUnit)} and {@link #calculateIsFailure()}.
- * <p>
- * By default, instances of this class will use a 2 second delay with 40% variance. Failures
- * will occur 3% of the time. HTTP errors will occur 0% of the time.
+ *
+ * Behavior can be applied to a Retrofit interface with {@link MockRetrofit}. Behavior can also be
+ * applied elsewhere using {@link #calculateDelay(TimeUnit)} and {@link #calculateIsFailure()}.
+ *
+ * <p>By default, instances of this class will use a 2 second delay with 40% variance. Failures will
+ * occur 3% of the time. HTTP errors will occur 0% of the time.
  */
 public final class NetworkBehavior {
   private static final int DEFAULT_DELAY_MS = 2000; // Network calls will take 2 seconds.
@@ -114,8 +116,8 @@ public final class NetworkBehavior {
 
   /**
    * Set the exception to be used when a failure is triggered.
-   * <p>
-   * It is a best practice to remove the stack trace from {@code exception} since it can
+   *
+   * <p>It is a best practice to remove the stack trace from {@code exception} since it can
    * misleadingly point to code unrelated to this class.
    */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.

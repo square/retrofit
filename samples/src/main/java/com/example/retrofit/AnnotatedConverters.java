@@ -15,6 +15,8 @@
  */
 package com.example.retrofit;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -37,8 +39,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import retrofit2.http.GET;
-
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 final class AnnotatedConverters {
   public static final class AnnotatedConverterFactory extends Converter.Factory {
@@ -68,7 +68,8 @@ final class AnnotatedConverters {
       this.factories = new LinkedHashMap<>(factories);
     }
 
-    @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+    @Override
+    public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
         Type type, Annotation[] annotations, Retrofit retrofit) {
       for (Annotation annotation : annotations) {
         Converter.Factory factory = factories.get(annotation.annotationType());
@@ -79,40 +80,52 @@ final class AnnotatedConverters {
       return null;
     }
 
-    @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+    @Override
+    public @Nullable Converter<?, RequestBody> requestBodyConverter(
+        Type type,
+        Annotation[] parameterAnnotations,
+        Annotation[] methodAnnotations,
+        Retrofit retrofit) {
       for (Annotation annotation : parameterAnnotations) {
         Converter.Factory factory = factories.get(annotation.annotationType());
         if (factory != null) {
-          return factory.requestBodyConverter(type, parameterAnnotations, methodAnnotations,
-              retrofit);
+          return factory.requestBodyConverter(
+              type, parameterAnnotations, methodAnnotations, retrofit);
         }
       }
       return null;
     }
   }
 
-  @Retention(RUNTIME) public @interface Moshi {
-  }
+  @Retention(RUNTIME)
+  public @interface Moshi {}
 
-  @Retention(RUNTIME) public @interface Gson {
-  }
+  @Retention(RUNTIME)
+  public @interface Gson {}
 
-  @Retention(RUNTIME) public @interface SimpleXml {
-  }
+  @Retention(RUNTIME)
+  public @interface SimpleXml {}
 
-  @Default(value = DefaultType.FIELD) static final class Library {
+  @Default(value = DefaultType.FIELD)
+  static final class Library {
     @Attribute String name;
   }
 
   interface Service {
-    @GET("/") @Moshi Call<Library> exampleMoshi();
+    @GET("/")
+    @Moshi
+    Call<Library> exampleMoshi();
 
-    @GET("/") @Gson Call<Library> exampleGson();
+    @GET("/")
+    @Gson
+    Call<Library> exampleGson();
 
-    @GET("/") @SimpleXml Call<Library> exampleSimpleXml();
+    @GET("/")
+    @SimpleXml
+    Call<Library> exampleSimpleXml();
 
-    @GET("/") Call<Library> exampleDefault();
+    @GET("/")
+    Call<Library> exampleDefault();
   }
 
   public static void main(String... args) throws IOException {
@@ -128,14 +141,17 @@ final class AnnotatedConverters {
     MoshiConverterFactory moshiConverterFactory = MoshiConverterFactory.create(moshi);
     GsonConverterFactory gsonConverterFactory = GsonConverterFactory.create(gson);
     SimpleXmlConverterFactory simpleXmlConverterFactory = SimpleXmlConverterFactory.create();
-    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/"))
-        .addConverterFactory(
-            new AnnotatedConverterFactory.Builder().add(Moshi.class, moshiConverterFactory)
-                .add(Gson.class, gsonConverterFactory)
-                .add(SimpleXml.class, simpleXmlConverterFactory)
-                .build())
-        .addConverterFactory(gsonConverterFactory)
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(
+                new AnnotatedConverterFactory.Builder()
+                    .add(Moshi.class, moshiConverterFactory)
+                    .add(Gson.class, gsonConverterFactory)
+                    .add(SimpleXml.class, simpleXmlConverterFactory)
+                    .build())
+            .addConverterFactory(gsonConverterFactory)
+            .build();
     Service service = retrofit.create(Service.class);
 
     Library library1 = service.exampleMoshi().execute().body();

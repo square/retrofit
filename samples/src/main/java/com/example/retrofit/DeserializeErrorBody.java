@@ -22,14 +22,15 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import retrofit2.Call;
 import retrofit2.Converter;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 
 public final class DeserializeErrorBody {
   interface Service {
-    @GET("/user") Call<User> getUser();
+    @GET("/user")
+    Call<User> getUser();
   }
 
   static class User {
@@ -44,15 +45,17 @@ public final class DeserializeErrorBody {
     // Create a local web server which response with a 404 and JSON body.
     MockWebServer server = new MockWebServer();
     server.start();
-    server.enqueue(new MockResponse()
-        .setResponseCode(404)
-        .setBody("{\"message\":\"Unable to locate resource\"}"));
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(404)
+            .setBody("{\"message\":\"Unable to locate resource\"}"));
 
     // Create our Service instance with a Retrofit pointing at the local web server and Gson.
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(GsonConverterFactory.create())
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
     Service service = retrofit.create(Service.class);
 
     Response<User> response = service.getUser().execute();

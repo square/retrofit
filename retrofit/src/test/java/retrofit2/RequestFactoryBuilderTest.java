@@ -15,14 +15,15 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Set;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 // TODO this test is far too white box, migrate to black box.
 public final class RequestFactoryBuilderTest {
-  @Test public void pathParameterParsing() throws Exception {
+  @Test
+  public void pathParameterParsing() throws Exception {
     expectParams("/");
     expectParams("/foo");
     expectParams("/foo/bar");

@@ -16,5 +16,6 @@
 package retrofit2.converter.jaxb;
 
 enum Type {
-  OTHER, MOBILE
+  OTHER,
+  MOBILE
 }

@@ -15,6 +15,9 @@
  */
 package retrofit2.adapter.rxjava;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import com.google.common.reflect.TypeToken;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -27,24 +30,24 @@ import retrofit2.Retrofit;
 import rx.Observable;
 import rx.Single;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class RxJavaCallAdapterFactoryTest {
   private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
   private final CallAdapter.Factory factory = RxJavaCallAdapterFactory.create();
   private Retrofit retrofit;
 
-  @Before public void setUp() {
-    retrofit = new Retrofit.Builder()
-        .baseUrl("http://localhost:1")
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(factory)
-        .build();
+  @Before
+  public void setUp() {
+    retrofit =
+        new Retrofit.Builder()
+            .baseUrl("http://localhost:1")
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(factory)
+            .build();
   }
 
-  @Test public void nullSchedulerThrows() {
+  @Test
+  public void nullSchedulerThrows() {
     try {
       RxJavaCallAdapterFactory.createWithScheduler(null);
       fail();
@@ -53,12 +56,14 @@ public final class RxJavaCallAdapterFactoryTest {
     }
   }
 
-  @Test public void nonRxJavaTypeReturnsNull() {
+  @Test
+  public void nonRxJavaTypeReturnsNull() {
     CallAdapter<?, ?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
     assertThat(adapter).isNull();
   }
 
-  @Test public void responseTypes() {
+  @Test
+  public void responseTypes() {
     Type oBodyClass = new TypeToken<Observable<String>>() {}.getType();
     assertThat(factory.get(oBodyClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
@@ -109,14 +114,16 @@ public final class RxJavaCallAdapterFactoryTest {
         .isEqualTo(String.class);
   }
 
-  @Test public void rawBodyTypeThrows() {
+  @Test
+  public void rawBodyTypeThrows() {
     Type observableType = new TypeToken<Observable>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
+      assertThat(e)
+          .hasMessage(
+              "Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single>() {}.getType();
@@ -124,19 +131,21 @@ public final class RxJavaCallAdapterFactoryTest {
       factory.get(singleType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Single return type must be parameterized as Single<Foo> or Single<? extends Foo>");
+      assertThat(e)
+          .hasMessage(
+              "Single return type must be parameterized as Single<Foo> or Single<? extends Foo>");
     }
   }
 
-  @Test public void rawResponseTypeThrows() {
+  @Test
+  public void rawResponseTypeThrows() {
     Type observableType = new TypeToken<Observable<Response>>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+      assertThat(e)
+          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single<Response>>() {}.getType();
@@ -144,19 +153,20 @@ public final class RxJavaCallAdapterFactoryTest {
       factory.get(singleType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+      assertThat(e)
+          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 
-  @Test public void rawResultTypeThrows() {
+  @Test
+  public void rawResultTypeThrows() {
     Type observableType = new TypeToken<Observable<Result>>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+      assertThat(e)
+          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single<Result>>() {}.getType();
@@ -164,8 +174,8 @@ public final class RxJavaCallAdapterFactoryTest {
       factory.get(singleType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+      assertThat(e)
+          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
   }
 }

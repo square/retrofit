@@ -29,7 +29,8 @@ final class WireResponseBodyConverter<T extends Message<T, ?>>
     this.adapter = adapter;
   }
 
-  @Override public T convert(ResponseBody value) throws IOException {
+  @Override
+  public T convert(ResponseBody value) throws IOException {
     try {
       return adapter.decode(value.source());
     } finally {
