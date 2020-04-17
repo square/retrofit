@@ -1,0 +1,21 @@
+apply plugin: 'java-library'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api project(':retrofit')
+  api(deps.wireRuntime) {
+    // Make sure OkHttp's transitive version wins (itself transitive from Retrofit).
+    exclude group: 'com.squareup.okio', module: 'okio'
+  }
+  compileOnly deps.findBugsAnnotations
+
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.mockwebserver
+}
+
+jar {
+  manifest {
+    attributes  'Automatic-Module-Name': 'retrofit2.converter.wire'
+  }
+}

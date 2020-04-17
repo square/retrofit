@@ -2,10 +2,16 @@ language: java
 
 jdk:
   - openjdk8
+  - openjdk9
+  - openjdk10
+  - openjdk11
+  - openjdk12
+  - openjdk13
+  - openjdk14
+  - openjdk-ea
 
-# Ensure Javadoc and source jar generation is exercised.
-install: mvn install javadoc:jar source:jar -DskipTests=true -B -V
-script: mvn test -B
+install: ./gradlew assemble
+script: ./gradlew build
 
 after_success:
   - .buildscript/deploy_snapshot.sh
@@ -21,7 +27,3 @@ branches:
 
 notifications:
   email: false
-
-cache:
-  directories:
-    - $HOME/.m2

@@ -1,0 +1,40 @@
+import org.gradle.internal.jvm.Jvm
+
+apply plugin: 'java-library'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api deps.okhttp
+
+  compileOnly deps.android
+  compileOnly deps.kotlinStdLib
+  compileOnly deps.kotlinCoroutines
+
+  compileOnly deps.animalSnifferAnnotations
+  compileOnly deps.findBugsAnnotations
+
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.guava
+  testImplementation deps.mockwebserver
+  testImplementation deps.robolectric
+  testImplementation deps.kotlinStdLib
+  testImplementation deps.kotlinCoroutines
+  testImplementation deps.android
+}
+
+test {
+  // Robolectric (at least the version we use) only works on JDK 8.
+  if (Jvm.current().javaVersion.isJava9Compatible()) {
+    filter {
+      excludeTestsMatching '*Android*'
+    }
+  }
+}
+
+jar {
+  manifest {
+    attributes  'Automatic-Module-Name': 'retrofit2'
+  }
+}

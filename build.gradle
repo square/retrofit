@@ -1,0 +1,120 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+import org.gradle.internal.jvm.Jvm
+
+buildscript {
+  ext.versions = [
+      'kotlin': '1.3.50',
+      'okhttp': '3.14.7',
+      'protobuf': '3.10.0',
+      'jaxb': '2.3.1',
+  ]
+  ext.deps = [
+      'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
+      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2',
+      'okhttp': "com.squareup.okhttp3:okhttp:${versions.okhttp}",
+      'mockwebserver': "com.squareup.okhttp3:mockwebserver:${versions.okhttp}",
+      'junit': 'junit:junit:4.13',
+      'assertj': 'org.assertj:assertj-core:3.13.2',
+      'guava': 'com.google.guava:guava:28.1-jre',
+      'robolectric': 'org.robolectric:robolectric:3.8',
+      'android': 'com.google.android:android:4.1.1.4',
+      'animalSnifferAnnotations': 'org.codehaus.mojo:animal-sniffer-annotations:1.18',
+      'findBugsAnnotations': 'com.google.code.findbugs:jsr305:3.0.2',
+      'androidxTestRunner': 'androidx.test:runner:1.1.0',
+      'rxjava': 'io.reactivex:rxjava:1.3.8',
+      'rxjava2': 'io.reactivex.rxjava2:rxjava:2.0.0',
+      'reactiveStreams': 'org.reactivestreams:reactive-streams:1.0.3',
+      'scalaLibrary': 'org.scala-lang:scala-library:2.13.1',
+      'gson': 'com.google.code.gson:gson:2.8.5',
+      'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.1',
+      'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
+      'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
+      'moshi': 'com.squareup.moshi:moshi:1.8.0',
+      'protobuf': "com.google.protobuf:protobuf-java:${versions.protobuf}",
+      'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
+      'wireRuntime': 'com.squareup.wire:wire-runtime:2.2.0',
+      'jsoup': 'org.jsoup:jsoup:1.12.1',
+  ]
+
+  dependencies {
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
+    classpath 'com.android.tools.build:gradle:3.6.2'
+    classpath 'com.vanniktech:gradle-maven-publish-plugin:0.9.0'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
+    classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
+    classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.8'
+  }
+  repositories {
+    mavenCentral()
+    google()
+    jcenter()
+    gradlePluginPortal()
+  }
+}
+
+subprojects {
+  repositories {
+    mavenCentral()
+    google()
+    jcenter()
+  }
+
+  // Error-prone only works on JDK 11 or older currently.
+  if (!Jvm.current().javaVersion.isJava12Compatible()) {
+    apply plugin: 'net.ltgt.errorprone'
+
+    dependencies {
+      errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
+      errorprone 'com.google.errorprone:error_prone_core:2.3.3'
+    }
+
+    tasks.withType(JavaCompile).configureEach { task ->
+      task.options.encoding = 'UTF-8'
+      task.sourceCompatibility = JavaVersion.VERSION_1_8
+      task.targetCompatibility = JavaVersion.VERSION_1_8
+
+      task.options.errorprone {
+        excludedPaths = '.*/build/generated/source/proto/.*'
+        check('MissingFail', CheckSeverity.ERROR)
+        check('MissingOverride', CheckSeverity.ERROR)
+        check('UnusedException', CheckSeverity.ERROR)
+        check('UnusedMethod', CheckSeverity.ERROR)
+        check('UnusedNestedClass', CheckSeverity.ERROR)
+        check('UnusedVariable', CheckSeverity.ERROR)
+      }
+    }
+  }
+
+  plugins.withId('java-library') {
+    // Animal Sniffer only works on JDK 11 or older currently.
+    if (!Jvm.current().javaVersion.isJava12Compatible()) {
+      project.apply plugin: 'ru.vyarus.animalsniffer'
+      animalsniffer {
+        sourceSets = [sourceSets.main] // Only check main sources, ignore test code.
+      }
+      dependencies {
+        signature 'org.codehaus.mojo.signature:java18:1.0@signature'
+
+        if (project.path != ':retrofit-converters:java8' &&
+            project.path != ':retrofit-converters:jaxb' &&
+            project.path != ':retrofit-adapters:java8') {
+          signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
+        }
+      }
+    }
+  }
+
+  plugins.withType(com.android.build.gradle.BasePlugin).configureEach { plugin ->
+    plugin.extension.compileOptions {
+      sourceCompatibility = JavaVersion.VERSION_1_8
+      targetCompatibility = JavaVersion.VERSION_1_8
+    }
+  }
+
+  tasks.withType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile).configureEach { task ->
+    task.kotlinOptions {
+      jvmTarget = '1.8'
+    }
+  }
+}
