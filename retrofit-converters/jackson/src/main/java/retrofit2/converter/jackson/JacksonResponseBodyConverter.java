@@ -27,7 +27,8 @@ final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T
     this.adapter = adapter;
   }
 
-  @Override public T convert(ResponseBody value) throws IOException {
+  @Override
+  public T convert(ResponseBody value) throws IOException {
     try {
       return adapter.readValue(value.charStream());
     } finally {

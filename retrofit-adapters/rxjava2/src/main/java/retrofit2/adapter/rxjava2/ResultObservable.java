@@ -30,7 +30,8 @@ final class ResultObservable<T> extends Observable<Result<T>> {
     this.upstream = upstream;
   }
 
-  @Override protected void subscribeActual(Observer<? super Result<T>> observer) {
+  @Override
+  protected void subscribeActual(Observer<? super Result<T>> observer) {
     upstream.subscribe(new ResultObserver<T>(observer));
   }
 
@@ -41,15 +42,18 @@ final class ResultObservable<T> extends Observable<Result<T>> {
       this.observer = observer;
     }
 
-    @Override public void onSubscribe(Disposable disposable) {
+    @Override
+    public void onSubscribe(Disposable disposable) {
       observer.onSubscribe(disposable);
     }
 
-    @Override public void onNext(Response<R> response) {
+    @Override
+    public void onNext(Response<R> response) {
       observer.onNext(Result.response(response));
     }
 
-    @Override public void onError(Throwable throwable) {
+    @Override
+    public void onError(Throwable throwable) {
       try {
         observer.onNext(Result.<R>error(throwable));
       } catch (Throwable t) {
@@ -64,7 +68,8 @@ final class ResultObservable<T> extends Observable<Result<T>> {
       observer.onComplete();
     }
 
-    @Override public void onComplete() {
+    @Override
+    public void onComplete() {
       observer.onComplete();
     }
   }

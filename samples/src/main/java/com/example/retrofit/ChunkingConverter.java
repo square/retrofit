@@ -15,6 +15,9 @@
  */
 package com.example.retrofit;
 
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -30,27 +33,27 @@ import okhttp3.mockwebserver.RecordedRequest;
 import okio.BufferedSink;
 import retrofit2.Call;
 import retrofit2.Converter;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
-
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public final class ChunkingConverter {
   @Target(PARAMETER)
   @Retention(RUNTIME)
-  @interface Chunked {
-  }
+  @interface Chunked {}
 
   /**
    * A converter which removes known content lengths to force chunking when {@code @Chunked} is
    * present on {@code @Body} params.
    */
   static class ChunkingConverterFactory extends Converter.Factory {
-    @Override public @Nullable Converter<Object, RequestBody> requestBodyConverter(Type type,
-        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+    @Override
+    public @Nullable Converter<Object, RequestBody> requestBodyConverter(
+        Type type,
+        Annotation[] parameterAnnotations,
+        Annotation[] methodAnnotations,
+        Retrofit retrofit) {
       boolean isBody = false;
       boolean isChunked = false;
       for (Annotation annotation : parameterAnnotations) {
@@ -68,11 +71,13 @@ public final class ChunkingConverter {
       return value -> {
         final RequestBody realBody = delegate.convert(value);
         return new RequestBody() {
-          @Override public MediaType contentType() {
+          @Override
+          public MediaType contentType() {
             return realBody.contentType();
           }
 
-          @Override public void writeTo(BufferedSink sink) throws IOException {
+          @Override
+          public void writeTo(BufferedSink sink) throws IOException {
             realBody.writeTo(sink);
           }
         };
@@ -93,6 +98,7 @@ public final class ChunkingConverter {
   interface Service {
     @POST("/")
     Call<ResponseBody> sendNormal(@Body Repo repo);
+
     @POST("/")
     Call<ResponseBody> sendChunked(@Chunked @Body Repo repo);
   }
@@ -103,11 +109,12 @@ public final class ChunkingConverter {
     server.enqueue(new MockResponse());
     server.start();
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ChunkingConverterFactory())
-        .addConverterFactory(GsonConverterFactory.create())
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ChunkingConverterFactory())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
     Service service = retrofit.create(Service.class);
 
     Repo retrofitRepo = new Repo("square", "retrofit");

@@ -15,6 +15,8 @@
  */
 package retrofit2.adapter.rxjava2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.reactivex.Notification;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -26,27 +28,27 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /** A test {@link Observer} and JUnit rule which guarantees all events are asserted. */
 final class RecordingObserver<T> implements Observer<T> {
   private final Deque<Notification<T>> events = new ArrayDeque<>();
 
-  private RecordingObserver() {
-  }
+  private RecordingObserver() {}
 
-  @Override public void onSubscribe(Disposable disposable) {
-  }
+  @Override
+  public void onSubscribe(Disposable disposable) {}
 
-  @Override public void onNext(T value) {
+  @Override
+  public void onNext(T value) {
     events.add(Notification.createOnNext(value));
   }
 
-  @Override public void onComplete() {
+  @Override
+  public void onComplete() {
     events.add(Notification.<T>createOnComplete());
   }
 
-  @Override public void onError(Throwable e) {
+  @Override
+  public void onError(Throwable e) {
     events.add(Notification.<T>createOnError(e));
   }
 
@@ -122,9 +124,11 @@ final class RecordingObserver<T> implements Observer<T> {
       return subscriber;
     }
 
-    @Override public Statement apply(final Statement base, Description description) {
+    @Override
+    public Statement apply(final Statement base, Description description) {
       return new Statement() {
-        @Override public void evaluate() throws Throwable {
+        @Override
+        public void evaluate() throws Throwable {
           base.evaluate();
           for (RecordingObserver<?> subscriber : subscribers) {
             subscriber.assertNoEvents();

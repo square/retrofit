@@ -15,6 +15,9 @@
  */
 package retrofit2.adapter.scala;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import com.google.common.reflect.TypeToken;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -28,9 +31,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import scala.concurrent.Future;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class ScalaCallAdapterFactoryTest {
   private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
@@ -39,15 +39,18 @@ public final class ScalaCallAdapterFactoryTest {
   private final CallAdapter.Factory factory = ScalaCallAdapterFactory.create();
   private Retrofit retrofit;
 
-  @Before public void setUp() {
-    retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(factory)
-        .build();
+  @Before
+  public void setUp() {
+    retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(factory)
+            .build();
   }
 
-  @Test public void responseType() {
+  @Test
+  public void responseType() {
     Type bodyClass = new TypeToken<Future<String>>() {}.getType();
     assertThat(factory.get(bodyClass, NO_ANNOTATIONS, retrofit).responseType())
         .isEqualTo(String.class);
@@ -71,30 +74,34 @@ public final class ScalaCallAdapterFactoryTest {
         .isEqualTo(String.class);
   }
 
-  @Test public void nonListenableFutureReturnsNull() {
+  @Test
+  public void nonListenableFutureReturnsNull() {
     CallAdapter<?, ?> adapter = factory.get(String.class, NO_ANNOTATIONS, retrofit);
     assertThat(adapter).isNull();
   }
 
-  @Test public void rawTypeThrows() {
+  @Test
+  public void rawTypeThrows() {
     Type observableType = new TypeToken<Future>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Future return type must be parameterized as Future<Foo> or Future<? extends Foo>");
+      assertThat(e)
+          .hasMessage(
+              "Future return type must be parameterized as Future<Foo> or Future<? extends Foo>");
     }
   }
 
-  @Test public void rawResponseTypeThrows() {
+  @Test
+  public void rawResponseTypeThrows() {
     Type observableType = new TypeToken<Future<Response>>() {}.getType();
     try {
       factory.get(observableType, NO_ANNOTATIONS, retrofit);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage(
-          "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+      assertThat(e)
+          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 }

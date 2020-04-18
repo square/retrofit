@@ -22,9 +22,11 @@ import rx.plugins.RxJavaPlugins;
 
 /** A JUnit @Rule which resets RxJava's plugins before and after each test. */
 final class RxJavaPluginsResetRule implements TestRule {
-  @Override public Statement apply(final Statement base, Description description) {
+  @Override
+  public Statement apply(final Statement base, Description description) {
     return new Statement() {
-      @Override public void evaluate() throws Throwable {
+      @Override
+      public void evaluate() throws Throwable {
         RxJavaPlugins.getInstance().reset();
         try {
           base.evaluate();

@@ -33,7 +33,8 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
     this.adapter = adapter;
   }
 
-  @Override public T convert(ResponseBody value) throws IOException {
+  @Override
+  public T convert(ResponseBody value) throws IOException {
     JsonReader jsonReader = gson.newJsonReader(value.charStream());
     try {
       T result = adapter.read(jsonReader);

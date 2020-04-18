@@ -25,7 +25,8 @@ import retrofit2.Retrofit;
 public final class ObjectInstanceConverterFactory extends Converter.Factory {
   public static final Object VALUE = new Object();
 
-  @Override public @Nullable Converter<ResponseBody, Object> responseBodyConverter(
+  @Override
+  public @Nullable Converter<ResponseBody, Object> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type != Object.class) {
       return null;

@@ -27,11 +27,11 @@ import retrofit2.Retrofit;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Gson for JSON.
- * <p>
- * Because Gson is so flexible in the types it supports, this converter assumes that it can handle
- * all types. If you are mixing JSON serialization with something else (such as protocol buffers),
- * you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this instance}
- * last to allow the other converters a chance to see their types.
+ *
+ * <p>Because Gson is so flexible in the types it supports, this converter assumes that it can
+ * handle all types. If you are mixing JSON serialization with something else (such as protocol
+ * buffers), you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this
+ * instance} last to allow the other converters a chance to see their types.
  */
 public final class GsonConverterFactory extends Converter.Factory {
   /**
@@ -43,8 +43,8 @@ public final class GsonConverterFactory extends Converter.Factory {
   }
 
   /**
-   * Create an instance using {@code gson} for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
+   * Create an instance using {@code gson} for conversion. Encoding to JSON and decoding from JSON
+   * (when no charset is specified by a header) will use UTF-8.
    */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static GsonConverterFactory create(Gson gson) {
@@ -59,15 +59,18 @@ public final class GsonConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  public Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
     return new GsonResponseBodyConverter<>(gson, adapter);
   }
 
   @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  public Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
     return new GsonRequestBodyConverter<>(gson, adapter);
   }

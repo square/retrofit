@@ -15,6 +15,12 @@
  */
 package retrofit2.mock;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -22,23 +28,20 @@ import okhttp3.ResponseBody;
 import org.junit.Test;
 import retrofit2.Response;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 public final class NetworkBehaviorTest {
   private final NetworkBehavior behavior = NetworkBehavior.create(new Random(2847));
 
-  @Test public void defaultThrowable() {
+  @Test
+  public void defaultThrowable() {
     Throwable t = behavior.failureException();
-    assertThat(t).isInstanceOf(IOException.class)
+    assertThat(t)
+        .isInstanceOf(IOException.class)
         .isExactlyInstanceOf(MockRetrofitIOException.class);
     assertThat(t.getStackTrace()).isEmpty();
   }
 
-  @Test public void delayMustBePositive() {
+  @Test
+  public void delayMustBePositive() {
     try {
       behavior.setDelay(-1, SECONDS);
       fail();
@@ -47,7 +50,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void varianceRestrictsRange() {
+  @Test
+  public void varianceRestrictsRange() {
     try {
       behavior.setVariancePercent(-13);
       fail();
@@ -62,7 +66,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void failureRestrictsRange() {
+  @Test
+  public void failureRestrictsRange() {
     try {
       behavior.setFailurePercent(-13);
       fail();
@@ -77,7 +82,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void failureExceptionIsNotNull() {
+  @Test
+  public void failureExceptionIsNotNull() {
     try {
       behavior.setFailureException(null);
       fail();
@@ -86,7 +92,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void errorRestrictsRange() {
+  @Test
+  public void errorRestrictsRange() {
     try {
       behavior.setErrorPercent(-13);
       fail();
@@ -101,7 +108,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void errorFactoryIsNotNull() {
+  @Test
+  public void errorFactoryIsNotNull() {
     try {
       behavior.setErrorFactory(null);
       fail();
@@ -110,7 +118,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void errorFactoryCannotReturnNull() {
+  @Test
+  public void errorFactoryCannotReturnNull() {
     behavior.setErrorFactory(() -> null);
     try {
       behavior.createErrorResponse();
@@ -120,11 +129,13 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void errorFactoryCannotThrow() {
+  @Test
+  public void errorFactoryCannotThrow() {
     final RuntimeException broken = new RuntimeException("Broken");
-    behavior.setErrorFactory(() -> {
-      throw broken;
-    });
+    behavior.setErrorFactory(
+        () -> {
+          throw broken;
+        });
     try {
       behavior.createErrorResponse();
       fail();
@@ -134,7 +145,8 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void errorFactoryCannotReturnSuccess() {
+  @Test
+  public void errorFactoryCannotReturnSuccess() {
     behavior.setErrorFactory(() -> Response.success("Taco"));
     try {
       behavior.createErrorResponse();
@@ -144,21 +156,25 @@ public final class NetworkBehaviorTest {
     }
   }
 
-  @Test public void errorFactoryCalledEachTime() {
-    behavior.setErrorFactory(new Callable<Response<?>>() {
-      private int code = 500;
+  @Test
+  public void errorFactoryCalledEachTime() {
+    behavior.setErrorFactory(
+        new Callable<Response<?>>() {
+          private int code = 500;
 
-      @Override public Response<?> call() throws Exception {
-        return Response.error(code++, ResponseBody.create(null, new byte[0]));
-      }
-    });
+          @Override
+          public Response<?> call() throws Exception {
+            return Response.error(code++, ResponseBody.create(null, new byte[0]));
+          }
+        });
 
     assertEquals(500, behavior.createErrorResponse().code());
     assertEquals(501, behavior.createErrorResponse().code());
     assertEquals(502, behavior.createErrorResponse().code());
   }
 
-  @Test public void failurePercentageIsAccurate() {
+  @Test
+  public void failurePercentageIsAccurate() {
     behavior.setFailurePercent(0);
     for (int i = 0; i < 10000; i++) {
       assertThat(behavior.calculateIsFailure()).isFalse();
@@ -174,7 +190,8 @@ public final class NetworkBehaviorTest {
     assertThat(failures).isEqualTo(2964); // ~3% of 100k
   }
 
-  @Test public void errorPercentageIsAccurate() {
+  @Test
+  public void errorPercentageIsAccurate() {
     behavior.setErrorPercent(0);
     for (int i = 0; i < 10000; i++) {
       assertThat(behavior.calculateIsError()).isFalse();
@@ -190,7 +207,8 @@ public final class NetworkBehaviorTest {
     assertThat(errors).isEqualTo(2964); // ~3% of 100k
   }
 
-  @Test public void delayVarianceIsAccurate() {
+  @Test
+  public void delayVarianceIsAccurate() {
     behavior.setDelay(2, SECONDS);
 
     behavior.setVariancePercent(0);

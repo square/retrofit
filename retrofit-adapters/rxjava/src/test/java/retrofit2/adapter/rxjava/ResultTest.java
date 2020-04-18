@@ -15,16 +15,16 @@
  */
 package retrofit2.adapter.rxjava;
 
-import java.io.IOException;
-import org.junit.Test;
-import retrofit2.Response;
-import retrofit2.adapter.rxjava.Result;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import org.junit.Test;
+import retrofit2.Response;
+
 public final class ResultTest {
-  @Test public void response() {
+  @Test
+  public void response() {
     Response<String> response = Response.success("Hi");
     Result<String> result = Result.response(response);
     assertThat(result.isError()).isFalse();
@@ -32,7 +32,8 @@ public final class ResultTest {
     assertThat(result.response()).isSameAs(response);
   }
 
-  @Test public void nullResponseThrows() {
+  @Test
+  public void nullResponseThrows() {
     try {
       Result.response(null);
       fail();
@@ -41,7 +42,8 @@ public final class ResultTest {
     }
   }
 
-  @Test public void error() {
+  @Test
+  public void error() {
     Throwable error = new IOException();
     Result<Object> result = Result.error(error);
     assertThat(result.isError()).isTrue();
@@ -49,7 +51,8 @@ public final class ResultTest {
     assertThat(result.response()).isNull();
   }
 
-  @Test public void nullErrorThrows() {
+  @Test
+  public void nullErrorThrows() {
     try {
       Result.error(null);
       fail();

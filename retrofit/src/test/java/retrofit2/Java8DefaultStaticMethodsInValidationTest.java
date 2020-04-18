@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import static org.junit.Assert.assertNotNull;
+
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,13 +24,12 @@ import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-import static org.junit.Assert.assertNotNull;
-
 public final class Java8DefaultStaticMethodsInValidationTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Example {
-    @GET("/") Call<String> user(@Query("name") String name);
+    @GET("/")
+    Call<String> user(@Query("name") String name);
 
     default Call<String> user() {
       return user("hey");
@@ -39,12 +40,14 @@ public final class Java8DefaultStaticMethodsInValidationTest {
     }
   }
 
-  @Test public void test() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ToStringConverterFactory())
-        .validateEagerly(true)
-        .build();
+  @Test
+  public void test() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ToStringConverterFactory())
+            .validateEagerly(true)
+            .build();
     assertNotNull(retrofit.create(Example.class));
   }
 }

@@ -15,6 +15,8 @@
  */
 package retrofit.converter.guava;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.common.base.Optional;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -31,28 +33,32 @@ import retrofit2.Converter;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class GuavaOptionalConverterFactoryTest {
   interface Service {
-    @GET("/") Call<Optional<Object>> optional();
-    @GET("/") Call<Object> object();
+    @GET("/")
+    Call<Optional<Object>> optional();
+
+    @GET("/")
+    Call<Object> object();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(GuavaOptionalConverterFactory.create())
-        .addConverterFactory(new AlwaysNullConverterFactory())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(GuavaOptionalConverterFactory.create())
+            .addConverterFactory(new AlwaysNullConverterFactory())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void optional() throws IOException {
+  @Test
+  public void optional() throws IOException {
     server.enqueue(new MockResponse());
 
     Optional<Object> optional = service.optional().execute().body();
@@ -60,28 +66,34 @@ public final class GuavaOptionalConverterFactoryTest {
     assertThat(optional.isPresent()).isFalse();
   }
 
-  @Test public void onlyMatchesOptional() throws IOException {
+  @Test
+  public void onlyMatchesOptional() throws IOException {
     server.enqueue(new MockResponse());
 
     Object body = service.object().execute().body();
     assertThat(body).isNull();
   }
 
-  @Test public void delegates() throws IOException {
+  @Test
+  public void delegates() throws IOException {
     final Object object = new Object();
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new Converter.Factory() {
-          @Nullable @Override public Converter<ResponseBody, Object> responseBodyConverter(Type type,
-              Annotation[] annotations, Retrofit retrofit) {
-            if (getRawType(type) != Object.class) {
-              return null;
-            }
-            return value -> object;
-          }
-        })
-        .addConverterFactory(GuavaOptionalConverterFactory.create())
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(
+                new Converter.Factory() {
+                  @Nullable
+                  @Override
+                  public Converter<ResponseBody, Object> responseBodyConverter(
+                      Type type, Annotation[] annotations, Retrofit retrofit) {
+                    if (getRawType(type) != Object.class) {
+                      return null;
+                    }
+                    return value -> object;
+                  }
+                })
+            .addConverterFactory(GuavaOptionalConverterFactory.create())
+            .build();
 
     server.enqueue(new MockResponse());
 

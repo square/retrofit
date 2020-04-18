@@ -72,8 +72,9 @@ public final class Invocation {
     return arguments;
   }
 
-  @Override public String toString() {
-    return String.format("%s.%s() %s",
-        method.getDeclaringClass().getName(), method.getName(), arguments);
+  @Override
+  public String toString() {
+    return String.format(
+        "%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);
   }
 }

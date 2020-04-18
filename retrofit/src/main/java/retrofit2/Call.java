@@ -16,15 +16,14 @@
 package retrofit2;
 
 import java.io.IOException;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okio.Timeout;
 
 /**
  * An invocation of a Retrofit method that sends a request to a webserver and returns a response.
  * Each call yields its own HTTP request and response pair. Use {@link #clone} to make multiple
- * calls with the same parameters to the same webserver; this may be used to implement polling or
- * to retry a failed call.
+ * calls with the same parameters to the same webserver; this may be used to implement polling or to
+ * retry a failed call.
  *
  * <p>Calls may be executed synchronously with {@link #execute}, or asynchronously with {@link
  * #enqueue}. In either case the call can be canceled at any time with {@link #cancel}. A call that
@@ -38,8 +37,8 @@ public interface Call<T> extends Cloneable {
    * Synchronously send the request and return its response.
    *
    * @throws IOException if a problem occurred talking to the server.
-   * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request
-   * or decoding the response.
+   * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request or
+   *     decoding the response.
    */
   Response<T> execute() throws IOException;
 

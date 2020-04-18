@@ -24,15 +24,18 @@ abstract class ForwardingSubscriber<T> extends Subscriber<T> {
     this.delegate = delegate;
   }
 
-  @Override public void onNext(T value) {
+  @Override
+  public void onNext(T value) {
     delegate.onNext(value);
   }
 
-  @Override public void onCompleted() {
+  @Override
+  public void onCompleted() {
     delegate.onCompleted();
   }
 
-  @Override public void onError(Throwable throwable) {
+  @Override
+  public void onError(Throwable throwable) {
     delegate.onError(throwable);
   }
 }

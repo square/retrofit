@@ -32,7 +32,8 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
     this.upstream = upstream;
   }
 
-  @Override public void call(Subscriber<? super T> subscriber) {
+  @Override
+  public void call(Subscriber<? super T> subscriber) {
     upstream.call(new BodySubscriber<T>(subscriber));
   }
 
@@ -46,7 +47,8 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
       this.subscriber = subscriber;
     }
 
-    @Override public void onNext(Response<R> response) {
+    @Override
+    public void onNext(Response<R> response) {
       if (response.isSuccessful()) {
         subscriber.onNext(response.body());
       } else {
@@ -66,20 +68,23 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
       }
     }
 
-    @Override public void onError(Throwable throwable) {
+    @Override
+    public void onError(Throwable throwable) {
       if (!subscriberTerminated) {
         subscriber.onError(throwable);
       } else {
         // This should never happen! onNext handles and forwards errors automatically.
-        Throwable broken = new AssertionError(
-            "This should never happen! Report as a Retrofit bug with the full stacktrace.");
+        Throwable broken =
+            new AssertionError(
+                "This should never happen! Report as a Retrofit bug with the full stacktrace.");
         //noinspection UnnecessaryInitCause Two-arg AssertionError constructor is 1.7+ only.
         broken.initCause(throwable);
         RxJavaPlugins.getInstance().getErrorHandler().handleError(broken);
       }
     }
 
-    @Override public void onCompleted() {
+    @Override
+    public void onCompleted() {
       if (!subscriberTerminated) {
         subscriber.onCompleted();
       }

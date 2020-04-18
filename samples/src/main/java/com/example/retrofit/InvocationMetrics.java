@@ -27,9 +27,7 @@ import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import retrofit2.http.Url;
 
-/**
- * This example prints HTTP call metrics with the initiating method names and arguments.
- */
+/** This example prints HTTP call metrics with the initiating method names and arguments. */
 public final class InvocationMetrics {
   public interface Browse {
     @GET("/robots.txt")
@@ -46,7 +44,8 @@ public final class InvocationMetrics {
   }
 
   static final class InvocationLogger implements Interceptor {
-    @Override public Response intercept(Chain chain) throws IOException {
+    @Override
+    public Response intercept(Chain chain) throws IOException {
       Request request = chain.request();
       long startNanos = System.nanoTime();
       Response response = chain.proceed(request);
@@ -54,7 +53,8 @@ public final class InvocationMetrics {
 
       Invocation invocation = request.tag(Invocation.class);
       if (invocation != null) {
-        System.out.printf("%s.%s %s HTTP %s (%.0f ms)%n",
+        System.out.printf(
+            "%s.%s %s HTTP %s (%.0f ms)%n",
             invocation.method().getDeclaringClass().getSimpleName(),
             invocation.method().getName(),
             invocation.arguments(),
@@ -69,14 +69,10 @@ public final class InvocationMetrics {
   public static void main(String... args) throws IOException {
     InvocationLogger invocationLogger = new InvocationLogger();
 
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
-        .addInterceptor(invocationLogger)
-        .build();
+    OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(invocationLogger).build();
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("https://square.com/")
-        .callFactory(okHttpClient)
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl("https://square.com/").callFactory(okHttpClient).build();
 
     Browse browse = retrofit.create(Browse.class);
 

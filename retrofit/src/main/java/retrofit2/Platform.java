@@ -15,6 +15,10 @@
  */
 package retrofit2;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -26,10 +30,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -73,7 +73,8 @@ class Platform {
     this.lookupConstructor = lookupConstructor;
   }
 
-  @Nullable Executor defaultCallbackExecutor() {
+  @Nullable
+  Executor defaultCallbackExecutor() {
     return null;
   }
 
@@ -90,9 +91,7 @@ class Platform {
   }
 
   List<? extends Converter.Factory> defaultConverterFactories() {
-    return hasJava8Types
-        ? singletonList(OptionalConverterFactory.INSTANCE)
-        : emptyList();
+    return hasJava8Types ? singletonList(OptionalConverterFactory.INSTANCE) : emptyList();
   }
 
   int defaultConverterFactoriesSize() {
@@ -105,15 +104,15 @@ class Platform {
   }
 
   @IgnoreJRERequirement // Only called on API 26+.
-  @Nullable Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
-      @Nullable Object... args) throws Throwable {
-    Lookup lookup = lookupConstructor != null
-        ? lookupConstructor.newInstance(declaringClass, -1 /* trusted */)
-        : MethodHandles.lookup();
-    return lookup
-        .unreflectSpecial(method, declaringClass)
-        .bindTo(object)
-        .invokeWithArguments(args);
+  @Nullable
+  Object invokeDefaultMethod(
+      Method method, Class<?> declaringClass, Object object, @Nullable Object... args)
+      throws Throwable {
+    Lookup lookup =
+        lookupConstructor != null
+            ? lookupConstructor.newInstance(declaringClass, -1 /* trusted */)
+            : MethodHandles.lookup();
+    return lookup.unreflectSpecial(method, declaringClass).bindTo(object).invokeWithArguments(args);
   }
 
   static final class Android extends Platform {
@@ -121,12 +120,16 @@ class Platform {
       super(Build.VERSION.SDK_INT >= 24);
     }
 
-    @Override public Executor defaultCallbackExecutor() {
+    @Override
+    public Executor defaultCallbackExecutor() {
       return new MainThreadExecutor();
     }
 
-    @Nullable @Override Object invokeDefaultMethod(Method method, Class<?> declaringClass,
-        Object object, @Nullable Object... args) throws Throwable {
+    @Nullable
+    @Override
+    Object invokeDefaultMethod(
+        Method method, Class<?> declaringClass, Object object, @Nullable Object... args)
+        throws Throwable {
       if (Build.VERSION.SDK_INT < 26) {
         throw new UnsupportedOperationException(
             "Calling default methods on API 24 and 25 is not supported");
@@ -137,7 +140,8 @@ class Platform {
     static final class MainThreadExecutor implements Executor {
       private final Handler handler = new Handler(Looper.getMainLooper());
 
-      @Override public void execute(Runnable r) {
+      @Override
+      public void execute(Runnable r) {
         handler.post(r);
       }
     }

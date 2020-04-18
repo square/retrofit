@@ -15,6 +15,14 @@
  */
 package retrofit2.adapter.rxjava2;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import io.reactivex.Completable;
 import io.reactivex.exceptions.CompositeException;
 import io.reactivex.exceptions.Exceptions;
@@ -39,47 +47,45 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.CompletableThrowingTest.ForwardingCompletableObserver;
 import retrofit2.http.GET;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 public final class AsyncTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") Completable completable();
+    @GET("/")
+    Completable completable();
   }
 
   private Service service;
   private List<Throwable> uncaughtExceptions = new ArrayList<>();
 
-  @Before public void setUp() {
-    ExecutorService executorService = Executors.newCachedThreadPool(r -> {
-      Thread thread = new Thread(r);
-      thread.setUncaughtExceptionHandler((t, e) -> uncaughtExceptions.add(e));
-      return thread;
-    });
+  @Before
+  public void setUp() {
+    ExecutorService executorService =
+        Executors.newCachedThreadPool(
+            r -> {
+              Thread thread = new Thread(r);
+              thread.setUncaughtExceptionHandler((t, e) -> uncaughtExceptions.add(e));
+              return thread;
+            });
 
-    OkHttpClient client = new OkHttpClient.Builder()
-        .dispatcher(new Dispatcher(executorService))
-        .build();
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .client(client)
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
-        .build();
+    OkHttpClient client =
+        new OkHttpClient.Builder().dispatcher(new Dispatcher(executorService)).build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .client(client)
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @After public void tearDown() {
+  @After
+  public void tearDown() {
     assertTrue("Uncaught exceptions: " + uncaughtExceptions, uncaughtExceptions.isEmpty());
   }
 
-  @Test public void success() throws InterruptedException {
+  @Test
+  public void success() throws InterruptedException {
     TestObserver<Void> observer = new TestObserver<>();
     service.completable().subscribe(observer);
     assertFalse(observer.await(1, SECONDS));
@@ -89,8 +95,8 @@ public final class AsyncTest {
     observer.assertComplete();
   }
 
-
-  @Test public void failure() throws InterruptedException {
+  @Test
+  public void failure() throws InterruptedException {
     TestObserver<Void> observer = new TestObserver<>();
     service.completable().subscribe(observer);
     assertFalse(observer.await(1, SECONDS));
@@ -100,51 +106,63 @@ public final class AsyncTest {
     observer.assertError(IOException.class);
   }
 
-  @Test public void throwingInOnCompleteDeliveredToPlugin() throws InterruptedException {
+  @Test
+  public void throwingInOnCompleteDeliveredToPlugin() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(throwable -> {
-      if (!errorRef.compareAndSet(null, throwable)) {
-        throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-      }
-      latch.countDown();
-    });
+    RxJavaPlugins.setErrorHandler(
+        throwable -> {
+          if (!errorRef.compareAndSet(null, throwable)) {
+            throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
+          }
+          latch.countDown();
+        });
 
     TestObserver<Void> observer = new TestObserver<>();
     final RuntimeException e = new RuntimeException();
-    service.completable().subscribe(new ForwardingCompletableObserver(observer) {
-      @Override public void onComplete() {
-        throw e;
-      }
-    });
+    service
+        .completable()
+        .subscribe(
+            new ForwardingCompletableObserver(observer) {
+              @Override
+              public void onComplete() {
+                throw e;
+              }
+            });
 
     latch.await(1, SECONDS);
     assertThat(errorRef.get()).isSameAs(e);
   }
 
-  @Test public void bodyThrowingInOnErrorDeliveredToPlugin() throws InterruptedException {
+  @Test
+  public void bodyThrowingInOnErrorDeliveredToPlugin() throws InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final CountDownLatch latch = new CountDownLatch(1);
     final AtomicReference<Throwable> pluginRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(throwable -> {
-      if (!pluginRef.compareAndSet(null, throwable)) {
-        throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-      }
-      latch.countDown();
-    });
+    RxJavaPlugins.setErrorHandler(
+        throwable -> {
+          if (!pluginRef.compareAndSet(null, throwable)) {
+            throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
+          }
+          latch.countDown();
+        });
 
     TestObserver<Void> observer = new TestObserver<>();
     final RuntimeException e = new RuntimeException();
     final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    service.completable().subscribe(new ForwardingCompletableObserver(observer) {
-      @Override public void onError(Throwable throwable) {
-        errorRef.set(throwable);
-        throw e;
-      }
-    });
+    service
+        .completable()
+        .subscribe(
+            new ForwardingCompletableObserver(observer) {
+              @Override
+              public void onError(Throwable throwable) {
+                errorRef.set(throwable);
+                throw e;
+              }
+            });
 
     latch.await(1, SECONDS);
     //noinspection ThrowableResultOfMethodCallIgnored
@@ -152,18 +170,23 @@ public final class AsyncTest {
     assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
   }
 
-  @Test public void bodyThrowingFatalInOnErrorPropagates() throws InterruptedException {
+  @Test
+  public void bodyThrowingFatalInOnErrorPropagates() throws InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final CountDownLatch latch = new CountDownLatch(1);
 
     TestObserver<Void> observer = new TestObserver<>();
     final Error e = new OutOfMemoryError("Not real");
-    service.completable().subscribe(new ForwardingCompletableObserver(observer) {
-      @Override public void onError(Throwable throwable) {
-        throw e;
-      }
-    });
+    service
+        .completable()
+        .subscribe(
+            new ForwardingCompletableObserver(observer) {
+              @Override
+              public void onError(Throwable throwable) {
+                throw e;
+              }
+            });
 
     latch.await(1, SECONDS);
 

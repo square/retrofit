@@ -15,6 +15,10 @@
  */
 package retrofit2.adapter.rxjava2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import java.util.List;
@@ -27,31 +31,31 @@ import org.junit.Test;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 public final class CancelDisposeTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
-    @GET("/") Observable<String> go();
+    @GET("/")
+    Observable<String> go();
   }
 
   private final OkHttpClient client = new OkHttpClient();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
-        .callFactory(client)
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
+            .callFactory(client)
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void disposeCancelsCall() {
+  @Test
+  public void disposeCancelsCall() {
     Disposable disposable = service.go().subscribe();
     List<Call> calls = client.dispatcher().runningCalls();
     assertEquals(1, calls.size());
@@ -60,13 +64,15 @@ public final class CancelDisposeTest {
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
-  @Test public void disposeBeforeEnqueueDoesNotEnqueue() {
+  @Test
+  public void disposeBeforeEnqueueDoesNotEnqueue() {
     service.go().test(true);
     List<Call> calls = client.dispatcher().runningCalls();
     assertEquals(0, calls.size());
   }
 
-  @Test public void cancelDoesNotDispose() {
+  @Test
+  public void cancelDoesNotDispose() {
     Disposable disposable = service.go().subscribe();
     List<Call> calls = client.dispatcher().runningCalls();
     assertEquals(1, calls.size());
@@ -74,4 +80,3 @@ public final class CancelDisposeTest {
     assertFalse(disposable.isDisposed());
   }
 }
-

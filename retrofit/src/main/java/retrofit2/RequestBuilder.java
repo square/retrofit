@@ -29,8 +29,9 @@ import okio.Buffer;
 import okio.BufferedSink;
 
 final class RequestBuilder {
-  private static final char[] HEX_DIGITS =
-      { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+  private static final char[] HEX_DIGITS = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+  };
   private static final String PATH_SEGMENT_ALWAYS_ENCODE_SET = " \"<>^`{}|\\?#";
 
   /**
@@ -42,8 +43,8 @@ final class RequestBuilder {
    * segment so {@code /one/./three/} becomes {@code /one/three/}. A double-dot pops the preceding
    * directory, so {@code /one/../three/} becomes {@code /three/}.
    *
-   * <p>We forbid these in Retrofit paths because they're likely to have the unintended effect.
-   * For example, passing {@code ..} to {@code DELETE /account/book/{isbn}/} yields {@code DELETE
+   * <p>We forbid these in Retrofit paths because they're likely to have the unintended effect. For
+   * example, passing {@code ..} to {@code DELETE /account/book/{isbn}/} yields {@code DELETE
    * /account/}.
    */
   private static final Pattern PATH_TRAVERSAL = Pattern.compile("(.*/)?(\\.|%2e|%2E){1,2}(/.*)?");
@@ -63,9 +64,15 @@ final class RequestBuilder {
   private @Nullable FormBody.Builder formBuilder;
   private @Nullable RequestBody body;
 
-  RequestBuilder(String method, HttpUrl baseUrl,
-      @Nullable String relativeUrl, @Nullable Headers headers, @Nullable MediaType contentType,
-      boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
+  RequestBuilder(
+      String method,
+      HttpUrl baseUrl,
+      @Nullable String relativeUrl,
+      @Nullable Headers headers,
+      @Nullable MediaType contentType,
+      boolean hasBody,
+      boolean isFormEncoded,
+      boolean isMultipart) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -127,7 +134,8 @@ final class RequestBuilder {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
-      if (codePoint < 0x20 || codePoint >= 0x7f
+      if (codePoint < 0x20
+          || codePoint >= 0x7f
           || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
           || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
         // Slow path: the character at i requires encoding!
@@ -142,8 +150,8 @@ final class RequestBuilder {
     return input;
   }
 
-  private static void canonicalizeForPath(Buffer out, String input, int pos, int limit,
-      boolean alreadyEncoded) {
+  private static void canonicalizeForPath(
+      Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
     Buffer utf8Buffer = null; // Lazily allocated.
     int codePoint;
     for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
@@ -151,7 +159,8 @@ final class RequestBuilder {
       if (alreadyEncoded
           && (codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r')) {
         // Skip this character.
-      } else if (codePoint < 0x20 || codePoint >= 0x7f
+      } else if (codePoint < 0x20
+          || codePoint >= 0x7f
           || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
           || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
         // Percent encode this character.
@@ -256,10 +265,7 @@ final class RequestBuilder {
       }
     }
 
-    return requestBuilder
-        .url(url)
-        .headers(headersBuilder.build())
-        .method(method, body);
+    return requestBuilder.url(url).headers(headersBuilder.build()).method(method, body);
   }
 
   private static class ContentTypeOverridingRequestBody extends RequestBody {
@@ -271,15 +277,18 @@ final class RequestBuilder {
       this.contentType = contentType;
     }
 
-    @Override public MediaType contentType() {
+    @Override
+    public MediaType contentType() {
       return contentType;
     }
 
-    @Override public long contentLength() throws IOException {
+    @Override
+    public long contentLength() throws IOException {
       return delegate.contentLength();
     }
 
-    @Override public void writeTo(BufferedSink sink) throws IOException {
+    @Override
+    public void writeTo(BufferedSink sink) throws IOException {
       delegate.writeTo(sink);
     }
   }

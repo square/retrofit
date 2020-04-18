@@ -47,16 +47,19 @@ final class CallArbiter<T> extends AtomicInteger implements Subscription, Produc
     this.subscriber = subscriber;
   }
 
-  @Override public void unsubscribe() {
+  @Override
+  public void unsubscribe() {
     unsubscribed = true;
     call.cancel();
   }
 
-  @Override public boolean isUnsubscribed() {
+  @Override
+  public boolean isUnsubscribed() {
     return unsubscribed;
   }
 
-  @Override public void request(long amount) {
+  @Override
+  public void request(long amount) {
     if (amount == 0) {
       return;
     }

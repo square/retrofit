@@ -23,8 +23,8 @@ import retrofit2.Retrofit;
 
 final class AlwaysNullConverterFactory extends Converter.Factory {
   @Override
-  public Converter<ResponseBody, Object> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  public Converter<ResponseBody, Object> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     return value -> null;
   }
 }

@@ -23,10 +23,12 @@ import retrofit2.Retrofit;
 
 /** Always converts to null. */
 public final class NullObjectConverterFactory extends Converter.Factory {
-  @Override public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  @Override
+  public Converter<?, String> stringConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     return new Converter<Object, String>() {
-      @Override public String convert(Object value) throws IOException {
+      @Override
+      public String convert(Object value) throws IOException {
         return null;
       }
     };

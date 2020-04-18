@@ -15,6 +15,8 @@
  */
 package retrofit2.converter.moshi;
 
+import static java.util.Collections.unmodifiableSet;
+
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.Moshi;
@@ -28,17 +30,15 @@ import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
-import static java.util.Collections.unmodifiableSet;
-
 /**
  * A {@linkplain Converter.Factory converter} which uses Moshi for JSON.
- * <p>
- * Because Moshi is so flexible in the types it supports, this converter assumes that it can handle
- * all types. If you are mixing JSON serialization with something else (such as protocol buffers),
- * you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this instance}
- * last to allow the other converters a chance to see their types.
- * <p>
- * Any {@link JsonQualifier @JsonQualifier}-annotated annotations on the parameter will be used
+ *
+ * <p>Because Moshi is so flexible in the types it supports, this converter assumes that it can
+ * handle all types. If you are mixing JSON serialization with something else (such as protocol
+ * buffers), you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this
+ * instance} last to allow the other converters a chance to see their types.
+ *
+ * <p>Any {@link JsonQualifier @JsonQualifier}-annotated annotations on the parameter will be used
  * when looking up a request body converter and those on the method will be used when looking up a
  * response body converter.
  */
@@ -60,8 +60,8 @@ public final class MoshiConverterFactory extends Converter.Factory {
   private final boolean failOnUnknown;
   private final boolean serializeNulls;
 
-  private MoshiConverterFactory(Moshi moshi, boolean lenient, boolean failOnUnknown,
-      boolean serializeNulls) {
+  private MoshiConverterFactory(
+      Moshi moshi, boolean lenient, boolean failOnUnknown, boolean serializeNulls) {
     this.moshi = moshi;
     this.lenient = lenient;
     this.failOnUnknown = failOnUnknown;
@@ -73,9 +73,7 @@ public final class MoshiConverterFactory extends Converter.Factory {
     return new MoshiConverterFactory(moshi, true, failOnUnknown, serializeNulls);
   }
 
-  /**
-   * Return a new factory which uses {@link JsonAdapter#failOnUnknown()} adapters.
-   */
+  /** Return a new factory which uses {@link JsonAdapter#failOnUnknown()} adapters. */
   public MoshiConverterFactory failOnUnknown() {
     return new MoshiConverterFactory(moshi, lenient, true, serializeNulls);
   }
@@ -86,8 +84,8 @@ public final class MoshiConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  public Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     JsonAdapter<?> adapter = moshi.adapter(type, jsonAnnotations(annotations));
     if (lenient) {
       adapter = adapter.lenient();
@@ -101,8 +99,12 @@ public final class MoshiConverterFactory extends Converter.Factory {
     return new MoshiResponseBodyConverter<>(adapter);
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     JsonAdapter<?> adapter = moshi.adapter(type, jsonAnnotations(parameterAnnotations));
     if (lenient) {
       adapter = adapter.lenient();

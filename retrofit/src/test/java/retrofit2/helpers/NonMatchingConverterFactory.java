@@ -26,19 +26,25 @@ import retrofit2.Retrofit;
 public final class NonMatchingConverterFactory extends Converter.Factory {
   public boolean called;
 
-  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+  @Override
+  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     called = true;
     return null;
   }
 
-  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public @Nullable Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     called = true;
     return null;
   }
 
-  @Override public @Nullable Converter<?, String> stringConverter(
+  @Override
+  public @Nullable Converter<?, String> stringConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     called = true;
     return null;

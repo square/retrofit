@@ -15,6 +15,9 @@
  */
 package retrofit2.converter.simplexml;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import okhttp3.mockwebserver.MockResponse;
@@ -36,33 +39,39 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public class SimpleXmlConverterFactoryTest {
   interface Service {
-    @GET("/") Call<MyObject> get();
-    @POST("/") Call<MyObject> post(@Body MyObject impl);
-    @GET("/") Call<String> wrongClass();
+    @GET("/")
+    Call<MyObject> get();
+
+    @POST("/")
+    Call<MyObject> post(@Body MyObject impl);
+
+    @GET("/")
+    Call<String> wrongClass();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     Format format = new Format(0, null, new HyphenStyle(), Verbosity.HIGH);
     Persister persister = new Persister(format);
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(SimpleXmlConverterFactory.create(persister))
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(SimpleXmlConverterFactory.create(persister))
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void bodyWays() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody(
-        "<my-object><message>hello world</message><count>10</count></my-object>"));
+  @Test
+  public void bodyWays() throws IOException, InterruptedException {
+    server.enqueue(
+        new MockResponse()
+            .setBody("<my-object><message>hello world</message><count>10</count></my-object>"));
 
     Call<MyObject> call = service.post(new MyObject("hello world", 10));
     Response<MyObject> response = call.execute();
@@ -71,16 +80,20 @@ public class SimpleXmlConverterFactoryTest {
     assertThat(body.getCount()).isEqualTo(10);
 
     RecordedRequest request = server.takeRequest();
-    assertThat(request.getBody().readUtf8()).isIn(
-        "<my-object><message>hello world</message><count>10</count></my-object>",
-        "<my-object><count>10</count><message>hello world</message></my-object>");
+    assertThat(request.getBody().readUtf8())
+        .isIn(
+            "<my-object><message>hello world</message><count>10</count></my-object>",
+            "<my-object><count>10</count><message>hello world</message></my-object>");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=UTF-8");
   }
 
-  @Test public void honorsCharacterEncoding() throws IOException {
-    Buffer buffer = new Buffer().writeString(
-        "<my-object><message>你好，世界</message><count>10</count></my-object>",
-        Charset.forName("GBK"));
+  @Test
+  public void honorsCharacterEncoding() throws IOException {
+    Buffer buffer =
+        new Buffer()
+            .writeString(
+                "<my-object><message>你好，世界</message><count>10</count></my-object>",
+                Charset.forName("GBK"));
     server.enqueue(
         new MockResponse().setBody(buffer).addHeader("Content-Type", "text/xml;charset=GBK"));
 
@@ -90,7 +103,8 @@ public class SimpleXmlConverterFactoryTest {
     assertThat(body.getMessage()).isEqualTo("你好，世界");
   }
 
-  @Test public void deserializeWrongValue() throws IOException {
+  @Test
+  public void deserializeWrongValue() throws IOException {
     server.enqueue(new MockResponse().setBody("<myObject><foo/><bar/></myObject>"));
 
     Call<?> call = service.get();
@@ -98,14 +112,18 @@ public class SimpleXmlConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(ElementException.class)
-          .hasMessageStartingWith("Element 'foo' does not have a match in class retrofit2.converter.simplexml.MyObject");
+      assertThat(e.getCause())
+          .isInstanceOf(ElementException.class)
+          .hasMessageStartingWith(
+              "Element 'foo' does not have a match in class retrofit2.converter.simplexml.MyObject");
     }
   }
 
-  @Test public void deserializeWrongClass() throws IOException {
-    server.enqueue(new MockResponse().setBody(
-        "<my-object><message>hello world</message><count>10</count></my-object>"));
+  @Test
+  public void deserializeWrongClass() throws IOException {
+    server.enqueue(
+        new MockResponse()
+            .setBody("<my-object><message>hello world</message><count>10</count></my-object>"));
 
     Call<?> call = service.wrongClass();
     try {

@@ -15,13 +15,14 @@
  */
 package retrofit2;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import org.junit.Test;
+
 public final class HttpExceptionTest {
-  @Test public void response() {
+  @Test
+  public void response() {
     Response<String> response = Response.success("Hi");
     HttpException exception = new HttpException(response);
     assertThat(exception.code()).isEqualTo(200);
@@ -29,7 +30,8 @@ public final class HttpExceptionTest {
     assertThat(exception.response()).isSameAs(response);
   }
 
-  @Test public void nullResponseThrows() {
+  @Test
+  public void nullResponseThrows() {
     try {
       new HttpException(null);
       fail();

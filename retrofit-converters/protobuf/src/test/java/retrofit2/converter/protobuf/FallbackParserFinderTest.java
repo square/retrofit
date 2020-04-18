@@ -15,6 +15,8 @@
  */
 package retrofit2.converter.protobuf;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 import java.lang.annotation.Annotation;
@@ -24,10 +26,9 @@ import retrofit2.Converter;
 import retrofit2.Retrofit;
 import retrofit2.converter.protobuf.PhoneProtos.Phone;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class FallbackParserFinderTest {
-  @Test public void converterFactoryFallsBackToParserField() {
+  @Test
+  public void converterFactoryFallsBackToParserField() {
     Retrofit retrofit = new Retrofit.Builder().baseUrl("http://localhost/").build();
     ProtoConverterFactory factory = ProtoConverterFactory.create();
     Converter<ResponseBody, ?> converter =
@@ -36,7 +37,7 @@ public final class FallbackParserFinderTest {
   }
 
   @SuppressWarnings("unused") // Used reflectively.
-  public static abstract class FakePhone implements MessageLite {
+  public abstract static class FakePhone implements MessageLite {
     public static final Parser<Phone> PARSER = Phone.parser();
   }
 }

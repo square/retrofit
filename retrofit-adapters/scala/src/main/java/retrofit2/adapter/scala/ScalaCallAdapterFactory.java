@@ -27,23 +27,25 @@ import scala.concurrent.Future;
 
 /**
  * A {@linkplain CallAdapter.Factory call adapter} which creates Scala futures.
- * <p>
- * Adding this class to {@link Retrofit} allows you to return {@link Future} from
- * service methods.
+ *
+ * <p>Adding this class to {@link Retrofit} allows you to return {@link Future} from service
+ * methods.
+ *
  * <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
  *   Future&lt;User&gt; getUser()
  * }
  * </code></pre>
+ *
  * There are two configurations supported for the {@code Future} type parameter:
+ *
  * <ul>
- * <li>Direct body (e.g., {@code Future<User>}) returns the deserialized body for 2XX
- * responses, sets {@link retrofit2.HttpException HttpException} errors for non-2XX responses, and
- * sets {@link IOException} for network errors.</li>
- * <li>Response wrapped body (e.g., {@code Future<Response<User>>}) returns a
- * {@link Response} object for all HTTP responses and sets {@link IOException} for network
- * errors</li>
+ *   <li>Direct body (e.g., {@code Future<User>}) returns the deserialized body for 2XX responses,
+ *       sets {@link retrofit2.HttpException HttpException} errors for non-2XX responses, and sets
+ *       {@link IOException} for network errors.
+ *   <li>Response wrapped body (e.g., {@code Future<Response<User>>}) returns a {@link Response}
+ *       object for all HTTP responses and sets {@link IOException} for network errors
  * </ul>
  */
 public final class ScalaCallAdapterFactory extends CallAdapter.Factory {
@@ -51,10 +53,10 @@ public final class ScalaCallAdapterFactory extends CallAdapter.Factory {
     return new ScalaCallAdapterFactory();
   }
 
-  private ScalaCallAdapterFactory() {
-  }
+  private ScalaCallAdapterFactory() {}
 
-  @Override public @Nullable CallAdapter<?, ?> get(
+  @Override
+  public @Nullable CallAdapter<?, ?> get(
       Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != Future.class) {
       return null;

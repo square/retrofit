@@ -24,8 +24,7 @@ final class PhoneNumber {
   @XmlElement(required = true)
   public final String number;
 
-  @XmlAttribute
-  public final Type type;
+  @XmlAttribute public final Type type;
 
   @SuppressWarnings("unused") // Used by JAXB.
   private PhoneNumber() {
@@ -37,13 +36,15 @@ final class PhoneNumber {
     this.type = type;
   }
 
-  @Override public boolean equals(Object o) {
+  @Override
+  public boolean equals(Object o) {
     return o instanceof PhoneNumber
         && ((PhoneNumber) o).number.equals(number)
         && ((PhoneNumber) o).type.equals(type);
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return Arrays.asList(number, type).hashCode();
   }
 }

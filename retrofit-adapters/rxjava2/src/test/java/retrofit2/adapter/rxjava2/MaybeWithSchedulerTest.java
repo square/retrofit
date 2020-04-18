@@ -31,24 +31,32 @@ public final class MaybeWithSchedulerTest {
   @Rule public final RecordingMaybeObserver.Rule observerRule = new RecordingMaybeObserver.Rule();
 
   interface Service {
-    @GET("/") Maybe<String> body();
-    @GET("/") Maybe<Response<String>> response();
-    @GET("/") Maybe<Result<String>> result();
+    @GET("/")
+    Maybe<String> body();
+
+    @GET("/")
+    Maybe<Response<String>> response();
+
+    @GET("/")
+    Maybe<Result<String>> result();
   }
 
   private final TestScheduler scheduler = new TestScheduler();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void bodyUsesScheduler() {
+  @Test
+  public void bodyUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingMaybeObserver<Object> observer = observerRule.create();
@@ -59,7 +67,8 @@ public final class MaybeWithSchedulerTest {
     observer.assertAnyValue();
   }
 
-  @Test public void responseUsesScheduler() {
+  @Test
+  public void responseUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingMaybeObserver<Object> observer = observerRule.create();
@@ -70,7 +79,8 @@ public final class MaybeWithSchedulerTest {
     observer.assertAnyValue();
   }
 
-  @Test public void resultUsesScheduler() {
+  @Test
+  public void resultUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingMaybeObserver<Object> observer = observerRule.create();

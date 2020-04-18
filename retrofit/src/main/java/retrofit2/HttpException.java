@@ -46,9 +46,7 @@ public class HttpException extends RuntimeException {
     return message;
   }
 
-  /**
-   * The full HTTP response. This may be null if the exception was serialized.
-   */
+  /** The full HTTP response. This may be null if the exception was serialized. */
   public @Nullable Response<?> response() {
     return response;
   }

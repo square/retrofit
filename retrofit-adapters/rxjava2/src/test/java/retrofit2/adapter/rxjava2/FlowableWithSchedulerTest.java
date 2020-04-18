@@ -31,24 +31,32 @@ public final class FlowableWithSchedulerTest {
   @Rule public final RecordingSubscriber.Rule subscriberRule = new RecordingSubscriber.Rule();
 
   interface Service {
-    @GET("/") Flowable<String> body();
-    @GET("/") Flowable<Response<String>> response();
-    @GET("/") Flowable<Result<String>> result();
+    @GET("/")
+    Flowable<String> body();
+
+    @GET("/")
+    Flowable<Response<String>> response();
+
+    @GET("/")
+    Flowable<Result<String>> result();
   }
 
   private final TestScheduler scheduler = new TestScheduler();
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new StringConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(scheduler))
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void bodyUsesScheduler() {
+  @Test
+  public void bodyUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingSubscriber<Object> subscriber = subscriberRule.create();
@@ -59,7 +67,8 @@ public final class FlowableWithSchedulerTest {
     subscriber.assertAnyValue().assertComplete();
   }
 
-  @Test public void responseUsesScheduler() {
+  @Test
+  public void responseUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingSubscriber<Object> subscriber = subscriberRule.create();
@@ -70,7 +79,8 @@ public final class FlowableWithSchedulerTest {
     subscriber.assertAnyValue().assertComplete();
   }
 
-  @Test public void resultUsesScheduler() {
+  @Test
+  public void resultUsesScheduler() {
     server.enqueue(new MockResponse());
 
     RecordingSubscriber<Object> subscriber = subscriberRule.create();

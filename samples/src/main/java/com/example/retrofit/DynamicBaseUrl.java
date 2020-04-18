@@ -44,16 +44,13 @@ public final class DynamicBaseUrl {
       this.host = host;
     }
 
-    @Override public okhttp3.Response intercept(Chain chain) throws IOException {
+    @Override
+    public okhttp3.Response intercept(Chain chain) throws IOException {
       Request request = chain.request();
       String host = this.host;
       if (host != null) {
-        HttpUrl newUrl = request.url().newBuilder()
-            .host(host)
-            .build();
-        request = request.newBuilder()
-            .url(newUrl)
-            .build();
+        HttpUrl newUrl = request.url().newBuilder().host(host).build();
+        request = request.newBuilder().url(newUrl).build();
       }
       return chain.proceed(request);
     }
@@ -62,14 +59,11 @@ public final class DynamicBaseUrl {
   public static void main(String... args) throws IOException {
     HostSelectionInterceptor hostSelectionInterceptor = new HostSelectionInterceptor();
 
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
-        .addInterceptor(hostSelectionInterceptor)
-        .build();
+    OkHttpClient okHttpClient =
+        new OkHttpClient.Builder().addInterceptor(hostSelectionInterceptor).build();
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://www.github.com/")
-        .callFactory(okHttpClient)
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl("http://www.github.com/").callFactory(okHttpClient).build();
 
     Pop pop = retrofit.create(Pop.class);
 
