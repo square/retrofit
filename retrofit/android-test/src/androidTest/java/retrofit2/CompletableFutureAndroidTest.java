@@ -15,25 +15,19 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.robolectric.annotation.Config.NEWEST_SDK;
-import static org.robolectric.annotation.Config.NONE;
-
+import androidx.test.filters.SdkSuppress;
 import java.util.concurrent.CompletableFuture;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.GET;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = NEWEST_SDK, manifest = NONE)
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SdkSuppress(minSdkVersion = 24)
 public final class CompletableFutureAndroidTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
@@ -54,26 +48,11 @@ public final class CompletableFutureAndroidTest {
     service = retrofit.create(Service.class);
   }
 
-  @Config(sdk = 24)
   @Test
   public void completableFutureApi24() throws Exception {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     CompletableFuture<String> future = service.endpoint();
     assertThat(future.get()).isEqualTo("Hi");
-  }
-
-  @Config(sdk = 21)
-  @Test
-  public void completableFuturePreApi24() {
-    try {
-      service.endpoint();
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessage(
-              "Unable to create call adapter for java.util.concurrent.CompletableFuture<java.lang.String>\n"
-                  + "    for method Service.endpoint");
-    }
   }
 }

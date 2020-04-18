@@ -16,7 +16,6 @@ buildscript {
       'junit': 'junit:junit:4.13',
       'assertj': 'org.assertj:assertj-core:3.13.2',
       'guava': 'com.google.guava:guava:28.1-jre',
-      'robolectric': 'org.robolectric:robolectric:3.8',
       'android': 'com.google.android:android:4.1.1.4',
       'animalSnifferAnnotations': 'org.codehaus.mojo:animal-sniffer-annotations:1.18',
       'findBugsAnnotations': 'com.google.code.findbugs:jsr305:3.0.2',

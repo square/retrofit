@@ -15,25 +15,19 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.robolectric.annotation.Config.NEWEST_SDK;
-import static org.robolectric.annotation.Config.NONE;
-
+import androidx.test.filters.SdkSuppress;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = NEWEST_SDK, manifest = NONE)
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 public final class DefaultMethodsAndroidTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
@@ -46,9 +40,9 @@ public final class DefaultMethodsAndroidTest {
     }
   }
 
-  @Config(sdk = 24)
   @Test
-  public void failsOnApi24() {
+  @SdkSuppress(minSdkVersion = 24, maxSdkVersion = 25)
+  public void failsOnApi24And25() {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(server.url("/"))
@@ -64,32 +58,11 @@ public final class DefaultMethodsAndroidTest {
     }
   }
 
-  @Config(sdk = 25)
   @Test
-  public void failsOnApi25() {
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(server.url("/"))
-            .addConverterFactory(new ToStringConverterFactory())
-            .build();
-    Example example = retrofit.create(Example.class);
-
-    try {
-      example.user();
-      fail();
-    } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("Calling default methods on API 24 and 25 is not supported");
-    }
-  }
-
-  /**
-   * Notably, this does not test that it works correctly on API 26+. Merely that the special casing
-   * of API 24/25 does not trigger.
-   */
-  @Test
-  public void doesNotFailOnApi26() throws IOException {
-    server.enqueue(new MockResponse().setBody("Hi"));
-    server.enqueue(new MockResponse().setBody("Hi"));
+  @SdkSuppress(minSdkVersion = 26)
+  public void doesNotFailOnApi26() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse());
+    server.enqueue(new MockResponse());
 
     Retrofit retrofit =
         new Retrofit.Builder()
@@ -98,9 +71,10 @@ public final class DefaultMethodsAndroidTest {
             .build();
     Example example = retrofit.create(Example.class);
 
-    Response<String> response = example.user().execute();
-    assertThat(response.body()).isEqualTo("Hi");
-    Response<String> response2 = example.user("Hi").execute();
-    assertThat(response2.body()).isEqualTo("Hi");
+    example.user().execute();
+    assertThat(server.takeRequest().getRequestUrl().queryParameter("name")).isEqualTo("hey");
+
+    example.user("hi").execute();
+    assertThat(server.takeRequest().getRequestUrl().queryParameter("name")).isEqualTo("hi");
   }
 }

@@ -2,6 +2,9 @@ name: build
 
 on: [push, pull_request]
 
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+
 jobs:
   jvm:
     runs-on: ubuntu-latest
@@ -31,11 +34,32 @@ jobs:
       - name: Test
         run: ./gradlew build
 
+  android:
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [21, 24, 26, 29]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          script: ./gradlew connectedCheck
+        env:
+          API_LEVEL: ${{ matrix.api-level }}
+
   release:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'master' }}
     needs:
       - jvm
+      - android
 
     steps:
       - name: checkout

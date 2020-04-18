@@ -15,11 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.robolectric.annotation.Config.NEWEST_SDK;
-import static org.robolectric.annotation.Config.NONE;
-
+import androidx.test.filters.SdkSuppress;
 import java.io.IOException;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
@@ -27,14 +23,12 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import retrofit2.helpers.ObjectInstanceConverterFactory;
 import retrofit2.http.GET;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = NEWEST_SDK, manifest = NONE)
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SdkSuppress(minSdkVersion = 24)
 public final class OptionalConverterFactoryAndroidTest {
   interface Service {
     @GET("/")
@@ -58,28 +52,12 @@ public final class OptionalConverterFactoryAndroidTest {
     service = retrofit.create(Service.class);
   }
 
-  @Config(sdk = 24)
   @Test
   public void optionalApi24() throws IOException {
     server.enqueue(new MockResponse());
 
     Optional<Object> optional = service.optional().execute().body();
-    assertThat(optional).isNotNull();
     assertThat(optional.get()).isSameAs(ObjectInstanceConverterFactory.VALUE);
-  }
-
-  @Config(sdk = 21)
-  @Test
-  public void optionalPreApi24() {
-    try {
-      service.optional();
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessage(
-              "Unable to create converter for java.util.Optional<java.lang.Object>\n"
-                  + "    for method Service.optional");
-    }
   }
 
   @Test
