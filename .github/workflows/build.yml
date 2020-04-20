@@ -40,7 +40,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: [21, 24, 26, 29]
+        api-level:
+          - 21
+          - 24
+          - 26
+          - 29
 
     steps:
       - name: checkout
@@ -54,7 +58,7 @@ jobs:
         env:
           API_LEVEL: ${{ matrix.api-level }}
 
-  release:
+  publish:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     needs:
@@ -70,7 +74,7 @@ jobs:
         with:
           java-version: 14
 
-      - name: Test
+      - name: Upload Artifacts
         run: ./gradlew uploadArchives
         env:
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
