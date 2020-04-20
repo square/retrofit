@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static retrofit2.Utils.checkNotNull;
+import java.util.Objects;
 
 abstract class DefaultParameterHandler {
 
@@ -27,8 +27,8 @@ abstract class DefaultParameterHandler {
     private final boolean encoded;
 
     DefaultField(String name, String value, boolean encoded) {
-      this.name = checkNotNull(name, "name == null");
-      this.value = checkNotNull(value, "value == null");
+      this.name = Objects.requireNonNull(name, "name == null");
+      this.value = Objects.requireNonNull(value, "value == null");
       this.encoded = encoded;
     }
 
