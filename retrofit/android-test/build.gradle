@@ -1,0 +1,36 @@
+apply plugin: 'com.android.library'
+
+android {
+  compileSdkVersion 29
+
+  defaultConfig {
+    minSdkVersion 21
+
+    // We need to disable D8 desugaring of default methods for the default method tests to work
+    // correctly. This works in Android Studio because it sets the minSdk automatically based on
+    // your deployment target. This environment variable is set by the GitHub Action.
+    def emulatorApiLevel = System.getenv("API_LEVEL")
+    if (emulatorApiLevel != null) {
+      try {
+        minSdkVersion Integer.parseInt(emulatorApiLevel)
+      } catch (NumberFormatException ignored) {
+      }
+    }
+
+    targetSdkVersion 29
+    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+  }
+
+  variantFilter { variant ->
+    variant.ignore = variant.name == "release"
+  }
+}
+
+dependencies {
+  androidTestImplementation project(':retrofit')
+  androidTestImplementation project(':retrofit:test-helpers')
+  androidTestImplementation deps.junit
+  androidTestImplementation deps.assertj
+  androidTestImplementation deps.mockwebserver
+  androidTestImplementation deps.androidxTestRunner
+}

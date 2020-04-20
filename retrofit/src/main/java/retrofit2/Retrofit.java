@@ -154,10 +154,10 @@ public final class Retrofit {
                 if (method.getDeclaringClass() == Object.class) {
                   return method.invoke(this, args);
                 }
-                if (platform.isDefaultMethod(method)) {
-                  return platform.invokeDefaultMethod(method, service, proxy, args);
-                }
-                return loadServiceMethod(method).invoke(args != null ? args : emptyArgs);
+                args = args != null ? args : emptyArgs;
+                return platform.isDefaultMethod(method)
+                    ? platform.invokeDefaultMethod(method, service, proxy, args)
+                    : loadServiceMethod(method).invoke(args);
               }
             });
   }

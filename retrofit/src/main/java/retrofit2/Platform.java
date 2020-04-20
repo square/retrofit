@@ -105,8 +105,7 @@ class Platform {
 
   @IgnoreJRERequirement // Only called on API 26+.
   @Nullable
-  Object invokeDefaultMethod(
-      Method method, Class<?> declaringClass, Object object, @Nullable Object... args)
+  Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object, Object... args)
       throws Throwable {
     Lookup lookup =
         lookupConstructor != null
@@ -128,8 +127,7 @@ class Platform {
     @Nullable
     @Override
     Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object object, @Nullable Object... args)
-        throws Throwable {
+        Method method, Class<?> declaringClass, Object object, Object... args) throws Throwable {
       if (Build.VERSION.SDK_INT < 26) {
         throw new UnsupportedOperationException(
             "Calling default methods on API 24 and 25 is not supported");
