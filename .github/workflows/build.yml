@@ -1,0 +1,50 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  jvm:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version:
+          - 1.8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+          - 15-ea
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Configure JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java-version }}
+
+      - name: Test
+        run: ./gradlew build
+
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'master' }}
+    needs:
+      - jvm
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Configure JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 14
+
+      - name: Test
+        run: ./gradlew uploadArchives
