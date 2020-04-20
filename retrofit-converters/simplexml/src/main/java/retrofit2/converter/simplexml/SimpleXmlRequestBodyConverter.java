@@ -33,7 +33,8 @@ final class SimpleXmlRequestBodyConverter<T> implements Converter<T, RequestBody
     this.serializer = serializer;
   }
 
-  @Override public RequestBody convert(T value) throws IOException {
+  @Override
+  public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
     try {
       OutputStreamWriter osw = new OutputStreamWriter(buffer.outputStream(), CHARSET);

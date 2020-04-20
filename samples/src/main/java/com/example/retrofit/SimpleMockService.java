@@ -17,8 +17,8 @@ import retrofit2.mock.MockRetrofit;
 import retrofit2.mock.NetworkBehavior;
 
 /**
- * An example of using {@link MockRetrofit} to create a mock service implementation with
- * fake data. This re-uses the GitHub service from {@link SimpleService} for its mocking.
+ * An example of using {@link MockRetrofit} to create a mock service implementation with fake data.
+ * This re-uses the GitHub service from {@link SimpleService} for its mocking.
  */
 public final class SimpleMockService {
   /** A mock implementation of the {@link GitHub} API interface. */
@@ -38,7 +38,8 @@ public final class SimpleMockService {
       addContributor("square", "picasso", "Keiser Soze", 152);
     }
 
-    @Override public Call<List<Contributor>> contributors(String owner, String repo) {
+    @Override
+    public Call<List<Contributor>> contributors(String owner, String repo) {
       List<Contributor> response = Collections.emptyList();
       Map<String, List<Contributor>> repoContributors = ownerRepoContributors.get(owner);
       if (repoContributors != null) {
@@ -67,15 +68,12 @@ public final class SimpleMockService {
 
   public static void main(String... args) throws IOException {
     // Create a very simple Retrofit adapter which points the GitHub API.
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(SimpleService.API_URL)
-        .build();
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(SimpleService.API_URL).build();
 
     // Create a MockRetrofit object with a NetworkBehavior which manages the fake behavior of calls.
     NetworkBehavior behavior = NetworkBehavior.create();
-    MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit)
-        .networkBehavior(behavior)
-        .build();
+    MockRetrofit mockRetrofit =
+        new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build();
 
     BehaviorDelegate<GitHub> delegate = mockRetrofit.create(GitHub.class);
     MockGitHub gitHub = new MockGitHub(delegate);

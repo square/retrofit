@@ -36,13 +36,15 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
     this.type = type;
   }
 
-  @Override public RequestBody convert(final T value) throws IOException {
+  @Override
+  public RequestBody convert(final T value) throws IOException {
     Buffer buffer = new Buffer();
     try {
       Marshaller marshaller = context.createMarshaller();
 
-      XMLStreamWriter xmlWriter = xmlOutputFactory.createXMLStreamWriter(
-          buffer.outputStream(), JaxbConverterFactory.XML.charset().name());
+      XMLStreamWriter xmlWriter =
+          xmlOutputFactory.createXMLStreamWriter(
+              buffer.outputStream(), JaxbConverterFactory.XML.charset().name());
       marshaller.marshal(value, xmlWriter);
     } catch (JAXBException | XMLStreamException e) {
       throw new RuntimeException(e);

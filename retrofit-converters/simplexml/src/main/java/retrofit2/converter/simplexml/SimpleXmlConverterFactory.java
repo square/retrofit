@@ -27,8 +27,8 @@ import retrofit2.Retrofit;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Simple Framework for XML.
- * <p>
- * This converter only applies for class types. Parameterized types (e.g., {@code List<Foo>}) are
+ *
+ * <p>This converter only applies for class types. Parameterized types (e.g., {@code List<Foo>}) are
  * not handled.
  *
  * @deprecated we recommend switching to the JAXB converter.
@@ -70,8 +70,8 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
   }
 
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
+  public Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
     if (!(type instanceof Class)) {
       return null;
     }
@@ -79,8 +79,12 @@ public final class SimpleXmlConverterFactory extends Converter.Factory {
     return new SimpleXmlResponseBodyConverter<>(cls, serializer, strict);
   }
 
-  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public @Nullable Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class)) {
       return null;
     }

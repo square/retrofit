@@ -30,7 +30,8 @@ final class BodyObservable<T> extends Observable<T> {
     this.upstream = upstream;
   }
 
-  @Override protected void subscribeActual(Observer<? super T> observer) {
+  @Override
+  protected void subscribeActual(Observer<? super T> observer) {
     upstream.subscribe(new BodyObserver<T>(observer));
   }
 
@@ -42,11 +43,13 @@ final class BodyObservable<T> extends Observable<T> {
       this.observer = observer;
     }
 
-    @Override public void onSubscribe(Disposable disposable) {
+    @Override
+    public void onSubscribe(Disposable disposable) {
       observer.onSubscribe(disposable);
     }
 
-    @Override public void onNext(Response<R> response) {
+    @Override
+    public void onNext(Response<R> response) {
       if (response.isSuccessful()) {
         observer.onNext(response.body());
       } else {
@@ -61,19 +64,22 @@ final class BodyObservable<T> extends Observable<T> {
       }
     }
 
-    @Override public void onComplete() {
+    @Override
+    public void onComplete() {
       if (!terminated) {
         observer.onComplete();
       }
     }
 
-    @Override public void onError(Throwable throwable) {
+    @Override
+    public void onError(Throwable throwable) {
       if (!terminated) {
         observer.onError(throwable);
       } else {
         // This should never happen! onNext handles and forwards errors automatically.
-        Throwable broken = new AssertionError(
-            "This should never happen! Report as a bug with the full stacktrace.");
+        Throwable broken =
+            new AssertionError(
+                "This should never happen! Report as a bug with the full stacktrace.");
         //noinspection UnnecessaryInitCause Two-arg AssertionError constructor is 1.7+ only.
         broken.initCause(throwable);
         RxJavaPlugins.onError(broken);

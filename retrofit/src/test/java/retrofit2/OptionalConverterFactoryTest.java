@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
@@ -25,27 +27,31 @@ import org.junit.Test;
 import retrofit2.helpers.ObjectInstanceConverterFactory;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class OptionalConverterFactoryTest {
   interface Service {
-    @GET("/") Call<Optional<Object>> optional();
-    @GET("/") Call<Object> object();
+    @GET("/")
+    Call<Optional<Object>> optional();
+
+    @GET("/")
+    Call<Object> object();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new ObjectInstanceConverterFactory())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ObjectInstanceConverterFactory())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void optional() throws IOException {
+  @Test
+  public void optional() throws IOException {
     server.enqueue(new MockResponse());
 
     Optional<Object> optional = service.optional().execute().body();
@@ -53,7 +59,8 @@ public final class OptionalConverterFactoryTest {
     assertThat(optional.get()).isSameAs(ObjectInstanceConverterFactory.VALUE);
   }
 
-  @Test public void onlyMatchesOptional() throws IOException {
+  @Test
+  public void onlyMatchesOptional() throws IOException {
     server.enqueue(new MockResponse());
 
     Object body = service.object().execute().body();

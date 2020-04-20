@@ -19,8 +19,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static retrofit2.Utils.checkNotNull;
+import java.util.Objects;
 
 /**
  * A single invocation of a Retrofit service interface method. This class captures both the method
@@ -51,8 +50,8 @@ import static retrofit2.Utils.checkNotNull;
  */
 public final class Invocation {
   public static Invocation of(Method method, List<?> arguments) {
-    checkNotNull(method, "method == null");
-    checkNotNull(arguments, "arguments == null");
+    Objects.requireNonNull(method, "method == null");
+    Objects.requireNonNull(arguments, "arguments == null");
     return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
   }
 
@@ -73,8 +72,9 @@ public final class Invocation {
     return arguments;
   }
 
-  @Override public String toString() {
-    return String.format("%s.%s() %s",
-        method.getDeclaringClass().getName(), method.getName(), arguments);
+  @Override
+  public String toString() {
+    return String.format(
+        "%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);
   }
 }

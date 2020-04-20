@@ -31,8 +31,8 @@ import retrofit2.Retrofit;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Protocol Buffers.
- * <p>
- * This converter only applies for types which extend from {@link MessageLite} (or one of its
+ *
+ * <p>This converter only applies for types which extend from {@link MessageLite} (or one of its
  * subclasses).
  */
 public final class ProtoConverterFactory extends Converter.Factory {
@@ -51,7 +51,8 @@ public final class ProtoConverterFactory extends Converter.Factory {
     this.registry = registry;
   }
 
-  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+  @Override
+  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
@@ -75,16 +76,22 @@ public final class ProtoConverterFactory extends Converter.Factory {
         //noinspection unchecked
         parser = (Parser<MessageLite>) field.get(null);
       } catch (NoSuchFieldException | IllegalAccessException e) {
-        throw new IllegalArgumentException("Found a protobuf message but "
-            + c.getName()
-            + " had no parser() method or PARSER field.");
+        throw new IllegalArgumentException(
+            "Found a protobuf message but "
+                + c.getName()
+                + " had no parser() method or PARSER field.",
+            e);
       }
     }
     return new ProtoResponseBodyConverter<>(parser, registry);
   }
 
-  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public @Nullable Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
     }

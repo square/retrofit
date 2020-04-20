@@ -15,6 +15,8 @@
  */
 package retrofit2.adapter.rxjava2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.reactivex.CompletableObserver;
 import io.reactivex.Notification;
 import io.reactivex.disposables.Disposable;
@@ -26,23 +28,22 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /** A test {@link CompletableObserver} and JUnit rule which guarantees all events are asserted. */
 final class RecordingCompletableObserver implements CompletableObserver {
   private final Deque<Notification<?>> events = new ArrayDeque<>();
 
-  private RecordingCompletableObserver() {
-  }
+  private RecordingCompletableObserver() {}
 
-  @Override public void onSubscribe(Disposable disposable) {
-  }
+  @Override
+  public void onSubscribe(Disposable disposable) {}
 
-  @Override public void onComplete() {
+  @Override
+  public void onComplete() {
     events.add(Notification.createOnComplete());
   }
 
-  @Override public void onError(Throwable e) {
+  @Override
+  public void onError(Throwable e) {
     events.add(Notification.createOnError(e));
   }
 
@@ -100,9 +101,11 @@ final class RecordingCompletableObserver implements CompletableObserver {
       return subscriber;
     }
 
-    @Override public Statement apply(final Statement base, Description description) {
+    @Override
+    public Statement apply(final Statement base, Description description) {
       return new Statement() {
-        @Override public void evaluate() throws Throwable {
+        @Override
+        public void evaluate() throws Throwable {
           base.evaluate();
           for (RecordingCompletableObserver subscriber : subscribers) {
             subscriber.assertNoEvents();

@@ -27,6 +27,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import okio.Buffer;
@@ -42,18 +43,20 @@ final class Utils {
     return methodError(method, null, message, args);
   }
 
-  static RuntimeException methodError(Method method, @Nullable Throwable cause, String message,
-      Object... args) {
+  static RuntimeException methodError(
+      Method method, @Nullable Throwable cause, String message, Object... args) {
     message = String.format(message, args);
-    return new IllegalArgumentException(message
-        + "\n    for method "
-        + method.getDeclaringClass().getSimpleName()
-        + "."
-        + method.getName(), cause);
+    return new IllegalArgumentException(
+        message
+            + "\n    for method "
+            + method.getDeclaringClass().getSimpleName()
+            + "."
+            + method.getName(),
+        cause);
   }
 
-  static RuntimeException parameterError(Method method,
-      Throwable cause, int p, String message, Object... args) {
+  static RuntimeException parameterError(
+      Method method, Throwable cause, int p, String message, Object... args) {
     return methodError(method, cause, message + " (parameter #" + (p + 1) + ")", args);
   }
 
@@ -62,7 +65,7 @@ final class Utils {
   }
 
   static Class<?> getRawType(Type type) {
-    checkNotNull(type, "type == null");
+    Objects.requireNonNull(type, "type == null");
 
     if (type instanceof Class<?>) {
       // Type is a normal class.
@@ -90,8 +93,12 @@ final class Utils {
       return getRawType(((WildcardType) type).getUpperBounds()[0]);
     }
 
-    throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-          + "GenericArrayType, but <" + type + "> is of type " + type.getClass().getName());
+    throw new IllegalArgumentException(
+        "Expected a Class, ParameterizedType, or "
+            + "GenericArrayType, but <"
+            + type
+            + "> is of type "
+            + type.getClass().getName());
   }
 
   /** Returns true if {@code a} and {@code b} are equal. */
@@ -194,8 +201,8 @@ final class Utils {
    */
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
-    return resolve(context, contextRawType,
-        getGenericSupertype(context, contextRawType, supertype));
+    return resolve(
+        context, contextRawType, getGenericSupertype(context, contextRawType, supertype));
   }
 
   static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
@@ -212,15 +219,17 @@ final class Utils {
         Class<?> original = (Class<?>) toResolve;
         Type componentType = original.getComponentType();
         Type newComponentType = resolve(context, contextRawType, componentType);
-        return componentType == newComponentType ? original : new GenericArrayTypeImpl(
-            newComponentType);
+        return componentType == newComponentType
+            ? original
+            : new GenericArrayTypeImpl(newComponentType);
 
       } else if (toResolve instanceof GenericArrayType) {
         GenericArrayType original = (GenericArrayType) toResolve;
         Type componentType = original.getGenericComponentType();
         Type newComponentType = resolve(context, contextRawType, componentType);
-        return componentType == newComponentType ? original : new GenericArrayTypeImpl(
-            newComponentType);
+        return componentType == newComponentType
+            ? original
+            : new GenericArrayTypeImpl(newComponentType);
 
       } else if (toResolve instanceof ParameterizedType) {
         ParameterizedType original = (ParameterizedType) toResolve;
@@ -252,12 +261,12 @@ final class Utils {
         if (originalLowerBound.length == 1) {
           Type lowerBound = resolve(context, contextRawType, originalLowerBound[0]);
           if (lowerBound != originalLowerBound[0]) {
-            return new WildcardTypeImpl(new Type[] { Object.class }, new Type[] { lowerBound });
+            return new WildcardTypeImpl(new Type[] {Object.class}, new Type[] {lowerBound});
           }
         } else if (originalUpperBound.length == 1) {
           Type upperBound = resolve(context, contextRawType, originalUpperBound[0]);
           if (upperBound != originalUpperBound[0]) {
-            return new WildcardTypeImpl(new Type[] { upperBound }, EMPTY_TYPE_ARRAY);
+            return new WildcardTypeImpl(new Type[] {upperBound}, EMPTY_TYPE_ARRAY);
           }
         }
         return original;
@@ -299,16 +308,8 @@ final class Utils {
     }
   }
 
-  static <T> T checkNotNull(@Nullable T object, String message) {
-    if (object == null) {
-      throw new NullPointerException(message);
-    }
-    return object;
-  }
-
   /** Returns true if {@code annotations} contains an instance of {@code cls}. */
-  static boolean isAnnotationPresent(Annotation[] annotations,
-      Class<? extends Annotation> cls) {
+  static boolean isAnnotationPresent(Annotation[] annotations, Class<? extends Annotation> cls) {
     for (Annotation annotation : annotations) {
       if (cls.isInstance(annotation)) {
         return true;
@@ -321,18 +322,6 @@ final class Utils {
     Buffer buffer = new Buffer();
     body.source().readAll(buffer);
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);
-  }
-
-  static <T> void validateServiceInterface(Class<T> service) {
-    if (!service.isInterface()) {
-      throw new IllegalArgumentException("API declarations must be interfaces.");
-    }
-    // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
-    // Android (http://b.android.com/58753) but it forces composition of API declarations which is
-    // the recommended pattern.
-    if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
-    }
   }
 
   static Type getParameterUpperBound(int index, ParameterizedType type) {
@@ -379,8 +368,12 @@ final class Utils {
       return true;
     }
     String className = type == null ? "null" : type.getClass().getName();
-    throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-        + "GenericArrayType, but <" + type + "> is of type " + className);
+    throw new IllegalArgumentException(
+        "Expected a Class, ParameterizedType, or "
+            + "GenericArrayType, but <"
+            + type
+            + "> is of type "
+            + className);
   }
 
   static final class ParameterizedTypeImpl implements ParameterizedType {
@@ -396,7 +389,7 @@ final class Utils {
       }
 
       for (Type typeArgument : typeArguments) {
-        checkNotNull(typeArgument, "typeArgument == null");
+        Objects.requireNonNull(typeArgument, "typeArgument == null");
         checkNotPrimitive(typeArgument);
       }
 
@@ -405,29 +398,35 @@ final class Utils {
       this.typeArguments = typeArguments.clone();
     }
 
-    @Override public Type[] getActualTypeArguments() {
+    @Override
+    public Type[] getActualTypeArguments() {
       return typeArguments.clone();
     }
 
-    @Override public Type getRawType() {
+    @Override
+    public Type getRawType() {
       return rawType;
     }
 
-    @Override public @Nullable Type getOwnerType() {
+    @Override
+    public @Nullable Type getOwnerType() {
       return ownerType;
     }
 
-    @Override public boolean equals(Object other) {
+    @Override
+    public boolean equals(Object other) {
       return other instanceof ParameterizedType && Utils.equals(this, (ParameterizedType) other);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       return Arrays.hashCode(typeArguments)
           ^ rawType.hashCode()
           ^ (ownerType != null ? ownerType.hashCode() : 0);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       if (typeArguments.length == 0) return typeToString(rawType);
       StringBuilder result = new StringBuilder(30 * (typeArguments.length + 1));
       result.append(typeToString(rawType));
@@ -446,28 +445,31 @@ final class Utils {
       this.componentType = componentType;
     }
 
-    @Override public Type getGenericComponentType() {
+    @Override
+    public Type getGenericComponentType() {
       return componentType;
     }
 
-    @Override public boolean equals(Object o) {
-      return o instanceof GenericArrayType
-          && Utils.equals(this, (GenericArrayType) o);
+    @Override
+    public boolean equals(Object o) {
+      return o instanceof GenericArrayType && Utils.equals(this, (GenericArrayType) o);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       return componentType.hashCode();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return typeToString(componentType) + "[]";
     }
   }
 
   /**
-   * The WildcardType interface supports multiple upper bounds and multiple
-   * lower bounds. We only support what the Java 6 language needs - at most one
-   * bound. If a lower bound is set, the upper bound must be Object.class.
+   * The WildcardType interface supports multiple upper bounds and multiple lower bounds. We only
+   * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
+   * bound must be Object.class.
    */
   private static final class WildcardTypeImpl implements WildcardType {
     private final Type upperBound;
@@ -491,24 +493,29 @@ final class Utils {
       }
     }
 
-    @Override public Type[] getUpperBounds() {
-      return new Type[] { upperBound };
+    @Override
+    public Type[] getUpperBounds() {
+      return new Type[] {upperBound};
     }
 
-    @Override public Type[] getLowerBounds() {
-      return lowerBound != null ? new Type[] { lowerBound } : EMPTY_TYPE_ARRAY;
+    @Override
+    public Type[] getLowerBounds() {
+      return lowerBound != null ? new Type[] {lowerBound} : EMPTY_TYPE_ARRAY;
     }
 
-    @Override public boolean equals(Object other) {
+    @Override
+    public boolean equals(Object other) {
       return other instanceof WildcardType && Utils.equals(this, (WildcardType) other);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       // This equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds()).
       return (lowerBound != null ? 31 + lowerBound.hashCode() : 1) ^ (31 + upperBound.hashCode());
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       if (lowerBound != null) return "? super " + typeToString(lowerBound);
       if (upperBound == Object.class) return "?";
       return "? extends " + typeToString(upperBound);

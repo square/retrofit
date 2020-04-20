@@ -2,6 +2,7 @@
 
 /**
  * Retrofit turns your REST API into a Java interface.
+ *
  * <pre>
  * public interface GitHubService {
  *   &#64;GET("/users/{user}/repos")

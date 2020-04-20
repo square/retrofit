@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import okhttp3.Request;
+import okio.Timeout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -50,10 +51,10 @@ public final class Calls {
 
   /**
    * Creates a failed {@link Call} from {@code failure}.
-   * <p>
-   * Note: When invoking {@link Call#execute() execute()} on the returned {@link Call}, if
-   * {@code failure} is a {@link RuntimeException}, {@link Error}, or {@link IOException} subtype
-   * it is thrown directly. Otherwise it is "sneaky thrown" despite not being declared.
+   *
+   * <p>Note: When invoking {@link Call#execute() execute()} on the returned {@link Call}, if {@code
+   * failure} is a {@link RuntimeException}, {@link Error}, or {@link IOException} subtype it is
+   * thrown directly. Otherwise it is "sneaky thrown" despite not being declared.
    */
   public static <T> Call<T> failure(Throwable failure) {
     return new FakeCall<>(null, failure);
@@ -77,7 +78,8 @@ public final class Calls {
       this.error = error;
     }
 
-    @Override public Response<T> execute() throws IOException {
+    @Override
+    public Response<T> execute() throws IOException {
       if (!executed.compareAndSet(false, true)) {
         throw new IllegalStateException("Already executed");
       }
@@ -87,16 +89,18 @@ public final class Calls {
       if (response != null) {
         return response;
       }
-      throw FakeCall.<Error>sneakyThrow2(error);
+      throw FakeCall.<Error>sneakyThrow(error);
     }
 
-    @SuppressWarnings("unchecked") // Intentionally abusing this feature.
-    private static <T extends Throwable> T sneakyThrow2(Throwable t) throws T {
+    // Intentionally abusing this feature.
+    @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
+    private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
       throw (T) t;
     }
 
     @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
-    @Override public void enqueue(Callback<T> callback) {
+    @Override
+    public void enqueue(Callback<T> callback) {
       if (callback == null) {
         throw new NullPointerException("callback == null");
       }
@@ -112,29 +116,37 @@ public final class Calls {
       }
     }
 
-    @Override public boolean isExecuted() {
+    @Override
+    public boolean isExecuted() {
       return executed.get();
     }
 
-    @Override public void cancel() {
+    @Override
+    public void cancel() {
       canceled.set(true);
     }
 
-    @Override public boolean isCanceled() {
+    @Override
+    public boolean isCanceled() {
       return canceled.get();
     }
 
-    @Override public Call<T> clone() {
+    @Override
+    public Call<T> clone() {
       return new FakeCall<>(response, error);
     }
 
-    @Override public Request request() {
+    @Override
+    public Request request() {
       if (response != null) {
         return response.raw().request();
       }
-      return new Request.Builder()
-          .url("http://localhost")
-          .build();
+      return new Request.Builder().url("http://localhost").build();
+    }
+
+    @Override
+    public Timeout timeout() {
+      return Timeout.NONE;
     }
   }
 
@@ -159,32 +171,44 @@ public final class Calls {
       return delegate;
     }
 
-    @Override public Response<T> execute() throws IOException {
+    @Override
+    public Response<T> execute() throws IOException {
       return getDelegate().execute();
     }
 
-    @Override public void enqueue(Callback<T> callback) {
+    @Override
+    public void enqueue(Callback<T> callback) {
       getDelegate().enqueue(callback);
     }
 
-    @Override public boolean isExecuted() {
+    @Override
+    public boolean isExecuted() {
       return getDelegate().isExecuted();
     }
 
-    @Override public void cancel() {
+    @Override
+    public void cancel() {
       getDelegate().cancel();
     }
 
-    @Override public boolean isCanceled() {
+    @Override
+    public boolean isCanceled() {
       return getDelegate().isCanceled();
     }
 
-    @Override public Call<T> clone() {
+    @Override
+    public Call<T> clone() {
       return new DeferredCall<>(callable);
     }
 
-    @Override public Request request() {
+    @Override
+    public Request request() {
       return getDelegate().request();
+    }
+
+    @Override
+    public Timeout timeout() {
+      return getDelegate().timeout();
     }
   }
 }

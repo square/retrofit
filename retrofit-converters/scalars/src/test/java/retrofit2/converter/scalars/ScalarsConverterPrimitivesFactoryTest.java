@@ -15,6 +15,9 @@
  */
 package retrofit2.converter.scalars;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -28,18 +31,31 @@ import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class ScalarsConverterPrimitivesFactoryTest {
   interface Service {
-    @GET("/") boolean booleanPrimitive();
-    @GET("/") byte bytePrimitive();
-    @GET("/") char charPrimitive();
-    @GET("/") double doublePrimitive();
-    @GET("/") float floatPrimitive();
-    @GET("/") int integerPrimitive();
-    @GET("/") long longPrimitive();
-    @GET("/") short shortPrimitive();
+    @GET("/")
+    boolean booleanPrimitive();
+
+    @GET("/")
+    byte bytePrimitive();
+
+    @GET("/")
+    char charPrimitive();
+
+    @GET("/")
+    double doublePrimitive();
+
+    @GET("/")
+    float floatPrimitive();
+
+    @GET("/")
+    int integerPrimitive();
+
+    @GET("/")
+    long longPrimitive();
+
+    @GET("/")
+    short shortPrimitive();
   }
 
   static class DirectCallIOException extends RuntimeException {
@@ -50,13 +66,16 @@ public final class ScalarsConverterPrimitivesFactoryTest {
 
   static class DirectCallAdapterFactory extends CallAdapter.Factory {
     @Override
-    public CallAdapter<?, ?> get(final Type returnType, Annotation[] annotations, Retrofit retrofit) {
+    public CallAdapter<?, ?> get(
+        final Type returnType, Annotation[] annotations, Retrofit retrofit) {
       return new CallAdapter<Object, Object>() {
-        @Override public Type responseType() {
+        @Override
+        public Type responseType() {
           return returnType;
         }
 
-        @Override public Object adapt(Call call) {
+        @Override
+        public Object adapt(Call call) {
           try {
             return call.execute().body();
           } catch (IOException e) {
@@ -71,16 +90,19 @@ public final class ScalarsConverterPrimitivesFactoryTest {
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .addCallAdapterFactory(new DirectCallAdapterFactory())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addCallAdapterFactory(new DirectCallAdapterFactory())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void supportedResponseTypes() throws IOException, InterruptedException {
+  @Test
+  public void supportedResponseTypes() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("true"));
     boolean booleanResponse = service.booleanPrimitive();
     assertThat(booleanResponse).isTrue();
@@ -96,6 +118,7 @@ public final class ScalarsConverterPrimitivesFactoryTest {
     server.enqueue(new MockResponse().setBody(""));
     try {
       service.charPrimitive();
+      fail();
     } catch (DirectCallIOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 0");
     }
@@ -103,6 +126,7 @@ public final class ScalarsConverterPrimitivesFactoryTest {
     server.enqueue(new MockResponse().setBody("bb"));
     try {
       service.charPrimitive();
+      fail();
     } catch (DirectCallIOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 2");
     }

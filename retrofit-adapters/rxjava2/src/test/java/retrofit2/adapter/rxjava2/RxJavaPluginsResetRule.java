@@ -21,9 +21,11 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 final class RxJavaPluginsResetRule implements TestRule {
-  @Override public Statement apply(final Statement base, Description description) {
+  @Override
+  public Statement apply(final Statement base, Description description) {
     return new Statement() {
-      @Override public void evaluate() throws Throwable {
+      @Override
+      public void evaluate() throws Throwable {
         RxJavaPlugins.reset();
         try {
           base.evaluate();

@@ -27,18 +27,18 @@ import retrofit2.Retrofit;
 
 /**
  * A {@linkplain Converter.Factory converter} that uses Wire for protocol buffers.
- * <p>
- * This converter only applies for types which extend from {@link Message}.
+ *
+ * <p>This converter only applies for types which extend from {@link Message}.
  */
 public final class WireConverterFactory extends Converter.Factory {
   public static WireConverterFactory create() {
     return new WireConverterFactory();
   }
 
-  private WireConverterFactory() {
-  }
+  private WireConverterFactory() {}
 
-  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+  @Override
+  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
@@ -52,8 +52,12 @@ public final class WireConverterFactory extends Converter.Factory {
     return new WireResponseBodyConverter<>(adapter);
   }
 
-  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public @Nullable Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     if (!(type instanceof Class<?>)) {
       return null;
     }

@@ -15,29 +15,33 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import okhttp3.Headers;
+import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.ResponseBody;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class ResponseTest {
-  private final okhttp3.Response successResponse = new okhttp3.Response.Builder() //
-      .code(200)
-      .message("OK")
-      .protocol(Protocol.HTTP_1_1)
-      .request(new okhttp3.Request.Builder().url("http://localhost").build())
-      .build();
-  private final okhttp3.Response errorResponse = new okhttp3.Response.Builder() //
-      .code(400)
-      .message("Broken!")
-      .protocol(Protocol.HTTP_1_1)
-      .request(new okhttp3.Request.Builder().url("http://localhost").build())
-      .build();
+  private final okhttp3.Response successResponse =
+      new okhttp3.Response.Builder() //
+          .code(200)
+          .message("OK")
+          .protocol(Protocol.HTTP_1_1)
+          .request(new okhttp3.Request.Builder().url("http://localhost").build())
+          .build();
+  private final okhttp3.Response errorResponse =
+      new okhttp3.Response.Builder() //
+          .code(400)
+          .message("Broken!")
+          .protocol(Protocol.HTTP_1_1)
+          .request(new okhttp3.Request.Builder().url("http://localhost").build())
+          .build();
 
-  @Test public void success() {
+  @Test
+  public void success() {
     Object body = new Object();
     Response<Object> response = Response.success(body);
     assertThat(response.raw()).isNotNull();
@@ -49,13 +53,15 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isNull();
   }
 
-  @Test public void successNullAllowed() {
+  @Test
+  public void successNullAllowed() {
     Response<Object> response = Response.success(null);
     assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isNull();
   }
 
-  @Test public void successWithHeaders() {
+  @Test
+  public void successWithHeaders() {
     Object body = new Object();
     Headers headers = Headers.of("foo", "bar");
     Response<Object> response = Response.success(body, headers);
@@ -68,7 +74,8 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isNull();
   }
 
-  @Test public void successWithNullHeadersThrows() {
+  @Test
+  public void successWithNullHeadersThrows() {
     try {
       Response.success("", (okhttp3.Headers) null);
       fail();
@@ -77,7 +84,8 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void successWithStatusCode() {
+  @Test
+  public void successWithStatusCode() {
     Object body = new Object();
     Response<Object> response = Response.success(204, body);
     assertThat(response.code()).isEqualTo(204);
@@ -88,7 +96,8 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isNull();
   }
 
-  @Test public void successWithRawResponse() {
+  @Test
+  public void successWithRawResponse() {
     Object body = new Object();
     Response<Object> response = Response.success(body, successResponse);
     assertThat(response.raw()).isSameAs(successResponse);
@@ -100,7 +109,8 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isNull();
   }
 
-  @Test public void successWithNullRawResponseThrows() {
+  @Test
+  public void successWithNullRawResponseThrows() {
     try {
       Response.success("", (okhttp3.Response) null);
       fail();
@@ -109,7 +119,8 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void successWithErrorRawResponseThrows() {
+  @Test
+  public void successWithErrorRawResponseThrows() {
     try {
       Response.success("", errorResponse);
       fail();
@@ -118,10 +129,19 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void error() {
-    ResponseBody errorBody = ResponseBody.create(null, "Broken!");
+  @Test
+  public void error() {
+    MediaType plainText = MediaType.get("text/plain; charset=utf-8");
+    ResponseBody errorBody = ResponseBody.create(plainText, "Broken!");
     Response<?> response = Response.error(400, errorBody);
     assertThat(response.raw()).isNotNull();
+    assertThat(response.raw().body().contentType()).isEqualTo(plainText);
+    assertThat(response.raw().body().contentLength()).isEqualTo(7);
+    try {
+      response.raw().body().source();
+      fail();
+    } catch (IllegalStateException expected) {
+    }
     assertThat(response.code()).isEqualTo(400);
     assertThat(response.message()).isEqualTo("Response.error()");
     assertThat(response.headers().size()).isZero();
@@ -130,7 +150,8 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isSameAs(errorBody);
   }
 
-  @Test public void nullErrorThrows() {
+  @Test
+  public void nullErrorThrows() {
     try {
       Response.error(400, null);
       fail();
@@ -139,7 +160,8 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithSuccessCodeThrows() {
+  @Test
+  public void errorWithSuccessCodeThrows() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     try {
       Response.error(200, errorBody);
@@ -149,7 +171,8 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithRawResponse() {
+  @Test
+  public void errorWithRawResponse() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     Response<?> response = Response.error(errorBody, errorResponse);
     assertThat(response.raw()).isSameAs(errorResponse);
@@ -161,7 +184,8 @@ public final class ResponseTest {
     assertThat(response.errorBody()).isSameAs(errorBody);
   }
 
-  @Test public void nullErrorWithRawResponseThrows() {
+  @Test
+  public void nullErrorWithRawResponseThrows() {
     try {
       Response.error(null, errorResponse);
       fail();
@@ -170,7 +194,8 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithNullRawResponseThrows() {
+  @Test
+  public void errorWithNullRawResponseThrows() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     try {
       Response.error(errorBody, null);
@@ -180,7 +205,8 @@ public final class ResponseTest {
     }
   }
 
-  @Test public void errorWithSuccessRawResponseThrows() {
+  @Test
+  public void errorWithSuccessRawResponseThrows() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     try {
       Response.error(errorBody, successResponse);

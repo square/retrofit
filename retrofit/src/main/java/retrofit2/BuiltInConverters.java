@@ -28,7 +28,8 @@ final class BuiltInConverters extends Converter.Factory {
   /** Not volatile because we don't mind multiple threads discovering this. */
   private boolean checkForKotlinUnit = true;
 
-  @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+  @Override
+  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type == ResponseBody.class) {
       return Utils.isAnnotationPresent(annotations, Streaming.class)
@@ -50,8 +51,12 @@ final class BuiltInConverters extends Converter.Factory {
     return null;
   }
 
-  @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+  @Override
+  public @Nullable Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
     if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
       return RequestBodyConverter.INSTANCE;
     }
@@ -61,7 +66,8 @@ final class BuiltInConverters extends Converter.Factory {
   static final class VoidResponseBodyConverter implements Converter<ResponseBody, Void> {
     static final VoidResponseBodyConverter INSTANCE = new VoidResponseBodyConverter();
 
-    @Override public Void convert(ResponseBody value) {
+    @Override
+    public Void convert(ResponseBody value) {
       value.close();
       return null;
     }
@@ -70,7 +76,8 @@ final class BuiltInConverters extends Converter.Factory {
   static final class UnitResponseBodyConverter implements Converter<ResponseBody, Unit> {
     static final UnitResponseBodyConverter INSTANCE = new UnitResponseBodyConverter();
 
-    @Override public Unit convert(ResponseBody value) {
+    @Override
+    public Unit convert(ResponseBody value) {
       value.close();
       return Unit.INSTANCE;
     }
@@ -79,7 +86,8 @@ final class BuiltInConverters extends Converter.Factory {
   static final class RequestBodyConverter implements Converter<RequestBody, RequestBody> {
     static final RequestBodyConverter INSTANCE = new RequestBodyConverter();
 
-    @Override public RequestBody convert(RequestBody value) {
+    @Override
+    public RequestBody convert(RequestBody value) {
       return value;
     }
   }
@@ -88,7 +96,8 @@ final class BuiltInConverters extends Converter.Factory {
       implements Converter<ResponseBody, ResponseBody> {
     static final StreamingResponseBodyConverter INSTANCE = new StreamingResponseBodyConverter();
 
-    @Override public ResponseBody convert(ResponseBody value) {
+    @Override
+    public ResponseBody convert(ResponseBody value) {
       return value;
     }
   }
@@ -97,7 +106,8 @@ final class BuiltInConverters extends Converter.Factory {
       implements Converter<ResponseBody, ResponseBody> {
     static final BufferingResponseBodyConverter INSTANCE = new BufferingResponseBodyConverter();
 
-    @Override public ResponseBody convert(ResponseBody value) throws IOException {
+    @Override
+    public ResponseBody convert(ResponseBody value) throws IOException {
       try {
         // Buffer the entire body to avoid future I/O.
         return Utils.buffer(value);
@@ -110,7 +120,8 @@ final class BuiltInConverters extends Converter.Factory {
   static final class ToStringConverter implements Converter<Object, String> {
     static final ToStringConverter INSTANCE = new ToStringConverter();
 
-    @Override public String convert(Object value) {
+    @Override
+    public String convert(Object value) {
       return value.toString();
     }
   }

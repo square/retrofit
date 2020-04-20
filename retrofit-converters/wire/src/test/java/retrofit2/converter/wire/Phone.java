@@ -10,10 +10,6 @@ import com.squareup.wire.ProtoWriter;
 import com.squareup.wire.WireField;
 import com.squareup.wire.internal.Internal;
 import java.io.IOException;
-import java.lang.Object;
-import java.lang.Override;
-import java.lang.String;
-import java.lang.StringBuilder;
 import okio.ByteString;
 
 public final class Phone extends Message<Phone, Phone.Builder> {
@@ -23,10 +19,7 @@ public final class Phone extends Message<Phone, Phone.Builder> {
 
   public static final String DEFAULT_NUMBER = "";
 
-  @WireField(
-      tag = 1,
-      adapter = "com.squareup.wire.ProtoAdapter#STRING"
-  )
+  @WireField(tag = 1, adapter = "com.squareup.wire.ProtoAdapter#STRING")
   public final String number;
 
   public Phone(String number) {
@@ -51,8 +44,7 @@ public final class Phone extends Message<Phone, Phone.Builder> {
     if (other == this) return true;
     if (!(other instanceof Phone)) return false;
     Phone o = (Phone) other;
-    return Internal.equals(unknownFields(), o.unknownFields())
-        && Internal.equals(number, o.number);
+    return Internal.equals(unknownFields(), o.unknownFields()) && Internal.equals(number, o.number);
   }
 
   @Override
@@ -76,8 +68,7 @@ public final class Phone extends Message<Phone, Phone.Builder> {
   public static final class Builder extends Message.Builder<Phone, Builder> {
     public String number;
 
-    public Builder() {
-    }
+    public Builder() {}
 
     public Builder number(String number) {
       this.number = number;
@@ -111,14 +102,17 @@ public final class Phone extends Message<Phone, Phone.Builder> {
     public Phone decode(ProtoReader reader) throws IOException {
       Builder builder = new Builder();
       long token = reader.beginMessage();
-      for (int tag; (tag = reader.nextTag()) != -1;) {
+      for (int tag; (tag = reader.nextTag()) != -1; ) {
         switch (tag) {
-          case 1: builder.number(ProtoAdapter.STRING.decode(reader)); break;
-          default: {
-            FieldEncoding fieldEncoding = reader.peekFieldEncoding();
-            Object value = fieldEncoding.rawProtoAdapter().decode(reader);
-            builder.addUnknownField(tag, fieldEncoding, value);
-          }
+          case 1:
+            builder.number(ProtoAdapter.STRING.decode(reader));
+            break;
+          default:
+            {
+              FieldEncoding fieldEncoding = reader.peekFieldEncoding();
+              Object value = fieldEncoding.rawProtoAdapter().decode(reader);
+              builder.addUnknownField(tag, fieldEncoding, value);
+            }
         }
       }
       reader.endMessage(token);

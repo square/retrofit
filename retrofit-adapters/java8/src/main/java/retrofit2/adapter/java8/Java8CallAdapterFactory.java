@@ -29,27 +29,25 @@ import retrofit2.Retrofit;
 
 /**
  * @deprecated Retrofit includes support for CompletableFuture. This no longer needs to be added to
- * the Retrofit instance explicitly.
- * <p>
- * A {@linkplain CallAdapter.Factory call adapter} which creates Java 8 futures.
- * <p>
- * Adding this class to {@link Retrofit} allows you to return {@link CompletableFuture} from
- * service methods.
- * <pre><code>
+ *     the Retrofit instance explicitly.
+ *     <p>A {@linkplain CallAdapter.Factory call adapter} which creates Java 8 futures.
+ *     <p>Adding this class to {@link Retrofit} allows you to return {@link CompletableFuture} from
+ *     service methods.
+ *     <pre><code>
  * interface MyService {
  *   &#64;GET("user/me")
  *   CompletableFuture&lt;User&gt; getUser()
  * }
  * </code></pre>
- * There are two configurations supported for the {@code CompletableFuture} type parameter:
- * <ul>
- * <li>Direct body (e.g., {@code CompletableFuture<User>}) returns the deserialized body for 2XX
- * responses, sets {@link retrofit2.HttpException HttpException} errors for non-2XX responses, and
- * sets {@link IOException} for network errors.</li>
- * <li>Response wrapped body (e.g., {@code CompletableFuture<Response<User>>}) returns a
- * {@link Response} object for all HTTP responses and sets {@link IOException} for network
- * errors</li>
- * </ul>
+ *     There are two configurations supported for the {@code CompletableFuture} type parameter:
+ *     <ul>
+ *       <li>Direct body (e.g., {@code CompletableFuture<User>}) returns the deserialized body for
+ *           2XX responses, sets {@link retrofit2.HttpException HttpException} errors for non-2XX
+ *           responses, and sets {@link IOException} for network errors.
+ *       <li>Response wrapped body (e.g., {@code CompletableFuture<Response<User>>}) returns a
+ *           {@link Response} object for all HTTP responses and sets {@link IOException} for network
+ *           errors
+ *     </ul>
  */
 @Deprecated
 public final class Java8CallAdapterFactory extends CallAdapter.Factory {
@@ -57,17 +55,18 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
     return new Java8CallAdapterFactory();
   }
 
-  private Java8CallAdapterFactory() {
-  }
+  private Java8CallAdapterFactory() {}
 
-  @Override public @Nullable CallAdapter<?, ?> get(
+  @Override
+  public @Nullable CallAdapter<?, ?> get(
       Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != CompletableFuture.class) {
       return null;
     }
     if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalStateException("CompletableFuture return type must be parameterized"
-          + " as CompletableFuture<Foo> or CompletableFuture<? extends Foo>");
+      throw new IllegalStateException(
+          "CompletableFuture return type must be parameterized"
+              + " as CompletableFuture<Foo> or CompletableFuture<? extends Foo>");
     }
     Type innerType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
@@ -78,8 +77,8 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
 
     // Generic type is Response<T>. Extract T and create the Response version of the adapter.
     if (!(innerType instanceof ParameterizedType)) {
-      throw new IllegalStateException("Response must be parameterized"
-          + " as Response<Foo> or Response<? extends Foo>");
+      throw new IllegalStateException(
+          "Response must be parameterized" + " as Response<Foo> or Response<? extends Foo>");
     }
     Type responseType = getParameterUpperBound(0, (ParameterizedType) innerType);
     return new ResponseCallAdapter<>(responseType);
@@ -92,33 +91,40 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
       this.responseType = responseType;
     }
 
-    @Override public Type responseType() {
+    @Override
+    public Type responseType() {
       return responseType;
     }
 
-    @Override public CompletableFuture<R> adapt(final Call<R> call) {
-      final CompletableFuture<R> future = new CompletableFuture<R>() {
-        @Override public boolean cancel(boolean mayInterruptIfRunning) {
-          if (mayInterruptIfRunning) {
-            call.cancel();
-          }
-          return super.cancel(mayInterruptIfRunning);
-        }
-      };
+    @Override
+    public CompletableFuture<R> adapt(final Call<R> call) {
+      final CompletableFuture<R> future =
+          new CompletableFuture<R>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+              if (mayInterruptIfRunning) {
+                call.cancel();
+              }
+              return super.cancel(mayInterruptIfRunning);
+            }
+          };
 
-      call.enqueue(new Callback<R>() {
-        @Override public void onResponse(Call<R> call, Response<R> response) {
-          if (response.isSuccessful()) {
-            future.complete(response.body());
-          } else {
-            future.completeExceptionally(new HttpException(response));
-          }
-        }
+      call.enqueue(
+          new Callback<R>() {
+            @Override
+            public void onResponse(Call<R> call, Response<R> response) {
+              if (response.isSuccessful()) {
+                future.complete(response.body());
+              } else {
+                future.completeExceptionally(new HttpException(response));
+              }
+            }
 
-        @Override public void onFailure(Call<R> call, Throwable t) {
-          future.completeExceptionally(t);
-        }
-      });
+            @Override
+            public void onFailure(Call<R> call, Throwable t) {
+              future.completeExceptionally(t);
+            }
+          });
 
       return future;
     }
@@ -132,29 +138,36 @@ public final class Java8CallAdapterFactory extends CallAdapter.Factory {
       this.responseType = responseType;
     }
 
-    @Override public Type responseType() {
+    @Override
+    public Type responseType() {
       return responseType;
     }
 
-    @Override public CompletableFuture<Response<R>> adapt(final Call<R> call) {
-      final CompletableFuture<Response<R>> future = new CompletableFuture<Response<R>>() {
-        @Override public boolean cancel(boolean mayInterruptIfRunning) {
-          if (mayInterruptIfRunning) {
-            call.cancel();
-          }
-          return super.cancel(mayInterruptIfRunning);
-        }
-      };
+    @Override
+    public CompletableFuture<Response<R>> adapt(final Call<R> call) {
+      final CompletableFuture<Response<R>> future =
+          new CompletableFuture<Response<R>>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+              if (mayInterruptIfRunning) {
+                call.cancel();
+              }
+              return super.cancel(mayInterruptIfRunning);
+            }
+          };
 
-      call.enqueue(new Callback<R>() {
-        @Override public void onResponse(Call<R> call, Response<R> response) {
-          future.complete(response);
-        }
+      call.enqueue(
+          new Callback<R>() {
+            @Override
+            public void onResponse(Call<R> call, Response<R> response) {
+              future.complete(response);
+            }
 
-        @Override public void onFailure(Call<R> call, Throwable t) {
-          future.completeExceptionally(t);
-        }
-      });
+            @Override
+            public void onFailure(Call<R> call, Throwable t) {
+              future.completeExceptionally(t);
+            }
+          });
 
       return future;
     }

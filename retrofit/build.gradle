@@ -1,0 +1,28 @@
+apply plugin: 'java-library'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api deps.okhttp
+
+  compileOnly deps.android
+  compileOnly deps.kotlinStdLib
+  compileOnly deps.kotlinCoroutines
+
+  compileOnly deps.animalSnifferAnnotations
+  compileOnly deps.findBugsAnnotations
+
+  testImplementation project(':retrofit:test-helpers')
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.guava
+  testImplementation deps.mockwebserver
+  testImplementation deps.kotlinStdLib
+  testImplementation deps.kotlinCoroutines
+}
+
+jar {
+  manifest {
+    attributes  'Automatic-Module-Name': 'retrofit2'
+  }
+}

@@ -15,6 +15,8 @@
  */
 package com.example.retrofit;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -34,23 +36,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import retrofit2.http.GET;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 /**
- * Both the Gson converter and the Simple Framework converter accept all types. Because of this,
- * you cannot use both in a single service by default. In order to work around this, we can create
+ * Both the Gson converter and the Simple Framework converter accept all types. Because of this, you
+ * cannot use both in a single service by default. In order to work around this, we can create
  * an @Json and @Xml annotation to declare which serialization format each endpoint should use and
  * then write our own Converter.Factory which delegates to either the Gson or Simple Framework
  * converter.
  */
 public final class JsonAndXmlConverters {
   @Retention(RUNTIME)
-  @interface Json {
-  }
+  @interface Json {}
 
   @Retention(RUNTIME)
-  @interface Xml {
-  }
+  @interface Xml {}
 
   static class QualifiedTypeConverterFactory extends Converter.Factory {
     private final Converter.Factory jsonFactory;
@@ -61,7 +59,8 @@ public final class JsonAndXmlConverters {
       this.xmlFactory = xmlFactory;
     }
 
-    @Override public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+    @Override
+    public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
         Type type, Annotation[] annotations, Retrofit retrofit) {
       for (Annotation annotation : annotations) {
         if (annotation instanceof Json) {
@@ -74,16 +73,20 @@ public final class JsonAndXmlConverters {
       return null;
     }
 
-    @Override public @Nullable Converter<?, RequestBody> requestBodyConverter(Type type,
-        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+    @Override
+    public @Nullable Converter<?, RequestBody> requestBodyConverter(
+        Type type,
+        Annotation[] parameterAnnotations,
+        Annotation[] methodAnnotations,
+        Retrofit retrofit) {
       for (Annotation annotation : parameterAnnotations) {
         if (annotation instanceof Json) {
-          return jsonFactory.requestBodyConverter(type, parameterAnnotations, methodAnnotations,
-              retrofit);
+          return jsonFactory.requestBodyConverter(
+              type, parameterAnnotations, methodAnnotations, retrofit);
         }
         if (annotation instanceof Xml) {
-          return xmlFactory.requestBodyConverter(type, parameterAnnotations, methodAnnotations,
-              retrofit);
+          return xmlFactory.requestBodyConverter(
+              type, parameterAnnotations, methodAnnotations, retrofit);
         }
       }
       return null;
@@ -92,14 +95,16 @@ public final class JsonAndXmlConverters {
 
   @Default(value = DefaultType.FIELD)
   static class User {
-    @Attribute
-    public String name;
+    @Attribute public String name;
   }
 
   interface Service {
-    @GET("/") @Json
+    @GET("/")
+    @Json
     Call<User> exampleJson();
-    @GET("/") @Xml
+
+    @GET("/")
+    @Xml
     Call<User> exampleXml();
   }
 
@@ -109,12 +114,13 @@ public final class JsonAndXmlConverters {
     server.enqueue(new MockResponse().setBody("{\"name\": \"Jason\"}"));
     server.enqueue(new MockResponse().setBody("<user name=\"Eximel\"/>"));
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new QualifiedTypeConverterFactory(
-            GsonConverterFactory.create(),
-            SimpleXmlConverterFactory.create()))
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(
+                new QualifiedTypeConverterFactory(
+                    GsonConverterFactory.create(), SimpleXmlConverterFactory.create()))
+            .build();
     Service service = retrofit.create(Service.class);
 
     User user1 = service.exampleJson().execute().body();

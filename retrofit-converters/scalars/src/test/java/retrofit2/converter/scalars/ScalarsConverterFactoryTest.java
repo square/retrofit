@@ -15,6 +15,9 @@
  */
 package retrofit2.converter.scalars;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
@@ -30,74 +33,131 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class ScalarsConverterFactoryTest {
   interface Service {
-      @POST("/") Call<ResponseBody> object(@Body Object body);
+    @POST("/")
+    Call<ResponseBody> object(@Body Object body);
 
-      @POST("/") Call<ResponseBody> stringObject(@Body String body);
-      @POST("/") Call<ResponseBody> booleanPrimitive(@Body boolean body);
-      @POST("/") Call<ResponseBody> booleanObject(@Body Boolean body);
-      @POST("/") Call<ResponseBody> bytePrimitive(@Body byte body);
-      @POST("/") Call<ResponseBody> byteObject(@Body Byte body);
-      @POST("/") Call<ResponseBody> charPrimitive(@Body char body);
-      @POST("/") Call<ResponseBody> charObject(@Body Character body);
-      @POST("/") Call<ResponseBody> doublePrimitive(@Body double body);
-      @POST("/") Call<ResponseBody> doubleObject(@Body Double body);
-      @POST("/") Call<ResponseBody> floatPrimitive(@Body float body);
-      @POST("/") Call<ResponseBody> floatObject(@Body Float body);
-      @POST("/") Call<ResponseBody> integerPrimitive(@Body int body);
-      @POST("/") Call<ResponseBody> integerObject(@Body Integer body);
-      @POST("/") Call<ResponseBody> longPrimitive(@Body long body);
-      @POST("/") Call<ResponseBody> longObject(@Body Long body);
-      @POST("/") Call<ResponseBody> shortPrimitive(@Body short body);
-      @POST("/") Call<ResponseBody> shortObject(@Body Short body);
+    @POST("/")
+    Call<ResponseBody> stringObject(@Body String body);
 
-      @GET("/") Call<Object> object();
+    @POST("/")
+    Call<ResponseBody> booleanPrimitive(@Body boolean body);
 
-      @GET("/") Call<String> stringObject();
-      @GET("/") Call<Boolean> booleanObject();
-      @GET("/") Call<Byte> byteObject();
-      @GET("/") Call<Character> charObject();
-      @GET("/") Call<Double> doubleObject();
-      @GET("/") Call<Float> floatObject();
-      @GET("/") Call<Integer> integerObject();
-      @GET("/") Call<Long> longObject();
-      @GET("/") Call<Short> shortObject();
+    @POST("/")
+    Call<ResponseBody> booleanObject(@Body Boolean body);
+
+    @POST("/")
+    Call<ResponseBody> bytePrimitive(@Body byte body);
+
+    @POST("/")
+    Call<ResponseBody> byteObject(@Body Byte body);
+
+    @POST("/")
+    Call<ResponseBody> charPrimitive(@Body char body);
+
+    @POST("/")
+    Call<ResponseBody> charObject(@Body Character body);
+
+    @POST("/")
+    Call<ResponseBody> doublePrimitive(@Body double body);
+
+    @POST("/")
+    Call<ResponseBody> doubleObject(@Body Double body);
+
+    @POST("/")
+    Call<ResponseBody> floatPrimitive(@Body float body);
+
+    @POST("/")
+    Call<ResponseBody> floatObject(@Body Float body);
+
+    @POST("/")
+    Call<ResponseBody> integerPrimitive(@Body int body);
+
+    @POST("/")
+    Call<ResponseBody> integerObject(@Body Integer body);
+
+    @POST("/")
+    Call<ResponseBody> longPrimitive(@Body long body);
+
+    @POST("/")
+    Call<ResponseBody> longObject(@Body Long body);
+
+    @POST("/")
+    Call<ResponseBody> shortPrimitive(@Body short body);
+
+    @POST("/")
+    Call<ResponseBody> shortObject(@Body Short body);
+
+    @GET("/")
+    Call<Object> object();
+
+    @GET("/")
+    Call<String> stringObject();
+
+    @GET("/")
+    Call<Boolean> booleanObject();
+
+    @GET("/")
+    Call<Byte> byteObject();
+
+    @GET("/")
+    Call<Character> charObject();
+
+    @GET("/")
+    Call<Double> doubleObject();
+
+    @GET("/")
+    Call<Float> floatObject();
+
+    @GET("/")
+    Call<Integer> integerObject();
+
+    @GET("/")
+    Call<Long> longObject();
+
+    @GET("/")
+    Call<Short> shortObject();
   }
 
   @Rule public final MockWebServer server = new MockWebServer();
 
   private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .build();
+  @Before
+  public void setUp() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .build();
     service = retrofit.create(Service.class);
   }
 
-  @Test public void unsupportedRequestTypesNotMatched() {
+  @Test
+  public void unsupportedRequestTypesNotMatched() {
     try {
       service.object(null);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(""
-          + "Unable to create @Body converter for class java.lang.Object (parameter #1)\n"
-          + "    for method Service.object");
-      assertThat(e.getCause()).hasMessage(""
-          + "Could not locate RequestBody converter for class java.lang.Object.\n"
-          + "  Tried:\n"
-          + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.converter.scalars.ScalarsConverterFactory\n"
-          + "   * retrofit2.OptionalConverterFactory");
+      assertThat(e)
+          .hasMessage(
+              ""
+                  + "Unable to create @Body converter for class java.lang.Object (parameter #1)\n"
+                  + "    for method Service.object");
+      assertThat(e.getCause())
+          .hasMessage(
+              ""
+                  + "Could not locate RequestBody converter for class java.lang.Object.\n"
+                  + "  Tried:\n"
+                  + "   * retrofit2.BuiltInConverters\n"
+                  + "   * retrofit2.converter.scalars.ScalarsConverterFactory\n"
+                  + "   * retrofit2.OptionalConverterFactory");
     }
   }
 
-  @Test public void supportedRequestTypes() throws IOException, InterruptedException {
+  @Test
+  public void supportedRequestTypes() throws IOException, InterruptedException {
     RecordedRequest request;
 
     server.enqueue(new MockResponse());
@@ -220,24 +280,30 @@ public final class ScalarsConverterFactoryTest {
     assertThat(request.getBody().readUtf8()).isEqualTo("11");
   }
 
-  @Test public void unsupportedResponseTypesNotMatched() {
+  @Test
+  public void unsupportedResponseTypesNotMatched() {
     try {
       service.object();
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(""
-          + "Unable to create converter for class java.lang.Object\n"
-          + "    for method Service.object");
-      assertThat(e.getCause()).hasMessage(""
-          + "Could not locate ResponseBody converter for class java.lang.Object.\n"
-          + "  Tried:\n"
-          + "   * retrofit2.BuiltInConverters\n"
-          + "   * retrofit2.converter.scalars.ScalarsConverterFactory\n"
-          + "   * retrofit2.OptionalConverterFactory");
+      assertThat(e)
+          .hasMessage(
+              ""
+                  + "Unable to create converter for class java.lang.Object\n"
+                  + "    for method Service.object");
+      assertThat(e.getCause())
+          .hasMessage(
+              ""
+                  + "Could not locate ResponseBody converter for class java.lang.Object.\n"
+                  + "  Tried:\n"
+                  + "   * retrofit2.BuiltInConverters\n"
+                  + "   * retrofit2.converter.scalars.ScalarsConverterFactory\n"
+                  + "   * retrofit2.OptionalConverterFactory");
     }
   }
 
-  @Test public void supportedResponseTypes() throws IOException, InterruptedException {
+  @Test
+  public void supportedResponseTypes() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("test"));
     Response<String> stringResponse = service.stringObject().execute();
     assertThat(stringResponse.body()).isEqualTo("test");
@@ -257,6 +323,7 @@ public final class ScalarsConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(""));
     try {
       service.charObject().execute();
+      fail();
     } catch (IOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 0");
     }
@@ -264,6 +331,7 @@ public final class ScalarsConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("bb"));
     try {
       service.charObject().execute();
+      fail();
     } catch (IOException e) {
       assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 2");
     }

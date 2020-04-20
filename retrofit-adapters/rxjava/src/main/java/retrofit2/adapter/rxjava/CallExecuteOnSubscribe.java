@@ -28,7 +28,8 @@ final class CallExecuteOnSubscribe<T> implements OnSubscribe<Response<T>> {
     this.originalCall = originalCall;
   }
 
-  @Override public void call(Subscriber<? super Response<T>> subscriber) {
+  @Override
+  public void call(Subscriber<? super Response<T>> subscriber) {
     // Since Call is a one-shot type, clone it for each new subscriber.
     Call<T> call = originalCall.clone();
     CallArbiter<T> arbiter = new CallArbiter<>(call, subscriber);

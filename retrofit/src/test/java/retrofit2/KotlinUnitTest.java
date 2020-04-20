@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import kotlin.Unit;
 import okhttp3.mockwebserver.MockResponse;
@@ -24,8 +26,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class KotlinUnitTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
@@ -34,10 +34,9 @@ public final class KotlinUnitTest {
     Call<Unit> empty();
   }
 
-  @Test public void unitOnClasspath() throws IOException {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .build();
+  @Test
+  public void unitOnClasspath() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
     Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
@@ -48,6 +47,6 @@ public final class KotlinUnitTest {
   }
 
   @Ignore("This is implicitly tested by integration tests of the adapters and converters")
-  @Test public void unitMissingFromClasspath() {
-  }
+  @Test
+  public void unitMissingFromClasspath() {}
 }

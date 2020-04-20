@@ -15,6 +15,8 @@
  */
 package com.example.retrofit;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -34,12 +36,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 public final class JsonQueryParameters {
   @Retention(RUNTIME)
-  @interface Json {
-  }
+  @interface Json {}
 
   static class JsonStringConverterFactory extends Converter.Factory {
     private final Converter.Factory delegateFactory;
@@ -48,7 +47,8 @@ public final class JsonQueryParameters {
       this.delegateFactory = delegateFactory;
     }
 
-    @Override public @Nullable Converter<?, String> stringConverter(
+    @Override
+    public @Nullable Converter<?, String> stringConverter(
         Type type, Annotation[] annotations, Retrofit retrofit) {
       for (Annotation annotation : annotations) {
         if (annotation instanceof Json) {
@@ -70,7 +70,8 @@ public final class JsonQueryParameters {
         this.delegate = delegate;
       }
 
-      @Override public String convert(T value) throws IOException {
+      @Override
+      public String convert(T value) throws IOException {
         Buffer buffer = new Buffer();
         delegate.convert(value).writeTo(buffer);
         return buffer.readUtf8();
@@ -91,15 +92,17 @@ public final class JsonQueryParameters {
     Call<ResponseBody> example(@Json @Query("value") Filter value);
   }
 
+  @SuppressWarnings("UnusedVariable")
   public static void main(String... args) throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.start();
     server.enqueue(new MockResponse());
 
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new JsonStringConverterFactory(GsonConverterFactory.create()))
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new JsonStringConverterFactory(GsonConverterFactory.create()))
+            .build();
     Service service = retrofit.create(Service.class);
 
     Call<ResponseBody> call = service.example(new Filter("123"));

@@ -24,8 +24,7 @@ final class MyObject {
   @Element private String message;
   @Element private int count;
 
-  public MyObject() {
-  }
+  public MyObject() {}
 
   public MyObject(String message, int count) {
     this.message = message;
@@ -48,14 +47,16 @@ final class MyObject {
     return count;
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     int result = 1;
     result = result * 31 + count;
     result = result * 31 + (message == null ? 0 : message.hashCode());
     return result;
   }
 
-  @Override public boolean equals(Object obj) {
+  @Override
+  public boolean equals(Object obj) {
     if (obj == this) return true;
     if (!(obj instanceof MyObject)) return false;
     MyObject other = (MyObject) obj;

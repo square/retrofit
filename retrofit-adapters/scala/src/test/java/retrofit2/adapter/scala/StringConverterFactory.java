@@ -15,7 +15,6 @@
  */
 package retrofit2.adapter.scala;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import okhttp3.MediaType;
@@ -26,21 +25,17 @@ import retrofit2.Retrofit;
 
 final class StringConverterFactory extends Converter.Factory {
   @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
-    return new Converter<ResponseBody, String>() {
-      @Override public String convert(ResponseBody value) throws IOException {
-        return value.string();
-      }
-    };
+  public Converter<ResponseBody, String> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
+    return ResponseBody::string;
   }
 
-  @Override public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    return new Converter<String, RequestBody>() {
-      @Override public RequestBody convert(String value) throws IOException {
-        return RequestBody.create(MediaType.get("text/plain"), value);
-      }
-    };
+  @Override
+  public Converter<String, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
+    return value -> RequestBody.create(MediaType.get("text/plain"), value);
   }
 }

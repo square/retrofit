@@ -15,6 +15,8 @@
  */
 package retrofit2.adapter.rxjava;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -25,8 +27,6 @@ import org.junit.runners.model.Statement;
 import rx.Notification;
 import rx.Subscriber;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /** A test {@link Subscriber} and JUnit rule which guarantees all events are asserted. */
 final class RecordingSubscriber<T> extends Subscriber<T> {
   private final long initialRequest;
@@ -36,19 +36,23 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
     this.initialRequest = initialRequest;
   }
 
-  @Override public void onStart() {
+  @Override
+  public void onStart() {
     request(initialRequest);
   }
 
-  @Override public void onNext(T value) {
+  @Override
+  public void onNext(T value) {
     events.add(Notification.createOnNext(value));
   }
 
-  @Override public void onCompleted() {
+  @Override
+  public void onCompleted() {
     events.add(Notification.<T>createOnCompleted());
   }
 
-  @Override public void onError(Throwable e) {
+  @Override
+  public void onError(Throwable e) {
     events.add(Notification.<T>createOnError(e));
   }
 
@@ -132,9 +136,11 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
       return subscriber;
     }
 
-    @Override public Statement apply(final Statement base, Description description) {
+    @Override
+    public Statement apply(final Statement base, Description description) {
       return new Statement() {
-        @Override public void evaluate() throws Throwable {
+        @Override
+        public void evaluate() throws Throwable {
           base.evaluate();
           for (RecordingSubscriber<?> subscriber : subscribers) {
             subscriber.assertNoEvents();

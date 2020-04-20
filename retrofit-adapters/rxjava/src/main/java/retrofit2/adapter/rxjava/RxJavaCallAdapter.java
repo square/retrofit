@@ -33,8 +33,14 @@ final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
   private final boolean isSingle;
   private final boolean isCompletable;
 
-  RxJavaCallAdapter(Type responseType, @Nullable Scheduler scheduler, boolean isAsync,
-      boolean isResult, boolean isBody, boolean isSingle, boolean isCompletable) {
+  RxJavaCallAdapter(
+      Type responseType,
+      @Nullable Scheduler scheduler,
+      boolean isAsync,
+      boolean isResult,
+      boolean isBody,
+      boolean isSingle,
+      boolean isCompletable) {
     this.responseType = responseType;
     this.scheduler = scheduler;
     this.isAsync = isAsync;
@@ -44,14 +50,15 @@ final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
     this.isCompletable = isCompletable;
   }
 
-  @Override public Type responseType() {
+  @Override
+  public Type responseType() {
     return responseType;
   }
 
-  @Override public Object adapt(Call<R> call) {
-    OnSubscribe<Response<R>> callFunc = isAsync
-        ? new CallEnqueueOnSubscribe<>(call)
-        : new CallExecuteOnSubscribe<>(call);
+  @Override
+  public Object adapt(Call<R> call) {
+    OnSubscribe<Response<R>> callFunc =
+        isAsync ? new CallEnqueueOnSubscribe<>(call) : new CallExecuteOnSubscribe<>(call);
 
     OnSubscribe<?> func;
     if (isResult) {

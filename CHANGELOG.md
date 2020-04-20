@@ -1,6 +1,73 @@
 Change Log
 ==========
 
+Version 2.8.1 *(2020-03-25)*
+----------------------------
+
+ * Fix: Do not access `MethodHandles.Lookup` on Android API 24 and 25. The class is only available
+   on Android API 26 and higher.
+
+
+Version 2.8.0 *(2020-03-23)*
+----------------------------
+
+ * New: Add `Call.timeout()` which returns the `okio.Timeout` of the full call.
+ * Fix: Change `Call.awaitResponse()` to accept a nullable response type.
+ * Fix: Support default methods on Java 14+. We had been working around a bug in earlier versions of
+   Java. That bug was fixed in Java 14, and the fix broke our workaround.
+
+
+Version 2.7.2 *(2020-02-24)*
+----------------------------
+
+ * Fix: Update to OkHttp 3.14.7 for compatibility with Android R (API 30).
+
+
+Version 2.7.1 *(2020-01-02)*
+----------------------------
+
+ * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
+
+
+Version 2.7.0 *(2019-12-09)*
+----------------------------
+
+**This release changes the minimum requirements to Java 8+ or Android 5+.**
+See [this blog post](https://cashapp.github.io/2019-02-05/okhttp-3-13-requires-android-5) for more information on the change.
+
+ * New: Upgrade to OkHttp 3.14.4. Please see [its changelog for 3.x](https://square.github.io/okhttp/changelog_3x/).
+ * Fix: Allow service interfaces to extend other interfaces.
+ * Fix: Ensure a non-null body is returned by `Response.error`.
+
+
+Version 2.6.4 *(2020-01-02)*
+----------------------------
+
+ * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
+
+
+Version 2.6.3 *(2019-12-09)*
+----------------------------
+
+ * Fix: Change mechanism for avoiding `UndeclaredThrowableException` in rare cases from using `yield`
+   an explicit dispatch which ensures that it will work even on dispatchers which do not support yielding.
+
+
+Version 2.6.2 *(2019-09-23)*
+----------------------------
+
+ * Fix: Avoid `IOException`s being wrapped in `UndeclaredThrowableException` in rare cases when using
+   `Response<..>` as a return type for Kotlin 'suspend' functions.
+
+
+Version 2.6.1 *(2019-07-31)*
+----------------------------
+
+ * Fix: Avoid `IOException`s being wrapped in `UndeclaredThrowableException` in rare cases.
+ * Fix: Include no-content `ResponseBody` for responses created by `Response.error`.
+ * Fix: Update embedded R8/ProGuard rules to not warn about nested classes used for Kotlin extensions.
+
+
 Version 2.6.0 *(2019-06-05)*
 ----------------------------
 
@@ -9,7 +76,7 @@ Version 2.6.0 *(2019-06-05)*
 
    ```kotlin
    @GET("users/{id}")
-   suspend fun user(@Path("id") long id): User
+   suspend fun user(@Path("id") id: Long): User
    ```
 
    Behind the scenes this behaves as if defined as `fun user(...): Call<User>` and then invoked with `Call.enqueue`.

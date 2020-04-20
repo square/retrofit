@@ -24,9 +24,9 @@ import javax.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 
 /**
@@ -52,7 +52,9 @@ public final class ErrorHandlingAdapter {
 
   interface MyCall<T> {
     void cancel();
+
     void enqueue(MyCallback<T> callback);
+
     MyCall<T> clone();
 
     // Left as an exercise for the reader...
@@ -60,7 +62,8 @@ public final class ErrorHandlingAdapter {
   }
 
   public static class ErrorHandlingCallAdapterFactory extends CallAdapter.Factory {
-    @Override public @Nullable CallAdapter<?, ?> get(
+    @Override
+    public @Nullable CallAdapter<?, ?> get(
         Type returnType, Annotation[] annotations, Retrofit retrofit) {
       if (getRawType(returnType) != MyCall.class) {
         return null;
@@ -83,11 +86,13 @@ public final class ErrorHandlingAdapter {
         this.callbackExecutor = callbackExecutor;
       }
 
-      @Override public Type responseType() {
+      @Override
+      public Type responseType() {
         return responseType;
       }
 
-      @Override public MyCall<R> adapt(Call<R> call) {
+      @Override
+      public MyCall<R> adapt(Call<R> call) {
         return new MyCallAdapter<>(call, callbackExecutor);
       }
     }
@@ -103,44 +108,52 @@ public final class ErrorHandlingAdapter {
       this.callbackExecutor = callbackExecutor;
     }
 
-    @Override public void cancel() {
+    @Override
+    public void cancel() {
       call.cancel();
     }
 
-    @Override public void enqueue(final MyCallback<T> callback) {
-      call.enqueue(new Callback<T>() {
-        @Override public void onResponse(Call<T> call, Response<T> response) {
-          // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
-          // on that executor by submitting a Runnable. This is left as an exercise for the reader.
+    @Override
+    public void enqueue(final MyCallback<T> callback) {
+      call.enqueue(
+          new Callback<T>() {
+            @Override
+            public void onResponse(Call<T> call, Response<T> response) {
+              // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
+              // on that executor by submitting a Runnable. This is left as an exercise for the
+              // reader.
 
-          int code = response.code();
-          if (code >= 200 && code < 300) {
-            callback.success(response);
-          } else if (code == 401) {
-            callback.unauthenticated(response);
-          } else if (code >= 400 && code < 500) {
-            callback.clientError(response);
-          } else if (code >= 500 && code < 600) {
-            callback.serverError(response);
-          } else {
-            callback.unexpectedError(new RuntimeException("Unexpected response " + response));
-          }
-        }
+              int code = response.code();
+              if (code >= 200 && code < 300) {
+                callback.success(response);
+              } else if (code == 401) {
+                callback.unauthenticated(response);
+              } else if (code >= 400 && code < 500) {
+                callback.clientError(response);
+              } else if (code >= 500 && code < 600) {
+                callback.serverError(response);
+              } else {
+                callback.unexpectedError(new RuntimeException("Unexpected response " + response));
+              }
+            }
 
-        @Override public void onFailure(Call<T> call, Throwable t) {
-          // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
-          // on that executor by submitting a Runnable. This is left as an exercise for the reader.
+            @Override
+            public void onFailure(Call<T> call, Throwable t) {
+              // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
+              // on that executor by submitting a Runnable. This is left as an exercise for the
+              // reader.
 
-          if (t instanceof IOException) {
-            callback.networkError((IOException) t);
-          } else {
-            callback.unexpectedError(t);
-          }
-        }
-      });
+              if (t instanceof IOException) {
+                callback.networkError((IOException) t);
+              } else {
+                callback.unexpectedError(t);
+              }
+            }
+          });
     }
 
-    @Override public MyCall<T> clone() {
+    @Override
+    public MyCall<T> clone() {
       return new MyCallAdapter<>(call.clone(), callbackExecutor);
     }
   }
@@ -155,38 +168,46 @@ public final class ErrorHandlingAdapter {
   }
 
   public static void main(String... args) {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://httpbin.org")
-        .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
-        .addConverterFactory(GsonConverterFactory.create())
-        .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl("http://httpbin.org")
+            .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
 
     HttpBinService service = retrofit.create(HttpBinService.class);
     MyCall<Ip> ip = service.getIp();
-    ip.enqueue(new MyCallback<Ip>() {
-      @Override public void success(Response<Ip> response) {
-        System.out.println("SUCCESS! " + response.body().origin);
-      }
+    ip.enqueue(
+        new MyCallback<Ip>() {
+          @Override
+          public void success(Response<Ip> response) {
+            System.out.println("SUCCESS! " + response.body().origin);
+          }
 
-      @Override public void unauthenticated(Response<?> response) {
-        System.out.println("UNAUTHENTICATED");
-      }
+          @Override
+          public void unauthenticated(Response<?> response) {
+            System.out.println("UNAUTHENTICATED");
+          }
 
-      @Override public void clientError(Response<?> response) {
-        System.out.println("CLIENT ERROR " + response.code() + " " + response.message());
-      }
+          @Override
+          public void clientError(Response<?> response) {
+            System.out.println("CLIENT ERROR " + response.code() + " " + response.message());
+          }
 
-      @Override public void serverError(Response<?> response) {
-        System.out.println("SERVER ERROR " + response.code() + " " + response.message());
-      }
+          @Override
+          public void serverError(Response<?> response) {
+            System.out.println("SERVER ERROR " + response.code() + " " + response.message());
+          }
 
-      @Override public void networkError(IOException e) {
-        System.err.println("NETWORK ERROR " + e.getMessage());
-      }
+          @Override
+          public void networkError(IOException e) {
+            System.err.println("NETWORK ERROR " + e.getMessage());
+          }
 
-      @Override public void unexpectedError(Throwable t) {
-        System.err.println("FATAL ERROR " + t.getMessage());
-      }
-    });
+          @Override
+          public void unexpectedError(Throwable t) {
+            System.err.println("FATAL ERROR " + t.getMessage());
+          }
+        });
   }
 }

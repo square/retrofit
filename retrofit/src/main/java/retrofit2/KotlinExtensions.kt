@@ -18,7 +18,11 @@
 
 package retrofit2
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.intrinsics.intercepted
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -79,7 +83,7 @@ suspend fun <T : Any> Call<T?>.await(): T? {
   }
 }
 
-suspend fun <T : Any> Call<T>.awaitResponse(): Response<T> {
+suspend fun <T> Call<T>.awaitResponse(): Response<T> {
   return suspendCancellableCoroutine { continuation ->
     continuation.invokeOnCancellation {
       cancel()
@@ -93,5 +97,23 @@ suspend fun <T : Any> Call<T>.awaitResponse(): Response<T> {
         continuation.resumeWithException(t)
       }
     })
+  }
+}
+
+/**
+ * Force the calling coroutine to suspend before throwing [this].
+ *
+ * This is needed when a checked exception is synchronously caught in a [java.lang.reflect.Proxy]
+ * invocation to avoid being wrapped in [java.lang.reflect.UndeclaredThrowableException].
+ *
+ * The implementation is derived from:
+ * https://github.com/Kotlin/kotlinx.coroutines/pull/1667#issuecomment-556106349
+ */
+internal suspend fun Exception.suspendAndThrow(): Nothing {
+  suspendCoroutineUninterceptedOrReturn<Nothing> { continuation ->
+    Dispatchers.Default.dispatch(continuation.context, Runnable {
+      continuation.intercepted().resumeWithException(this@suspendAndThrow)
+    })
+    COROUTINE_SUSPENDED
   }
 }

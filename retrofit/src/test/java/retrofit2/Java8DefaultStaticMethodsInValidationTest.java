@@ -15,28 +15,39 @@
  */
 package retrofit2;
 
-// TODO this test doesn't play nice in the IDE because it relies on Java 8 language features.
+import static org.junit.Assert.assertNotNull;
+
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Rule;
+import org.junit.Test;
+import retrofit2.helpers.ToStringConverterFactory;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
+
 public final class Java8DefaultStaticMethodsInValidationTest {
-  //@Rule public final MockWebServer server = new MockWebServer();
-  //
-  //interface Example {
-  //  @GET("/") Call<String> user(@Query("name") String name);
-  //
-  //  default Call<String> user() {
-  //    return user("hey");
-  //  }
-  //
-  //  static String staticMethod() {
-  //    return "Hi";
-  //  }
-  //}
-  //
-  //@Test public void test() throws IOException {
-  //  Retrofit retrofit = new Retrofit.Builder()
-  //      .baseUrl(server.url("/"))
-  //      .addConverterFactory(new ToStringConverterFactory())
-  //      .validateEagerly(true)
-  //      .build();
-  //  Example example = retrofit.create(Example.class);
-  //}
+  @Rule public final MockWebServer server = new MockWebServer();
+
+  interface Example {
+    @GET("/")
+    Call<String> user(@Query("name") String name);
+
+    default Call<String> user() {
+      return user("hey");
+    }
+
+    static String staticMethod() {
+      return "Hi";
+    }
+  }
+
+  @Test
+  public void test() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ToStringConverterFactory())
+            .validateEagerly(true)
+            .build();
+    assertNotNull(retrofit.create(Example.class));
+  }
 }

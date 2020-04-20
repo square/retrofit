@@ -39,7 +39,8 @@ final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
     xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
   }
 
-  @Override public T convert(ResponseBody value) throws IOException {
+  @Override
+  public T convert(ResponseBody value) throws IOException {
     try {
       Unmarshaller unmarshaller = context.createUnmarshaller();
       XMLStreamReader streamReader = xmlInputFactory.createXMLStreamReader(value.charStream());
