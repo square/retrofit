@@ -56,8 +56,10 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    if: github.ref == 'master'
-    needs: [jvm, android]
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - jvm
+      - android
 
     steps:
       - name: checkout
