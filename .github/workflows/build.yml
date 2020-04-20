@@ -23,8 +23,11 @@ jobs:
           - 15-ea
 
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
 
       - name: Configure JDK
         uses: actions/setup-java@v1
@@ -47,10 +50,13 @@ jobs:
           - 29
 
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: run tests
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
@@ -66,7 +72,7 @@ jobs:
       - android
 
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
 
       - name: Configure JDK
