@@ -15,6 +15,7 @@
  */
 package retrofit2.converter.jackson;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -50,6 +51,7 @@ public final class JacksonConverterFactory extends Converter.Factory {
   private final ObjectMapper mapper;
 
   private JacksonConverterFactory(ObjectMapper mapper) {
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     this.mapper = mapper;
   }
 
