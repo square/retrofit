@@ -56,8 +56,6 @@ import static java.util.Collections.unmodifiableList;
  */
 public final class Retrofit {
   private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
-  private String[] supportAnnotations;
-  private List<String> annotationSimpleNames;
   final okhttp3.Call.Factory callFactory;
   final HttpUrl baseUrl;
   final List<Converter.Factory> converterFactories;
@@ -78,9 +76,6 @@ public final class Retrofit {
     this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
-    supportAnnotations = new String[]{"Body", "Field", "FieldMap", "Header", "HeaderMap", "Part", "Path",
-            "Query", "QueryMap", "QueryName", "Tag", "Url", "partMap"};
-    annotationSimpleNames = Arrays.asList(supportAnnotations);
   }
 
   /**
@@ -134,18 +129,6 @@ public final class Retrofit {
   @SuppressWarnings({"unchecked", "checkstyle:WhitespaceAround"})
   // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(final Class<T> service) {
-    Method[] methods = service.getMethods();
-    for (int i = 0; i < methods.length; i++) {
-      Method method = methods[i];
-      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-      for (Annotation[] annotations : parameterAnnotations) {
-        for (Annotation annotation : annotations)
-          if (!annotationSimpleNames.contains(annotation.annotationType().getSimpleName())) {
-            System.out.printf("Unsupported annotation @%s\n", annotation.annotationType().getSimpleName());
-          }
-      }
-
-    }
 
     validateServiceInterface(service);
     return (T)
@@ -396,23 +379,51 @@ public final class Retrofit {
   /**
    * Returns a {@link Converter} for {@code type} to {@link String} from the available {@linkplain
    * #converterFactories() factories}.
+   *
+   * @throws IllegalArgumentException if no converter available for {@code type}.
    */
   public <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
+    return nextStringConverter(null,type, annotations);
+  }
+
+  /**
+   * Returns a {@link Converter} for {@link String} to {@code type} from the available
+   * {@linkplain #converterFactories() factories} except {@code skipPast}.
+   *
+   * @throws IllegalArgumentException if no converter available for {@code type}.
+   */
+  public <T> Converter<T, String>  nextStringConverter(
+          @Nullable Converter.Factory skipPast, Type type, Annotation[] annotations) {
     Objects.requireNonNull(type, "type == null");
     Objects.requireNonNull(annotations, "annotations == null");
 
+    int start = converterFactories.indexOf(skipPast) + 1;
+
     for (int i = 0, count = converterFactories.size(); i < count; i++) {
       Converter<?, String> converter =
-          converterFactories.get(i).stringConverter(type, annotations, this);
+              converterFactories.get(i).stringConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<T, String>) converter;
       }
     }
 
-    // Nothing matched. Resort to default converter which just calls toString().
-    //noinspection unchecked
-    return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
+    StringBuilder builder =
+            new StringBuilder("Could not locate ResponseBody converter for ")
+                    .append(type)
+                    .append(".\n");
+    if (skipPast != null) {
+      builder.append("  Skipped:");
+      for (int i = 0; i < start; i++) {
+        builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
+      }
+      builder.append('\n');
+    }
+    builder.append("  Tried:");
+    for (int i = start, count = converterFactories.size(); i < count; i++) {
+      builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
+    }
+    throw new IllegalArgumentException(builder.toString());
   }
 
   /**
