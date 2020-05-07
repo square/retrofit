@@ -78,27 +78,24 @@ public final class StringConverterTest {
                         .baseUrl(server.url("/"))
                         .addConverterFactory(new MyConverterFactory())
                         .build();
-        RetrofitTest.Annotated annotated = retrofit.create(RetrofitTest.Annotated.class);
+        Annotated annotated = retrofit.create(Annotated.class);
         annotated.queryParameter(null); // Trigger internal setup.
 
         Annotation[] annotations = annotationsRef.get();
-        assertThat(annotations).hasAtLeastOneElementOfType(RetrofitTest.Annotated.Foo.class);
+        assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
     }
 
     @Test
     public void parameterAnnotationsPassedToNotStringConverter() {
-        final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Unable to create @Query converter for class java.lang.Object (parameter #1)"));
         Retrofit retrofit =
                 new Retrofit.Builder()
                         .baseUrl(server.url("/"))
                         .build();
-        RetrofitTest.Annotated annotated = retrofit.create(RetrofitTest.Annotated.class);
+        Annotated annotated = retrofit.create(Annotated.class);
         annotated.queryParameter(null); // Trigger internal setup.
 
-        Annotation[] annotations = annotationsRef.get();
-        assertThat(annotations).hasAtLeastOneElementOfType(RetrofitTest.Annotated.Foo.class);
     }
 
 }
