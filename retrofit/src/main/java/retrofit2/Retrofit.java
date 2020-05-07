@@ -134,7 +134,6 @@ public final class Retrofit {
   @SuppressWarnings({"unchecked", "checkstyle:WhitespaceAround"})
   // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(final Class<T> service) {
-
     Method[] methods = service.getMethods();
     for (int i = 0; i < methods.length; i++) {
       Method method = methods[i];

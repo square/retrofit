@@ -44,7 +44,6 @@ public final class UnsupportedAnnotationTest {
     private PrintStream console = null;
     private ByteArrayOutputStream bytes = null;
 
-
     interface Annotated {
         @GET("/")
         @Foo
