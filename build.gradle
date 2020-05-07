@@ -2,6 +2,10 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 import org.gradle.internal.jvm.Jvm
 
 buildscript {
+  repositories {
+        maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    }
   ext.versions = [
       'kotlin': '1.3.50',
       'okhttp': '3.14.7',

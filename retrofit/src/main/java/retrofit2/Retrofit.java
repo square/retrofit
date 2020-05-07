@@ -15,25 +15,6 @@
  */
 package retrofit2;
 
-import static java.util.Collections.unmodifiableList;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.net.URL;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
@@ -42,6 +23,16 @@ import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
 import retrofit2.http.Url;
+
+import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Retrofit adapts a Java interface to HTTP calls by using annotations on the declared methods to
@@ -65,7 +56,8 @@ import retrofit2.http.Url;
  */
 public final class Retrofit {
   private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
-
+  private String[] supportAnnotations;
+  private List<String> annotationSimpleNames;
   final okhttp3.Call.Factory callFactory;
   final HttpUrl baseUrl;
   final List<Converter.Factory> converterFactories;
@@ -86,6 +78,9 @@ public final class Retrofit {
     this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
+    supportAnnotations = new String[]{"Body", "Field", "FieldMap", "Header", "HeaderMap", "Part", "Path",
+            "Query", "QueryMap", "QueryName", "Tag", "Url", "partMap"};
+    annotationSimpleNames = Arrays.asList(supportAnnotations);
   }
 
   /**
@@ -136,8 +131,23 @@ public final class Retrofit {
    * }
    * </pre>
    */
-  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
+  @SuppressWarnings({"unchecked", "checkstyle:WhitespaceAround"})
+  // Single-interface proxy creation guarded by parameter safety.
   public <T> T create(final Class<T> service) {
+
+    Method[] methods = service.getMethods();
+    for (int i = 0; i < methods.length; i++) {
+      Method method = methods[i];
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      for (Annotation[] annotations : parameterAnnotations) {
+        for (Annotation annotation : annotations)
+          if (!annotationSimpleNames.contains(annotation.annotationType().getSimpleName())) {
+            System.out.printf("Unsupported annotation @%s\n", annotation.annotationType().getSimpleName());
+          }
+      }
+
+    }
+
     validateServiceInterface(service);
     return (T)
         Proxy.newProxyInstance(
