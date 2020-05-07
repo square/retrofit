@@ -392,6 +392,7 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
+  @SuppressWarnings("checkstyle:WhitespaceAround")
   public <T> Converter<T, String>  nextStringConverter(
           @Nullable Converter.Factory skipPast, Type type, Annotation[] annotations) {
     Objects.requireNonNull(type, "type == null");
@@ -407,6 +408,11 @@ public final class Retrofit {
         return (Converter<T, String>) converter;
       }
     }
+
+    if(type == String.class){
+      return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
+    }
+
 
     StringBuilder builder =
             new StringBuilder("Could not locate ResponseBody converter for ")

@@ -20,9 +20,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 import java.lang.annotation.Annotation;
@@ -34,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 
@@ -46,15 +45,12 @@ public final class StringConverterTest {
 
 
     interface Annotated {
-        @GET("/")
-        @Foo
-        Call<String> method();
-
-        @POST("/")
-        Call<ResponseBody> bodyParameter(@Foo @Body String param);
 
         @GET("/")
-        Call<ResponseBody> queryParameter(@Foo @Query("foo") Object foo);
+        Call<ResponseBody> queryString(@Query("word") String word);
+
+        @GET("/")
+        Call<ResponseBody> queryObject(@Foo @Query("foo") Object foo);
 
         @Target({PARAMETER,METHOD})
         @Retention(RUNTIME)
@@ -62,7 +58,7 @@ public final class StringConverterTest {
     }
 
     @Test
-    public void parameterAnnotationsPassedToStringConverter() {
+    public void queryObjectWithStringConverter() {
         final AtomicReference<Annotation[]> annotationsRef = new AtomicReference<>();
         class MyConverterFactory extends Converter.Factory {
             @Override
@@ -79,14 +75,14 @@ public final class StringConverterTest {
                         .addConverterFactory(new MyConverterFactory())
                         .build();
         Annotated annotated = retrofit.create(Annotated.class);
-        annotated.queryParameter(null); // Trigger internal setup.
+        annotated.queryObject(null); // Trigger internal setup.
 
         Annotation[] annotations = annotationsRef.get();
         assertThat(annotations).hasAtLeastOneElementOfType(Annotated.Foo.class);
     }
 
     @Test
-    public void parameterAnnotationsPassedToNotStringConverter() {
+    public void queryObjectWithoutStringConverter() {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Unable to create @Query converter for class java.lang.Object (parameter #1)"));
         Retrofit retrofit =
@@ -94,7 +90,23 @@ public final class StringConverterTest {
                         .baseUrl(server.url("/"))
                         .build();
         Annotated annotated = retrofit.create(Annotated.class);
-        annotated.queryParameter(null); // Trigger internal setup.
+        annotated.queryObject(null); // Trigger internal setup.
+    }
+
+    @Test
+    public void queryStringWithoutStringConverter(){
+        Retrofit retrofit =
+                new Retrofit.Builder()
+                        .baseUrl(server.url("/"))
+                        .build();
+        Annotated annotated = retrofit.create(Annotated.class);
+        try {
+            annotated.queryString(null); // Trigger internal setup.
+            assertTrue(true);
+        }catch (Exception e){
+            assertTrue(false);
+        }
+
 
     }
 
