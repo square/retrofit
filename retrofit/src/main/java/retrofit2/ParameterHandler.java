@@ -18,6 +18,8 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -174,32 +176,69 @@ abstract class ParameterHandler<T> {
         throw Utils.parameterError(method, p, "Query map was null");
       }
 
+      boolean fail = false;
+      String entryKey = null;
+      T entryValue = null;
       for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
+        entryKey = entry.getKey();
         if (entryKey == null) {
           throw Utils.parameterError(method, p, "Query map contained null key.");
         }
-        T entryValue = entry.getValue();
+        entryValue = entry.getValue();
         if (entryValue == null) {
           throw Utils.parameterError(
               method, p, "Query map contained null value for key '" + entryKey + "'.");
         }
-
-        String convertedEntryValue = valueConverter.convert(entryValue);
-        if (convertedEntryValue == null) {
-          throw Utils.parameterError(
-              method,
-              p,
-              "Query map value '"
-                  + entryValue
-                  + "' converted to null by "
-                  + valueConverter.getClass().getName()
-                  + " for key '"
-                  + entryKey
-                  + "'.");
+        String convertedEntryValue;
+        if (entryValue instanceof List || entryValue.getClass().isArray()) {
+          List<String> list = null;
+          if (entryValue.getClass().isArray()) {
+            throw new UnsupportedOperationException();
+          }
+          if (entryValue instanceof List) {
+            list = (List<String>) entryValue;
+          }
+          Iterator i = list.iterator();
+          if (!i.hasNext()) {
+            throw new IllegalArgumentException();
+          }
+          convertedEntryValue = valueConverter.convert((T) i.next());
+          if (convertedEntryValue == null) {
+            fail = true;
+            break;
+          } else {
+            builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+          }
+          while (i.hasNext()) {
+            convertedEntryValue = valueConverter.convert((T) i.next());
+            if (convertedEntryValue == null) {
+              fail = true;
+              break;
+            } else {
+              builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+            }
+          }
+        } else {
+          convertedEntryValue = valueConverter.convert(entryValue);
+          if (convertedEntryValue == null) {
+            fail = true;
+            break;
+          } else {
+            builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+          }
         }
-
-        builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+      }
+      if (fail) {
+        throw Utils.parameterError(
+            method,
+            p,
+            "Query map value '"
+                + entryValue
+                + "' converted to null by "
+                + valueConverter.getClass().getName()
+                + " for key '"
+                + entryKey
+                + "'.");
       }
     }
   }
