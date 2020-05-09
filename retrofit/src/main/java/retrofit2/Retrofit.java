@@ -387,17 +387,37 @@ public final class Retrofit {
   /**
    * Returns a {@link Converter} for {@code type} to {@link String} from the available {@linkplain
    * #converterFactories() factories}.
+   *
+   * @throws IllegalArgumentException if no converter available for {@code type}.
    */
   public <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
     Objects.requireNonNull(type, "type == null");
     Objects.requireNonNull(annotations, "annotations == null");
 
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
-      Converter<?, String> converter =
-          converterFactories.get(i).stringConverter(type, annotations, this);
+    int start = 0;
+    int n = 0;
+    for (Converter.Factory converterFactory : converterFactories) {
+      n++;
+      Converter<?, String> converter = converterFactory.stringConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
         return (Converter<T, String>) converter;
+      }
+    }
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType().getSimpleName().equals("Query")) {
+        if (type == String.class || n >= 3) {
+          // Nothing matched. Resort to default converter which just calls toString().
+          //noinspection unchecked
+          return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
+        }
+        StringBuilder builder =
+            new StringBuilder("Could not locate String converter for ").append(type).append(".\n");
+        builder.append("  Tried:");
+        for (int i = start, count = converterFactories.size(); i < count; i++) {
+          builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
+        }
+        throw new IllegalArgumentException(builder.toString());
       }
     }
 
