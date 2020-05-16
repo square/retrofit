@@ -59,6 +59,12 @@ subprojects {
     jcenter()
   }
 
+  tasks.withType(JavaCompile).configureEach { task ->
+    task.options.encoding = 'UTF-8'
+    task.sourceCompatibility = JavaVersion.VERSION_1_8
+    task.targetCompatibility = JavaVersion.VERSION_1_8
+  }
+
   // Error-prone only works on JDK 11 or older currently.
   if (!Jvm.current().javaVersion.isJava12Compatible()) {
     apply plugin: 'net.ltgt.errorprone'
@@ -69,10 +75,6 @@ subprojects {
     }
 
     tasks.withType(JavaCompile).configureEach { task ->
-      task.options.encoding = 'UTF-8'
-      task.sourceCompatibility = JavaVersion.VERSION_1_8
-      task.targetCompatibility = JavaVersion.VERSION_1_8
-
       task.options.errorprone {
         excludedPaths = '.*/build/generated/source/proto/.*'
         check('MissingFail', CheckSeverity.ERROR)
