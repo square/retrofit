@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 2.8.2 *(2020-05-18)*
+----------------------------
+
+ * Fix: Detect running on the Android platform by using system property rather than the presence of classes.
+   This ensures that even when you're running on the JVM with Android classes present on the classpath you
+   get JVM semantics.
+ * Fix: Update to OkHttp 3.14.9 which contains an associated Android platform detection fix.
+
+
 Version 2.8.1 *(2020-03-25)*
 ----------------------------
 
