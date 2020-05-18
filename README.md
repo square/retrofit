@@ -1,7 +1,7 @@
 Retrofit
 ========
 
-Type-safe HTTP client for Android and Java by Square, Inc.
+A type-safe HTTP client for Android and Java.
 
 For more information please see [the website][1].
 
