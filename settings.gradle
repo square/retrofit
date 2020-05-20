@@ -8,6 +8,7 @@ include ':retrofit-adapters:guava'
 include ':retrofit-adapters:java8'
 include ':retrofit-adapters:rxjava'
 include ':retrofit-adapters:rxjava2'
+include ':retrofit-adapters:rxjava3'
 include ':retrofit-adapters:scala'
 
 include ':retrofit-converters:gson'
