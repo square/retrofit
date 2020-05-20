@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+Version 2.9.0 *(2020-05-20)*
+----------------------------
+
+ * New: RxJava 3 adapter!
+
+   The Maven coordinates are `com.squareup.retrofit2:rxjava3-adapter`.
+
+   Unlike the RxJava 1 and RxJava 2 adapters, the RxJava 3 adapter's `create()` method will produce asynchronous HTTP requests by default. For synchronous requests use `createSynchronous()` and for synchronous on a scheduler use `createWithScheduler(..)`.
+
+
 Version 2.8.2 *(2020-05-18)*
 ----------------------------
 
