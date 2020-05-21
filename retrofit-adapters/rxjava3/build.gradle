@@ -1,0 +1,20 @@
+apply plugin: 'java-library'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api project(':retrofit')
+  api deps.rxjava3
+  api deps.reactiveStreams
+  compileOnly deps.findBugsAnnotations
+
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.guava
+  testImplementation deps.mockwebserver
+}
+
+jar {
+  manifest {
+    attributes  'Automatic-Module-Name': 'retrofit2.adapter.rxjava3'
+  }
+}
