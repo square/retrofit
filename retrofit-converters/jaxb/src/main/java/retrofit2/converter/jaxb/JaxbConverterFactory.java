@@ -85,7 +85,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
       Annotation[] methodAnnotations,
       Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbRequestConverter<>(contextForType((Class<?>) type), marshalProps, (Class<?>) type);
+      return new JaxbXmlRequestConverter<>(contextForType((Class<?>) type), marshalProps, (Class<?>) type);
     }
     return null;
   }
@@ -94,7 +94,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbResponseConverter<>(contextForType((Class<?>) type), unmarshalProps, (Class<?>) type);
+      return new JaxbXmlResponseConverter<>(contextForType((Class<?>) type), unmarshalProps, (Class<?>) type);
     }
     return null;
   }

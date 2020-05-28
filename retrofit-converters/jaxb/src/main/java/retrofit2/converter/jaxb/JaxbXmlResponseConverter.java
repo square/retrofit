@@ -26,13 +26,13 @@ import javax.xml.stream.XMLStreamReader;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 
-final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
+final class JaxbXmlResponseConverter<T> implements Converter<ResponseBody, T> {
   final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
   final JAXBContext context;
   final Map<String, Object> unmarshalProps;
   final Class<T> type;
 
-  JaxbResponseConverter(JAXBContext context, Map<String, Object> unmarshalProps, Class<T> type) {
+  protected JaxbXmlResponseConverter(JAXBContext context, Map<String, Object> unmarshalProps, Class<T> type) {
     this.context = context;
     this.unmarshalProps = unmarshalProps;
     this.type = type;

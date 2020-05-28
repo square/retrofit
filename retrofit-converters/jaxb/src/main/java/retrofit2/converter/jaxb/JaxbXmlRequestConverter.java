@@ -27,13 +27,13 @@ import okhttp3.RequestBody;
 import okio.Buffer;
 import retrofit2.Converter;
 
-final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
+final class JaxbXmlRequestConverter<T> implements Converter<T, RequestBody> {
   final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
   final JAXBContext context;
   final Map<String, Object> marshalProps;
   final Class<T> type;
 
-  JaxbRequestConverter(JAXBContext context, Map<String, Object> marshalProps, Class<T> type) {
+  protected JaxbXmlRequestConverter(JAXBContext context, Map<String, Object> marshalProps, Class<T> type) {
     this.context = context;
     this.marshalProps = marshalProps;
     this.type = type;
