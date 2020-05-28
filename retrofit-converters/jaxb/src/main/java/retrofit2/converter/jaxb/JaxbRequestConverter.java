@@ -16,6 +16,7 @@
 package retrofit2.converter.jaxb;
 
 import java.io.IOException;
+import java.util.Map;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -29,10 +30,12 @@ import retrofit2.Converter;
 final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
   final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
   final JAXBContext context;
+  final Map<String, Object> marshalProps;
   final Class<T> type;
 
-  JaxbRequestConverter(JAXBContext context, Class<T> type) {
+  JaxbRequestConverter(JAXBContext context, Map<String, Object> marshalProps, Class<T> type) {
     this.context = context;
+    this.marshalProps = marshalProps;
     this.type = type;
   }
 
@@ -40,7 +43,7 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
   public RequestBody convert(final T value) throws IOException {
     Buffer buffer = new Buffer();
     try {
-      Marshaller marshaller = context.createMarshaller();
+      Marshaller marshaller = createMarshaller();
 
       XMLStreamWriter xmlWriter =
           xmlOutputFactory.createXMLStreamWriter(
@@ -50,5 +53,15 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
       throw new RuntimeException(e);
     }
     return RequestBody.create(JaxbConverterFactory.XML, buffer.readByteString());
+  }
+
+  private Marshaller createMarshaller() throws JAXBException {
+    Marshaller marshaller = context.createMarshaller();
+    if (!marshalProps.isEmpty()) {
+      for (Map.Entry<String, Object> entry : marshalProps.entrySet()) {
+        marshaller.setProperty(entry.getKey(), entry.getValue());
+      }
+    }
+    return marshaller;
   }
 }

@@ -17,6 +17,8 @@ package retrofit2.converter.jaxb;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Map;
 import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -36,21 +38,44 @@ public final class JaxbConverterFactory extends Converter.Factory {
 
   /** Create an instance using a default {@link JAXBContext} instance for conversion. */
   public static JaxbConverterFactory create() {
-    return new JaxbConverterFactory(null);
+    return new JaxbConverterFactory(null, null, null);
   }
 
   /** Create an instance using {@code context} for conversion. */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static JaxbConverterFactory create(JAXBContext context) {
     if (context == null) throw new NullPointerException("context == null");
-    return new JaxbConverterFactory(context);
+    return new JaxbConverterFactory(context, null, null);
+  }
+
+  /** Create an instance using a default {@link JAXBContext}
+   * instance for conversion with custom (un)marshaller properties. */
+  public static JaxbConverterFactory create(Map<String, Object> marshalProps, Map<String, Object> unmarshalProps) {
+    return new JaxbConverterFactory(null, marshalProps, unmarshalProps);
+  }
+
+  /** Create an instance using {@code context} for conversion with custom (un)marshaller properties. */
+  @SuppressWarnings("ConstantConditions")
+  public static JaxbConverterFactory create(
+      JAXBContext context,
+      Map<String, Object> marshalProps,
+      Map<String, Object> unmarshalProps) {
+    if (context == null) throw new NullPointerException("context == null");
+    return new JaxbConverterFactory(context, marshalProps, unmarshalProps);
   }
 
   /** If null, a new JAXB context will be created for each type to be converted. */
   private final @Nullable JAXBContext context;
+  private final @Nullable Map<String, Object> marshalProps;
+  private final @Nullable Map<String, Object> unmarshalProps;
 
-  private JaxbConverterFactory(@Nullable JAXBContext context) {
+  private JaxbConverterFactory(
+      @Nullable JAXBContext context,
+      Map<String, Object> marshalProps,
+      Map<String, Object> unmarshalProps) {
     this.context = context;
+    this.marshalProps = marshalProps != null ? marshalProps : Collections.emptyMap();
+    this.unmarshalProps = unmarshalProps != null ? unmarshalProps : Collections.emptyMap();
   }
 
   @Override
@@ -60,7 +85,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
       Annotation[] methodAnnotations,
       Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type);
+      return new JaxbRequestConverter<>(contextForType((Class<?>) type), marshalProps, (Class<?>) type);
     }
     return null;
   }
@@ -69,7 +94,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type);
+      return new JaxbResponseConverter<>(contextForType((Class<?>) type), unmarshalProps, (Class<?>) type);
     }
     return null;
   }
