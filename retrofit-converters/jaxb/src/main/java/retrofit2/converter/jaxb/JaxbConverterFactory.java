@@ -30,8 +30,8 @@ import retrofit2.Converter;
 import retrofit2.Retrofit;
 
 /**
- * A {@linkplain Converter.Factory converter} which uses JAXB for XML. All validation events are
- * ignored.
+ * A {@linkplain Converter.Factory converter} which uses JAXB for XML and JSON. Concrete content media type
+ * sets by {@link ConvertingMediaType}. All validation events are ignored.
  */
 public final class JaxbConverterFactory extends Converter.Factory {
   static final MediaType XML = MediaType.get("application/xml; charset=utf-8");
@@ -49,7 +49,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
     return new JaxbConverterFactory(context, null,null, null);
   }
 
-  /** Create an instance using {@code context} for conversion. */
+  /** Create an instance using a default {@link JAXBContext} instance for conversion */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static JaxbConverterFactory create(ConvertingMediaType convertingMediaType) {
     if (convertingMediaType == null) throw new NullPointerException("convertingMediaType == null");
@@ -104,6 +104,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
 
   /** If null, a new JAXB context will be created for each type to be converted. */
   private final @Nullable JAXBContext context;
+  /** If null, will be XML by default */
   private final ConvertingMediaType convertingMediaType;
   private final Map<String, Object> marshalProps;
   private final Map<String, Object> unmarshalProps;
