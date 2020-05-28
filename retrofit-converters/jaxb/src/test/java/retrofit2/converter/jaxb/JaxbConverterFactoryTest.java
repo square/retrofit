@@ -19,6 +19,7 @@ import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
+import java.util.Map;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import okhttp3.mockwebserver.MockResponse;
@@ -40,7 +41,7 @@ public final class JaxbConverterFactoryTest {
 
   static final String SAMPLE_CONTACT_XML =
       ""
-          + "<?xml version=\"1.0\" ?>"
+          + "<?xml version=\"1.0\"?>"
           + "<contact>"
           + "<name>Jenny</name>"
           + "<phone_number type=\"MOBILE\">"
@@ -48,17 +49,25 @@ public final class JaxbConverterFactoryTest {
           + "</phone_number>"
           + "</contact>";
 
+  static final String SAMPLE_CONTACT_JSON =
+      ""
+          + "{\"contact\":"
+          + "{\"name\":\"Jenny\","
+          + "\"phone_number\":"
+          + "[{\"type\":\"MOBILE\",\"number\":\"867-5309\""
+          + "}]}}";
+
   static final String SAMPLE_CONTACT_XML_WITH_SCHEMA_LOCATION =
-          ""
-                  + "<?xml version=\"1.0\" ?>"
-                  + "<contact "
-                  + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                  + "xsi:schemaLocation=\"location\">"
-                  + "<name>Jenny</name>"
-                  + "<phone_number type=\"MOBILE\">"
-                  + "<number>867-5309</number>"
-                  + "</phone_number>"
-                  + "</contact>";
+      ""
+          + "<?xml version=\"1.0\"?>"
+          + "<contact "
+          + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+          + "xsi:schemaLocation=\"location\">"
+          + "<name>Jenny</name>"
+          + "<phone_number type=\"MOBILE\">"
+          + "<number>867-5309</number>"
+          + "</phone_number>"
+          + "</contact>";
 
   interface Service {
     @POST("/")
@@ -95,6 +104,19 @@ public final class JaxbConverterFactoryTest {
   @Test
   public void xmlResponseBody() throws Exception {
     server.enqueue(new MockResponse().setBody(SAMPLE_CONTACT_XML));
+
+    Call<Contact> call = service.getXml();
+    Response<Contact> response = call.execute();
+    assertThat(response.body()).isEqualTo(SAMPLE_CONTACT);
+  }
+
+  @Test
+  public void jsonResponseBody() throws Exception {
+    Map<String, Object> props = Collections.singletonMap("eclipselink.media-type", "application/json");
+    JaxbConverterFactory factory = JaxbConverterFactory.create(ConvertingMediaType.JSON, props, props);
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    service = retrofit.create(Service.class);
+    server.enqueue(new MockResponse().setBody(SAMPLE_CONTACT_JSON));
 
     Call<Contact> call = service.getXml();
     Response<Contact> response = call.execute();
@@ -168,6 +190,22 @@ public final class JaxbConverterFactoryTest {
     } catch (RuntimeException expected) {
       assertThat(expected).hasMessageContaining("PropertyException");
     }
+  }
+
+  @Test
+  public void userSuppliedJsonContent() throws Exception {
+    Map<String, Object> props = Collections.singletonMap("eclipselink.media-type", "application/json");
+    JaxbConverterFactory factory = JaxbConverterFactory.create(ConvertingMediaType.JSON, props, props);
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    service = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse());
+
+    Call<Void> call = service.postXml(SAMPLE_CONTACT);
+    call.execute();
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=utf-8");
+    assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_JSON);
   }
 
   @Test
