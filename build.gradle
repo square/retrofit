@@ -28,7 +28,7 @@ buildscript {
       'gson': 'com.google.code.gson:gson:2.8.5',
       'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.1',
       'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
-      'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
+      'jaxbImpl': "org.eclipse.persistence:org.eclipse.persistence.moxy:2.5.0",
       'moshi': 'com.squareup.moshi:moshi:1.8.0',
       'protobuf': "com.google.protobuf:protobuf-java:${versions.protobuf}",
       'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
