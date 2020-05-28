@@ -112,9 +112,12 @@ public final class JaxbConverterFactoryTest {
 
   @Test
   public void jsonResponseBody() throws Exception {
-    Map<String, Object> props = Collections.singletonMap("eclipselink.media-type", "application/json");
-    JaxbConverterFactory factory = JaxbConverterFactory.create(ConvertingMediaType.JSON, props, props);
-    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    Map<String, Object> props =
+        Collections.singletonMap("eclipselink.media-type", "application/json");
+    JaxbConverterFactory factory =
+        JaxbConverterFactory.create(ConvertingMediaType.JSON, props, props);
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
     server.enqueue(new MockResponse().setBody(SAMPLE_CONTACT_JSON));
 
@@ -160,9 +163,11 @@ public final class JaxbConverterFactoryTest {
 
   @Test
   public void userSuppliedMarshallerProperties() throws Exception {
-    JaxbConverterFactory factory = JaxbConverterFactory.create(
-        Collections.singletonMap(Marshaller.JAXB_SCHEMA_LOCATION, "location"), null);
-    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    JaxbConverterFactory factory =
+        JaxbConverterFactory.create(
+            Collections.singletonMap(Marshaller.JAXB_SCHEMA_LOCATION, "location"), null);
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse());
@@ -176,9 +181,11 @@ public final class JaxbConverterFactoryTest {
 
   @Test
   public void userSuppliedUnmarshallerProperties() throws Exception {
-    JaxbConverterFactory factory = JaxbConverterFactory.create(
-        null, Collections.singletonMap(Marshaller.JAXB_SCHEMA_LOCATION, "location"));
-    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    JaxbConverterFactory factory =
+        JaxbConverterFactory.create(
+            null, Collections.singletonMap(Marshaller.JAXB_SCHEMA_LOCATION, "location"));
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse());
@@ -194,9 +201,12 @@ public final class JaxbConverterFactoryTest {
 
   @Test
   public void userSuppliedJsonContent() throws Exception {
-    Map<String, Object> props = Collections.singletonMap("eclipselink.media-type", "application/json");
-    JaxbConverterFactory factory = JaxbConverterFactory.create(ConvertingMediaType.JSON, props, props);
-    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    Map<String, Object> props =
+        Collections.singletonMap("eclipselink.media-type", "application/json");
+    JaxbConverterFactory factory =
+        JaxbConverterFactory.create(ConvertingMediaType.JSON, props, props);
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse());

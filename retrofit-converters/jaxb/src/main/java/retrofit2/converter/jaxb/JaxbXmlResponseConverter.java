@@ -32,7 +32,8 @@ final class JaxbXmlResponseConverter<T> implements Converter<ResponseBody, T> {
   final Map<String, Object> unmarshalProps;
   final Class<T> type;
 
-  protected JaxbXmlResponseConverter(JAXBContext context, Map<String, Object> unmarshalProps, Class<T> type) {
+  protected JaxbXmlResponseConverter(
+      JAXBContext context, Map<String, Object> unmarshalProps, Class<T> type) {
     this.context = context;
     this.unmarshalProps = unmarshalProps;
     this.type = type;

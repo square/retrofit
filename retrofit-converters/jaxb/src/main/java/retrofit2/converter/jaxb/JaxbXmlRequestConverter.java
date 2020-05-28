@@ -33,7 +33,8 @@ final class JaxbXmlRequestConverter<T> implements Converter<T, RequestBody> {
   final Map<String, Object> marshalProps;
   final Class<T> type;
 
-  protected JaxbXmlRequestConverter(JAXBContext context, Map<String, Object> marshalProps, Class<T> type) {
+  protected JaxbXmlRequestConverter(
+      JAXBContext context, Map<String, Object> marshalProps, Class<T> type) {
     this.context = context;
     this.marshalProps = marshalProps;
     this.type = type;
