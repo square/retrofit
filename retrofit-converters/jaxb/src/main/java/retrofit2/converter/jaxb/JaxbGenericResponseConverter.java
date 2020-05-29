@@ -10,12 +10,12 @@ import javax.xml.transform.stream.StreamSource;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 
-final class JaxbJsonResponseConverter<T> implements Converter<ResponseBody, T> {
+final class JaxbGenericResponseConverter<T> implements Converter<ResponseBody, T> {
   final JAXBContext context;
   final Map<String, Object> unmarshalProps;
   final Class<T> type;
 
-  protected JaxbJsonResponseConverter(
+  protected JaxbGenericResponseConverter(
       JAXBContext context, Map<String, Object> unmarshalProps, Class<T> type) {
     this.context = context;
     this.unmarshalProps = unmarshalProps;
