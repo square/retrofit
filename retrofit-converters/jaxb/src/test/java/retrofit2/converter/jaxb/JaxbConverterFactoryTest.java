@@ -207,7 +207,7 @@ public final class JaxbConverterFactoryTest {
     Map<String, Object> props =
         Collections.singletonMap("eclipselink.media-type", "application/json");
     JaxbConverterFactory factory =
-        JaxbConverterFactory.create(MediaType.get("application/json"), props, props);
+        JaxbConverterFactory.create(MediaType.get("application/json; charset=utf-8"), props, props);
     Retrofit retrofit =
         new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
