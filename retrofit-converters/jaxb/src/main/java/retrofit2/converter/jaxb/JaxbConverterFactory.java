@@ -30,60 +30,70 @@ import retrofit2.Converter;
 import retrofit2.Retrofit;
 
 /**
- * A {@linkplain Converter.Factory converter} which uses JAXB for XML and JSON. Concrete content
- * media type sets by {@link ConvertingMediaType}. All validation events are ignored.
+ * A {@linkplain Converter.Factory converter} which uses JAXB. All validation events are ignored.
  */
 public final class JaxbConverterFactory extends Converter.Factory {
   static final MediaType XML = MediaType.get("application/xml; charset=utf-8");
-  static final MediaType JSON = (MediaType.get("application/json; charset=utf-8"));
+  static final MediaType JSON = MediaType.get("application/xml; charset=utf-8");
 
-  /** Create an instance using a default {@link JAXBContext} instance for conversion. */
+  /**
+   * Create an instance using a default {@link JAXBContext} instance for conversion, with XML
+   * content-type by default.
+   */
   public static JaxbConverterFactory create() {
-    return new JaxbConverterFactory(null, null, null, null);
+    return new JaxbConverterFactory(null, XML, Collections.emptyMap(), Collections.emptyMap());
   }
 
-  /** Create an instance using {@code context} for conversion. */
+  /** Create an instance using {@code context} for conversion, with XML content-type by default. */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static JaxbConverterFactory create(JAXBContext context) {
     if (context == null) throw new NullPointerException("context == null");
-    return new JaxbConverterFactory(context, null, null, null);
+    return new JaxbConverterFactory(context, XML, Collections.emptyMap(), Collections.emptyMap());
   }
 
-  /** Create an instance using a default {@link JAXBContext} instance for conversion */
+  /**
+   * Create an instance using a default {@link JAXBContext} instance for conversion with custom
+   * content type.
+   */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
-  public static JaxbConverterFactory create(ConvertingMediaType convertingMediaType) {
-    if (convertingMediaType == null) throw new NullPointerException("convertingMediaType == null");
-    return new JaxbConverterFactory(null, convertingMediaType, null, null);
+  public static JaxbConverterFactory create(MediaType contentType) {
+    if (contentType == null) throw new NullPointerException("contentType == null");
+    return new JaxbConverterFactory(
+        null, contentType, Collections.emptyMap(), Collections.emptyMap());
   }
 
-  /** Create an instance using {@code context} for conversion. */
+  /** Create an instance using {@code context} for conversion with custom content type. */
   @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
-  public static JaxbConverterFactory create(
-      JAXBContext context, ConvertingMediaType convertingMediaType) {
+  public static JaxbConverterFactory create(JAXBContext context, MediaType contentType) {
     if (context == null) throw new NullPointerException("context == null");
-    if (convertingMediaType == null) throw new NullPointerException("convertingMediaType == null");
-    return new JaxbConverterFactory(context, convertingMediaType, null, null);
+    if (contentType == null) throw new NullPointerException("contentType == null");
+    return new JaxbConverterFactory(
+        context, contentType, Collections.emptyMap(), Collections.emptyMap());
   }
 
   /**
    * Create an instance using a default {@link JAXBContext} instance for conversion with custom
    * (un)marshaller properties.
    */
+  @SuppressWarnings("ConstantConditions")
   public static JaxbConverterFactory create(
       Map<String, Object> marshalProps, Map<String, Object> unmarshalProps) {
-    return new JaxbConverterFactory(null, null, marshalProps, unmarshalProps);
+    if (marshalProps == null) throw new NullPointerException("marshalProps == null");
+    if (unmarshalProps == null) throw new NullPointerException("marshalProps == null");
+    return new JaxbConverterFactory(null, XML, marshalProps, unmarshalProps);
   }
 
   /**
    * Create an instance using a default {@link JAXBContext} instance for conversion with custom
-   * (un)marshaller properties.
+   * media type and (un)marshaller properties.
    */
+  @SuppressWarnings("ConstantConditions")
   public static JaxbConverterFactory create(
-      ConvertingMediaType convertingMediaType,
-      Map<String, Object> marshalProps,
-      Map<String, Object> unmarshalProps) {
-    if (convertingMediaType == null) throw new NullPointerException("convertingMediaType == null");
-    return new JaxbConverterFactory(null, convertingMediaType, marshalProps, unmarshalProps);
+      MediaType contentType, Map<String, Object> marshalProps, Map<String, Object> unmarshalProps) {
+    if (contentType == null) throw new NullPointerException("convertingMediaType == null");
+    if (marshalProps == null) throw new NullPointerException("marshalProps == null");
+    if (unmarshalProps == null) throw new NullPointerException("unmarshalProps == null");
+    return new JaxbConverterFactory(null, contentType, marshalProps, unmarshalProps);
   }
 
   /**
@@ -93,41 +103,44 @@ public final class JaxbConverterFactory extends Converter.Factory {
   public static JaxbConverterFactory create(
       JAXBContext context, Map<String, Object> marshalProps, Map<String, Object> unmarshalProps) {
     if (context == null) throw new NullPointerException("context == null");
-    return new JaxbConverterFactory(context, null, marshalProps, unmarshalProps);
+    if (marshalProps == null) throw new NullPointerException("marshalProps == null");
+    if (unmarshalProps == null) throw new NullPointerException("unmarshalProps == null");
+    return new JaxbConverterFactory(context, XML, marshalProps, unmarshalProps);
   }
 
   /**
-   * Create an instance using {@code context} for conversion with custom (un)marshaller properties.
+   * Create an instance using {@code context} for conversion with custom media type and
+   * (un)marshaller properties.
    */
   @SuppressWarnings("ConstantConditions")
   public static JaxbConverterFactory create(
       JAXBContext context,
-      ConvertingMediaType convertingMediaType,
+      MediaType contentType,
       Map<String, Object> marshalProps,
       Map<String, Object> unmarshalProps) {
     if (context == null) throw new NullPointerException("context == null");
-    if (convertingMediaType == null) throw new NullPointerException("convertingMediaType == null");
-    return new JaxbConverterFactory(context, convertingMediaType, marshalProps, unmarshalProps);
+    if (contentType == null) throw new NullPointerException("convertingMediaType == null");
+    if (marshalProps == null) throw new NullPointerException("marshalProps == null");
+    if (unmarshalProps == null) throw new NullPointerException("unmarshalProps == null");
+    return new JaxbConverterFactory(context, contentType, marshalProps, unmarshalProps);
   }
 
   /** If null, a new JAXB context will be created for each type to be converted. */
   private final @Nullable JAXBContext context;
-  /** If null, will be XML by default */
-  private final ConvertingMediaType convertingMediaType;
 
+  private final MediaType contentType;
   private final Map<String, Object> marshalProps;
   private final Map<String, Object> unmarshalProps;
 
   private JaxbConverterFactory(
       JAXBContext context,
-      @Nullable ConvertingMediaType convertingMediaType,
-      @Nullable Map<String, Object> marshalProps,
-      @Nullable Map<String, Object> unmarshalProps) {
+      MediaType contentType,
+      Map<String, Object> marshalProps,
+      Map<String, Object> unmarshalProps) {
     this.context = context;
-    this.convertingMediaType =
-        convertingMediaType != null ? convertingMediaType : ConvertingMediaType.XML;
-    this.marshalProps = marshalProps != null ? marshalProps : Collections.emptyMap();
-    this.unmarshalProps = unmarshalProps != null ? unmarshalProps : Collections.emptyMap();
+    this.contentType = contentType;
+    this.marshalProps = marshalProps;
+    this.unmarshalProps = unmarshalProps;
   }
 
   @Override
@@ -136,17 +149,13 @@ public final class JaxbConverterFactory extends Converter.Factory {
       Annotation[] parameterAnnotations,
       Annotation[] methodAnnotations,
       Retrofit retrofit) {
-    if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      switch (convertingMediaType) {
-        case XML:
-          return new JaxbXmlRequestConverter<>(
-              contextForType((Class<?>) type), marshalProps, (Class<?>) type);
-        case JSON:
-          return new JaxbJsonRequestConverter<>(
-              contextForType((Class<?>) type), marshalProps, (Class<?>) type);
-        default:
-          throw new IllegalArgumentException("Unsupported content type: " + convertingMediaType);
+    JAXBContext context = contextForType((Class<?>) type);
+    if (contentType.equals(XML)) {
+      if (((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
+        return new JaxbXmlRequestConverter<>(context, marshalProps, (Class<?>) type);
       }
+    } else {
+      return new JaxbGenericRequestConverter<>(context, contentType, marshalProps, (Class<?>) type);
     }
     return null;
   }
@@ -154,17 +163,13 @@ public final class JaxbConverterFactory extends Converter.Factory {
   @Override
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
-    if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
-      switch (convertingMediaType) {
-        case XML:
-          return new JaxbXmlResponseConverter<>(
-              contextForType((Class<?>) type), unmarshalProps, (Class<?>) type);
-        case JSON:
-          return new JaxbJsonResponseConverter<>(
-              contextForType((Class<?>) type), unmarshalProps, (Class<?>) type);
-        default:
-          throw new IllegalArgumentException("Unsupported content type: " + convertingMediaType);
+    JAXBContext context = contextForType((Class<?>) type);
+    if (contentType.equals(XML)) {
+      if (((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
+        return new JaxbXmlResponseConverter<>(context, unmarshalProps, (Class<?>) type);
       }
+    } else {
+      return new JaxbGenericResponseConverter<>(context, unmarshalProps, (Class<?>) type);
     }
     return null;
   }
