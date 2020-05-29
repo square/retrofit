@@ -236,7 +236,16 @@ final class RequestBuilder {
     } else {
       // No query parameters triggered builder creation, just combine the relative URL and base URL.
       //noinspection ConstantConditions Non-null if urlBuilder is null.
-      url = baseUrl.resolve(relativeUrl);
+      StringBuilder relativeUrlBuilder = new StringBuilder(relativeUrl);
+      if (relativeUrl.length() > 0) {
+        if (relativeUrlBuilder.charAt(0) != '/') {
+          if (!relativeUrl.contains("://")) {
+            relativeUrlBuilder.insert(0, '/');
+          }
+        }
+      }
+
+      url = baseUrl.resolve(relativeUrlBuilder.toString());
       if (url == null) {
         throw new IllegalArgumentException(
             "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);

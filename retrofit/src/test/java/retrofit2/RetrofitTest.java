@@ -62,9 +62,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public final class RetrofitTest {
-
   @Rule public final MockWebServer server = new MockWebServer();
-
 
   interface CallMethod {
     @GET("/")
