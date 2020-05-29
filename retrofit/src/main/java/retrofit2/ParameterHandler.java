@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -190,31 +189,15 @@ abstract class ParameterHandler<T> {
               method, p, "Query map contained null value for key '" + entryKey + "'.");
         }
         String convertedEntryValue;
-        if (entryValue instanceof List || entryValue.getClass().isArray()) {
-          List<String> list = null;
-          if (entryValue.getClass().isArray()) {
-            throw new UnsupportedOperationException();
-          }
-          if (entryValue instanceof List) {
-            list = (List<String>) entryValue;
-          }
-          Iterator i = list.iterator();
-          if (!i.hasNext()) {
-            throw new IllegalArgumentException();
-          }
-          convertedEntryValue = valueConverter.convert((T) i.next());
-          if (convertedEntryValue == null) {
-            fail = true;
-            break;
-          } else {
-            builder.addQueryParam(entryKey, convertedEntryValue, encoded);
-          }
+        if (entryValue instanceof Iterable) {
+          Iterator i = ((Iterable) entryValue).iterator();
           while (i.hasNext()) {
-            convertedEntryValue = valueConverter.convert((T) i.next());
-            if (convertedEntryValue == null) {
+            Object t = i.next();
+            if (t == null) {
               fail = true;
               break;
             } else {
+              convertedEntryValue = valueConverter.convert((T) t);
               builder.addQueryParam(entryKey, convertedEntryValue, encoded);
             }
           }

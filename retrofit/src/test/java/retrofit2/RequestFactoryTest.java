@@ -1559,6 +1559,27 @@ public final class RequestFactoryTest {
   }
 
   @Test
+  public void getWithQueryParamMultiValueMapWithNull() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap(encoded = true) Map<String, Object> query) {
+        return null;
+      }
+    }
+    Map<String, Object> map = new HashMap<>();
+    List<String> param1 = new ArrayList<>();
+    param1.add("a");
+    param1.add("b");
+    param1.add(null);
+    map.put("string", param1);
+    try {
+      Request request = buildRequest(Example.class, map);
+      fail();
+    } catch (IllegalArgumentException e) {;
+    }
+  }
+
+  @Test
   public void getWithEncodedQueryParamMultiValueMap() {
     class Example {
       @GET("/foo/bar/") //
