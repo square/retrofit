@@ -21,8 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import java.util.Map;
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-import okhttp3.MediaType;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -57,18 +55,6 @@ public final class JaxbConverterFactoryTest {
           + "\"phone_number\":"
           + "[{\"type\":\"MOBILE\",\"number\":\"867-5309\""
           + "}]}}";
-
-  static final String SAMPLE_CONTACT_XML_WITH_SCHEMA_LOCATION =
-      ""
-          + "<?xml version=\"1.0\"?>"
-          + "<contact "
-          + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-          + "xsi:schemaLocation=\"location\">"
-          + "<name>Jenny</name>"
-          + "<phone_number type=\"MOBILE\">"
-          + "<number>867-5309</number>"
-          + "</phone_number>"
-          + "</contact>";
 
   interface Service {
     @POST("/")
@@ -115,8 +101,8 @@ public final class JaxbConverterFactoryTest {
   public void jsonResponseBody() throws Exception {
     Map<String, Object> props =
         Collections.singletonMap("eclipselink.media-type", "application/json");
-    JaxbConverterFactory factory =
-        JaxbConverterFactory.create(MediaType.get("application/json; charset=utf-8"), props, props);
+    JAXBContext context = JAXBContext.newInstance(new Class[] {Contact.class}, props);
+    JaxbConverterFactory factory = JaxbConverterFactory.create(context, JaxbConverterFactory.JSON);
     Retrofit retrofit =
         new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
@@ -163,51 +149,11 @@ public final class JaxbConverterFactoryTest {
   }
 
   @Test
-  public void userSuppliedMarshallerProperties() throws Exception {
-    JaxbConverterFactory factory =
-        JaxbConverterFactory.create(
-            Collections.singletonMap(Marshaller.JAXB_SCHEMA_LOCATION, "location"),
-            Collections.emptyMap());
-    Retrofit retrofit =
-        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
-    service = retrofit.create(Service.class);
-
-    server.enqueue(new MockResponse());
-
-    Call<Void> call = service.postXml(SAMPLE_CONTACT);
-    call.execute();
-    RecordedRequest request = server.takeRequest();
-    assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=utf-8");
-    assertThat(request.getBody().readUtf8()).isEqualTo(SAMPLE_CONTACT_XML_WITH_SCHEMA_LOCATION);
-  }
-
-  @Test
-  public void userSuppliedUnmarshallerProperties() throws Exception {
-    JaxbConverterFactory factory =
-        JaxbConverterFactory.create(
-            Collections.emptyMap(),
-            Collections.singletonMap(Marshaller.JAXB_SCHEMA_LOCATION, "location"));
-    Retrofit retrofit =
-        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
-    service = retrofit.create(Service.class);
-
-    server.enqueue(new MockResponse());
-
-    Call<Contact> call = service.getXml();
-    try {
-      call.execute();
-      fail();
-    } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("PropertyException");
-    }
-  }
-
-  @Test
   public void userSuppliedJsonContent() throws Exception {
     Map<String, Object> props =
         Collections.singletonMap("eclipselink.media-type", "application/json");
-    JaxbConverterFactory factory =
-        JaxbConverterFactory.create(MediaType.get("application/json; charset=utf-8"), props, props);
+    JAXBContext context = JAXBContext.newInstance(new Class[] {Contact.class}, props);
+    JaxbConverterFactory factory = JaxbConverterFactory.create(context, JaxbConverterFactory.JSON);
     Retrofit retrofit =
         new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
     service = retrofit.create(Service.class);
