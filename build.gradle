@@ -66,25 +66,22 @@ subprojects {
     task.targetCompatibility = JavaVersion.VERSION_1_8
   }
 
-  // Error-prone only works on JDK 11 or older currently.
-  if (!Jvm.current().javaVersion.isJava12Compatible()) {
-    apply plugin: 'net.ltgt.errorprone'
+  apply plugin: 'net.ltgt.errorprone'
 
-    dependencies {
-      errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
-      errorprone 'com.google.errorprone:error_prone_core:2.3.3'
-    }
+  dependencies {
+    errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
+    errorprone 'com.google.errorprone:error_prone_core:2.4.0'
+  }
 
-    tasks.withType(JavaCompile).configureEach { task ->
-      task.options.errorprone {
-        excludedPaths = '.*/build/generated/source/proto/.*'
-        check('MissingFail', CheckSeverity.ERROR)
-        check('MissingOverride', CheckSeverity.ERROR)
-        check('UnusedException', CheckSeverity.ERROR)
-        check('UnusedMethod', CheckSeverity.ERROR)
-        check('UnusedNestedClass', CheckSeverity.ERROR)
-        check('UnusedVariable', CheckSeverity.ERROR)
-      }
+  tasks.withType(JavaCompile).configureEach { task ->
+    task.options.errorprone {
+      excludedPaths = '.*/build/generated/source/proto/.*'
+      check('MissingFail', CheckSeverity.ERROR)
+      check('MissingOverride', CheckSeverity.ERROR)
+      check('UnusedException', CheckSeverity.ERROR)
+      check('UnusedMethod', CheckSeverity.ERROR)
+      check('UnusedNestedClass', CheckSeverity.ERROR)
+      check('UnusedVariable', CheckSeverity.ERROR)
     }
   }
 
