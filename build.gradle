@@ -43,7 +43,7 @@ buildscript {
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.9.0'
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
-    classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.8'
+    classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
   }
   repositories {
     mavenCentral()
@@ -103,26 +103,29 @@ subprojects {
       }
     }
 
-    project.apply plugin: 'com.github.sherter.google-java-format'
-    googleJavaFormat {
-      toolVersion = '1.7'
+    // google-java-format only works on JDK 11 or newer.
+    if (Jvm.current().javaVersion.isJava11Compatible()) {
+      project.apply plugin: 'com.github.sherter.google-java-format'
+      googleJavaFormat {
+        toolVersion = '1.8'
 
-      // By default, the GJF plugin includes all Java folders inside the project directory. This
-      // does not work well with nested projects, especially when you want to exclude them.
-      source = sourceSets*.allJava
-    }
-    afterEvaluate {
-      def verify = tasks.getByName('verifyGoogleJavaFormat')
-      tasks.getByName('check').dependsOn(verify)
-      def prompt = tasks.create('promptGoogleJavaFormat') {
-        doLast {
-          println()
-          println('To automatically format, run "./gradlew googleJavaFormat"')
-          println()
-        }
-        onlyIf { verify.state.failure != null }
+        // By default, the GJF plugin includes all Java folders inside the project directory. This
+        // does not work well with nested projects, especially when you want to exclude them.
+        source = sourceSets*.allJava
       }
-      verify.finalizedBy(prompt)
+      afterEvaluate {
+        def verify = tasks.getByName('verifyGoogleJavaFormat')
+        tasks.getByName('check').dependsOn(verify)
+        def prompt = tasks.create('promptGoogleJavaFormat') {
+          doLast {
+            println()
+            println('To automatically format, run "./gradlew googleJavaFormat"')
+            println()
+          }
+          onlyIf { verify.state.failure != null }
+        }
+        verify.finalizedBy(prompt)
+      }
     }
   }
 
