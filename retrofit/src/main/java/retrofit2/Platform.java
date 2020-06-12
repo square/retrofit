@@ -39,9 +39,14 @@ class Platform {
   }
 
   private static Platform findPlatform() {
-    return "Dalvik".equals(System.getProperty("java.vm.name"))
-        ? new Android() //
-        : new Platform(true);
+    switch (System.getProperty("java.vm.name")) {
+      case "Dalvik":
+        return new Android();
+      case "RoboVM":
+        return new Platform(false);
+      default:
+        return new Platform(true);
+    }
   }
 
   private final boolean hasJava8Types;
