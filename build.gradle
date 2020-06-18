@@ -7,6 +7,7 @@ buildscript {
       'okhttp': '3.14.9',
       'protobuf': '3.10.0',
       'jaxb': '2.3.1',
+      'robovm': '2.3.9',
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
@@ -34,6 +35,7 @@ buildscript {
       'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
       'wireRuntime': 'com.squareup.wire:wire-runtime:2.2.0',
       'jsoup': 'org.jsoup:jsoup:1.12.1',
+      'robovm': "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
   ]
 
   dependencies {
@@ -44,6 +46,7 @@ buildscript {
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
     classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
+    classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${versions.robovm}"
   }
   repositories {
     mavenCentral()
