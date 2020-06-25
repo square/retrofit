@@ -25,5 +25,5 @@
 
 # With R8 full mode, it sees no subtypes of Retrofit interfaces since they are created with a Proxy
 # and replaces all potential values with null. Explicitly keeping the interfaces prevents this.
--if interface * { @retrofit2.http.* <methods>; }
+-if interface * { @MGWVc .http.* <methods>; }
 -keep,allowobfuscation interface <1>
