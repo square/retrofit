@@ -20,8 +20,11 @@ package retrofit2
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.yield
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
+import kotlin.coroutines.intrinsics.startCoroutineUninterceptedOrReturn
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -105,15 +108,22 @@ suspend fun <T> Call<T>.awaitResponse(): Response<T> {
  *
  * This is needed when a checked exception is synchronously caught in a [java.lang.reflect.Proxy]
  * invocation to avoid being wrapped in [java.lang.reflect.UndeclaredThrowableException].
- *
- * The implementation is derived from:
- * https://github.com/Kotlin/kotlinx.coroutines/pull/1667#issuecomment-556106349
  */
 internal suspend fun Exception.suspendAndThrow(): Nothing {
-  suspendCoroutineUninterceptedOrReturn<Nothing> { continuation ->
-    Dispatchers.Default.dispatch(continuation.context, Runnable {
-      continuation.intercepted().resumeWithException(this@suspendAndThrow)
-    })
+  suspendCoroutineUninterceptedOrReturn<Unit> { continuation ->
+    val dispatcher = continuation.context[ContinuationInterceptor]
+    // Try yielding first if running on a non-unconfined dispatcher.
+    if (dispatcher == null || dispatcher == Dispatchers.Unconfined ||
+        // Can't use ::yield because of https://youtrack.jetbrains.com/issue/KT-37456
+        suspend { yield() }.startCoroutineUninterceptedOrReturn(continuation) != COROUTINE_SUSPENDED
+    ) {
+      // If yield does not suspend, then fall back to dispatching on the default dispatcher. This is
+      // derived from https://github.com/Kotlin/kotlinx.coroutines/pull/1667#issuecomment-556106349
+      Dispatchers.Default.dispatch(continuation.context, kotlinx.coroutines.Runnable {
+        continuation.intercepted().resume(Unit)
+      })
+    }
     COROUTINE_SUSPENDED
   }
+  throw this
 }
