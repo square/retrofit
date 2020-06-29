@@ -21,7 +21,6 @@ package retrofit2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.yield
-import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
 import kotlin.coroutines.intrinsics.startCoroutineUninterceptedOrReturn
@@ -111,12 +110,10 @@ suspend fun <T> Call<T>.awaitResponse(): Response<T> {
  */
 internal suspend fun Exception.suspendAndThrow(): Nothing {
   suspendCoroutineUninterceptedOrReturn<Unit> { continuation ->
-    val dispatcher = continuation.context[ContinuationInterceptor]
     // Try yielding first if running on a non-unconfined dispatcher.
-    if (dispatcher == null || dispatcher == Dispatchers.Unconfined ||
-        // Can't use ::yield because of https://youtrack.jetbrains.com/issue/KT-37456
-        suspend { yield() }.startCoroutineUninterceptedOrReturn(continuation) != COROUTINE_SUSPENDED
-    ) {
+    // Can't use ::yield because of https://youtrack.jetbrains.com/issue/KT-37456
+    if (suspend { yield() }.startCoroutineUninterceptedOrReturn(continuation) !=
+            COROUTINE_SUSPENDED) {
       // If yield does not suspend, then fall back to dispatching on the default dispatcher. This is
       // derived from https://github.com/Kotlin/kotlinx.coroutines/pull/1667#issuecomment-556106349
       Dispatchers.Default.dispatch(continuation.context, kotlinx.coroutines.Runnable {
