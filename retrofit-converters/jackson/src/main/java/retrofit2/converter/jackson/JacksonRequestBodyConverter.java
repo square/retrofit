@@ -32,13 +32,16 @@ final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> 
     this.adapter = adapter;
   }
 
-  @Override public RequestBody convert(T value) {
+  @Override
+  public RequestBody convert(T value) {
     return new RequestBody() {
-      @Override public MediaType contentType() {
+      @Override
+      public MediaType contentType() {
         return MEDIA_TYPE;
       }
 
-      @Override public void writeTo(BufferedSink bufferedSink) throws IOException {
+      @Override
+      public void writeTo(BufferedSink bufferedSink) throws IOException {
         try (OutputStream os = bufferedSink.outputStream()) {
           adapter.writeValue(os, value);
         }

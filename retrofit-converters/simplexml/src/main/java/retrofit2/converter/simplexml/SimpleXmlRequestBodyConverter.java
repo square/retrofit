@@ -33,13 +33,16 @@ final class SimpleXmlRequestBodyConverter<T> implements Converter<T, RequestBody
     this.serializer = serializer;
   }
 
-  @Override public RequestBody convert(T value) {
+  @Override
+  public RequestBody convert(T value) {
     return new RequestBody() {
-      @Override public MediaType contentType() {
+      @Override
+      public MediaType contentType() {
         return MEDIA_TYPE;
       }
 
-      @Override public void writeTo(BufferedSink sink) throws IOException {
+      @Override
+      public void writeTo(BufferedSink sink) throws IOException {
         try {
           try (OutputStreamWriter osw = new OutputStreamWriter(sink.outputStream(), CHARSET)) {
             serializer.write(value, osw);

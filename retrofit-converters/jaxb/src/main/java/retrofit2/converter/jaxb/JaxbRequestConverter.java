@@ -36,17 +36,21 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
     this.type = type;
   }
 
-  @Override public RequestBody convert(final T value) {
+  @Override
+  public RequestBody convert(final T value) {
     return new RequestBody() {
-      @Override public MediaType contentType() {
+      @Override
+      public MediaType contentType() {
         return JaxbConverterFactory.XML;
       }
 
-      @Override public void writeTo(BufferedSink sink) {
+      @Override
+      public void writeTo(BufferedSink sink) {
         try {
           Marshaller marshaller = context.createMarshaller();
-          XMLStreamWriter xmlWriter = xmlOutputFactory.createXMLStreamWriter(
-              sink.outputStream(), JaxbConverterFactory.XML.charset().name());
+          XMLStreamWriter xmlWriter =
+              xmlOutputFactory.createXMLStreamWriter(
+                  sink.outputStream(), JaxbConverterFactory.XML.charset().name());
           try {
             marshaller.marshal(value, xmlWriter);
             xmlWriter.flush();

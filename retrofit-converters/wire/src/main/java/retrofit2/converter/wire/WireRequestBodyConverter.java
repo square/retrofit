@@ -32,13 +32,16 @@ final class WireRequestBodyConverter<T extends Message<T, ?>> implements Convert
     this.adapter = adapter;
   }
 
-  @Override public RequestBody convert(T value) {
+  @Override
+  public RequestBody convert(T value) {
     return new RequestBody() {
-      @Override public MediaType contentType() {
+      @Override
+      public MediaType contentType() {
         return MEDIA_TYPE;
       }
 
-      @Override public void writeTo(BufferedSink sink) throws IOException {
+      @Override
+      public void writeTo(BufferedSink sink) throws IOException {
         try (BufferedSink autoClosingSink = sink) {
           adapter.encode(autoClosingSink, value);
         }

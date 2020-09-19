@@ -26,13 +26,16 @@ import retrofit2.Converter;
 final class ProtoRequestBodyConverter<T extends MessageLite> implements Converter<T, RequestBody> {
   private static final MediaType MEDIA_TYPE = MediaType.get("application/x-protobuf");
 
-  @Override public RequestBody convert(T value) {
+  @Override
+  public RequestBody convert(T value) {
     return new RequestBody() {
-      @Override public MediaType contentType() {
+      @Override
+      public MediaType contentType() {
         return MEDIA_TYPE;
       }
 
-      @Override public void writeTo(BufferedSink sink) throws IOException {
+      @Override
+      public void writeTo(BufferedSink sink) throws IOException {
         try (OutputStream os = sink.outputStream()) {
           value.writeTo(os);
         }
