@@ -128,7 +128,7 @@ final class RequestFactory {
       argumentList.add(args[p]);
       ParameterHandler<Object> handler = handlers[p];
       if (handler != null) {
-        handlers[p].apply(requestBuilder, args[p]);
+        handler.apply(requestBuilder, args[p]);
       }
     }
 
