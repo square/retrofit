@@ -465,7 +465,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "No Retrofit annotation found. (parameter #1)\n    for method Example.method");
+              "No annotation found. (parameter #1)\n    for method Example.method");
     }
   }
 

@@ -126,7 +126,10 @@ final class RequestFactory {
     List<Object> argumentList = new ArrayList<>(argumentCount);
     for (int p = 0; p < argumentCount; p++) {
       argumentList.add(args[p]);
-      handlers[p].apply(requestBuilder, args[p]);
+      ParameterHandler<Object> handler = handlers[p];
+      if (handler != null) {
+        handlers[p].apply(requestBuilder, args[p]);
+      }
     }
 
     return requestBuilder.get().tag(Invocation.class, new Invocation(method, argumentList)).build();
@@ -347,7 +350,9 @@ final class RequestFactory {
           } catch (NoClassDefFoundError ignored) {
           }
         }
-        throw parameterError(method, p, "No Retrofit annotation found.");
+        if (annotations == null || annotations.length == 0) {
+          throw parameterError(method, p, "No annotation found.");
+        }
       }
 
       return result;
