@@ -97,7 +97,7 @@ class Platform {
 
   static final class Android extends Platform {
     Android() {
-      super(Build.VERSION.SDK_INT >= 24);
+      super(Build.VERSION.SDK_INT >= 23);
     }
 
     @Override public Executor defaultCallbackExecutor() {
