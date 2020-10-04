@@ -8,6 +8,7 @@ dependencies {
   compileOnly deps.android
   compileOnly deps.kotlinStdLib
   compileOnly deps.kotlinCoroutines
+  compileOnly deps.kotlinMetaData
 
   compileOnly deps.animalSnifferAnnotations
   compileOnly deps.findBugsAnnotations

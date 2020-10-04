@@ -16,7 +16,6 @@
 package retrofit2
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -29,7 +28,6 @@ import okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.helpers.ToStringConverterFactory
@@ -200,7 +198,6 @@ class KotlinSuspendTest {
     }
   }
 
-  @Ignore("Not working yet")
   @Test fun bodyNullable() {
     val retrofit = Retrofit.Builder()
         .baseUrl(server.url("/"))

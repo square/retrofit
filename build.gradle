@@ -12,6 +12,7 @@ buildscript {
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
       'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2',
+      'kotlinMetaData': 'org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0',
       'okhttp': "com.squareup.okhttp3:okhttp:${versions.okhttp}",
       'mockwebserver': "com.squareup.okhttp3:mockwebserver:${versions.okhttp}",
       'junit': 'junit:junit:4.13',
