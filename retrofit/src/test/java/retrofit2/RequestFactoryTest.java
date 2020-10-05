@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URI;
@@ -3250,6 +3252,24 @@ public final class RequestFactoryTest {
               "@Tag type java.util.List is duplicate of parameter #1 and would always overwrite its value. (parameter #2)\n"
                   + "    for method Example.method");
     }
+  }
+
+  @Retention(RUNTIME)
+  @interface CustomAnnotation {}
+
+  @Test
+  public void parameterWithCustomAnnotation() {
+    class Example {
+      @GET("/") //
+      Call<ResponseBody> method(@CustomAnnotation String a) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "CustomArgument");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/");
+    Invocation invocation = request.tag(Invocation.class);
+    assertThat(invocation.arguments().get(0)).isEqualTo("CustomArgument");
+    assertThat(invocation.method().getParameterAnnotations()[0][0]).isInstanceOf(CustomAnnotation.class);
   }
 
   private static void assertBody(RequestBody body, String expected) {
