@@ -8,7 +8,8 @@ buildscript {
       'protobuf': '3.10.0',
       'jaxb': '2.3.1',
       'robovm': '2.3.9',
-      'bnd': '5.1.2'
+      'bnd': '5.1.2',
+      'equinox': '3.16.0'
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
@@ -38,6 +39,8 @@ buildscript {
       'jsoup': 'org.jsoup:jsoup:1.12.1',
       'robovm': "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
       'bnd': "biz.aQute.bnd:biz.aQute.bnd.gradle:${versions.bnd}",
+      'bndResolve': "biz.aQute.bnd:biz.aQute.resolve:${versions.bnd}",
+      'equinox': "org.eclipse.platform:org.eclipse.osgi:${versions.equinox}",
       'kotlinStdlibOsgi': "org.jetbrains.kotlin:kotlin-osgi-bundle:${versions.kotlin}"
   ]
 
@@ -158,13 +161,6 @@ subprojects {
 
     project.jar { t ->
       t.setClasspath(project.sourceSets.osgi['compileClasspath'] + project.sourceSets.main['compileClasspath'])
-    }
-
-    project.dependencies { dp ->
-      if (dp.hasProperty('osgiApi')) {
-        // The OSGi kotlin-stdlib lets bnd infer bundle versions.
-        dp.osgiApi deps.kotlinStdlibOsgi
-      }
     }
   }
 }
