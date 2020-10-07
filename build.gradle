@@ -8,6 +8,7 @@ buildscript {
       'protobuf': '3.10.0',
       'jaxb': '2.3.1',
       'robovm': '2.3.9',
+      'bnd': '5.1.2'
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
@@ -36,6 +37,8 @@ buildscript {
       'wireRuntime': 'com.squareup.wire:wire-runtime:2.2.0',
       'jsoup': 'org.jsoup:jsoup:1.12.1',
       'robovm': "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
+      'bnd': "biz.aQute.bnd:biz.aQute.bnd.gradle:${versions.bnd}",
+      'kotlinStdlibOsgi': "org.jetbrains.kotlin:kotlin-osgi-bundle:${versions.kotlin}"
   ]
 
   dependencies {
@@ -47,6 +50,7 @@ buildscript {
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
     classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
     classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${versions.robovm}"
+    classpath deps.bnd
   }
   repositories {
     mavenCentral()
@@ -142,6 +146,25 @@ subprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile).configureEach { task ->
     task.kotlinOptions {
       jvmTarget = '1.8'
+    }
+  }
+
+  ext.applyOsgi = { project ->
+    project.apply plugin: 'biz.aQute.bnd.builder'
+
+    project.sourceSets {
+      osgi
+    }
+
+    project.jar { t ->
+      t.setClasspath(project.sourceSets.osgi['compileClasspath'] + project.sourceSets.main['compileClasspath'])
+    }
+
+    project.dependencies { dp ->
+      if (dp.hasProperty('osgiApi')) {
+        // The OSGi kotlin-stdlib lets bnd infer bundle versions.
+        dp.osgiApi deps.kotlinStdlibOsgi
+      }
     }
   }
 }

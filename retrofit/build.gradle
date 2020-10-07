@@ -1,6 +1,24 @@
 apply plugin: 'java-library'
 apply plugin: 'org.jetbrains.kotlin.jvm'
 apply plugin: 'com.vanniktech.maven.publish'
+applyOsgi(this)
+
+jar {
+  // MANIFEST.MF, including OSGi bnd instructions.
+  // We export retrofit2.internal for our own modules use.
+  // The packages of all optional dependencies must be explicitly specified.
+  bnd '''
+  Export-Package: \
+  retrofit2,\
+  retrofit2.http,\
+  retrofit2.internal;retrofitinternal=true;mandatory:=retrofitinternal
+  Import-Package: \
+  android.*;resolution:=optional,\
+  *
+  Automatic-Module-Name: retrofit2
+  Bundle-SymbolicName: com.squareup.retrofit2
+  '''
+}
 
 dependencies {
   api deps.okhttp
@@ -19,10 +37,4 @@ dependencies {
   testImplementation deps.mockwebserver
   testImplementation deps.kotlinStdLib
   testImplementation deps.kotlinCoroutines
-}
-
-jar {
-  manifest {
-    attributes  'Automatic-Module-Name': 'retrofit2'
-  }
 }
