@@ -70,6 +70,7 @@ public final class Retrofit {
   final HttpUrl baseUrl;
   final List<Converter.Factory> converterFactories;
   final List<CallAdapter.Factory> callAdapterFactories;
+  final List<RequestBuilderInterceptor> requestBuilderInterceptors;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
 
@@ -78,12 +79,14 @@ public final class Retrofit {
       HttpUrl baseUrl,
       List<Converter.Factory> converterFactories,
       List<CallAdapter.Factory> callAdapterFactories,
+      List<RequestBuilderInterceptor> requestBuilderInterceptors,
       @Nullable Executor callbackExecutor,
       boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
     this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
+    this.requestBuilderInterceptors = requestBuilderInterceptors; // Copy+unmodifiable at call site.
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
   }
@@ -407,6 +410,14 @@ public final class Retrofit {
   }
 
   /**
+   * Returns an unmodifiable list of the request builder interceptors used to intercept
+   * and possibly modify the {@link okhttp3.Request.Builder} using the provided {@link Invocation}.
+   */
+  public List<RequestBuilderInterceptor> requestBuilderInterceptors() {
+    return requestBuilderInterceptors;
+  }
+
+  /**
    * The executor used for {@link Callback} methods on a {@link Call}. This may be {@code null}, in
    * which case callbacks should be made synchronously on the background thread.
    */
@@ -430,6 +441,7 @@ public final class Retrofit {
     private @Nullable HttpUrl baseUrl;
     private final List<Converter.Factory> converterFactories = new ArrayList<>();
     private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
+    private final List<RequestBuilderInterceptor> requestBuilderInterceptors = new ArrayList<>();
     private @Nullable Executor callbackExecutor;
     private boolean validateEagerly;
 
@@ -463,6 +475,7 @@ public final class Retrofit {
         callAdapterFactories.add(retrofit.callAdapterFactories.get(i));
       }
 
+      requestBuilderInterceptors.addAll(retrofit.requestBuilderInterceptors);
       callbackExecutor = retrofit.callbackExecutor;
       validateEagerly = retrofit.validateEagerly;
     }
@@ -582,6 +595,17 @@ public final class Retrofit {
     }
 
     /**
+     * Add a request builder interceptor to implement custom request logic based on the {@link
+     * Invocation}.
+     */
+    public Builder addRequestBuilderInterceptor(RequestBuilderInterceptor interceptor) {
+      requestBuilderInterceptors.add(
+              Objects.requireNonNull(interceptor, "interceptor == null")
+      );
+      return this;
+    }
+
+    /**
      * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
      * your service method.
      *
@@ -648,11 +672,16 @@ public final class Retrofit {
       converterFactories.addAll(this.converterFactories);
       converterFactories.addAll(platform.defaultConverterFactories());
 
+      // Make a defensive copy of the request builder interceptors.
+      List<RequestBuilderInterceptor> requestBuilderInterceptors =
+              new ArrayList<>(this.requestBuilderInterceptors);
+
       return new Retrofit(
           callFactory,
           baseUrl,
           unmodifiableList(converterFactories),
           unmodifiableList(callAdapterFactories),
+          unmodifiableList(requestBuilderInterceptors),
           callbackExecutor,
           validateEagerly);
     }

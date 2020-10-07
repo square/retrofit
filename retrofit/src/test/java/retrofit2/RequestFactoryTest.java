@@ -3260,7 +3260,7 @@ public final class RequestFactoryTest {
   @Test
   public void parameterWithCustomAnnotation() {
     class Example {
-      @GET("/") //
+      @GET("/")
       Call<ResponseBody> method(@CustomAnnotation String a) {
         return null;
       }
@@ -3270,6 +3270,50 @@ public final class RequestFactoryTest {
     Invocation invocation = request.tag(Invocation.class);
     assertThat(invocation.arguments().get(0)).isEqualTo("CustomArgument");
     assertThat(invocation.method().getParameterAnnotations()[0][0]).isInstanceOf(CustomAnnotation.class);
+  }
+
+  @Test
+  public void requestAlteredWithRequestBuilderInterceptor() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder =
+            new Retrofit.Builder()
+                    .baseUrl("http://example.com")
+                    .addRequestBuilderInterceptor((requestBuilder, invocation) -> {
+                      requestBuilder.addHeader("CustomHeader", "CustomHeaderValue");
+                    });
+
+    Request request = buildRequest(Example.class, retrofitBuilder);
+    assertThat(request.header("CustomHeader")).isEqualTo("CustomHeaderValue");
+  }
+
+  @Test
+  public void requestAlteredWithMultipleRequestBuilderInterceptors() {
+    class Example {
+      @GET("/")
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+
+    Retrofit.Builder retrofitBuilder =
+            new Retrofit.Builder()
+                    .baseUrl("http://example.com")
+                    .addRequestBuilderInterceptor((requestBuilder, invocation) -> {
+                      requestBuilder.addHeader("CustomHeader", "CustomHeaderValue");
+                    })
+                    .addRequestBuilderInterceptor((requestBuilder, invocation) -> {
+                      requestBuilder.tag(String.class, "CustomTag");
+                    });
+
+    Request request = buildRequest(Example.class, retrofitBuilder);
+    assertThat(request.header("CustomHeader")).isEqualTo("CustomHeaderValue");
+    assertThat(request.tag(String.class)).isEqualTo("CustomTag");
   }
 
   private static void assertBody(RequestBody body, String expected) {

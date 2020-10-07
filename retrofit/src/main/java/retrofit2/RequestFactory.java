@@ -37,6 +37,7 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -77,6 +78,7 @@ final class RequestFactory {
   private final boolean isFormEncoded;
   private final boolean isMultipart;
   private final ParameterHandler<?>[] parameterHandlers;
+  private final List<RequestBuilderInterceptor> requestBuilderInterceptors;
   final boolean isKotlinSuspendFunction;
 
   RequestFactory(Builder builder) {
@@ -90,6 +92,7 @@ final class RequestFactory {
     isFormEncoded = builder.isFormEncoded;
     isMultipart = builder.isMultipart;
     parameterHandlers = builder.parameterHandlers;
+    requestBuilderInterceptors = builder.retrofit.requestBuilderInterceptors;
     isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
   }
 
@@ -132,7 +135,12 @@ final class RequestFactory {
       }
     }
 
-    return requestBuilder.get().tag(Invocation.class, new Invocation(method, argumentList)).build();
+    Invocation invocation = new Invocation(method, argumentList);
+    Request.Builder rawRequestBuilder = requestBuilder.get().tag(Invocation.class, invocation);
+    for (int i = 0; i < requestBuilderInterceptors.size(); i++) {
+      requestBuilderInterceptors.get(i).intercept(rawRequestBuilder, invocation);
+    }
+    return rawRequestBuilder.build();
   }
 
   /**

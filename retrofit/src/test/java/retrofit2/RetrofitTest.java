@@ -245,11 +245,13 @@ public final class RetrofitTest {
         request -> {
           throw new AssertionError();
         };
+    RequestBuilderInterceptor interceptor = (requestBuilder, invocation) -> {};
 
     Retrofit one =
         new Retrofit.Builder()
             .addCallAdapterFactory(callAdapter)
             .addConverterFactory(converter)
+            .addRequestBuilderInterceptor(interceptor)
             .baseUrl(baseUrl)
             .callbackExecutor(executor)
             .callFactory(callFactory)
@@ -265,15 +267,19 @@ public final class RetrofitTest {
           }
         };
     Converter.Factory converter2 = new Converter.Factory() {};
+    RequestBuilderInterceptor interceptor2 = (requestBuilder, invocation) -> {};
     Retrofit two =
         one.newBuilder()
             .addCallAdapterFactory(callAdapter2)
             .addConverterFactory(converter2)
+            .addRequestBuilderInterceptor(interceptor2)
             .build();
     assertEquals(one.callAdapterFactories().size() + 1, two.callAdapterFactories().size());
     assertThat(two.callAdapterFactories()).contains(callAdapter, callAdapter2);
     assertEquals(one.converterFactories().size() + 1, two.converterFactories().size());
     assertThat(two.converterFactories()).contains(converter, converter2);
+    assertEquals(one.requestBuilderInterceptors().size() + 1, two.requestBuilderInterceptors().size());
+    assertThat(two.requestBuilderInterceptors()).contains(interceptor, interceptor2);
     assertSame(baseUrl, two.baseUrl());
     assertSame(executor, two.callbackExecutor());
     assertSame(callFactory, two.callFactory());
@@ -1498,6 +1504,33 @@ public final class RetrofitTest {
     assertThat(delegatingFactory1.called).isTrue();
     assertThat(delegatingFactory2.called).isTrue();
     assertThat(nonMatchingFactory.called).isTrue();
+  }
+
+  @Test
+  public void requestBuilderInterceptorNullThrows() {
+    try {
+      new Retrofit.Builder().addRequestBuilderInterceptor(null);
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessage("interceptor == null");
+    }
+  }
+
+  @Test
+  public void requestBuilderInterceptorDefault() {
+    Retrofit retrofit = new Retrofit.Builder().baseUrl("http://example.com/").build();
+    assertThat(retrofit.requestBuilderInterceptors()).isEmpty();
+  }
+
+  @Test
+  public void requestBuilderInterceptorPropagated() {
+    RequestBuilderInterceptor interceptor = (requestBuilder, invocation) -> {};
+    Retrofit retrofit =
+            new Retrofit.Builder()
+                    .baseUrl("http://example.com/")
+                    .addRequestBuilderInterceptor(interceptor)
+                    .build();
+    assertThat(retrofit.requestBuilderInterceptors()).contains(interceptor);
   }
 
   @Test
