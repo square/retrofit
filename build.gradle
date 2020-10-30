@@ -57,6 +57,8 @@ buildscript {
 }
 
 subprojects {
+  if (project.name == 'retrofit-bom') return
+
   repositories {
     mavenCentral()
     google()
@@ -142,6 +144,96 @@ subprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile).configureEach { task ->
     task.kotlinOptions {
       jvmTarget = '1.8'
+    }
+  }
+}
+
+def nonPublishedModule(project) {
+  return (project.name == 'android-test'
+          || project.name == 'robovm-test'
+          || project.name == 'test-helpers')
+}
+
+subprojects { subproject ->
+  if (nonPublishedModule(subproject) || !subproject.hasProperty('POM_ARTIFACT_ID')) return
+
+  apply plugin: 'maven-publish'
+  apply plugin: 'signing'
+
+  afterEvaluate {
+    def versionName = subproject.property('VERSION_NAME')
+    def isReleaseBuild = !versionName.contains('SNAPSHOT')
+    def bom = plugins.hasPlugin('java-platform')
+
+    publishing {
+      if (!bom) {
+        java {
+          withJavadocJar()
+          withSourcesJar()
+        }
+
+        tasks.withType(Javadoc).configureEach {
+          exclude("**/internal/*")
+          if (JavaVersion.current().isJava8Compatible()) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+          }
+        }
+      }
+
+      publications {
+        create('maven', MavenPublication) {
+          groupId = subproject.property('GROUP')
+          artifactId = subproject.property('POM_ARTIFACT_ID')
+          version = versionName
+
+          if (bom) {
+            from components.javaPlatform
+          } else {
+            from components.java
+          }
+
+          pom {
+            name.set(subproject.findProperty('POM_NAME'))
+            description.set(subproject.findProperty('POM_DESCRIPTION'))
+            url.set(subproject.findProperty('POM_URL'))
+            scm {
+              url.set(subproject.findProperty('POM_SCM_URL'))
+              connection.set(subproject.findProperty('POM_SCM_CONNECTION'))
+              developerConnection.set(subproject.findProperty('POM_SCM_DEV_CONNECTION'))
+            }
+            licenses {
+              license {
+                name.set(subproject.findProperty('POM_LICENCE_NAME'))
+                url.set(subproject.findProperty('POM_LICENCE_URL'))
+                distribution.set(subproject.findProperty('POM_LICENCE_DIST'))
+              }
+            }
+            developers {
+              developer {
+                id.set(subproject.findProperty('POM_DEVELOPER_ID'))
+                name.set(subproject.findProperty('POM_DEVELOPER_NAME'))
+              }
+            }
+          }
+        }
+      }
+
+      repositories {
+        maven {
+          def releaseRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+          def snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+          url = isReleaseBuild ? releaseRepoUrl : snapshotRepoUrl
+          credentials {
+            username = subproject.findProperty('SONATYPE_NEXUS_USERNAME')
+            password = subproject.findProperty('SONATYPE_NEXUS_PASSWORD')
+          }
+        }
+      }
+    }
+
+    signing {
+      required { isReleaseBuild && gradle.taskGraph.hasTask("publish") }
+      sign(publishing.publications.maven)
     }
   }
 }

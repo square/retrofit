@@ -1,6 +1,5 @@
 apply plugin: 'java-library'
 apply plugin: 'com.google.protobuf'
-apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
   api project(':retrofit')
