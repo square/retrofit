@@ -175,8 +175,9 @@ implementation 'com.squareup.retrofit2:retrofit:<span class="version pln"><em>(i
               <p>Retrofit requires at minimum Java 8+ or Android API 21+.</p>
 
               <h4>R8 / ProGuard</h4>
-              <p>If you are using R8 or ProGuard add the options from <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro">this file</a>.</p>
-              <p>You might also need rules for OkHttp and Okio which are dependencies of this library.</p>
+              <p>If you are using R8 the shrinking and obfuscation rules are included automatically.</p>
+              <p>ProGuard users must manually add the options from <a href="https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro">retrofit2.pro</a>.</p>
+              <p>You might also need rules for <a href="https://square.github.io/okhttp/r8_proguard">OkHttp</a> and <a href="https://github.com/square/okio#r8--proguard">Okio</a> which are dependencies of this library.</p>
             </section>
 
             <section id="contributing">
