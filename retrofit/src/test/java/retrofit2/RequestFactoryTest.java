@@ -3252,6 +3252,54 @@ public final class RequestFactoryTest {
     }
   }
 
+  @Test
+  public void shouldBuildRequestBodyWithContentTypeSuccessfully() throws IOException {
+    class Example {
+      @Multipart(type = "multipart/form-data; charset=utf-8") //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("ping") String ping, @Part("kit") RequestBody kit) {
+        return null;
+      }
+    }
+
+    Request request = buildRequest(Example.class, "pong", RequestBody.create(TEXT_PLAIN, "kat"));
+    assertThat(request.method()).isEqualTo("POST");
+    assertThat(request.headers().size()).isZero();
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+
+    RequestBody body = request.body();
+    assertThat(body.contentType().toString()).startsWith("multipart/form-data; charset=utf-8; boundary=");
+
+    Buffer buffer = new Buffer();
+    body.writeTo(buffer);
+    String bodyString = buffer.readUtf8();
+
+    assertThat(bodyString)
+            .contains("Content-Disposition: form-data;")
+            .contains("name=\"ping\"\r\n")
+            .contains("\r\npong\r\n--")
+            .contains("name=\"kit\"")
+            .contains("\r\nkat\r\n--");
+  }
+
+  @Test
+  public void shouldFailRequestBodyWithContentTypeInvalid() throws IOException {
+    class Example {
+      @Multipart(type = "invalid-type") //
+      @POST("/foo/bar/") //
+      Call<ResponseBody> method(@Part("ping") String ping, @Part("kit") RequestBody kit) {
+        return null;
+      }
+    }
+
+    try {
+      buildRequest(Example.class, "pong", RequestBody.create(TEXT_PLAIN, "kat"));
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining("No subtype found for: \"invalid-type\"");
+    }
+  }
+
   private static void assertBody(RequestBody body, String expected) {
     assertThat(body).isNotNull();
     Buffer buffer = new Buffer();
