@@ -3291,7 +3291,6 @@ public final class RequestFactoryTest {
         return null;
       }
     }
-
     try {
       buildRequest(Example.class, "pong", RequestBody.create(TEXT_PLAIN, "kat"));
       fail();

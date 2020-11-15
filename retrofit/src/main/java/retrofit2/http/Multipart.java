@@ -32,9 +32,8 @@ import okhttp3.HttpUrl;
 @Target(METHOD)
 @Retention(RUNTIME)
 public @interface Multipart {
-    /**
-     * Sets the type(MediaType) on MultipartBody. When calling the
-     */
-
-    String type() default "multipart/form-data";
+  /**
+   * Sets the type(MediaType) on MultipartBody. When calling the
+   */
+  String type() default "multipart/form-data";
 }
