@@ -164,7 +164,7 @@ final class RequestFactory {
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
-    String multipartType;
+    @Nullable String multipartType;
     @Nullable String relativeUrl;
     @Nullable Headers headers;
     @Nullable MediaType contentType;

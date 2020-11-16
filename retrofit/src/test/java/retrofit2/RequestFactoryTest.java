@@ -3268,18 +3268,19 @@ public final class RequestFactoryTest {
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
 
     RequestBody body = request.body();
-    assertThat(body.contentType().toString()).startsWith("multipart/form-data; charset=utf-8; boundary=");
+    assertThat(body.contentType().toString())
+        .startsWith("multipart/form-data; charset=utf-8; boundary=");
 
     Buffer buffer = new Buffer();
     body.writeTo(buffer);
     String bodyString = buffer.readUtf8();
 
     assertThat(bodyString)
-            .contains("Content-Disposition: form-data;")
-            .contains("name=\"ping\"\r\n")
-            .contains("\r\npong\r\n--")
-            .contains("name=\"kit\"")
-            .contains("\r\nkat\r\n--");
+        .contains("Content-Disposition: form-data;")
+        .contains("name=\"ping\"\r\n")
+        .contains("\r\npong\r\n--")
+        .contains("name=\"kit\"")
+        .contains("\r\nkat\r\n--");
   }
 
   @Test

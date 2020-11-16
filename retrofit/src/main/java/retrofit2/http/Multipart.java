@@ -22,8 +22,6 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import okhttp3.HttpUrl;
-
 /**
  * Denotes that the request body is multi-part. Parts should be declared as parameters and annotated
  * with {@link Part @Part}.
@@ -32,8 +30,6 @@ import okhttp3.HttpUrl;
 @Target(METHOD)
 @Retention(RUNTIME)
 public @interface Multipart {
-  /**
-   * Sets the type(MediaType) on MultipartBody. When calling the
-   */
+  /** Sets the type(MediaType) on MultipartBody. When calling the */
   String type() default "multipart/form-data";
 }
