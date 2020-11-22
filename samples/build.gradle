@@ -1,4 +1,5 @@
 apply plugin: 'java-library'
+apply plugin: 'org.jetbrains.kotlin.jvm'
 
 dependencies {
   implementation project(':retrofit')
@@ -10,5 +11,6 @@ dependencies {
   implementation deps.mockwebserver
   implementation deps.guava
   implementation deps.jsoup
+  implementation deps.kotlinCoroutines
   compileOnly deps.findBugsAnnotations
 }
