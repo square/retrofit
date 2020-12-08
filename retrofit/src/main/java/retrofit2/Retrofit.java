@@ -15,6 +15,8 @@
  */
 package retrofit2;
 
+import android.os.Build;
+
 import static java.util.Collections.unmodifiableList;
 
 import java.lang.annotation.Annotation;
@@ -72,6 +74,7 @@ public final class Retrofit {
   final List<CallAdapter.Factory> callAdapterFactories;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
+  final ObjectLogger logger;
 
   Retrofit(
       okhttp3.Call.Factory callFactory,
@@ -79,12 +82,14 @@ public final class Retrofit {
       List<Converter.Factory> converterFactories,
       List<CallAdapter.Factory> callAdapterFactories,
       @Nullable Executor callbackExecutor,
+      ObjectLogger logger,
       boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
     this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
     this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
     this.callbackExecutor = callbackExecutor;
+    this.logger = logger;
     this.validateEagerly = validateEagerly;
   }
 
@@ -431,6 +436,7 @@ public final class Retrofit {
     private final List<Converter.Factory> converterFactories = new ArrayList<>();
     private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
     private @Nullable Executor callbackExecutor;
+    private @Nullable ObjectLogger logger;
     private boolean validateEagerly;
 
     Builder(Platform platform) {
@@ -581,6 +587,11 @@ public final class Retrofit {
       return this;
     }
 
+    public Builder setObjectLogger(ObjectLogger logger) {
+      this.logger = logger;
+      return this;
+    }
+
     /**
      * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
      * your service method.
@@ -648,12 +659,18 @@ public final class Retrofit {
       converterFactories.addAll(this.converterFactories);
       converterFactories.addAll(platform.defaultConverterFactories());
 
+      ObjectLogger logger = this.logger;
+      if (logger == null) {
+        logger = new EmptyLogger();
+      }
+
       return new Retrofit(
           callFactory,
           baseUrl,
           unmodifiableList(converterFactories),
           unmodifiableList(callAdapterFactories),
           callbackExecutor,
+          logger,
           validateEagerly);
     }
   }

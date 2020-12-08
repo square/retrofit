@@ -22,6 +22,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.logging.Logger;
+
 import javax.annotation.Nullable;
 import kotlin.coroutines.Continuation;
 import okhttp3.ResponseBody;
@@ -83,10 +85,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
     Converter<ResponseBody, ResponseT> responseConverter =
         createResponseConverter(retrofit, method, responseType);
-
+    ObjectLogger logger = retrofit.logger;
     okhttp3.Call.Factory callFactory = retrofit.callFactory;
     if (!isKotlinSuspendFunction) {
-      return new CallAdapted<>(requestFactory, callFactory, responseConverter, callAdapter);
+      return new CallAdapted<>(requestFactory, callFactory, responseConverter, callAdapter, logger);
     } else if (continuationWantsResponse) {
       //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>)
@@ -94,7 +96,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
               requestFactory,
               callFactory,
               responseConverter,
-              (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter);
+              (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter, logger);
     } else {
       //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>)
@@ -103,6 +105,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
               callFactory,
               responseConverter,
               (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter,
+              logger,
               continuationBodyNullable);
     }
   }
@@ -130,20 +133,25 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
   private final RequestFactory requestFactory;
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, ResponseT> responseConverter;
+  private final ObjectLogger logger;
 
   HttpServiceMethod(
       RequestFactory requestFactory,
       okhttp3.Call.Factory callFactory,
-      Converter<ResponseBody, ResponseT> responseConverter) {
+      Converter<ResponseBody, ResponseT> responseConverter,
+      ObjectLogger logger) {
     this.requestFactory = requestFactory;
     this.callFactory = callFactory;
     this.responseConverter = responseConverter;
+    this.logger = logger;
   }
 
   @Override
   final @Nullable ReturnT invoke(Object[] args) {
     Call<ResponseT> call = new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
-    return adapt(call, args);
+    ReturnT result = adapt(call, args);
+    logger.log(result);
+    return result;
   }
 
   protected abstract @Nullable ReturnT adapt(Call<ResponseT> call, Object[] args);
@@ -155,8 +163,9 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         RequestFactory requestFactory,
         okhttp3.Call.Factory callFactory,
         Converter<ResponseBody, ResponseT> responseConverter,
-        CallAdapter<ResponseT, ReturnT> callAdapter) {
-      super(requestFactory, callFactory, responseConverter);
+        CallAdapter<ResponseT, ReturnT> callAdapter,
+        ObjectLogger logger) {
+      super(requestFactory, callFactory, responseConverter, logger);
       this.callAdapter = callAdapter;
     }
 
@@ -173,8 +182,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         RequestFactory requestFactory,
         okhttp3.Call.Factory callFactory,
         Converter<ResponseBody, ResponseT> responseConverter,
-        CallAdapter<ResponseT, Call<ResponseT>> callAdapter) {
-      super(requestFactory, callFactory, responseConverter);
+        CallAdapter<ResponseT, Call<ResponseT>> callAdapter,
+        ObjectLogger logger
+        ) {
+      super(requestFactory, callFactory, responseConverter, logger);
       this.callAdapter = callAdapter;
     }
 
@@ -204,8 +215,9 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         okhttp3.Call.Factory callFactory,
         Converter<ResponseBody, ResponseT> responseConverter,
         CallAdapter<ResponseT, Call<ResponseT>> callAdapter,
+        ObjectLogger logger,
         boolean isNullable) {
-      super(requestFactory, callFactory, responseConverter);
+      super(requestFactory, callFactory, responseConverter, logger);
       this.callAdapter = callAdapter;
       this.isNullable = isNullable;
     }
