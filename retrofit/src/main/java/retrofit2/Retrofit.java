@@ -15,8 +15,6 @@
  */
 package retrofit2;
 
-import android.os.Build;
-
 import static java.util.Collections.unmodifiableList;
 
 import java.lang.annotation.Annotation;
