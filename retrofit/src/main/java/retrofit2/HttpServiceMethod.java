@@ -148,9 +148,8 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
   @Override
   final @Nullable ReturnT invoke(Object[] args) {
-    Call<ResponseT> call = new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
+    Call<ResponseT> call = new OkHttpCall<>(requestFactory, args, callFactory, responseConverter, logger);
     ReturnT result = adapt(call, args);
-    logger.log(result);
     return result;
   }
 

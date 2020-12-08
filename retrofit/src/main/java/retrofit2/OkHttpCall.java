@@ -35,6 +35,7 @@ final class OkHttpCall<T> implements Call<T> {
   private final Object[] args;
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, T> responseConverter;
+  private final ObjectLogger logger;
 
   private volatile boolean canceled;
 
@@ -51,17 +52,19 @@ final class OkHttpCall<T> implements Call<T> {
       RequestFactory requestFactory,
       Object[] args,
       okhttp3.Call.Factory callFactory,
-      Converter<ResponseBody, T> responseConverter) {
+      Converter<ResponseBody, T> responseConverter,
+      ObjectLogger logger) {
     this.requestFactory = requestFactory;
     this.args = args;
     this.callFactory = callFactory;
     this.responseConverter = responseConverter;
+    this.logger = logger;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override
   public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
+    return new OkHttpCall<>(requestFactory, args, callFactory, responseConverter, logger);
   }
 
   @Override
@@ -151,6 +154,9 @@ final class OkHttpCall<T> implements Call<T> {
             Response<T> response;
             try {
               response = parseResponse(rawResponse);
+              if (response.body() != null) {
+                logger.log(response.body());
+              }
             } catch (Throwable e) {
               throwIfFatal(e);
               callFailure(e);
