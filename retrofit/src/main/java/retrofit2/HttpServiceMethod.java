@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import javax.annotation.Nullable;
+
 import kotlin.coroutines.Continuation;
 import okhttp3.ResponseBody;
 
@@ -95,7 +96,8 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
               requestFactory,
               callFactory,
               responseConverter,
-              (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter, logger);
+              (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter,
+              logger);
     } else {
       //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>)
@@ -147,7 +149,8 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
   @Override
   final @Nullable ReturnT invoke(Object[] args) {
-    Call<ResponseT> call = new OkHttpCall<>(requestFactory, args, callFactory, responseConverter, logger);
+    Call<ResponseT> call =
+        new OkHttpCall<>(requestFactory, args, callFactory, responseConverter, logger);
     ReturnT result = adapt(call, args);
     return result;
   }
@@ -181,8 +184,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         okhttp3.Call.Factory callFactory,
         Converter<ResponseBody, ResponseT> responseConverter,
         CallAdapter<ResponseT, Call<ResponseT>> callAdapter,
-        ObjectLogger logger
-        ) {
+        ObjectLogger logger) {
       super(requestFactory, callFactory, responseConverter, logger);
       this.callAdapter = callAdapter;
     }
