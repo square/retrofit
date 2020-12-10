@@ -27,7 +27,7 @@ buildscript {
       'reactiveStreams': 'org.reactivestreams:reactive-streams:1.0.3',
       'scalaLibrary': 'org.scala-lang:scala-library:2.13.1',
       'gson': 'com.google.code.gson:gson:2.8.5',
-      'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.1',
+      'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
       'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
       'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
       'moshi': 'com.squareup.moshi:moshi:1.8.0',
