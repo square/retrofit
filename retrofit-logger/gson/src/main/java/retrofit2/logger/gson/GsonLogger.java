@@ -1,7 +1,6 @@
 package retrofit2.logger.gson;
 
 import com.google.gson.Gson;
-
 import okhttp3.Request;
 import retrofit2.ObjectLogger;
 

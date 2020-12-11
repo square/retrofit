@@ -1,7 +1,7 @@
 Retrofit Logger
 ===================
 
-Retrofit ships with support for object logging to increase readability for case like response is binary and can't log in OkHttp layer.
+Retrofit ships with support for object level logging to increase readability for case like response is binary so we can't log in OkHttp layer.
 
 To use, supply an instance of your desired logger when building your `Retrofit` instance.
 
