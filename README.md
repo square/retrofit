@@ -48,5 +48,5 @@ License
  [2]: https://search.maven.org/remote_content?g=com.squareup.retrofit2&a=retrofit&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [proguard file]: https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro
- [okhttp proguard]: https://square.github.io/okhttp/#r8-proguard
+ [okhttp proguard]: https://square.github.io/okhttp/r8_proguard/
  [okio proguard]: https://square.github.io/okio/#r8-proguard
