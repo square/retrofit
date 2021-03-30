@@ -3,7 +3,7 @@ import org.gradle.internal.jvm.Jvm
 
 buildscript {
   ext.versions = [
-      'kotlin': '1.3.50',
+      'kotlin': '1.4.32',
       'okhttp': '3.14.9',
       'protobuf': '3.10.0',
       'jaxb': '2.3.1',
@@ -11,10 +11,10 @@ buildscript {
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
-      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2',
+      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3',
       'okhttp': "com.squareup.okhttp3:okhttp:${versions.okhttp}",
       'mockwebserver': "com.squareup.okhttp3:mockwebserver:${versions.okhttp}",
-      'junit': 'junit:junit:4.13',
+      'junit': 'junit:junit:4.13.2',
       'assertj': 'org.assertj:assertj-core:3.13.2',
       'guava': 'com.google.guava:guava:28.1-jre',
       'android': 'com.google.android:android:4.1.1.4',
@@ -41,7 +41,7 @@ buildscript {
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
     classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
-    classpath 'com.android.tools.build:gradle:3.6.2'
+    classpath 'com.android.tools.build:gradle:4.1.3'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.9.0'
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
