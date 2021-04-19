@@ -27,8 +27,5 @@ class JvmMetadataVersion(versionArray: IntArray, val isStrictSemantics: Boolean)
     companion object {
         @JvmField
         val INSTANCE = JvmMetadataVersion(1, 5, 1)
-
-        @JvmField
-        val INVALID_VERSION = JvmMetadataVersion()
     }
 }

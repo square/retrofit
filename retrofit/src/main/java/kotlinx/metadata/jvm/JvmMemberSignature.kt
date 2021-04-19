@@ -41,17 +41,4 @@ data class JvmMethodSignature(override val name: String, override val desc: Stri
     override fun asString() = name + desc
 }
 
-/**
- * A signature of a JVM field in the JVM-based format.
- *
- * Example: `JvmFieldSignature("value", "Ljava/lang/String;")`.
- *
- * @see JvmMemberSignature
- */
-data class JvmFieldSignature(override val name: String, override val desc: String) : JvmMemberSignature() {
-    override fun asString() = "$name:$desc"
-}
-
-
 internal fun JvmMemberSignatureImpl.Method.wrapAsPublic() = JvmMethodSignature(name, desc)
-internal fun JvmMemberSignatureImpl.Field.wrapAsPublic() = JvmFieldSignature(name, desc)

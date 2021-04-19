@@ -18,6 +18,3 @@ package kotlinx.metadata
  */
 // TODO: use inline class in 1.3
 typealias ClassName = String
-
-val ClassName.isLocal: Boolean
-    get() = this.startsWith(".")

@@ -62,14 +62,6 @@ public interface Parser<MessageType> {
       throws InvalidProtocolBufferException;
 
   /**
-   * Like {@link #parseFrom(CodedInputStream)}, but does not throw an
-   * exception if the message is missing required fields. Instead, a partial
-   * message is returned.
-   */
-  public MessageType parsePartialFrom(CodedInputStream input)
-      throws InvalidProtocolBufferException;
-
-  /**
    * Like {@link #parseFrom(CodedInputStream input, ExtensionRegistryLite)},
    * but does not throw an exception if the message is missing required fields.
    * Instead, a partial message is returned.
@@ -98,27 +90,12 @@ public interface Parser<MessageType> {
       throws InvalidProtocolBufferException;
 
   /**
-   * Like {@link #parseFrom(ByteString)}, but does not throw an
-   * exception if the message is missing required fields. Instead, a partial
-   * message is returned.
-   */
-  public MessageType parsePartialFrom(ByteString data)
-      throws InvalidProtocolBufferException;
-
-  /**
    * Like {@link #parseFrom(ByteString, ExtensionRegistryLite)},
    * but does not throw an exception if the message is missing required fields.
    * Instead, a partial message is returned.
    */
   public MessageType parsePartialFrom(ByteString data,
                                       ExtensionRegistryLite extensionRegistry)
-      throws InvalidProtocolBufferException;
-
-  /**
-   * Parses {@code data} as a message of {@code MessageType}.
-   * This is just a small wrapper around {@link #parseFrom(CodedInputStream)}.
-   */
-  public MessageType parseFrom(byte[] data, int off, int len)
       throws InvalidProtocolBufferException;
 
   /**
@@ -147,36 +124,11 @@ public interface Parser<MessageType> {
       throws InvalidProtocolBufferException;
 
   /**
-   * Like {@link #parseFrom(byte[], int, int)}, but does not throw an
-   * exception if the message is missing required fields. Instead, a partial
-   * message is returned.
-   */
-  public MessageType parsePartialFrom(byte[] data, int off, int len)
-      throws InvalidProtocolBufferException;
-
-  /**
    * Like {@link #parseFrom(ByteString, ExtensionRegistryLite)},
    * but does not throw an exception if the message is missing required fields.
    * Instead, a partial message is returned.
    */
   public MessageType parsePartialFrom(byte[] data, int off, int len,
-                                      ExtensionRegistryLite extensionRegistry)
-      throws InvalidProtocolBufferException;
-
-  /**
-   * Like {@link #parseFrom(byte[])}, but does not throw an
-   * exception if the message is missing required fields. Instead, a partial
-   * message is returned.
-   */
-  public MessageType parsePartialFrom(byte[] data)
-      throws InvalidProtocolBufferException;
-
-  /**
-   * Like {@link #parseFrom(byte[], ExtensionRegistryLite)},
-   * but does not throw an exception if the message is missing required fields.
-   * Instead, a partial message is returned.
-   */
-  public MessageType parsePartialFrom(byte[] data,
                                       ExtensionRegistryLite extensionRegistry)
       throws InvalidProtocolBufferException;
 
@@ -201,14 +153,6 @@ public interface Parser<MessageType> {
    */
   public MessageType parseFrom(InputStream input,
                                ExtensionRegistryLite extensionRegistry)
-      throws InvalidProtocolBufferException;
-
-  /**
-   * Like {@link #parseFrom(InputStream)}, but does not throw an
-   * exception if the message is missing required fields. Instead, a partial
-   * message is returned.
-   */
-  public MessageType parsePartialFrom(InputStream input)
       throws InvalidProtocolBufferException;
 
   /**
@@ -239,14 +183,6 @@ public interface Parser<MessageType> {
    */
   public MessageType parseDelimitedFrom(InputStream input,
                                         ExtensionRegistryLite extensionRegistry)
-      throws InvalidProtocolBufferException;
-
-  /**
-   * Like {@link #parseDelimitedFrom(InputStream)}, but does not throw an
-   * exception if the message is missing required fields. Instead, a partial
-   * message is returned.
-   */
-  public MessageType parsePartialDelimitedFrom(InputStream input)
       throws InvalidProtocolBufferException;
 
   /**

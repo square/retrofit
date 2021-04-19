@@ -43,7 +43,11 @@ import kotlin.coroutines.CoroutineContext
 class KotlinSuspendTest {
   @get:Rule val server = MockWebServer()
 
-  interface Service {
+  interface SuperService {
+      @GET("/") suspend fun noBody(@Query("x") arg: Long)
+  }
+
+  interface Service : SuperService {
     @GET("/") suspend fun body(): String
     @GET("/") suspend fun bodyNullable(): String?
     @GET("/") suspend fun noBody()
@@ -165,13 +169,9 @@ class KotlinSuspendTest {
             .build()
         val example = retrofit.create(Service::class.java)
 
-        server.enqueue(MockResponse())
-        server.enqueue(MockResponse())
-        server.enqueue(MockResponse())
-        server.enqueue(MockResponse())
-        server.enqueue(MockResponse())
-        server.enqueue(MockResponse())
-        server.enqueue(MockResponse())
+        repeat(8) {
+            server.enqueue(MockResponse())
+        }
 
         runBlocking {
             example.noBody()
@@ -181,6 +181,7 @@ class KotlinSuspendTest {
             example.noBody(intArrayOf(1))
             example.noBody(arrayOf(""))
             example.noBody(1u)
+            example.noBody(1L)
         }
     }
 

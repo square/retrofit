@@ -35,32 +35,6 @@ abstract class BinaryVersion(private vararg val numbers: Int) {
         else major == ourVersion.major && minor <= ourVersion.minor
     }
 
-    fun isAtLeast(version: BinaryVersion): Boolean =
-        isAtLeast(version.major, version.minor, version.patch)
-
-    fun isAtLeast(major: Int, minor: Int, patch: Int): Boolean {
-        if (this.major > major) return true
-        if (this.major < major) return false
-
-        if (this.minor > minor) return true
-        if (this.minor < minor) return false
-
-        return this.patch >= patch
-    }
-
-    fun isAtMost(version: BinaryVersion): Boolean =
-        isAtMost(version.major, version.minor, version.patch)
-
-    fun isAtMost(major: Int, minor: Int, patch: Int): Boolean {
-        if (this.major < major) return true
-        if (this.major > major) return false
-
-        if (this.minor < minor) return true
-        if (this.minor > minor) return false
-
-        return this.patch <= patch
-    }
-
     override fun toString(): String {
         val versions = toArray().takeWhile { it != UNKNOWN }
         return if (versions.isEmpty()) "unknown" else versions.joinToString(".")
@@ -81,11 +55,5 @@ abstract class BinaryVersion(private vararg val numbers: Int) {
 
     companion object {
         private const val UNKNOWN = -1
-
-        @JvmStatic
-        fun parseVersionArray(string: String): IntArray? =
-            string.split(".")
-                .map { part -> part.toIntOrNull() ?: return null }
-                .toTypedArray().toIntArray()
     }
 }

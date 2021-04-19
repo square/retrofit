@@ -15,7 +15,6 @@ import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmMetadataVersion
  *
  * @param kind see [kind]
  * @param metadataVersion see [metadataVersion]
- * @param bytecodeVersion see [bytecodeVersion]
  * @param data1 see [data1]
  * @param data2 see [data2]
  * @param extraString see [extraString]
@@ -23,31 +22,15 @@ import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmMetadataVersion
  * @param extraInt see [extraInt]
  */
 class KotlinClassHeader
-@Deprecated(
-    "Use another constructor, which doesn't take bytecodeVersion as a parameter.",
-    ReplaceWith("KotlinClassHeader(kind, metadataVersion, data1, data2, extraString, packageName, extraInt)"),
-    DeprecationLevel.ERROR
-)
 constructor(
     kind: Int?,
     metadataVersion: IntArray?,
-    bytecodeVersion: IntArray?,
     data1: Array<String>?,
     data2: Array<String>?,
     extraString: String?,
     packageName: String?,
     extraInt: Int?
 ) {
-    @Suppress("DEPRECATION_ERROR")
-    constructor(
-        kind: Int?,
-        metadataVersion: IntArray?,
-        data1: Array<String>?,
-        data2: Array<String>?,
-        extraString: String?,
-        packageName: String?,
-        extraInt: Int?
-    ) : this(kind, metadataVersion, null, data1, data2, extraString, packageName, extraInt)
 
     /**
      * A kind of the metadata this header encodes.
@@ -68,18 +51,6 @@ constructor(
      * @see COMPATIBLE_METADATA_VERSION
      */
     val metadataVersion: IntArray = metadataVersion ?: intArrayOf()
-
-    /**
-     * The version of the bytecode interface (naming conventions, signatures) of the corresponding class file.
-     *
-     * @see Metadata.bytecodeVersion
-     * @see COMPATIBLE_BYTECODE_VERSION
-     */
-    @Deprecated(
-        "Bytecode version had no significant use in Kotlin metadata and it will be removed in a future version.",
-        level = DeprecationLevel.ERROR
-    )
-    val bytecodeVersion: IntArray = bytecodeVersion ?: intArrayOf()
 
     /**
      * The first array of strings used to encode the metadata.
@@ -163,17 +134,5 @@ constructor(
          */
         @JvmField
         val COMPATIBLE_METADATA_VERSION = JvmMetadataVersion.INSTANCE.toArray().copyOf()
-
-        /**
-         * The latest bytecode version supported by this version of the library.
-         *
-         * @see bytecodeVersion
-         */
-        @Deprecated(
-            "Bytecode version had no significant use in Kotlin metadata and it will be removed in a future version.",
-            level = DeprecationLevel.ERROR
-        )
-        @JvmField
-        val COMPATIBLE_BYTECODE_VERSION = intArrayOf(1, 0, 3)
     }
 }

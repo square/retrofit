@@ -12,7 +12,3 @@ interface KmExtension<V : KmExtensionVisitor> : KmExtensionVisitor {
 }
 
 interface KmFunctionExtension : KmFunctionExtensionVisitor, KmExtension<KmFunctionExtensionVisitor>
-
-interface KmTypeExtension : KmTypeExtensionVisitor, KmExtension<KmTypeExtensionVisitor>
-
-interface KmValueParameterExtension : KmValueParameterExtensionVisitor, KmExtension<KmValueParameterExtensionVisitor>

@@ -198,11 +198,6 @@ public abstract class AbstractParser<MessageType extends MessageLite>
     return message;
   }
 
-  public MessageType parsePartialFrom(InputStream input)
-      throws InvalidProtocolBufferException {
-    return parsePartialFrom(input, EMPTY_REGISTRY);
-  }
-
   public MessageType parseFrom(InputStream input,
                                ExtensionRegistryLite extensionRegistry)
       throws InvalidProtocolBufferException {
@@ -231,11 +226,6 @@ public abstract class AbstractParser<MessageType extends MessageLite>
     }
     InputStream limitedInput = new LimitedInputStream(input, size);
     return parsePartialFrom(limitedInput, extensionRegistry);
-  }
-
-  public MessageType parsePartialDelimitedFrom(InputStream input)
-      throws InvalidProtocolBufferException {
-    return parsePartialDelimitedFrom(input, EMPTY_REGISTRY);
   }
 
   public MessageType parseDelimitedFrom(

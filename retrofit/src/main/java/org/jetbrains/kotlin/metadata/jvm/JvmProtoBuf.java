@@ -5,22 +5,8 @@ package org.jetbrains.kotlin.metadata.jvm;
 
 public final class JvmProtoBuf {
   private JvmProtoBuf() {}
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
-    registry.add(JvmProtoBuf.constructorSignature);
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {
     registry.add(JvmProtoBuf.methodSignature);
-    registry.add(JvmProtoBuf.lambdaClassOriginName);
-    registry.add(JvmProtoBuf.propertySignature);
-    registry.add(JvmProtoBuf.flags);
-    registry.add(JvmProtoBuf.typeAnnotation);
-    registry.add(JvmProtoBuf.isRaw);
-    registry.add(JvmProtoBuf.typeParameterAnnotation);
-    registry.add(JvmProtoBuf.classModuleName);
-    registry.add(JvmProtoBuf.classLocalVariable);
-    registry.add(JvmProtoBuf.anonymousObjectOriginName);
-    registry.add(JvmProtoBuf.jvmClassFlags);
-    registry.add(JvmProtoBuf.packageModuleName);
-    registry.add(JvmProtoBuf.packageLocalVariable);
   }
   public interface StringTableTypesOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.jetbrains.kotlin.metadata.jvm.StringTableTypes)
@@ -31,14 +17,6 @@ public final class JvmProtoBuf {
      */
     java.util.List<StringTableTypes.Record>
         getRecordList();
-    /**
-     * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-     */
-    StringTableTypes.Record getRecord(int index);
-    /**
-     * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-     */
-    int getRecordCount();
 
     /**
      * <code>repeated int32 local_name = 5 [packed = true];</code>
@@ -48,22 +26,6 @@ public final class JvmProtoBuf {
      * </pre>
      */
     java.util.List<Integer> getLocalNameList();
-    /**
-     * <code>repeated int32 local_name = 5 [packed = true];</code>
-     *
-     * <pre>
-     * Indices of strings which are names of local classes or anonymous objects
-     * </pre>
-     */
-    int getLocalNameCount();
-    /**
-     * <code>repeated int32 local_name = 5 [packed = true];</code>
-     *
-     * <pre>
-     * Indices of strings which are names of local classes or anonymous objects
-     * </pre>
-     */
-    int getLocalName(int index);
   }
   /**
    * Protobuf type {@code org.jetbrains.kotlin.metadata.jvm.StringTableTypes}
@@ -657,7 +619,7 @@ public final class JvmProtoBuf {
         if (ref instanceof String) {
           return (String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
+          com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
@@ -678,7 +640,7 @@ public final class JvmProtoBuf {
           getStringBytes() {
         Object ref = string_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (String) ref);
           string_ = b;
@@ -1083,7 +1045,7 @@ public final class JvmProtoBuf {
           if (other.hasString()) {
             bitField0_ |= 0x00000004;
             string_ = other.string_;
-            
+
           }
           if (other.hasOperation()) {
             setOperation(other.getOperation());
@@ -1096,7 +1058,7 @@ public final class JvmProtoBuf {
               ensureSubstringIndexIsMutable();
               substringIndex_.addAll(other.substringIndex_);
             }
-            
+
           }
           if (!other.replaceChar_.isEmpty()) {
             if (replaceChar_.isEmpty()) {
@@ -1106,7 +1068,7 @@ public final class JvmProtoBuf {
               ensureReplaceCharIsMutable();
               replaceChar_.addAll(other.replaceChar_);
             }
-            
+
           }
           setUnknownFields(
               getUnknownFields().concat(other.unknownFields));
@@ -1171,7 +1133,7 @@ public final class JvmProtoBuf {
         public Builder setRange(int value) {
           bitField0_ |= 0x00000001;
           range_ = value;
-          
+
           return this;
         }
         /**
@@ -1184,7 +1146,7 @@ public final class JvmProtoBuf {
         public Builder clearRange() {
           bitField0_ = (bitField0_ & ~0x00000001);
           range_ = 1;
-          
+
           return this;
         }
 
@@ -1221,7 +1183,7 @@ public final class JvmProtoBuf {
         public Builder setPredefinedIndex(int value) {
           bitField0_ |= 0x00000002;
           predefinedIndex_ = value;
-          
+
           return this;
         }
         /**
@@ -1234,7 +1196,7 @@ public final class JvmProtoBuf {
         public Builder clearPredefinedIndex() {
           bitField0_ = (bitField0_ & ~0x00000002);
           predefinedIndex_ = 0;
-          
+
           return this;
         }
 
@@ -1284,7 +1246,7 @@ public final class JvmProtoBuf {
             getStringBytes() {
           Object ref = string_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString b =
                 com.google.protobuf.ByteString.copyFromUtf8(
                     (String) ref);
             string_ = b;
@@ -1307,7 +1269,7 @@ public final class JvmProtoBuf {
   }
   bitField0_ |= 0x00000004;
           string_ = value;
-          
+
           return this;
         }
         /**
@@ -1320,7 +1282,7 @@ public final class JvmProtoBuf {
         public Builder clearString() {
           bitField0_ = (bitField0_ & ~0x00000004);
           string_ = getDefaultInstance().getString();
-          
+
           return this;
         }
         /**
@@ -1337,7 +1299,7 @@ public final class JvmProtoBuf {
   }
   bitField0_ |= 0x00000004;
           string_ = value;
-          
+
           return this;
         }
 
@@ -1377,7 +1339,7 @@ public final class JvmProtoBuf {
           }
           bitField0_ |= 0x00000008;
           operation_ = value;
-          
+
           return this;
         }
         /**
@@ -1390,7 +1352,7 @@ public final class JvmProtoBuf {
         public Builder clearOperation() {
           bitField0_ = (bitField0_ & ~0x00000008);
           operation_ = Operation.NONE;
-          
+
           return this;
         }
 
@@ -1454,7 +1416,7 @@ public final class JvmProtoBuf {
             int index, int value) {
           ensureSubstringIndexIsMutable();
           substringIndex_.set(index, value);
-          
+
           return this;
         }
         /**
@@ -1469,7 +1431,7 @@ public final class JvmProtoBuf {
         public Builder addSubstringIndex(int value) {
           ensureSubstringIndexIsMutable();
           substringIndex_.add(value);
-          
+
           return this;
         }
         /**
@@ -1486,7 +1448,7 @@ public final class JvmProtoBuf {
           ensureSubstringIndexIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
               values, substringIndex_);
-          
+
           return this;
         }
         /**
@@ -1501,7 +1463,7 @@ public final class JvmProtoBuf {
         public Builder clearSubstringIndex() {
           substringIndex_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000010);
-          
+
           return this;
         }
 
@@ -1561,7 +1523,7 @@ public final class JvmProtoBuf {
             int index, int value) {
           ensureReplaceCharIsMutable();
           replaceChar_.set(index, value);
-          
+
           return this;
         }
         /**
@@ -1575,7 +1537,7 @@ public final class JvmProtoBuf {
         public Builder addReplaceChar(int value) {
           ensureReplaceCharIsMutable();
           replaceChar_.add(value);
-          
+
           return this;
         }
         /**
@@ -1591,7 +1553,7 @@ public final class JvmProtoBuf {
           ensureReplaceCharIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
               values, replaceChar_);
-          
+
           return this;
         }
         /**
@@ -1605,7 +1567,7 @@ public final class JvmProtoBuf {
         public Builder clearReplaceChar() {
           replaceChar_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000020);
-          
+
           return this;
         }
 
@@ -1639,20 +1601,6 @@ public final class JvmProtoBuf {
     /**
      * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
      */
-    @Override
-    public int getRecordCount() {
-      return record_.size();
-    }
-    /**
-     * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-     */
-    @Override
-    public Record getRecord(int index) {
-      return record_.get(index);
-    }
-    /**
-     * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-     */
     public RecordOrBuilder getRecordOrBuilder(
         int index) {
       return record_.get(index);
@@ -1671,28 +1619,6 @@ public final class JvmProtoBuf {
     public java.util.List<Integer>
         getLocalNameList() {
       return localName_;
-    }
-    /**
-     * <code>repeated int32 local_name = 5 [packed = true];</code>
-     *
-     * <pre>
-     * Indices of strings which are names of local classes or anonymous objects
-     * </pre>
-     */
-    @Override
-    public int getLocalNameCount() {
-      return localName_.size();
-    }
-    /**
-     * <code>repeated int32 local_name = 5 [packed = true];</code>
-     *
-     * <pre>
-     * Indices of strings which are names of local classes or anonymous objects
-     * </pre>
-     */
-    @Override
-    public int getLocalName(int index) {
-      return localName_.get(index);
     }
     private int localNameMemoizedSerializedSize = -1;
 
@@ -1905,7 +1831,7 @@ public final class JvmProtoBuf {
             ensureRecordIsMutable();
             record_.addAll(other.record_);
           }
-          
+
         }
         if (!other.localName_.isEmpty()) {
           if (localName_.isEmpty()) {
@@ -1915,7 +1841,7 @@ public final class JvmProtoBuf {
             ensureLocalNameIsMutable();
             localName_.addAll(other.localName_);
           }
-          
+
         }
         setUnknownFields(
             getUnknownFields().concat(other.unknownFields));
@@ -1963,117 +1889,6 @@ public final class JvmProtoBuf {
       public java.util.List<Record> getRecordList() {
         return java.util.Collections.unmodifiableList(record_);
       }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      @Override
-      public int getRecordCount() {
-        return record_.size();
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      @Override
-      public Record getRecord(int index) {
-        return record_.get(index);
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder setRecord(
-          int index, Record value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureRecordIsMutable();
-        record_.set(index, value);
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder setRecord(
-          int index, Record.Builder builderForValue) {
-        ensureRecordIsMutable();
-        record_.set(index, builderForValue.build());
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder addRecord(Record value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureRecordIsMutable();
-        record_.add(value);
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder addRecord(
-          int index, Record value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureRecordIsMutable();
-        record_.add(index, value);
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder addRecord(
-          Record.Builder builderForValue) {
-        ensureRecordIsMutable();
-        record_.add(builderForValue.build());
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder addRecord(
-          int index, Record.Builder builderForValue) {
-        ensureRecordIsMutable();
-        record_.add(index, builderForValue.build());
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder addAllRecord(
-          Iterable<? extends Record> values) {
-        ensureRecordIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, record_);
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder clearRecord() {
-        record_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
-
-        return this;
-      }
-      /**
-       * <code>repeated .org.jetbrains.kotlin.metadata.jvm.StringTableTypes.Record record = 1;</code>
-       */
-      public Builder removeRecord(int index) {
-        ensureRecordIsMutable();
-        record_.remove(index);
-
-        return this;
-      }
 
       private java.util.List<Integer> localName_ = java.util.Collections.emptyList();
       private void ensureLocalNameIsMutable() {
@@ -2093,83 +1908,6 @@ public final class JvmProtoBuf {
       public java.util.List<Integer>
           getLocalNameList() {
         return java.util.Collections.unmodifiableList(localName_);
-      }
-      /**
-       * <code>repeated int32 local_name = 5 [packed = true];</code>
-       *
-       * <pre>
-       * Indices of strings which are names of local classes or anonymous objects
-       * </pre>
-       */
-      @Override
-      public int getLocalNameCount() {
-        return localName_.size();
-      }
-      /**
-       * <code>repeated int32 local_name = 5 [packed = true];</code>
-       *
-       * <pre>
-       * Indices of strings which are names of local classes or anonymous objects
-       * </pre>
-       */
-      @Override
-      public int getLocalName(int index) {
-        return localName_.get(index);
-      }
-      /**
-       * <code>repeated int32 local_name = 5 [packed = true];</code>
-       *
-       * <pre>
-       * Indices of strings which are names of local classes or anonymous objects
-       * </pre>
-       */
-      public Builder setLocalName(
-          int index, int value) {
-        ensureLocalNameIsMutable();
-        localName_.set(index, value);
-        
-        return this;
-      }
-      /**
-       * <code>repeated int32 local_name = 5 [packed = true];</code>
-       *
-       * <pre>
-       * Indices of strings which are names of local classes or anonymous objects
-       * </pre>
-       */
-      public Builder addLocalName(int value) {
-        ensureLocalNameIsMutable();
-        localName_.add(value);
-        
-        return this;
-      }
-      /**
-       * <code>repeated int32 local_name = 5 [packed = true];</code>
-       *
-       * <pre>
-       * Indices of strings which are names of local classes or anonymous objects
-       * </pre>
-       */
-      public Builder addAllLocalName(
-          Iterable<? extends Integer> values) {
-        ensureLocalNameIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, localName_);
-        
-        return this;
-      }
-      /**
-       * <code>repeated int32 local_name = 5 [packed = true];</code>
-       *
-       * <pre>
-       * Indices of strings which are names of local classes or anonymous objects
-       * </pre>
-       */
-      public Builder clearLocalName() {
-        localName_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000002);
-        
-        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:org.jetbrains.kotlin.metadata.jvm.StringTableTypes)
@@ -2598,7 +2336,7 @@ public final class JvmProtoBuf {
       public Builder setName(int value) {
         bitField0_ |= 0x00000001;
         name_ = value;
-        
+
         return this;
       }
       /**
@@ -2607,7 +2345,7 @@ public final class JvmProtoBuf {
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
         name_ = 0;
-        
+
         return this;
       }
 
@@ -2644,7 +2382,7 @@ public final class JvmProtoBuf {
       public Builder setDesc(int value) {
         bitField0_ |= 0x00000002;
         desc_ = value;
-        
+
         return this;
       }
       /**
@@ -2657,7 +2395,7 @@ public final class JvmProtoBuf {
       public Builder clearDesc() {
         bitField0_ = (bitField0_ & ~0x00000002);
         desc_ = 0;
-        
+
         return this;
       }
 
@@ -2672,1277 +2410,6 @@ public final class JvmProtoBuf {
     // @@protoc_insertion_point(class_scope:org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature)
   }
 
-  public interface JvmFieldSignatureOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature)
-      com.google.protobuf.MessageLiteOrBuilder {
-
-    /**
-     * <code>optional int32 name = 1;</code>
-     */
-    boolean hasName();
-    /**
-     * <code>optional int32 name = 1;</code>
-     */
-    int getName();
-
-    /**
-     * <code>optional int32 desc = 2;</code>
-     *
-     * <pre>
-     * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-     * </pre>
-     */
-    boolean hasDesc();
-    /**
-     * <code>optional int32 desc = 2;</code>
-     *
-     * <pre>
-     * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-     * </pre>
-     */
-    int getDesc();
-  }
-  /**
-   * Protobuf type {@code org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature}
-   */
-  public static final class JvmFieldSignature extends
-      com.google.protobuf.GeneratedMessageLite implements
-      // @@protoc_insertion_point(message_implements:org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature)
-      JvmFieldSignatureOrBuilder {
-    // Use JvmFieldSignature.newBuilder() to construct.
-    private JvmFieldSignature(com.google.protobuf.GeneratedMessageLite.Builder builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    @SuppressWarnings("UnusedVariable")
-    private JvmFieldSignature(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-    private static final JvmFieldSignature defaultInstance;
-    public static JvmFieldSignature getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    @Override
-    public JvmFieldSignature getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.ByteString unknownFields;
-    private JvmFieldSignature(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      com.google.protobuf.ByteString.Output unknownFieldsOutput =
-          com.google.protobuf.ByteString.newOutput();
-      com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-          com.google.protobuf.CodedOutputStream.newInstance(
-              unknownFieldsOutput, 1);
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 8: {
-              bitField0_ |= 0x00000001;
-              name_ = input.readInt32();
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              desc_ = input.readInt32();
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        try {
-          unknownFieldsCodedOutput.flush();
-        } catch (java.io.IOException e) {
-        // Should not happen
-        } finally {
-          unknownFields = unknownFieldsOutput.toByteString();
-        }
-        makeExtensionsImmutable();
-      }
-    }
-    public static com.google.protobuf.Parser<JvmFieldSignature> PARSER =
-        new com.google.protobuf.AbstractParser<JvmFieldSignature>() {
-          @Override public JvmFieldSignature parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new JvmFieldSignature(input, extensionRegistry);
-      }
-    };
-
-    @Override
-    public com.google.protobuf.Parser<JvmFieldSignature> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    public static final int NAME_FIELD_NUMBER = 1;
-    private int name_;
-    /**
-     * <code>optional int32 name = 1;</code>
-     */
-    @Override
-    public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional int32 name = 1;</code>
-     */
-    @Override
-    public int getName() {
-      return name_;
-    }
-
-    public static final int DESC_FIELD_NUMBER = 2;
-    private int desc_;
-    /**
-     * <code>optional int32 desc = 2;</code>
-     *
-     * <pre>
-     * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-     * </pre>
-     */
-    @Override
-    public boolean hasDesc() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional int32 desc = 2;</code>
-     *
-     * <pre>
-     * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-     * </pre>
-     */
-    @Override
-    public int getDesc() {
-      return desc_;
-    }
-
-    private void initFields() {
-      name_ = 0;
-      desc_ = 0;
-    }
-    private byte memoizedIsInitialized = -1;
-
-    @Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, name_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, desc_);
-      }
-      output.writeRawBytes(unknownFields);
-    }
-
-    private int memoizedSerializedSize = -1;
-
-    @Override
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, name_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, desc_);
-      }
-      size += unknownFields.size();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static JvmFieldSignature parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static JvmFieldSignature parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static JvmFieldSignature parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static JvmFieldSignature parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static JvmFieldSignature parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static JvmFieldSignature parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static JvmFieldSignature parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static JvmFieldSignature parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static JvmFieldSignature parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static JvmFieldSignature parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-
-    @Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(JvmFieldSignature prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-
-    @Override
-    public Builder toBuilder() { return newBuilder(this); }
-
-    /**
-     * Protobuf type {@code org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageLite.Builder<
-          JvmFieldSignature, Builder>
-        implements
-        // @@protoc_insertion_point(builder_implements:org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature)
-        JvmFieldSignatureOrBuilder {
-      // Construct using org.jetbrains.kotlin.metadata.jvm.JvmProtoBuf.JvmFieldSignature.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private void maybeForceBuilderInitialization() {
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      @Override public Builder clear() {
-        super.clear();
-        name_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        desc_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      @Override public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      @Override
-      public JvmFieldSignature getDefaultInstanceForType() {
-        return JvmFieldSignature.getDefaultInstance();
-      }
-
-      @Override
-      public JvmFieldSignature build() {
-        JvmFieldSignature result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @Override
-      public JvmFieldSignature buildPartial() {
-        JvmFieldSignature result = new JvmFieldSignature(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.name_ = name_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.desc_ = desc_;
-        result.bitField0_ = to_bitField0_;
-        return result;
-      }
-
-      @Override
-      public Builder mergeFrom(JvmFieldSignature other) {
-        if (other == JvmFieldSignature.getDefaultInstance()) return this;
-        if (other.hasName()) {
-          setName(other.getName());
-        }
-        if (other.hasDesc()) {
-          setDesc(other.getDesc());
-        }
-        setUnknownFields(
-            getUnknownFields().concat(other.unknownFields));
-        return this;
-      }
-
-      @Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        JvmFieldSignature parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (JvmFieldSignature) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private int name_ ;
-      /**
-       * <code>optional int32 name = 1;</code>
-       */
-      @Override
-      public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional int32 name = 1;</code>
-       */
-      @Override
-      public int getName() {
-        return name_;
-      }
-      /**
-       * <code>optional int32 name = 1;</code>
-       */
-      public Builder setName(int value) {
-        bitField0_ |= 0x00000001;
-        name_ = value;
-        
-        return this;
-      }
-      /**
-       * <code>optional int32 name = 1;</code>
-       */
-      public Builder clearName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        name_ = 0;
-        
-        return this;
-      }
-
-      private int desc_ ;
-      /**
-       * <code>optional int32 desc = 2;</code>
-       *
-       * <pre>
-       * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-       * </pre>
-       */
-      @Override
-      public boolean hasDesc() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional int32 desc = 2;</code>
-       *
-       * <pre>
-       * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-       * </pre>
-       */
-      @Override public int getDesc() {
-        return desc_;
-      }
-      /**
-       * <code>optional int32 desc = 2;</code>
-       *
-       * <pre>
-       * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-       * </pre>
-       */
-      public Builder setDesc(int value) {
-        bitField0_ |= 0x00000002;
-        desc_ = value;
-        
-        return this;
-      }
-      /**
-       * <code>optional int32 desc = 2;</code>
-       *
-       * <pre>
-       * JVM descriptor of the field type, e.g. 'Ljava/lang/String;'
-       * </pre>
-       */
-      public Builder clearDesc() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        desc_ = 0;
-        
-        return this;
-      }
-
-      // @@protoc_insertion_point(builder_scope:org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature)
-    }
-
-    static {
-      defaultInstance = new JvmFieldSignature(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature)
-  }
-
-  public interface JvmPropertySignatureOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature)
-      com.google.protobuf.MessageLiteOrBuilder {
-
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-     */
-    boolean hasField();
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-     */
-    JvmFieldSignature getField();
-
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-     *
-     * <pre>
-     * Annotations on properties are written on a synthetic method with this signature
-     * </pre>
-     */
-    boolean hasSyntheticMethod();
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-     *
-     * <pre>
-     * Annotations on properties are written on a synthetic method with this signature
-     * </pre>
-     */
-    JvmMethodSignature getSyntheticMethod();
-
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-     */
-    boolean hasGetter();
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-     */
-    JvmMethodSignature getGetter();
-
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-     */
-    boolean hasSetter();
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-     */
-    JvmMethodSignature getSetter();
-  }
-  /**
-   * Protobuf type {@code org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature}
-   */
-  public static final class JvmPropertySignature extends
-      com.google.protobuf.GeneratedMessageLite implements
-      // @@protoc_insertion_point(message_implements:org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature)
-      JvmPropertySignatureOrBuilder {
-    // Use JvmPropertySignature.newBuilder() to construct.
-    private JvmPropertySignature(com.google.protobuf.GeneratedMessageLite.Builder builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    @SuppressWarnings("UnusedVariable")
-    private JvmPropertySignature(boolean noInit) { this.unknownFields = com.google.protobuf.ByteString.EMPTY;}
-
-    private static final JvmPropertySignature defaultInstance;
-    public static JvmPropertySignature getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    @Override public JvmPropertySignature getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.ByteString unknownFields;
-    private JvmPropertySignature(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      com.google.protobuf.ByteString.Output unknownFieldsOutput =
-          com.google.protobuf.ByteString.newOutput();
-      com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
-          com.google.protobuf.CodedOutputStream.newInstance(
-              unknownFieldsOutput, 1);
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFieldsCodedOutput,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 10: {
-              JvmFieldSignature.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = field_.toBuilder();
-              }
-              field_ = input.readMessage(JvmFieldSignature.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(field_);
-                field_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000001;
-              break;
-            }
-            case 18: {
-              JvmMethodSignature.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                subBuilder = syntheticMethod_.toBuilder();
-              }
-              syntheticMethod_ = input.readMessage(JvmMethodSignature.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(syntheticMethod_);
-                syntheticMethod_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000002;
-              break;
-            }
-            case 26: {
-              JvmMethodSignature.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                subBuilder = getter_.toBuilder();
-              }
-              getter_ = input.readMessage(JvmMethodSignature.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(getter_);
-                getter_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000004;
-              break;
-            }
-            case 34: {
-              JvmMethodSignature.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                subBuilder = setter_.toBuilder();
-              }
-              setter_ = input.readMessage(JvmMethodSignature.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(setter_);
-                setter_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000008;
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        try {
-          unknownFieldsCodedOutput.flush();
-        } catch (java.io.IOException e) {
-        // Should not happen
-        } finally {
-          unknownFields = unknownFieldsOutput.toByteString();
-        }
-        makeExtensionsImmutable();
-      }
-    }
-    public static com.google.protobuf.Parser<JvmPropertySignature> PARSER =
-        new com.google.protobuf.AbstractParser<JvmPropertySignature>() {
-          @Override public JvmPropertySignature parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new JvmPropertySignature(input, extensionRegistry);
-      }
-    };
-
-    @Override
-    public com.google.protobuf.Parser<JvmPropertySignature> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    public static final int FIELD_FIELD_NUMBER = 1;
-    private JvmFieldSignature field_;
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-     */
-    @Override public boolean hasField() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-     */
-    @Override public JvmFieldSignature getField() {
-      return field_;
-    }
-
-    public static final int SYNTHETIC_METHOD_FIELD_NUMBER = 2;
-    private JvmMethodSignature syntheticMethod_;
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-     *
-     * <pre>
-     * Annotations on properties are written on a synthetic method with this signature
-     * </pre>
-     */
-    @Override public boolean hasSyntheticMethod() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-     *
-     * <pre>
-     * Annotations on properties are written on a synthetic method with this signature
-     * </pre>
-     */
-    @Override public JvmMethodSignature getSyntheticMethod() {
-      return syntheticMethod_;
-    }
-
-    public static final int GETTER_FIELD_NUMBER = 3;
-    private JvmMethodSignature getter_;
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-     */
-    @Override public boolean hasGetter() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-     */
-    @Override public JvmMethodSignature getGetter() {
-      return getter_;
-    }
-
-    public static final int SETTER_FIELD_NUMBER = 4;
-    private JvmMethodSignature setter_;
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-     */
-    @Override public boolean hasSetter() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    /**
-     * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-     */
-    @Override public JvmMethodSignature getSetter() {
-      return setter_;
-    }
-
-    private void initFields() {
-      field_ = JvmFieldSignature.getDefaultInstance();
-      syntheticMethod_ = JvmMethodSignature.getDefaultInstance();
-      getter_ = JvmMethodSignature.getDefaultInstance();
-      setter_ = JvmMethodSignature.getDefaultInstance();
-    }
-    private byte memoizedIsInitialized = -1;
-    @Override public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @Override public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, field_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeMessage(2, syntheticMethod_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeMessage(3, getter_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeMessage(4, setter_);
-      }
-      output.writeRawBytes(unknownFields);
-    }
-
-    private int memoizedSerializedSize = -1;
-    @Override public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, field_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, syntheticMethod_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, getter_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, setter_);
-      }
-      size += unknownFields.size();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static JvmPropertySignature parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static JvmPropertySignature parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static JvmPropertySignature parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static JvmPropertySignature parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static JvmPropertySignature parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static JvmPropertySignature parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static JvmPropertySignature parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static JvmPropertySignature parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static JvmPropertySignature parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static JvmPropertySignature parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-    @Override public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(JvmPropertySignature prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    @Override public Builder toBuilder() { return newBuilder(this); }
-
-    /**
-     * Protobuf type {@code org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageLite.Builder<
-          JvmPropertySignature, Builder>
-        implements
-        // @@protoc_insertion_point(builder_implements:org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature)
-        JvmPropertySignatureOrBuilder {
-      // Construct using org.jetbrains.kotlin.metadata.jvm.JvmProtoBuf.JvmPropertySignature.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private void maybeForceBuilderInitialization() {
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      @Override public Builder clear() {
-        super.clear();
-        field_ = JvmFieldSignature.getDefaultInstance();
-        bitField0_ = (bitField0_ & ~0x00000001);
-        syntheticMethod_ = JvmMethodSignature.getDefaultInstance();
-        bitField0_ = (bitField0_ & ~0x00000002);
-        getter_ = JvmMethodSignature.getDefaultInstance();
-        bitField0_ = (bitField0_ & ~0x00000004);
-        setter_ = JvmMethodSignature.getDefaultInstance();
-        bitField0_ = (bitField0_ & ~0x00000008);
-        return this;
-      }
-
-      @Override public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      @Override public JvmPropertySignature getDefaultInstanceForType() {
-        return JvmPropertySignature.getDefaultInstance();
-      }
-
-      @Override public JvmPropertySignature build() {
-        JvmPropertySignature result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @Override public JvmPropertySignature buildPartial() {
-        JvmPropertySignature result = new JvmPropertySignature(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.field_ = field_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.syntheticMethod_ = syntheticMethod_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
-        }
-        result.getter_ = getter_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.setter_ = setter_;
-        result.bitField0_ = to_bitField0_;
-        return result;
-      }
-
-      @Override public Builder mergeFrom(JvmPropertySignature other) {
-        if (other == JvmPropertySignature.getDefaultInstance()) return this;
-        if (other.hasField()) {
-          mergeField(other.getField());
-        }
-        if (other.hasSyntheticMethod()) {
-          mergeSyntheticMethod(other.getSyntheticMethod());
-        }
-        if (other.hasGetter()) {
-          mergeGetter(other.getGetter());
-        }
-        if (other.hasSetter()) {
-          mergeSetter(other.getSetter());
-        }
-        setUnknownFields(
-            getUnknownFields().concat(other.unknownFields));
-        return this;
-      }
-
-      @Override public final boolean isInitialized() {
-        return true;
-      }
-
-      @Override public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        JvmPropertySignature parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (JvmPropertySignature) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private JvmFieldSignature field_ = JvmFieldSignature.getDefaultInstance();
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-       */
-      @Override public boolean hasField() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-       */
-      @Override public JvmFieldSignature getField() {
-        return field_;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-       */
-      public Builder setField(JvmFieldSignature value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        field_ = value;
-
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-       */
-      public Builder setField(
-          JvmFieldSignature.Builder builderForValue) {
-        field_ = builderForValue.build();
-
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-       */
-      public Builder mergeField(JvmFieldSignature value) {
-        if (((bitField0_ & 0x00000001) == 0x00000001) &&
-            field_ != JvmFieldSignature.getDefaultInstance()) {
-          field_ =
-            JvmFieldSignature.newBuilder(field_).mergeFrom(value).buildPartial();
-        } else {
-          field_ = value;
-        }
-
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmFieldSignature field = 1;</code>
-       */
-      public Builder clearField() {
-        field_ = JvmFieldSignature.getDefaultInstance();
-
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-
-      private JvmMethodSignature syntheticMethod_ = JvmMethodSignature.getDefaultInstance();
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-       *
-       * <pre>
-       * Annotations on properties are written on a synthetic method with this signature
-       * </pre>
-       */
-      @Override public boolean hasSyntheticMethod() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-       *
-       * <pre>
-       * Annotations on properties are written on a synthetic method with this signature
-       * </pre>
-       */
-      @Override public JvmMethodSignature getSyntheticMethod() {
-        return syntheticMethod_;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-       *
-       * <pre>
-       * Annotations on properties are written on a synthetic method with this signature
-       * </pre>
-       */
-      public Builder setSyntheticMethod(JvmMethodSignature value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        syntheticMethod_ = value;
-
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-       *
-       * <pre>
-       * Annotations on properties are written on a synthetic method with this signature
-       * </pre>
-       */
-      public Builder setSyntheticMethod(
-          JvmMethodSignature.Builder builderForValue) {
-        syntheticMethod_ = builderForValue.build();
-
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-       *
-       * <pre>
-       * Annotations on properties are written on a synthetic method with this signature
-       * </pre>
-       */
-      public Builder mergeSyntheticMethod(JvmMethodSignature value) {
-        if (((bitField0_ & 0x00000002) == 0x00000002) &&
-            syntheticMethod_ != JvmMethodSignature.getDefaultInstance()) {
-          syntheticMethod_ =
-            JvmMethodSignature.newBuilder(syntheticMethod_).mergeFrom(value).buildPartial();
-        } else {
-          syntheticMethod_ = value;
-        }
-
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature synthetic_method = 2;</code>
-       *
-       * <pre>
-       * Annotations on properties are written on a synthetic method with this signature
-       * </pre>
-       */
-      public Builder clearSyntheticMethod() {
-        syntheticMethod_ = JvmMethodSignature.getDefaultInstance();
-
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      private JvmMethodSignature getter_ = JvmMethodSignature.getDefaultInstance();
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-       */
-      @Override public boolean hasGetter() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-       */
-      @Override public JvmMethodSignature getGetter() {
-        return getter_;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-       */
-      public Builder setGetter(JvmMethodSignature value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        getter_ = value;
-
-        bitField0_ |= 0x00000004;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-       */
-      public Builder setGetter(
-          JvmMethodSignature.Builder builderForValue) {
-        getter_ = builderForValue.build();
-
-        bitField0_ |= 0x00000004;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-       */
-      public Builder mergeGetter(JvmMethodSignature value) {
-        if (((bitField0_ & 0x00000004) == 0x00000004) &&
-            getter_ != JvmMethodSignature.getDefaultInstance()) {
-          getter_ =
-            JvmMethodSignature.newBuilder(getter_).mergeFrom(value).buildPartial();
-        } else {
-          getter_ = value;
-        }
-
-        bitField0_ |= 0x00000004;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature getter = 3;</code>
-       */
-      public Builder clearGetter() {
-        getter_ = JvmMethodSignature.getDefaultInstance();
-
-        bitField0_ = (bitField0_ & ~0x00000004);
-        return this;
-      }
-
-      private JvmMethodSignature setter_ = JvmMethodSignature.getDefaultInstance();
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-       */
-      @Override public boolean hasSetter() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-       */
-      @Override public JvmMethodSignature getSetter() {
-        return setter_;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-       */
-      public Builder setSetter(JvmMethodSignature value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        setter_ = value;
-
-        bitField0_ |= 0x00000008;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-       */
-      public Builder setSetter(
-          JvmMethodSignature.Builder builderForValue) {
-        setter_ = builderForValue.build();
-
-        bitField0_ |= 0x00000008;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-       */
-      public Builder mergeSetter(JvmMethodSignature value) {
-        if (((bitField0_ & 0x00000008) == 0x00000008) &&
-            setter_ != JvmMethodSignature.getDefaultInstance()) {
-          setter_ =
-            JvmMethodSignature.newBuilder(setter_).mergeFrom(value).buildPartial();
-        } else {
-          setter_ = value;
-        }
-
-        bitField0_ |= 0x00000008;
-        return this;
-      }
-      /**
-       * <code>optional .org.jetbrains.kotlin.metadata.jvm.JvmMethodSignature setter = 4;</code>
-       */
-      public Builder clearSetter() {
-        setter_ = JvmMethodSignature.getDefaultInstance();
-
-        bitField0_ = (bitField0_ & ~0x00000008);
-        return this;
-      }
-
-      // @@protoc_insertion_point(builder_scope:org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature)
-    }
-
-    static {
-      defaultInstance = new JvmPropertySignature(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:org.jetbrains.kotlin.metadata.jvm.JvmPropertySignature)
-  }
-
-  public static final int CONSTRUCTOR_SIGNATURE_FIELD_NUMBER = 100;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Constructor { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Constructor,
-      JvmMethodSignature> constructorSignature = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Constructor.getDefaultInstance(),
-        JvmMethodSignature.getDefaultInstance(),
-        JvmMethodSignature.getDefaultInstance(),
-        null,
-        100,
-        com.google.protobuf.WireFormat.FieldType.MESSAGE,
-        JvmMethodSignature.class);
   public static final int METHOD_SIGNATURE_FIELD_NUMBER = 100;
   /**
    * <code>extend .org.jetbrains.kotlin.metadata.Function { ... }</code>
@@ -3959,225 +2426,6 @@ public final class JvmProtoBuf {
         100,
         com.google.protobuf.WireFormat.FieldType.MESSAGE,
         JvmMethodSignature.class);
-  public static final int LAMBDA_CLASS_ORIGIN_NAME_FIELD_NUMBER = 101;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Function { ... }</code>
-   *
-   * <pre>
-   * For lambdas from bodies of inline functions copied to the use site, the JVM internal name of the original
-   * lambda class this class is copied from
-   * </pre>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Function,
-      Integer> lambdaClassOriginName = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Function.getDefaultInstance(),
-        0,
-        null,
-        null,
-        101,
-        com.google.protobuf.WireFormat.FieldType.INT32,
-        Integer.class);
-  public static final int PROPERTY_SIGNATURE_FIELD_NUMBER = 100;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Property { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Property,
-      JvmPropertySignature> propertySignature = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Property.getDefaultInstance(),
-        JvmPropertySignature.getDefaultInstance(),
-        JvmPropertySignature.getDefaultInstance(),
-        null,
-        100,
-        com.google.protobuf.WireFormat.FieldType.MESSAGE,
-        JvmPropertySignature.class);
-  public static final int FLAGS_FIELD_NUMBER = 101;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Property { ... }</code>
-   *
-   * <pre>
-   **
-   *isMovedFromInterfaceCompanion   true if this property is declared in an interface companion, and the field is stored in the interface
-   * </pre>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Property,
-      Integer> flags = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Property.getDefaultInstance(),
-        0,
-        null,
-        null,
-        101,
-        com.google.protobuf.WireFormat.FieldType.INT32,
-        Integer.class);
-  public static final int TYPE_ANNOTATION_FIELD_NUMBER = 100;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Type { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Type,
-      java.util.List<org.jetbrains.kotlin.metadata.ProtoBuf.Annotation>> typeAnnotation = com.google.protobuf.GeneratedMessageLite
-          .newRepeatedGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Type.getDefaultInstance(),
-        org.jetbrains.kotlin.metadata.ProtoBuf.Annotation.getDefaultInstance(),
-        null,
-        100,
-        com.google.protobuf.WireFormat.FieldType.MESSAGE,
-        false,
-        org.jetbrains.kotlin.metadata.ProtoBuf.Annotation.class);
-  public static final int IS_RAW_FIELD_NUMBER = 101;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Type { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Type,
-      Boolean> isRaw = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Type.getDefaultInstance(),
-        false,
-        null,
-        null,
-        101,
-        com.google.protobuf.WireFormat.FieldType.BOOL,
-        Boolean.class);
-  public static final int TYPE_PARAMETER_ANNOTATION_FIELD_NUMBER = 100;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.TypeParameter { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.TypeParameter,
-      java.util.List<org.jetbrains.kotlin.metadata.ProtoBuf.Annotation>> typeParameterAnnotation = com.google.protobuf.GeneratedMessageLite
-          .newRepeatedGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.TypeParameter.getDefaultInstance(),
-        org.jetbrains.kotlin.metadata.ProtoBuf.Annotation.getDefaultInstance(),
-        null,
-        100,
-        com.google.protobuf.WireFormat.FieldType.MESSAGE,
-        false,
-        org.jetbrains.kotlin.metadata.ProtoBuf.Annotation.class);
-  public static final int CLASS_MODULE_NAME_FIELD_NUMBER = 101;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Class { ... }</code>
-   *
-   * <pre>
-   * If absent, assumed to be "main" (JvmProtoBufUtil.DEFAULT_MODULE_NAME)
-   * </pre>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Class,
-      Integer> classModuleName = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Class.getDefaultInstance(),
-        0,
-        null,
-        null,
-        101,
-        com.google.protobuf.WireFormat.FieldType.INT32,
-        Integer.class);
-  public static final int CLASS_LOCAL_VARIABLE_FIELD_NUMBER = 102;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Class { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Class,
-      java.util.List<org.jetbrains.kotlin.metadata.ProtoBuf.Property>> classLocalVariable = com.google.protobuf.GeneratedMessageLite
-          .newRepeatedGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Class.getDefaultInstance(),
-        org.jetbrains.kotlin.metadata.ProtoBuf.Property.getDefaultInstance(),
-        null,
-        102,
-        com.google.protobuf.WireFormat.FieldType.MESSAGE,
-        false,
-        org.jetbrains.kotlin.metadata.ProtoBuf.Property.class);
-  public static final int ANONYMOUS_OBJECT_ORIGIN_NAME_FIELD_NUMBER = 103;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Class { ... }</code>
-   *
-   * <pre>
-   * For anonymous objects from bodies of inline functions copied to the use site, the JVM internal name of the original
-   * anonymous object this class is copied from
-   * </pre>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Class,
-      Integer> anonymousObjectOriginName = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Class.getDefaultInstance(),
-        0,
-        null,
-        null,
-        103,
-        com.google.protobuf.WireFormat.FieldType.INT32,
-        Integer.class);
-  public static final int JVM_CLASS_FLAGS_FIELD_NUMBER = 104;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Class { ... }</code>
-   *
-   * <pre>
-   * first bit: isFunctionBodyInInterface: 0 if actual body generated in DefaultImpl, 1 - otherwise (in interface default method)
-   * second bit: is all-compatibility mode or not, 1 - yes, 0 - no
-   * </pre>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Class,
-      Integer> jvmClassFlags = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Class.getDefaultInstance(),
-        0,
-        null,
-        null,
-        104,
-        com.google.protobuf.WireFormat.FieldType.INT32,
-        Integer.class);
-  public static final int PACKAGE_MODULE_NAME_FIELD_NUMBER = 101;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Package { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Package,
-      Integer> packageModuleName = com.google.protobuf.GeneratedMessageLite
-          .newSingularGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Package.getDefaultInstance(),
-        0,
-        null,
-        null,
-        101,
-        com.google.protobuf.WireFormat.FieldType.INT32,
-        Integer.class);
-  public static final int PACKAGE_LOCAL_VARIABLE_FIELD_NUMBER = 102;
-  /**
-   * <code>extend .org.jetbrains.kotlin.metadata.Package { ... }</code>
-   */
-  public static final
-    com.google.protobuf.GeneratedMessageLite.GeneratedExtension<
-      org.jetbrains.kotlin.metadata.ProtoBuf.Package,
-      java.util.List<org.jetbrains.kotlin.metadata.ProtoBuf.Property>> packageLocalVariable = com.google.protobuf.GeneratedMessageLite
-          .newRepeatedGeneratedExtension(
-        org.jetbrains.kotlin.metadata.ProtoBuf.Package.getDefaultInstance(),
-        org.jetbrains.kotlin.metadata.ProtoBuf.Property.getDefaultInstance(),
-        null,
-        102,
-        com.google.protobuf.WireFormat.FieldType.MESSAGE,
-        false,
-        org.jetbrains.kotlin.metadata.ProtoBuf.Property.class);
-
-  static {
-  }
 
   // @@protoc_insertion_point(outer_class_scope)
 }
