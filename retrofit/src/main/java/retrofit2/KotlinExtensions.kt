@@ -20,6 +20,12 @@ package retrofit2
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.metadata.Flag
+import kotlinx.metadata.KmClassifier
+import kotlinx.metadata.jvm.KotlinClassHeader
+import kotlinx.metadata.jvm.KotlinClassMetadata
+import kotlinx.metadata.jvm.signature
+import java.lang.reflect.Method
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
@@ -117,3 +123,61 @@ internal suspend fun Exception.suspendAndThrow(): Nothing {
     COROUTINE_SUSPENDED
   }
 }
+
+internal fun isReturnTypeNullable(method: Method): Boolean {
+  val declaringClass = method.declaringClass
+  val metadataAnnotation = declaringClass.getAnnotation(Metadata::class.java)
+
+  val header = KotlinClassHeader(
+    kind = metadataAnnotation.kind,
+    metadataVersion = metadataAnnotation.metadataVersion,
+    data1 = metadataAnnotation.data1,
+    data2 = metadataAnnotation.data2,
+    extraString = metadataAnnotation.extraString,
+    extraInt = metadataAnnotation.extraInt,
+    packageName = metadataAnnotation.packageName
+  )
+
+  val classMetadata = KotlinClassMetadata.read(header)
+  val kmClass = (classMetadata as KotlinClassMetadata.Class).toKmClass()
+
+  val javaMethodSignature = method.createSignature()
+  val candidates = kmClass.functions.filter { it.signature?.asString() == javaMethodSignature }
+
+  require(candidates.isNotEmpty()) { "No match found in metadata for '${method}'" }
+  require(candidates.size == 1) { "Multiple function matches found in metadata for '${method}'" }
+  val match = candidates.first()
+
+  return Flag.Type.IS_NULLABLE(match.returnType.flags) || match.returnType.classifier == KmClassifier.Class("kotlin/Unit")
+}
+
+private fun Method.createSignature() = buildString {
+  append(name)
+  append('(')
+
+  parameterTypes.forEach {
+    append(it.typeToSignature())
+  }
+
+  append(')')
+
+  append(returnType.typeToSignature())
+}
+
+private fun Class<*>.typeToSignature() = when {
+  isPrimitive -> javaTypesMap[name]
+  isArray -> name.replace('.', '/')
+  else -> "L${name.replace('.', '/')};"
+}
+
+private val javaTypesMap = mapOf(
+  "int" to "I",
+  "long" to "J",
+  "boolean" to "Z",
+  "byte" to "B",
+  "char" to "C",
+  "float" to "F",
+  "double" to "D",
+  "short" to "S",
+  "void" to "V"
+)
