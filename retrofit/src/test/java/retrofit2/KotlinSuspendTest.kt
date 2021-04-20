@@ -26,8 +26,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST
 import okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -35,6 +34,7 @@ import retrofit2.helpers.ToStringConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.kotlin.metadata.deserialization.readRawVarint32
 import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -135,6 +135,50 @@ class KotlinSuspendTest {
           "Response from retrofit2.KotlinSuspendTest\$Service.body was null but response body type was declared as non-null")
     }
   }
+
+    @Test fun protobuf() {
+        val bytes1 = byteArrayOf(74)
+        val varint1 = bytes1.inputStream().readRawVarint32()
+        assertEquals(74, varint1)
+
+        val bytes2 = byteArrayOf(0x96.toByte(), 0x15)
+        val varint2 = bytes2.inputStream().readRawVarint32()
+        assertEquals(2710, varint2)
+
+        val bytes3 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x15)
+        val varint3 = bytes3.inputStream().readRawVarint32()
+        assertEquals(346902, varint3)
+
+        val bytes4 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x15)
+        val varint4 = bytes4.inputStream().readRawVarint32()
+        assertEquals(44403478, varint4)
+
+        val bytes5 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x15)
+        val varint5 = bytes5.inputStream().readRawVarint32()
+        assertEquals(1388677910, varint5)
+
+        val bytes6 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        val varint6 = bytes6.inputStream().readRawVarint32()
+        assertEquals(1388677910, varint6)
+
+        val bytes7 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),)
+        try {
+            println("expecting error")
+            bytes7.inputStream().readRawVarint32()
+            fail()
+        } catch (e: Exception) {
+            println("exception: $e")
+        }
+
+        val bytes8 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),)
+        try {
+            println("expecting error2")
+            bytes8.inputStream().readRawVarint32()
+            fail()
+        } catch (e: Exception) {
+            println("exception: $e")
+        }
+    }
 
   @Test fun bodyNullable() {
     val retrofit = Retrofit.Builder()

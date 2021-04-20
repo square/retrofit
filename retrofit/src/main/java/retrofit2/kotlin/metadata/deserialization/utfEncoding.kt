@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package retrofit2.kotlin.metadata.jvm.deserialization
+package retrofit2.kotlin.metadata.deserialization
 
 import java.util.*
 

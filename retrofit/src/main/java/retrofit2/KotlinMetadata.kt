@@ -1,30 +1,27 @@
 package retrofit2
 
-import retrofit2.kotlinx.metadata.Flag
-import retrofit2.kotlinx.metadata.KmClassifier
-import retrofit2.kotlinx.metadata.KmFunction
-import retrofit2.kotlinx.metadata.jvm.KotlinClassHeader
-import retrofit2.kotlinx.metadata.jvm.KotlinClassMetadata
-import retrofit2.kotlinx.metadata.jvm.signature
+import retrofit2.kotlin.metadata.deserialization.*
+import java.io.ByteArrayInputStream
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 
 object KotlinMetadata {
 
-    private val kotlinFunctionsMap = ConcurrentHashMap<Class<*>, List<KmFunction>>()
+    data class Function(val signature: String, val returnType: ReturnType)
+    data class ReturnType(val isNullable: Boolean, val isUnit: Boolean)
+
+    private val kotlinFunctionsMap = ConcurrentHashMap<Class<*>, List<Function>>()
 
     @JvmStatic fun isReturnTypeNullable(method: Method): Boolean {
         val javaMethodSignature = method.createSignature()
         val kotlinFunctions = loadKotlinFunctions(method.declaringClass)
-        val candidates = kotlinFunctions.filter { it.signature?.asString() == javaMethodSignature }
+        val candidates = kotlinFunctions.filter { it.signature == javaMethodSignature }
 
         require(candidates.isNotEmpty()) { "No match found in metadata for '${method}'" }
         require(candidates.size == 1) { "Multiple function matches found in metadata for '${method}'" }
         val match = candidates.first()
 
-        val isNullable = Flag.Type.IS_NULLABLE(match.returnType.flags)
-        val isUnit = match.returnType.classifier == KmClassifier.Class("kotlin/Unit")
-        return isNullable || isUnit
+        return match.returnType.isNullable || match.returnType.isUnit
     }
 
     private fun Method.createSignature() = buildString {
@@ -40,7 +37,7 @@ object KotlinMetadata {
         append(returnType.typeToSignature())
     }
 
-    private fun loadKotlinFunctions(clazz: Class<*>): List<KmFunction> {
+    private fun loadKotlinFunctions(clazz: Class<*>): List<Function> {
         var result = kotlinFunctionsMap[clazz]
         if (result != null) return result
 
@@ -54,23 +51,21 @@ object KotlinMetadata {
         return result!!
     }
 
-    private fun readFunctionsFromMetadata(clazz: Class<*>): List<KmFunction> {
+    private fun readFunctionsFromMetadata(clazz: Class<*>): List<Function> {
         val metadataAnnotation = clazz.getAnnotation(Metadata::class.java)
 
-        val header = KotlinClassHeader(
-            kind = metadataAnnotation.kind,
-            metadataVersion = metadataAnnotation.metadataVersion,
-            data1 = metadataAnnotation.data1,
-            data2 = metadataAnnotation.data2,
-            extraString = metadataAnnotation.extraString,
-            extraInt = metadataAnnotation.extraInt,
-            packageName = metadataAnnotation.packageName
-        )
+        val isStrictSemantics = (metadataAnnotation.extraInt and (1 shl 3)) != 0
+        val isCompatible = JvmMetadataVersion(metadataAnnotation.metadataVersion, isStrictSemantics).isCompatible()
 
-        val classMetadata = KotlinClassMetadata.read(header)
-        val kmClass = (classMetadata as KotlinClassMetadata.Class).toKmClass()
+        require(isCompatible) { "Metadata version not compatible" }
+        require(metadataAnnotation.kind == 1) { "Metadata of wrong kind: ${metadataAnnotation.kind}" }
+        require(metadataAnnotation.data1.isNotEmpty()) { "data1 must not be empty" }
 
-        return kmClass.functions
+        val bytes = BitEncoding.decodeBytes(metadataAnnotation.data1)
+        val stream = ByteArrayInputStream(bytes)
+        val parser = MetadataParser(metadataAnnotation.data2, stream)
+
+        return parser.parseClass()
     }
 
     private fun Class<*>.typeToSignature() = when {

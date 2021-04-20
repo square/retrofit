@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package retrofit2.kotlin.metadata.jvm.deserialization
+package retrofit2.kotlin.metadata.deserialization
 
 import retrofit2.kotlin.metadata.deserialization.BinaryVersion
 

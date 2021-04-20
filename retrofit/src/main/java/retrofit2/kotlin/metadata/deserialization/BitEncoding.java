@@ -3,11 +3,12 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package retrofit2.kotlin.metadata.jvm.deserialization;
+package retrofit2.kotlin.metadata.deserialization;
 
 import org.jetbrains.annotations.NotNull;
 
-import static retrofit2.kotlin.metadata.jvm.deserialization.UtfEncodingKt.MAX_UTF8_INFO_LENGTH;
+import static retrofit2.kotlin.metadata.deserialization.UtfEncodingKt.MAX_UTF8_INFO_LENGTH;
+
 
 public class BitEncoding {
 
