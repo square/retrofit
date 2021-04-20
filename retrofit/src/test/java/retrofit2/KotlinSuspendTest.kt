@@ -136,50 +136,6 @@ class KotlinSuspendTest {
     }
   }
 
-    @Test fun protobuf() {
-        val bytes1 = byteArrayOf(74)
-        val varint1 = bytes1.inputStream().readRawVarint32()
-        assertEquals(74, varint1)
-
-        val bytes2 = byteArrayOf(0x96.toByte(), 0x15)
-        val varint2 = bytes2.inputStream().readRawVarint32()
-        assertEquals(2710, varint2)
-
-        val bytes3 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x15)
-        val varint3 = bytes3.inputStream().readRawVarint32()
-        assertEquals(346902, varint3)
-
-        val bytes4 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x15)
-        val varint4 = bytes4.inputStream().readRawVarint32()
-        assertEquals(44403478, varint4)
-
-        val bytes5 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x15)
-        val varint5 = bytes5.inputStream().readRawVarint32()
-        assertEquals(1388677910, varint5)
-
-        val bytes6 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        val varint6 = bytes6.inputStream().readRawVarint32()
-        assertEquals(1388677910, varint6)
-
-        val bytes7 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),)
-        try {
-            println("expecting error")
-            bytes7.inputStream().readRawVarint32()
-            fail()
-        } catch (e: Exception) {
-            println("exception: $e")
-        }
-
-        val bytes8 = byteArrayOf(0x96.toByte(), 0x96.toByte(), 0x96.toByte(), 0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),0x96.toByte(),)
-        try {
-            println("expecting error2")
-            bytes8.inputStream().readRawVarint32()
-            fail()
-        } catch (e: Exception) {
-            println("exception: $e")
-        }
-    }
-
   @Test fun bodyNullable() {
     val retrofit = Retrofit.Builder()
         .baseUrl(server.url("/"))
