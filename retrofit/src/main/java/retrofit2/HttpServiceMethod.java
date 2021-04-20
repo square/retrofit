@@ -15,7 +15,6 @@
  */
 package retrofit2;
 
-import static retrofit2.KotlinExtensions.isReturnTypeNullable;
 import static retrofit2.Utils.getRawType;
 import static retrofit2.Utils.methodError;
 
@@ -52,7 +51,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
       } else {
-        continuationBodyNullable = isReturnTypeNullable(method);
+        continuationBodyNullable = KotlinMetadata.isReturnTypeNullable(method);
       }
 
       adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
