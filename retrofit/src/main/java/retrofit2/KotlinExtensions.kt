@@ -20,11 +20,11 @@ package retrofit2
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.metadata.Flag
-import kotlinx.metadata.KmClassifier
-import kotlinx.metadata.jvm.KotlinClassHeader
-import kotlinx.metadata.jvm.KotlinClassMetadata
-import kotlinx.metadata.jvm.signature
+import retrofit2.kotlinx.metadata.Flag
+import retrofit2.kotlinx.metadata.KmClassifier
+import retrofit2.kotlinx.metadata.jvm.KotlinClassHeader
+import retrofit2.kotlinx.metadata.jvm.KotlinClassMetadata
+import retrofit2.kotlinx.metadata.jvm.signature
 import java.lang.reflect.Method
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
