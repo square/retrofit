@@ -15,13 +15,12 @@
  */
 package retrofit2.helpers;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
-
-import javax.annotation.Nullable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
 public class ToNullStringResponseConverterFactory extends Converter.Factory {
 
