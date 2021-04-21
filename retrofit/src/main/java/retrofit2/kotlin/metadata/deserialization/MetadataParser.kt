@@ -5,7 +5,7 @@ import java.io.ByteArrayInputStream
 
 class MetadataParser(val strings: Array<String>, val input: ByteArrayInputStream) {
 
-    data class Record(val range: Int, val predefinedIndex: Int, val operation: Int)
+    class Record(val range: Int, val predefinedIndex: Int, val operation: Int)
 
     companion object {
         private val PREDEFINED_STRINGS = listOf(
@@ -106,7 +106,7 @@ class MetadataParser(val strings: Array<String>, val input: ByteArrayInputStream
         return KotlinMetadata.ReturnType(nullable, name == "kotlin/Unit")
     }
 
-    data class Signature(val nameIndex: Int, val desc: String)
+    class Signature(val nameIndex: Int, val desc: String)
 
     private fun parseSignature(): Signature {
         var nameIndex = -1
