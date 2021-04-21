@@ -13,6 +13,8 @@ object KotlinMetadata {
     private val kotlinFunctionsMap = ConcurrentHashMap<Class<*>, List<Function>>()
 
     @JvmStatic fun isReturnTypeNullable(method: Method): Boolean {
+        if (method.declaringClass.getAnnotation(Metadata::class.java) == null) return false
+
         val javaMethodSignature = method.createSignature()
         val kotlinFunctions = loadKotlinFunctions(method.declaringClass)
         val candidates = kotlinFunctions.filter { it.signature == javaMethodSignature }
