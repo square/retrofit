@@ -3295,6 +3295,7 @@ public final class RequestFactoryTest {
       Request request = buildRequest(cls, args);
       fail("expected a malformed request but was " + request);
     } catch (IllegalArgumentException expected) {
+      // Ignored
     }
   }
 }
