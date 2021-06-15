@@ -19,7 +19,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /** Exception for an unexpected, non-2xx HTTP response. */
-public class HttpException extends RuntimeException {
+public class HttpException extends Exception {
   private static String getMessage(Response<?> response) {
     Objects.requireNonNull(response, "response == null");
     return "HTTP " + response.code() + " " + response.message();
