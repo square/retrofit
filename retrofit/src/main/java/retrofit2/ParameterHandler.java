@@ -446,4 +446,13 @@ abstract class ParameterHandler<T> {
       builder.addTag(cls, value);
     }
   }
+
+  static final class NoOp<T> extends ParameterHandler<T> {
+
+    @Override
+    void apply(RequestBuilder builder, @org.jetbrains.annotations.Nullable T value) throws IOException {
+      // do nothing
+    }
+  }
+
 }
