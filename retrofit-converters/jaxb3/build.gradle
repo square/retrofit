@@ -1,0 +1,20 @@
+apply plugin: 'java-library'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api project(':retrofit')
+  api deps.jaxb3Api
+  compileOnly deps.findBugsAnnotations
+
+  testImplementation deps.jaxb3Impl
+  testImplementation deps.junit
+  testImplementation deps.assertj
+  testImplementation deps.mockwebserver
+  testImplementation deps.findBugsAnnotations
+}
+
+jar {
+  manifest {
+    attributes  'Automatic-Module-Name': 'retrofit2.converter.jaxb3'
+  }
+}
