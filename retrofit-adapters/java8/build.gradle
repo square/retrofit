@@ -1,5 +1,16 @@
 apply plugin: 'java-library'
 apply plugin: 'com.vanniktech.maven.publish'
+applyOsgi(this)
+
+jar {
+  // MANIFEST.MF, including OSGi bnd instructions.
+  bnd '''
+  Export-Package: retrofit2.adapter.java8
+  Import-Package: *
+  Automatic-Module-Name: retrofit2.adapter.java8
+  Bundle-SymbolicName: com.squareup.retrofit2.adapter.java8
+  '''
+}
 
 dependencies {
   api project(':retrofit')
@@ -9,10 +20,4 @@ dependencies {
   testImplementation deps.assertj
   testImplementation deps.guava
   testImplementation deps.mockwebserver
-}
-
-jar {
-  manifest {
-    attributes  'Automatic-Module-Name': 'retrofit2.adapter.java8'
-  }
 }

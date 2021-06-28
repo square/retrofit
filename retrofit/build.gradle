@@ -1,9 +1,41 @@
 apply plugin: 'java-library'
 apply plugin: 'org.jetbrains.kotlin.jvm'
 apply plugin: 'com.vanniktech.maven.publish'
+applyOsgi(this)
+
+jar {
+  // MANIFEST.MF, including OSGi bnd instructions.
+  // We export retrofit2.internal for our own modules use.
+  // The packages of all optional dependencies must be explicitly specified.
+  // kotlinx.coroutines is optional for now because there is no OSGi metadata available
+  // and it's only necessary when kotlin is used
+  bnd '''
+  Export-Package: \
+  retrofit2,\
+  retrofit2.http,\
+  retrofit2.internal;retrofitinternal=true;mandatory:=retrofitinternal
+  Import-Package: \
+  android.*;resolution:=optional,\
+  kotlinx.coroutines.*;resolution:=optional,\
+  *
+  Automatic-Module-Name: retrofit2
+  Bundle-SymbolicName: com.squareup.retrofit2
+  '''
+}
+
+// Expose OSGi jars to the test environment.
+configurations {
+  osgiTestDeploy
+}
+task copyOsgiTestDeployment(type: Copy) {
+  from configurations.osgiTestDeploy
+  into "${buildDir}/resources/test/retrofit2/osgi/deployments"
+}
+tasks.test.dependsOn(copyOsgiTestDeployment)
 
 dependencies {
   api deps.okhttp
+  osgiApi deps.kotlinStdlibOsgi
 
   compileOnly deps.android
   compileOnly deps.kotlinStdLib
@@ -19,10 +51,25 @@ dependencies {
   testImplementation deps.mockwebserver
   testImplementation deps.kotlinStdLib
   testImplementation deps.kotlinCoroutines
-}
-
-jar {
-  manifest {
-    attributes  'Automatic-Module-Name': 'retrofit2'
-  }
+  testImplementation deps.bndResolve
+  osgiTestDeploy deps.equinox
+  osgiTestDeploy deps.kotlinStdlibOsgi
+  osgiTestDeploy project(':retrofit-adapters:guava')
+  osgiTestDeploy project(':retrofit-adapters:java8')
+  osgiTestDeploy project(':retrofit-adapters:rxjava')
+  osgiTestDeploy project(':retrofit-adapters:rxjava2')
+  osgiTestDeploy project(':retrofit-adapters:rxjava3')
+  osgiTestDeploy project(':retrofit-adapters:scala')
+  // can't include those because gradle seems to get confused because of the retrofit-adapters counterpart
+  //osgiTestDeploy project(':retrofit-converters:guava')
+  //osgiTestDeploy project(':retrofit-converters:java8')
+  osgiTestDeploy project(':retrofit-converters:gson')
+  osgiTestDeploy project(':retrofit-converters:jackson')
+  osgiTestDeploy project(':retrofit-converters:jaxb')
+  osgiTestDeploy project(':retrofit-converters:protobuf')
+  osgiTestDeploy project(':retrofit-converters:scalars')
+  // those dependencies are not fully OSGi compatible yet
+  //osgiTestDeploy project(':retrofit-converters:moshi')
+  //osgiTestDeploy project(':retrofit-converters:simplexml')
+  //osgiTestDeploy project(':retrofit-converters:wire')
 }
