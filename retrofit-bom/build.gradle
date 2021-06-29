@@ -1,0 +1,25 @@
+apply plugin: 'java-platform'
+apply plugin: 'com.vanniktech.maven.publish.base'
+
+dependencies {
+    constraints {
+        project.rootProject.subprojects.forEach { subproject ->
+            if (!subproject.name.startsWith("test-") &&
+                    !subproject.name.endsWith("-test") &&
+                    subproject.name != "retrofit-bom" &&
+                    subproject.name != "samples") {
+                api(subproject)
+            }
+        }
+    }
+}
+
+// There is no java-platforms support, yet, in the publish plugin,
+// see https://github.com/vanniktech/gradle-maven-publish-plugin/issues/210
+publishing {
+    publications {
+        javaLibrary(MavenPublication) {
+            from components.javaPlatform
+        }
+    }
+}

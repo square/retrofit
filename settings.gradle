@@ -23,4 +23,6 @@ include ':retrofit-converters:scalars'
 include ':retrofit-converters:simplexml'
 include ':retrofit-converters:wire'
 
+include ':retrofit-bom'
+
 include ':samples'
