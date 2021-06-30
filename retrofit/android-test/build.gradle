@@ -21,6 +21,21 @@ android {
     testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   }
 
+  signingConfigs {
+    debug {
+      storeFile file('debug.keystore')
+      storePassword 'retrofit'
+      keyAlias 'retrofit'
+      keyPassword 'retrofit'
+    }
+  }
+
+  buildTypes {
+    debug {
+      signingConfig signingConfigs.debug
+    }
+  }
+
   variantFilter { variant ->
     variant.ignore = variant.name == "release"
   }
