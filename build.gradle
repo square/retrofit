@@ -41,7 +41,7 @@ buildscript {
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
     classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
-    classpath 'com.android.tools.build:gradle:3.6.2'
+    classpath 'com.android.tools.build:gradle:4.2.1'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.9.0'
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
