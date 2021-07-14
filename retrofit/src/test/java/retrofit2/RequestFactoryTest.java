@@ -2991,7 +2991,20 @@ public final class RequestFactoryTest {
   }
 
   @Test
-  public void contentTypeAnnotationHeaderAddsHeaderWithNoBody() {
+  public void contentTypeAnnotationHeaderAddsHeaderWithNoBodyGet() {
+    class Example {
+      @GET("/") //
+      @Headers("Content-Type: text/not-plain") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.headers().get("Content-Type")).isEqualTo("text/not-plain");
+  }
+
+  @Test
+  public void contentTypeAnnotationHeaderAddsHeaderWithNoBodyDelete() {
     class Example {
       @DELETE("/") //
       @Headers("Content-Type: text/not-plain") //
