@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -36,6 +37,9 @@ import retrofit2.helpers.ToStringConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import java.io.IOException
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.lang.Runnable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import kotlin.coroutines.CoroutineContext
@@ -176,6 +180,58 @@ class KotlinSuspendTest {
       runBlocking { example.response() }
       fail()
     } catch (e: IOException) {
+    }
+  }
+
+  @Test fun await404() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setResponseCode(404))
+
+    try {
+      runBlocking {
+        val deferred = async { example.body()  }
+
+        deferred.await()
+      }
+      fail()
+    } catch (e: HttpException) {
+      val writer = StringWriter()
+      e.printStackTrace(PrintWriter(writer))
+      val trace = writer.toString()
+
+      assertThat(trace).contains("KotlinSuspendTest")
+      assertThat(trace).contains("await404")
+    }
+  }
+
+  @Test fun launch404() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setResponseCode(404))
+
+    try {
+      runBlocking {
+        val job = launch { example.body()  }
+
+        job.join()
+      }
+      fail()
+    } catch (e: HttpException) {
+      val writer = StringWriter()
+      e.printStackTrace(PrintWriter(writer))
+      val trace = writer.toString()
+
+      assertThat(trace).contains("KotlinSuspendTest")
+      assertThat(trace).contains("launch404")
     }
   }
 

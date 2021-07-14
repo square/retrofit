@@ -18,6 +18,7 @@
 
 package retrofit2
 
+import kotlinx.coroutines.CopyableThrowable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
@@ -50,7 +51,7 @@ suspend fun <T : Any> Call<T>.await(): T {
             continuation.resume(body)
           }
         } else {
-          continuation.resumeWithException(HttpException(response))
+          continuation.resumeWithException(KotlinHttpException(response))
         }
       }
 
@@ -72,7 +73,7 @@ suspend fun <T : Any> Call<T?>.await(): T? {
         if (response.isSuccessful) {
           continuation.resume(response.body())
         } else {
-          continuation.resumeWithException(HttpException(response))
+          continuation.resumeWithException(KotlinHttpException(response))
         }
       }
 
@@ -115,5 +116,16 @@ internal suspend fun Exception.suspendAndThrow(): Nothing {
       continuation.intercepted().resumeWithException(this@suspendAndThrow)
     })
     COROUTINE_SUSPENDED
+  }
+}
+
+private class KotlinHttpException(
+  private val response: Response<*>
+) : HttpException(response), CopyableThrowable<KotlinHttpException> {
+
+  override fun createCopy(): KotlinHttpException {
+    val result = KotlinHttpException(response)
+    result.initCause(this)
+    return result
   }
 }
