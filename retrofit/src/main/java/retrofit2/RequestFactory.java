@@ -803,9 +803,15 @@ final class RequestFactory {
         }
 
         return new ParameterHandler.Tag<>(tagType);
+      } else if (shouldIgnoreParameter(annotation)) {
+        return new ParameterHandler.NoOp<>();
       }
 
-      return null; // Not a Retrofit annotation.
+      return null; // No ParameterHandler for annotation.
+    }
+
+    private boolean shouldIgnoreParameter(Annotation annotation){
+      return annotation.getClass().isAnnotationPresent(IgnoreParameter.class);
     }
 
     private void validateResolvableType(int p, Type type) {
