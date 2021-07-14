@@ -7,7 +7,6 @@ buildscript {
       'okhttp': '3.14.9',
       'protobuf': '3.10.0',
       'jaxb': '2.3.1',
-      'robovm': '2.3.9',
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
@@ -35,18 +34,17 @@ buildscript {
       'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
       'wireRuntime': 'com.squareup.wire:wire-runtime:2.2.0',
       'jsoup': 'org.jsoup:jsoup:1.12.1',
-      'robovm': "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
   ]
 
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
+    classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.4.32'
+    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:2.0.1'
     classpath 'com.android.tools.build:gradle:4.2.1'
-    classpath 'com.vanniktech:gradle-maven-publish-plugin:0.9.0'
+    classpath 'com.vanniktech:gradle-maven-publish-plugin:0.14.0'
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
     classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
-    classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${versions.robovm}"
   }
   repositories {
     mavenCentral()
@@ -69,11 +67,20 @@ subprojects {
     task.targetCompatibility = JavaVersion.VERSION_1_8
   }
 
+  tasks.withType(Test).configureEach {
+    testLogging {
+      if (System.getenv("CI") == "true") {
+        events = ["failed", "skipped", "passed"]
+      }
+      exceptionFormat "full"
+    }
+  }
+
   apply plugin: 'net.ltgt.errorprone'
 
   dependencies {
     errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
-    errorprone 'com.google.errorprone:error_prone_core:2.4.0'
+    errorprone 'com.google.errorprone:error_prone_core:2.7.1'
   }
 
   tasks.withType(JavaCompile).configureEach { task ->
@@ -106,11 +113,11 @@ subprojects {
       }
     }
 
-    // google-java-format only works on JDK 11 or newer.
-    if (Jvm.current().javaVersion.isJava11Compatible()) {
+    // google-java-format only works on JDK 11 to JDK 15 (without wild flags).
+    if (Jvm.current().javaVersion.isJava11Compatible() && !Jvm.current().javaVersion.isCompatibleWith(JavaVersion.VERSION_16)) {
       project.apply plugin: 'com.github.sherter.google-java-format'
       googleJavaFormat {
-        toolVersion = '1.8'
+        toolVersion = '1.10.0'
 
         // By default, the GJF plugin includes all Java folders inside the project directory. This
         // does not work well with nested projects, especially when you want to exclude them.
