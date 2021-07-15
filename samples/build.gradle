@@ -7,6 +7,7 @@ dependencies {
   implementation project(':retrofit-converters:gson')
   implementation project(':retrofit-converters:simplexml')
   implementation project(':retrofit-adapters:rxjava')
+  implementation project(':retrofit-logger:gson')
   implementation deps.mockwebserver
   implementation deps.guava
   implementation deps.jsoup

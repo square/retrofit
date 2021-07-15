@@ -1,0 +1,6 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation project(':retrofit')
+    api deps.gson
+}
