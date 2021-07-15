@@ -17,22 +17,27 @@ package retrofit2.converter.jackson;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Converter;
 
 final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> {
-  private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=UTF-8");
+  private static final MediaType DEFAULT_MEDIA_TYPE =
+      MediaType.get("application/json; charset=UTF-8");
 
   private final ObjectWriter adapter;
 
-  JacksonRequestBodyConverter(ObjectWriter adapter) {
+  @Nullable private final MediaType mediaType;
+
+  JacksonRequestBodyConverter(ObjectWriter adapter, @Nullable MediaType mediaType) {
     this.adapter = adapter;
+    this.mediaType = mediaType;
   }
 
   @Override
   public RequestBody convert(T value) throws IOException {
     byte[] bytes = adapter.writeValueAsBytes(value);
-    return RequestBody.create(MEDIA_TYPE, bytes);
+    return RequestBody.create(mediaType != null ? mediaType : DEFAULT_MEDIA_TYPE, bytes);
   }
 }

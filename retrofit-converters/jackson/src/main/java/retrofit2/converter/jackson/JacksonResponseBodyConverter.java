@@ -30,7 +30,7 @@ final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T
   @Override
   public T convert(ResponseBody value) throws IOException {
     try {
-      return adapter.readValue(value.charStream());
+      return adapter.readValue(value.byteStream());
     } finally {
       value.close();
     }
