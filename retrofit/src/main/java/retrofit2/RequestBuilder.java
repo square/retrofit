@@ -72,7 +72,8 @@ final class RequestBuilder {
       @Nullable MediaType contentType,
       boolean hasBody,
       boolean isFormEncoded,
-      boolean isMultipart) {
+      boolean isMultipart,
+      String multipartType) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -92,7 +93,7 @@ final class RequestBuilder {
     } else if (isMultipart) {
       // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBody.Builder();
-      multipartBuilder.setType(MultipartBody.FORM);
+      multipartBuilder.setType(MediaType.get(multipartType));
     }
   }
 
