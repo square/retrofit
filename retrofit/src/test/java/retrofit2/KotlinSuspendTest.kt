@@ -47,6 +47,7 @@ class KotlinSuspendTest {
     @GET("/") suspend fun body(): String
     @GET("/") suspend fun bodyNullable(): String?
     @GET("/") suspend fun response(): Response<String>
+    @GET("/") suspend fun unit()
 
     @GET("/{a}/{b}/{c}")
     suspend fun params(
@@ -54,6 +55,83 @@ class KotlinSuspendTest {
         @Path("b") b: String,
         @Path("c") c: String
     ): String
+  }
+
+  @Test
+  fun unit() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse())
+
+    val unit = runBlocking { example.unit() }
+    assertThat(unit).isEqualTo(Unit)
+  }
+
+  @Test
+  fun unitWithBody() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setBody("Hi"))
+
+    val unit = runBlocking { example.unit() }
+    assertThat(unit).isEqualTo(Unit)
+  }
+
+  @Test
+  fun unit404() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setResponseCode(404))
+
+    try {
+      runBlocking { example.unit() }
+      fail()
+    } catch (e: HttpException) {
+      assertThat(e.code()).isEqualTo(404)
+    }
+  }
+
+  @Test
+  fun unitFailure() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST))
+
+    try {
+      runBlocking { example.unit() }
+      fail()
+    } catch (e: IOException) {
+    }
+  }
+
+  @Test
+  fun unitDoesNotThrowOnNull() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setResponseCode(204))
+
+    val unit = runBlocking { example.unit() }
+    assertThat(unit).isEqualTo(Unit)
   }
 
   @Test fun body() {
