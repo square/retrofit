@@ -7,6 +7,7 @@ buildscript {
       'okhttp': '3.14.9',
       'protobuf': '3.10.0',
       'jaxb': '2.3.1',
+      'jaxb3': '3.0.1',
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
@@ -29,6 +30,8 @@ buildscript {
       'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
       'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
       'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
+      'jaxb3Api': "jakarta.xml.bind:jakarta.xml.bind-api:${versions.jaxb3}",
+      'jaxb3Impl': "com.sun.xml.bind:jaxb-impl:${versions.jaxb3}",
       'moshi': 'com.squareup.moshi:moshi:1.8.0',
       'protobuf': "com.google.protobuf:protobuf-java:${versions.protobuf}",
       'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
@@ -107,6 +110,7 @@ subprojects {
 
         if (project.path != ':retrofit-converters:java8' &&
             project.path != ':retrofit-converters:jaxb' &&
+            project.path != ':retrofit-converters:jaxb3' &&
             project.path != ':retrofit-adapters:java8') {
           signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
         }
