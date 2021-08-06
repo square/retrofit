@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         java-version:
-          - 1.8
+          - 8
           - 9
           - 10
           - 11
@@ -21,17 +21,15 @@ jobs:
           - 13
           - 14
           - 15
+          - 16
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
+      - uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
-
-      - name: Configure JDK
-        uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2
         with:
+          distribution: 'zulu'
           java-version: ${{ matrix.java-version }}
 
       - name: Test
@@ -50,11 +48,13 @@ jobs:
           - 29
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
+      - uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: 8
 
       - name: Run Tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -64,34 +64,19 @@ jobs:
         env:
           API_LEVEL: ${{ matrix.api-level }}
 
-  robovm:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
-
-      - name: Run Tests
-        run: ./gradlew retrofit:robovm-test:robovmTest
-
   publish:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     needs:
       - jvm
       - android
-      - robovm
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
 
-      - name: Configure JDK
-        uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2
         with:
+          distribution: 'zulu'
           java-version: 14
 
       - name: Upload Artifacts
