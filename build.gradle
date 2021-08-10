@@ -3,7 +3,7 @@ import org.gradle.internal.jvm.Jvm
 
 buildscript {
   ext.versions = [
-      'kotlin': '1.3.50',
+      'kotlin': '1.5.21',
       'okhttp': '3.14.9',
       'protobuf': '3.17.3',
       'jaxb': '2.3.1',
@@ -11,22 +11,22 @@ buildscript {
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
-      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2',
+      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1',
       'okhttp': "com.squareup.okhttp3:okhttp:${versions.okhttp}",
       'mockwebserver': "com.squareup.okhttp3:mockwebserver:${versions.okhttp}",
-      'junit': 'junit:junit:4.13',
+      'junit': 'junit:junit:4.13.2',
       'assertj': 'org.assertj:assertj-core:3.13.2',
       'guava': 'com.google.guava:guava:28.1-jre',
       'android': 'com.google.android:android:4.1.1.4',
       'animalSnifferAnnotations': 'org.codehaus.mojo:animal-sniffer-annotations:1.18',
       'findBugsAnnotations': 'com.google.code.findbugs:jsr305:3.0.2',
-      'androidxTestRunner': 'androidx.test:runner:1.1.0',
+      'androidxTestRunner': 'androidx.test:runner:1.4.0',
       'rxjava': 'io.reactivex:rxjava:1.3.8',
       'rxjava2': 'io.reactivex.rxjava2:rxjava:2.0.0',
       'rxjava3': 'io.reactivex.rxjava3:rxjava:3.0.0',
       'reactiveStreams': 'org.reactivestreams:reactive-streams:1.0.3',
-      'scalaLibrary': 'org.scala-lang:scala-library:2.13.1',
-      'gson': 'com.google.code.gson:gson:2.8.5',
+      'scalaLibrary': 'org.scala-lang:scala-library:2.13.6',
+      'gson': 'com.google.code.gson:gson:2.8.7',
       'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
       'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
       'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
@@ -41,11 +41,11 @@ buildscript {
 
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.4.32'
-    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:2.0.1'
-    classpath 'com.android.tools.build:gradle:4.2.1'
+    classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.5.0'
+    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:2.0.2'
+    classpath 'com.android.tools.build:gradle:4.2.2'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.14.0'
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
     classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
     classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
   }
