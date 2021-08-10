@@ -25,7 +25,7 @@ buildscript {
       'rxjava2': 'io.reactivex.rxjava2:rxjava:2.0.0',
       'rxjava3': 'io.reactivex.rxjava3:rxjava:3.0.0',
       'reactiveStreams': 'org.reactivestreams:reactive-streams:1.0.3',
-      'scalaLibrary': 'org.scala-lang:scala-library:2.13.1',
+      'scalaLibrary': 'org.scala-lang:scala-library:2.13.6',
       'gson': 'com.google.code.gson:gson:2.8.7',
       'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
       'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
