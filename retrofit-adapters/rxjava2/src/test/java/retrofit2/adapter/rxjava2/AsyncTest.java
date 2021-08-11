@@ -56,7 +56,7 @@ public final class AsyncTest {
   }
 
   private Service service;
-  private List<Throwable> uncaughtExceptions = new ArrayList<>();
+  private final List<Throwable> uncaughtExceptions = new ArrayList<>();
 
   @Before
   public void setUp() {
