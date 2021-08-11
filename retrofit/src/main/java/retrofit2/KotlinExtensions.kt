@@ -111,9 +111,9 @@ suspend fun <T> Call<T>.awaitResponse(): Response<T> {
  */
 internal suspend fun Exception.suspendAndThrow(): Nothing {
   suspendCoroutineUninterceptedOrReturn<Nothing> { continuation ->
-    Dispatchers.Default.dispatch(continuation.context, Runnable {
+    Dispatchers.Default.dispatch(continuation.context) {
       continuation.intercepted().resumeWithException(this@suspendAndThrow)
-    })
+    }
     COROUTINE_SUSPENDED
   }
 }
