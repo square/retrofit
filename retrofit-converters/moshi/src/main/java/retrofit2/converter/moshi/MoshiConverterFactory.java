@@ -126,6 +126,6 @@ public final class MoshiConverterFactory extends Converter.Factory {
         result.add(annotation);
       }
     }
-    return result != null ? unmodifiableSet(result) : Collections.<Annotation>emptySet();
+    return result != null ? unmodifiableSet(result) : Collections.emptySet();
   }
 }

@@ -44,12 +44,12 @@ final class RecordingObserver<T> implements Observer<T> {
 
   @Override
   public void onComplete() {
-    events.add(Notification.<T>createOnComplete());
+    events.add(Notification.createOnComplete());
   }
 
   @Override
   public void onError(Throwable e) {
-    events.add(Notification.<T>createOnError(e));
+    events.add(Notification.createOnError(e));
   }
 
   private Notification<T> takeNotification() {

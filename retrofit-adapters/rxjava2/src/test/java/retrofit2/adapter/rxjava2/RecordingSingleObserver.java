@@ -45,7 +45,7 @@ final class RecordingSingleObserver<T> implements SingleObserver<T> {
 
   @Override
   public void onError(Throwable e) {
-    events.add(Notification.<T>createOnError(e));
+    events.add(Notification.createOnError(e));
   }
 
   private Notification<T> takeNotification() {
