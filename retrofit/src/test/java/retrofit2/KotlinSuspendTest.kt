@@ -217,7 +217,7 @@ class KotlinSuspendTest {
     server.takeRequest()
 
     deferred.cancel()
-    assertTrue(call.isCanceled)
+    assertTrue(call.isCanceled())
   }
 
   @Test fun doesNotUseCallbackExecutor() {
