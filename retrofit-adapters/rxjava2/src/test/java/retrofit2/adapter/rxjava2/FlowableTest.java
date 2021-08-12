@@ -89,15 +89,15 @@ public final class FlowableTest {
   public void bodyRespectsBackpressure() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-	// Since 2.0.7 non-positive request() will not stop the current stream but signal
-	// an error via RxJavaPlugins.onError.
+    // Since 2.0.7 non-positive request() will not stop the current stream but signal
+    // an error via RxJavaPlugins.onError.
     RecordingSubscriber<String> subscriber = subscriberRule.createWithInitialRequest(1);
     Flowable<String> o = service.body();
 
     o.subscribe(subscriber);
     assertThat(server.getRequestCount()).isEqualTo(1);
 
-	subscriber.assertAnyValue().assertComplete();
+    subscriber.assertAnyValue().assertComplete();
 
     subscriber.request(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP or notifications.
     assertThat(server.getRequestCount()).isEqualTo(1);
@@ -136,8 +136,8 @@ public final class FlowableTest {
   public void responseRespectsBackpressure() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-	// Since 2.0.7 non-positive request() will not stop the current stream but signal
-	// an error via RxJavaPlugins.onError.
+    // Since 2.0.7 non-positive request() will not stop the current stream but signal
+    // an error via RxJavaPlugins.onError.
     RecordingSubscriber<Response<String>> subscriber = subscriberRule.createWithInitialRequest(1);
     Flowable<Response<String>> o = service.response();
 
@@ -190,8 +190,8 @@ public final class FlowableTest {
   public void resultRespectsBackpressure() {
     server.enqueue(new MockResponse().setBody("Hi"));
 
-	// Since 2.0.7 non-positive request() will not stop the current stream but signal
-	// an error via RxJavaPlugins.onError.
+    // Since 2.0.7 non-positive request() will not stop the current stream but signal
+    // an error via RxJavaPlugins.onError.
     RecordingSubscriber<Result<String>> subscriber = subscriberRule.createWithInitialRequest(1);
     Flowable<Result<String>> o = service.result();
 

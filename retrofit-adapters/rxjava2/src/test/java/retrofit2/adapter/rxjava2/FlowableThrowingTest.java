@@ -109,7 +109,6 @@ public final class FlowableThrowingTest {
 
     subscriber.assertAnyValue();
     assertThat(throwableRef.get()).hasCause(e);
-
   }
 
   @Test

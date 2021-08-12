@@ -109,7 +109,6 @@ public final class ObservableThrowingTest {
 
     observer.assertAnyValue();
     assertThat(throwableRef.get()).hasCause(e);
-
   }
 
   @Test
