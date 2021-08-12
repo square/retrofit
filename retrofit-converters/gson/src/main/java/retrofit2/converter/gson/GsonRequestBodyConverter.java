@@ -15,13 +15,14 @@
  */
 package retrofit2.converter.gson;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
@@ -41,7 +42,7 @@ final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
   @Override
   public RequestBody convert(T value) throws IOException {
     Buffer buffer = new Buffer();
-    Writer writer = new OutputStreamWriter(buffer.outputStream(), StandardCharsets.UTF_8);
+    Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
     JsonWriter jsonWriter = gson.newJsonWriter(writer);
     adapter.write(jsonWriter, value);
     jsonWriter.close();
