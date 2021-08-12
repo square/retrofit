@@ -48,12 +48,12 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onCompleted() {
-    events.add(Notification.<T>createOnCompleted());
+    events.add(Notification.createOnCompleted());
   }
 
   @Override
   public void onError(Throwable e) {
-    events.add(Notification.<T>createOnError(e));
+    events.add(Notification.createOnError(e));
   }
 
   private Notification<T> takeNotification() {

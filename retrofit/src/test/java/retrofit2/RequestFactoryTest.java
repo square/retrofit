@@ -1357,7 +1357,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList(1, 2, null, "three", "1");
+    List<Object> values = Arrays.asList(1, 2, null, "three", "1");
     Request request = buildRequest(Example.class, values);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
@@ -1453,7 +1453,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList(1, 2, null, "three", "1");
+    List<Object> values = Arrays.asList(1, 2, null, "three", "1");
     Request request = buildRequest(Example.class, values);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
@@ -2634,7 +2634,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
+    List<Object> values = Arrays.asList("foo", "bar", null, 3);
     Request request = buildRequest(Example.class, values, "kat");
     assertBody(request.body(), "foo=foo&foo=bar&foo=3&kit=kat");
   }
