@@ -108,7 +108,8 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertAnyValue();
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
+
   }
 
   @Test
@@ -188,7 +189,7 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertAnyValue();
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test
@@ -268,7 +269,7 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertAnyValue();
-    assertThat(throwableRef.get()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test
