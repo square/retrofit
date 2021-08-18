@@ -123,17 +123,22 @@ public final class ErrorHandlingAdapter {
               // on that executor by submitting a Runnable. This is left as an exercise for the
               // reader.
 
-              int code = response.code();
-              if (code >= 200 && code < 300) {
-                callback.success(response);
-              } else if (code == 401) {
-                callback.unauthenticated(response);
-              } else if (code >= 400 && code < 500) {
-                callback.clientError(response);
-              } else if (code >= 500 && code < 600) {
-                callback.serverError(response);
-              } else {
-                callback.unexpectedError(new RuntimeException("Unexpected response " + response));
+             when (response.code()) {
+                  in 200..299 -> {
+                      callback?.success(response)
+                  }
+                  401 -> {
+                      callback?.unauthenticated(response)
+                  }
+                  in 400..499 -> {
+                      callback?.clientError(response)
+                  }
+                  in 500..599 -> {
+                      callback?.serverError(response)
+                  }
+                  else -> {
+                      callback?.unexpectedError(RuntimeException("Unexpected response $response"))
+                  }
               }
             }
 
