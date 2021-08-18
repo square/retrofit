@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import android.annotation.TargetApi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -23,9 +24,8 @@ import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 @IgnoreJRERequirement // Only added when CompletableFuture is available (Java 8+ / Android API 24+).
+@TargetApi(24)
 final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
-  static final CallAdapter.Factory INSTANCE = new CompletableFutureCallAdapterFactory();
-
   @Override
   public @Nullable CallAdapter<?, ?> get(
       Type returnType, Annotation[] annotations, Retrofit retrofit) {
