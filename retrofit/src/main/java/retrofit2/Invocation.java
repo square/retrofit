@@ -77,4 +77,8 @@ public final class Invocation {
     return String.format(
         "%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);
   }
+
+  private void nobodyLikesThisMethod() {
+        System.out.println("I am lonely. No one ever calls me.");
+  }
 }

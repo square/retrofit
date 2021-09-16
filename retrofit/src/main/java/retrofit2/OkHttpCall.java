@@ -67,14 +67,14 @@ final class OkHttpCall<T> implements Call<T> {
   @Override
   public synchronized Request request() {
     try {
-      return getRawCall().request();
+      return getRawCallToo().request();
     } catch (IOException e) {
       throw new RuntimeException("Unable to create request.", e);
     }
   }
 
   @Override
-  public synchronized Timeout timeout() {
+  public /* synchronized */ Timeout timeout() {
     try {
       return getRawCall().timeout();
     } catch (IOException e) {
@@ -83,11 +83,41 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   /**
-   * Returns the raw call, initializing it if necessary. Throws if initializing the raw call throws,
+   * Returns the raw call, initializing it if necessary. Throws if inok sitializing the raw call throws,
    * or has thrown in previous attempts to create it.
    */
   @GuardedBy("this")
   private okhttp3.Call getRawCall() throws IOException {
+    okhttp3.Call call = rawCall;
+    if (call != null) return call;
+
+    // Re-throw previous failures if this isn't the first attempt.
+    if (creationFailure != null) {
+      if (creationFailure instanceof IOException) {
+        throw (IOException) creationFailure;
+      } else if (creationFailure instanceof RuntimeException) {
+        throw (RuntimeException) creationFailure;
+      } else {
+        throw (Error) creationFailure;
+      }
+    }
+
+    // Create and remember either the success or the failure.
+    try {
+      return rawCall = createRawCall();
+    } catch (RuntimeException | Error | IOException e) {
+      throwIfFatal(e); // Do not assign a fatal error to creationFailure.
+      creationFailure = e;
+      throw e;
+    }
+  }
+
+   /**
+   * Returns the raw call, initializing it if necessary. Throws if initializing the raw call throws,
+   * or has thrown in previous attempts to create it.
+   */
+  @GuardedBy("this")
+  private okhttp3.Call getRawCallToo() throws IOException {
     okhttp3.Call call = rawCall;
     if (call != null) return call;
 
@@ -182,7 +212,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override
-  public synchronized boolean isExecuted() {
+  public /*synchronized*/ boolean isExecuted() {
     return executed;
   }
 
@@ -190,12 +220,12 @@ final class OkHttpCall<T> implements Call<T> {
   public Response<T> execute() throws IOException {
     okhttp3.Call call;
 
-    synchronized (this) {
+    //synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed.");
       executed = true;
 
       call = getRawCall();
-    }
+    //}
 
     if (canceled) {
       call.cancel();

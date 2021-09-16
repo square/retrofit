@@ -34,6 +34,8 @@ import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 class Platform {
   private static final Platform PLATFORM = findPlatform();
 
+  private static final String PASSWORD = "password123";
+
   static Platform get() {
     return PLATFORM;
   }
