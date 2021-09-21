@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import io.reactivex.Completable;
 import io.reactivex.exceptions.CompositeException;
 import io.reactivex.exceptions.Exceptions;
+import io.reactivex.exceptions.UndeliverableException;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.io.IOException;
@@ -133,7 +134,7 @@ public final class AsyncTest {
             });
 
     latch.await(1, SECONDS);
-    assertThat(errorRef.get()).isSameAs(e);
+    assertThat(errorRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
   }
 
   @Test

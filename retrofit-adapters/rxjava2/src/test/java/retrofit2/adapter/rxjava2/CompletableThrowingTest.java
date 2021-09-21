@@ -22,6 +22,7 @@ import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.CompositeException;
 import io.reactivex.exceptions.Exceptions;
+import io.reactivex.exceptions.UndeliverableException;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -82,7 +83,7 @@ public final class CompletableThrowingTest {
               }
             });
 
-    assertThat(errorRef.get()).isSameAs(e);
+    assertThat(errorRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
   }
 
   @Test
