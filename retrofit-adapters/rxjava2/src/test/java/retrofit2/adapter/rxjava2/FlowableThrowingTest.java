@@ -84,34 +84,6 @@ public final class FlowableThrowingTest {
   }
 
   @Test
-  public void bodyThrowingInOnCompleteDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
-        });
-
-    RecordingSubscriber<String> subscriber = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .body()
-        .subscribe(
-            new ForwardingSubscriber<String>(subscriber) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    subscriber.assertAnyValue();
-    assertThat(throwableRef.get()).hasCause(e);
-  }
-
-  @Test
   public void bodyThrowingInOnErrorDeliveredToPlugin() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
@@ -164,34 +136,6 @@ public final class FlowableThrowingTest {
   }
 
   @Test
-  public void responseThrowingInOnCompleteDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
-        });
-
-    RecordingSubscriber<Response<String>> subscriber = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .response()
-        .subscribe(
-            new ForwardingSubscriber<Response<String>>(subscriber) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    subscriber.assertAnyValue();
-    assertThat(throwableRef.get()).hasCause(e);
-  }
-
-  @Test
   public void responseThrowingInOnErrorDeliveredToPlugin() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
@@ -241,34 +185,6 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertError(e);
-  }
-
-  @Test
-  public void resultThrowingInOnCompletedDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
-        });
-
-    RecordingSubscriber<Result<String>> subscriber = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .result()
-        .subscribe(
-            new ForwardingSubscriber<Result<String>>(subscriber) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    subscriber.assertAnyValue();
-    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Test

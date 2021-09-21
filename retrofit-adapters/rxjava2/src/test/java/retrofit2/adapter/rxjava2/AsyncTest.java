@@ -107,36 +107,6 @@ public final class AsyncTest {
   }
 
   @Test
-  public void throwingInOnCompleteDeliveredToPlugin() throws InterruptedException {
-    server.enqueue(new MockResponse());
-
-    final CountDownLatch latch = new CountDownLatch(1);
-    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!errorRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-          }
-          latch.countDown();
-        });
-
-    TestObserver<Void> observer = new TestObserver<>();
-    final RuntimeException e = new RuntimeException();
-    service
-        .completable()
-        .subscribe(
-            new ForwardingCompletableObserver(observer) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    latch.await(1, SECONDS);
-    assertThat(errorRef.get()).hasCause(e);
-  }
-
-  @Test
   public void bodyThrowingInOnErrorDeliveredToPlugin() throws InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(404));
 

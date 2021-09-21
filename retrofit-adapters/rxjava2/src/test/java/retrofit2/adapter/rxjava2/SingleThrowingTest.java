@@ -68,33 +68,6 @@ public final class SingleThrowingTest {
   }
 
   @Test
-  public void bodyThrowingInOnSuccessDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
-        });
-
-    RecordingSingleObserver<String> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .body()
-        .subscribe(
-            new ForwardingObserver<String>(observer) {
-              @Override
-              public void onSuccess(String value) {
-                throw e;
-              }
-            });
-
-    assertThat(throwableRef.get()).hasCause(e);
-  }
-
-  @Test
   public void bodyThrowingInOnErrorDeliveredToPlugin() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
@@ -128,33 +101,6 @@ public final class SingleThrowingTest {
   }
 
   @Test
-  public void responseThrowingInOnSuccessDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
-        });
-
-    RecordingSingleObserver<Response<String>> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .response()
-        .subscribe(
-            new ForwardingObserver<Response<String>>(observer) {
-              @Override
-              public void onSuccess(Response<String> value) {
-                throw e;
-              }
-            });
-
-    assertThat(throwableRef.get()).hasCause(e);
-  }
-
-  @Test
   public void responseThrowingInOnErrorDeliveredToPlugin() {
     server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
@@ -185,33 +131,6 @@ public final class SingleThrowingTest {
     //noinspection ThrowableResultOfMethodCallIgnored
     CompositeException composite = (CompositeException) throwableRef.get();
     assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
-  }
-
-  @Test
-  public void resultThrowingInOnSuccessDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
-        });
-
-    RecordingSingleObserver<Result<String>> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .result()
-        .subscribe(
-            new ForwardingObserver<Result<String>>(observer) {
-              @Override
-              public void onSuccess(Result<String> value) {
-                throw e;
-              }
-            });
-
-    assertThat(throwableRef.get()).hasCause(e);
   }
 
   @Ignore("Single's contract is onNext|onError so we have no way of triggering this case")

@@ -59,33 +59,6 @@ public final class CompletableThrowingTest {
   }
 
   @Test
-  public void throwingInOnCompleteDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!errorRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable); // Don't swallow secondary errors!
-          }
-        });
-
-    RecordingCompletableObserver observer = observerRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .completable()
-        .subscribe(
-            new ForwardingCompletableObserver(observer) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    assertThat(errorRef.get()).hasCause(e);
-  }
-
-  @Test
   public void bodyThrowingInOnErrorDeliveredToPlugin() {
     server.enqueue(new MockResponse().setResponseCode(404));
 
