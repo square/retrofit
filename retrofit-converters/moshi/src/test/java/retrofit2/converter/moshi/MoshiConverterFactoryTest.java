@@ -260,7 +260,7 @@ public final class MoshiConverterFactoryTest {
   }
 
   @Test
-  public void failOnUnknown() throws IOException, InterruptedException {
+  public void failOnUnknown() throws IOException {
     server.enqueue(new MockResponse().setBody("{\"taco\":\"delicious\"}"));
 
     Call<AnImplementation> call = serviceFailOnUnknown.anImplementation(new AnImplementation(null));
@@ -268,7 +268,7 @@ public final class MoshiConverterFactoryTest {
       call.execute();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.");
+      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.taco");
     }
   }
 
