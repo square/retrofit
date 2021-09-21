@@ -3,16 +3,16 @@ import org.gradle.internal.jvm.Jvm
 
 buildscript {
   ext.versions = [
-      'kotlin': '1.5.21',
+      'kotlin': '1.5.31',
       'okhttp': '3.14.9',
-      'protobuf': '3.17.3',
+      'protobuf': '3.18.0',
       'jaxb': '2.3.1',
       'jaxb3': '3.0.1',
       'robovm': '2.3.14',
   ]
   ext.deps = [
       'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
-      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1',
+      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2',
       'okhttp': "com.squareup.okhttp3:okhttp:${versions.okhttp}",
       'mockwebserver': "com.squareup.okhttp3:mockwebserver:${versions.okhttp}",
       'junit': 'junit:junit:4.13.2',
@@ -27,8 +27,8 @@ buildscript {
       'rxjava3': 'io.reactivex.rxjava3:rxjava:3.1.1',
       'reactiveStreams': 'org.reactivestreams:reactive-streams:1.0.3',
       'scalaLibrary': 'org.scala-lang:scala-library:2.13.6',
-      'gson': 'com.google.code.gson:gson:2.8.7',
-      'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.12.4',
+      'gson': 'com.google.code.gson:gson:2.8.8',
+      'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.12.5',
       'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
       'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
       'jaxb3Api': "jakarta.xml.bind:jakarta.xml.bind-api:${versions.jaxb3}",
@@ -37,18 +37,18 @@ buildscript {
       'protobuf': "com.google.protobuf:protobuf-java:${versions.protobuf}",
       'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
       'wireRuntime': 'com.squareup.wire:wire-runtime:2.2.0',
-      'jsoup': 'org.jsoup:jsoup:1.14.1',
+      'jsoup': 'org.jsoup:jsoup:1.14.2',
       'robovm': "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
   ]
 
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.5.0'
+    classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.5.30'
     classpath 'net.ltgt.gradle:gradle-errorprone-plugin:2.0.2'
     classpath 'com.android.tools.build:gradle:4.2.2'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.14.0'
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
-    classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
+    classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.2'
     classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
     classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${versions.robovm}"
   }
@@ -86,7 +86,7 @@ subprojects {
 
   dependencies {
     errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
-    errorprone 'com.google.errorprone:error_prone_core:2.8.1'
+    errorprone 'com.google.errorprone:error_prone_core:2.9.0'
   }
 
   tasks.withType(JavaCompile).configureEach { task ->
