@@ -156,7 +156,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessage(
               "@Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}."
-                  + " Found: hey! (parameter #1)\n    for method Example.method");
+                  + " Found: hey! (parameter 'thing')\n    for method Example.method");
     }
   }
 
@@ -193,7 +193,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "Multiple Retrofit annotations found, only one allowed. (parameter #1)\n    for method Example.method");
+              "Multiple Retrofit annotations found, only one allowed. (parameter 'o')\n    for method Example.method");
     }
   }
 
@@ -263,7 +263,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "@Part parameters can only be used with multipart encoding. (parameter #1)\n    for method Example.method");
+              "@Part parameters can only be used with multipart encoding. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -281,7 +281,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "@PartMap parameters can only be used with multipart encoding. (parameter #1)\n    for method Example.method");
+              "@PartMap parameters can only be used with multipart encoding. (parameter 'params')\n    for method Example.method");
     }
   }
 
@@ -337,7 +337,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "@Field parameters can only be used with form encoding. (parameter #1)\n    for method Example.method");
+              "@Field parameters can only be used with form encoding. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -355,7 +355,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "@FieldMap parameters can only be used with form encoding. (parameter #1)\n    for method Example.method");
+              "@FieldMap parameters can only be used with form encoding. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -447,7 +447,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "URL \"/{a}\" does not contain \"{b}\". (parameter #2)\n    for method Example.method");
+              "URL \"/{a}\" does not contain \"{b}\". (parameter 'b')\n    for method Example.method");
     }
   }
 
@@ -465,7 +465,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "No Retrofit annotation found. (parameter #1)\n    for method Example.method");
+              "No Retrofit annotation found. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -500,7 +500,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "@QueryMap parameter type must be Map. (parameter #1)\n    for method Example.method");
+              "@QueryMap parameter type must be Map. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -536,7 +536,7 @@ public final class RequestFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage("Query map was null (parameter #1)\n" + "    for method Example.method");
+          .hasMessage("Query map was null (parameter 'a')\n" + "    for method Example.method");
     }
   }
 
@@ -559,7 +559,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "Query map contained null key. (parameter #1)\n" + "    for method Example.method");
+              "Query map contained null key. (parameter 'a')\n" + "    for method Example.method");
     }
   }
 

@@ -29,6 +29,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
@@ -44,6 +45,9 @@ abstract class Platform {
   private static Platform createPlatform() {
     switch (System.getProperty("java.vm.name")) {
       case "Dalvik":
+        if (Android26.isSupported()) {
+          return new Android26();
+        }
         if (Android24.isSupported()) {
           return new Android24();
         }
@@ -61,6 +65,23 @@ abstract class Platform {
         }
         return new Java8();
     }
+  }
+
+  // Method parameter names only available by reflection in Java 8+/Android 26+
+  private final boolean hasMethodParamReflection = this instanceof Android26 ||
+          this instanceof Java8 ||
+          this instanceof Java14 ||
+          this instanceof Java16;
+
+  String describeMethodParameter(Method method, int paramIndex) {
+    if (hasMethodParamReflection) {
+      Parameter param = method.getParameters()[paramIndex];
+      if (param.isNamePresent()) {
+        return "parameter '" + param.getName() + "'";
+      }
+    }
+
+    return "parameter #" + (paramIndex + 1);
   }
 
   abstract @Nullable Executor defaultCallbackExecutor();
@@ -107,7 +128,7 @@ abstract class Platform {
 
   @IgnoreJRERequirement // Only used on Android API 24+
   @TargetApi(24)
-  private static final class Android24 extends Platform {
+  private static class Android24 extends Platform {
     static boolean isSupported() {
       return Build.VERSION.SDK_INT >= 24;
     }
@@ -156,6 +177,13 @@ abstract class Platform {
           .unreflectSpecial(method, declaringClass)
           .bindTo(proxy)
           .invokeWithArguments(args);
+    }
+  }
+
+  @TargetApi(26)
+  private static final class Android26 extends Android24 {
+    static boolean isSupported() {
+      return Build.VERSION.SDK_INT >= 26;
     }
   }
 

@@ -797,8 +797,8 @@ final class RequestFactory {
                 p,
                 "@Tag type "
                     + tagType.getName()
-                    + " is duplicate of parameter #"
-                    + (i + 1)
+                    + " is duplicate of "
+                    + Platform.get().describeMethodParameter(method, i)
                     + " and would always overwrite its value.");
           }
         }

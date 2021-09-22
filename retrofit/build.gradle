@@ -21,6 +21,10 @@ dependencies {
   testImplementation deps.kotlinCoroutines
 }
 
+tasks.withType(JavaCompile) {
+  options.compilerArgs << '-parameters'
+}
+
 jar {
   manifest {
     attributes  'Automatic-Module-Name': 'retrofit2'

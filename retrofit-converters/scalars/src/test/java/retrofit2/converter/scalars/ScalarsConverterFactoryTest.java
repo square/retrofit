@@ -143,7 +143,7 @@ public final class ScalarsConverterFactoryTest {
       assertThat(e)
           .hasMessage(
               ""
-                  + "Unable to create @Body converter for class java.lang.Object (parameter #1)\n"
+                  + "Unable to create @Body converter for class java.lang.Object (parameter 'body')\n"
                   + "    for method Service.object");
       assertThat(e.getCause())
           .hasMessage(

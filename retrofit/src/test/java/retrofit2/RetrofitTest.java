@@ -619,7 +619,7 @@ public final class RetrofitTest {
       assertThat(e)
           .hasMessage(
               ""
-                  + "Unable to create @Body converter for class java.lang.String (parameter #1)\n"
+                  + "Unable to create @Body converter for class java.lang.String (parameter 'body')\n"
                   + "    for method CallMethod.disallowed");
       assertThat(e.getCause())
           .hasMessage(
@@ -782,7 +782,7 @@ public final class RetrofitTest {
       assertThat(e)
           .hasMessage(
               "Parameter type must not include a type variable or wildcard: "
-                  + "T (parameter #1)\n    for method UnresolvableParameterType.typeVariable");
+                  + "T (parameter 'body')\n    for method UnresolvableParameterType.typeVariable");
     }
     try {
       example.typeVariableUpperBound(null);
@@ -791,7 +791,7 @@ public final class RetrofitTest {
       assertThat(e)
           .hasMessage(
               "Parameter type must not include a type variable or wildcard: "
-                  + "T (parameter #1)\n    for method UnresolvableParameterType.typeVariableUpperBound");
+                  + "T (parameter 'body')\n    for method UnresolvableParameterType.typeVariableUpperBound");
     }
     try {
       example.crazy(null);
@@ -800,7 +800,7 @@ public final class RetrofitTest {
       assertThat(e)
           .hasMessage(
               "Parameter type must not include a type variable or wildcard: "
-                  + "java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>> (parameter #1)\n"
+                  + "java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>> (parameter 'body')\n"
                   + "    for method UnresolvableParameterType.crazy");
     }
     try {
@@ -810,7 +810,7 @@ public final class RetrofitTest {
       assertThat(e)
           .hasMessage(
               "Parameter type must not include a type variable or wildcard: "
-                  + "java.util.List<?> (parameter #1)\n    for method UnresolvableParameterType.wildcard");
+                  + "java.util.List<?> (parameter 'body')\n    for method UnresolvableParameterType.wildcard");
     }
     try {
       example.wildcardUpperBound(null);
@@ -819,7 +819,7 @@ public final class RetrofitTest {
       assertThat(e)
           .hasMessage(
               "Parameter type must not include a type variable or wildcard: "
-                  + "java.util.List<? extends okhttp3.RequestBody> (parameter #1)\n"
+                  + "java.util.List<? extends okhttp3.RequestBody> (parameter 'body')\n"
                   + "    for method UnresolvableParameterType.wildcardUpperBound");
     }
   }
