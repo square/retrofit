@@ -9,6 +9,10 @@ dependencies {
   testImplementation libs.mockwebserver
 }
 
+tasks.withType(JavaCompile).configureEach {
+  options.compilerArgs << '-parameters'
+}
+
 // Create a test task for each supported JDK.
 (8..21).each { majorVersion ->
   def jdkTest = tasks.register("testJdk$majorVersion", Test) {
