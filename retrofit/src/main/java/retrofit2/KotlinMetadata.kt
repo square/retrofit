@@ -17,6 +17,7 @@ package retrofit2
 
 import retrofit2.kotlin.metadata.deserialization.BitEncoding
 import retrofit2.kotlin.metadata.deserialization.JvmMetadataVersion
+import retrofit2.kotlin.metadata.deserialization.JvmNameResolver
 import retrofit2.kotlin.metadata.deserialization.MetadataParser
 import java.io.ByteArrayInputStream
 import java.lang.reflect.Method
@@ -80,9 +81,10 @@ object KotlinMetadata {
         require(metadataAnnotation.kind == 1) { "Metadata of wrong kind: ${metadataAnnotation.kind}" }
         require(metadataAnnotation.data1.isNotEmpty()) { "data1 must not be empty" }
 
-        val bytes = BitEncoding.decodeBytes(metadataAnnotation.data1)
+        val bytes: ByteArray = BitEncoding.decodeBytes(metadataAnnotation.data1)
         val stream = ByteArrayInputStream(bytes)
-        val parser = MetadataParser(metadataAnnotation.data2, stream)
+        val jvmNameResolver = JvmNameResolver(stream, metadataAnnotation.data2)
+        val parser = MetadataParser(stream, jvmNameResolver)
 
         return parser.parseClass()
     }
