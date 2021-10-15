@@ -16,6 +16,11 @@
 package retrofit2.kotlin.metadata.deserialization
 
 /**
+ * This file was adapted from https://github.com/JetBrains/kotlin/blob/af18b10da9d1e20b1b35831a3fb5e508048a2576/core/metadata.jvm/src/org/jetbrains/kotlin/metadata/jvm/deserialization/JvmMetadataVersion.kt
+ * by removing the unused parts.
+ */
+
+/**
  * The version of the metadata serialized by the compiler and deserialized by the compiler and reflection.
  * This version includes the version of the core protobuf messages (metadata.proto) as well as JVM extensions (jvm_metadata.proto).
  */
@@ -34,6 +39,6 @@ class JvmMetadataVersion(versionArray: IntArray, val isStrictSemantics: Boolean)
 
     companion object {
         @JvmField
-        val INSTANCE = JvmMetadataVersion(1, 5, 1)
+        val INSTANCE = JvmMetadataVersion(1, 6, 0)
     }
 }

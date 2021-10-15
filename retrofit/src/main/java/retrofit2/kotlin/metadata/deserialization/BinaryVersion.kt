@@ -16,6 +16,11 @@
 package retrofit2.kotlin.metadata.deserialization
 
 /**
+ * This file was adapted from https://github.com/JetBrains/kotlin/blob/af18b10da9d1e20b1b35831a3fb5e508048a2576/core/metadata/src/org/jetbrains/kotlin/metadata/deserialization/BinaryVersion.kt
+ * by removing unused parts.
+ */
+
+/**
  * Subclasses of this class are used to identify different versions of the binary output of the compiler and their compatibility guarantees.
  * - Major version should be increased only when the new binary format is neither forward- nor backward compatible.
  *   This shouldn't really ever happen at all.
@@ -28,7 +33,12 @@ abstract class BinaryVersion(private vararg val numbers: Int) {
     val major: Int = numbers.getOrNull(0) ?: UNKNOWN
     val minor: Int = numbers.getOrNull(1) ?: UNKNOWN
     val patch: Int = numbers.getOrNull(2) ?: UNKNOWN
-    val rest: List<Int> = if (numbers.size > 3) numbers.asList().subList(3, numbers.size).toList() else emptyList()
+    val rest: List<Int> = if (numbers.size > 3) {
+        if (numbers.size > MAX_LENGTH)
+            throw IllegalArgumentException("BinaryVersion with length more than $MAX_LENGTH are not supported. Provided length ${numbers.size}.")
+        else
+            numbers.asList().subList(3, numbers.size).toList()
+    } else emptyList()
 
     abstract fun isCompatible(): Boolean
 
@@ -64,6 +74,7 @@ abstract class BinaryVersion(private vararg val numbers: Int) {
     }
 
     companion object {
+        const val MAX_LENGTH = 1024
         private const val UNKNOWN = -1
     }
 }

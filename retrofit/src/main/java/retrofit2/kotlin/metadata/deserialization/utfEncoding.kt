@@ -15,6 +15,11 @@
  */
 package retrofit2.kotlin.metadata.deserialization
 
+/**
+ * This file was adapted from https://github.com/JetBrains/kotlin/blob/af18b10da9d1e20b1b35831a3fb5e508048a2576/core/metadata.jvm/src/org/jetbrains/kotlin/metadata/jvm/deserialization/utfEncoding.kt
+ * by removing the unused parts.
+ */
+
 // The maximum possible length of the byte array in the CONSTANT_Utf8_info structure in the bytecode, as per JVMS7 4.4.7
 const val MAX_UTF8_INFO_LENGTH = 65535
 
