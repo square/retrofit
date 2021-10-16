@@ -81,7 +81,9 @@ final class RxJava3CallAdapter<R> implements CallAdapter<R, Object> {
     }
 
     if (isFlowable) {
-      return observable.toFlowable(BackpressureStrategy.LATEST);
+      // We only ever deliver a single value, and the RS spec states that you MUST request at least
+      // one element which means we never need to honor backpressure.
+      return observable.toFlowable(BackpressureStrategy.MISSING);
     }
     if (isSingle) {
       return observable.singleOrError();

@@ -1357,7 +1357,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList(1, 2, null, "three", "1");
+    List<Object> values = Arrays.asList(1, 2, null, "three", "1");
     Request request = buildRequest(Example.class, values);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
@@ -1453,7 +1453,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList(1, 2, null, "three", "1");
+    List<Object> values = Arrays.asList(1, 2, null, "three", "1");
     Request request = buildRequest(Example.class, values);
     assertThat(request.method()).isEqualTo("GET");
     assertThat(request.headers().size()).isZero();
@@ -2634,7 +2634,7 @@ public final class RequestFactoryTest {
       }
     }
 
-    List<Object> values = Arrays.<Object>asList("foo", "bar", null, 3);
+    List<Object> values = Arrays.asList("foo", "bar", null, 3);
     Request request = buildRequest(Example.class, values, "kat");
     assertBody(request.body(), "foo=foo&foo=bar&foo=3&kit=kat");
   }
@@ -2991,7 +2991,20 @@ public final class RequestFactoryTest {
   }
 
   @Test
-  public void contentTypeAnnotationHeaderAddsHeaderWithNoBody() {
+  public void contentTypeAnnotationHeaderAddsHeaderWithNoBodyGet() {
+    class Example {
+      @GET("/") //
+      @Headers("Content-Type: text/not-plain") //
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.headers().get("Content-Type")).isEqualTo("text/not-plain");
+  }
+
+  @Test
+  public void contentTypeAnnotationHeaderAddsHeaderWithNoBodyDelete() {
     class Example {
       @DELETE("/") //
       @Headers("Content-Type: text/not-plain") //
@@ -3295,6 +3308,7 @@ public final class RequestFactoryTest {
       Request request = buildRequest(cls, args);
       fail("expected a malformed request but was " + request);
     } catch (IllegalArgumentException expected) {
+      // Ignored
     }
   }
 }

@@ -17,15 +17,14 @@ package retrofit2;
 
 public final class RoboVmPlatformTest {
   public static void main(String[] args) {
-    System.exit(new RoboVmPlatformTest().isRoboVM() ? 0 : 1);
+    Platform platform = Platform.get();
+    if (platform.createDefaultCallAdapterFactories(null).size() > 1) {
+      // Everyone gets the callback executor adapter. If RoboVM was correctly detected it will NOT
+      // get the Java 8-supporting CompletableFuture call adapter factory.
+      System.exit(1);
+    }
   }
 
-  boolean isRoboVM() {
-    if (!"RoboVM".equals(System.getProperty("java.vm.name"))) {
-      return false;
-    }
-
-    // This is a proxy for the private property hasJava8Classes.
-    return Platform.get().defaultCallAdapterFactoriesSize() == 1;
+  private RoboVmPlatformTest() {
   }
 }
