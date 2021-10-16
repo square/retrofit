@@ -1,26 +1,29 @@
-
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package retrofit2.kotlin.metadata.deserialization
 
-import java.io.ByteArrayInputStream
+/**
+ * This file was adapted from https://github.com/JetBrains/kotlin/blob/26673d2b08f01dec1a9007b9b75436a50fa497e9/core/metadata.jvm/src/org/jetbrains/kotlin/metadata/jvm/deserialization/JvmNameResolver.kt
+ * by removing the unused parts.
+ */
 
-class JvmNameResolver(private val input: ByteArrayInputStream, private val strings: Array<String>) {
-
-    class Record(
-        val range: Int,
-        val predefinedIndex: Int,
-        val operation: Int,
-        val string: String?,
-        val substringIndexList: List<Int>,
-        val replaceCharList: List<Int>
-    ) {
-        fun hasString() = string != null
-        fun hasPredefinedIndex() = predefinedIndex != -1
-    }
-
-    private val records = parseStringTableTypes()
+internal class JvmNameResolver(private val types: StringTableTypes, private val strings: Array<String>) {
 
     fun getString(index: Int): String {
-        val record = records[index]
+        val record = types.records[index]
 
         var string = when {
             record.hasString() -> record.string
@@ -43,13 +46,13 @@ class JvmNameResolver(private val input: ByteArrayInputStream, private val strin
         }
 
         when (record.operation) {
-            0 -> {
+            Record.OPERATION_NONE -> {
                 // Do nothing
             }
-            1 -> {
+            Record.OPERATION_INTERNAL_TO_CLASS_ID -> {
                 string = string.replace('$', '.')
             }
-            2 -> {
+            Record.OPERATION_DESC_TO_CLASS_ID -> {
                 if (string.length >= 2) {
                     string = string.substring(1, string.length - 1)
                 }
@@ -58,65 +61,6 @@ class JvmNameResolver(private val input: ByteArrayInputStream, private val strin
         }
 
         return string
-    }
-
-    private fun parseStringTableTypes(): List<Record> {
-        val records = mutableListOf<Record>()
-        input.readMessage { field, wireType ->
-            when (field) {
-                1 -> {
-                    val record = parseRecord()
-                    repeat(record.range) { records += record }
-                }
-                else -> { input.skipProto(wireType) }
-            }
-        }
-
-        return records
-    }
-
-    private fun parseRecord(): Record {
-        var range = 1
-        var operation = 0
-        var predefinedIndex = -1
-        var string: String? = null
-        val substringIndexList = mutableListOf<Int>()
-        val replaceCharList = mutableListOf<Int>()
-
-        input.readMessage { field, wireType ->
-            when (field) {
-                1 -> {
-                    range = input.readRawVarint32()
-                }
-                2 -> {
-                    predefinedIndex = input.readRawVarint32()
-                }
-                3 -> {
-                    operation = input.readRawVarint32()
-                }
-                4 -> {
-                    val length = input.readRawVarint32()
-                    repeat(length) {
-                        substringIndexList += input.readRawVarint32()
-                    }
-                }
-                5 -> {
-                    val length = input.readRawVarint32()
-                    repeat(length) {
-                        replaceCharList += input.readRawVarint32()
-                    }
-                }
-                6 -> {
-                    val length = input.readRawVarint32()
-                    val array = ByteArray(length)
-                    input.read(array)
-                    string = String(array)
-                }
-                else -> { input.skipProto(wireType) }
-            }
-        }
-
-        return Record(range, predefinedIndex, operation, string, substringIndexList, replaceCharList)
     }
 
     companion object {

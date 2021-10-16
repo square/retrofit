@@ -27,14 +27,12 @@ import okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST
 import okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.helpers.ToStringConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
-import retrofit2.kotlin.metadata.deserialization.readRawVarint32
 import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type

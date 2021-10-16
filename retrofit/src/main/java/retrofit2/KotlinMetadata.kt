@@ -16,10 +16,10 @@
 package retrofit2
 
 import retrofit2.kotlin.metadata.deserialization.BitEncoding
+import retrofit2.kotlin.metadata.deserialization.ByteArrayInput
 import retrofit2.kotlin.metadata.deserialization.JvmMetadataVersion
-import retrofit2.kotlin.metadata.deserialization.JvmNameResolver
 import retrofit2.kotlin.metadata.deserialization.MetadataParser
-import java.io.ByteArrayInputStream
+import retrofit2.kotlin.metadata.deserialization.ProtobufReader
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 
@@ -82,11 +82,10 @@ object KotlinMetadata {
         require(metadataAnnotation.data1.isNotEmpty()) { "data1 must not be empty" }
 
         val bytes: ByteArray = BitEncoding.decodeBytes(metadataAnnotation.data1)
-        val stream = ByteArrayInputStream(bytes)
-        val jvmNameResolver = JvmNameResolver(stream, metadataAnnotation.data2)
-        val parser = MetadataParser(stream, jvmNameResolver)
+        val reader = ProtobufReader(ByteArrayInput(bytes))
+        val parser = MetadataParser(reader, metadataAnnotation.data2)
 
-        return parser.parseClass()
+        return parser.parse()
     }
 
     private fun Class<*>.typeToSignature() = when {
