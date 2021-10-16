@@ -103,6 +103,11 @@ internal class Record(
     }
 }
 
+/**
+ * Renamed from `Class` in .proto definition to [Klass] to avoid conflicting with [java.lang.Class]. We only parse the
+ * info needed to determine nullability of the method's return type and skip other stuff. Thanks to
+ * the protobuf format we will also be able to skip any new fields added in the future.
+ */
 internal class Klass(val functions: List<Function>) {
 
     companion object {

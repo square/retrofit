@@ -22,6 +22,7 @@ import retrofit2.kotlin.metadata.deserialization.MetadataParser
 import retrofit2.kotlin.metadata.deserialization.ProtobufReader
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.Continuation
 
 object KotlinMetadata {
 
@@ -30,6 +31,41 @@ object KotlinMetadata {
 
     private val kotlinFunctionsMap = ConcurrentHashMap<Class<*>, List<Function>>()
 
+    /**
+     * This helps to parse kotlin metadata of a compiled class to find out the nullability of a suspending method return
+     * type.
+     *
+     * For example a suspending method with following declaration:
+     *
+     * ```
+     *     @GET("/") suspend fun foo(@Query("x") arg: IntArray): String?
+     * ```
+     *
+     * Will be compiled as a method returning [Object] and with injected [Continuation] argument with following java
+     * method:
+     *
+     * ```
+     *     public Object foo(int[], Continuation)
+     * ```
+     *
+     * The information about the return type and its nullability is stored in a [Metadata] annotation of the containing
+     * class. We process the metadata of a class the first time [isReturnTypeNullable] is called on one of its methods.
+     * We extract necessary information about all of its methods and store this info in cache, so each class is
+     * processed only once. Then we try to match the currently inspected [Method] to one extracted from metadata by
+     * comparing their signatures.
+     *
+     * We use the method signature because:
+     *   - it uniquely identifies a method
+     *   - it requires just comparing 2 strings
+     *   - it is already stored in kotlin metadata
+     *   - it is trivial to create one from java reflection's [Method] instance
+     *
+     * For example the previous method's signature would be:
+     *
+     * ```
+     *     foo([ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+     * ```
+     */
     @JvmStatic fun isReturnTypeNullable(method: Method): Boolean {
         if (method.declaringClass.getAnnotation(Metadata::class.java) == null) return false
 

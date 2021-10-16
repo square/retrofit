@@ -17,13 +17,16 @@ package retrofit2.kotlin.metadata.deserialization
 
 import retrofit2.KotlinMetadata
 
+/**
+ * The class metadata is in protobuf format with [StringTableTypes] object followed by [Klass] object.
+ */
 internal class MetadataParser(private val reader: ProtobufReader, private val strings: Array<String>) {
 
     fun parse(): List<KotlinMetadata.Function> {
-        val table = StringTableTypes.parse(makeDelimited(reader, true))
-        val nameResolver = JvmNameResolver(table, strings)
-
+        val table = StringTableTypes.parse(makeDelimited(reader, tagless = true))
         val klass = Klass.parse(reader)
+
+        val nameResolver = JvmNameResolver(table, strings)
 
         val functions = mutableListOf<KotlinMetadata.Function>()
 
