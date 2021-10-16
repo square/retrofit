@@ -20,10 +20,10 @@ import static retrofit2.kotlin.metadata.deserialization.UtfEncodingKt.MAX_UTF8_I
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This file was adapted from https://github.com/JetBrains/kotlin/blob/af18b10da9d1e20b1b35831a3fb5e508048a2576/core/metadata.jvm/src/org/jetbrains/kotlin/metadata/jvm/deserialization/BitEncoding.java
+ * This file was adapted from
+ * https://github.com/JetBrains/kotlin/blob/af18b10da9d1e20b1b35831a3fb5e508048a2576/core/metadata.jvm/src/org/jetbrains/kotlin/metadata/jvm/deserialization/BitEncoding.java
  * by removing the unused parts.
  */
-
 public class BitEncoding {
 
   private static final char _8TO7_MODE_MARKER = (char) -1;
@@ -36,9 +36,7 @@ public class BitEncoding {
     }
   }
 
-  /**
-   * Converts encoded array of {@code String} back to a byte array.
-   */
+  /** Converts encoded array of {@code String} back to a byte array. */
   @NotNull
   public static byte[] decodeBytes(@NotNull String[] data) {
     if (data.length > 0 && !data[0].isEmpty()) {
