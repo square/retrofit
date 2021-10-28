@@ -25,23 +25,39 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.GET;
+import retrofit2.http.HEAD;
 
 public final class KotlinUnitTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   interface Service {
     @GET("/")
-    Call<Unit> empty();
+    Call<Unit> get();
+
+    @HEAD("/")
+    Call<Unit> head();
   }
 
   @Test
-  public void unitOnClasspath() throws IOException {
+  public void getWithUnitOnClasspath() throws IOException {
     Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
     Service example = retrofit.create(Service.class);
 
     server.enqueue(new MockResponse().setBody("Hi"));
 
-    Response<Unit> response = example.empty().execute();
+    Response<Unit> response = example.get().execute();
+    assertThat(response.isSuccessful()).isTrue();
+    assertThat(response.body()).isSameAs(Unit.INSTANCE);
+  }
+
+  @Test
+  public void headWithUnitOnClasspath() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Response<Unit> response = example.head().execute();
     assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isSameAs(Unit.INSTANCE);
   }
