@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import kotlin.Unit;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
@@ -317,6 +318,15 @@ final class Utils {
       }
     }
     return false;
+  }
+
+  static boolean isUnitAvailable() {
+    try {
+      final Class<?> ignored = Unit.class;
+      return true;
+    } catch (final NoClassDefFoundError ignored) {
+      return false;
+    }
   }
 
   static ResponseBody buffer(final ResponseBody body) throws IOException {
