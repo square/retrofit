@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
+import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 import okhttp3.ResponseBody;
 
@@ -76,9 +77,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     if (responseType == Response.class) {
       throw methodError(method, "Response must include generic type (e.g., Response<String>)");
     }
-    // TODO support Unit for Kotlin?
-    if (requestFactory.httpMethod.equals("HEAD") && !Void.class.equals(responseType)) {
-      throw methodError(method, "HEAD method must use Void as response type.");
+    if (requestFactory.httpMethod.equals("HEAD")
+        && !Void.class.equals(responseType)
+        && !Unit.class.equals(responseType)) {
+      throw methodError(method, "HEAD method must use Void or Unit as response type.");
     }
 
     Converter<ResponseBody, ResponseT> responseConverter =
