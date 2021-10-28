@@ -16,6 +16,7 @@
 package retrofit2;
 
 import static retrofit2.Utils.getRawType;
+import static retrofit2.Utils.isUnitAvailable;
 import static retrofit2.Utils.methodError;
 
 import java.lang.annotation.Annotation;
@@ -77,9 +78,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     if (responseType == Response.class) {
       throw methodError(method, "Response must include generic type (e.g., Response<String>)");
     }
-    if (requestFactory.httpMethod.equals("HEAD")
-        && !Void.class.equals(responseType)
-        && !Unit.class.equals(responseType)) {
+    if (!Void.class.equals(responseType) && !isUnitAvailable()) {
+      throw methodError(method, "HEAD method must use Void as response type.");
+    }
+    if (!Unit.class.equals(responseType)) {
       throw methodError(method, "HEAD method must use Void or Unit as response type.");
     }
 
