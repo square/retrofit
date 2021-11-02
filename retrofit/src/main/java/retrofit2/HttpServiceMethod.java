@@ -78,11 +78,13 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     if (responseType == Response.class) {
       throw methodError(method, "Response must include generic type (e.g., Response<String>)");
     }
-    if (!Void.class.equals(responseType) && !isUnitAvailable()) {
-      throw methodError(method, "HEAD method must use Void as response type.");
-    }
-    if (!Unit.class.equals(responseType)) {
-      throw methodError(method, "HEAD method must use Void or Unit as response type.");
+    if (requestFactory.httpMethod.equals("HEAD")) {
+      if (!Void.class.equals(responseType) && !isUnitAvailable()) {
+        throw methodError(method, "HEAD method must use Void as response type.");
+      }
+      if (!Unit.class.equals(responseType)) {
+        throw methodError(method, "HEAD method must use Void or Unit as response type.");
+      }
     }
 
     Converter<ResponseBody, ResponseT> responseConverter =
