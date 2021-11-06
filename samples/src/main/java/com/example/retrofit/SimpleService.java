@@ -22,6 +22,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
+import retrofit2.logger.gson.GsonLogger;
 
 public final class SimpleService {
   public static final String API_URL = "https://api.github.com";
@@ -46,6 +47,7 @@ public final class SimpleService {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(API_URL)
+            .setObjectLogger(GsonLogger.create())
             .addConverterFactory(GsonConverterFactory.create())
             .build();
 
