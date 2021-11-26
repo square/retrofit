@@ -100,13 +100,15 @@ final class RequestBuilder {
     this.relativeUrl = relativeUrl.toString();
   }
 
-  void addHeader(String name, String value) {
+  void addHeader(String name, String value, boolean allowUnsafeNonAsciiValues) {
     if ("Content-Type".equalsIgnoreCase(name)) {
       try {
         contentType = MediaType.get(value);
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Malformed content type: " + value, e);
       }
+    } else if (allowUnsafeNonAsciiValues) {
+      headersBuilder.addUnsafeNonAscii(name, value);
     } else {
       headersBuilder.add(name, value);
     }

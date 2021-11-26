@@ -783,6 +783,29 @@ public final class RequestFactoryTest {
   }
 
   @Test
+  public void getWithHeaderMapAllowingUnsafeNonAsciiValues() {
+    class Example {
+      @GET("/search")
+      Call<ResponseBody> method(
+          @HeaderMap(allowUnsafeNonAsciiValues = true) Map<String, Object> headers) {
+        return null;
+      }
+    }
+
+    Map<String, Object> headers = new LinkedHashMap<>();
+    headers.put("Accept", "text/plain");
+    headers.put("Title", "Kein plötzliches");
+
+    Request request = buildRequest(Example.class, headers);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/search");
+    assertThat(request.body()).isNull();
+    assertThat(request.headers().size()).isEqualTo(2);
+    assertThat(request.header("Accept")).isEqualTo("text/plain");
+    assertThat(request.header("Title")).isEqualTo("Kein plötzliches");
+  }
+
+  @Test
   public void twoBodies() {
     class Example {
       @PUT("/") //
@@ -2833,6 +2856,27 @@ public final class RequestFactoryTest {
   }
 
   @Test
+  public void simpleHeadersAllowingUnsafeNonAsciiValues() {
+    class Example {
+      @GET("/foo/bar/")
+      @Headers(
+          value = {"ping: pong", "title: Kein plötzliches"},
+          allowUnsafeNonAsciiValues = true)
+      Call<ResponseBody> method() {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class);
+    assertThat(request.method()).isEqualTo("GET");
+    okhttp3.Headers headers = request.headers();
+    assertThat(headers.size()).isEqualTo(2);
+    assertThat(headers.get("ping")).isEqualTo("pong");
+    assertThat(headers.get("title")).isEqualTo("Kein plötzliches");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test
   public void headersDoNotOverwriteEachOther() {
     class Example {
       @GET("/foo/bar/")
@@ -2887,6 +2931,26 @@ public final class RequestFactoryTest {
     assertThat(headers.size()).isEqualTo(2);
     assertThat(headers.get("ping")).isEqualTo("pong");
     assertThat(headers.get("kit")).isEqualTo("kat");
+    assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test
+  public void headerParamAllowingUnsafeNonAsciiValues() {
+    class Example {
+      @GET("/foo/bar/") //
+      @Headers("ping: pong") //
+      Call<ResponseBody> method(
+          @Header(value = "title", allowUnsafeNonAsciiValues = true) String kit) {
+        return null;
+      }
+    }
+    Request request = buildRequest(Example.class, "Kein plötzliches");
+    assertThat(request.method()).isEqualTo("GET");
+    okhttp3.Headers headers = request.headers();
+    assertThat(headers.size()).isEqualTo(2);
+    assertThat(headers.get("ping")).isEqualTo("pong");
+    assertThat(headers.get("title")).isEqualTo("Kein plötzliches");
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }
