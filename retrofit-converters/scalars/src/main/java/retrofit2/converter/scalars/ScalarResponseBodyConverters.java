@@ -19,10 +19,10 @@ import java.io.IOException;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 
-final class ScalarResponseBodyConverters {
-  private ScalarResponseBodyConverters() {}
+public class ScalarResponseBodyConverters {
+  protected ScalarResponseBodyConverters() {}
 
-  static final class StringResponseBodyConverter implements Converter<ResponseBody, String> {
+  public static final class StringResponseBodyConverter implements Converter<ResponseBody, String> {
     static final StringResponseBodyConverter INSTANCE = new StringResponseBodyConverter();
 
     @Override
@@ -31,7 +31,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class BooleanResponseBodyConverter implements Converter<ResponseBody, Boolean> {
+  public static final class BooleanResponseBodyConverter implements Converter<ResponseBody, Boolean> {
     static final BooleanResponseBodyConverter INSTANCE = new BooleanResponseBodyConverter();
 
     @Override
@@ -40,7 +40,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class ByteResponseBodyConverter implements Converter<ResponseBody, Byte> {
+  public static final class ByteResponseBodyConverter implements Converter<ResponseBody, Byte> {
     static final ByteResponseBodyConverter INSTANCE = new ByteResponseBodyConverter();
 
     @Override
@@ -49,7 +49,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class CharacterResponseBodyConverter implements Converter<ResponseBody, Character> {
+  public static final class CharacterResponseBodyConverter implements Converter<ResponseBody, Character> {
     static final CharacterResponseBodyConverter INSTANCE = new CharacterResponseBodyConverter();
 
     @Override
@@ -63,7 +63,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class DoubleResponseBodyConverter implements Converter<ResponseBody, Double> {
+  public static final class DoubleResponseBodyConverter implements Converter<ResponseBody, Double> {
     static final DoubleResponseBodyConverter INSTANCE = new DoubleResponseBodyConverter();
 
     @Override
@@ -72,7 +72,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class FloatResponseBodyConverter implements Converter<ResponseBody, Float> {
+  public static final class FloatResponseBodyConverter implements Converter<ResponseBody, Float> {
     static final FloatResponseBodyConverter INSTANCE = new FloatResponseBodyConverter();
 
     @Override
@@ -81,7 +81,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class IntegerResponseBodyConverter implements Converter<ResponseBody, Integer> {
+  public static final class IntegerResponseBodyConverter implements Converter<ResponseBody, Integer> {
     static final IntegerResponseBodyConverter INSTANCE = new IntegerResponseBodyConverter();
 
     @Override
@@ -90,7 +90,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class LongResponseBodyConverter implements Converter<ResponseBody, Long> {
+  public static final class LongResponseBodyConverter implements Converter<ResponseBody, Long> {
     static final LongResponseBodyConverter INSTANCE = new LongResponseBodyConverter();
 
     @Override
@@ -99,7 +99,7 @@ final class ScalarResponseBodyConverters {
     }
   }
 
-  static final class ShortResponseBodyConverter implements Converter<ResponseBody, Short> {
+  public static final class ShortResponseBodyConverter implements Converter<ResponseBody, Short> {
     static final ShortResponseBodyConverter INSTANCE = new ShortResponseBodyConverter();
 
     @Override

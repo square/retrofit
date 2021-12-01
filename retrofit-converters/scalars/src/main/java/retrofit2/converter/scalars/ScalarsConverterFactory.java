@@ -36,7 +36,7 @@ import retrofit2.converter.scalars.ScalarResponseBodyConverters.StringResponseBo
  * A {@linkplain Converter.Factory converter} for strings and both primitives and their boxed types
  * to {@code text/plain} bodies.
  */
-public final class ScalarsConverterFactory extends Converter.Factory {
+public class ScalarsConverterFactory extends Converter.Factory {
   public static ScalarsConverterFactory create() {
     return new ScalarsConverterFactory();
   }
