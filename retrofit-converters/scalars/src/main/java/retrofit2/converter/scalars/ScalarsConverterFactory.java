@@ -41,7 +41,7 @@ public class ScalarsConverterFactory extends Converter.Factory {
     return new ScalarsConverterFactory();
   }
 
-  private ScalarsConverterFactory() {}
+  protected ScalarsConverterFactory() {}
 
   @Override
   public @Nullable Converter<?, RequestBody> requestBodyConverter(
