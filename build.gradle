@@ -49,8 +49,8 @@ subprojects {
   apply plugin: 'net.ltgt.errorprone'
 
   dependencies {
-    errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
-    errorprone 'com.google.errorprone:error_prone_core:2.8.1'
+    errorproneJavac libs.errorproneJavac
+    errorprone libs.errorproneCore
   }
 
   tasks.withType(JavaCompile).configureEach { task ->
