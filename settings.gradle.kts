@@ -27,3 +27,5 @@ include(
 
   ":samples",
 )
+
+enableFeaturePreview("VERSION_CATALOGS")

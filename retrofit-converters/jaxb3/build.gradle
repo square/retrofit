@@ -3,14 +3,14 @@ apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
   api project(':retrofit')
-  api deps.jaxb3Api
-  compileOnly deps.findBugsAnnotations
+  api libs.jaxb3Api
+  compileOnly libs.findBugsAnnotations
 
-  testImplementation deps.jaxb3Impl
-  testImplementation deps.junit
-  testImplementation deps.assertj
-  testImplementation deps.mockwebserver
-  testImplementation deps.findBugsAnnotations
+  testImplementation libs.jaxb3Impl
+  testImplementation libs.junit
+  testImplementation libs.assertj
+  testImplementation libs.mockwebserver
+  testImplementation libs.findBugsAnnotations
 }
 
 jar {
