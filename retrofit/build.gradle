@@ -3,22 +3,22 @@ apply plugin: 'org.jetbrains.kotlin.jvm'
 apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
-  api deps.okhttp
+  api libs.okhttp
 
-  compileOnly deps.android
-  compileOnly deps.kotlinStdLib
-  compileOnly deps.kotlinCoroutines
+  compileOnly libs.android
+  compileOnly libs.kotlinStdLib
+  compileOnly libs.kotlinCoroutines
 
-  compileOnly deps.animalSnifferAnnotations
-  compileOnly deps.findBugsAnnotations
+  compileOnly libs.animalSnifferAnnotations
+  compileOnly libs.findBugsAnnotations
 
   testImplementation project(':retrofit:test-helpers')
-  testImplementation deps.junit
-  testImplementation deps.assertj
-  testImplementation deps.guava
-  testImplementation deps.mockwebserver
-  testImplementation deps.kotlinStdLib
-  testImplementation deps.kotlinCoroutines
+  testImplementation libs.junit
+  testImplementation libs.assertj
+  testImplementation libs.guava
+  testImplementation libs.mockwebserver
+  testImplementation libs.kotlinStdLib
+  testImplementation libs.kotlinCoroutines
 }
 
 jar {

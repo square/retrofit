@@ -25,3 +25,5 @@ include ':retrofit-converters:simplexml'
 include ':retrofit-converters:wire'
 
 include ':samples'
+
+enableFeaturePreview("VERSION_CATALOGS")

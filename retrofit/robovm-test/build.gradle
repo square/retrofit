@@ -9,7 +9,7 @@ robovm {
 
 dependencies {
   implementation project(':retrofit')
-  implementation deps.robovm
+  implementation libs.robovm
 }
 
 task robovmTest(type: Exec) {
