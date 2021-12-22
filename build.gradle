@@ -122,4 +122,10 @@ subprojects {
       jvmTarget = '1.8'
     }
   }
+
+  pluginManager.withPlugin("com.vanniktech.maven.publish") {
+    mavenPublish {
+      sonatypeHost = "S01"
+    }
+  }
 }
