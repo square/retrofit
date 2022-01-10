@@ -446,9 +446,7 @@ public final class Retrofit {
 
       // Do not add the default BuiltIntConverters and platform-aware converters added by build().
       for (int i = 1,
-              size =
-                  retrofit.converterFactories.size()
-                      - Platform.get().createDefaultConverterFactories().size();
+              size = retrofit.converterFactories.size() - retrofit.defaultConverterFactoriesSize;
           i < size;
           i++) {
         converterFactories.add(retrofit.converterFactories.get(i));
