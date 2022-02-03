@@ -26,7 +26,7 @@ import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-inline fun <reified T> Retrofit.create(): T = create(T::class.java)
+inline fun <reified T: Any> Retrofit.create(): T = create(T::class.java)
 
 suspend fun <T : Any> Call<T>.await(): T {
   return suspendCancellableCoroutine { continuation ->
