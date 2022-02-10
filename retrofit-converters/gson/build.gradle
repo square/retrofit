@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
-  api project(':retrofit')
+  api projects.retrofit
   api libs.gson
   compileOnly libs.findBugsAnnotations
 

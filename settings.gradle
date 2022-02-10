@@ -1,3 +1,5 @@
+rootProject.name = 'retrofit-root'
+
 include ':retrofit'
 include ':retrofit:android-test'
 include ':retrofit:robovm-test'
@@ -25,3 +27,5 @@ include ':retrofit-converters:simplexml'
 include ':retrofit-converters:wire'
 
 include ':samples'
+
+enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
