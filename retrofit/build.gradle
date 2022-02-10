@@ -12,7 +12,7 @@ dependencies {
   compileOnly libs.animalSnifferAnnotations
   compileOnly libs.findBugsAnnotations
 
-  testImplementation project(':retrofit:test-helpers')
+  testImplementation projects.retrofit.testHelpers
   testImplementation libs.junit
   testImplementation libs.assertj
   testImplementation libs.guava

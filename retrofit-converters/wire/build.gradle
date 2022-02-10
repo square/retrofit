@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
-  api project(':retrofit')
+  api projects.retrofit
   api(libs.wireRuntime) {
     // Make sure OkHttp's transitive version wins (itself transitive from Retrofit).
     exclude group: 'com.squareup.okio', module: 'okio'

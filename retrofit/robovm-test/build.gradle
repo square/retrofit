@@ -8,7 +8,7 @@ robovm {
 }
 
 dependencies {
-  implementation project(':retrofit')
+  implementation projects.retrofit
   implementation libs.robovm
 }
 
