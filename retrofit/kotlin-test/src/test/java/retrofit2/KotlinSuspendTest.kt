@@ -17,6 +17,7 @@ package retrofit2
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -352,6 +353,32 @@ class KotlinSuspendTest {
       }
     }
   }
+
+  @Test fun usesCoroutineContextForCallFactory() {
+    val okHttpClient = OkHttpClient()
+    var callFactoryThread: Thread? = null
+    val outerContextThread: Thread
+    val retrofit = Retrofit.Builder()
+      .baseUrl(server.url("/"))
+      .callFactory {
+        callFactoryThread = Thread.currentThread()
+        okHttpClient.newCall(it)
+      }
+      .addConverterFactory(ToStringConverterFactory())
+      .build()
+    val example = retrofit.create(Service::class.java)
+
+    server.enqueue(MockResponse().setBody("Hi"))
+
+    runBlocking {
+      outerContextThread = Thread.currentThread()
+      example.body()
+    }
+
+    assertThat(callFactoryThread).isNotNull
+    assertThat(outerContextThread).isNotEqualTo(callFactoryThread)
+  }
+
 
   @Suppress("EXPERIMENTAL_OVERRIDE")
   private object DirectUnconfinedDispatcher : CoroutineDispatcher() {
