@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import kotlin.Unit;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
@@ -533,5 +534,19 @@ final class Utils {
     } else if (t instanceof LinkageError) {
       throw (LinkageError) t;
     }
+  }
+
+  /** Not volatile because we don't mind multiple threads discovering this. */
+  private static boolean checkForKotlinUnit = true;
+
+  static boolean isUnit(Type type) {
+    if (checkForKotlinUnit) {
+      try {
+        return type == Unit.class;
+      } catch (NoClassDefFoundError ignored) {
+        checkForKotlinUnit = false;
+      }
+    }
+    return false;
   }
 }
