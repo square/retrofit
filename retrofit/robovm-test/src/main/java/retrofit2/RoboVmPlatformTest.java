@@ -15,13 +15,16 @@
  */
 package retrofit2;
 
-import static org.junit.Assert.assertFalse;
+public final class RoboVmPlatformTest {
+  public static void main(String[] args) {
+    Platform platform = Platform.get();
+    if (platform.createDefaultCallAdapterFactories(null).size() > 1) {
+      // Everyone gets the callback executor adapter. If RoboVM was correctly detected it will NOT
+      // get the Java 8-supporting CompletableFuture call adapter factory.
+      System.exit(1);
+    }
+  }
 
-import org.junit.Test;
-
-public final class PlatformTest {
-  @Test
-  public void isAndroid() {
-    assertFalse(Platform.get() instanceof Platform.Android);
+  private RoboVmPlatformTest() {
   }
 }

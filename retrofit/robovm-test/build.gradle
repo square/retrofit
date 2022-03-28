@@ -1,0 +1,20 @@
+apply plugin: 'java'
+apply plugin: 'robovm'
+
+ext.mainClassName = 'retrofit2.RoboVmPlatformTest'
+
+robovm {
+  archs = 'x86_64'
+}
+
+dependencies {
+  implementation projects.retrofit
+  implementation libs.robovm
+}
+
+task robovmTest(type: Exec) {
+  dependsOn {
+    robovmInstall
+  }
+  commandLine './build/robovm/retrofit2.RoboVmPlatformTest'
+}

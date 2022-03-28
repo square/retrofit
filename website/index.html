@@ -136,7 +136,7 @@ Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
 
               <h4>Converters</h4>
               <p>By default, Retrofit can only deserialize HTTP bodies into OkHttp's <code>ResponseBody</code> type and it can only accept its <code>RequestBody</code> type for <code>@Body</code>.</p>
-              <p>Converters can be added to support other types. Six sibling modules adapt popular serialization libraries for your convenience.</p>
+              <p>Converters can be added to support other types. Sibling modules adapt popular serialization libraries for your convenience.</p>
               <ul>
                 <li><a href="https://github.com/google/gson">Gson</a>: <code>com.squareup.retrofit2:converter-gson</code></li>
                 <li><a href="https://github.com/FasterXML/jackson">Jackson</a>: <code>com.squareup.retrofit2:converter-jackson</code></li>
@@ -144,8 +144,8 @@ Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
                 <li><a href="https://developers.google.com/protocol-buffers/">Protobuf</a>: <code>com.squareup.retrofit2:converter-protobuf</code></li>
                 <li><a href="https://github.com/square/wire">Wire</a>: <code>com.squareup.retrofit2:converter-wire</code></li>
                 <li><a href="http://simple.sourceforge.net/">Simple XML</a>: <code>com.squareup.retrofit2:converter-simplexml</code></li>
-		<li><a href="https://docs.oracle.com/javase/tutorial/jaxb/intro/index.html">JAXB</a>: <code>com.squareup.retrofit2:converter-jaxb</code></li>
-		<li>Scalars (primitives, boxed, and String): <code>com.squareup.retrofit2:converter-scalars</code></li>
+                <li><a href="https://docs.oracle.com/javase/tutorial/jaxb/intro/index.html">JAXB</a>: <code>com.squareup.retrofit2:converter-jaxb</code></li>
+                <li>Scalars (primitives, boxed, and String): <code>com.squareup.retrofit2:converter-scalars</code></li>
               </ul>
               <p>Here's an example of using the <code>GsonConverterFactory</code> class to generate an implementation of the <code>GitHubService</code> interface which uses Gson for its deserialization.</p>
               <pre class="prettyprint">Retrofit retrofit = new Retrofit.Builder()
