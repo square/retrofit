@@ -8,23 +8,6 @@ env:
 jobs:
   jvm:
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        java-version:
-          - 8
-          - 9
-          - 10
-          - 11
-          - 12
-          - 13
-          - 14
-          - 15
-          - 16
-          - 17
-          - 18
-
     steps:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1.0.4
@@ -32,7 +15,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: ${{ matrix.java-version }}
+          java-version: 18
 
       - name: Test
         run: ./gradlew build
@@ -95,7 +78,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: 14
+          java-version: 18
 
       - name: Upload Artifacts
         run: ./gradlew publish
