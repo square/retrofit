@@ -17,6 +17,8 @@ jobs:
           distribution: 'zulu'
           java-version: 18
 
+      - uses: gradle/gradle-build-action@v2
+
       - name: Test
         run: ./gradlew build
 
@@ -41,6 +43,8 @@ jobs:
           distribution: 'zulu'
           java-version: 8
 
+      - uses: gradle/gradle-build-action@v2
+
       - name: Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -61,6 +65,8 @@ jobs:
           distribution: 'zulu'
           java-version: 8
 
+      - uses: gradle/gradle-build-action@v2
+
       - name: Run Tests
         run: ./gradlew retrofit:robovm-test:robovmTest
 
@@ -79,6 +85,8 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 18
+
+      - uses: gradle/gradle-build-action@v2
 
       - name: Upload Artifacts
         run: ./gradlew publish
