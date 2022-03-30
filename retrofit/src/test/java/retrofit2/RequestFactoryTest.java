@@ -20,9 +20,9 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static retrofit2.TestingUtils.buildRequest;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.Arrays;
@@ -41,7 +41,6 @@ import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Test;
 import retrofit2.helpers.NullObjectConverterFactory;
-import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
@@ -851,7 +850,7 @@ public final class RequestFactoryTest {
   }
 
   @Test
-  public void head() {
+  public void headVoid() {
     class Example {
       @HEAD("/foo/bar/") //
       Call<Void> method() {
@@ -879,7 +878,8 @@ public final class RequestFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage("HEAD method must use Void as response type.\n    for method Example.method");
+          .hasMessage(
+              "HEAD method must use Void or Unit as response type.\n    for method Example.method");
     }
   }
 
@@ -3274,33 +3274,6 @@ public final class RequestFactoryTest {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
-    okhttp3.Call.Factory callFactory =
-        request -> {
-          throw new UnsupportedOperationException("Not implemented");
-        };
-
-    Retrofit retrofit = builder.callFactory(callFactory).build();
-
-    Method method = TestingUtils.onlyMethod(cls);
-    try {
-      return RequestFactory.parseAnnotations(retrofit, method).create(args);
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
-  }
-
-  static <T> Request buildRequest(Class<T> cls, Object... args) {
-    Retrofit.Builder retrofitBuilder =
-        new Retrofit.Builder()
-            .baseUrl("http://example.com/")
-            .addConverterFactory(new ToStringConverterFactory());
-
-    return buildRequest(cls, retrofitBuilder, args);
   }
 
   static void assertMalformedRequest(Class<?> cls, Object... args) {
