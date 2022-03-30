@@ -21,7 +21,6 @@ import java.io.IOException;
 import kotlin.Unit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.GET;
@@ -45,8 +44,4 @@ public final class KotlinUnitTest {
     assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isSameAs(Unit.INSTANCE);
   }
-
-  @Ignore("This is implicitly tested by integration tests of the adapters and converters")
-  @Test
-  public void unitMissingFromClasspath() {}
 }
