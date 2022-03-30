@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: gradle/wrapper-validation-action@v1.0.4
+      - uses: gradle/wrapper-validation-action@v1
 
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 18
@@ -34,9 +34,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: gradle/wrapper-validation-action@v1.0.4
+      - uses: gradle/wrapper-validation-action@v1
 
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 8
@@ -54,9 +54,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: gradle/wrapper-validation-action@v1.0.4
+      - uses: gradle/wrapper-validation-action@v1
 
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 8
@@ -75,7 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 18
