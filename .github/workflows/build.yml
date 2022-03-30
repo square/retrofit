@@ -1,6 +1,6 @@
 name: build
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
@@ -11,39 +11,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
-
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 18
-
       - uses: gradle/gradle-build-action@v2
-
       - name: Test
         run: ./gradlew build
 
   android:
     runs-on: macos-latest
-
     strategy:
       fail-fast: false
       matrix:
-        api-level:
-          - 21
-          - 24
-          - 26
-          - 29
-
+        api-level: [ 21, 24, 26, 29 ]
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 8
-
       - uses: gradle/gradle-build-action@v2
-
       - name: Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -54,16 +42,13 @@ jobs:
 
   robovm:
     runs-on: macos-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 8
-
       - uses: gradle/gradle-build-action@v2
-
       - name: Run Tests
         run: ./gradlew retrofit:robovm-test:robovmTest
 
@@ -74,17 +59,13 @@ jobs:
       - jvm
       - android
       - robovm
-
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 18
-
       - uses: gradle/gradle-build-action@v2
-
       - name: Upload Artifacts
         run: ./gradlew publish
         env:
