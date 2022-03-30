@@ -17,8 +17,6 @@ dependencies {
   testImplementation libs.assertj
   testImplementation libs.guava
   testImplementation libs.mockwebserver
-  testImplementation libs.kotlinStdLib
-  testImplementation libs.kotlinCoroutines
 }
 
 jar {
