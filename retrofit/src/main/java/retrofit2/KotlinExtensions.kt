@@ -20,12 +20,12 @@ package retrofit2
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.lang.reflect.ParameterizedType
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellableContinuation
 
 inline fun <reified T: Any> Retrofit.create(): T = create(T::class.java)
 
@@ -36,29 +36,51 @@ suspend fun <T : Any> Call<T>.await(): T {
     }
     enqueue(object : Callback<T> {
       override fun onResponse(call: Call<T>, response: Response<T>) {
-        if (response.isSuccessful) {
-          val body = response.body()
-          if (body == null) {
-            val invocation = call.request().tag(Invocation::class.java)!!
-            val method = invocation.method()
-            val e = KotlinNullPointerException("Response from " +
-                method.declaringClass.name +
-                '.' +
-                method.name +
-                " was null but response body type was declared as non-null")
-            continuation.resumeWithException(e)
-          } else {
-            continuation.resume(body)
-          }
-        } else {
-          continuation.resumeWithException(HttpException(response))
-        }
+        continuation.resumeWithResponse(call, response)
       }
 
       override fun onFailure(call: Call<T>, t: Throwable) {
         continuation.resumeWithException(t)
       }
     })
+  }
+}
+
+/**
+ * Same as [await] but using [Call.execute] instead of [Call.enqueue], i.e. skipping the current dispatcher.
+ */
+suspend fun <T : Any> Call<T>.executeAwait(): T {
+  return suspendCancellableCoroutine { continuation ->
+    continuation.invokeOnCancellation {
+      cancel()
+    }
+    runCatching { execute() }.fold(
+      onSuccess = { response -> continuation.resumeWithResponse(this, response) },
+      onFailure = continuation::resumeWithException
+    )
+  }
+}
+
+private fun <T> CancellableContinuation<T>.resumeWithResponse(
+  call: Call<T>,
+  response: Response<T>,
+) {
+  if (response.isSuccessful) {
+    val body = response.body()
+    if (body == null) {
+      val invocation = call.request().tag(Invocation::class.java)!!
+      val method = invocation.method()
+      val e = KotlinNullPointerException("Response from " +
+        method.declaringClass.name +
+        '.' +
+        method.name +
+        " was null but response body type was declared as non-null")
+      resumeWithException(e)
+    } else {
+      resume(body)
+    }
+  } else {
+    resumeWithException(HttpException(response))
   }
 }
 
