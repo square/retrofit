@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * A single invocation of a Retrofit service interface method. This class captures both the method
@@ -35,8 +36,9 @@ import java.util.Objects;
  *     Invocation invocation = request.tag(Invocation.class);
  *     if (invocation != null) {
  *       System.out.printf("%s.%s %s%n",
- *           invocation.method().getDeclaringClass().getSimpleName(),
- *           invocation.method().getName(), invocation.arguments());
+ *           invocation.service().getSimpleName(),
+ *           invocation.method().getName(),
+ *           invocation.arguments());
  *     }
  *     return chain.proceed(request);
  *   }
@@ -49,19 +51,48 @@ import java.util.Objects;
  * types for parameters!
  */
 public final class Invocation {
+  public static <T> Invocation of(Class<T> service, T instance, Method method, List<?> arguments) {
+    Objects.requireNonNull(service, "service == null");
+    Objects.requireNonNull(instance, "instance == null");
+    Objects.requireNonNull(method, "method == null");
+    Objects.requireNonNull(arguments, "arguments == null");
+    return new Invocation(service, instance, method, new ArrayList<>(arguments)); // Defensive copy.
+  }
+
+  @Deprecated
   public static Invocation of(Method method, List<?> arguments) {
     Objects.requireNonNull(method, "method == null");
     Objects.requireNonNull(arguments, "arguments == null");
-    return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
+    return new Invocation(
+        method.getDeclaringClass(), null, method, new ArrayList<>(arguments)); // Defensive copy.
   }
 
+  private final Class<?> service;
+  @Nullable private final Object instance;
   private final Method method;
   private final List<?> arguments;
 
   /** Trusted constructor assumes ownership of {@code arguments}. */
-  Invocation(Method method, List<?> arguments) {
+  Invocation(Class<?> service, @Nullable Object instance, Method method, List<?> arguments) {
+    this.service = service;
+    this.instance = instance;
     this.method = method;
     this.arguments = Collections.unmodifiableList(arguments);
+  }
+
+  public Class<?> service() {
+    return service;
+  }
+
+  /**
+   * The instance of {@link #service}.
+   * <p>
+   * This will never be null when created by Retrofit. Null will only be returned when created
+   * by {@link #of(Method, List)}.
+   */
+  @Nullable
+  public Object instance() {
+    return instance;
   }
 
   public Method method() {
@@ -74,7 +105,6 @@ public final class Invocation {
 
   @Override
   public String toString() {
-    return String.format(
-        "%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);
+    return String.format("%s.%s() %s", service.getName(), method.getName(), arguments);
   }
 }

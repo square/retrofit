@@ -31,7 +31,7 @@ final class TestingUtils {
 
     Method method = onlyMethod(cls);
     try {
-      return RequestFactory.parseAnnotations(retrofit, method).create(args);
+      return RequestFactory.parseAnnotations(retrofit, cls, method).create(null, args);
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
