@@ -1,0 +1,33 @@
+[MASTER] 08:10:10.517 [pool-2-thread-1] ERROR TestSuiteGenerator - Problem for retrofit2.ServiceMethod. Full stack:
+java.lang.TypeNotPresentException: Type okhttp3.ResponseBody not present
+	at sun.reflect.generics.factory.CoreReflectionFactory.makeNamedType(CoreReflectionFactory.java:117) ~[na:1.8.0_332]
+	at sun.reflect.generics.visitor.Reifier.visitClassTypeSignature(Reifier.java:125) ~[na:1.8.0_332]
+	at sun.reflect.generics.tree.ClassTypeSignature.accept(ClassTypeSignature.java:49) ~[na:1.8.0_332]
+	at sun.reflect.generics.visitor.Reifier.reifyTypeArguments(Reifier.java:68) ~[na:1.8.0_332]
+	at sun.reflect.generics.visitor.Reifier.visitClassTypeSignature(Reifier.java:138) ~[na:1.8.0_332]
+	at sun.reflect.generics.tree.ClassTypeSignature.accept(ClassTypeSignature.java:49) ~[na:1.8.0_332]
+	at sun.reflect.generics.repository.MethodRepository.getReturnType(MethodRepository.java:68) ~[na:1.8.0_332]
+	at java.lang.reflect.Method.getGenericReturnType(Method.java:255) ~[na:1.8.0_332]
+	at org.evosuite.setup.TestUsageChecker.canUse(TestUsageChecker.java:338) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.initializeTargetMethods(TestClusterGenerator.java:527) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.generateCluster(TestClusterGenerator.java:134) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.DependencyAnalysis.analyze(DependencyAnalysis.java:118) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.DependencyAnalysis.analyzeClass(DependencyAnalysis.java:132) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.TestSuiteGenerator.initializeTargetClass(TestSuiteGenerator.java:110) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.TestSuiteGenerator.generateTestSuite(TestSuiteGenerator.java:130) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.rmi.service.ClientNodeImpl$1.run(ClientNodeImpl.java:145) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511) [na:1.8.0_332]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266) [na:1.8.0_332]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149) [na:1.8.0_332]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624) [na:1.8.0_332]
+	at java.lang.Thread.run(Thread.java:750) [na:1.8.0_332]
+Caused by: java.lang.ClassNotFoundException: Class 'okhttp3/ResponseBody.class' should be in target project, but could not be found!
+	at org.evosuite.instrumentation.InstrumentingClassLoader.instrumentClass(InstrumentingClassLoader.java:201) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.instrumentation.InstrumentingClassLoader.loadClass(InstrumentingClassLoader.java:168) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at java.lang.Class.forName0(Native Method) ~[na:1.8.0_332]
+	at java.lang.Class.forName(Class.java:348) ~[na:1.8.0_332]
+	at sun.reflect.generics.factory.CoreReflectionFactory.makeNamedType(CoreReflectionFactory.java:114) ~[na:1.8.0_332]
+	... 20 common frames omitted
+Caused by: java.lang.ClassNotFoundException: Class 'okhttp3/ResponseBody.class' should be in target project, but could not be found!
+	at org.evosuite.instrumentation.InstrumentingClassLoader.instrumentClass(InstrumentingClassLoader.java:188) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	... 24 common frames omitted

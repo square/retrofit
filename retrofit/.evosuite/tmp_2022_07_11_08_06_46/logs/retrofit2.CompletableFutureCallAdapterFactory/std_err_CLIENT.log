@@ -1,0 +1,77 @@
+[MASTER] 08:07:56.076 [pool-2-thread-1] ERROR ConcreteClassAnalyzer - Problem for retrofit2.CompletableFutureCallAdapterFactory. Class not found: retrofit2.RequestFactoryTest$NonNull
+java.lang.NoClassDefFoundError: retrofit2/RequestFactoryTest
+	at java.lang.Class.getDeclaringClass0(Native Method) ~[na:1.8.0_332]
+	at java.lang.Class.getDeclaringClass(Class.java:1235) ~[na:1.8.0_332]
+	at java.lang.Class.getEnclosingClass(Class.java:1277) ~[na:1.8.0_332]
+	at java.lang.Class.getSimpleBinaryName(Class.java:1471) ~[na:1.8.0_332]
+	at java.lang.Class.getSimpleNameImpl(Class.java:1323) ~[na:1.8.0_332]
+	at java.lang.Class.getSimpleName(Class.java:1308) ~[na:1.8.0_332]
+	at java.lang.Class.isAnonymousClass(Class.java:1439) ~[na:1.8.0_332]
+	at org.evosuite.setup.TestUsageChecker.canUse(TestUsageChecker.java:155) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.ConcreteClassAnalyzer.getConcreteClassesImpl(ConcreteClassAnalyzer.java:133) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.ConcreteClassAnalyzer.getConcreteClasses(ConcreteClassAnalyzer.java:61) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.addDependency(TestClusterGenerator.java:878) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.addDependency(TestClusterGenerator.java:844) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.addDependencies(TestClusterGenerator.java:789) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.initializeTargetMethods(TestClusterGenerator.java:546) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.TestClusterGenerator.generateCluster(TestClusterGenerator.java:134) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.DependencyAnalysis.analyze(DependencyAnalysis.java:118) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.setup.DependencyAnalysis.analyzeClass(DependencyAnalysis.java:132) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.TestSuiteGenerator.initializeTargetClass(TestSuiteGenerator.java:110) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.TestSuiteGenerator.generateTestSuite(TestSuiteGenerator.java:130) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.rmi.service.ClientNodeImpl$1.run(ClientNodeImpl.java:145) [evosuite-1.0.6%20(1).jar:1.0.6]
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511) [na:1.8.0_332]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266) [na:1.8.0_332]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149) [na:1.8.0_332]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624) [na:1.8.0_332]
+	at java.lang.Thread.run(Thread.java:750) [na:1.8.0_332]
+Caused by: java.lang.ClassNotFoundException: Class not found: okhttp3/Request: java.lang.NullPointerException: Class not found okhttp3/Request
+	at org.evosuite.instrumentation.InstrumentingClassLoader.instrumentClass(InstrumentingClassLoader.java:201) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.instrumentation.InstrumentingClassLoader.loadClass(InstrumentingClassLoader.java:168) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	... 25 common frames omitted
+Caused by: java.lang.RuntimeException: Class not found: okhttp3/Request: java.lang.NullPointerException: Class not found okhttp3/Request
+	at org.evosuite.runtime.util.ComputeClassWriter.getCommonSuperClass(ComputeClassWriter.java:58) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.ClassWriter.getMergedType(ClassWriter.java:1729) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.Frame.merge(Frame.java:1530) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.Frame.merge(Frame.java:1429) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodWriter.visitMaxs(MethodWriter.java:1497) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodVisitor.visitMaxs(MethodVisitor.java:867) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodVisitor.visitMaxs(MethodVisitor.java:867) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodVisitor.visitMaxs(MethodVisitor.java:867) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.runtime.instrumentation.LoopCounterMethodAdapter.visitMaxs(LoopCounterMethodAdapter.java:48) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.tree.MethodNode.accept(MethodNode.java:835) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.commons.JSRInlinerAdapter.visitEnd(JSRInlinerAdapter.java:187) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodVisitor.visitEnd(MethodVisitor.java:878) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodVisitor.visitEnd(MethodVisitor.java:878) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.MethodVisitor.visitEnd(MethodVisitor.java:878) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.tree.MethodNode.accept(MethodNode.java:838) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.tree.MethodNode.accept(MethodNode.java:727) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.shaded.org.objectweb.asm.tree.ClassNode.accept(ClassNode.java:452) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.instrumentation.BytecodeInstrumentation.transformBytes(BytecodeInstrumentation.java:287) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.instrumentation.InstrumentingClassLoader.getTransformedBytes(InstrumentingClassLoader.java:175) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.instrumentation.InstrumentingClassLoader.instrumentClass(InstrumentingClassLoader.java:192) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	... 26 common frames omitted
+Caused by: java.lang.NullPointerException: Class not found okhttp3/Request
+	at org.evosuite.runtime.util.ComputeClassWriter.typeInfo(ComputeClassWriter.java:186) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	at org.evosuite.runtime.util.ComputeClassWriter.getCommonSuperClass(ComputeClassWriter.java:55) ~[evosuite-1.0.6%20(1).jar:1.0.6]
+	... 45 common frames omitted
+[MASTER] 08:07:56.077 [pool-2-thread-1] ERROR ConcreteClassAnalyzer - Removing class from inheritance tree
+[MASTER] 08:08:12.407 [TEST_EXECUTION_THREAD_0] ERROR FunctionalMockStatement - Cannot use Mockito on interface java.lang.reflect.ParameterizedType due to IAE: 
+Mockito cannot mock this class: interface java.lang.reflect.ParameterizedType.
+
+Mockito can only mock non-private & non-final classes.
+If you're not sure why you're getting this error, please report to the mailing list.
+
+
+Java               : 1.8
+JVM vendor name    : Amazon.com Inc.
+JVM vendor version : 25.332-b08
+JVM name           : OpenJDK 64-Bit Server VM
+JVM version        : 1.8.0_332-b08
+JVM info           : mixed mode
+OS name            : Linux
+OS version         : 5.4.0-121-generic
+
+
+Underlying exception : java.lang.IllegalArgumentException: Could not create type
+[MASTER] 08:09:59.199 [pool-2-thread-1] ERROR ClassStateSupport - Could not initialize retrofit2.Utils: okio/Sink

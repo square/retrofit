@@ -18,7 +18,7 @@ public class SkipCallbackExecutorImplTest {
 
     @Test
     public void testAnnotationType() {
-        assertEquals(Object.class, skipCallbackExecutorImplUnderTest.annotationType());
+        assertEquals(SkipCallbackExecutor.class, skipCallbackExecutorImplUnderTest.annotationType());
     }
 
     @Test
@@ -32,20 +32,14 @@ public class SkipCallbackExecutorImplTest {
     }
 
     @Test
-    public void testToString() {
-        assertEquals("result", skipCallbackExecutorImplUnderTest.toString());
-    }
-
-    @Test
     public void testEnsurePresent() {
         // Setup
         final Annotation[] annotations = new Annotation[]{};
-        final Annotation[] expectedResult = new Annotation[]{};
 
         // Run the test
         final Annotation[] result = SkipCallbackExecutorImpl.ensurePresent(annotations);
 
         // Verify the results
-        assertArrayEquals(expectedResult, result);
+        assertNotEquals(annotations, result);
     }
 }

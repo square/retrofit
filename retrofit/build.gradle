@@ -5,8 +5,10 @@ apply plugin: 'com.vanniktech.maven.publish'
 dependencies {
   api libs.okhttp
     implementation 'org.jetbrains:annotations:20.1.0'
+    implementation 'org.testng:testng:7.1.0'
+  implementation 'org.testng:testng:7.1.0'
 
-    compileOnly libs.android
+  compileOnly libs.android
   compileOnly libs.kotlinStdLib
   compileOnly libs.kotlinCoroutines
 
@@ -22,7 +24,9 @@ dependencies {
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
   // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
   testImplementation 'org.mockito:mockito-junit-jupiter:4.6.1'
-
+  // https://mvnrepository.com/artifact/org.evosuite.plugins/evosuite-maven-plugin
+  api group: 'org.evosuite', name: 'evosuite-runtime', version: '1.0.4-alpha2'
+  //Thanks for using https://jar-download.com
 }
 
 jar {

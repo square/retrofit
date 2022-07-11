@@ -1,0 +1,78 @@
+* Starting client
+* Connecting to master process on port 14731
+* Analyzing classpath: 
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/resources/main
+* Finished analyzing classpath
+* Generating tests for class retrofit2.Invocation
+* Test criteria:
+  - Line Coverage
+  - Branch Coverage
+  - Exception
+  - Mutation testing (weak)
+  - Method-Output Coverage
+  - Top-Level Method Coverage
+  - No-Exception Top-Level Method Coverage
+  - Context Branch Coverage
+* Setting up search algorithm for whole suite generation
+[MASTER] 08:11:44.900 [pool-2-thread-1] WARN  TestSuiteSerialization - Cannot load tests because file does not exist: /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.Invocation.seed
+* Loaded 0 tests from /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.Invocation.seed
+* Total number of test goals: 
+  - Line 11
+  - Branch 5
+  - Exception 0
+  - MutationFactory 14
+  - Output 23
+  - Method 5
+  - MethodNoException 5
+  - CBranchFitnessFactory 5
+* Using seed 1657537903512
+* Starting evolution
+* Search finished after 32s and 666 generations, 75837 statements, best individual has fitness: 30.916666666666668
+* Writing sequences to pool
+[MASTER] 08:12:21.506 [pool-2-thread-1] WARN  TimeController - Phase SEARCH lasted too long, 6 seconds more than allowed.
+* Minimizing test suite
+* Going to analyze the coverage criteria
+* Coverage analysis for criterion LINE
+* Coverage of criterion LINE: 82%
+* Total number of goals: 11
+* Number of covered goals: 9
+* Coverage analysis for criterion BRANCH
+* Coverage of criterion BRANCH: 100%
+* Total number of goals: 5
+* Number of covered goals: 5
+* Coverage analysis for criterion EXCEPTION
+* Coverage of criterion EXCEPTION: 100%
+* Total number of goals: 3
+* Number of covered goals: 3
+* Coverage analysis for criterion WEAKMUTATION
+* Coverage of criterion WEAKMUTATION: 57%
+* Total number of goals: 14
+* Number of covered goals: 8
+* Coverage analysis for criterion OUTPUT
+* Coverage of criterion OUTPUT: 4%
+* Total number of goals: 23
+* Number of covered goals: 1
+* Coverage analysis for criterion METHOD
+* Coverage of criterion METHOD: 100%
+* Total number of goals: 5
+* Number of covered goals: 5
+* Coverage analysis for criterion METHODNOEXCEPTION
+* Coverage of criterion METHODNOEXCEPTION: 60%
+* Total number of goals: 5
+* Number of covered goals: 3
+* Coverage analysis for criterion CBRANCH
+* Coverage of criterion CBRANCH: 100%
+* Total number of goals: 5
+* Number of covered goals: 5
+* Generated 5 tests with total length 12
+* Resulting test suite's coverage: 75% (average coverage for all fitness functions)
+* Generating assertions
+[MASTER] 08:12:30.282 [pool-2-thread-1] WARN  SimpleMutationAssertionGenerator - Reached maximum time to generate assertions, aborting assertion generation
+* Resulting test suite's mutation score: 0%
+* Compiling and checking tests
+[MASTER] 08:12:36.436 [pool-2-thread-1] WARN  TimeController - Phase ASSERTION_GENERATION lasted too long, 7 seconds more than allowed.

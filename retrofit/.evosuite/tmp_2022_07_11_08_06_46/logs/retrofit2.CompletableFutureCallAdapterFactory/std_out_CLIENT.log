@@ -1,0 +1,79 @@
+* Starting client
+* Connecting to master process on port 19646
+* Analyzing classpath: 
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/resources/main
+* Finished analyzing classpath
+* Generating tests for class retrofit2.CompletableFutureCallAdapterFactory
+* Test criteria:
+  - Line Coverage
+  - Branch Coverage
+  - Exception
+  - Mutation testing (weak)
+  - Method-Output Coverage
+  - Top-Level Method Coverage
+  - No-Exception Top-Level Method Coverage
+  - Context Branch Coverage
+* Setting up search algorithm for whole suite generation
+[MASTER] 08:08:01.105 [pool-2-thread-1] WARN  TestSuiteSerialization - Cannot load tests because file does not exist: /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.CompletableFutureCallAdapterFactory.seed
+* Loaded 0 tests from /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.CompletableFutureCallAdapterFactory.seed
+* Total number of test goals: 
+  - Line 48
+  - Branch 25
+  - Exception 0
+  - MutationFactory 20
+  - Output 2
+  - Method 7
+  - MethodNoException 7
+  - CBranchFitnessFactory 25
+* Using seed 1657537674052
+* Starting evolution
+[MASTER] 08:08:02.277 [pool-2-thread-1] WARN  FunctionalMockStatement - Problem with class retrofit2.Retrofit: java.lang.NoClassDefFoundError: okhttp3/Call$Factory
+* Search finished after 108s and 1741 generations, 282577 statements, best individual has fitness: 147.47872340425533
+* Writing sequences to pool
+* Minimizing test suite
+* Going to analyze the coverage criteria
+* Coverage analysis for criterion LINE
+* Coverage of criterion LINE: 4%
+* Total number of goals: 48
+* Number of covered goals: 2
+* Coverage analysis for criterion BRANCH
+* Coverage of criterion BRANCH: 4%
+* Total number of goals: 25
+* Number of covered goals: 1
+* Coverage analysis for criterion EXCEPTION
+* Coverage of criterion EXCEPTION: 100%
+* Total number of goals: 1
+* Number of covered goals: 1
+* Coverage analysis for criterion WEAKMUTATION
+* Coverage of criterion WEAKMUTATION: 0%
+* Total number of goals: 20
+* Number of covered goals: 0
+* Coverage analysis for criterion OUTPUT
+* Coverage of criterion OUTPUT: 0%
+* Total number of goals: 2
+* Number of covered goals: 0
+* Coverage analysis for criterion METHOD
+* Coverage of criterion METHOD: 29%
+* Total number of goals: 7
+* Number of covered goals: 2
+* Coverage analysis for criterion METHODNOEXCEPTION
+* Coverage of criterion METHODNOEXCEPTION: 14%
+* Total number of goals: 7
+* Number of covered goals: 1
+* Coverage analysis for criterion CBRANCH
+* Coverage of criterion CBRANCH: 4%
+* Total number of goals: 25
+* Number of covered goals: 1
+* Generated 1 tests with total length 5
+* Resulting test suite's coverage: 19% (average coverage for all fitness functions)
+* Generating assertions
+* Resulting test suite's mutation score: 0%
+* Compiling and checking tests
+* Writing JUnit test case 'CompletableFutureCallAdapterFactory_ESTest' to /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/tmp_2022_07_11_08_06_46/tests
+* Done!
+

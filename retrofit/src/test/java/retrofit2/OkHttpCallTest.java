@@ -10,8 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,20 +32,14 @@ public class OkHttpCallTest {
 
     @Test
     public void testClone() {
-        // Setup
-        // Run the test
         final OkHttpCall<Object> result = okHttpCallUnderTest.clone();
-
-        // Verify the results
+        assertNotEquals(result, okHttpCallUnderTest);
     }
 
     @Test
     public void testRequest() {
-        // Setup
-        // Run the test
         final Request result = okHttpCallUnderTest.request();
-
-        // Verify the results
+        result.body();
     }
 
     @Test
@@ -52,8 +47,8 @@ public class OkHttpCallTest {
         // Setup
         // Run the test
         final Timeout result = okHttpCallUnderTest.timeout();
-
-        // Verify the results
+        result.timeout(3000, TimeUnit.MILLISECONDS);
+        assertEquals(3000000, result.timeoutNanos());
     }
 
     @Test
@@ -101,7 +96,7 @@ public class OkHttpCallTest {
         // Run the test
         final Response<Object> result = okHttpCallUnderTest.execute();
 
-        // Verify the results
+        result.body();
     }
 
     @Test
@@ -112,7 +107,7 @@ public class OkHttpCallTest {
         // Run the test
         final Response<Object> result = okHttpCallUnderTest.execute();
 
-        // Verify the results
+        result.body();
     }
 
     @Test
@@ -134,7 +129,7 @@ public class OkHttpCallTest {
         // Run the test
         final Response<Object> result = okHttpCallUnderTest.parseResponse(mockRawResponse);
 
-        // Verify the results
+        result.body();
     }
 
     @Test
@@ -146,7 +141,7 @@ public class OkHttpCallTest {
         // Run the test
         final Response<Object> result = okHttpCallUnderTest.parseResponse(mockRawResponse);
 
-        // Verify the results
+        result.body();
     }
 
     @Test

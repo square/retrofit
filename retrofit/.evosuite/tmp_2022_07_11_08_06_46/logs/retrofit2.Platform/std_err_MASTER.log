@@ -1,0 +1,2 @@
+[MASTER] 08:07:08.936 [main] ERROR SearchStatistics - No statistics has been saved because EvoSuite failed to generate any test case
+[MASTER] 08:07:09.039 [main] ERROR TestGeneration - failed to write statistics data

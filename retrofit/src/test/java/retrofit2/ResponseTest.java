@@ -15,14 +15,15 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.ResponseBody;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public final class ResponseTest {
   private final okhttp3.Response successResponse =
@@ -127,6 +128,20 @@ public final class ResponseTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("rawResponse must be successful response");
     }
+  }
+
+  @Test
+  public void successWithWrongStatusCodeUnderInterval() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      Response.success(102, successResponse);
+    });
+  }
+
+  @Test
+  public void successWithWrongStatusCodeOverInterval() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      Response.success(404, successResponse);
+    });
   }
 
   @Test

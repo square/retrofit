@@ -1,0 +1,10 @@
+* Starting client
+* Connecting to master process on port 11225
+* Analyzing classpath: 
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/resources/main
+* Error while initializing target class: Type okhttp3.ResponseBody not present

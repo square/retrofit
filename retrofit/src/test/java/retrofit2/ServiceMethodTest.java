@@ -1,21 +1,46 @@
 package retrofit2;
 
+import org.junit.Assert;
 import org.junit.Test;
+import retrofit2.http.GET;
 
 import java.lang.reflect.Method;
-
-import static org.junit.Assert.assertEquals;
+import java.util.Arrays;
 
 public class ServiceMethodTest {
 
     @Test
     public void testParseAnnotations() {
         // Setup
-        final Retrofit retrofit = null;
-        final Method method = null;
+      //Can't set an adapter to test, so it should return an exception
+        Retrofit retrofit = new Retrofit.Builder()
+          .baseUrl("http://www.example.com")
+          .build();
 
-        // Run the test
-        final ServiceMethod<Object> result = ServiceMethod.parseAnnotations(retrofit, method);
-        assertEquals(null, result.invoke(new Object[]{"args"}));
+        Method method = Arrays.stream(ITest.class.getMethods()).findFirst().get();
+      // Run the test
+      Assert.assertThrows(IllegalArgumentException.class, () -> {
+        ServiceMethod.parseAnnotations(retrofit, method);
+      });
     }
+}
+interface ITest {
+  @GET("/")
+  Call<String> testGet();
+}
+
+class TestDTO {
+  private String message;
+
+  public TestDTO(String message) {
+    this.message = message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  public String getMessage() {
+    return this.message;
+  }
 }

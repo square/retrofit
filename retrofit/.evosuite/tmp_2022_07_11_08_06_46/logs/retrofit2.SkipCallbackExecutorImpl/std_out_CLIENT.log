@@ -1,0 +1,80 @@
+* Starting client
+* Connecting to master process on port 12118
+* Analyzing classpath: 
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/resources/main
+* Finished analyzing classpath
+* Generating tests for class retrofit2.SkipCallbackExecutorImpl
+* Test criteria:
+  - Line Coverage
+  - Branch Coverage
+  - Exception
+  - Mutation testing (weak)
+  - Method-Output Coverage
+  - Top-Level Method Coverage
+  - No-Exception Top-Level Method Coverage
+  - Context Branch Coverage
+* Setting up search algorithm for whole suite generation
+[MASTER] 08:10:16.457 [pool-2-thread-1] WARN  TestSuiteSerialization - Cannot load tests because file does not exist: /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.SkipCallbackExecutorImpl.seed
+* Loaded 0 tests from /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.SkipCallbackExecutorImpl.seed
+* Total number of test goals: 
+  - Line 11
+  - Branch 7
+  - Exception 0
+  - MutationFactory 17
+  - Output 24
+  - Method 6
+  - MethodNoException 6
+  - CBranchFitnessFactory 7
+* Using seed 1657537814864
+* Starting evolution
+* Search finished after 54s and 1491 generations, 304683 statements, best individual has fitness: 40.333333333333336
+* Writing sequences to pool
+* Minimizing test suite
+* Going to analyze the coverage criteria
+* Coverage analysis for criterion LINE
+* Coverage of criterion LINE: 55%
+* Total number of goals: 11
+* Number of covered goals: 6
+* Coverage analysis for criterion BRANCH
+* Coverage of criterion BRANCH: 71%
+* Total number of goals: 7
+* Number of covered goals: 5
+* Coverage analysis for criterion EXCEPTION
+* Coverage of criterion EXCEPTION: 100%
+* Total number of goals: 1
+* Number of covered goals: 1
+* Coverage analysis for criterion WEAKMUTATION
+* Coverage of criterion WEAKMUTATION: 18%
+* Total number of goals: 17
+* Number of covered goals: 3
+* Coverage analysis for criterion OUTPUT
+* Coverage of criterion OUTPUT: 42%
+* Total number of goals: 24
+* Number of covered goals: 10
+* Coverage analysis for criterion METHOD
+* Coverage of criterion METHOD: 100%
+* Total number of goals: 6
+* Number of covered goals: 6
+* Coverage analysis for criterion METHODNOEXCEPTION
+* Coverage of criterion METHODNOEXCEPTION: 83%
+* Total number of goals: 6
+* Number of covered goals: 5
+* Coverage analysis for criterion CBRANCH
+* Coverage of criterion CBRANCH: 71%
+* Total number of goals: 7
+* Number of covered goals: 5
+* Generated 6 tests with total length 12
+* Resulting test suite's coverage: 68% (average coverage for all fitness functions)
+* Generating assertions
+* Resulting test suite's mutation score: 12%
+* Compiling and checking tests
+[MASTER] 08:11:26.152 [pool-2-thread-1] WARN  TestSuiteGenerator - JUnit checking timed out
+[MASTER] 08:11:26.154 [pool-2-thread-1] WARN  TimeController - Phase JUNIT_CHECK lasted too long, 6 seconds more than allowed.
+* Writing JUnit test case 'SkipCallbackExecutorImpl_ESTest' to /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/tmp_2022_07_11_08_06_46/tests
+* Done!
+

@@ -1,0 +1,23 @@
+* Starting client
+* Connecting to master process on port 4465
+* Analyzing classpath: 
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/java/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/test
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/classes/kotlin/main
+  - /home/mariaeas/ES/retrofit-tests/retrofit/build/resources/main
+* Finished analyzing classpath
+* Generating tests for class retrofit2.DefaultCallAdapterFactory
+* Test criteria:
+  - Line Coverage
+  - Branch Coverage
+  - Exception
+  - Mutation testing (weak)
+  - Method-Output Coverage
+  - Top-Level Method Coverage
+  - No-Exception Top-Level Method Coverage
+  - Context Branch Coverage
+* Setting up search algorithm for whole suite generation
+[MASTER] 08:10:07.809 [pool-2-thread-1] WARN  TestSuiteSerialization - Cannot load tests because file does not exist: /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.DefaultCallAdapterFactory.seed
+* Loaded 0 tests from /home/mariaeas/ES/retrofit-tests/retrofit/.evosuite/evosuite-seeds/retrofit2.DefaultCallAdapterFactory.seed
