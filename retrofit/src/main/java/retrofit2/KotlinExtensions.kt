@@ -20,13 +20,14 @@ package retrofit2
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.lang.reflect.ParameterizedType
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-inline fun <reified T> Retrofit.create(): T = create(T::class.java)
+inline fun <reified T: Any> Retrofit.create(): T = create(T::class.java)
 
 suspend fun <T : Any> Call<T>.await(): T {
   return suspendCancellableCoroutine { continuation ->
@@ -81,6 +82,12 @@ suspend fun <T : Any> Call<T?>.await(): T? {
       }
     })
   }
+}
+
+@JvmName("awaitUnit")
+suspend fun Call<Unit>.await() {
+  @Suppress("UNCHECKED_CAST")
+  (this as Call<Unit?>).await()
 }
 
 suspend fun <T> Call<T>.awaitResponse(): Response<T> {

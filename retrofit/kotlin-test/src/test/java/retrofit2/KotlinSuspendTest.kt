@@ -31,6 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import retrofit2.helpers.ToStringConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.HEAD
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.io.IOException
@@ -59,6 +60,8 @@ class KotlinSuspendTest {
     @GET("/") suspend fun noBody(@Query("x") arg: UInt)
 
     @GET("/") suspend fun response(): Response<String>
+    @GET("/") suspend fun unit()
+    @HEAD("/") suspend fun headUnit()
 
     @GET("/{a}/{b}/{c}")
     suspend fun params(
@@ -224,6 +227,27 @@ class KotlinSuspendTest {
       fail()
     } catch (e: IOException) {
     }
+  }
+
+  @Test fun unit() {
+    val retrofit = Retrofit.Builder().baseUrl(server.url("/")).build()
+    val example = retrofit.create(Service::class.java)
+    server.enqueue(MockResponse().setBody("Unit"))
+    runBlocking { example.unit() }
+  }
+
+  @Test fun unitNullableBody() {
+    val retrofit = Retrofit.Builder().baseUrl(server.url("/")).build()
+    val example = retrofit.create(Service::class.java)
+    server.enqueue(MockResponse().setResponseCode(204))
+    runBlocking { example.unit() }
+  }
+
+  @Test fun headUnit() {
+    val retrofit = Retrofit.Builder().baseUrl(server.url("/")).build()
+    val example = retrofit.create(Service::class.java)
+    server.enqueue(MockResponse())
+    runBlocking { example.headUnit() }
   }
 
   @Test fun params() {
