@@ -86,9 +86,9 @@ public final class Retrofit {
       boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
-    this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
+    this.converterFactories = converterFactories; 
     this.defaultConverterFactoriesSize = defaultConverterFactoriesSize;
-    this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
+    this.callAdapterFactories = callAdapterFactories; 
     this.defaultCallAdapterFactoriesSize = defaultCallAdapterFactoriesSize;
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
@@ -142,7 +142,7 @@ public final class Retrofit {
    * }
    * </pre>
    */
-  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
+  @SuppressWarnings("unchecked") 
   public <T> T create(final Class<T> service) {
     validateServiceInterface(service);
     return (T)
@@ -155,7 +155,6 @@ public final class Retrofit {
               @Override
               public @Nullable Object invoke(Object proxy, Method method, @Nullable Object[] args)
                   throws Throwable {
-                // If the method is a method from Object then defer to normal invocation.
                 if (method.getDeclaringClass() == Object.class) {
                   return method.invoke(this, args);
                 }
@@ -320,7 +319,6 @@ public final class Retrofit {
       Converter<?, RequestBody> converter =
           factory.requestBodyConverter(type, parameterAnnotations, methodAnnotations, this);
       if (converter != null) {
-        //noinspection unchecked
         return (Converter<T, RequestBody>) converter;
       }
     }
@@ -367,7 +365,6 @@ public final class Retrofit {
       Converter<ResponseBody, ?> converter =
           converterFactories.get(i).responseBodyConverter(type, annotations, this);
       if (converter != null) {
-        //noinspection unchecked
         return (Converter<ResponseBody, T>) converter;
       }
     }
@@ -402,13 +399,10 @@ public final class Retrofit {
       Converter<?, String> converter =
           converterFactories.get(i).stringConverter(type, annotations, this);
       if (converter != null) {
-        //noinspection unchecked
         return (Converter<T, String>) converter;
       }
     }
 
-    // Nothing matched. Resort to default converter which just calls toString().
-    //noinspection unchecked
     return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
   }
 
@@ -444,7 +438,7 @@ public final class Retrofit {
       callFactory = retrofit.callFactory;
       baseUrl = retrofit.baseUrl;
 
-      // Do not add the default BuiltIntConverters and platform-aware converters added by build().
+   
       for (int i = 1,
               size = retrofit.converterFactories.size() - retrofit.defaultConverterFactoriesSize;
           i < size;
@@ -452,7 +446,6 @@ public final class Retrofit {
         converterFactories.add(retrofit.converterFactories.get(i));
       }
 
-      // Do not add the default, platform-aware call adapters added by build().
       for (int i = 0,
               size =
                   retrofit.callAdapterFactories.size() - retrofit.defaultCallAdapterFactoriesSize;
@@ -633,21 +626,17 @@ public final class Retrofit {
         callbackExecutor = platform.defaultCallbackExecutor();
       }
 
-      // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
       List<? extends CallAdapter.Factory> defaultCallAdapterFactories =
           platform.createDefaultCallAdapterFactories(callbackExecutor);
       callAdapterFactories.addAll(defaultCallAdapterFactories);
 
-      // Make a defensive copy of the converters.
       List<? extends Converter.Factory> defaultConverterFactories =
           platform.createDefaultConverterFactories();
       int defaultConverterFactoriesSize = defaultConverterFactories.size();
       List<Converter.Factory> converterFactories =
           new ArrayList<>(1 + this.converterFactories.size() + defaultConverterFactoriesSize);
 
-      // Add the built-in converter factory first. This prevents overriding its behavior but also
-      // ensures correct behavior when using converters that consume all types.
       converterFactories.add(new BuiltInConverters());
       converterFactories.addAll(this.converterFactories);
       converterFactories.addAll(defaultConverterFactories);
