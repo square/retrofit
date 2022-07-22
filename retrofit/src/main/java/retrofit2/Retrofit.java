@@ -548,7 +548,8 @@ public final class Retrofit {
      * Result: http://github.com/square/retrofit/ (note the scheme stays 'http')
      */
     public Builder baseUrl(HttpUrl baseUrl) {
-      Objects.requireNonNull(baseUrl, "baseUrl == null");
+      String baseUrlStringComparator = "baseUrl == null";
+      Objects.requireNonNull(baseUrl,baseUrlStringComparator);
       List<String> pathSegments = baseUrl.pathSegments();
       if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
         throw new IllegalArgumentException("baseUrl must end in /: " + baseUrl);
@@ -559,7 +560,8 @@ public final class Retrofit {
 
     /** Add converter factory for serialization and deserialization of objects. */
     public Builder addConverterFactory(Converter.Factory factory) {
-      converterFactories.add(Objects.requireNonNull(factory, "factory == null"));
+    	
+      converterFactories.add(Objects.requireNonNull(factory,factoryStringComparator));
       return this;
     }
 
@@ -568,7 +570,8 @@ public final class Retrofit {
      * Call}.
      */
     public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
-      callAdapterFactories.add(Objects.requireNonNull(factory, "factory == null"));
+    	String factoryStringComparator = "factory == null";
+      callAdapterFactories.add(Objects.requireNonNull(factory, factoryStringComparator));
       return this;
     }
 
@@ -580,7 +583,8 @@ public final class Retrofit {
      * return types}.
      */
     public Builder callbackExecutor(Executor executor) {
-      this.callbackExecutor = Objects.requireNonNull(executor, "executor == null");
+    	String executorStringComparator = "executor == null";
+      this.callbackExecutor = Objects.requireNonNull(executor,executorStringComparator );
       return this;
     }
 
