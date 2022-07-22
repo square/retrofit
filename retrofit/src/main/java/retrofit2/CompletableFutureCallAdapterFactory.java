@@ -35,7 +35,7 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
     if (!(returnType instanceof ParameterizedType)) {
       throw new IllegalStateException(
           "CompletableFuture return type must be parameterized"
-              + " as CompletableFuture<Foo> or CompletableFuture<? extends Foo>");
+          + " as CompletableFuture<Foo> or CompletableFuture<? extends Foo>");
     }
     Type innerType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
@@ -45,7 +45,7 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
 
     if (!(innerType instanceof ParameterizedType)) {
       throw new IllegalStateException(
-          "Response must be parameterized" + " as Response<Foo> or Response<? extends Foo>");
+          "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
     Type responseType = getParameterUpperBound(0, (ParameterizedType) innerType);
     return new ResponseCallAdapter<>(responseType);
