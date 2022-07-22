@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-@IgnoreJRERequirement // Only added when CompletableFuture is available (Java 8+ / Android API 24+).
+@IgnoreJRERequirement 
 @TargetApi(24)
 final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
   @Override
@@ -40,11 +40,9 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
     Type innerType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
     if (getRawType(innerType) != Response.class) {
-      // Generic type is not Response<T>. Use it for body-only adapter.
       return new BodyCallAdapter<>(innerType);
     }
 
-    // Generic type is Response<T>. Extract T and create the Response version of the adapter.
     if (!(innerType instanceof ParameterizedType)) {
       throw new IllegalStateException(
           "Response must be parameterized" + " as Response<Foo> or Response<? extends Foo>");
