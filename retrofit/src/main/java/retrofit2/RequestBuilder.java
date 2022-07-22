@@ -87,10 +87,8 @@ final class RequestBuilder {
     }
 
     if (isFormEncoded) {
-      // Will be set to 'body' in 'build'.
       formBuilder = new FormBody.Builder();
     } else if (isMultipart) {
-      // Will be set to 'body' in 'build'.
       multipartBuilder = new MultipartBody.Builder();
       multipartBuilder.setType(MultipartBody.FORM);
     }
@@ -118,7 +116,6 @@ final class RequestBuilder {
 
   void addPathParam(String name, String value, boolean encoded) {
     if (relativeUrl == null) {
-      // The relative URL is cleared when the first query parameter is set.
       throw new AssertionError();
     }
     String replacement = canonicalizeForPath(value, encoded);
@@ -138,7 +135,6 @@ final class RequestBuilder {
           || codePoint >= 0x7f
           || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
           || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
-        // Slow path: the character at i requires encoding!
         Buffer out = new Buffer();
         out.writeUtf8(input, 0, i);
         canonicalizeForPath(out, input, i, limit, alreadyEncoded);
@@ -146,24 +142,21 @@ final class RequestBuilder {
       }
     }
 
-    // Fast path: no characters required encoding.
     return input;
   }
 
   private static void canonicalizeForPath(
       Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
-    Buffer utf8Buffer = null; // Lazily allocated.
+    Buffer utf8Buffer = null;
     int codePoint;
     for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
       if (alreadyEncoded
           && (codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r')) {
-        // Skip this character.
       } else if (codePoint < 0x20
           || codePoint >= 0x7f
           || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
           || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
-        // Percent encode this character.
         if (utf8Buffer == null) {
           utf8Buffer = new Buffer();
         }
@@ -175,7 +168,6 @@ final class RequestBuilder {
           out.writeByte(HEX_DIGITS[b & 0xf]);
         }
       } else {
-        // This character doesn't need encoding. Just copy it over.
         out.writeUtf8CodePoint(codePoint);
       }
     }
@@ -183,7 +175,6 @@ final class RequestBuilder {
 
   void addQueryParam(String name, @Nullable String value, boolean encoded) {
     if (relativeUrl != null) {
-      // Do a one-time combination of the built relative URL and the base URL.
       urlBuilder = baseUrl.newBuilder(relativeUrl);
       if (urlBuilder == null) {
         throw new IllegalArgumentException(
@@ -193,15 +184,13 @@ final class RequestBuilder {
     }
 
     if (encoded) {
-      //noinspection ConstantConditions Checked to be non-null by above 'if' block.
       urlBuilder.addEncodedQueryParameter(name, value);
     } else {
-      //noinspection ConstantConditions Checked to be non-null by above 'if' block.
       urlBuilder.addQueryParameter(name, value);
     }
   }
 
-  @SuppressWarnings("ConstantConditions") // Only called when isFormEncoded was true.
+  @SuppressWarnings("ConstantConditions") 
   void addFormField(String name, String value, boolean encoded) {
     if (encoded) {
       formBuilder.addEncoded(name, value);
@@ -210,12 +199,12 @@ final class RequestBuilder {
     }
   }
 
-  @SuppressWarnings("ConstantConditions") // Only called when isMultipart was true.
+  @SuppressWarnings("ConstantConditions") 
   void addPart(Headers headers, RequestBody body) {
     multipartBuilder.addPart(headers, body);
   }
 
-  @SuppressWarnings("ConstantConditions") // Only called when isMultipart was true.
+  @SuppressWarnings("ConstantConditions") 
   void addPart(MultipartBody.Part part) {
     multipartBuilder.addPart(part);
   }
@@ -234,8 +223,6 @@ final class RequestBuilder {
     if (urlBuilder != null) {
       url = urlBuilder.build();
     } else {
-      // No query parameters triggered builder creation, just combine the relative URL and base URL.
-      //noinspection ConstantConditions Non-null if urlBuilder is null.
       url = baseUrl.resolve(relativeUrl);
       if (url == null) {
         throw new IllegalArgumentException(
@@ -245,13 +232,11 @@ final class RequestBuilder {
 
     RequestBody body = this.body;
     if (body == null) {
-      // Try to pull from one of the builders.
       if (formBuilder != null) {
         body = formBuilder.build();
       } else if (multipartBuilder != null) {
         body = multipartBuilder.build();
       } else if (hasBody) {
-        // Body is absent, make an empty body.
         body = RequestBody.create(null, new byte[0]);
       }
     }
