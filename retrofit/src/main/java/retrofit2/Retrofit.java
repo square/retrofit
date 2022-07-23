@@ -80,7 +80,7 @@ public final class Retrofit {
   private static final String NEXT_CALL_ADAPTER_MESSAGE ="Could not locate call adapter for ";
   private static final String NEXT_REQUEST_BODY_COVERT_MESSAGE = "Could not locate RequestBody converter for ";
   private static final String NEXT_RESPONSE_BODY_COVERT_MESSAGE ="Could not locate ResponseBody converter for ";
-  
+  private static final String BUILD_MESSAGE = "Base URL required.";
   
   Retrofit(
       okhttp3.Call.Factory callFactory,
@@ -622,7 +622,7 @@ public final class Retrofit {
      */
     public Retrofit build() {
       if (baseUrl == null) {
-        throw new IllegalStateException("Base URL required.");
+        throw new IllegalStateException(BUILD_MESSAGE);
       }
 
       Platform platform = Platform.get();
