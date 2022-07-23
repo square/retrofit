@@ -33,7 +33,8 @@ final class RequestBuilder {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
   };
   private static final String PATH_SEGMENT_ALWAYS_ENCODE_SET = " \"<>^`{}|\\?#";
-
+  private static final String ADD_HEADER_EXCEPTION = "Malformed content type: ";
+  private static final String ADD_PATH_PARAM_EXCEPTION = "@Path parameters shouldn't perform path traversal ('.' or '..'): ";
   /**
    * Matches strings that contain {@code .} or {@code ..} as a complete path segment. This also
    * matches dots in their percent-encoded form, {@code %2E}.
@@ -103,7 +104,7 @@ final class RequestBuilder {
       try {
         contentType = MediaType.get(value);
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Malformed content type: " + value, e);
+        throw new IllegalArgumentException( ADD_HEADER_EXCEPTION + value, e);
       }
     } else {
       headersBuilder.add(name, value);
@@ -122,7 +123,7 @@ final class RequestBuilder {
     String newRelativeUrl = relativeUrl.replace("{" + name + "}", replacement);
     if (PATH_TRAVERSAL.matcher(newRelativeUrl).matches()) {
       throw new IllegalArgumentException(
-          "@Path parameters shouldn't perform path traversal ('.' or '..'): " + value);
+    		  ADD_PATH_PARAM_EXCEPTION  + value);
     }
     relativeUrl = newRelativeUrl;
   }

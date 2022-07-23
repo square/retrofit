@@ -74,7 +74,14 @@ public final class Retrofit {
   final int defaultCallAdapterFactoriesSize;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
-
+  private static final String VALIDATE_SERVICE_INTERFACE_EXCEPTION = "API declarations must be interfaces.";
+  
+  private static final String VALIDATE_SERVICE_INTERFACE_MESSAGE ="Type parameters are unsupported on ";
+  private static final String NEXT_CALL_ADAPTER_MESSAGE ="Could not locate call adapter for ";
+  private static final String NEXT_REQUEST_BODY_COVERT_MESSAGE = "Could not locate RequestBody converter for ";
+  private static final String NEXT_RESPONSE_BODY_COVERT_MESSAGE ="Could not locate ResponseBody converter for ";
+  
+  
   Retrofit(
       okhttp3.Call.Factory callFactory,
       HttpUrl baseUrl,
@@ -169,7 +176,7 @@ public final class Retrofit {
 
   private void validateServiceInterface(Class<?> service) {
     if (!service.isInterface()) {
-      throw new IllegalArgumentException("API declarations must be interfaces.");
+      throw new IllegalArgumentException(VALIDATE_SERVICE_INTERFACE_EXCEPTION);
     }
 
     Deque<Class<?>> check = new ArrayDeque<>(1);
@@ -178,7 +185,7 @@ public final class Retrofit {
       Class<?> candidate = check.removeFirst();
       if (candidate.getTypeParameters().length != 0) {
         StringBuilder message =
-            new StringBuilder("Type parameters are unsupported on ").append(candidate.getName());
+            new StringBuilder(VALIDATE_SERVICE_INTERFACE_MESSAGE).append(candidate.getName());
         if (candidate != service) {
           message.append(" which is an interface of ").append(service.getName());
         }
@@ -262,7 +269,7 @@ public final class Retrofit {
     }
 
     StringBuilder builder =
-        new StringBuilder("Could not locate call adapter for ").append(returnType).append(".\n");
+        new StringBuilder(NEXT_CALL_ADAPTER_MESSAGE).append(returnType).append(".\n");
     if (skipPast != null) {
       builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
@@ -324,7 +331,7 @@ public final class Retrofit {
     }
 
     StringBuilder builder =
-        new StringBuilder("Could not locate RequestBody converter for ").append(type).append(".\n");
+        new StringBuilder(NEXT_REQUEST_BODY_COVERT_MESSAGE).append(type).append(".\n");
     if (skipPast != null) {
       builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
@@ -370,7 +377,7 @@ public final class Retrofit {
     }
 
     StringBuilder builder =
-        new StringBuilder("Could not locate ResponseBody converter for ")
+        new StringBuilder(NEXT_RESPONSE_BODY_COVERT_MESSAGE)
             .append(type)
             .append(".\n");
     if (skipPast != null) {
@@ -560,7 +567,7 @@ public final class Retrofit {
 
     /** Add converter factory for serialization and deserialization of objects. */
     public Builder addConverterFactory(Converter.Factory factory) {
-    	
+    	String factoryStringComparator = "factory == null";
       converterFactories.add(Objects.requireNonNull(factory,factoryStringComparator));
       return this;
     }
