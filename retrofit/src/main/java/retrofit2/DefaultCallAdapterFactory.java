@@ -15,17 +15,23 @@
  */
 package retrofit2;
 
+import okhttp3.Request;
+import okio.Timeout;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import javax.annotation.Nullable;
-import okhttp3.Request;
-import okio.Timeout;
+
+import static retrofit2.CommonConstants.PARAMETER_UPPER_BOUND_INDEX;
+import static retrofit2.CommonConstants.REQUIRE_NON_NULL_MESSAGE;
 
 final class DefaultCallAdapterFactory extends CallAdapter.Factory {
+  private final static String NO_PARAMETRIZED_CLASS_ERROR_MESSAGE = "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>";
+  private final static String CANCELED_MESSAGE_ERROR = "Canceled";
   private final @Nullable Executor callbackExecutor;
 
   DefaultCallAdapterFactory(@Nullable Executor callbackExecutor) {
@@ -34,20 +40,20 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
   @Override
   public @Nullable CallAdapter<?, ?> get(
-      Type returnType, Annotation[] annotations, Retrofit retrofit) {
+    Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != Call.class) {
       return null;
     }
     if (!(returnType instanceof ParameterizedType)) {
       throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+        NO_PARAMETRIZED_CLASS_ERROR_MESSAGE);
     }
-    final Type responseType = Utils.getParameterUpperBound(0, (ParameterizedType) returnType);
+    final Type responseType = Utils.getParameterUpperBound(PARAMETER_UPPER_BOUND_INDEX, (ParameterizedType) returnType);
 
     final Executor executor =
-        Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)
-            ? null
-            : callbackExecutor;
+      Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)
+        ? null
+        : callbackExecutor;
 
     return new CallAdapter<Object, Call<?>>() {
       @Override
@@ -73,29 +79,29 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
     @Override
     public void enqueue(final Callback<T> callback) {
-      Objects.requireNonNull(callback, "callback == null");
+      Objects.requireNonNull(callback, REQUIRE_NON_NULL_MESSAGE);
 
       delegate.enqueue(
-          new Callback<T>() {
-            @Override
-            public void onResponse(Call<T> call, final Response<T> response) {
-              callbackExecutor.execute(
-                  () -> {
-                    if (delegate.isCanceled()) {
-                      // Emulate OkHttp's behavior of throwing/delivering an IOException on
-                      // cancellation.
-                      callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));
-                    } else {
-                      callback.onResponse(ExecutorCallbackCall.this, response);
-                    }
-                  });
-            }
+        new Callback<T>() {
+          @Override
+          public void onResponse(Call<T> call, final Response<T> response) {
+            callbackExecutor.execute(
+              () -> {
+                if (delegate.isCanceled()) {
+                  // Emulate OkHttp's behavior of throwing/delivering an IOException on
+                  // cancellation.
+                  callback.onFailure(ExecutorCallbackCall.this, new IOException(CANCELED_MESSAGE_ERROR));
+                } else {
+                  callback.onResponse(ExecutorCallbackCall.this, response);
+                }
+              });
+          }
 
-            @Override
-            public void onFailure(Call<T> call, final Throwable t) {
-              callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackCall.this, t));
-            }
-          });
+          @Override
+          public void onFailure(Call<T> call, final Throwable t) {
+            callbackExecutor.execute(() -> callback.onFailure(ExecutorCallbackCall.this, t));
+          }
+        });
     }
 
     @Override
@@ -118,7 +124,7 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
       return delegate.isCanceled();
     }
 
-    @SuppressWarnings("CloneDoesntCallSuperClone") // Performing deep clone.
+    // Performing deep clone.
     @Override
     public Call<T> clone() {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());

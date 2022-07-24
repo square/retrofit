@@ -15,25 +15,25 @@
  */
 package retrofit2;
 
-import static retrofit2.Utils.methodError;
-
+import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import javax.annotation.Nullable;
+
+import static retrofit2.Utils.methodError;
 
 abstract class ServiceMethod<T> {
+  private static final String UNRESOLVABLE_TYPE_ERROR_MESSAGE = "Method return type must not include a type variable or wildcard: %s";
+  private static final String VOID_CLASS_ERROR_MESSAGE = "Service methods cannot return void.";
+
   static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
     RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
 
     Type returnType = method.getGenericReturnType();
     if (Utils.hasUnresolvableType(returnType)) {
-      throw methodError(
-          method,
-          "Method return type must not include a type variable or wildcard: %s",
-          returnType);
+      throw methodError(method, UNRESOLVABLE_TYPE_ERROR_MESSAGE, returnType);
     }
     if (returnType == void.class) {
-      throw methodError(method, "Service methods cannot return void.");
+      throw methodError(method, VOID_CLASS_ERROR_MESSAGE);
     }
 
     return HttpServiceMethod.parseAnnotations(retrofit, method, requestFactory);
