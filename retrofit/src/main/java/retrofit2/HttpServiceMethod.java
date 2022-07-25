@@ -15,27 +15,45 @@
  */
 package retrofit2;
 
-import static retrofit2.Utils.getRawType;
-import static retrofit2.Utils.methodError;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import javax.annotation.Nullable;
 import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 import okhttp3.ResponseBody;
 
-/** Adapts an invocation of an interface method into an HTTP call. */
+import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
+import static retrofit2.Utils.getRawType;
+import static retrofit2.Utils.methodError;
+
+/**
+ * Adapts an invocation of an interface method into an HTTP call.
+ */
 abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT> {
+  private final RequestFactory requestFactory;
+  private final okhttp3.Call.Factory callFactory;
+  private final Converter<ResponseBody, ResponseT> responseConverter;
+  private static final String RESPONSE = "Response must include generic type (e.g., Response<String>)";
+  private static final String HEAD_METHOD = "HEAD method must use Void or Unit as response type.";
+
+  HttpServiceMethod(
+    RequestFactory requestFactory,
+    okhttp3.Call.Factory callFactory,
+    Converter<ResponseBody, ResponseT> responseConverter) {
+    this.requestFactory = requestFactory;
+    this.callFactory = callFactory;
+    this.responseConverter = responseConverter;
+  }
+
   /**
    * Inspects the annotations on an interface method to construct a reusable service method that
    * speaks HTTP. This requires potentially-expensive reflection so it is best to build each service
    * method only once and reuse it.
    */
   static <ResponseT, ReturnT> HttpServiceMethod<ResponseT, ReturnT> parseAnnotations(
-      Retrofit retrofit, Method method, RequestFactory requestFactory) {
+    Retrofit retrofit, Method method, RequestFactory requestFactory) {
     boolean isKotlinSuspendFunction = requestFactory.isKotlinSuspendFunction;
     boolean continuationWantsResponse = false;
     boolean continuationBodyNullable = false;
@@ -46,18 +64,14 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     if (isKotlinSuspendFunction) {
       Type[] parameterTypes = method.getGenericParameterTypes();
       Type responseType =
-          Utils.getParameterLowerBound(
-              0, (ParameterizedType) parameterTypes[parameterTypes.length - 1]);
+        Utils.getParameterLowerBound(
+          0, (ParameterizedType) parameterTypes[parameterTypes.length - 1]);
       if (getRawType(responseType) == Response.class && responseType instanceof ParameterizedType) {
-        // Unwrap the actual body type from Response<T>.
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
       } else {
         continuationIsUnit = Utils.isUnit(responseType);
         // TODO figure out if type is nullable or not
-        // Metadata metadata = method.getDeclaringClass().getAnnotation(Metadata.class)
-        // Find the entry for method
-        // Determine if return type is nullable or not
       }
 
       adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
@@ -67,101 +81,87 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     }
 
     CallAdapter<ResponseT, ReturnT> callAdapter =
-        createCallAdapter(retrofit, method, adapterType, annotations);
+      createCallAdapter(retrofit, method, adapterType, annotations);
     Type responseType = callAdapter.responseType();
     if (responseType == okhttp3.Response.class) {
       throw methodError(
-          method,
-          "'"
-              + getRawType(responseType).getName()
-              + "' is not a valid response body type. Did you mean ResponseBody?");
+        method,
+        String.format("'%s' is not a valid response body type. Did you mean ResponseBody?", getRawType(responseType).getName()));
     }
     if (responseType == Response.class) {
-      throw methodError(method, "Response must include generic type (e.g., Response<String>)");
+      throw methodError(method, RESPONSE);
     }
     // TODO support Unit for Kotlin?
     if (requestFactory.httpMethod.equals("HEAD")
-        && !Void.class.equals(responseType)
-        && !Utils.isUnit(responseType)) {
-      throw methodError(method, "HEAD method must use Void or Unit as response type.");
+      && !Void.class.equals(responseType)
+      && !Utils.isUnit(responseType)) {
+      throw methodError(method, HEAD_METHOD);
     }
 
     Converter<ResponseBody, ResponseT> responseConverter =
-        createResponseConverter(retrofit, method, responseType);
+      createResponseConverter(retrofit, method, responseType);
 
     okhttp3.Call.Factory callFactory = retrofit.callFactory;
     if (!isKotlinSuspendFunction) {
       return new CallAdapted<>(requestFactory, callFactory, responseConverter, callAdapter);
     } else if (continuationWantsResponse) {
-      //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>)
-          new SuspendForResponse<>(
-              requestFactory,
-              callFactory,
-              responseConverter,
-              (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter);
+        new SuspendForResponse<>(
+          requestFactory,
+          callFactory,
+          responseConverter,
+          (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter);
     } else {
       //noinspection unchecked Kotlin compiler guarantees ReturnT to be Object.
       return (HttpServiceMethod<ResponseT, ReturnT>)
-          new SuspendForBody<>(
-              requestFactory,
-              callFactory,
-              responseConverter,
-              (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter,
-              continuationBodyNullable,
-              continuationIsUnit);
+        new SuspendForBody<>(
+          requestFactory,
+          callFactory,
+          responseConverter,
+          (CallAdapter<ResponseT, Call<ResponseT>>) callAdapter,
+          continuationBodyNullable,
+          continuationIsUnit);
     }
   }
 
   private static <ResponseT, ReturnT> CallAdapter<ResponseT, ReturnT> createCallAdapter(
-      Retrofit retrofit, Method method, Type returnType, Annotation[] annotations) {
+    Retrofit retrofit, Method method, Type returnType, Annotation[] annotations) {
     try {
       //noinspection unchecked
       return (CallAdapter<ResponseT, ReturnT>) retrofit.callAdapter(returnType, annotations);
-    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+    } catch (RuntimeException e) {
       throw methodError(method, e, "Unable to create call adapter for %s", returnType);
     }
   }
 
   private static <ResponseT> Converter<ResponseBody, ResponseT> createResponseConverter(
-      Retrofit retrofit, Method method, Type responseType) {
+    Retrofit retrofit, Method method, Type responseType) {
     Annotation[] annotations = method.getAnnotations();
     try {
       return retrofit.responseBodyConverter(responseType, annotations);
-    } catch (RuntimeException e) { // Wide exception range because factories are user code.
+    } catch (RuntimeException e) {
       throw methodError(method, e, "Unable to create converter for %s", responseType);
     }
   }
 
-  private final RequestFactory requestFactory;
-  private final okhttp3.Call.Factory callFactory;
-  private final Converter<ResponseBody, ResponseT> responseConverter;
-
-  HttpServiceMethod(
-      RequestFactory requestFactory,
-      okhttp3.Call.Factory callFactory,
-      Converter<ResponseBody, ResponseT> responseConverter) {
-    this.requestFactory = requestFactory;
-    this.callFactory = callFactory;
-    this.responseConverter = responseConverter;
-  }
-
   @Override
-  final @Nullable ReturnT invoke(Object[] args) {
+  final @Nullable
+  ReturnT invoke(Object[] args) {
     Call<ResponseT> call = new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
     return adapt(call, args);
   }
 
-  protected abstract @Nullable ReturnT adapt(Call<ResponseT> call, Object[] args);
+  protected abstract @Nullable
+  ReturnT adapt(Call<ResponseT> call, Object[] args);
 
   static final class CallAdapted<ResponseT, ReturnT> extends HttpServiceMethod<ResponseT, ReturnT> {
     private final CallAdapter<ResponseT, ReturnT> callAdapter;
 
     CallAdapted(
-        RequestFactory requestFactory,
-        okhttp3.Call.Factory callFactory,
-        Converter<ResponseBody, ResponseT> responseConverter,
-        CallAdapter<ResponseT, ReturnT> callAdapter) {
+      RequestFactory requestFactory,
+      okhttp3.Call.Factory callFactory,
+      Converter<ResponseBody, ResponseT> responseConverter,
+      CallAdapter<ResponseT, ReturnT> callAdapter) {
       super(requestFactory, callFactory, responseConverter);
       this.callAdapter = callAdapter;
     }
@@ -176,10 +176,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     private final CallAdapter<ResponseT, Call<ResponseT>> callAdapter;
 
     SuspendForResponse(
-        RequestFactory requestFactory,
-        okhttp3.Call.Factory callFactory,
-        Converter<ResponseBody, ResponseT> responseConverter,
-        CallAdapter<ResponseT, Call<ResponseT>> callAdapter) {
+      RequestFactory requestFactory,
+      okhttp3.Call.Factory callFactory,
+      Converter<ResponseBody, ResponseT> responseConverter,
+      CallAdapter<ResponseT, Call<ResponseT>> callAdapter) {
       super(requestFactory, callFactory, responseConverter);
       this.callAdapter = callAdapter;
     }
@@ -190,9 +190,8 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
 
       //noinspection unchecked Checked by reflection inside RequestFactory.
       Continuation<Response<ResponseT>> continuation =
-          (Continuation<Response<ResponseT>>) args[args.length - 1];
+        (Continuation<Response<ResponseT>>) args[args.length - 1];
 
-      // See SuspendForBody for explanation about this try/catch.
       try {
         return KotlinExtensions.awaitResponse(call, continuation);
       } catch (Exception e) {
@@ -207,12 +206,12 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     private final boolean isUnit;
 
     SuspendForBody(
-        RequestFactory requestFactory,
-        okhttp3.Call.Factory callFactory,
-        Converter<ResponseBody, ResponseT> responseConverter,
-        CallAdapter<ResponseT, Call<ResponseT>> callAdapter,
-        boolean isNullable,
-        boolean isUnit) {
+      RequestFactory requestFactory,
+      okhttp3.Call.Factory callFactory,
+      Converter<ResponseBody, ResponseT> responseConverter,
+      CallAdapter<ResponseT, Call<ResponseT>> callAdapter,
+      boolean isNullable,
+      boolean isUnit) {
       super(requestFactory, callFactory, responseConverter);
       this.callAdapter = callAdapter;
       this.isNullable = isNullable;
@@ -226,14 +225,6 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
       //noinspection unchecked Checked by reflection inside RequestFactory.
       Continuation<ResponseT> continuation = (Continuation<ResponseT>) args[args.length - 1];
 
-      // Calls to OkHttp Call.enqueue() like those inside await and awaitNullable can sometimes
-      // invoke the supplied callback with an exception before the invoking stack frame can return.
-      // Coroutines will intercept the subsequent invocation of the Continuation and throw the
-      // exception synchronously. A Java Proxy cannot throw checked exceptions without them being
-      // declared on the interface method. To avoid the synchronous checked exception being wrapped
-      // in an UndeclaredThrowableException, it is intercepted and supplied to a helper which will
-      // force suspension to occur so that it can be instead delivered to the continuation to
-      // bypass this restriction.
       try {
         if (isUnit) {
           //noinspection unchecked Checked by isUnit
