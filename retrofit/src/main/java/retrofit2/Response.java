@@ -113,7 +113,7 @@ public final class Response<T> {
    */
   public static <T> Response<T> error(int code, ResponseBody body) {
     Objects.requireNonNull(body, BODY_NULL);
-    if (code < 400) throw new IllegalArgumentException(String.format("code < 400: ", code));
+    if (code < 400) throw new IllegalArgumentException(String.format("code < 400: %s", code));
     return error(
       body,
       new okhttp3.Response.Builder() //
@@ -175,16 +175,14 @@ public final class Response<T> {
   /**
    * The deserialized response body of a {@linkplain #isSuccessful() successful} response.
    */
-  public @Nullable
-  T body() {
+  public @Nullable T body() {
     return body;
   }
 
   /**
    * The raw response body of an {@linkplain #isSuccessful() unsuccessful} response.
    */
-  public @Nullable
-  ResponseBody errorBody() {
+  public @Nullable ResponseBody errorBody() {
     return errorBody;
   }
 
