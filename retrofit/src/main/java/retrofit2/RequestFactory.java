@@ -15,69 +15,40 @@
  */
 package retrofit2;
 
-import static retrofit2.Utils.methodError;
-import static retrofit2.Utils.parameterError;
+import kotlin.coroutines.Continuation;
+import okhttp3.Headers;
+import okhttp3.*;
+import retrofit2.http.*;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
-import kotlin.coroutines.Continuation;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.HEAD;
-import retrofit2.http.HTTP;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.Multipart;
-import retrofit2.http.OPTIONS;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-import retrofit2.http.QueryName;
-import retrofit2.http.Tag;
-import retrofit2.http.Url;
+
+import static retrofit2.Utils.methodError;
+import static retrofit2.Utils.parameterError;
 
 final class RequestFactory {
-  static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
-    return new Builder(retrofit, method).build();
-  }
-
+  final String httpMethod;
+  final boolean isKotlinSuspendFunction;
   private final Method method;
   private final HttpUrl baseUrl;
-  final String httpMethod;
-  private final @Nullable String relativeUrl;
-  private final @Nullable Headers headers;
-  private final @Nullable MediaType contentType;
+  private final @Nullable
+  String relativeUrl;
+  private final @Nullable
+  Headers headers;
+  private final @Nullable
+  MediaType contentType;
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
   private final ParameterHandler<?>[] parameterHandlers;
-  final boolean isKotlinSuspendFunction;
 
   RequestFactory(Builder builder) {
     method = builder.method;
@@ -93,33 +64,40 @@ final class RequestFactory {
     isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
   }
 
+  static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
+    return new Builder(retrofit, method).build();
+  }
+
+  private static boolean typeBoolean(Type type) {
+    return type == HttpUrl.class
+      || type == String.class
+      || type == URI.class
+      || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()));
+  }
+
   okhttp3.Request create(Object[] args) throws IOException {
-    @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
+    @SuppressWarnings("unchecked")
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
     int argumentCount = args.length;
     if (argumentCount != handlers.length) {
       throw new IllegalArgumentException(
-          "Argument count ("
-              + argumentCount
-              + ") doesn't match expected count ("
-              + handlers.length
-              + ")");
+        String.format("Argument count ('%s') doesn't match expected count ('%s')", argumentCount, handlers.length));
+
     }
 
     RequestBuilder requestBuilder =
-        new RequestBuilder(
-            httpMethod,
-            baseUrl,
-            relativeUrl,
-            headers,
-            contentType,
-            hasBody,
-            isFormEncoded,
-            isMultipart);
+      new RequestBuilder(
+        httpMethod,
+        baseUrl,
+        relativeUrl,
+        headers,
+        contentType,
+        hasBody,
+        isFormEncoded,
+        isMultipart);
 
     if (isKotlinSuspendFunction) {
-      // The Continuation is the last parameter and the handlers array contains null at that index.
       argumentCount--;
     }
 
@@ -138,10 +116,19 @@ final class RequestFactory {
    * and reuse it. Builders cannot be reused.
    */
   static final class Builder {
-    // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
     private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
     private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
     private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
+
+    private static final String HTTP_METHOD_REQUIRED = "HTTP method annotation is required (e.g., @GET, @POST, etc.).";
+    private static final String MULTIPART_ESPECIFIED = "Multipart can only be specified on HTTP methods with request body (e.g., @POST).";
+    private static final String FORM_URL_ENCODED = "FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).";
+    private static final String DOES_NOT_CONTAIN_BODY = "Non-body HTTP method cannot contain @Body.";
+    private static final String MUST_CONTAIN_ONE_FIELD = "Form-encoded method must contain at least one @Field.";
+    private static final String MUST_CONTAIN_ONE_PART = "Multipart method must contain at least one @Part.";
+    private static final String HEADERS_EMPTY = "@Headers annotation is empty.";
+    private static final String ENCODING_ANNOTATION_ALLOWED = "Only one encoding annotation is allowed.";
+    private static final String RETROFIT_ANNOTATION_ALLOWED = "Multiple Retrofit annotations found, only one allowed.";
 
     final Retrofit retrofit;
     final Method method;
@@ -157,15 +144,21 @@ final class RequestFactory {
     boolean gotQueryName;
     boolean gotQueryMap;
     boolean gotUrl;
-    @Nullable String httpMethod;
+    @Nullable
+    String httpMethod;
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
-    @Nullable String relativeUrl;
-    @Nullable Headers headers;
-    @Nullable MediaType contentType;
-    @Nullable Set<String> relativeUrlParamNames;
-    @Nullable ParameterHandler<?>[] parameterHandlers;
+    @Nullable
+    String relativeUrl;
+    @Nullable
+    Headers headers;
+    @Nullable
+    MediaType contentType;
+    @Nullable
+    Set<String> relativeUrlParamNames;
+    @Nullable
+    ParameterHandler<?>[] parameterHandlers;
     boolean isKotlinSuspendFunction;
 
     Builder(Retrofit retrofit, Method method) {
@@ -176,26 +169,50 @@ final class RequestFactory {
       this.parameterAnnotationsArray = method.getParameterAnnotations();
     }
 
+    /**
+     * Gets the set of unique path parameters used in the given URI. If a parameter is used twice in
+     * the URI, it will only show up once in the set.
+     */
+    static Set<String> parsePathParameters(String path) {
+      Matcher m = PARAM_URL_REGEX.matcher(path);
+      Set<String> patterns = new LinkedHashSet<>();
+      while (m.find()) {
+        patterns.add(m.group(1));
+      }
+      return patterns;
+    }
+
+    private static Class<?> boxIfPrimitive(Class<?> type) {
+      if (boolean.class == type) return Boolean.class;
+      if (byte.class == type) return Byte.class;
+      if (char.class == type) return Character.class;
+      if (double.class == type) return Double.class;
+      if (float.class == type) return Float.class;
+      if (int.class == type) return Integer.class;
+      if (long.class == type) return Long.class;
+      if (short.class == type) return Short.class;
+      return type;
+    }
+
     RequestFactory build() {
       for (Annotation annotation : methodAnnotations) {
         parseMethodAnnotation(annotation);
       }
 
       if (httpMethod == null) {
-        throw methodError(method, "HTTP method annotation is required (e.g., @GET, @POST, etc.).");
+        throw methodError(method, HTTP_METHOD_REQUIRED);
       }
 
       if (!hasBody) {
         if (isMultipart) {
           throw methodError(
-              method,
-              "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
+            method,
+            MULTIPART_ESPECIFIED);
         }
         if (isFormEncoded) {
           throw methodError(
-              method,
-              "FormUrlEncoded can only be specified on HTTP methods with "
-                  + "request body (e.g., @POST).");
+            method,
+            FORM_URL_ENCODED);
         }
       }
 
@@ -203,20 +220,20 @@ final class RequestFactory {
       parameterHandlers = new ParameterHandler<?>[parameterCount];
       for (int p = 0, lastParameter = parameterCount - 1; p < parameterCount; p++) {
         parameterHandlers[p] =
-            parseParameter(p, parameterTypes[p], parameterAnnotationsArray[p], p == lastParameter);
+          parseParameter(p, parameterTypes[p], parameterAnnotationsArray[p], p == lastParameter);
       }
 
       if (relativeUrl == null && !gotUrl) {
         throw methodError(method, "Missing either @%s URL or @Url parameter.", httpMethod);
       }
       if (!isFormEncoded && !isMultipart && !hasBody && gotBody) {
-        throw methodError(method, "Non-body HTTP method cannot contain @Body.");
+        throw methodError(method, DOES_NOT_CONTAIN_BODY);
       }
       if (isFormEncoded && !gotField) {
-        throw methodError(method, "Form-encoded method must contain at least one @Field.");
+        throw methodError(method, MUST_CONTAIN_ONE_FIELD);
       }
       if (isMultipart && !gotPart) {
-        throw methodError(method, "Multipart method must contain at least one @Part.");
+        throw methodError(method, MUST_CONTAIN_ONE_PART);
       }
 
       return new RequestFactory(this);
@@ -243,17 +260,17 @@ final class RequestFactory {
       } else if (annotation instanceof retrofit2.http.Headers) {
         String[] headersToParse = ((retrofit2.http.Headers) annotation).value();
         if (headersToParse.length == 0) {
-          throw methodError(method, "@Headers annotation is empty.");
+          throw methodError(method, HEADERS_EMPTY);
         }
         headers = parseHeaders(headersToParse);
       } else if (annotation instanceof Multipart) {
         if (isFormEncoded) {
-          throw methodError(method, "Only one encoding annotation is allowed.");
+          throw methodError(method, ENCODING_ANNOTATION_ALLOWED);
         }
         isMultipart = true;
       } else if (annotation instanceof FormUrlEncoded) {
         if (isMultipart) {
-          throw methodError(method, "Only one encoding annotation is allowed.");
+          throw methodError(method, ENCODING_ANNOTATION_ALLOWED);
         }
         isFormEncoded = true;
       }
@@ -262,10 +279,10 @@ final class RequestFactory {
     private void parseHttpMethodAndPath(String httpMethod, String value, boolean hasBody) {
       if (this.httpMethod != null) {
         throw methodError(
-            method,
-            "Only one HTTP method is allowed. Found: %s and %s.",
-            this.httpMethod,
-            httpMethod);
+          method,
+          "Only one HTTP method is allowed. Found: %s and %s.",
+          this.httpMethod,
+          httpMethod);
       }
       this.httpMethod = httpMethod;
       this.hasBody = hasBody;
@@ -274,18 +291,16 @@ final class RequestFactory {
         return;
       }
 
-      // Get the relative URL path and existing query string, if present.
       int question = value.indexOf('?');
       if (question != -1 && question < value.length() - 1) {
-        // Ensure the query string does not have any named parameters.
         String queryParams = value.substring(question + 1);
         Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(queryParams);
         if (queryParamMatcher.find()) {
           throw methodError(
-              method,
-              "URL query string \"%s\" must not have replace block. "
-                  + "For dynamic query parameters use @Query.",
-              queryParams);
+            method,
+            "URL query string \"%s\" must not have replace block. "
+              + "For dynamic query parameters use @Query.",
+            queryParams);
         }
       }
 
@@ -299,7 +314,7 @@ final class RequestFactory {
         int colon = header.indexOf(':');
         if (colon == -1 || colon == 0 || colon == header.length() - 1) {
           throw methodError(
-              method, "@Headers value must be in the form \"Name: Value\". Found: \"%s\"", header);
+            method, "@Headers value must be in the form \"Name: Value\". Found: \"%s\"", header);
         }
         String headerName = header.substring(0, colon);
         String headerValue = header.substring(colon + 1).trim();
@@ -316,21 +331,21 @@ final class RequestFactory {
       return builder.build();
     }
 
-    private @Nullable ParameterHandler<?> parseParameter(
-        int p, Type parameterType, @Nullable Annotation[] annotations, boolean allowContinuation) {
+    private @Nullable
+    ParameterHandler<?> parseParameter(
+      int p, Type parameterType, @Nullable Annotation[] annotations, boolean allowContinuation) {
       ParameterHandler<?> result = null;
       if (annotations != null) {
         for (Annotation annotation : annotations) {
           ParameterHandler<?> annotationAction =
-              parseParameterAnnotation(p, parameterType, annotations, annotation);
+            parseParameterAnnotation(p, parameterType, annotations, annotation);
 
           if (annotationAction == null) {
             continue;
           }
-
           if (result != null) {
             throw parameterError(
-                method, p, "Multiple Retrofit annotations found, only one allowed.");
+              method, p, RETROFIT_ANNOTATION_ALLOWED);
           }
 
           result = annotationAction;
@@ -345,7 +360,6 @@ final class RequestFactory {
               return null;
             }
           } catch (NoClassDefFoundError ignored) {
-            // Ignored
           }
         }
         throw parameterError(method, p, "No Retrofit annotation found.");
@@ -356,60 +370,30 @@ final class RequestFactory {
 
     @Nullable
     private ParameterHandler<?> parseParameterAnnotation(
-        int p, Type type, Annotation[] annotations, Annotation annotation) {
+      int p, Type type, Annotation[] annotations, Annotation annotation) {
+
       if (annotation instanceof Url) {
         validateResolvableType(p, type);
-        if (gotUrl) {
-          throw parameterError(method, p, "Multiple @Url method annotations found.");
-        }
-        if (gotPath) {
-          throw parameterError(method, p, "@Path parameters may not be used with @Url.");
-        }
-        if (gotQuery) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @Query.");
-        }
-        if (gotQueryName) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @QueryName.");
-        }
-        if (gotQueryMap) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @QueryMap.");
-        }
-        if (relativeUrl != null) {
-          throw parameterError(method, p, "@Url cannot be used with @%s URL", httpMethod);
-        }
+        // extract function
+        validateUrlFlags(p);
 
         gotUrl = true;
 
-        if (type == HttpUrl.class
-            || type == String.class
-            || type == URI.class
-            || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()))) {
+        // refactoring decompose condition
+        if (typeBoolean(type)) {
           return new ParameterHandler.RelativeUrl(method, p);
         } else {
           throw parameterError(
-              method,
-              p,
-              "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type.");
+            method,
+            p,
+            "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type.");
         }
 
       } else if (annotation instanceof Path) {
         validateResolvableType(p, type);
-        if (gotQuery) {
-          throw parameterError(method, p, "A @Path parameter must not come after a @Query.");
-        }
-        if (gotQueryName) {
-          throw parameterError(method, p, "A @Path parameter must not come after a @QueryName.");
-        }
-        if (gotQueryMap) {
-          throw parameterError(method, p, "A @Path parameter must not come after a @QueryMap.");
-        }
-        if (gotUrl) {
-          throw parameterError(method, p, "@Path parameters may not be used with @Url.");
-        }
-        if (relativeUrl == null) {
-          throw parameterError(
-              method, p, "@Path can only be used with relative url on @%s", httpMethod);
-        }
+        // extract function
+        validatePathFlags(p);
+
         gotPath = true;
 
         Path path = (Path) annotation;
@@ -426,25 +410,16 @@ final class RequestFactory {
         boolean encoded = query.encoded();
 
         Class<?> rawParameterType = Utils.getRawType(type);
+
         gotQuery = true;
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-                method,
-                p,
-                rawParameterType.getSimpleName()
-                    + " must include generic type (e.g., "
-                    + rawParameterType.getSimpleName()
-                    + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          // extract method
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.Query<>(name, converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
           Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
+            retrofit.stringConverter(arrayComponentType, annotations);
           return new ParameterHandler.Query<>(name, converter, encoded).array();
         } else {
           Converter<?, String> converter = retrofit.stringConverter(type, annotations);
@@ -459,23 +434,12 @@ final class RequestFactory {
         Class<?> rawParameterType = Utils.getRawType(type);
         gotQueryName = true;
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-                method,
-                p,
-                rawParameterType.getSimpleName()
-                    + " must include generic type (e.g., "
-                    + rawParameterType.getSimpleName()
-                    + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.QueryName<>(converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
           Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
+            retrofit.stringConverter(arrayComponentType, annotations);
           return new ParameterHandler.QueryName<>(converter, encoded).array();
         } else {
           Converter<?, String> converter = retrofit.stringConverter(type, annotations);
@@ -492,7 +456,7 @@ final class RequestFactory {
         Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
         if (!(mapType instanceof ParameterizedType)) {
           throw parameterError(
-              method, p, "Map must include generic types (e.g., Map<String, String>)");
+            method, p, "Map must include generic types (e.g., Map<String, String>)");
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
@@ -503,7 +467,7 @@ final class RequestFactory {
         Converter<?, String> valueConverter = retrofit.stringConverter(valueType, annotations);
 
         return new ParameterHandler.QueryMap<>(
-            method, p, valueConverter, ((QueryMap) annotation).encoded());
+          method, p, valueConverter, ((QueryMap) annotation).encoded());
 
       } else if (annotation instanceof Header) {
         validateResolvableType(p, type);
@@ -512,23 +476,12 @@ final class RequestFactory {
 
         Class<?> rawParameterType = Utils.getRawType(type);
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-                method,
-                p,
-                rawParameterType.getSimpleName()
-                    + " must include generic type (e.g., "
-                    + rawParameterType.getSimpleName()
-                    + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.Header<>(name, converter).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
           Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
+            retrofit.stringConverter(arrayComponentType, annotations);
           return new ParameterHandler.Header<>(name, converter).array();
         } else {
           Converter<?, String> converter = retrofit.stringConverter(type, annotations);
@@ -548,7 +501,7 @@ final class RequestFactory {
         Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
         if (!(mapType instanceof ParameterizedType)) {
           throw parameterError(
-              method, p, "Map must include generic types (e.g., Map<String, String>)");
+            method, p, "Map must include generic types (e.g., Map<String, String>)");
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
@@ -573,23 +526,12 @@ final class RequestFactory {
 
         Class<?> rawParameterType = Utils.getRawType(type);
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-                method,
-                p,
-                rawParameterType.getSimpleName()
-                    + " must include generic type (e.g., "
-                    + rawParameterType.getSimpleName()
-                    + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.Field<>(name, converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
           Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
+            retrofit.stringConverter(arrayComponentType, annotations);
           return new ParameterHandler.Field<>(name, converter, encoded).array();
         } else {
           Converter<?, String> converter = retrofit.stringConverter(type, annotations);
@@ -600,7 +542,7 @@ final class RequestFactory {
         validateResolvableType(p, type);
         if (!isFormEncoded) {
           throw parameterError(
-              method, p, "@FieldMap parameters can only be used with form encoding.");
+            method, p, "@FieldMap parameters can only be used with form encoding.");
         }
         Class<?> rawParameterType = Utils.getRawType(type);
         if (!Map.class.isAssignableFrom(rawParameterType)) {
@@ -609,7 +551,7 @@ final class RequestFactory {
         Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
         if (!(mapType instanceof ParameterizedType)) {
           throw parameterError(
-              method, p, "Map must include generic types (e.g., Map<String, String>)");
+            method, p, "Map must include generic types (e.g., Map<String, String>)");
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
         Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
@@ -621,13 +563,13 @@ final class RequestFactory {
 
         gotField = true;
         return new ParameterHandler.FieldMap<>(
-            method, p, valueConverter, ((FieldMap) annotation).encoded());
+          method, p, valueConverter, ((FieldMap) annotation).encoded());
 
       } else if (annotation instanceof Part) {
         validateResolvableType(p, type);
         if (!isMultipart) {
           throw parameterError(
-              method, p, "@Part parameters can only be used with multipart encoding.");
+            method, p, "@Part parameters can only be used with multipart encoding.");
         }
         Part part = (Part) annotation;
         gotPart = true;
@@ -637,91 +579,85 @@ final class RequestFactory {
         if (partName.isEmpty()) {
           if (Iterable.class.isAssignableFrom(rawParameterType)) {
             if (!(type instanceof ParameterizedType)) {
+
               throw parameterError(
-                  method,
-                  p,
-                  rawParameterType.getSimpleName()
-                      + " must include generic type (e.g., "
-                      + rawParameterType.getSimpleName()
-                      + "<String>)");
+                method,
+                p, formatIncludeGenericTypeStringError(rawParameterType.getSimpleName()));
             }
+
             ParameterizedType parameterizedType = (ParameterizedType) type;
             Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
             if (!MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
               throw parameterError(
-                  method,
-                  p,
-                  "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
+                method,
+                p,
+                "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
             }
             return ParameterHandler.RawPart.INSTANCE.iterable();
           } else if (rawParameterType.isArray()) {
             Class<?> arrayComponentType = rawParameterType.getComponentType();
             if (!MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
               throw parameterError(
-                  method,
-                  p,
-                  "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
+                method,
+                p,
+                "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
             }
             return ParameterHandler.RawPart.INSTANCE.array();
           } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
             return ParameterHandler.RawPart.INSTANCE;
           } else {
             throw parameterError(
-                method,
-                p,
-                "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
+              method,
+              p,
+              "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
           }
         } else {
           Headers headers =
-              Headers.of(
-                  "Content-Disposition",
-                  "form-data; name=\"" + partName + "\"",
-                  "Content-Transfer-Encoding",
-                  part.encoding());
+            Headers.of(
+              "Content-Disposition",
+              "form-data; name=\"" + partName + "\"",
+              "Content-Transfer-Encoding",
+              part.encoding());
 
           if (Iterable.class.isAssignableFrom(rawParameterType)) {
             if (!(type instanceof ParameterizedType)) {
               throw parameterError(
-                  method,
-                  p,
-                  rawParameterType.getSimpleName()
-                      + " must include generic type (e.g., "
-                      + rawParameterType.getSimpleName()
-                      + "<String>)");
+                method,
+                p, formatIncludeGenericTypeStringError(rawParameterType.getSimpleName()));
             }
             ParameterizedType parameterizedType = (ParameterizedType) type;
             Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
             if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
               throw parameterError(
-                  method,
-                  p,
-                  "@Part parameters using the MultipartBody.Part must not "
-                      + "include a part name in the annotation.");
+                method,
+                p,
+                "@Part parameters using the MultipartBody.Part must not "
+                  + "include a part name in the annotation.");
             }
             Converter<?, RequestBody> converter =
-                retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
+              retrofit.requestBodyConverter(iterableType, annotations, methodAnnotations);
             return new ParameterHandler.Part<>(method, p, headers, converter).iterable();
           } else if (rawParameterType.isArray()) {
             Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
             if (MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
               throw parameterError(
-                  method,
-                  p,
-                  "@Part parameters using the MultipartBody.Part must not "
-                      + "include a part name in the annotation.");
-            }
-            Converter<?, RequestBody> converter =
-                retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
-            return new ParameterHandler.Part<>(method, p, headers, converter).array();
-          } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
-            throw parameterError(
                 method,
                 p,
                 "@Part parameters using the MultipartBody.Part must not "
-                    + "include a part name in the annotation.");
+                  + "include a part name in the annotation.");
+            }
+            Converter<?, RequestBody> converter =
+              retrofit.requestBodyConverter(arrayComponentType, annotations, methodAnnotations);
+            return new ParameterHandler.Part<>(method, p, headers, converter).array();
+          } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
+            throw parameterError(
+              method,
+              p,
+              "@Part parameters using the MultipartBody.Part must not "
+                + "include a part name in the annotation.");
           } else {
             Converter<?, RequestBody> converter =
-                retrofit.requestBodyConverter(type, annotations, methodAnnotations);
+              retrofit.requestBodyConverter(type, annotations, methodAnnotations);
             return new ParameterHandler.Part<>(method, p, headers, converter);
           }
         }
@@ -730,7 +666,7 @@ final class RequestFactory {
         validateResolvableType(p, type);
         if (!isMultipart) {
           throw parameterError(
-              method, p, "@PartMap parameters can only be used with multipart encoding.");
+            method, p, "@PartMap parameters can only be used with multipart encoding.");
         }
         gotPart = true;
         Class<?> rawParameterType = Utils.getRawType(type);
@@ -740,7 +676,7 @@ final class RequestFactory {
         Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
         if (!(mapType instanceof ParameterizedType)) {
           throw parameterError(
-              method, p, "Map must include generic types (e.g., Map<String, String>)");
+            method, p, "Map must include generic types (e.g., Map<String, String>)");
         }
         ParameterizedType parameterizedType = (ParameterizedType) mapType;
 
@@ -752,14 +688,14 @@ final class RequestFactory {
         Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
         if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(valueType))) {
           throw parameterError(
-              method,
-              p,
-              "@PartMap values cannot be MultipartBody.Part. "
-                  + "Use @Part List<Part> or a different value type instead.");
+            method,
+            p,
+            "@PartMap values cannot be MultipartBody.Part. "
+              + "Use @Part List<Part> or a different value type instead.");
         }
 
         Converter<?, RequestBody> valueConverter =
-            retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
+          retrofit.requestBodyConverter(valueType, annotations, methodAnnotations);
 
         PartMap partMap = (PartMap) annotation;
         return new ParameterHandler.PartMap<>(method, p, valueConverter, partMap.encoding());
@@ -768,7 +704,7 @@ final class RequestFactory {
         validateResolvableType(p, type);
         if (isFormEncoded || isMultipart) {
           throw parameterError(
-              method, p, "@Body parameters cannot be used with form or multi-part encoding.");
+            method, p, "@Body parameters cannot be used with form or multi-part encoding.");
         }
         if (gotBody) {
           throw parameterError(method, p, "Multiple @Body method annotations found.");
@@ -791,69 +727,89 @@ final class RequestFactory {
         for (int i = p - 1; i >= 0; i--) {
           ParameterHandler<?> otherHandler = parameterHandlers[i];
           if (otherHandler instanceof ParameterHandler.Tag
-              && ((ParameterHandler.Tag) otherHandler).cls.equals(tagType)) {
+            && ((ParameterHandler.Tag) otherHandler).cls.equals(tagType)) {
             throw parameterError(
-                method,
-                p,
-                "@Tag type "
-                    + tagType.getName()
-                    + " is duplicate of parameter #"
-                    + (i + 1)
-                    + " and would always overwrite its value.");
+              method,
+              p,
+              "@Tag type "
+                + tagType.getName()
+                + " is duplicate of parameter #"
+                + (i + 1)
+                + " and would always overwrite its value.");
           }
         }
 
         return new ParameterHandler.Tag<>(tagType);
       }
 
-      return null; // Not a Retrofit annotation.
+      return null;
+    }
+
+    private String formatIncludeGenericTypeStringError(String rawParameterType) {
+      return String.format("%s must include generic type (e.g., %s<String>)", rawParameterType, rawParameterType);
+    }
+
+    private Converter verifyParameterizedType(int p, Type type, Annotation[] annotations, Class<?> rawParameterType) {
+      if (!(type instanceof ParameterizedType)) {
+        throw parameterError(
+          method,
+          p, formatIncludeGenericTypeStringError(rawParameterType.getSimpleName()));
+      }
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+      return retrofit.stringConverter(iterableType, annotations);
+    }
+
+    private void validatePathFlags(int p) {
+      if (gotQuery) {
+        throw parameterError(method, p, "A @Path parameter must not come after a @Query.");
+      } else if (gotQueryName) {
+        throw parameterError(method, p, "A @Path parameter must not come after a @QueryName.");
+      } else if (gotQueryMap) {
+        throw parameterError(method, p, "A @Path parameter must not come after a @QueryMap.");
+      } else if (gotUrl) {
+        throw parameterError(method, p, "@Path parameters may not be used with @Url.");
+      } else if (relativeUrl == null) {
+        throw parameterError(
+          method, p, "@Path can only be used with relative url on @%s", httpMethod);
+      }
+    }
+
+    private void validateUrlFlags(int p) {
+      if (gotUrl) {
+        throw parameterError(method, p, "Multiple @Url method annotations found.");
+      } else if (gotPath) {
+        throw parameterError(method, p, "@Path parameters may not be used with @Url.");
+      } else if (gotQuery) {
+        throw parameterError(method, p, "A @Url parameter must not come after a @Query.");
+      } else if (gotQueryName) {
+        throw parameterError(method, p, "A @Url parameter must not come after a @QueryName.");
+      } else if (gotQueryMap) {
+        throw parameterError(method, p, "A @Url parameter must not come after a @QueryMap.");
+      } else if (relativeUrl != null) {
+        throw parameterError(method, p, "@Url cannot be used with @%s URL", httpMethod);
+      }
     }
 
     private void validateResolvableType(int p, Type type) {
       if (Utils.hasUnresolvableType(type)) {
         throw parameterError(
-            method, p, "Parameter type must not include a type variable or wildcard: %s", type);
+          method, p, "Parameter type must not include a type variable or wildcard: %s", type);
       }
     }
 
     private void validatePathName(int p, String name) {
       if (!PARAM_NAME_REGEX.matcher(name).matches()) {
         throw parameterError(
-            method,
-            p,
-            "@Path parameter name must match %s. Found: %s",
-            PARAM_URL_REGEX.pattern(),
-            name);
+          method,
+          p,
+          "@Path parameter name must match %s. Found: %s",
+          PARAM_URL_REGEX.pattern(),
+          name);
       }
-      // Verify URL replacement name is actually present in the URL path.
       if (!relativeUrlParamNames.contains(name)) {
         throw parameterError(method, p, "URL \"%s\" does not contain \"{%s}\".", relativeUrl, name);
       }
-    }
-
-    /**
-     * Gets the set of unique path parameters used in the given URI. If a parameter is used twice in
-     * the URI, it will only show up once in the set.
-     */
-    static Set<String> parsePathParameters(String path) {
-      Matcher m = PARAM_URL_REGEX.matcher(path);
-      Set<String> patterns = new LinkedHashSet<>();
-      while (m.find()) {
-        patterns.add(m.group(1));
-      }
-      return patterns;
-    }
-
-    private static Class<?> boxIfPrimitive(Class<?> type) {
-      if (boolean.class == type) return Boolean.class;
-      if (byte.class == type) return Byte.class;
-      if (char.class == type) return Character.class;
-      if (double.class == type) return Double.class;
-      if (float.class == type) return Float.class;
-      if (int.class == type) return Integer.class;
-      if (long.class == type) return Long.class;
-      if (short.class == type) return Short.class;
-      return type;
     }
   }
 }
