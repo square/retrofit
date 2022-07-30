@@ -74,7 +74,14 @@ public final class Retrofit {
   final int defaultCallAdapterFactoriesSize;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
-
+  private static final String VALIDATE_SERVICE_INTERFACE_EXCEPTION = "API declarations must be interfaces.";
+  
+  private static final String VALIDATE_SERVICE_INTERFACE_MESSAGE ="Type parameters are unsupported on ";
+  private static final String NEXT_CALL_ADAPTER_MESSAGE ="Could not locate call adapter for ";
+  private static final String NEXT_REQUEST_BODY_COVERT_MESSAGE = "Could not locate RequestBody converter for ";
+  private static final String NEXT_RESPONSE_BODY_COVERT_MESSAGE ="Could not locate ResponseBody converter for ";
+  private static final String BUILD_MESSAGE = "Base URL required.";
+  
   Retrofit(
       okhttp3.Call.Factory callFactory,
       HttpUrl baseUrl,
@@ -86,9 +93,9 @@ public final class Retrofit {
       boolean validateEagerly) {
     this.callFactory = callFactory;
     this.baseUrl = baseUrl;
-    this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
+    this.converterFactories = converterFactories; 
     this.defaultConverterFactoriesSize = defaultConverterFactoriesSize;
-    this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
+    this.callAdapterFactories = callAdapterFactories; 
     this.defaultCallAdapterFactoriesSize = defaultCallAdapterFactoriesSize;
     this.callbackExecutor = callbackExecutor;
     this.validateEagerly = validateEagerly;
@@ -142,7 +149,7 @@ public final class Retrofit {
    * }
    * </pre>
    */
-  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
+  @SuppressWarnings("unchecked") 
   public <T> T create(final Class<T> service) {
     validateServiceInterface(service);
     return (T)
@@ -155,7 +162,6 @@ public final class Retrofit {
               @Override
               public @Nullable Object invoke(Object proxy, Method method, @Nullable Object[] args)
                   throws Throwable {
-                // If the method is a method from Object then defer to normal invocation.
                 if (method.getDeclaringClass() == Object.class) {
                   return method.invoke(this, args);
                 }
@@ -170,7 +176,7 @@ public final class Retrofit {
 
   private void validateServiceInterface(Class<?> service) {
     if (!service.isInterface()) {
-      throw new IllegalArgumentException("API declarations must be interfaces.");
+      throw new IllegalArgumentException(VALIDATE_SERVICE_INTERFACE_EXCEPTION);
     }
 
     Deque<Class<?>> check = new ArrayDeque<>(1);
@@ -179,7 +185,7 @@ public final class Retrofit {
       Class<?> candidate = check.removeFirst();
       if (candidate.getTypeParameters().length != 0) {
         StringBuilder message =
-            new StringBuilder("Type parameters are unsupported on ").append(candidate.getName());
+            new StringBuilder(VALIDATE_SERVICE_INTERFACE_MESSAGE).append(candidate.getName());
         if (candidate != service) {
           message.append(" which is an interface of ").append(service.getName());
         }
@@ -263,7 +269,7 @@ public final class Retrofit {
     }
 
     StringBuilder builder =
-        new StringBuilder("Could not locate call adapter for ").append(returnType).append(".\n");
+        new StringBuilder(NEXT_CALL_ADAPTER_MESSAGE).append(returnType).append(".\n");
     if (skipPast != null) {
       builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
@@ -320,13 +326,12 @@ public final class Retrofit {
       Converter<?, RequestBody> converter =
           factory.requestBodyConverter(type, parameterAnnotations, methodAnnotations, this);
       if (converter != null) {
-        //noinspection unchecked
         return (Converter<T, RequestBody>) converter;
       }
     }
 
     StringBuilder builder =
-        new StringBuilder("Could not locate RequestBody converter for ").append(type).append(".\n");
+        new StringBuilder(NEXT_REQUEST_BODY_COVERT_MESSAGE).append(type).append(".\n");
     if (skipPast != null) {
       builder.append("  Skipped:");
       for (int i = 0; i < start; i++) {
@@ -367,13 +372,12 @@ public final class Retrofit {
       Converter<ResponseBody, ?> converter =
           converterFactories.get(i).responseBodyConverter(type, annotations, this);
       if (converter != null) {
-        //noinspection unchecked
         return (Converter<ResponseBody, T>) converter;
       }
     }
 
     StringBuilder builder =
-        new StringBuilder("Could not locate ResponseBody converter for ")
+        new StringBuilder(NEXT_RESPONSE_BODY_COVERT_MESSAGE)
             .append(type)
             .append(".\n");
     if (skipPast != null) {
@@ -402,13 +406,10 @@ public final class Retrofit {
       Converter<?, String> converter =
           converterFactories.get(i).stringConverter(type, annotations, this);
       if (converter != null) {
-        //noinspection unchecked
         return (Converter<T, String>) converter;
       }
     }
 
-    // Nothing matched. Resort to default converter which just calls toString().
-    //noinspection unchecked
     return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
   }
 
@@ -444,7 +445,7 @@ public final class Retrofit {
       callFactory = retrofit.callFactory;
       baseUrl = retrofit.baseUrl;
 
-      // Do not add the default BuiltIntConverters and platform-aware converters added by build().
+   
       for (int i = 1,
               size = retrofit.converterFactories.size() - retrofit.defaultConverterFactoriesSize;
           i < size;
@@ -452,7 +453,6 @@ public final class Retrofit {
         converterFactories.add(retrofit.converterFactories.get(i));
       }
 
-      // Do not add the default, platform-aware call adapters added by build().
       for (int i = 0,
               size =
                   retrofit.callAdapterFactories.size() - retrofit.defaultCallAdapterFactoriesSize;
@@ -555,7 +555,8 @@ public final class Retrofit {
      * Result: http://github.com/square/retrofit/ (note the scheme stays 'http')
      */
     public Builder baseUrl(HttpUrl baseUrl) {
-      Objects.requireNonNull(baseUrl, "baseUrl == null");
+      String baseUrlStringComparator = "baseUrl == null";
+      Objects.requireNonNull(baseUrl,baseUrlStringComparator);
       List<String> pathSegments = baseUrl.pathSegments();
       if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
         throw new IllegalArgumentException("baseUrl must end in /: " + baseUrl);
@@ -566,7 +567,8 @@ public final class Retrofit {
 
     /** Add converter factory for serialization and deserialization of objects. */
     public Builder addConverterFactory(Converter.Factory factory) {
-      converterFactories.add(Objects.requireNonNull(factory, "factory == null"));
+    	String factoryStringComparator = "factory == null";
+      converterFactories.add(Objects.requireNonNull(factory,factoryStringComparator));
       return this;
     }
 
@@ -575,7 +577,8 @@ public final class Retrofit {
      * Call}.
      */
     public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
-      callAdapterFactories.add(Objects.requireNonNull(factory, "factory == null"));
+    	String factoryStringComparator = "factory == null";
+      callAdapterFactories.add(Objects.requireNonNull(factory, factoryStringComparator));
       return this;
     }
 
@@ -587,7 +590,8 @@ public final class Retrofit {
      * return types}.
      */
     public Builder callbackExecutor(Executor executor) {
-      this.callbackExecutor = Objects.requireNonNull(executor, "executor == null");
+    	String executorStringComparator = "executor == null";
+      this.callbackExecutor = Objects.requireNonNull(executor,executorStringComparator );
       return this;
     }
 
@@ -618,7 +622,7 @@ public final class Retrofit {
      */
     public Retrofit build() {
       if (baseUrl == null) {
-        throw new IllegalStateException("Base URL required.");
+        throw new IllegalStateException(BUILD_MESSAGE);
       }
 
       Platform platform = Platform.get();
@@ -633,21 +637,17 @@ public final class Retrofit {
         callbackExecutor = platform.defaultCallbackExecutor();
       }
 
-      // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
       List<? extends CallAdapter.Factory> defaultCallAdapterFactories =
           platform.createDefaultCallAdapterFactories(callbackExecutor);
       callAdapterFactories.addAll(defaultCallAdapterFactories);
 
-      // Make a defensive copy of the converters.
       List<? extends Converter.Factory> defaultConverterFactories =
           platform.createDefaultConverterFactories();
       int defaultConverterFactoriesSize = defaultConverterFactories.size();
       List<Converter.Factory> converterFactories =
           new ArrayList<>(1 + this.converterFactories.size() + defaultConverterFactoriesSize);
 
-      // Add the built-in converter factory first. This prevents overriding its behavior but also
-      // ensures correct behavior when using converters that consume all types.
       converterFactories.add(new BuiltInConverters());
       converterFactories.addAll(this.converterFactories);
       converterFactories.addAll(defaultConverterFactories);
