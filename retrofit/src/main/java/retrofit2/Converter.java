@@ -15,23 +15,15 @@
  */
 package retrofit2;
 
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.http.*;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import javax.annotation.Nullable;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.http.Body;
-import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
-import retrofit2.http.Header;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
 
 /**
  * Convert objects to and from their representation in HTTP. Instances are created by {@linkplain
@@ -42,44 +34,10 @@ public interface Converter<F, T> {
   @Nullable
   T convert(F value) throws IOException;
 
-  /** Creates {@link Converter} instances based on a type and target usage. */
+  /**
+   * Creates {@link Converter} instances based on a type and target usage.
+   */
   abstract class Factory {
-    /**
-     * Returns a {@link Converter} for converting an HTTP response body to {@code type}, or null if
-     * {@code type} cannot be handled by this factory. This is used to create converters for
-     * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
-     * declaration.
-     */
-    public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
-        Type type, Annotation[] annotations, Retrofit retrofit) {
-      return null;
-    }
-
-    /**
-     * Returns a {@link Converter} for converting {@code type} to an HTTP request body, or null if
-     * {@code type} cannot be handled by this factory. This is used to create converters for types
-     * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap} values.
-     */
-    public @Nullable Converter<?, RequestBody> requestBodyConverter(
-        Type type,
-        Annotation[] parameterAnnotations,
-        Annotation[] methodAnnotations,
-        Retrofit retrofit) {
-      return null;
-    }
-
-    /**
-     * Returns a {@link Converter} for converting {@code type} to a {@link String}, or null if
-     * {@code type} cannot be handled by this factory. This is used to create converters for types
-     * specified by {@link Field @Field}, {@link FieldMap @FieldMap} values, {@link Header @Header},
-     * {@link HeaderMap @HeaderMap}, {@link Path @Path}, {@link Query @Query}, and {@link
-     * QueryMap @QueryMap} values.
-     */
-    public @Nullable Converter<?, String> stringConverter(
-        Type type, Annotation[] annotations, Retrofit retrofit) {
-      return null;
-    }
-
     /**
      * Extract the upper bound of the generic parameter at {@code index} from {@code type}. For
      * example, index 1 of {@code Map<String, ? extends Runnable>} returns {@code Runnable}.
@@ -94,6 +52,45 @@ public interface Converter<F, T> {
      */
     protected static Class<?> getRawType(Type type) {
       return Utils.getRawType(type);
+    }
+
+    /**
+     * Returns a {@link Converter} for converting an HTTP response body to {@code type}, or null if
+     * {@code type} cannot be handled by this factory. This is used to create converters for
+     * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
+     * declaration.
+     */
+    public @Nullable
+    Converter<ResponseBody, ?> responseBodyConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
+      return null;
+    }
+
+    /**
+     * Returns a {@link Converter} for converting {@code type} to an HTTP request body, or null if
+     * {@code type} cannot be handled by this factory. This is used to create converters for types
+     * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap} values.
+     */
+    public @Nullable
+    Converter<?, RequestBody> requestBodyConverter(
+      Type type,
+      Annotation[] parameterAnnotations,
+      Annotation[] methodAnnotations,
+      Retrofit retrofit) {
+      return null;
+    }
+
+    /**
+     * Returns a {@link Converter} for converting {@code type} to a {@link String}, or null if
+     * {@code type} cannot be handled by this factory. This is used to create converters for types
+     * specified by {@link Field @Field}, {@link FieldMap @FieldMap} values, {@link Header @Header},
+     * {@link HeaderMap @HeaderMap}, {@link Path @Path}, {@link Query @Query}, and {@link
+     * QueryMap @QueryMap} values.
+     */
+    public @Nullable
+    Converter<?, String> stringConverter(
+      Type type, Annotation[] annotations, Retrofit retrofit) {
+      return null;
     }
   }
 }

@@ -15,15 +15,18 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import okhttp3.HttpUrl;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import okhttp3.HttpUrl;
 
-/** Make a PATCH request. */
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+/**
+ * Make a PATCH request.
+ */
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)

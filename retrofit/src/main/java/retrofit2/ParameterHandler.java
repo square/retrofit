@@ -55,9 +55,9 @@ abstract class ParameterHandler<T> {
   }
 
   static final class RelativeUrl extends ParameterHandler<Object> {
+    private static final String PARAMETER_IS_NULL = "@Url parameter is null.";
     private final Method method;
     private final int p;
-    private static final String PARAMETER_IS_NULL = "@Url parameter is null.";
 
     RelativeUrl(Method method, int p) {
       this.method = method;
@@ -74,9 +74,9 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Header<T> extends ParameterHandler<T> {
+    private static final String NAME_IS_NULL = "name == null";
     private final String name;
     private final Converter<T, String> valueConverter;
-    private static final String NAME_IS_NULL = "name == null";
 
     Header(String name, Converter<T, String> valueConverter) {
       this.name = Objects.requireNonNull(name, NAME_IS_NULL);
@@ -95,12 +95,12 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Path<T> extends ParameterHandler<T> {
+    private static final String NAME_IS_NULL = "name == null";
     private final Method method;
     private final int p;
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
-    private static final String NAME_IS_NULL = "name == null";
 
     Path(Method method, int p, String name, Converter<T, String> valueConverter, boolean encoded) {
       this.method = method;
@@ -121,10 +121,10 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Query<T> extends ParameterHandler<T> {
+    private static final String NAME_IS_NULL = "name == null";
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
-    private static final String NAME_IS_NULL = "name == null";
 
     Query(String name, Converter<T, String> valueConverter, boolean encoded) {
       this.name = Objects.requireNonNull(name, NAME_IS_NULL);
@@ -160,12 +160,12 @@ abstract class ParameterHandler<T> {
   }
 
   static final class QueryMap<T> extends ParameterHandler<Map<String, T>> {
+    private static final String QUERY_MAP_NULL = "Query map was null";
+    private static final String QUERY_MAP_NULL_KEY = "Query map contained null key.";
     private final Method method;
     private final int p;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
-    private static final String QUERY_MAP_NULL = "Query map was null";
-    private static final String QUERY_MAP_NULL_KEY = "Query map contained null key.";
 
     QueryMap(Method method, int p, Converter<T, String> valueConverter, boolean encoded) {
       this.method = method;
@@ -205,11 +205,11 @@ abstract class ParameterHandler<T> {
   }
 
   static final class HeaderMap<T> extends ParameterHandler<Map<String, T>> {
+    private static final String HEADER_MAP_NULL = "Header map was null.";
+    private static final String HEADER_MAP_KEY_NULL = "Header map contained null key.";
     private final Method method;
     private final int p;
     private final Converter<T, String> valueConverter;
-    private static final String HEADER_MAP_NULL = "Header map was null.";
-    private static final String HEADER_MAP_KEY_NULL = "Header map contained null key.";
 
     HeaderMap(Method method, int p, Converter<T, String> valueConverter) {
       this.method = method;
@@ -239,9 +239,9 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Headers extends ParameterHandler<okhttp3.Headers> {
+    private static final String HEADERS_NOT_NULL = "Headers parameter must not be null.";
     private final Method method;
     private final int p;
-    private static final String HEADERS_NOT_NULL = "Headers parameter must not be null.";
 
     Headers(Method method, int p) {
       this.method = method;
@@ -258,10 +258,10 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Field<T> extends ParameterHandler<T> {
+    private static final String NAME_IS_NULL = "name == null";
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
-    private static final String NAME_IS_NULL = "name == null";
 
     Field(String name, Converter<T, String> valueConverter, boolean encoded) {
       this.name = Objects.requireNonNull(name, NAME_IS_NULL);
@@ -281,12 +281,12 @@ abstract class ParameterHandler<T> {
   }
 
   static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
+    private static final String FIELD_NULL = "Field map was null.";
+    private static final String FIELD_NULL_KEY = "Field map contained null key.";
     private final Method method;
     private final int p;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
-    private static final String FIELD_NULL = "Field map was null.";
-    private static final String FIELD_NULL_KEY = "Field map contained null key.";
 
     FieldMap(Method method, int p, Converter<T, String> valueConverter, boolean encoded) {
       this.method = method;
@@ -347,7 +347,7 @@ abstract class ParameterHandler<T> {
       try {
         body = converter.convert(value);
       } catch (IOException e) {
-        throw Utils.parameterError(method, p, String.format("Unable to convert %s to RequestBody",value), e);
+        throw Utils.parameterError(method, p, String.format("Unable to convert %s to RequestBody", value), e);
       }
       builder.addPart(headers, body);
     }
@@ -368,12 +368,12 @@ abstract class ParameterHandler<T> {
   }
 
   static final class PartMap<T> extends ParameterHandler<Map<String, T>> {
+    private static final String PART_MAP_NULL = "Part map was null.";
+    private static final String PART_MAP_KEY_NULL = "Part map contained null key.";
     private final Method method;
     private final int p;
     private final Converter<T, RequestBody> valueConverter;
     private final String transferEncoding;
-    private static final String PART_MAP_NULL = "Part map was null.";
-    private static final String PART_MAP_KEY_NULL = "Part map contained null key.";
 
     PartMap(
       Method method, int p, Converter<T, RequestBody> valueConverter, String transferEncoding) {
@@ -413,10 +413,10 @@ abstract class ParameterHandler<T> {
   }
 
   static final class Body<T> extends ParameterHandler<T> {
+    private static final String BODY_PARAMETER_NOT_NULL = "Body parameter value must not be null.";
     private final Method method;
     private final int p;
     private final Converter<T, RequestBody> converter;
-    private static final String BODY_PARAMETER_NOT_NULL = "Body parameter value must not be null.";
 
     Body(Method method, int p, Converter<T, RequestBody> converter) {
       this.method = method;

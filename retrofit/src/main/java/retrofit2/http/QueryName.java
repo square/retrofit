@@ -15,12 +15,12 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter appended to the URL that has no value.
@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@QueryName String filter);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.friends("contains(Bob)")} yields {@code /friends?contains(Bob)}.
  *
  * <p>Array/Varargs Example:
@@ -43,7 +43,7 @@ import java.lang.annotation.Target;
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@QueryName String... filters);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.friends("contains(Bob)", "age(42)")} yields {@code
  * /friends?contains(Bob)&age(42)}.
  *
@@ -54,7 +54,7 @@ import java.lang.annotation.Target;
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@QueryName(encoded=true) String filter);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.friends("name+age"))} yields {@code /friends?name+age}.
  *
  * @see Query
@@ -64,6 +64,8 @@ import java.lang.annotation.Target;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface QueryName {
-  /** Specifies whether the parameter is already URL encoded. */
+  /**
+   * Specifies whether the parameter is already URL encoded.
+   */
   boolean encoded() default false;
 }

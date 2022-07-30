@@ -32,14 +32,16 @@ import static retrofit2.CommonConstants.REQUIRE_NON_NULL_MESSAGE;
 final class DefaultCallAdapterFactory extends CallAdapter.Factory {
   private final static String NO_PARAMETRIZED_CLASS_ERROR_MESSAGE = "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>";
   private final static String CANCELED_MESSAGE_ERROR = "Canceled";
-  private final @Nullable Executor callbackExecutor;
+  private final @Nullable
+  Executor callbackExecutor;
 
   DefaultCallAdapterFactory(@Nullable Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
   }
 
   @Override
-  public @Nullable CallAdapter<?, ?> get(
+  public @Nullable
+  CallAdapter<?, ?> get(
     Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != Call.class) {
       return null;

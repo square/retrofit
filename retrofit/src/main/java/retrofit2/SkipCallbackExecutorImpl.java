@@ -18,36 +18,36 @@ package retrofit2;
 import java.lang.annotation.Annotation;
 
 final class SkipCallbackExecutorImpl implements SkipCallbackExecutor {
-    private static final SkipCallbackExecutor INSTANCE = new SkipCallbackExecutorImpl();
+  private static final SkipCallbackExecutor INSTANCE = new SkipCallbackExecutorImpl();
 
-    static Annotation[] ensurePresent(Annotation[] annotations) {
-        if (Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)) {
-            return annotations;
-        }
-
-        Annotation[] newAnnotations = new Annotation[annotations.length + 1];
-        newAnnotations[0] = SkipCallbackExecutorImpl.INSTANCE;
-        System.arraycopy(annotations, 0, newAnnotations, 1, annotations.length);
-        return newAnnotations;
+  static Annotation[] ensurePresent(Annotation[] annotations) {
+    if (Utils.isAnnotationPresent(annotations, SkipCallbackExecutor.class)) {
+      return annotations;
     }
 
-    @Override
-    public Class<? extends Annotation> annotationType() {
-        return SkipCallbackExecutor.class;
-    }
+    Annotation[] newAnnotations = new Annotation[annotations.length + 1];
+    newAnnotations[0] = SkipCallbackExecutorImpl.INSTANCE;
+    System.arraycopy(annotations, 0, newAnnotations, 1, annotations.length);
+    return newAnnotations;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof SkipCallbackExecutor;
-    }
+  @Override
+  public Class<? extends Annotation> annotationType() {
+    return SkipCallbackExecutor.class;
+  }
 
-    @Override
-    public int hashCode() {
-        return 0;
-    }
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof SkipCallbackExecutor;
+  }
 
-    @Override
-    public String toString() {
-        return String.format("@%s()", SkipCallbackExecutor.class.getName());
-    }
+  @Override
+  public int hashCode() {
+    return 0;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("@%s()", SkipCallbackExecutor.class.getName());
+  }
 }

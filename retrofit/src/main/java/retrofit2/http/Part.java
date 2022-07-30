@@ -15,13 +15,14 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import retrofit2.Converter;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import retrofit2.Converter;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Denotes a single part of a multi-part request.
@@ -62,6 +63,9 @@ public @interface Part {
    * okhttp3.MultipartBody.Part}.
    */
   String value() default "";
-  /** The {@code Content-Transfer-Encoding} of this part. */
+
+  /**
+   * The {@code Content-Transfer-Encoding} of this part.
+   */
   String encoding() default "binary";
 }

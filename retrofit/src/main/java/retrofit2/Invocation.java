@@ -49,19 +49,20 @@ import java.util.Objects;
  * types for parameters!
  */
 public final class Invocation {
+  private final Method method;
+  private final List<?> arguments;
+  /**
+   * Trusted constructor assumes ownership of {@code arguments}.
+   */
+  Invocation(Method method, List<?> arguments) {
+    this.method = method;
+    this.arguments = Collections.unmodifiableList(arguments);
+  }
+
   public static Invocation of(Method method, List<?> arguments) {
     Objects.requireNonNull(method, "method == null");
     Objects.requireNonNull(arguments, "arguments == null");
     return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
-  }
-
-  private final Method method;
-  private final List<?> arguments;
-
-  /** Trusted constructor assumes ownership of {@code arguments}. */
-  Invocation(Method method, List<?> arguments) {
-    this.method = method;
-    this.arguments = Collections.unmodifiableList(arguments);
   }
 
   public Method method() {
@@ -75,6 +76,6 @@ public final class Invocation {
   @Override
   public String toString() {
     return String.format(
-        "%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);
+      "%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);
   }
 }

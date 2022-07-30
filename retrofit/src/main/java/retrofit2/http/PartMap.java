@@ -15,13 +15,14 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import retrofit2.Converter;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import retrofit2.Converter;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Denotes name and value parts of a multi-part request.
@@ -54,6 +55,8 @@ import retrofit2.Converter;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface PartMap {
-  /** The {@code Content-Transfer-Encoding} of the parts. */
+  /**
+   * The {@code Content-Transfer-Encoding} of the parts.
+   */
   String encoding() default "binary";
 }

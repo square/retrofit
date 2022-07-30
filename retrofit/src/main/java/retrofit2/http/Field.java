@@ -15,15 +15,16 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import retrofit2.Retrofit;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
-import retrofit2.Retrofit;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Named pair for a form-encoded request.
@@ -42,7 +43,7 @@ import retrofit2.Retrofit;
  *     &#64;Field("name") String name,
  *     &#64;Field("occupation") String occupation);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.example("Bob Smith", "President")} yields a request body of {@code
  * name=Bob+Smith&occupation=President}.
  *
@@ -53,7 +54,7 @@ import retrofit2.Retrofit;
  * &#64;POST("/list")
  * Call&lt;ResponseBody&gt; example(@Field("name") String... names);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.example("Bob Smith", "Jane Doe")} yields a request body of {@code
  * name=Bob+Smith&name=Jane+Doe}.
  *
@@ -66,6 +67,8 @@ import retrofit2.Retrofit;
 public @interface Field {
   String value();
 
-  /** Specifies whether the {@linkplain #value() name} and value are already URL encoded. */
+  /**
+   * Specifies whether the {@linkplain #value() name} and value are already URL encoded.
+   */
   boolean encoded() default false;
 }

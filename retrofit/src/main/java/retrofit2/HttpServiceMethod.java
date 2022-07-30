@@ -32,11 +32,11 @@ import static retrofit2.Utils.methodError;
  * Adapts an invocation of an interface method into an HTTP call.
  */
 abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT> {
+  private static final String RESPONSE = "Response must include generic type (e.g., Response<String>)";
+  private static final String HEAD_METHOD = "HEAD method must use Void or Unit as response type.";
   private final RequestFactory requestFactory;
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, ResponseT> responseConverter;
-  private static final String RESPONSE = "Response must include generic type (e.g., Response<String>)";
-  private static final String HEAD_METHOD = "HEAD method must use Void or Unit as response type.";
 
   HttpServiceMethod(
     RequestFactory requestFactory,

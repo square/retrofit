@@ -15,15 +15,16 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import retrofit2.Retrofit;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
-import retrofit2.Retrofit;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Named replacement in a URL path segment. Values are converted to strings using {@link
@@ -36,7 +37,7 @@ import retrofit2.Retrofit;
  * &#64;GET("/image/{id}")
  * Call&lt;ResponseBody&gt; example(@Path("id") int id);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.example(1)} yields {@code /image/1}.
  *
  * <p>Values are URL encoded by default. Disable with {@code encoded=true}.
@@ -48,7 +49,7 @@ import retrofit2.Retrofit;
  * &#64;GET("/user/{name}")
  * Call&lt;ResponseBody&gt; notEncoded(@Path(value="name", encoded=true) String name);
  * </code></pre>
- *
+ * <p>
  * Calling {@code foo.encoded("John+Doe")} yields {@code /user/John%2BDoe} whereas {@code
  * foo.notEncoded("John+Doe")} yields {@code /user/John+Doe}.
  *

@@ -15,24 +15,26 @@
  */
 package retrofit2;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import javax.annotation.Nullable;
 import kotlin.Unit;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Streaming;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+
 final class BuiltInConverters extends Converter.Factory {
 
   @Override
-  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
-      Type type, Annotation[] annotations, Retrofit retrofit) {
+  public @Nullable
+  Converter<ResponseBody, ?> responseBodyConverter(
+    Type type, Annotation[] annotations, Retrofit retrofit) {
     if (type == ResponseBody.class) {
       return Utils.isAnnotationPresent(annotations, Streaming.class)
-          ? StreamingResponseBodyConverter.INSTANCE
-          : BufferingResponseBodyConverter.INSTANCE;
+        ? StreamingResponseBodyConverter.INSTANCE
+        : BufferingResponseBodyConverter.INSTANCE;
     }
     if (type == Void.class) {
       return VoidResponseBodyConverter.INSTANCE;
@@ -44,11 +46,12 @@ final class BuiltInConverters extends Converter.Factory {
   }
 
   @Override
-  public @Nullable Converter<?, RequestBody> requestBodyConverter(
-      Type type,
-      Annotation[] parameterAnnotations,
-      Annotation[] methodAnnotations,
-      Retrofit retrofit) {
+  public @Nullable
+  Converter<?, RequestBody> requestBodyConverter(
+    Type type,
+    Annotation[] parameterAnnotations,
+    Annotation[] methodAnnotations,
+    Retrofit retrofit) {
     if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
       return RequestBodyConverter.INSTANCE;
     }
@@ -85,7 +88,7 @@ final class BuiltInConverters extends Converter.Factory {
   }
 
   static final class StreamingResponseBodyConverter
-      implements Converter<ResponseBody, ResponseBody> {
+    implements Converter<ResponseBody, ResponseBody> {
     static final StreamingResponseBodyConverter INSTANCE = new StreamingResponseBodyConverter();
 
     @Override
@@ -95,7 +98,7 @@ final class BuiltInConverters extends Converter.Factory {
   }
 
   static final class BufferingResponseBodyConverter
-      implements Converter<ResponseBody, ResponseBody> {
+    implements Converter<ResponseBody, ResponseBody> {
     static final BufferingResponseBodyConverter INSTANCE = new BufferingResponseBodyConverter();
 
     @Override

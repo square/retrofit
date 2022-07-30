@@ -40,10 +40,12 @@ final class OkHttpCall<T> implements Call<T> {
   private volatile boolean canceled;
 
   @GuardedBy("this")
-  private @Nullable okhttp3.Call rawCall;
+  private @Nullable
+  okhttp3.Call rawCall;
 
   @GuardedBy("this") // Either a RuntimeException, non-fatal Error, or IOException.
-  private @Nullable Throwable creationFailure;
+  private @Nullable
+  Throwable creationFailure;
 
   @GuardedBy("this")
   private boolean executed;
@@ -274,7 +276,8 @@ final class OkHttpCall<T> implements Call<T> {
 
   static final class NoContentResponseBody extends ResponseBody {
     private static final String CANNOT_READ_RAW_RESPONSE_BODY_OF_A_CONVERTED_BODY = "Cannot read raw response body of a converted body.";
-    private final @Nullable MediaType contentType;
+    private final @Nullable
+    MediaType contentType;
     private final long contentLength;
 
     NoContentResponseBody(@Nullable MediaType contentType, long contentLength) {

@@ -15,14 +15,14 @@
  */
 package retrofit2;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Change the behavior of a {@code Call<BodyType>} return type to not use the {@linkplain
@@ -34,7 +34,7 @@ import java.lang.reflect.Type;
  * &#64;GET("user/{id}/token")
  * Call&lt;String&gt; getToken(@Path("id") long id);
  * </code></pre>
- *
+ * <p>
  * This annotation can also be used when a {@link CallAdapter.Factory} <em>explicitly</em> delegates
  * to the built-in factory for {@link Call} via {@link Retrofit#nextCallAdapter(CallAdapter.Factory,
  * Type, Annotation[])} in order for the returned {@link Call} to skip the executor. (Note: by
@@ -44,4 +44,5 @@ import java.lang.reflect.Type;
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface SkipCallbackExecutor {}
+public @interface SkipCallbackExecutor {
+}

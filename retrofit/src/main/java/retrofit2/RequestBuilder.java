@@ -15,18 +15,13 @@
  */
 package retrofit2;
 
-import java.io.IOException;
-import java.util.regex.Pattern;
-import javax.annotation.Nullable;
-import okhttp3.FormBody;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import okio.Buffer;
 import okio.BufferedSink;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.regex.Pattern;
 
 final class RequestBuilder {
   private static final char[] HEX_DIGITS = {
@@ -53,27 +48,31 @@ final class RequestBuilder {
   private final String method;
 
   private final HttpUrl baseUrl;
-  private @Nullable String relativeUrl;
-  private @Nullable HttpUrl.Builder urlBuilder;
-
   private final Request.Builder requestBuilder;
   private final Headers.Builder headersBuilder;
-  private @Nullable MediaType contentType;
-
   private final boolean hasBody;
-  private @Nullable MultipartBody.Builder multipartBuilder;
-  private @Nullable FormBody.Builder formBuilder;
-  private @Nullable RequestBody body;
+  private @Nullable
+  String relativeUrl;
+  private @Nullable
+  HttpUrl.Builder urlBuilder;
+  private @Nullable
+  MediaType contentType;
+  private @Nullable
+  MultipartBody.Builder multipartBuilder;
+  private @Nullable
+  FormBody.Builder formBuilder;
+  private @Nullable
+  RequestBody body;
 
   RequestBuilder(
-      String method,
-      HttpUrl baseUrl,
-      @Nullable String relativeUrl,
-      @Nullable Headers headers,
-      @Nullable MediaType contentType,
-      boolean hasBody,
-      boolean isFormEncoded,
-      boolean isMultipart) {
+    String method,
+    HttpUrl baseUrl,
+    @Nullable String relativeUrl,
+    @Nullable Headers headers,
+    @Nullable MediaType contentType,
+    boolean hasBody,
+    boolean isFormEncoded,
+    boolean isMultipart) {
     this.method = method;
     this.baseUrl = baseUrl;
     this.relativeUrl = relativeUrl;
@@ -95,6 +94,52 @@ final class RequestBuilder {
     }
   }
 
+  private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
+    int codePoint;
+    for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
+      codePoint = input.codePointAt(i);
+      if (codePoint < 0x20
+        || codePoint >= 0x7f
+        || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
+        || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
+        Buffer out = new Buffer();
+        out.writeUtf8(input, 0, i);
+        canonicalizeForPath(out, input, i, limit, alreadyEncoded);
+        return out.readUtf8();
+      }
+    }
+
+    return input;
+  }
+
+  private static void canonicalizeForPath(
+    Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
+    Buffer utf8Buffer = null;
+    int codePoint;
+    for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
+      codePoint = input.codePointAt(i);
+      if (alreadyEncoded
+        && (codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r')) {
+      } else if (codePoint < 0x20
+        || codePoint >= 0x7f
+        || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
+        || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
+        if (utf8Buffer == null) {
+          utf8Buffer = new Buffer();
+        }
+        utf8Buffer.writeUtf8CodePoint(codePoint);
+        while (!utf8Buffer.exhausted()) {
+          int b = utf8Buffer.readByte() & 0xff;
+          out.writeByte('%');
+          out.writeByte(HEX_DIGITS[(b >> 4) & 0xf]);
+          out.writeByte(HEX_DIGITS[b & 0xf]);
+        }
+      } else {
+        out.writeUtf8CodePoint(codePoint);
+      }
+    }
+  }
+
   void setRelativeUrl(Object relativeUrl) {
     this.relativeUrl = relativeUrl.toString();
   }
@@ -104,7 +149,7 @@ final class RequestBuilder {
       try {
         contentType = MediaType.get(value);
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException( ADD_HEADER_EXCEPTION + value, e);
+        throw new IllegalArgumentException(ADD_HEADER_EXCEPTION + value, e);
       }
     } else {
       headersBuilder.add(name, value);
@@ -123,55 +168,9 @@ final class RequestBuilder {
     String newRelativeUrl = relativeUrl.replace("{" + name + "}", replacement);
     if (PATH_TRAVERSAL.matcher(newRelativeUrl).matches()) {
       throw new IllegalArgumentException(
-    		  ADD_PATH_PARAM_EXCEPTION  + value);
+        ADD_PATH_PARAM_EXCEPTION + value);
     }
     relativeUrl = newRelativeUrl;
-  }
-
-  private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
-    int codePoint;
-    for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
-      codePoint = input.codePointAt(i);
-      if (codePoint < 0x20
-          || codePoint >= 0x7f
-          || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
-          || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
-        Buffer out = new Buffer();
-        out.writeUtf8(input, 0, i);
-        canonicalizeForPath(out, input, i, limit, alreadyEncoded);
-        return out.readUtf8();
-      }
-    }
-
-    return input;
-  }
-
-  private static void canonicalizeForPath(
-      Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
-    Buffer utf8Buffer = null;
-    int codePoint;
-    for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
-      codePoint = input.codePointAt(i);
-      if (alreadyEncoded
-          && (codePoint == '\t' || codePoint == '\n' || codePoint == '\f' || codePoint == '\r')) {
-      } else if (codePoint < 0x20
-          || codePoint >= 0x7f
-          || PATH_SEGMENT_ALWAYS_ENCODE_SET.indexOf(codePoint) != -1
-          || (!alreadyEncoded && (codePoint == '/' || codePoint == '%'))) {
-        if (utf8Buffer == null) {
-          utf8Buffer = new Buffer();
-        }
-        utf8Buffer.writeUtf8CodePoint(codePoint);
-        while (!utf8Buffer.exhausted()) {
-          int b = utf8Buffer.readByte() & 0xff;
-          out.writeByte('%');
-          out.writeByte(HEX_DIGITS[(b >> 4) & 0xf]);
-          out.writeByte(HEX_DIGITS[b & 0xf]);
-        }
-      } else {
-        out.writeUtf8CodePoint(codePoint);
-      }
-    }
   }
 
   void addQueryParam(String name, @Nullable String value, boolean encoded) {
@@ -179,7 +178,7 @@ final class RequestBuilder {
       urlBuilder = baseUrl.newBuilder(relativeUrl);
       if (urlBuilder == null) {
         throw new IllegalArgumentException(
-            "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
+          "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
       }
       relativeUrl = null;
     }
@@ -191,7 +190,7 @@ final class RequestBuilder {
     }
   }
 
-  @SuppressWarnings("ConstantConditions") 
+  @SuppressWarnings("ConstantConditions")
   void addFormField(String name, String value, boolean encoded) {
     if (encoded) {
       formBuilder.addEncoded(name, value);
@@ -200,12 +199,12 @@ final class RequestBuilder {
     }
   }
 
-  @SuppressWarnings("ConstantConditions") 
+  @SuppressWarnings("ConstantConditions")
   void addPart(Headers headers, RequestBody body) {
     multipartBuilder.addPart(headers, body);
   }
 
-  @SuppressWarnings("ConstantConditions") 
+  @SuppressWarnings("ConstantConditions")
   void addPart(MultipartBody.Part part) {
     multipartBuilder.addPart(part);
   }
@@ -227,7 +226,7 @@ final class RequestBuilder {
       url = baseUrl.resolve(relativeUrl);
       if (url == null) {
         throw new IllegalArgumentException(
-            "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
+          "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
       }
     }
 

@@ -15,10 +15,10 @@
  */
 package retrofit2;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import javax.annotation.Nullable;
 
 /**
  * Adapts a {@link Call} with response type {@code R} into the type of {@code T}. Instances are
@@ -62,13 +62,6 @@ public interface CallAdapter<R, T> {
    */
   abstract class Factory {
     /**
-     * Returns a call adapter for interface methods that return {@code returnType}, or null if it
-     * cannot be handled by this factory.
-     */
-    public abstract @Nullable CallAdapter<?, ?> get(
-        Type returnType, Annotation[] annotations, Retrofit retrofit);
-
-    /**
      * Extract the upper bound of the generic parameter at {@code index} from {@code type}. For
      * example, index 1 of {@code Map<String, ? extends Runnable>} returns {@code Runnable}.
      */
@@ -83,5 +76,13 @@ public interface CallAdapter<R, T> {
     protected static Class<?> getRawType(Type type) {
       return Utils.getRawType(type);
     }
+
+    /**
+     * Returns a call adapter for interface methods that return {@code returnType}, or null if it
+     * cannot be handled by this factory.
+     */
+    public abstract @Nullable
+    CallAdapter<?, ?> get(
+      Type returnType, Annotation[] annotations, Retrofit retrofit);
   }
 }

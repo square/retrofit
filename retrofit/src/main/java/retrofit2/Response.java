@@ -27,9 +27,6 @@ import java.util.Objects;
  * An HTTP response.
  */
 public final class Response<T> {
-  private final okhttp3.Response rawResponse;
-  private final @Nullable T body;
-  private final @Nullable ResponseBody errorBody;
   private static final String RESPONSE_SUCCESS = "Response.success()";
   private static final String RESPONSE_ERROR = "Response.error()";
   private static final String HEADER_NULL = "headers == null";
@@ -37,6 +34,11 @@ public final class Response<T> {
   private static final String RAW_RESPONSE_SUCCESS = "rawResponse must be successful response";
   private static final String RAW_RESPONSE_NOT_SUCCESS = "rawResponse should not be successful response";
   private static final String BODY_NULL = "body == null";
+  private final okhttp3.Response rawResponse;
+  private final @Nullable
+  T body;
+  private final @Nullable
+  ResponseBody errorBody;
 
   private Response(
     okhttp3.Response rawResponse, @Nullable T body, @Nullable ResponseBody errorBody) {
@@ -175,14 +177,16 @@ public final class Response<T> {
   /**
    * The deserialized response body of a {@linkplain #isSuccessful() successful} response.
    */
-  public @Nullable T body() {
+  public @Nullable
+  T body() {
     return body;
   }
 
   /**
    * The raw response body of an {@linkplain #isSuccessful() unsuccessful} response.
    */
-  public @Nullable ResponseBody errorBody() {
+  public @Nullable
+  ResponseBody errorBody() {
     return errorBody;
   }
 

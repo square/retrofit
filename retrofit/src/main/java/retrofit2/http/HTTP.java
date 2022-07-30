@@ -15,13 +15,14 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import okhttp3.HttpUrl;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import okhttp3.HttpUrl;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Use a custom HTTP verb for a request.
@@ -32,7 +33,7 @@ import okhttp3.HttpUrl;
  *   Call&lt;ResponseBody&gt; customEndpoint();
  * }
  * </code></pre>
- *
+ * <p>
  * This annotation can also used for sending {@code DELETE} with a request body:
  *
  * <pre><code>
@@ -47,6 +48,7 @@ import okhttp3.HttpUrl;
 @Retention(RUNTIME)
 public @interface HTTP {
   String method();
+
   /**
    * A relative or absolute path, or full URL of the endpoint. This value is optional if the first
    * parameter of the method is annotated with {@link Url @Url}.

@@ -15,15 +15,16 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import retrofit2.Retrofit;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
-import retrofit2.Retrofit;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter keys and values appended to the URL.
@@ -37,7 +38,7 @@ import retrofit2.Retrofit;
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@QueryMap Map&lt;String, String&gt; filters);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.friends(ImmutableMap.of("group", "coworker", "age", "42"))} yields {@code
  * /friends?group=coworker&age=42}.
  *
@@ -48,7 +49,7 @@ import retrofit2.Retrofit;
  * &#64;GET("/friends")
  * Call&lt;ResponseBody&gt; friends(@QueryMap(encoded=true) Map&lt;String, String&gt; filters);
  * </code></pre>
- *
+ * <p>
  * Calling with {@code foo.list(ImmutableMap.of("group", "coworker+bowling"))} yields {@code
  * /friends?group=coworker+bowling}.
  *
@@ -61,6 +62,8 @@ import retrofit2.Retrofit;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface QueryMap {
-  /** Specifies whether parameter names and values are already URL encoded. */
+  /**
+   * Specifies whether parameter names and values are already URL encoded.
+   */
   boolean encoded() default false;
 }

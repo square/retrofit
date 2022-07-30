@@ -15,14 +15,15 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import retrofit2.Converter;
+import retrofit2.Retrofit;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import retrofit2.Converter;
-import retrofit2.Retrofit;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Use this annotation on a service method param when you want to directly control the request body
@@ -35,4 +36,5 @@ import retrofit2.Retrofit;
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface Body {}
+public @interface Body {
+}

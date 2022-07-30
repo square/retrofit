@@ -22,10 +22,10 @@ import java.util.Objects;
  * Exception for an unexpected, non-2xx HTTP response.
  */
 public class HttpException extends RuntimeException {
+  private static final String RESPONSE_NULL = "response == null";
   private final int code;
   private final String message;
   private final transient Response<?> response;
-  private static final String RESPONSE_NULL = "response == null";
 
   public HttpException(Response<?> response) {
     super(getMessage(response));

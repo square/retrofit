@@ -16,25 +16,27 @@
 package retrofit2;
 
 import android.annotation.TargetApi;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-@IgnoreJRERequirement 
+@IgnoreJRERequirement
 @TargetApi(24)
 final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
   @Override
-  public @Nullable CallAdapter<?, ?> get(
-      Type returnType, Annotation[] annotations, Retrofit retrofit) {
+  public @Nullable
+  CallAdapter<?, ?> get(
+    Type returnType, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(returnType) != CompletableFuture.class) {
       return null;
     }
     if (!(returnType instanceof ParameterizedType)) {
       throw new IllegalStateException(
-          "CompletableFuture return type must be parameterized"
+        "CompletableFuture return type must be parameterized"
           + " as CompletableFuture<Foo> or CompletableFuture<? extends Foo>");
     }
     Type innerType = getParameterUpperBound(0, (ParameterizedType) returnType);
@@ -45,7 +47,7 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
 
     if (!(innerType instanceof ParameterizedType)) {
       throw new IllegalStateException(
-          "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+        "Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
     Type responseType = getParameterUpperBound(0, (ParameterizedType) innerType);
     return new ResponseCallAdapter<>(responseType);
@@ -97,7 +99,7 @@ final class CompletableFutureCallAdapterFactory extends CallAdapter.Factory {
 
   @IgnoreJRERequirement
   private static final class ResponseCallAdapter<R>
-      implements CallAdapter<R, CompletableFuture<Response<R>>> {
+    implements CallAdapter<R, CompletableFuture<Response<R>>> {
     private final Type responseType;
 
     ResponseCallAdapter(Type responseType) {

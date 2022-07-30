@@ -15,9 +15,10 @@
  */
 package retrofit2;
 
-import java.io.IOException;
 import okhttp3.Request;
 import okio.Timeout;
+
+import java.io.IOException;
 
 /**
  * An invocation of a Retrofit method that sends a request to a webserver and returns a response.
@@ -36,9 +37,9 @@ public interface Call<T> extends Cloneable {
   /**
    * Synchronously send the request and return its response.
    *
-   * @throws IOException if a problem occurred talking to the server.
+   * @throws IOException      if a problem occurred talking to the server.
    * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request or
-   *     decoding the response.
+   *                          decoding the response.
    */
   Response<T> execute() throws IOException;
 
@@ -60,7 +61,9 @@ public interface Call<T> extends Cloneable {
    */
   void cancel();
 
-  /** True if {@link #cancel()} was called. */
+  /**
+   * True if {@link #cancel()} was called.
+   */
   boolean isCanceled();
 
   /**
@@ -69,7 +72,9 @@ public interface Call<T> extends Cloneable {
    */
   Call<T> clone();
 
-  /** The original HTTP request. */
+  /**
+   * The original HTTP request.
+   */
   Request request();
 
   /**

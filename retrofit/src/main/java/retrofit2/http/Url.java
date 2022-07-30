@@ -15,14 +15,15 @@
  */
 package retrofit2.http;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import okhttp3.HttpUrl;
+import retrofit2.Retrofit;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import okhttp3.HttpUrl;
-import retrofit2.Retrofit;
+
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * URL resolved against the {@linkplain Retrofit#baseUrl() base URL}.
@@ -38,4 +39,5 @@ import retrofit2.Retrofit;
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface Url {}
+public @interface Url {
+}

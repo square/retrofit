@@ -303,7 +303,8 @@ final class Utils {
    * Returns the declaring class of {@code typeVariable}, or {@code null} if it was not declared by
    * a class.
    */
-  private static @Nullable Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
+  private static @Nullable
+  Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
     GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
     return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
   }
@@ -416,7 +417,8 @@ final class Utils {
   }
 
   static final class ParameterizedTypeImpl implements ParameterizedType {
-    private final @Nullable Type ownerType;
+    private final @Nullable
+    Type ownerType;
     private final Type rawType;
     private final Type[] typeArguments;
 
@@ -448,7 +450,8 @@ final class Utils {
     }
 
     @Override
-    public @Nullable Type getOwnerType() {
+    public @Nullable
+    Type getOwnerType() {
       return ownerType;
     }
 
@@ -512,7 +515,8 @@ final class Utils {
    */
   private static final class WildcardTypeImpl implements WildcardType {
     private final Type upperBound;
-    private final @Nullable Type lowerBound;
+    private final @Nullable
+    Type lowerBound;
 
     WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
       if (lowerBounds.length > 1) throw new IllegalArgumentException();

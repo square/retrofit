@@ -32,7 +32,8 @@ import static retrofit2.CommonConstants.PARAMETER_UPPER_BOUND_INDEX;
 @TargetApi(24)
 final class OptionalConverterFactory extends Converter.Factory {
   @Override
-  public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
+  public @Nullable
+  Converter<ResponseBody, ?> responseBodyConverter(
     Type type, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(type) != Optional.class) {
       return null;
