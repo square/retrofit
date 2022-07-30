@@ -1129,7 +1129,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage())
           .isEqualTo(
-              "Path parameter \"ping\" value must not be null. (parameter #1)\n"
+              "Path parameter ping value must not be null. (parameter #1)\n"
                   + "    for method Example.method");
     }
   }

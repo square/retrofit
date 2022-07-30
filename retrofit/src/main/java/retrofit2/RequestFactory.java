@@ -561,14 +561,12 @@ final class RequestFactory {
         if (partName.isEmpty()) {
           if (Iterable.class.isAssignableFrom(rawParameterType)) {
             if (!(type instanceof ParameterizedType)) {
+
               throw parameterError(
                 method,
-                p,
-                rawParameterType.getSimpleName()
-                  + " must include generic type (e.g., "
-                  + rawParameterType.getSimpleName()
-                  + "<String>)");
+                p, formatIncludeGenericTypeStringError(rawParameterType.getSimpleName()));
             }
+
             ParameterizedType parameterizedType = (ParameterizedType) type;
             Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
             if (!MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
@@ -607,11 +605,7 @@ final class RequestFactory {
             if (!(type instanceof ParameterizedType)) {
               throw parameterError(
                 method,
-                p,
-                rawParameterType.getSimpleName()
-                  + " must include generic type (e.g., "
-                  + rawParameterType.getSimpleName()
-                  + "<String>)");
+                p, formatIncludeGenericTypeStringError(rawParameterType.getSimpleName()));
             }
             ParameterizedType parameterizedType = (ParameterizedType) type;
             Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
@@ -730,18 +724,18 @@ final class RequestFactory {
         return new ParameterHandler.Tag<>(tagType);
       }
 
-      return null; // Not a Retrofit annotation.
+      return null;
+    }
+
+    private String formatIncludeGenericTypeStringError(String rawParameterType) {
+      return String.format("%s must include generic type (e.g., %s<String>)", rawParameterType, rawParameterType);
     }
 
     private Converter verifyParameterizedType(int p, Type type, Annotation[] annotations, Class<?> rawParameterType) {
       if (!(type instanceof ParameterizedType)) {
         throw parameterError(
           method,
-          p,
-          rawParameterType.getSimpleName()
-            + " must include generic type (e.g., "
-            + rawParameterType.getSimpleName()
-            + "<String>)");
+          p, formatIncludeGenericTypeStringError(rawParameterType.getSimpleName()));
       }
       ParameterizedType parameterizedType = (ParameterizedType) type;
       Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
