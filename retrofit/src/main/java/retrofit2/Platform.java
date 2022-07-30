@@ -15,14 +15,13 @@
  */
 package retrofit2;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+
+import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
@@ -31,11 +30,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.Executor;
-import javax.annotation.Nullable;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 abstract class Platform {
   private static final Platform PLATFORM = createPlatform();
+  private static final String UNSUPPORTED_OPERATION_EXCEPTION = "Calling default methods on API 24 and 25 is not supported";
 
   static Platform get() {
     return PLATFORM;
@@ -63,17 +65,19 @@ abstract class Platform {
     }
   }
 
-  abstract @Nullable Executor defaultCallbackExecutor();
+  abstract @Nullable
+  Executor defaultCallbackExecutor();
 
   abstract List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-      @Nullable Executor callbackExecutor);
+    @Nullable Executor callbackExecutor);
 
   abstract List<? extends Converter.Factory> createDefaultConverterFactories();
 
   abstract boolean isDefaultMethod(Method method);
 
-  abstract @Nullable Object invokeDefaultMethod(
-      Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable;
+  abstract @Nullable
+  Object invokeDefaultMethod(
+    Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable;
 
   private static final class Android21 extends Platform {
     @Override
@@ -84,7 +88,7 @@ abstract class Platform {
     @Nullable
     @Override
     Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, Object... args) {
+      Method method, Class<?> declaringClass, Object proxy, Object... args) {
       throw new AssertionError();
     }
 
@@ -95,7 +99,7 @@ abstract class Platform {
 
     @Override
     List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-        @Nullable Executor callbackExecutor) {
+      @Nullable Executor callbackExecutor) {
       return singletonList(new DefaultCallAdapterFactory(callbackExecutor));
     }
 
@@ -105,14 +109,15 @@ abstract class Platform {
     }
   }
 
-  @IgnoreJRERequirement // Only used on Android API 24+
+  @IgnoreJRERequirement
   @TargetApi(24)
   private static final class Android24 extends Platform {
+    private @Nullable
+    Constructor<Lookup> lookupConstructor;
+
     static boolean isSupported() {
       return Build.VERSION.SDK_INT >= 24;
     }
-
-    private @Nullable Constructor<Lookup> lookupConstructor;
 
     @Override
     Executor defaultCallbackExecutor() {
@@ -121,10 +126,10 @@ abstract class Platform {
 
     @Override
     List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-        @Nullable Executor callbackExecutor) {
+      @Nullable Executor callbackExecutor) {
       return asList(
-          new CompletableFutureCallAdapterFactory(),
-          new DefaultCallAdapterFactory(callbackExecutor));
+        new CompletableFutureCallAdapterFactory(),
+        new DefaultCallAdapterFactory(callbackExecutor));
     }
 
     @Override
@@ -140,10 +145,9 @@ abstract class Platform {
     @Nullable
     @Override
     public Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+      Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
       if (Build.VERSION.SDK_INT < 26) {
-        throw new UnsupportedOperationException(
-            "Calling default methods on API 24 and 25 is not supported");
+        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_EXCEPTION);
       }
       Constructor<Lookup> lookupConstructor = this.lookupConstructor;
       if (lookupConstructor == null) {
@@ -152,10 +156,10 @@ abstract class Platform {
         this.lookupConstructor = lookupConstructor;
       }
       return lookupConstructor
-          .newInstance(declaringClass, -1 /* trusted */)
-          .unreflectSpecial(method, declaringClass)
-          .bindTo(proxy)
-          .invokeWithArguments(args);
+        .newInstance(declaringClass, -1 /* trusted */)
+        .unreflectSpecial(method, declaringClass)
+        .bindTo(proxy)
+        .invokeWithArguments(args);
     }
   }
 
@@ -168,7 +172,7 @@ abstract class Platform {
 
     @Override
     List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-        @Nullable Executor callbackExecutor) {
+      @Nullable Executor callbackExecutor) {
       return singletonList(new DefaultCallAdapterFactory(callbackExecutor));
     }
 
@@ -185,15 +189,15 @@ abstract class Platform {
     @Nullable
     @Override
     Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, Object... args) {
+      Method method, Class<?> declaringClass, Object proxy, Object... args) {
       throw new AssertionError();
     }
   }
 
-  @IgnoreJRERequirement // Only used on JVM and Java 8 is the minimum-supported version.
-  @SuppressWarnings("NewApi") // Not used for Android.
+  @IgnoreJRERequirement
   private static final class Java8 extends Platform {
-    private @Nullable Constructor<Lookup> lookupConstructor;
+    private @Nullable
+    Constructor<Lookup> lookupConstructor;
 
     @Nullable
     @Override
@@ -203,10 +207,10 @@ abstract class Platform {
 
     @Override
     List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-        @Nullable Executor callbackExecutor) {
+      @Nullable Executor callbackExecutor) {
       return asList(
-          new CompletableFutureCallAdapterFactory(),
-          new DefaultCallAdapterFactory(callbackExecutor));
+        new CompletableFutureCallAdapterFactory(),
+        new DefaultCallAdapterFactory(callbackExecutor));
     }
 
     @Override
@@ -220,8 +224,9 @@ abstract class Platform {
     }
 
     @Override
-    public @Nullable Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+    public @Nullable
+    Object invokeDefaultMethod(
+      Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
       Constructor<Lookup> lookupConstructor = this.lookupConstructor;
       if (lookupConstructor == null) {
         lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
@@ -229,10 +234,10 @@ abstract class Platform {
         this.lookupConstructor = lookupConstructor;
       }
       return lookupConstructor
-          .newInstance(declaringClass, -1 /* trusted */)
-          .unreflectSpecial(method, declaringClass)
-          .bindTo(proxy)
-          .invokeWithArguments(args);
+        .newInstance(declaringClass, -1 /* trusted */)
+        .unreflectSpecial(method, declaringClass)
+        .bindTo(proxy)
+        .invokeWithArguments(args);
     }
   }
 
@@ -241,8 +246,7 @@ abstract class Platform {
    *
    * <p>https://bugs.openjdk.java.net/browse/JDK-8209005
    */
-  @IgnoreJRERequirement // Only used on JVM and Java 14.
-  @SuppressWarnings("NewApi") // Not used for Android.
+  @IgnoreJRERequirement
   private static final class Java14 extends Platform {
     static boolean isSupported() {
       try {
@@ -262,10 +266,10 @@ abstract class Platform {
 
     @Override
     List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-        @Nullable Executor callbackExecutor) {
+      @Nullable Executor callbackExecutor) {
       return asList(
-          new CompletableFutureCallAdapterFactory(),
-          new DefaultCallAdapterFactory(callbackExecutor));
+        new CompletableFutureCallAdapterFactory(),
+        new DefaultCallAdapterFactory(callbackExecutor));
     }
 
     @Override
@@ -281,11 +285,11 @@ abstract class Platform {
     @Nullable
     @Override
     public Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+      Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
       return MethodHandles.lookup()
-          .unreflectSpecial(method, declaringClass)
-          .bindTo(proxy)
-          .invokeWithArguments(args);
+        .unreflectSpecial(method, declaringClass)
+        .bindTo(proxy)
+        .invokeWithArguments(args);
     }
   }
 
@@ -293,9 +297,11 @@ abstract class Platform {
    * Java 16 has a supported public API for invoking default methods on a proxy. We invoke it
    * reflectively because we cannot compile against the API directly.
    */
-  @IgnoreJRERequirement // Only used on JVM and Java 16.
-  @SuppressWarnings("NewApi") // Not used for Android.
+  @IgnoreJRERequirement
   private static final class Java16 extends Platform {
+    private @Nullable
+    Method invokeDefaultMethod;
+
     static boolean isSupported() {
       try {
         Object version = Runtime.class.getMethod("version").invoke(null);
@@ -306,8 +312,6 @@ abstract class Platform {
       }
     }
 
-    private @Nullable Method invokeDefaultMethod;
-
     @Nullable
     @Override
     Executor defaultCallbackExecutor() {
@@ -316,10 +320,10 @@ abstract class Platform {
 
     @Override
     List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
-        @Nullable Executor callbackExecutor) {
+      @Nullable Executor callbackExecutor) {
       return asList(
-          new CompletableFutureCallAdapterFactory(),
-          new DefaultCallAdapterFactory(callbackExecutor));
+        new CompletableFutureCallAdapterFactory(),
+        new DefaultCallAdapterFactory(callbackExecutor));
     }
 
     @Override
@@ -332,16 +336,16 @@ abstract class Platform {
       return method.isDefault();
     }
 
-    @SuppressWarnings("JavaReflectionMemberAccess") // Only available on Java 16, as we expect.
+    @SuppressWarnings("JavaReflectionMemberAccess")
     @Nullable
     @Override
     public Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+      Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
       Method invokeDefaultMethod = this.invokeDefaultMethod;
       if (invokeDefaultMethod == null) {
         invokeDefaultMethod =
-            InvocationHandler.class.getMethod(
-                "invokeDefault", Object.class, Method.class, Object[].class);
+          InvocationHandler.class.getMethod(
+            "invokeDefault", Object.class, Method.class, Object[].class);
         this.invokeDefaultMethod = invokeDefaultMethod;
       }
       return invokeDefaultMethod.invoke(null, proxy, method, args);
