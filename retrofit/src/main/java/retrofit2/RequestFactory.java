@@ -353,33 +353,16 @@ final class RequestFactory {
     @Nullable
     private ParameterHandler<?> parseParameterAnnotation(
       int p, Type type, Annotation[] annotations, Annotation annotation) {
+
       if (annotation instanceof Url) {
         validateResolvableType(p, type);
-        if (gotUrl) {
-          throw parameterError(method, p, "Multiple @Url method annotations found.");
-        }
-        if (gotPath) {
-          throw parameterError(method, p, "@Path parameters may not be used with @Url.");
-        }
-        if (gotQuery) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @Query.");
-        }
-        if (gotQueryName) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @QueryName.");
-        }
-        if (gotQueryMap) {
-          throw parameterError(method, p, "A @Url parameter must not come after a @QueryMap.");
-        }
-        if (relativeUrl != null) {
-          throw parameterError(method, p, "@Url cannot be used with @%s URL", httpMethod);
-        }
+        // extract function
+        validateUrlFlags(p);
 
         gotUrl = true;
 
-        if (type == HttpUrl.class
-          || type == String.class
-          || type == URI.class
-          || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()))) {
+        // refactoring decompose condition
+        if (typeBoolean(type)) {
           return new ParameterHandler.RelativeUrl(method, p);
         } else {
           throw parameterError(
@@ -390,22 +373,9 @@ final class RequestFactory {
 
       } else if (annotation instanceof Path) {
         validateResolvableType(p, type);
-        if (gotQuery) {
-          throw parameterError(method, p, "A @Path parameter must not come after a @Query.");
-        }
-        if (gotQueryName) {
-          throw parameterError(method, p, "A @Path parameter must not come after a @QueryName.");
-        }
-        if (gotQueryMap) {
-          throw parameterError(method, p, "A @Path parameter must not come after a @QueryMap.");
-        }
-        if (gotUrl) {
-          throw parameterError(method, p, "@Path parameters may not be used with @Url.");
-        }
-        if (relativeUrl == null) {
-          throw parameterError(
-            method, p, "@Path can only be used with relative url on @%s", httpMethod);
-        }
+        // extract function
+        validatePathFlags(p);
+
         gotPath = true;
 
         Path path = (Path) annotation;
@@ -422,20 +392,11 @@ final class RequestFactory {
         boolean encoded = query.encoded();
 
         Class<?> rawParameterType = Utils.getRawType(type);
+
         gotQuery = true;
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-              method,
-              p,
-              rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          // extract method
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.Query<>(name, converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
@@ -455,18 +416,7 @@ final class RequestFactory {
         Class<?> rawParameterType = Utils.getRawType(type);
         gotQueryName = true;
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-              method,
-              p,
-              rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.QueryName<>(converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
@@ -508,18 +458,7 @@ final class RequestFactory {
 
         Class<?> rawParameterType = Utils.getRawType(type);
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-              method,
-              p,
-              rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.Header<>(name, converter).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
@@ -569,18 +508,7 @@ final class RequestFactory {
 
         Class<?> rawParameterType = Utils.getRawType(type);
         if (Iterable.class.isAssignableFrom(rawParameterType)) {
-          if (!(type instanceof ParameterizedType)) {
-            throw parameterError(
-              method,
-              p,
-              rawParameterType.getSimpleName()
-                + " must include generic type (e.g., "
-                + rawParameterType.getSimpleName()
-                + "<String>)");
-          }
-          ParameterizedType parameterizedType = (ParameterizedType) type;
-          Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+          Converter converter = verifyParameterizedType(p, type, annotations, rawParameterType);
           return new ParameterHandler.Field<>(name, converter, encoded).iterable();
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
@@ -805,6 +733,52 @@ final class RequestFactory {
       return null; // Not a Retrofit annotation.
     }
 
+    private Converter verifyParameterizedType(int p, Type type, Annotation[] annotations, Class<?> rawParameterType) {
+      if (!(type instanceof ParameterizedType)) {
+        throw parameterError(
+          method,
+          p,
+          rawParameterType.getSimpleName()
+            + " must include generic type (e.g., "
+            + rawParameterType.getSimpleName()
+            + "<String>)");
+      }
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
+      return retrofit.stringConverter(iterableType, annotations);
+    }
+
+    private void validatePathFlags(int p) {
+      if (gotQuery) {
+        throw parameterError(method, p, "A @Path parameter must not come after a @Query.");
+      } else if (gotQueryName) {
+        throw parameterError(method, p, "A @Path parameter must not come after a @QueryName.");
+      } else if (gotQueryMap) {
+        throw parameterError(method, p, "A @Path parameter must not come after a @QueryMap.");
+      } else if (gotUrl) {
+        throw parameterError(method, p, "@Path parameters may not be used with @Url.");
+      } else if (relativeUrl == null) {
+        throw parameterError(
+          method, p, "@Path can only be used with relative url on @%s", httpMethod);
+      }
+    }
+
+    private void validateUrlFlags(int p) {
+      if (gotUrl) {
+        throw parameterError(method, p, "Multiple @Url method annotations found.");
+      } else if (gotPath) {
+        throw parameterError(method, p, "@Path parameters may not be used with @Url.");
+      } else if (gotQuery) {
+        throw parameterError(method, p, "A @Url parameter must not come after a @Query.");
+      } else if (gotQueryName) {
+        throw parameterError(method, p, "A @Url parameter must not come after a @QueryName.");
+      } else if (gotQueryMap) {
+        throw parameterError(method, p, "A @Url parameter must not come after a @QueryMap.");
+      } else if (relativeUrl != null) {
+        throw parameterError(method, p, "@Url cannot be used with @%s URL", httpMethod);
+      }
+    }
+
     private void validateResolvableType(int p, Type type) {
       if (Utils.hasUnresolvableType(type)) {
         throw parameterError(
@@ -825,5 +799,12 @@ final class RequestFactory {
         throw parameterError(method, p, "URL \"%s\" does not contain \"{%s}\".", relativeUrl, name);
       }
     }
+  }
+
+  private static boolean typeBoolean(Type type) {
+    return type == HttpUrl.class
+      || type == String.class
+      || type == URI.class
+      || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()));
   }
 }
