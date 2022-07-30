@@ -39,13 +39,17 @@ final class RequestFactory {
   final boolean isKotlinSuspendFunction;
   private final Method method;
   private final HttpUrl baseUrl;
-  private final @Nullable String relativeUrl;
-  private final @Nullable Headers headers;
-  private final @Nullable MediaType contentType;
+  private final @Nullable
+  String relativeUrl;
+  private final @Nullable
+  Headers headers;
+  private final @Nullable
+  MediaType contentType;
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
   private final ParameterHandler<?>[] parameterHandlers;
+
   RequestFactory(Builder builder) {
     method = builder.method;
     baseUrl = builder.retrofit.baseUrl;
@@ -62,6 +66,13 @@ final class RequestFactory {
 
   static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
     return new Builder(retrofit, method).build();
+  }
+
+  private static boolean typeBoolean(Type type) {
+    return type == HttpUrl.class
+      || type == String.class
+      || type == URI.class
+      || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()));
   }
 
   okhttp3.Request create(Object[] args) throws IOException {
@@ -109,7 +120,7 @@ final class RequestFactory {
     private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
     private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
 
-    private static final String HTTP_METHOD_REQUIRED= "HTTP method annotation is required (e.g., @GET, @POST, etc.).";
+    private static final String HTTP_METHOD_REQUIRED = "HTTP method annotation is required (e.g., @GET, @POST, etc.).";
     private static final String MULTIPART_ESPECIFIED = "Multipart can only be specified on HTTP methods with request body (e.g., @POST).";
     private static final String FORM_URL_ENCODED = "FormUrlEncoded can only be specified on HTTP methods with request body (e.g., @POST).";
     private static final String DOES_NOT_CONTAIN_BODY = "Non-body HTTP method cannot contain @Body.";
@@ -133,15 +144,21 @@ final class RequestFactory {
     boolean gotQueryName;
     boolean gotQueryMap;
     boolean gotUrl;
-    @Nullable String httpMethod;
+    @Nullable
+    String httpMethod;
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
-    @Nullable String relativeUrl;
-    @Nullable Headers headers;
-    @Nullable MediaType contentType;
-    @Nullable Set<String> relativeUrlParamNames;
-    @Nullable ParameterHandler<?>[] parameterHandlers;
+    @Nullable
+    String relativeUrl;
+    @Nullable
+    Headers headers;
+    @Nullable
+    MediaType contentType;
+    @Nullable
+    Set<String> relativeUrlParamNames;
+    @Nullable
+    ParameterHandler<?>[] parameterHandlers;
     boolean isKotlinSuspendFunction;
 
     Builder(Retrofit retrofit, Method method) {
@@ -342,7 +359,8 @@ final class RequestFactory {
               isKotlinSuspendFunction = true;
               return null;
             }
-          } catch (NoClassDefFoundError ignored) {}
+          } catch (NoClassDefFoundError ignored) {
+          }
         }
         throw parameterError(method, p, "No Retrofit annotation found.");
       }
@@ -793,12 +811,5 @@ final class RequestFactory {
         throw parameterError(method, p, "URL \"%s\" does not contain \"{%s}\".", relativeUrl, name);
       }
     }
-  }
-
-  private static boolean typeBoolean(Type type) {
-    return type == HttpUrl.class
-      || type == String.class
-      || type == URI.class
-      || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()));
   }
 }
