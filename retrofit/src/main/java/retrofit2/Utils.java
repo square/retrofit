@@ -15,26 +15,28 @@
  */
 package retrofit2;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import javax.annotation.Nullable;
 import kotlin.Unit;
 import okhttp3.ResponseBody;
 import okio.Buffer;
+import org.apache.http.HttpStatus;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 final class Utils {
+  public static final String TYPE_ARGUMENT_NULL = "typeArgument == null";
+  public static final String EXPECTED_A_CLASS_PARAMETERIZED_TYPE_OR_GENERIC_ARRAY_ERROR_MESSAGE = "Expected a Class, ParameterizedType, or GenericArrayType, but <%s> is of type %s";
+  public static final String INDEX_NOT_IN_RANGE_FOR_TYPE = "Index %d not in range [0, %d) for %s";
   static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
+  /**
+   * Not volatile because we don't mind multiple threads discovering this.
+   */
+  private static boolean checkForKotlinUnit = true;
 
   private Utils() {
     // No instances.
@@ -46,19 +48,19 @@ final class Utils {
 
   @SuppressWarnings("AnnotateFormatMethod")
   static RuntimeException methodError(
-      Method method, @Nullable Throwable cause, String message, Object... args) {
+    Method method, @Nullable Throwable cause, String message, Object... args) {
     message = String.format(message, args);
     return new IllegalArgumentException(
-        message
-            + "\n    for method "
-            + method.getDeclaringClass().getSimpleName()
-            + "."
-            + method.getName(),
-        cause);
+      message
+        + "\n    for method "
+        + method.getDeclaringClass().getSimpleName()
+        + "."
+        + method.getName(),
+      cause);
   }
 
   static RuntimeException parameterError(
-      Method method, Throwable cause, int p, String message, Object... args) {
+    Method method, Throwable cause, int p, String message, Object... args) {
     return methodError(method, cause, message + " (parameter #" + (p + 1) + ")", args);
   }
 
@@ -96,14 +98,16 @@ final class Utils {
     }
 
     throw new IllegalArgumentException(
-        "Expected a Class, ParameterizedType, or "
-            + "GenericArrayType, but <"
-            + type
-            + "> is of type "
-            + type.getClass().getName());
+      "Expected a Class, ParameterizedType, or "
+        + "GenericArrayType, but <"
+        + type
+        + "> is of type "
+        + type.getClass().getName());
   }
 
-  /** Returns true if {@code a} and {@code b} are equal. */
+  /**
+   * Returns true if {@code a} and {@code b} are equal.
+   */
   static boolean equals(Type a, Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
@@ -118,8 +122,8 @@ final class Utils {
       Object ownerA = pa.getOwnerType();
       Object ownerB = pb.getOwnerType();
       return (ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB)))
-          && pa.getRawType().equals(pb.getRawType())
-          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+        && pa.getRawType().equals(pb.getRawType())
+        && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
     } else if (a instanceof GenericArrayType) {
       if (!(b instanceof GenericArrayType)) return false;
@@ -132,14 +136,14 @@ final class Utils {
       WildcardType wa = (WildcardType) a;
       WildcardType wb = (WildcardType) b;
       return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
-          && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
+        && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
 
     } else if (a instanceof TypeVariable) {
       if (!(b instanceof TypeVariable)) return false;
       TypeVariable<?> va = (TypeVariable<?>) a;
       TypeVariable<?> vb = (TypeVariable<?>) b;
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
-          && va.getName().equals(vb.getName());
+        && va.getName().equals(vb.getName());
 
     } else {
       return false; // This isn't a type we support!
@@ -204,7 +208,7 @@ final class Utils {
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
     return resolve(
-        context, contextRawType, getGenericSupertype(context, contextRawType, supertype));
+      context, contextRawType, getGenericSupertype(context, contextRawType, supertype));
   }
 
   static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
@@ -222,16 +226,16 @@ final class Utils {
         Type componentType = original.getComponentType();
         Type newComponentType = resolve(context, contextRawType, componentType);
         return componentType == newComponentType
-            ? original
-            : new GenericArrayTypeImpl(newComponentType);
+          ? original
+          : new GenericArrayTypeImpl(newComponentType);
 
       } else if (toResolve instanceof GenericArrayType) {
         GenericArrayType original = (GenericArrayType) toResolve;
         Type componentType = original.getGenericComponentType();
         Type newComponentType = resolve(context, contextRawType, componentType);
         return componentType == newComponentType
-            ? original
-            : new GenericArrayTypeImpl(newComponentType);
+          ? original
+          : new GenericArrayTypeImpl(newComponentType);
 
       } else if (toResolve instanceof ParameterizedType) {
         ParameterizedType original = (ParameterizedType) toResolve;
@@ -252,8 +256,8 @@ final class Utils {
         }
 
         return changed
-            ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
-            : original;
+          ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
+          : original;
 
       } else if (toResolve instanceof WildcardType) {
         WildcardType original = (WildcardType) toResolve;
@@ -263,12 +267,12 @@ final class Utils {
         if (originalLowerBound.length == 1) {
           Type lowerBound = resolve(context, contextRawType, originalLowerBound[0]);
           if (lowerBound != originalLowerBound[0]) {
-            return new WildcardTypeImpl(new Type[] {Object.class}, new Type[] {lowerBound});
+            return new WildcardTypeImpl(new Type[]{Object.class}, new Type[]{lowerBound});
           }
         } else if (originalUpperBound.length == 1) {
           Type upperBound = resolve(context, contextRawType, originalUpperBound[0]);
           if (upperBound != originalUpperBound[0]) {
-            return new WildcardTypeImpl(new Type[] {upperBound}, EMPTY_TYPE_ARRAY);
+            return new WildcardTypeImpl(new Type[]{upperBound}, EMPTY_TYPE_ARRAY);
           }
         }
         return original;
@@ -280,7 +284,7 @@ final class Utils {
   }
 
   private static Type resolveTypeVariable(
-      Type context, Class<?> contextRawType, TypeVariable<?> unknown) {
+    Type context, Class<?> contextRawType, TypeVariable<?> unknown) {
     Class<?> declaredByRaw = declaringClassOf(unknown);
 
     // We can't reduce this further.
@@ -310,7 +314,9 @@ final class Utils {
     }
   }
 
-  /** Returns true if {@code annotations} contains an instance of {@code cls}. */
+  /**
+   * Returns true if {@code annotations} contains an instance of {@code cls}.
+   */
   static boolean isAnnotationPresent(Annotation[] annotations, Class<? extends Annotation> cls) {
     for (Annotation annotation : annotations) {
       if (cls.isInstance(annotation)) {
@@ -328,15 +334,18 @@ final class Utils {
 
   static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
-    if (index < 0 || index >= types.length) {
-      throw new IllegalArgumentException(
-          "Index " + index + " not in range [0," + types.length + ") for " + type);
+    if (isInRange(index, types.length)) {
+      throw new IllegalArgumentException(String.format(INDEX_NOT_IN_RANGE_FOR_TYPE, index, types.length, type));
     }
     Type paramType = types[index];
     if (paramType instanceof WildcardType) {
       return ((WildcardType) paramType).getUpperBounds()[0];
     }
     return paramType;
+  }
+
+  private static boolean isInRange(int index, int max) {
+    return index < 0 || index >= max;
   }
 
   static Type getParameterLowerBound(int index, ParameterizedType type) {
@@ -370,12 +379,40 @@ final class Utils {
       return true;
     }
     String className = type == null ? "null" : type.getClass().getName();
-    throw new IllegalArgumentException(
-        "Expected a Class, ParameterizedType, or "
-            + "GenericArrayType, but <"
-            + type
-            + "> is of type "
-            + className);
+
+
+    throw new IllegalArgumentException(String.format(EXPECTED_A_CLASS_PARAMETERIZED_TYPE_OR_GENERIC_ARRAY_ERROR_MESSAGE, type, className));
+  }
+
+  // https://github.com/ReactiveX/RxJava/blob/6a44e5d0543a48f1c378dc833a155f3f71333bc2/
+  // src/main/java/io/reactivex/exceptions/Exceptions.java#L66
+  static void throwIfFatal(Throwable t) {
+    if (t instanceof VirtualMachineError) {
+      throw (VirtualMachineError) t;
+    } else if (t instanceof ThreadDeath) {
+      throw (ThreadDeath) t;
+    } else if (t instanceof LinkageError) {
+      throw (LinkageError) t;
+    }
+  }
+
+  static boolean isUnit(Type type) {
+    if (checkForKotlinUnit) {
+      try {
+        return type == Unit.class;
+      } catch (NoClassDefFoundError ignored) {
+        checkForKotlinUnit = false;
+      }
+    }
+    return false;
+  }
+
+  static boolean isSuccessfulStatusCode(int code) {
+    return code < HttpStatus.SC_OK || code >= HttpStatus.SC_MULTIPLE_CHOICES;
+  }
+
+  static boolean isNoContentOrResetContentStatusCode(int code) {
+    return code == HttpStatus.SC_NO_CONTENT || code == HttpStatus.SC_RESET_CONTENT;
   }
 
   static final class ParameterizedTypeImpl implements ParameterizedType {
@@ -386,12 +423,12 @@ final class Utils {
     ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type... typeArguments) {
       // Require an owner type if the raw type needs it.
       if (rawType instanceof Class<?>
-          && (ownerType == null) != (((Class<?>) rawType).getEnclosingClass() == null)) {
+        && (ownerType == null) != (((Class<?>) rawType).getEnclosingClass() == null)) {
         throw new IllegalArgumentException();
       }
 
       for (Type typeArgument : typeArguments) {
-        Objects.requireNonNull(typeArgument, "typeArgument == null");
+        Objects.requireNonNull(typeArgument, TYPE_ARGUMENT_NULL);
         checkNotPrimitive(typeArgument);
       }
 
@@ -423,8 +460,8 @@ final class Utils {
     @Override
     public int hashCode() {
       return Arrays.hashCode(typeArguments)
-          ^ rawType.hashCode()
-          ^ (ownerType != null ? ownerType.hashCode() : 0);
+        ^ rawType.hashCode()
+        ^ (ownerType != null ? ownerType.hashCode() : 0);
     }
 
     @Override
@@ -464,7 +501,7 @@ final class Utils {
 
     @Override
     public String toString() {
-      return typeToString(componentType) + "[]";
+      return String.format("%s []", typeToString(componentType));
     }
   }
 
@@ -497,12 +534,12 @@ final class Utils {
 
     @Override
     public Type[] getUpperBounds() {
-      return new Type[] {upperBound};
+      return new Type[]{upperBound};
     }
 
     @Override
     public Type[] getLowerBounds() {
-      return lowerBound != null ? new Type[] {lowerBound} : EMPTY_TYPE_ARRAY;
+      return lowerBound != null ? new Type[]{lowerBound} : EMPTY_TYPE_ARRAY;
     }
 
     @Override
@@ -518,35 +555,9 @@ final class Utils {
 
     @Override
     public String toString() {
-      if (lowerBound != null) return "? super " + typeToString(lowerBound);
+      if (lowerBound != null) return String.format("? super %s", typeToString(lowerBound));
       if (upperBound == Object.class) return "?";
-      return "? extends " + typeToString(upperBound);
+      return String.format("? extends %s", typeToString(upperBound));
     }
-  }
-
-  // https://github.com/ReactiveX/RxJava/blob/6a44e5d0543a48f1c378dc833a155f3f71333bc2/
-  // src/main/java/io/reactivex/exceptions/Exceptions.java#L66
-  static void throwIfFatal(Throwable t) {
-    if (t instanceof VirtualMachineError) {
-      throw (VirtualMachineError) t;
-    } else if (t instanceof ThreadDeath) {
-      throw (ThreadDeath) t;
-    } else if (t instanceof LinkageError) {
-      throw (LinkageError) t;
-    }
-  }
-
-  /** Not volatile because we don't mind multiple threads discovering this. */
-  private static boolean checkForKotlinUnit = true;
-
-  static boolean isUnit(Type type) {
-    if (checkForKotlinUnit) {
-      try {
-        return type == Unit.class;
-      } catch (NoClassDefFoundError ignored) {
-        checkForKotlinUnit = false;
-      }
-    }
-    return false;
   }
 }

@@ -16,28 +16,31 @@
 package retrofit2;
 
 import android.annotation.TargetApi;
+import okhttp3.ResponseBody;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import javax.annotation.Nullable;
-import okhttp3.ResponseBody;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+
+import static retrofit2.CommonConstants.PARAMETER_UPPER_BOUND_INDEX;
 
 @IgnoreJRERequirement // Only added when Optional is available (Java 8+ / Android API 24+).
 @TargetApi(24)
 final class OptionalConverterFactory extends Converter.Factory {
   @Override
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
-      Type type, Annotation[] annotations, Retrofit retrofit) {
+    Type type, Annotation[] annotations, Retrofit retrofit) {
     if (getRawType(type) != Optional.class) {
       return null;
     }
 
-    Type innerType = getParameterUpperBound(0, (ParameterizedType) type);
+    Type innerType = getParameterUpperBound(PARAMETER_UPPER_BOUND_INDEX, (ParameterizedType) type);
     Converter<ResponseBody, Object> delegate =
-        retrofit.responseBodyConverter(innerType, annotations);
+      retrofit.responseBodyConverter(innerType, annotations);
     return new OptionalConverter<>(delegate);
   }
 

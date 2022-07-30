@@ -15,27 +15,28 @@
  */
 package retrofit2;
 
-import static retrofit2.Utils.throwIfFatal;
-
-import java.io.IOException;
-import java.util.Objects;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
-import okio.Buffer;
-import okio.BufferedSource;
-import okio.ForwardingSource;
-import okio.Okio;
-import okio.Timeout;
+import okio.*;
+
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
+import java.io.IOException;
+import java.util.Objects;
+
+import static retrofit2.CommonConstants.REQUIRE_NON_NULL_MESSAGE;
+import static retrofit2.Utils.*;
 
 final class OkHttpCall<T> implements Call<T> {
+  public static final String CALL_FACTORY_RETURNED_NULL = "Call.Factory returned null.";
+  private final static String ALREADY_EXECUTED_MESSAGE = "Already executed.";
+  private final static String UNABLE_TO_CREATE_REQUEST_MESSAGE = "Unable to create request.";
+  private final static String UNABLE_TO_CREATE_CALL_MESSAGE = "Unable to create call.";
   private final RequestFactory requestFactory;
   private final Object[] args;
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, T> responseConverter;
-
   private volatile boolean canceled;
 
   @GuardedBy("this")
@@ -48,17 +49,17 @@ final class OkHttpCall<T> implements Call<T> {
   private boolean executed;
 
   OkHttpCall(
-      RequestFactory requestFactory,
-      Object[] args,
-      okhttp3.Call.Factory callFactory,
-      Converter<ResponseBody, T> responseConverter) {
+    RequestFactory requestFactory,
+    Object[] args,
+    okhttp3.Call.Factory callFactory,
+    Converter<ResponseBody, T> responseConverter) {
     this.requestFactory = requestFactory;
     this.args = args;
     this.callFactory = callFactory;
     this.responseConverter = responseConverter;
   }
 
-  @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
+  // We are a final type & this saves clearing state.
   @Override
   public OkHttpCall<T> clone() {
     return new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
@@ -69,7 +70,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       return getRawCall().request();
     } catch (IOException e) {
-      throw new RuntimeException("Unable to create request.", e);
+      throw new RuntimeException(UNABLE_TO_CREATE_REQUEST_MESSAGE, e);
     }
   }
 
@@ -78,7 +79,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       return getRawCall().timeout();
     } catch (IOException e) {
-      throw new RuntimeException("Unable to create call.", e);
+      throw new RuntimeException(UNABLE_TO_CREATE_CALL_MESSAGE, e);
     }
   }
 
@@ -114,13 +115,13 @@ final class OkHttpCall<T> implements Call<T> {
 
   @Override
   public void enqueue(final Callback<T> callback) {
-    Objects.requireNonNull(callback, "callback == null");
+    Objects.requireNonNull(callback, REQUIRE_NON_NULL_MESSAGE);
 
     okhttp3.Call call;
     Throwable failure;
 
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed.");
+      if (executed) throw new IllegalStateException(ALREADY_EXECUTED_MESSAGE);
       executed = true;
 
       call = rawCall;
@@ -145,40 +146,38 @@ final class OkHttpCall<T> implements Call<T> {
     }
 
     call.enqueue(
-        new okhttp3.Callback() {
-          @Override
-          public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse) {
-            Response<T> response;
-            try {
-              response = parseResponse(rawResponse);
-            } catch (Throwable e) {
-              throwIfFatal(e);
-              callFailure(e);
-              return;
-            }
-
-            try {
-              callback.onResponse(OkHttpCall.this, response);
-            } catch (Throwable t) {
-              throwIfFatal(t);
-              t.printStackTrace(); // TODO this is not great
-            }
-          }
-
-          @Override
-          public void onFailure(okhttp3.Call call, IOException e) {
+      new okhttp3.Callback() {
+        @Override
+        public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse) {
+          Response<T> response;
+          try {
+            response = parseResponse(rawResponse);
+          } catch (Throwable e) {
+            throwIfFatal(e);
             callFailure(e);
+            return;
           }
 
-          private void callFailure(Throwable e) {
-            try {
-              callback.onFailure(OkHttpCall.this, e);
-            } catch (Throwable t) {
-              throwIfFatal(t);
-              t.printStackTrace(); // TODO this is not great
-            }
+          try {
+            callback.onResponse(OkHttpCall.this, response);
+          } catch (Throwable t) {
+            throwIfFatal(t);
           }
-        });
+        }
+
+        @Override
+        public void onFailure(okhttp3.Call call, IOException e) {
+          callFailure(e);
+        }
+
+        private void callFailure(Throwable e) {
+          try {
+            callback.onFailure(OkHttpCall.this, e);
+          } catch (Throwable t) {
+            throwIfFatal(t);
+          }
+        }
+      });
   }
 
   @Override
@@ -191,7 +190,7 @@ final class OkHttpCall<T> implements Call<T> {
     okhttp3.Call call;
 
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed.");
+      if (executed) throw new IllegalStateException(ALREADY_EXECUTED_MESSAGE);
       executed = true;
 
       call = getRawCall();
@@ -207,7 +206,7 @@ final class OkHttpCall<T> implements Call<T> {
   private okhttp3.Call createRawCall() throws IOException {
     okhttp3.Call call = callFactory.newCall(requestFactory.create(args));
     if (call == null) {
-      throw new NullPointerException("Call.Factory returned null.");
+      throw new NullPointerException(CALL_FACTORY_RETURNED_NULL);
     }
     return call;
   }
@@ -217,13 +216,13 @@ final class OkHttpCall<T> implements Call<T> {
 
     // Remove the body's source (the only stateful object) so we can pass the response along.
     rawResponse =
-        rawResponse
-            .newBuilder()
-            .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
-            .build();
+      rawResponse
+        .newBuilder()
+        .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
+        .build();
 
     int code = rawResponse.code();
-    if (code < 200 || code >= 300) {
+    if (isSuccessfulStatusCode(code)) {
       try {
         // Buffer the entire body to avoid future I/O.
         ResponseBody bufferedBody = Utils.buffer(rawBody);
@@ -233,7 +232,7 @@ final class OkHttpCall<T> implements Call<T> {
       }
     }
 
-    if (code == 204 || code == 205) {
+    if (isNoContentOrResetContentStatusCode(code)) {
       rawBody.close();
       return Response.success(null, rawResponse);
     }
@@ -274,6 +273,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   static final class NoContentResponseBody extends ResponseBody {
+    private static final String CANNOT_READ_RAW_RESPONSE_BODY_OF_A_CONVERTED_BODY = "Cannot read raw response body of a converted body.";
     private final @Nullable MediaType contentType;
     private final long contentLength;
 
@@ -294,30 +294,31 @@ final class OkHttpCall<T> implements Call<T> {
 
     @Override
     public BufferedSource source() {
-      throw new IllegalStateException("Cannot read raw response body of a converted body.");
+      throw new IllegalStateException(CANNOT_READ_RAW_RESPONSE_BODY_OF_A_CONVERTED_BODY);
     }
   }
 
   static final class ExceptionCatchingResponseBody extends ResponseBody {
     private final ResponseBody delegate;
     private final BufferedSource delegateSource;
-    @Nullable IOException thrownException;
+    @Nullable
+    IOException thrownException;
 
     ExceptionCatchingResponseBody(ResponseBody delegate) {
       this.delegate = delegate;
       this.delegateSource =
-          Okio.buffer(
-              new ForwardingSource(delegate.source()) {
-                @Override
-                public long read(Buffer sink, long byteCount) throws IOException {
-                  try {
-                    return super.read(sink, byteCount);
-                  } catch (IOException e) {
-                    thrownException = e;
-                    throw e;
-                  }
-                }
-              });
+        Okio.buffer(
+          new ForwardingSource(delegate.source()) {
+            @Override
+            public long read(Buffer sink, long byteCount) throws IOException {
+              try {
+                return super.read(sink, byteCount);
+              } catch (IOException e) {
+                thrownException = e;
+                throw e;
+              }
+            }
+          });
     }
 
     @Override
