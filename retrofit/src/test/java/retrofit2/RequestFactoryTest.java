@@ -609,10 +609,10 @@ public final class RequestFactoryTest {
   }
 
   @Test
-  public void headerMapMustBeAMap() {
+  public void headerMapMustBeAMapOrHeaders() {
     class Example {
       @GET("/")
-      Call<ResponseBody> method(@HeaderMap List<String> headers) {
+      Call<ResponseBody> method(@HeaderMap okhttp3.Headers headers, @HeaderMap List<String> headerMap) {
         return null;
       }
     }
@@ -622,7 +622,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessage(
-              "@HeaderMap parameter type must be Map. (parameter #1)\n    for method Example.method");
+              "@HeaderMap parameter type must be Map or Headers. (parameter #2)\n    for method Example.method");
     }
   }
 
