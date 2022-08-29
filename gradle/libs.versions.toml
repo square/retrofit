@@ -13,9 +13,9 @@
 # limitations under the License.
 
 [versions]
-kotlin = "1.5.21"
+kotlin = "1.6.0"
 okhttp = "3.14.9"
-protobuf = "3.17.3"
+protobuf = "3.18.2"
 jaxb = "2.3.1"
 jaxb3 = "3.0.1"
 robovm = "2.3.14"
@@ -38,7 +38,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
 junit = { module = "junit:junit", version = "4.13.2" }
 assertj = { module = "org.assertj:assertj-core", version = "3.13.2" }
-guava = { module = "com.google.guava:guava", version = "28.1-jre" }
+guava = { module = "com.google.guava:guava", version = "30.0-jre" }
 android = { module = "com.google.android:android", version = "4.1.1.4" }
 animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.20" }
 findBugsAnnotations = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
@@ -49,7 +49,7 @@ rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.1" }
 reactiveStreams = { module = "org.reactivestreams:reactive-streams", version = "1.0.3" }
 scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.6" }
 gson = { module = "com.google.code.gson:gson", version = "2.9.0" }
-jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.12.4" }
+jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.13.4" }
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb" }
 jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jaxb3" }
@@ -59,7 +59,7 @@ protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protob
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
 wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
-jsoup = { module = "org.jsoup:jsoup", version = "1.14.1" }
+jsoup = { module = "org.jsoup:jsoup", version = "1.15.3" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
-errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
+errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.11.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
