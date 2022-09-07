@@ -21,10 +21,10 @@ import java.io.IOException;
 import kotlin.Unit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.GET;
+import retrofit2.http.HEAD;
 
 public final class KotlinUnitTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -32,10 +32,13 @@ public final class KotlinUnitTest {
   interface Service {
     @GET("/")
     Call<Unit> empty();
+
+    @HEAD("/")
+    Call<Unit> head();
   }
 
   @Test
-  public void unitOnClasspath() throws IOException {
+  public void unitGet() throws IOException {
     Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
     Service example = retrofit.create(Service.class);
 
@@ -46,7 +49,15 @@ public final class KotlinUnitTest {
     assertThat(response.body()).isSameAs(Unit.INSTANCE);
   }
 
-  @Ignore("This is implicitly tested by integration tests of the adapters and converters")
   @Test
-  public void unitMissingFromClasspath() {}
+  public void unitHead() throws IOException {
+    Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
+    Service example = retrofit.create(Service.class);
+
+    server.enqueue(new MockResponse().setBody("Hi"));
+
+    Response<Unit> response = example.head().execute();
+    assertThat(response.isSuccessful()).isTrue();
+    assertThat(response.body()).isSameAs(Unit.INSTANCE);
+  }
 }

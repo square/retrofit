@@ -2,51 +2,9 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 import org.gradle.internal.jvm.Jvm
 
 buildscript {
-  ext.versions = [
-      'kotlin': '1.3.50',
-      'okhttp': '3.14.9',
-      'protobuf': '3.10.0',
-      'jaxb': '2.3.1',
-      'robovm': '2.3.9',
-  ]
-  ext.deps = [
-      'kotlinStdLib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
-      'kotlinCoroutines': 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2',
-      'okhttp': "com.squareup.okhttp3:okhttp:${versions.okhttp}",
-      'mockwebserver': "com.squareup.okhttp3:mockwebserver:${versions.okhttp}",
-      'junit': 'junit:junit:4.13',
-      'assertj': 'org.assertj:assertj-core:3.13.2',
-      'guava': 'com.google.guava:guava:28.1-jre',
-      'android': 'com.google.android:android:4.1.1.4',
-      'animalSnifferAnnotations': 'org.codehaus.mojo:animal-sniffer-annotations:1.18',
-      'findBugsAnnotations': 'com.google.code.findbugs:jsr305:3.0.2',
-      'androidxTestRunner': 'androidx.test:runner:1.1.0',
-      'rxjava': 'io.reactivex:rxjava:1.3.8',
-      'rxjava2': 'io.reactivex.rxjava2:rxjava:2.0.0',
-      'rxjava3': 'io.reactivex.rxjava3:rxjava:3.0.0',
-      'reactiveStreams': 'org.reactivestreams:reactive-streams:1.0.3',
-      'scalaLibrary': 'org.scala-lang:scala-library:2.13.1',
-      'gson': 'com.google.code.gson:gson:2.8.5',
-      'jacksonDatabind': 'com.fasterxml.jackson.core:jackson-databind:2.10.1',
-      'jaxbApi': "javax.xml.bind:jaxb-api:${versions.jaxb}",
-      'jaxbImpl': "org.glassfish.jaxb:jaxb-runtime:${versions.jaxb}",
-      'moshi': 'com.squareup.moshi:moshi:1.8.0',
-      'protobuf': "com.google.protobuf:protobuf-java:${versions.protobuf}",
-      'simpleXml': 'org.simpleframework:simple-xml:2.7.1',
-      'wireRuntime': 'com.squareup.wire:wire-runtime:2.2.0',
-      'jsoup': 'org.jsoup:jsoup:1.12.1',
-      'robovm': "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
-  ]
-
   dependencies {
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
-    classpath 'com.android.tools.build:gradle:3.6.2'
-    classpath 'com.vanniktech:gradle-maven-publish-plugin:0.9.0'
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
-    classpath 'ru.vyarus:gradle-animalsniffer-plugin:1.5.0'
-    classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9'
-    classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${versions.robovm}"
+    classpath libs.androidPlugin
+    classpath libs.robovmPlugin
   }
   repositories {
     mavenCentral()
@@ -54,6 +12,16 @@ buildscript {
     jcenter()
     gradlePluginPortal()
   }
+}
+
+plugins {
+  alias(libs.plugins.kotlin.jvm) apply false
+  alias(libs.plugins.dokka) apply false
+  alias(libs.plugins.errorprone) apply false
+  alias(libs.plugins.mavenPublish) apply false
+  alias(libs.plugins.protobuf) apply false
+  alias(libs.plugins.animalsniffer) apply false
+  alias(libs.plugins.googleJavaFormat) apply false
 }
 
 subprojects {
@@ -69,11 +37,20 @@ subprojects {
     task.targetCompatibility = JavaVersion.VERSION_1_8
   }
 
+  tasks.withType(Test).configureEach {
+    testLogging {
+      if (System.getenv("CI") == "true") {
+        events = ["failed", "skipped", "passed"]
+      }
+      exceptionFormat "full"
+    }
+  }
+
   apply plugin: 'net.ltgt.errorprone'
 
   dependencies {
-    errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
-    errorprone 'com.google.errorprone:error_prone_core:2.4.0'
+    errorproneJavac libs.errorproneJavac
+    errorprone libs.errorproneCore
   }
 
   tasks.withType(JavaCompile).configureEach { task ->
@@ -99,18 +76,19 @@ subprojects {
         signature 'org.codehaus.mojo.signature:java18:1.0@signature'
 
         if (project.path != ':retrofit-converters:java8' &&
-            project.path != ':retrofit-converters:jaxb' &&
-            project.path != ':retrofit-adapters:java8') {
+          project.path != ':retrofit-converters:jaxb' &&
+          project.path != ':retrofit-converters:jaxb3' &&
+          project.path != ':retrofit-adapters:java8') {
           signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
         }
       }
     }
 
-    // google-java-format only works on JDK 11 or newer.
-    if (Jvm.current().javaVersion.isJava11Compatible()) {
+    // google-java-format only works on JDK 11 to JDK 15 (without wild flags).
+    if (Jvm.current().javaVersion.isJava11Compatible() && !Jvm.current().javaVersion.isCompatibleWith(JavaVersion.VERSION_16)) {
       project.apply plugin: 'com.github.sherter.google-java-format'
       googleJavaFormat {
-        toolVersion = '1.8'
+        toolVersion = '1.10.0'
 
         // By default, the GJF plugin includes all Java folders inside the project directory. This
         // does not work well with nested projects, especially when you want to exclude them.
@@ -142,6 +120,12 @@ subprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile).configureEach { task ->
     task.kotlinOptions {
       jvmTarget = '1.8'
+    }
+  }
+
+  pluginManager.withPlugin("com.vanniktech.maven.publish") {
+    mavenPublish {
+      sonatypeHost = "S01"
     }
   }
 }

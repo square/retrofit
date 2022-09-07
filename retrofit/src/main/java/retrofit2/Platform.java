@@ -19,129 +19,343 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-class Platform {
-  private static final Platform PLATFORM = findPlatform();
+abstract class Platform {
+  private static final Platform PLATFORM = createPlatform();
 
   static Platform get() {
     return PLATFORM;
   }
 
-  private static Platform findPlatform() {
+  private static Platform createPlatform() {
     switch (System.getProperty("java.vm.name")) {
       case "Dalvik":
-        return new Android();
+        if (Android24.isSupported()) {
+          return new Android24();
+        }
+        return new Android21();
+
       case "RoboVM":
-        return new Platform(false);
+        return new RoboVm();
+
       default:
-        return new Platform(true);
+        if (Java16.isSupported()) {
+          return new Java16();
+        }
+        if (Java14.isSupported()) {
+          return new Java14();
+        }
+        return new Java8();
     }
   }
 
-  private final boolean hasJava8Types;
-  private final @Nullable Constructor<Lookup> lookupConstructor;
+  abstract @Nullable Executor defaultCallbackExecutor();
 
-  Platform(boolean hasJava8Types) {
-    this.hasJava8Types = hasJava8Types;
+  abstract List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+      @Nullable Executor callbackExecutor);
 
-    Constructor<Lookup> lookupConstructor = null;
-    if (hasJava8Types) {
-      try {
-        // Because the service interface might not be public, we need to use a MethodHandle lookup
-        // that ignores the visibility of the declaringClass.
-        lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
-        lookupConstructor.setAccessible(true);
-      } catch (NoClassDefFoundError ignored) {
-        // Android API 24 or 25 where Lookup doesn't exist. Calling default methods on non-public
-        // interfaces will fail, but there's nothing we can do about it.
-      } catch (NoSuchMethodException ignored) {
-        // Assume JDK 14+ which contains a fix that allows a regular lookup to succeed.
-        // See https://bugs.openjdk.java.net/browse/JDK-8209005.
-      }
-    }
-    this.lookupConstructor = lookupConstructor;
-  }
+  abstract List<? extends Converter.Factory> createDefaultConverterFactories();
 
-  @Nullable
-  Executor defaultCallbackExecutor() {
-    return null;
-  }
+  abstract boolean isDefaultMethod(Method method);
 
-  List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
-      @Nullable Executor callbackExecutor) {
-    DefaultCallAdapterFactory executorFactory = new DefaultCallAdapterFactory(callbackExecutor);
-    return hasJava8Types
-        ? asList(CompletableFutureCallAdapterFactory.INSTANCE, executorFactory)
-        : singletonList(executorFactory);
-  }
+  abstract @Nullable Object invokeDefaultMethod(
+      Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable;
 
-  int defaultCallAdapterFactoriesSize() {
-    return hasJava8Types ? 2 : 1;
-  }
-
-  List<? extends Converter.Factory> defaultConverterFactories() {
-    return hasJava8Types ? singletonList(OptionalConverterFactory.INSTANCE) : emptyList();
-  }
-
-  int defaultConverterFactoriesSize() {
-    return hasJava8Types ? 1 : 0;
-  }
-
-  @IgnoreJRERequirement // Only called on API 24+.
-  boolean isDefaultMethod(Method method) {
-    return hasJava8Types && method.isDefault();
-  }
-
-  @IgnoreJRERequirement // Only called on API 26+.
-  @Nullable
-  Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object, Object... args)
-      throws Throwable {
-    Lookup lookup =
-        lookupConstructor != null
-            ? lookupConstructor.newInstance(declaringClass, -1 /* trusted */)
-            : MethodHandles.lookup();
-    return lookup.unreflectSpecial(method, declaringClass).bindTo(object).invokeWithArguments(args);
-  }
-
-  static final class Android extends Platform {
-    Android() {
-      super(Build.VERSION.SDK_INT >= 24);
-    }
-
+  private static final class Android21 extends Platform {
     @Override
-    public Executor defaultCallbackExecutor() {
-      return new MainThreadExecutor();
+    boolean isDefaultMethod(Method method) {
+      return false;
     }
 
     @Nullable
     @Override
     Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object object, Object... args) throws Throwable {
+        Method method, Class<?> declaringClass, Object proxy, Object... args) {
+      throw new AssertionError();
+    }
+
+    @Override
+    Executor defaultCallbackExecutor() {
+      return MainThreadExecutor.INSTANCE;
+    }
+
+    @Override
+    List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      return singletonList(new DefaultCallAdapterFactory(callbackExecutor));
+    }
+
+    @Override
+    List<? extends Converter.Factory> createDefaultConverterFactories() {
+      return emptyList();
+    }
+  }
+
+  @IgnoreJRERequirement // Only used on Android API 24+
+  @TargetApi(24)
+  private static final class Android24 extends Platform {
+    static boolean isSupported() {
+      return Build.VERSION.SDK_INT >= 24;
+    }
+
+    private @Nullable Constructor<Lookup> lookupConstructor;
+
+    @Override
+    Executor defaultCallbackExecutor() {
+      return MainThreadExecutor.INSTANCE;
+    }
+
+    @Override
+    List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      return asList(
+          new CompletableFutureCallAdapterFactory(),
+          new DefaultCallAdapterFactory(callbackExecutor));
+    }
+
+    @Override
+    List<? extends Converter.Factory> createDefaultConverterFactories() {
+      return singletonList(new OptionalConverterFactory());
+    }
+
+    @Override
+    public boolean isDefaultMethod(Method method) {
+      return method.isDefault();
+    }
+
+    @Nullable
+    @Override
+    public Object invokeDefaultMethod(
+        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
       if (Build.VERSION.SDK_INT < 26) {
         throw new UnsupportedOperationException(
             "Calling default methods on API 24 and 25 is not supported");
       }
-      return super.invokeDefaultMethod(method, declaringClass, object, args);
+      Constructor<Lookup> lookupConstructor = this.lookupConstructor;
+      if (lookupConstructor == null) {
+        lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
+        lookupConstructor.setAccessible(true);
+        this.lookupConstructor = lookupConstructor;
+      }
+      return lookupConstructor
+          .newInstance(declaringClass, -1 /* trusted */)
+          .unreflectSpecial(method, declaringClass)
+          .bindTo(proxy)
+          .invokeWithArguments(args);
+    }
+  }
+
+  private static final class RoboVm extends Platform {
+    @Nullable
+    @Override
+    Executor defaultCallbackExecutor() {
+      return null;
     }
 
-    static final class MainThreadExecutor implements Executor {
-      private final Handler handler = new Handler(Looper.getMainLooper());
+    @Override
+    List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      return singletonList(new DefaultCallAdapterFactory(callbackExecutor));
+    }
 
-      @Override
-      public void execute(Runnable r) {
-        handler.post(r);
+    @Override
+    List<? extends Converter.Factory> createDefaultConverterFactories() {
+      return emptyList();
+    }
+
+    @Override
+    boolean isDefaultMethod(Method method) {
+      return false;
+    }
+
+    @Nullable
+    @Override
+    Object invokeDefaultMethod(
+        Method method, Class<?> declaringClass, Object proxy, Object... args) {
+      throw new AssertionError();
+    }
+  }
+
+  @IgnoreJRERequirement // Only used on JVM and Java 8 is the minimum-supported version.
+  @SuppressWarnings("NewApi") // Not used for Android.
+  private static final class Java8 extends Platform {
+    private @Nullable Constructor<Lookup> lookupConstructor;
+
+    @Nullable
+    @Override
+    Executor defaultCallbackExecutor() {
+      return null;
+    }
+
+    @Override
+    List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      return asList(
+          new CompletableFutureCallAdapterFactory(),
+          new DefaultCallAdapterFactory(callbackExecutor));
+    }
+
+    @Override
+    List<? extends Converter.Factory> createDefaultConverterFactories() {
+      return singletonList(new OptionalConverterFactory());
+    }
+
+    @Override
+    public boolean isDefaultMethod(Method method) {
+      return method.isDefault();
+    }
+
+    @Override
+    public @Nullable Object invokeDefaultMethod(
+        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+      Constructor<Lookup> lookupConstructor = this.lookupConstructor;
+      if (lookupConstructor == null) {
+        lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
+        lookupConstructor.setAccessible(true);
+        this.lookupConstructor = lookupConstructor;
       }
+      return lookupConstructor
+          .newInstance(declaringClass, -1 /* trusted */)
+          .unreflectSpecial(method, declaringClass)
+          .bindTo(proxy)
+          .invokeWithArguments(args);
+    }
+  }
+
+  /**
+   * Java 14 allows a regular lookup to succeed for invoking default methods.
+   *
+   * <p>https://bugs.openjdk.java.net/browse/JDK-8209005
+   */
+  @IgnoreJRERequirement // Only used on JVM and Java 14.
+  @SuppressWarnings("NewApi") // Not used for Android.
+  private static final class Java14 extends Platform {
+    static boolean isSupported() {
+      try {
+        Object version = Runtime.class.getMethod("version").invoke(null);
+        Integer feature = (Integer) version.getClass().getMethod("feature").invoke(version);
+        return feature >= 14;
+      } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException ignored) {
+        return false;
+      }
+    }
+
+    @Nullable
+    @Override
+    Executor defaultCallbackExecutor() {
+      return null;
+    }
+
+    @Override
+    List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      return asList(
+          new CompletableFutureCallAdapterFactory(),
+          new DefaultCallAdapterFactory(callbackExecutor));
+    }
+
+    @Override
+    List<? extends Converter.Factory> createDefaultConverterFactories() {
+      return singletonList(new OptionalConverterFactory());
+    }
+
+    @Override
+    public boolean isDefaultMethod(Method method) {
+      return method.isDefault();
+    }
+
+    @Nullable
+    @Override
+    public Object invokeDefaultMethod(
+        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+      return MethodHandles.lookup()
+          .unreflectSpecial(method, declaringClass)
+          .bindTo(proxy)
+          .invokeWithArguments(args);
+    }
+  }
+
+  /**
+   * Java 16 has a supported public API for invoking default methods on a proxy. We invoke it
+   * reflectively because we cannot compile against the API directly.
+   */
+  @IgnoreJRERequirement // Only used on JVM and Java 16.
+  @SuppressWarnings("NewApi") // Not used for Android.
+  private static final class Java16 extends Platform {
+    static boolean isSupported() {
+      try {
+        Object version = Runtime.class.getMethod("version").invoke(null);
+        Integer feature = (Integer) version.getClass().getMethod("feature").invoke(version);
+        return feature >= 16;
+      } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException ignored) {
+        return false;
+      }
+    }
+
+    private @Nullable Method invokeDefaultMethod;
+
+    @Nullable
+    @Override
+    Executor defaultCallbackExecutor() {
+      return null;
+    }
+
+    @Override
+    List<? extends CallAdapter.Factory> createDefaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+      return asList(
+          new CompletableFutureCallAdapterFactory(),
+          new DefaultCallAdapterFactory(callbackExecutor));
+    }
+
+    @Override
+    List<? extends Converter.Factory> createDefaultConverterFactories() {
+      return singletonList(new OptionalConverterFactory());
+    }
+
+    @Override
+    public boolean isDefaultMethod(Method method) {
+      return method.isDefault();
+    }
+
+    @SuppressWarnings("JavaReflectionMemberAccess") // Only available on Java 16, as we expect.
+    @Nullable
+    @Override
+    public Object invokeDefaultMethod(
+        Method method, Class<?> declaringClass, Object proxy, Object... args) throws Throwable {
+      Method invokeDefaultMethod = this.invokeDefaultMethod;
+      if (invokeDefaultMethod == null) {
+        invokeDefaultMethod =
+            InvocationHandler.class.getMethod(
+                "invokeDefault", Object.class, Method.class, Object[].class);
+        this.invokeDefaultMethod = invokeDefaultMethod;
+      }
+      return invokeDefaultMethod.invoke(null, proxy, method, args);
+    }
+  }
+
+  private static final class MainThreadExecutor implements Executor {
+    static final Executor INSTANCE = new MainThreadExecutor();
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    @Override
+    public void execute(Runnable r) {
+      handler.post(r);
     }
   }
 }

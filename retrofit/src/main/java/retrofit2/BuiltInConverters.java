@@ -25,8 +25,6 @@ import okhttp3.ResponseBody;
 import retrofit2.http.Streaming;
 
 final class BuiltInConverters extends Converter.Factory {
-  /** Not volatile because we don't mind multiple threads discovering this. */
-  private boolean checkForKotlinUnit = true;
 
   @Override
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
@@ -39,14 +37,8 @@ final class BuiltInConverters extends Converter.Factory {
     if (type == Void.class) {
       return VoidResponseBodyConverter.INSTANCE;
     }
-    if (checkForKotlinUnit) {
-      try {
-        if (type == Unit.class) {
-          return UnitResponseBodyConverter.INSTANCE;
-        }
-      } catch (NoClassDefFoundError ignored) {
-        checkForKotlinUnit = false;
-      }
+    if (Utils.isUnit(type)) {
+      return UnitResponseBodyConverter.INSTANCE;
     }
     return null;
   }

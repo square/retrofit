@@ -45,12 +45,12 @@ final class RecordingMaybeObserver<T> implements MaybeObserver<T> {
 
   @Override
   public void onError(Throwable e) {
-    events.add(Notification.<T>createOnError(e));
+    events.add(Notification.createOnError(e));
   }
 
   @Override
   public void onComplete() {
-    events.add(Notification.<T>createOnComplete());
+    events.add(Notification.createOnComplete());
   }
 
   private Notification<T> takeNotification() {

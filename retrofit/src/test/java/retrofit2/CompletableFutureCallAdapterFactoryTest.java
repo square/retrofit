@@ -34,7 +34,7 @@ public final class CompletableFutureCallAdapterFactoryTest {
 
   @Rule public final MockWebServer server = new MockWebServer();
 
-  private final CallAdapter.Factory factory = CompletableFutureCallAdapterFactory.INSTANCE;
+  private final CallAdapter.Factory factory = new CompletableFutureCallAdapterFactory();
   private Retrofit retrofit;
 
   @Before

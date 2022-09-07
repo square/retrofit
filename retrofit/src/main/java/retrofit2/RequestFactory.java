@@ -345,6 +345,7 @@ final class RequestFactory {
               return null;
             }
           } catch (NoClassDefFoundError ignored) {
+            // Ignored
           }
         }
         throw parameterError(method, p, "No Retrofit annotation found.");
@@ -542,7 +543,7 @@ final class RequestFactory {
         validateResolvableType(p, type);
         Class<?> rawParameterType = Utils.getRawType(type);
         if (!Map.class.isAssignableFrom(rawParameterType)) {
-          throw parameterError(method, p, "@HeaderMap parameter type must be Map.");
+          throw parameterError(method, p, "@HeaderMap parameter type must be Map or Headers.");
         }
         Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
         if (!(mapType instanceof ParameterizedType)) {

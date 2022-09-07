@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1515,26 +1514,6 @@ public final class RetrofitTest {
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("executor == null");
     }
-  }
-
-  @Test
-  public void callbackExecutorPropagatesDefaultJvm() {
-    Retrofit retrofit = new Retrofit.Builder().baseUrl("http://example.com/").build();
-    assertThat(retrofit.callbackExecutor()).isNull();
-  }
-
-  @Test
-  public void callbackExecutorPropagatesDefaultAndroid() {
-    final Executor executor = Executors.newSingleThreadExecutor();
-    Platform platform =
-        new Platform(true) {
-          @Override
-          Executor defaultCallbackExecutor() {
-            return executor;
-          }
-        };
-    Retrofit retrofit = new Retrofit.Builder(platform).baseUrl("http://example.com/").build();
-    assertThat(retrofit.callbackExecutor()).isSameAs(executor);
   }
 
   @Test

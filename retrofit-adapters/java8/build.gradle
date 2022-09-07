@@ -2,13 +2,13 @@ apply plugin: 'java-library'
 apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
-  api project(':retrofit')
-  compileOnly deps.findBugsAnnotations
+  api projects.retrofit
+  compileOnly libs.findBugsAnnotations
 
-  testImplementation deps.junit
-  testImplementation deps.assertj
-  testImplementation deps.guava
-  testImplementation deps.mockwebserver
+  testImplementation libs.junit
+  testImplementation libs.assertj
+  testImplementation libs.guava
+  testImplementation libs.mockwebserver
 }
 
 jar {
