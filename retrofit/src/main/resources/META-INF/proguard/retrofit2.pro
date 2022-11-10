@@ -31,7 +31,7 @@
 -if interface * { @retrofit2.http.* <methods>; }
 -keep,allowobfuscation interface <1>
 
-# Keep inherited services
+# Keep inherited services.
 -if interface * { @retrofit2.http.* <methods>; }
 -keep,allowobfuscation interface * extends <1>
 
