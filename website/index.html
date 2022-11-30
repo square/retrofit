@@ -128,6 +128,14 @@ Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
               <h4>Synchronous vs. Asynchronous</h4>
               <p><code>Call</code> instances can be executed either synchronously or asynchronously. Each instance can only be used once, but calling <code>clone()</code> will create a new instance that can be used.</p>
               <p>On Android, callbacks will be executed on the main thread. On the JVM, callbacks will happen on the same thread that executed the HTTP request.</p>
+
+              <h4>Kotlin Support</h4>
+              <p>Interface methods support kotlin suspend functions which directly return a <code>Response</code> object, creating and asynchronously executing the call while suspending the current function.</p>
+              <pre class="prettyprint">@GET("users")
+suspend fun getUser(): Response&lt;User&gt;</pre>
+              <p>A suspend method may also directly return the body. If a non-2XX status is returned an <code>HttpException</code> will be thrown containing the response.</p>
+              <pre class="prettyprint">@GET("users")
+suspend fun getUser(): User</pre>
             </section>
 
             <section id="restadapter-configuration">
