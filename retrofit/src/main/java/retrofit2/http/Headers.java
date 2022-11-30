@@ -38,8 +38,13 @@ import java.lang.annotation.Target;
  * ...
  * </code></pre>
  *
- * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
- * be included in the request.
+ * <p>Parameter keys and values only allows ascii values by default. Specify {@link
+ * #allowUnsafeNonAsciiValues() allowUnsafeNonAsciiValues=true} to change this behavior.
+ *
+ * <p>&#64;Headers({ "X-Foo: Bar", "X-Ping: Pong" }, allowUnsafeNonAsciiValues=true) &#64;GET("/")
+ *
+ * <p><strong>Note:</strong> Headers do not overwrite each other. All headers with the same name
+ * will be included in the request.
  *
  * @see Header
  * @see HeaderMap
@@ -48,5 +53,12 @@ import java.lang.annotation.Target;
 @Target(METHOD)
 @Retention(RUNTIME)
 public @interface Headers {
+
+  /** The query parameter name. */
   String[] value();
+
+  /**
+   * Specifies whether the parameter {@linkplain #value() name} and value are already URL encoded.
+   */
+  boolean allowUnsafeNonAsciiValues() default false;
 }
