@@ -21,7 +21,7 @@ import okhttp3.Request;
 import retrofit2.helpers.ToStringConverterFactory;
 
 final class TestingUtils {
-  static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
+  static <T> Request buildRequest(Class<T> serviceClass, Retrofit.Builder builder, Object... args) {
     okhttp3.Call.Factory callFactory =
       request -> {
         throw new UnsupportedOperationException("Not implemented");
@@ -29,9 +29,9 @@ final class TestingUtils {
 
     Retrofit retrofit = builder.callFactory(callFactory).build();
 
-    Method method = onlyMethod(cls);
+    Method method = onlyMethod(serviceClass);
     try {
-      return RequestFactory.parseAnnotations(retrofit, method).create(args);
+      return RequestFactory.parseAnnotations(retrofit, serviceClass, method).create(args);
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
@@ -39,13 +39,13 @@ final class TestingUtils {
     }
   }
 
-  static <T> Request buildRequest(Class<T> cls, Object... args) {
+  static <T> Request buildRequest(Class<T> serviceClass, Object... args) {
     Retrofit.Builder retrofitBuilder =
       new Retrofit.Builder()
         .baseUrl("http://example.com/")
         .addConverterFactory(new ToStringConverterFactory());
 
-    return buildRequest(cls, retrofitBuilder, args);
+    return buildRequest(serviceClass, retrofitBuilder, args);
   }
 
   static Method onlyMethod(Class c) {

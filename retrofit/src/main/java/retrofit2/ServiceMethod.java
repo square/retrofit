@@ -22,8 +22,8 @@ import java.lang.reflect.Type;
 import javax.annotation.Nullable;
 
 abstract class ServiceMethod<T> {
-  static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
-    RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
+  static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Class<?> service, Method method) {
+    RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, service, method);
 
     Type returnType = method.getGenericReturnType();
     if (Utils.hasUnresolvableType(returnType)) {

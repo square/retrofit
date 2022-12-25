@@ -38,6 +38,7 @@ import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.http.BaseUrl;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
@@ -63,8 +64,8 @@ import retrofit2.http.Tag;
 import retrofit2.http.Url;
 
 final class RequestFactory {
-  static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
-    return new Builder(retrofit, method).build();
+  static RequestFactory parseAnnotations(Retrofit retrofit, Class<?> service, Method method) {
+    return new Builder(retrofit, service, method).build();
   }
 
   private final Method method;
@@ -81,7 +82,7 @@ final class RequestFactory {
 
   RequestFactory(Builder builder) {
     method = builder.method;
-    baseUrl = builder.retrofit.baseUrl;
+    baseUrl = builder.serviceBaseUrl != null ? HttpUrl.get(builder.serviceBaseUrl) : builder.retrofit.baseUrl;
     httpMethod = builder.httpMethod;
     relativeUrl = builder.relativeUrl;
     headers = builder.headers;
@@ -148,6 +149,7 @@ final class RequestFactory {
     final Annotation[] methodAnnotations;
     final Annotation[][] parameterAnnotationsArray;
     final Type[] parameterTypes;
+    final Annotation[] serviceAnnotations;
 
     boolean gotField;
     boolean gotPart;
@@ -166,17 +168,22 @@ final class RequestFactory {
     @Nullable MediaType contentType;
     @Nullable Set<String> relativeUrlParamNames;
     @Nullable ParameterHandler<?>[] parameterHandlers;
+    @Nullable String serviceBaseUrl;
     boolean isKotlinSuspendFunction;
 
-    Builder(Retrofit retrofit, Method method) {
+    Builder(Retrofit retrofit, Class<?> service, Method method) {
       this.retrofit = retrofit;
       this.method = method;
       this.methodAnnotations = method.getAnnotations();
       this.parameterTypes = method.getGenericParameterTypes();
       this.parameterAnnotationsArray = method.getParameterAnnotations();
+      this.serviceAnnotations = service.getAnnotations();
     }
 
     RequestFactory build() {
+      for (Annotation annotation: serviceAnnotations) {
+        parseServiceAnnotation(annotation);
+      }
       for (Annotation annotation : methodAnnotations) {
         parseMethodAnnotation(annotation);
       }
@@ -220,6 +227,12 @@ final class RequestFactory {
       }
 
       return new RequestFactory(this);
+    }
+
+    private void parseServiceAnnotation(Annotation annotation) {
+      if (annotation instanceof BaseUrl) {
+        serviceBaseUrl = ((BaseUrl) annotation).value();
+      }
     }
 
     private void parseMethodAnnotation(Annotation annotation) {
