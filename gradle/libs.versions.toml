@@ -16,7 +16,7 @@
 kotlin = "1.5.21"
 okhttp = "3.14.9"
 protobuf = "3.21.12"
-jaxb3 = "3.0.1"
+jaxb3 = "3.0.2"
 robovm = "2.3.14"
 
 [plugins]
