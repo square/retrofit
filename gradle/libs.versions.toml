@@ -18,7 +18,7 @@ okhttp = "3.14.9"
 protobuf = "3.17.3"
 jaxb = "2.3.1"
 jaxb3 = "3.0.1"
-robovm = "2.3.14"
+robovm = "2.3.18"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
