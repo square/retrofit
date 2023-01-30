@@ -54,7 +54,7 @@ jaxbApi = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb" }
 jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jaxb3" }
 jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb3" }
-moshi = { module = "com.squareup.moshi:moshi", version = "1.8.0" }
+moshi = { module = "com.squareup.moshi:moshi", version = "1.14.0" }
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
