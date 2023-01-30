@@ -268,7 +268,7 @@ public final class MoshiConverterFactoryTest {
       call.execute();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.");
+      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.taco");
     }
   }
 
