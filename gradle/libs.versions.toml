@@ -16,7 +16,6 @@
 kotlin = "1.5.21"
 okhttp = "3.14.9"
 protobuf = "3.21.12"
-jaxb = "2.3.7"
 jaxb3 = "3.0.1"
 robovm = "2.3.14"
 
@@ -50,8 +49,8 @@ reactiveStreams = { module = "org.reactivestreams:reactive-streams", version = "
 scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.10" }
 gson = { module = "com.google.code.gson:gson", version = "2.9.0" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.12.4" }
-jaxbApi = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb" }
-jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb" }
+jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
+jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version = "2.3.7" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jaxb3" }
 jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb3" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.14.0" }
