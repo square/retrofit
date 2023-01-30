@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [versions]
-kotlin = "1.5.21"
+kotlin = "1.8.0"
 okhttp = "3.14.9"
 protobuf = "3.21.12"
 jaxb3 = "3.0.1"
