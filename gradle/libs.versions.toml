@@ -57,7 +57,7 @@ moshi = { module = "com.squareup.moshi:moshi", version = "1.14.0" }
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
-wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
+wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "4.4.3" }
 jsoup = { module = "org.jsoup:jsoup", version = "1.15.3" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
