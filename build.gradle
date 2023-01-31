@@ -33,8 +33,12 @@ subprojects {
 
   tasks.withType(JavaCompile).configureEach { task ->
     task.options.encoding = 'UTF-8'
-    task.sourceCompatibility = JavaVersion.VERSION_1_8
-    task.targetCompatibility = JavaVersion.VERSION_1_8
+  }
+
+  plugins.withType(JavaBasePlugin).configureEach {
+    java.toolchain {
+      languageVersion.set(JavaLanguageVersion.of(8))
+    }
   }
 
   tasks.withType(Test).configureEach {
@@ -111,15 +115,10 @@ subprojects {
   }
 
   plugins.withType(com.android.build.gradle.BasePlugin).configureEach { plugin ->
+    // Can remove this once https://issuetracker.google.com/issues/260059413 is fixed.
     plugin.extension.compileOptions {
       sourceCompatibility = JavaVersion.VERSION_1_8
       targetCompatibility = JavaVersion.VERSION_1_8
-    }
-  }
-
-  tasks.withType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile).configureEach { task ->
-    task.kotlinOptions {
-      jvmTarget = '1.8'
     }
   }
 
