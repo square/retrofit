@@ -51,7 +51,7 @@ jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", vers
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
 jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version = "2.3.7" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "3.0.1" }
-jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version = "3.0.2" }
+jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version = "4.0.1" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.14.0" }
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
