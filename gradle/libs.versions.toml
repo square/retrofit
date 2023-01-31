@@ -21,7 +21,7 @@ robovm = "2.3.14"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-dokka = { id = "org.jetbrains.dokka", version = "1.5.0" }
+dokka = { id = "org.jetbrains.dokka", version = "1.7.20" }
 errorprone = { id = "net.ltgt.errorprone", version = "2.0.2" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
 protobuf = { id = "com.google.protobuf", version = "0.8.17" }
