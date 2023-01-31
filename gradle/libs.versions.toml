@@ -16,7 +16,6 @@
 kotlin = "1.8.0"
 okhttp = "3.14.9"
 protobuf = "3.21.12"
-jaxb3 = "3.0.1"
 robovm = "2.3.14"
 
 [plugins]
@@ -51,8 +50,8 @@ gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.14.2" }
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
 jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version = "2.3.7" }
-jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jaxb3" }
-jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb3" }
+jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "3.0.1" }
+jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version = "3.0.2" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.14.0" }
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
