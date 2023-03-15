@@ -191,7 +191,8 @@ public final class Retrofit {
     if (validateEagerly) {
       Platform platform = Platform.get();
       for (Method method : service.getDeclaredMethods()) {
-        if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
+        if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())
+          && !method.isSynthetic()) {
           loadServiceMethod(method);
         }
       }
