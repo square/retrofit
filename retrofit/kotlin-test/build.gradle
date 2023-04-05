@@ -8,4 +8,6 @@ dependencies {
   testImplementation libs.mockwebserver
   testImplementation libs.kotlinStdLib
   testImplementation libs.kotlinCoroutines
+  testImplementation libs.rxjavaAdapter
+  testImplementation libs.rxjavaAdapter2
 }
