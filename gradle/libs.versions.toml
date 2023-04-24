@@ -47,7 +47,7 @@ rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.6" }
 reactiveStreams = { module = "org.reactivestreams:reactive-streams", version = "1.0.4" }
 scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.10" }
 gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
-jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.14.2" }
+jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.15.0" }
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
 jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version = "4.0.2" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "3.0.1" }
