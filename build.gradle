@@ -92,7 +92,7 @@ subprojects {
     if (Jvm.current().javaVersion.isJava11Compatible() && !Jvm.current().javaVersion.isCompatibleWith(JavaVersion.VERSION_16)) {
       project.apply plugin: 'com.github.sherter.google-java-format'
       googleJavaFormat {
-        toolVersion = '1.16.0'
+        toolVersion = '1.17.0'
 
         // By default, the GJF plugin includes all Java folders inside the project directory. This
         // does not work well with nested projects, especially when you want to exclude them.
