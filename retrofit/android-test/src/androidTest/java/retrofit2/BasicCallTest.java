@@ -22,25 +22,25 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.http.GET;
-
 import static org.junit.Assert.assertEquals;
 
 public final class BasicCallTest {
-  @Rule public final MockWebServer server = new MockWebServer();
 
-  interface Service {
-    @GET("/") Call<ResponseBody> getBody();
-  }
+    @Rule
+    public final MockWebServer server = new MockWebServer();
 
-  @Test public void responseBody() throws IOException {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .build();
-    Service example = retrofit.create(Service.class);
+    interface Service {
 
-    server.enqueue(new MockResponse().setBody("1234"));
+        @GET("/")
+        Call<ResponseBody> getBody();
+    }
 
-    Response<ResponseBody> response = example.getBody().execute();
-    assertEquals("1234", response.body().string());
-  }
+    @Test
+    public void responseBody() throws IOException {
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
+        Service example = retrofit.create(Service.class);
+        server.enqueue(new MockResponse().setBody("1234"));
+        Response<ResponseBody> response = example.getBody().execute();
+        assertEquals("1234", response.body().string());
+    }
 }

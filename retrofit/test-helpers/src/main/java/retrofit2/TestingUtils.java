@@ -21,44 +21,38 @@ import okhttp3.Request;
 import retrofit2.helpers.ToStringConverterFactory;
 
 final class TestingUtils {
-  static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
-    okhttp3.Call.Factory callFactory =
-      request -> {
-        throw new UnsupportedOperationException("Not implemented");
-      };
 
-    Retrofit retrofit = builder.callFactory(callFactory).build();
-
-    Method method = onlyMethod(cls);
-    try {
-      return RequestFactory.parseAnnotations(retrofit, method).create(args);
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new AssertionError(e);
+    static <T> Request buildRequest(Class<T> cls, Retrofit.Builder builder, Object... args) {
+        okhttp3.Call.Factory callFactory = request -> {
+            throw new UnsupportedOperationException("Not implemented");
+        };
+        Retrofit retrofit = builder.callFactory(callFactory).build();
+        Method method = onlyMethod(cls);
+        try {
+            return RequestFactory.parseAnnotations(retrofit, method).create(args);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
     }
-  }
 
-  static <T> Request buildRequest(Class<T> cls, Object... args) {
-    Retrofit.Builder retrofitBuilder =
-      new Retrofit.Builder()
-        .baseUrl("http://example.com/")
-        .addConverterFactory(new ToStringConverterFactory());
-
-    return buildRequest(cls, retrofitBuilder, args);
-  }
-
-  static Method onlyMethod(Class c) {
-    Method[] declaredMethods = c.getDeclaredMethods();
-    if (declaredMethods.length == 1) {
-      return declaredMethods[0];
+    static <T> Request buildRequest(Class<T> cls, Object... args) {
+        Retrofit.Builder retrofitBuilder = new Retrofit.Builder().baseUrl("http://example.com/").addConverterFactory(new ToStringConverterFactory());
+        return buildRequest(cls, retrofitBuilder, args);
     }
-    throw new IllegalArgumentException("More than one method declared.");
-  }
 
-  static String repeat(char c, int times) {
-    char[] cs = new char[times];
-    Arrays.fill(cs, c);
-    return new String(cs);
-  }
+    static Method onlyMethod(Class c) {
+        Method[] declaredMethods = c.getDeclaredMethods();
+        if (declaredMethods.length == 1) {
+            return declaredMethods[0];
+        }
+        throw new IllegalArgumentException("More than one method declared.");
+    }
+
+    static String repeat(char c, int times) {
+        char[] cs = new char[times];
+        Arrays.fill(cs, c);
+        return new String(cs);
+    }
 }

@@ -38,131 +38,128 @@ import retrofit2.Retrofit;
  * @see MockRetrofit#create(Class)
  */
 public final class BehaviorDelegate<T> {
-  final Retrofit retrofit;
-  private final NetworkBehavior behavior;
-  private final ExecutorService executor;
-  private final Class<T> service;
 
-  BehaviorDelegate(
-      Retrofit retrofit, NetworkBehavior behavior, ExecutorService executor, Class<T> service) {
-    this.retrofit = retrofit;
-    this.behavior = behavior;
-    this.executor = executor;
-    this.service = service;
-  }
+    final Retrofit retrofit;
 
-  public T returningResponse(@Nullable Object response) {
-    return returning(Calls.response(response));
-  }
+    private final NetworkBehavior behavior;
 
-  @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
-  public <R> T returning(Call<R> call) {
-    final Call<R> behaviorCall = new BehaviorCall<>(behavior, executor, call);
-    return (T)
-        Proxy.newProxyInstance(
-            service.getClassLoader(),
-            new Class[] {service},
-            (proxy, method, args) -> {
-              ServiceMethodAdapterInfo adapterInfo = parseServiceMethodAdapterInfo(method);
+    private final ExecutorService executor;
 
-              Annotation[] methodAnnotations = method.getAnnotations();
-              CallAdapter<R, T> callAdapter =
-                  (CallAdapter<R, T>)
-                      retrofit.callAdapter(adapterInfo.responseType, methodAnnotations);
+    private final Class<T> service;
 
-              T adapted = callAdapter.adapt(behaviorCall);
-              if (!adapterInfo.isSuspend) {
+    BehaviorDelegate(Retrofit retrofit, NetworkBehavior behavior, ExecutorService executor, Class<T> service) {
+        this.retrofit = retrofit;
+        this.behavior = behavior;
+        this.executor = executor;
+        this.service = service;
+    }
+
+    public T returningResponse(@Nullable Object response) {
+        return returning(Calls.response(response));
+    }
+
+    // Single-interface proxy creation guarded by parameter safety.
+    @SuppressWarnings("unchecked")
+    public <R> T returning(Call<R> call) {
+        final Call<R> behaviorCall = new BehaviorCall<>(behavior, executor, call);
+        return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class[] { service }, (proxy, method, args) -> {
+            ServiceMethodAdapterInfo adapterInfo = parseServiceMethodAdapterInfo(method);
+            Annotation[] methodAnnotations = method.getAnnotations();
+            CallAdapter<R, T> callAdapter = (CallAdapter<R, T>) retrofit.callAdapter(adapterInfo.responseType, methodAnnotations);
+            T adapted = callAdapter.adapt(behaviorCall);
+            if (!adapterInfo.isSuspend) {
                 return adapted;
-              }
-
-              Call<Object> adaptedCall = (Call<Object>) adapted;
-              Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
-              try {
-                return adapterInfo.wantsResponse
-                    ? KotlinExtensions.awaitResponse(adaptedCall, continuation)
-                    : KotlinExtensions.await(adaptedCall, continuation);
-              } catch (Exception e) {
+            }
+            Call<Object> adaptedCall = (Call<Object>) adapted;
+            Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
+            try {
+                return adapterInfo.wantsResponse ? KotlinExtensions.awaitResponse(adaptedCall, continuation) : KotlinExtensions.await(adaptedCall, continuation);
+            } catch (Exception e) {
                 return KotlinExtensions.suspendAndThrow(e, continuation);
-              }
-            });
-  }
-
-  /**
-   * Computes the adapter type of the method for lookup via {@link Retrofit#callAdapter} as well as
-   * information on whether the method is a {@code suspend fun}.
-   *
-   * <p>In the case of a Kotlin {@code suspend fun}, the last parameter type is a {@code
-   * Continuation} whose parameter carries the actual response type. In this case, we return {@code
-   * Call<T>} where {@code T} is the body type.
-   */
-  private static ServiceMethodAdapterInfo parseServiceMethodAdapterInfo(Method method) {
-    Type[] genericParameterTypes = method.getGenericParameterTypes();
-    if (genericParameterTypes.length != 0) {
-      Type lastParameterType = genericParameterTypes[genericParameterTypes.length - 1];
-      if (lastParameterType instanceof ParameterizedType) {
-        ParameterizedType parameterizedLastParameterType = (ParameterizedType) lastParameterType;
-        try {
-          if (parameterizedLastParameterType.getRawType() == Continuation.class) {
-            Type resultType = parameterizedLastParameterType.getActualTypeArguments()[0];
-            if (resultType instanceof WildcardType) {
-              resultType = ((WildcardType) resultType).getLowerBounds()[0];
             }
-            if (resultType instanceof ParameterizedType) {
-              ParameterizedType parameterizedResultType = (ParameterizedType) resultType;
-              if (parameterizedResultType.getRawType() == Response.class) {
-                Type bodyType = parameterizedResultType.getActualTypeArguments()[0];
-                Type callType = new CallParameterizedTypeImpl(bodyType);
-                return new ServiceMethodAdapterInfo(true, true, callType);
-              }
-            }
-            Type callType = new CallParameterizedTypeImpl(resultType);
-            return new ServiceMethodAdapterInfo(true, false, callType);
-          }
-        } catch (NoClassDefFoundError ignored) {
-          // Not using coroutines.
-        }
-      }
-    }
-    return new ServiceMethodAdapterInfo(false, false, method.getGenericReturnType());
-  }
-
-  static final class CallParameterizedTypeImpl implements ParameterizedType {
-    private final Type bodyType;
-
-    CallParameterizedTypeImpl(Type bodyType) {
-      this.bodyType = bodyType;
+        });
     }
 
-    @Override
-    public Type[] getActualTypeArguments() {
-      return new Type[] {bodyType};
-    }
-
-    @Override
-    public Type getRawType() {
-      return Call.class;
-    }
-
-    @Override
-    public @Nullable Type getOwnerType() {
-      return null;
-    }
-  }
-
-  static class ServiceMethodAdapterInfo {
-    final boolean isSuspend;
     /**
-     * Whether the suspend function return type was {@code Response<T>}. Only meaningful if {@link
-     * #isSuspend} is true.
+     * Computes the adapter type of the method for lookup via {@link Retrofit#callAdapter} as well as
+     * information on whether the method is a {@code suspend fun}.
+     *
+     * <p>In the case of a Kotlin {@code suspend fun}, the last parameter type is a {@code
+     * Continuation} whose parameter carries the actual response type. In this case, we return {@code
+     * Call<T>} where {@code T} is the body type.
      */
-    final boolean wantsResponse;
-
-    final Type responseType;
-
-    ServiceMethodAdapterInfo(boolean isSuspend, boolean wantsResponse, Type responseType) {
-      this.isSuspend = isSuspend;
-      this.wantsResponse = wantsResponse;
-      this.responseType = responseType;
+    private static ServiceMethodAdapterInfo parseServiceMethodAdapterInfo(Method method) {
+        Type[] genericParameterTypes = method.getGenericParameterTypes();
+        if (genericParameterTypes.length != 0) {
+            Type lastParameterType = genericParameterTypes[genericParameterTypes.length - 1];
+            if (lastParameterType instanceof ParameterizedType) {
+                ParameterizedType parameterizedLastParameterType = (ParameterizedType) lastParameterType;
+                try {
+                    if (parameterizedLastParameterType.getRawType() == Continuation.class) {
+                        Type resultType = parameterizedLastParameterType.getActualTypeArguments()[0];
+                        if (resultType instanceof WildcardType) {
+                            resultType = ((WildcardType) resultType).getLowerBounds()[0];
+                        }
+                        if (resultType instanceof ParameterizedType) {
+                            ParameterizedType parameterizedResultType = (ParameterizedType) resultType;
+                            if (parameterizedResultType.getRawType() == Response.class) {
+                                Type bodyType = parameterizedResultType.getActualTypeArguments()[0];
+                                Type callType = new CallParameterizedTypeImpl(bodyType);
+                                return new ServiceMethodAdapterInfo(true, true, callType);
+                            }
+                        }
+                        Type callType = new CallParameterizedTypeImpl(resultType);
+                        return new ServiceMethodAdapterInfo(true, false, callType);
+                    }
+                } catch (NoClassDefFoundError ignored) {
+                    // Not using coroutines.
+                }
+            }
+        }
+        return new ServiceMethodAdapterInfo(false, false, method.getGenericReturnType());
     }
-  }
+
+    static final class CallParameterizedTypeImpl implements ParameterizedType {
+
+        private final Type bodyType;
+
+        CallParameterizedTypeImpl(Type bodyType) {
+            this.bodyType = bodyType;
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return new Type[] { bodyType };
+        }
+
+        @Override
+        public Type getRawType() {
+            return Call.class;
+        }
+
+        @Override
+        @Nullable
+        public Type getOwnerType() {
+            return null;
+        }
+    }
+
+    static class ServiceMethodAdapterInfo {
+
+        final boolean isSuspend;
+
+        /**
+         * Whether the suspend function return type was {@code Response<T>}. Only meaningful if {@link
+         * #isSuspend} is true.
+         */
+        final boolean wantsResponse;
+
+        final Type responseType;
+
+        ServiceMethodAdapterInfo(boolean isSuspend, boolean wantsResponse, Type responseType) {
+            this.isSuspend = isSuspend;
+            this.wantsResponse = wantsResponse;
+            this.responseType = responseType;
+        }
+    }
 }
