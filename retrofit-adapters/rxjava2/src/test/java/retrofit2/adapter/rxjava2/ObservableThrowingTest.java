@@ -17,7 +17,6 @@ package retrofit2.adapter.rxjava2;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -37,302 +36,266 @@ import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
 public final class ObservableThrowingTest {
-  @Rule public final MockWebServer server = new MockWebServer();
-  @Rule public final TestRule resetRule = new RxJavaPluginsResetRule();
-  @Rule public final RecordingObserver.Rule subscriberRule = new RecordingObserver.Rule();
 
-  interface Service {
-    @GET("/")
-    Observable<String> body();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
 
-    @GET("/")
-    Observable<Response<String>> response();
+    @Rule
+    public final TestRule resetRule = new RxJavaPluginsResetRule();
 
-    @GET("/")
-    Observable<Result<String>> result();
-  }
+    @Rule
+    public final RecordingObserver.Rule subscriberRule = new RecordingObserver.Rule();
 
-  private Service service;
+    interface Service {
 
-  @Before
-  public void setUp() {
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(server.url("/"))
-            .addConverterFactory(new StringConverterFactory())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .build();
-    service = retrofit.create(Service.class);
-  }
+        @GET("/")
+        Observable<String> body();
 
-  @Test
-  public void bodyThrowingInOnNextDeliveredToError() {
-    server.enqueue(new MockResponse());
+        @GET("/")
+        Observable<Response<String>> response();
 
-    RecordingObserver<String> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .body()
-        .subscribe(
-            new ForwardingObserver<String>(observer) {
-              @Override
-              public void onNext(String value) {
-                throw e;
-              }
-            });
+        @GET("/")
+        Observable<Result<String>> result();
+    }
 
-    observer.assertError(e);
-  }
+    private Service service;
 
-  @Test
-  public void bodyThrowingInOnCompleteDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(new StringConverterFactory()).addCallAdapterFactory(RxJava2CallAdapterFactory.create()).build();
+        service = retrofit.create(Service.class);
+    }
 
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
+    @Test
+    public void bodyThrowingInOnNextDeliveredToError() {
+        server.enqueue(new MockResponse());
+        RecordingObserver<String> observer = subscriberRule.create();
+        final RuntimeException e = new RuntimeException();
+        service.body().subscribe(new ForwardingObserver<String>(observer) {
+
+            @Override
+            public void onNext(String value) {
+                Raise(value);
+            }
         });
+        observer.assertError(e);
+    }
 
-    RecordingObserver<String> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .body()
-        .subscribe(
-            new ForwardingObserver<String>(observer) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    observer.assertAnyValue();
-    assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
-  }
-
-  @Test
-  public void bodyThrowingInOnErrorDeliveredToPlugin() {
-    server.enqueue(new MockResponse().setResponseCode(404));
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
+    @Test
+    public void bodyThrowingInOnCompleteDeliveredToPlugin() {
+        server.enqueue(new MockResponse());
+        final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            if (!throwableRef.compareAndSet(null, throwable)) {
+                throw Exceptions.propagate(throwable);
+            }
         });
+        RecordingObserver<String> observer = subscriberRule.create();
+        final RuntimeException e = new RuntimeException();
+        service.body().subscribe(new ForwardingObserver<String>(observer) {
 
-    RecordingObserver<String> observer = subscriberRule.create();
-    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    final RuntimeException e = new RuntimeException();
-    service
-        .body()
-        .subscribe(
-            new ForwardingObserver<String>(observer) {
-              @Override
-              public void onError(Throwable throwable) {
-                if (!errorRef.compareAndSet(null, throwable)) {
-                  throw Exceptions.propagate(throwable);
-                }
-                throw e;
-              }
-            });
-
-    //noinspection ThrowableResultOfMethodCallIgnored
-    CompositeException composite = (CompositeException) throwableRef.get();
-    assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
-  }
-
-  @Test
-  public void responseThrowingInOnNextDeliveredToError() {
-    server.enqueue(new MockResponse());
-
-    RecordingObserver<Response<String>> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .response()
-        .subscribe(
-            new ForwardingObserver<Response<String>>(observer) {
-              @Override
-              public void onNext(Response<String> value) {
-                throw e;
-              }
-            });
-
-    observer.assertError(e);
-  }
-
-  @Test
-  public void responseThrowingInOnCompleteDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
+            @Override
+            public void onComplete() {
+                raiseError();
+            }
         });
+        observer.assertAnyValue();
+        assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+    }
 
-    RecordingObserver<Response<String>> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .response()
-        .subscribe(
-            new ForwardingObserver<Response<String>>(observer) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
-
-    observer.assertAnyValue();
-    assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
-  }
-
-  @Test
-  public void responseThrowingInOnErrorDeliveredToPlugin() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
+    @Test
+    public void bodyThrowingInOnErrorDeliveredToPlugin() {
+        server.enqueue(new MockResponse().setResponseCode(404));
+        final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            if (!throwableRef.compareAndSet(null, throwable)) {
+                throw Exceptions.propagate(throwable);
+            }
         });
+        RecordingObserver<String> observer = subscriberRule.create();
+        final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+        final RuntimeException e = new RuntimeException();
+        service.body().subscribe(new ForwardingObserver<String>(observer) {
 
-    RecordingObserver<Response<String>> observer = subscriberRule.create();
-    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-    final RuntimeException e = new RuntimeException();
-    service
-        .response()
-        .subscribe(
-            new ForwardingObserver<Response<String>>(observer) {
-              @Override
-              public void onError(Throwable throwable) {
-                if (!errorRef.compareAndSet(null, throwable)) {
-                  throw Exceptions.propagate(throwable);
-                }
-                throw e;
-              }
-            });
-
-    //noinspection ThrowableResultOfMethodCallIgnored
-    CompositeException composite = (CompositeException) throwableRef.get();
-    assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
-  }
-
-  @Test
-  public void resultThrowingInOnNextDeliveredToError() {
-    server.enqueue(new MockResponse());
-
-    RecordingObserver<Result<String>> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .result()
-        .subscribe(
-            new ForwardingObserver<Result<String>>(observer) {
-              @Override
-              public void onNext(Result<String> value) {
-                throw e;
-              }
-            });
-
-    observer.assertError(e);
-  }
-
-  @Test
-  public void resultThrowingInOnCompletedDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
+            @Override
+            public void onError(Throwable throwable) {
+                setOrPropagateError(throwable);
+            }
         });
+        //noinspection ThrowableResultOfMethodCallIgnored
+        CompositeException composite = (CompositeException) throwableRef.get();
+        assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
+    }
 
-    RecordingObserver<Result<String>> observer = subscriberRule.create();
-    final RuntimeException e = new RuntimeException();
-    service
-        .result()
-        .subscribe(
-            new ForwardingObserver<Result<String>>(observer) {
-              @Override
-              public void onComplete() {
-                throw e;
-              }
-            });
+    @Test
+    public void responseThrowingInOnNextDeliveredToError() {
+        server.enqueue(new MockResponse());
+        RecordingObserver<Response<String>> observer = subscriberRule.create();
+        final RuntimeException e = new RuntimeException();
+        service.response().subscribe(new ForwardingObserver<Response<String>>(observer) {
 
-    observer.assertAnyValue();
-    assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
-  }
-
-  @Test
-  public void resultThrowingInOnErrorDeliveredToPlugin() {
-    server.enqueue(new MockResponse());
-
-    final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
-    RxJavaPlugins.setErrorHandler(
-        throwable -> {
-          if (!throwableRef.compareAndSet(null, throwable)) {
-            throw Exceptions.propagate(throwable);
-          }
+            @Override
+            public void onNext(Response<String> value) {
+                Raise(value);
+            }
         });
+        observer.assertError(e);
+    }
 
-    RecordingObserver<Result<String>> observer = subscriberRule.create();
-    final RuntimeException first = new RuntimeException();
-    final RuntimeException second = new RuntimeException();
-    service
-        .result()
-        .subscribe(
-            new ForwardingObserver<Result<String>>(observer) {
-              @Override
-              public void onNext(Result<String> value) {
+    @Test
+    public void responseThrowingInOnCompleteDeliveredToPlugin() {
+        server.enqueue(new MockResponse());
+        final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            if (!throwableRef.compareAndSet(null, throwable)) {
+                throw Exceptions.propagate(throwable);
+            }
+        });
+        RecordingObserver<Response<String>> observer = subscriberRule.create();
+        final RuntimeException e = new RuntimeException();
+        service.response().subscribe(new ForwardingObserver<Response<String>>(observer) {
+
+            @Override
+            public void onComplete() {
+                raiseError();
+            }
+        });
+        observer.assertAnyValue();
+        assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+    }
+
+    @Test
+    public void responseThrowingInOnErrorDeliveredToPlugin() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+        final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            if (!throwableRef.compareAndSet(null, throwable)) {
+                throw Exceptions.propagate(throwable);
+            }
+        });
+        RecordingObserver<Response<String>> observer = subscriberRule.create();
+        final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+        final RuntimeException e = new RuntimeException();
+        service.response().subscribe(new ForwardingObserver<Response<String>>(observer) {
+
+            @Override
+            public void onError(Throwable throwable) {
+                setOrPropagateError(throwable);
+            }
+        });
+        //noinspection ThrowableResultOfMethodCallIgnored
+        CompositeException composite = (CompositeException) throwableRef.get();
+        assertThat(composite.getExceptions()).containsExactly(errorRef.get(), e);
+    }
+
+    @Test
+    public void resultThrowingInOnNextDeliveredToError() {
+        server.enqueue(new MockResponse());
+        RecordingObserver<Result<String>> observer = subscriberRule.create();
+        final RuntimeException e = new RuntimeException();
+        service.result().subscribe(new ForwardingObserver<Result<String>>(observer) {
+
+            @Override
+            public void onNext(Result<String> value) {
+                Raise(value);
+            }
+        });
+        observer.assertError(e);
+    }
+
+    @Test
+    public void resultThrowingInOnCompletedDeliveredToPlugin() {
+        server.enqueue(new MockResponse());
+        final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            if (!throwableRef.compareAndSet(null, throwable)) {
+                throw Exceptions.propagate(throwable);
+            }
+        });
+        RecordingObserver<Result<String>> observer = subscriberRule.create();
+        final RuntimeException e = new RuntimeException();
+        service.result().subscribe(new ForwardingObserver<Result<String>>(observer) {
+
+            @Override
+            public void onComplete() {
+                raiseError();
+            }
+        });
+        observer.assertAnyValue();
+        assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+    }
+
+    @Test
+    public void resultThrowingInOnErrorDeliveredToPlugin() {
+        server.enqueue(new MockResponse());
+        final AtomicReference<Throwable> throwableRef = new AtomicReference<>();
+        RxJavaPlugins.setErrorHandler(throwable -> {
+            if (!throwableRef.compareAndSet(null, throwable)) {
+                throw Exceptions.propagate(throwable);
+            }
+        });
+        RecordingObserver<Result<String>> observer = subscriberRule.create();
+        final RuntimeException first = new RuntimeException();
+        final RuntimeException second = new RuntimeException();
+        service.result().subscribe(new ForwardingObserver<Result<String>>(observer) {
+
+            @Override
+            public void onNext(Result<String> value) {
                 // The only way to trigger onError for a result is if onNext throws.
                 throw first;
-              }
+            }
 
-              @Override
-              public void onError(Throwable throwable) {
+            @Override
+            public void onError(Throwable throwable) {
                 throw second;
-              }
-            });
-
-    //noinspection ThrowableResultOfMethodCallIgnored
-    CompositeException composite = (CompositeException) throwableRef.get();
-    assertThat(composite.getExceptions()).containsExactly(first, second);
-  }
-
-  private abstract static class ForwardingObserver<T> implements Observer<T> {
-    private final Observer<T> delegate;
-
-    ForwardingObserver(Observer<T> delegate) {
-      this.delegate = delegate;
+            }
+        });
+        //noinspection ThrowableResultOfMethodCallIgnored
+        CompositeException composite = (CompositeException) throwableRef.get();
+        assertThat(composite.getExceptions()).containsExactly(first, second);
     }
 
-    @Override
-    public void onSubscribe(Disposable disposable) {
-      delegate.onSubscribe(disposable);
+    private abstract static class ForwardingObserver<T> implements Observer<T> {
+
+        private final Observer<T> delegate;
+
+        ForwardingObserver(Observer<T> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void onSubscribe(Disposable disposable) {
+            delegate.onSubscribe(disposable);
+        }
+
+        @Override
+        public void onNext(T value) {
+            delegate.onNext(value);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            delegate.onError(throwable);
+        }
+
+        @Override
+        public void onComplete() {
+            delegate.onComplete();
+        }
     }
 
-    @Override
-    public void onNext(T value) {
-      delegate.onNext(value);
+    public void Raise(String value) {
+        throw e;
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-      delegate.onError(throwable);
+    public void raiseError() {
+        throw e;
     }
 
-    @Override
-    public void onComplete() {
-      delegate.onComplete();
+    public void setOrPropagateError(Throwable throwable) {
+        if (!errorRef.compareAndSet(null, throwable)) {
+            throw Exceptions.propagate(throwable);
+        }
+        throw e;
     }
-  }
 }
