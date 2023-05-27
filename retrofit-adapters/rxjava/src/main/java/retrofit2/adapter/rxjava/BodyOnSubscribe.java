@@ -26,68 +26,69 @@ import rx.exceptions.OnErrorNotImplementedException;
 import rx.plugins.RxJavaPlugins;
 
 final class BodyOnSubscribe<T> implements OnSubscribe<T> {
-  private final OnSubscribe<Response<T>> upstream;
 
-  BodyOnSubscribe(OnSubscribe<Response<T>> upstream) {
-    this.upstream = upstream;
-  }
+    private final OnSubscribe<Response<T>> upstream;
 
-  @Override
-  public void call(Subscriber<? super T> subscriber) {
-    upstream.call(new BodySubscriber<T>(subscriber));
-  }
-
-  private static class BodySubscriber<R> extends Subscriber<Response<R>> {
-    private final Subscriber<? super R> subscriber;
-    /** Indicates whether a terminal event has been sent to {@link #subscriber}. */
-    private boolean subscriberTerminated;
-
-    BodySubscriber(Subscriber<? super R> subscriber) {
-      super(subscriber);
-      this.subscriber = subscriber;
+    BodyOnSubscribe(OnSubscribe<Response<T>> upstream) {
+        this.upstream = upstream;
     }
 
     @Override
-    public void onNext(Response<R> response) {
-      if (response.isSuccessful()) {
-        subscriber.onNext(response.body());
-      } else {
-        subscriberTerminated = true;
-        Throwable t = new HttpException(response);
-        try {
-          subscriber.onError(t);
-        } catch (OnCompletedFailedException
-            | OnErrorFailedException
-            | OnErrorNotImplementedException e) {
-          RxJavaPlugins.getInstance().getErrorHandler().handleError(e);
-        } catch (Throwable inner) {
-          Exceptions.throwIfFatal(inner);
-          CompositeException composite = new CompositeException(t, inner);
-          RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
+    public void call(Subscriber<? super T> subscriber) {
+        upstream.call(new BodySubscriber<T>(subscriber));
+    }
+
+    private static class BodySubscriber<R> extends Subscriber<Response<R>> {
+
+        private final Subscriber<? super R> subscriber;
+
+        /**
+         * Indicates whether a terminal event has been sent to {@link #subscriber}.
+         */
+        private boolean subscriberTerminated;
+
+        BodySubscriber(Subscriber<? super R> subscriber) {
+            super(subscriber);
+            this.subscriber = subscriber;
         }
-      }
-    }
 
-    @Override
-    public void onError(Throwable throwable) {
-      if (!subscriberTerminated) {
-        subscriber.onError(throwable);
-      } else {
-        // This should never happen! onNext handles and forwards errors automatically.
-        Throwable broken =
-            new AssertionError(
-                "This should never happen! Report as a Retrofit bug with the full stacktrace.");
-        //noinspection UnnecessaryInitCause Two-arg AssertionError constructor is 1.7+ only.
-        broken.initCause(throwable);
-        RxJavaPlugins.getInstance().getErrorHandler().handleError(broken);
-      }
-    }
+        @Override
+        public void onNext(Response<R> response) {
+            if (response.isSuccessful()) {
+                subscriber.onNext(response.body());
+            } else {
+                subscriberTerminated = true;
+                Throwable t = new HttpException(response);
+                try {
+                    subscriber.onError(t);
+                } catch (OnCompletedFailedException | OnErrorFailedException | OnErrorNotImplementedException e) {
+                    RxJavaPlugins.getInstance().getErrorHandler().handleError(e);
+                } catch (Throwable inner) {
+                    Exceptions.throwIfFatal(inner);
+                    CompositeException composite = new CompositeException(t, inner);
+                    RxJavaPlugins.getInstance().getErrorHandler().handleError(composite);
+                }
+            }
+        }
 
-    @Override
-    public void onCompleted() {
-      if (!subscriberTerminated) {
-        subscriber.onCompleted();
-      }
+        @Override
+        public void onError(Throwable throwable) {
+            if (!subscriberTerminated) {
+                subscriber.onError(throwable);
+            } else {
+                // This should never happen! onNext handles and forwards errors automatically.
+                Throwable broken = new AssertionError("This should never happen! Report as a Retrofit bug with the full stacktrace.");
+                //noinspection UnnecessaryInitCause Two-arg AssertionError constructor is 1.7+ only.
+                broken.initCause(throwable);
+                RxJavaPlugins.getInstance().getErrorHandler().handleError(broken);
+            }
+        }
+
+        @Override
+        public void onCompleted() {
+            if (!subscriberTerminated) {
+                subscriber.onCompleted();
+            }
+        }
     }
-  }
 }
