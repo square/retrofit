@@ -542,6 +542,10 @@ public final class RequestFactoryTest {
             //
             @GET("/")
             Call<ResponseBody> method(@QueryMap Map<String, String> a) {
+                return emptyMethod(a);
+            }
+
+            Call<ResponseBody> emptyMethod(@QueryMap Map<String, String> a) {
                 return null;
             }
         }
@@ -560,7 +564,7 @@ public final class RequestFactoryTest {
             //
             @GET("/")
             Call<ResponseBody> method(@QueryMap Map<String, String> a) {
-                return null;
+                return emptyMethod(a);
             }
         }
         Map<String, String> queryParams = new LinkedHashMap<>();
@@ -581,7 +585,7 @@ public final class RequestFactoryTest {
             //
             @GET("/")
             Call<ResponseBody> method(@QueryMap Map<String, String> a) {
-                return null;
+                return emptyMethod(a);
             }
         }
         Map<String, String> queryParams = new LinkedHashMap<>();
@@ -658,6 +662,10 @@ public final class RequestFactoryTest {
 
             @GET("/")
             Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
+                return getNullValue(headers);
+            }
+
+            Call<ResponseBody> getNullValue(@HeaderMap Map<String, String> headers) {
                 return null;
             }
         }
@@ -675,7 +683,7 @@ public final class RequestFactoryTest {
 
             @GET("/")
             Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
-                return null;
+                return getNullValue(headers);
             }
         }
         Map<String, String> headers = new LinkedHashMap<>();
@@ -695,7 +703,7 @@ public final class RequestFactoryTest {
 
             @GET("/")
             Call<ResponseBody> method(@HeaderMap Map<String, String> headers) {
-                return null;
+                return getNullValue(headers);
             }
         }
         Map<String, String> headers = new LinkedHashMap<>();
@@ -901,6 +909,10 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@Body RequestBody body) {
+                return generateMethodNames(body);
+            }
+
+            Call<ResponseBody> generateMethodNames(@Body RequestBody body) {
                 return null;
             }
         }
@@ -972,6 +984,10 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path("ping") String ping) {
+                return generateNames(ping);
+            }
+
+            Call<ResponseBody> generateNames(@Path("ping") String ping) {
                 return null;
             }
         }
@@ -1006,6 +1022,10 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path(value = "ping", encoded = true) String ping) {
+                return getName(ping);
+            }
+
+            Call<ResponseBody> getName(@Path(value = "ping", encoded = true) String ping) {
                 return null;
             }
         }
@@ -1023,7 +1043,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path(value = "ping", encoded = true) String ping) {
-                return null;
+                return getName(ping);
             }
         }
         Request request = buildRequest(Example.class, "baz/pong/more");
@@ -1057,7 +1077,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path(value = "ping", encoded = true) String ping) {
-                return null;
+                return getName(ping);
             }
         }
         Request request = buildRequest(Example.class, "baz/\r\npong");
@@ -1095,7 +1115,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path(value = "ping", encoded = true) String ping) {
-                return null;
+                return getName(ping);
             }
         }
         assertMalformedRequest(Example.class, ".");
@@ -1145,7 +1165,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path("ping") String ping) {
-                return null;
+                return generateNames(ping);
             }
         }
         try {
@@ -1163,6 +1183,10 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/")
             Call<ResponseBody> method(@Query("ping") String ping) {
+                return getOption(ping);
+            }
+
+            Call<ResponseBody> getOption(@Query("ping") String ping) {
                 return null;
             }
         }
@@ -1197,7 +1221,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/")
             Call<ResponseBody> method(@Query("ping") String ping) {
-                return null;
+                return getOption(ping);
             }
         }
         Request request = buildRequest(Example.class, new Object[] { null });
@@ -1330,6 +1354,10 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path("ping") String ping, @Query("kit") String kit) {
+                return nullify(ping, kit);
+            }
+
+            Call<ResponseBody> nullify(@Path("ping") String ping, @Query("kit") String kit) {
                 return null;
             }
         }
@@ -1347,7 +1375,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path("ping") String ping, @Query("kit") String kit) {
-                return null;
+                return nullify(ping, kit);
             }
         }
         Request request = buildRequest(Example.class, "pong&", "kat&");
@@ -1364,7 +1392,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/{ping}/")
             Call<ResponseBody> method(@Path("ping") String ping, @Query("kit") String kit) {
-                return null;
+                return nullify(ping, kit);
             }
         }
         Request request = buildRequest(Example.class, "pong#", "kat#");
@@ -1435,6 +1463,10 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/")
             Call<ResponseBody> method(@QueryName String ping) {
+                return returnNull(ping);
+            }
+
+            Call<ResponseBody> returnNull(@QueryName String ping) {
                 return null;
             }
         }
@@ -1469,7 +1501,7 @@ public final class RequestFactoryTest {
             //
             @GET("/foo/bar/")
             Call<ResponseBody> method(@QueryName String ping) {
-                return null;
+                return returnNull(ping);
             }
         }
         Request request = buildRequest(Example.class, new Object[] { null });
@@ -1592,6 +1624,10 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url String url) {
+                return execute(url);
+            }
+
+            Call<ResponseBody> execute(@Url String url) {
                 return null;
             }
         }
@@ -1608,6 +1644,10 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url URI url) {
+                return generateNullMethod(url);
+            }
+
+            Call<ResponseBody> generateNullMethod(@Url URI url) {
                 return null;
             }
         }
@@ -1624,7 +1664,7 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url String url) {
-                return null;
+                return execute(url);
             }
         }
         Request request = buildRequest(Example.class, "https://example2.com/foo/bar/");
@@ -1640,7 +1680,7 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url URI url) {
-                return null;
+                return generateNullMethod(url);
             }
         }
         Request request = buildRequest(Example.class, URI.create("https://example2.com/foo/bar/"));
@@ -1656,7 +1696,7 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url String url) {
-                return null;
+                return execute(url);
             }
         }
         Request request = buildRequest(Example.class, "http://example.com/foo/bar/");
@@ -1672,6 +1712,10 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url HttpUrl url) {
+                return Functionality(url);
+            }
+
+            Call<ResponseBody> Functionality(@Url HttpUrl url) {
                 return null;
             }
         }
@@ -1688,7 +1732,7 @@ public final class RequestFactoryTest {
 
             @GET
             Call<ResponseBody> method(@Url HttpUrl url) {
-                return null;
+                return Functionality(url);
             }
         }
         try {
@@ -1926,7 +1970,7 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@Body RequestBody body) {
-                return null;
+                return generateMethodNames(body);
             }
         }
         try {
@@ -2093,6 +2137,10 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@Part MultipartBody.Part part) {
+                return generateNull(part);
+            }
+
+            Call<ResponseBody> generateNull(@Part MultipartBody.Part part) {
                 return null;
             }
         }
@@ -2169,7 +2217,7 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@Part MultipartBody.Part part) {
-                return null;
+                return generateNull(part);
             }
         }
         MultipartBody.Part part = MultipartBody.Part.createFormData("kit", "kit.txt", RequestBody.create(null, "kat"));
@@ -2281,6 +2329,10 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
+                return randomizeOutput(parts);
+            }
+
+            Call<ResponseBody> randomizeOutput(@PartMap Map<String, RequestBody> parts) {
                 return null;
             }
         }
@@ -2375,7 +2427,7 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
-                return null;
+                return randomizeOutput(parts);
             }
         }
         try {
@@ -2395,7 +2447,7 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
-                return null;
+                return randomizeOutput(parts);
             }
         }
         Map<String, RequestBody> params = new LinkedHashMap<>();
@@ -2418,7 +2470,7 @@ public final class RequestFactoryTest {
             //
             @POST("/foo/bar/")
             Call<ResponseBody> method(@PartMap Map<String, RequestBody> parts) {
-                return null;
+                return randomizeOutput(parts);
             }
         }
         Map<String, RequestBody> params = new LinkedHashMap<>();
@@ -2665,6 +2717,10 @@ public final class RequestFactoryTest {
             //
             @POST("/")
             Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
+                return processData(a);
+            }
+
+            Call<ResponseBody> processData(@FieldMap Map<String, Object> a) {
                 return null;
             }
         }
@@ -2685,7 +2741,7 @@ public final class RequestFactoryTest {
             //
             @POST("/")
             Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
-                return null;
+                return processData(a);
             }
         }
         Map<String, Object> fieldMap = new LinkedHashMap<>();
@@ -2708,7 +2764,7 @@ public final class RequestFactoryTest {
             //
             @POST("/")
             Call<ResponseBody> method(@FieldMap Map<String, Object> a) {
-                return null;
+                return processData(a);
             }
         }
         Map<String, Object> fieldMap = new LinkedHashMap<>();
@@ -3041,6 +3097,10 @@ public final class RequestFactoryTest {
             //
             @POST("/")
             Call<ResponseBody> method(@Header("Content-Type") String contentType, @Body RequestBody body) {
+                return returnValuePair(contentType, body);
+            }
+
+            Call<ResponseBody> returnValuePair(@Header("Content-Type") String contentType, @Body RequestBody body) {
                 return null;
             }
         }
@@ -3056,7 +3116,7 @@ public final class RequestFactoryTest {
             //
             @POST("/")
             Call<ResponseBody> method(@Header("Content-Type") String contentType, @Body RequestBody body) {
-                return null;
+                return returnValuePair(contentType, body);
             }
         }
         RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
