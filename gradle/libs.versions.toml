@@ -24,7 +24,7 @@ dokka = { id = "org.jetbrains.dokka", version = "1.8.20" }
 errorprone = { id = "net.ltgt.errorprone", version = "3.1.0" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
 protobuf = { id = "com.google.protobuf", version = "0.9.3" }
-animalsniffer = { id = "ru.vyarus.animalsniffer", version = "1.7.0" }
+animalsniffer = { id = "ru.vyarus.animalsniffer", version = "1.7.1" }
 googleJavaFormat = { id = "com.github.sherter.google-java-format", version = "0.9" }
 
 [libraries]
