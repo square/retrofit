@@ -40,7 +40,7 @@ guava = { module = "com.google.guava:guava", version = "32.1.1-jre" }
 android = { module = "com.google.android:android", version = "4.1.1.4" }
 animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.23" }
 findBugsAnnotations = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
-androidxTestRunner = { module = "androidx.test:runner", version = "1.4.0" }
+androidxTestRunner = { module = "androidx.test:runner", version = "1.5.2" }
 rxjava = { module = "io.reactivex:rxjava", version = "1.3.8" }
 rxjava2 = { module = "io.reactivex.rxjava2:rxjava", version = "2.2.21" }
 rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.6" }
