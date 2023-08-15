@@ -116,7 +116,7 @@ suspend fun <T> Call<T>.awaitResponse(): Response<T> {
  * The implementation is derived from:
  * https://github.com/Kotlin/kotlinx.coroutines/pull/1667#issuecomment-556106349
  */
-internal suspend fun Exception.suspendAndThrow(): Nothing {
+internal suspend fun Throwable.suspendAndThrow(): Nothing {
   suspendCoroutineUninterceptedOrReturn<Nothing> { continuation ->
     Dispatchers.Default.dispatch(continuation.context) {
       continuation.intercepted().resumeWithException(this@suspendAndThrow)

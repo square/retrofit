@@ -243,7 +243,10 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         } else {
           return KotlinExtensions.await(call, continuation);
         }
-      } catch (Exception e) {
+      } catch (VirtualMachineError | ThreadDeath | LinkageError e) {
+        // Do not attempt to capture fatal throwables. This list is derived RxJava's `throwIfFatal`.
+        throw e;
+      } catch (Throwable e) {
         return KotlinExtensions.suspendAndThrow(e, continuation);
       }
     }
