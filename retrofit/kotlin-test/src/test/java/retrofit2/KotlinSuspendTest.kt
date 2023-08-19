@@ -26,8 +26,6 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST
 import okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -39,6 +37,8 @@ import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import kotlin.coroutines.CoroutineContext
+import org.junit.Assert.*
+import retrofit2.converter.gson.GsonConverterFactory
 
 class KotlinSuspendTest {
   @get:Rule val server = MockWebServer()
@@ -50,6 +50,9 @@ class KotlinSuspendTest {
     @GET("/") suspend fun unit()
     @HEAD("/") suspend fun headUnit()
 
+    @GET("user")
+    suspend fun getUser(): Result<User>
+
     @GET("/{a}/{b}/{c}")
     suspend fun params(
         @Path("a") a: String,
@@ -57,6 +60,8 @@ class KotlinSuspendTest {
         @Path("c") c: String
     ): String
   }
+
+  data class User(val id:Int,val name: String,val email:String)
 
   @Test fun body() {
     val retrofit = Retrofit.Builder()
@@ -352,6 +357,42 @@ class KotlinSuspendTest {
       }
     }
   }
+
+  @Test
+  fun testSuccessfulResponse() = runBlocking {
+    val responseBody = """
+            {
+                "id": 1,
+                "name": "John Doe",
+                "email": "john.doe@example.com"
+            }
+        """.trimIndent()
+    server.enqueue(MockResponse().setResponseCode(200).setBody(responseBody))
+    val retrofit = Retrofit.Builder()
+      .baseUrl(server.url("/"))
+      .addCallAdapterFactory(ResultCallAdapterFactory())
+      .addConverterFactory(GsonConverterFactory.create())
+      .build()
+    val service = retrofit.create(Service::class.java)
+    val result = service.getUser()
+    assertEquals(1, result.getOrNull()?.id)
+    assertEquals("John Doe", result.getOrNull()?.name)
+    assertEquals("john.doe@example.com", result.getOrNull()?.email)
+  }
+
+  @Test
+  fun testErrorResponse() = runBlocking {
+    server.enqueue(MockResponse().setResponseCode(404))
+    val retrofit = Retrofit.Builder()
+      .baseUrl(server.url("/"))
+      .addCallAdapterFactory(ResultCallAdapterFactory())
+      .addConverterFactory(GsonConverterFactory.create())
+      .build()
+    val service = retrofit.create(Service::class.java)
+    val result = service.getUser()
+    assert(result.isFailure)
+  }
+
 
   @Suppress("EXPERIMENTAL_OVERRIDE")
   private object DirectUnconfinedDispatcher : CoroutineDispatcher() {
