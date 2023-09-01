@@ -1,0 +1,13 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.kotlin.plugin.serialization'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  api projects.retrofit
+  api libs.kotlinx.serialization.core
+
+  testImplementation libs.junit
+  testImplementation libs.mockwebserver
+  testImplementation libs.kotlinx.serialization.proto
+  testImplementation libs.kotlinx.serialization.json
+}
