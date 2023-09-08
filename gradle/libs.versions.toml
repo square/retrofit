@@ -15,7 +15,7 @@
 [versions]
 kotlin = "1.9.10"
 okhttp = "3.14.9"
-protobuf = "3.24.2"
+protobuf = "3.24.3"
 robovm = "2.3.14"
 
 [plugins]
