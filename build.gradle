@@ -16,6 +16,7 @@ buildscript {
 
 plugins {
   alias(libs.plugins.kotlin.jvm) apply false
+  alias(libs.plugins.kotlin.serialization) apply false
   alias(libs.plugins.dokka) apply false
   alias(libs.plugins.errorprone) apply false
   alias(libs.plugins.mavenPublish) apply false
