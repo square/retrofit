@@ -234,8 +234,11 @@ final class OkHttpCall<T> implements Call<T> {
     }
 
     if (code == 204 || code == 205) {
-      rawBody.close();
-      return Response.success(null, rawResponse);
+      try {
+        return Response.success(null, rawResponse);
+      } finally {
+        rawBody.close();
+      }
     }
 
     ExceptionCatchingResponseBody catchingBody = new ExceptionCatchingResponseBody(rawBody);
@@ -245,6 +248,7 @@ final class OkHttpCall<T> implements Call<T> {
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was
       // a runtime exception.
+      catchingBody.close();
       catchingBody.throwIfCaught();
       throw e;
     }
