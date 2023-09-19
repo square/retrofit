@@ -30,7 +30,7 @@ animalsniffer = { id = "ru.vyarus.animalsniffer", version = "1.7.1" }
 googleJavaFormat = { id = "com.github.sherter.google-java-format", version = "0.9" }
 
 [libraries]
-androidPlugin = { module = "com.android.tools.build:gradle", version = "4.2.2" }
+androidPlugin = { module = "com.android.tools.build:gradle", version = "8.1.1" }
 robovmPlugin = { module = "com.mobidevelop.robovm:robovm-gradle-plugin", version.ref = "robovm" }
 kotlinStdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.7.3" }
