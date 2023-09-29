@@ -236,9 +236,8 @@ public final class MoshiConverterFactoryTest {
 
     Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
     IOException e = catchThrowableOfType(call::execute, IOException.class);
-    assertEquals(
-        e.getMessage(),
-        "Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
+    assertThat(e)
+        .hasMessage("Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
 
     Call<AnImplementation> call2 = serviceLenient.anImplementation(new AnImplementation("value"));
     Response<AnImplementation> response = call2.execute();
