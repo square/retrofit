@@ -16,6 +16,7 @@
 package retrofit2.converter.protobuf;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.Assert.fail;
 import static retrofit2.converter.protobuf.PhoneProtos.Phone;
 
@@ -175,13 +176,9 @@ public final class ProtoConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
     Call<?> call = service.get();
-    try {
-      call.execute();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e.getCause())
-          .isInstanceOf(InvalidProtocolBufferException.class)
-          .hasMessageContaining("input ended unexpectedly");
-    }
+    RuntimeException e = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(e.getCause())
+        .isInstanceOf(InvalidProtocolBufferException.class)
+        .hasMessageContaining("input ended unexpectedly");
   }
 }
