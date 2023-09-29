@@ -18,8 +18,8 @@ package retrofit2;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static retrofit2.TestingUtils.repeat;
 
 import java.io.IOException;
@@ -187,11 +187,7 @@ public final class CallTest {
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
     Call<String> call = example.getString();
-    try {
-      call.execute();
-      fail();
-    } catch (IOException ignored) {
-    }
+    assertThat(catchThrowableOfType(call::execute, IOException.class)).isNotNull();
   }
 
   @Test
@@ -250,12 +246,9 @@ public final class CallTest {
     Service example = retrofit.create(Service.class);
 
     Call<String> call = example.postString("Hi");
-    try {
-      call.execute();
-      fail();
-    } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("I am broken!");
-    }
+    UnsupportedOperationException e =
+        catchThrowableOfType(call::execute, UnsupportedOperationException.class);
+    assertThat(e).hasMessage("I am broken!");
   }
 
   @Test
@@ -324,12 +317,9 @@ public final class CallTest {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     Call<String> call = example.postString("Hi");
-    try {
-      call.execute();
-      fail();
-    } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("I am broken!");
-    }
+    UnsupportedOperationException e =
+        catchThrowableOfType(call::execute, UnsupportedOperationException.class);
+    assertThat(e).hasMessage("I am broken!");
   }
 
   @Test
@@ -380,12 +370,8 @@ public final class CallTest {
     server.enqueue(new MockResponse().setBody("Hi"));
 
     Call<String> call = example.getString();
-    try {
-      call.execute();
-      fail();
-    } catch (IOException e) {
-      assertThat(e).hasMessage("cause");
-    }
+    IOException e = catchThrowableOfType(call::execute, IOException.class);
+    assertThat(e).hasMessage("cause");
   }
 
   @Test
@@ -524,12 +510,8 @@ public final class CallTest {
     server.enqueue(new MockResponse());
     Call<String> call = example.getString();
     call.execute();
-    try {
-      call.execute();
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Already executed.");
-    }
+    IllegalStateException e = catchThrowableOfType(call::execute, IllegalStateException.class);
+    assertThat(e).hasMessage("Already executed.");
   }
 
   @Test
@@ -576,12 +558,8 @@ public final class CallTest {
 
     Call<ResponseBody> buffered = example.getBody();
     // When buffering we will detect all socket problems before returning the Response.
-    try {
-      buffered.execute();
-      fail();
-    } catch (IOException e) {
-      assertThat(e).hasMessage("unexpected end of stream");
-    }
+    IOException e = catchThrowableOfType(buffered::execute, IOException.class);
+    assertThat(e).hasMessage("unexpected end of stream");
   }
 
   @Test
@@ -600,12 +578,8 @@ public final class CallTest {
 
     ResponseBody streamedBody = response.body();
     // When streaming we only detect socket problems as the ResponseBody is read.
-    try {
-      streamedBody.string();
-      fail();
-    } catch (IOException e) {
-      assertThat(e).hasMessage("unexpected end of stream");
-    }
+    IOException e = catchThrowableOfType(streamedBody::string, IOException.class);
+    assertThat(e).hasMessage("unexpected end of stream");
   }
 
   @Test
@@ -624,12 +598,8 @@ public final class CallTest {
     ResponseBody rawBody = response.raw().body();
     assertThat(rawBody.contentLength()).isEqualTo(2);
     assertThat(rawBody.contentType().toString()).isEqualTo("text/greeting");
-    try {
-      rawBody.source();
-      fail();
-    } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Cannot read raw response body of a converted body.");
-    }
+    IllegalStateException e = catchThrowableOfType(rawBody::source, IllegalStateException.class);
+    assertThat(e).hasMessage("Cannot read raw response body of a converted body.");
   }
 
   @Test
@@ -706,12 +676,8 @@ public final class CallTest {
     call.cancel();
     assertThat(call.isCanceled()).isTrue();
 
-    try {
-      call.execute();
-      fail();
-    } catch (IOException e) {
-      assertThat(e).hasMessage("Canceled");
-    }
+    IOException e = catchThrowableOfType(call::execute, IOException.class);
+    assertThat(e).hasMessage("Canceled");
   }
 
   @Test
@@ -891,20 +857,12 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.request();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    RuntimeException e = catchThrowableOfType(call::request, RuntimeException.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.execute();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    RuntimeException e2 = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
@@ -930,20 +888,12 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.request();
-      fail();
-    } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    NonFatalError e = catchThrowableOfType(call::request, NonFatalError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.execute();
-      fail();
-    } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    NonFatalError e2 = catchThrowableOfType(call::execute, NonFatalError.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
@@ -998,20 +948,12 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.execute();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    RuntimeException e = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.request();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    RuntimeException e2 = catchThrowableOfType(call::request, RuntimeException.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
@@ -1037,20 +979,12 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.execute();
-      fail();
-    } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    NonFatalError e = catchThrowableOfType(call::execute, NonFatalError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.request();
-      fail();
-    } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    NonFatalError e2 = catchThrowableOfType(call::request, NonFatalError.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
@@ -1116,12 +1050,8 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.request();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    RuntimeException e = catchThrowableOfType(call::request, RuntimeException.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
     final CountDownLatch latch = new CountDownLatch(1);
@@ -1163,12 +1093,8 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.request();
-      fail();
-    } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    NonFatalError e = catchThrowableOfType(call::request, NonFatalError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
     final CountDownLatch latch = new CountDownLatch(1);
@@ -1264,12 +1190,8 @@ public final class CallTest {
         });
     assertTrue(latch.await(10, SECONDS));
 
-    try {
-      call.request();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    RuntimeException e = catchThrowableOfType(call::request, RuntimeException.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
@@ -1311,12 +1233,8 @@ public final class CallTest {
         });
     assertTrue(latch.await(10, SECONDS));
 
-    try {
-      call.request();
-      fail();
-    } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    NonFatalError e = catchThrowableOfType(call::request, NonFatalError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
   }
 
@@ -1342,20 +1260,12 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.request();
-      fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    OutOfMemoryError e = catchThrowableOfType(call::request, OutOfMemoryError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.request();
-      fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    OutOfMemoryError e2 = catchThrowableOfType(call::request, OutOfMemoryError.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(2);
   }
 
@@ -1381,31 +1291,28 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      final AtomicBoolean callsFailureSynchronously = new AtomicBoolean();
-      call.enqueue(
-          new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {}
+    final AtomicBoolean callsFailureSynchronously = new AtomicBoolean();
+    OutOfMemoryError e =
+        catchThrowableOfType(
+            () -> {
+              call.enqueue(
+                  new Callback<String>() {
+                    @Override
+                    public void onResponse(Call<String> call, Response<String> response) {}
 
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-              callsFailureSynchronously.set(true); // Will not be called for fatal errors.
-            }
-          });
-      assertThat(callsFailureSynchronously.get()).isFalse();
-      fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+                    @Override
+                    public void onFailure(Call<String> call, Throwable t) {
+                      callsFailureSynchronously.set(true); // Will not be called for fatal errors.
+                    }
+                  });
+              assertThat(callsFailureSynchronously.get()).isFalse();
+            },
+            OutOfMemoryError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.request();
-      fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    OutOfMemoryError e2 = catchThrowableOfType(call::request, OutOfMemoryError.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(2);
   }
 
@@ -1431,20 +1338,12 @@ public final class CallTest {
         };
     Call<String> call = service.postRequestBody(a);
 
-    try {
-      call.execute();
-      fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    OutOfMemoryError e = catchThrowableOfType(call::execute, OutOfMemoryError.class);
+    assertThat(e).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(1);
 
-    try {
-      call.request();
-      fail();
-    } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
-    }
+    OutOfMemoryError e2 = catchThrowableOfType(call::request, OutOfMemoryError.class);
+    assertThat(e2).hasMessage("Broken!");
     assertThat(writeCount.get()).isEqualTo(2);
   }
 
@@ -1461,11 +1360,7 @@ public final class CallTest {
 
     Call<String> call = example.getString();
     call.timeout().timeout(100, TimeUnit.MILLISECONDS);
-    try {
-      call.execute();
-      fail();
-    } catch (InterruptedIOException expected) {
-    }
+    assertThat(catchThrowableOfType(call::execute, InterruptedIOException.class)).isNotNull();
   }
 
   @Test
@@ -1481,11 +1376,7 @@ public final class CallTest {
 
     Call<String> call = example.getString();
     call.timeout().deadline(100, TimeUnit.MILLISECONDS);
-    try {
-      call.execute();
-      fail();
-    } catch (InterruptedIOException expected) {
-    }
+    assertThat(catchThrowableOfType(call::execute, InterruptedIOException.class)).isNotNull();
   }
 
   @Test
