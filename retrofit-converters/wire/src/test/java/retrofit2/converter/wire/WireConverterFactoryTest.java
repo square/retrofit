@@ -16,6 +16,7 @@
 package retrofit2.converter.wire;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.Assert.fail;
 
 import java.io.EOFException;
@@ -146,10 +147,6 @@ public final class WireConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
     Call<?> call = service.get();
-    try {
-      call.execute();
-      fail();
-    } catch (EOFException ignored) {
-    }
+    assertThat(catchThrowableOfType(call::execute, EOFException.class)).isNotNull();
   }
 }
