@@ -16,6 +16,7 @@
 package retrofit2.converter.simplexml;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -126,11 +127,7 @@ public class SimpleXmlConverterFactoryTest {
             .setBody("<my-object><message>hello world</message><count>10</count></my-object>"));
 
     Call<?> call = service.wrongClass();
-    try {
-      call.execute();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
-    }
+    RuntimeException e = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
   }
 }
