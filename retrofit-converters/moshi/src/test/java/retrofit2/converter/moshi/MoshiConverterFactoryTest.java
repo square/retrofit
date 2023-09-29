@@ -17,8 +17,8 @@ package retrofit2.converter.moshi;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.JsonDataException;
@@ -235,14 +235,10 @@ public final class MoshiConverterFactoryTest {
     server.enqueue(malformedResponse);
 
     Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
-    try {
-      call.execute();
-      fail();
-    } catch (IOException e) {
-      assertEquals(
-          e.getMessage(),
-          "Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
-    }
+    IOException e = catchThrowableOfType(call::execute, IOException.class);
+    assertEquals(
+        e.getMessage(),
+        "Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
 
     Call<AnImplementation> call2 = serviceLenient.anImplementation(new AnImplementation("value"));
     Response<AnImplementation> response = call2.execute();
@@ -264,12 +260,8 @@ public final class MoshiConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("{\"taco\":\"delicious\"}"));
 
     Call<AnImplementation> call = serviceFailOnUnknown.anImplementation(new AnImplementation(null));
-    try {
-      call.execute();
-      fail();
-    } catch (JsonDataException e) {
-      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.taco");
-    }
+    JsonDataException e = catchThrowableOfType(call::execute, JsonDataException.class);
+    assertThat(e).hasMessage("Cannot skip unexpected NAME at $.taco");
   }
 
   @Test
@@ -295,11 +287,7 @@ public final class MoshiConverterFactoryTest {
     server.enqueue(malformedResponse);
 
     Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
-    try {
-      call.execute();
-      fail();
-    } catch (IOException expected) {
-    }
+    assertThat(catchThrowableOfType(call::execute, IOException.class)).isNotNull();
   }
 
   @Test
@@ -307,11 +295,7 @@ public final class MoshiConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
 
     Call<Value> call = service.value();
-    try {
-      call.execute();
-      fail();
-    } catch (JsonDataException e) {
-      assertThat(e).hasMessage("JSON document was not fully consumed.");
-    }
+    JsonDataException e = catchThrowableOfType(call::execute, JsonDataException.class);
+    assertThat(e).hasMessage("JSON document was not fully consumed.");
   }
 }
