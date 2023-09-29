@@ -15,8 +15,8 @@
  */
 package retrofit2.converter.jaxb;
 
-import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import jakarta.xml.bind.JAXBContext;
 import java.util.Collections;
@@ -128,12 +128,8 @@ public final class JaxbConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("This is not XML"));
 
     Call<Contact> call = service.getXml();
-    try {
-      call.execute();
-      fail();
-    } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("ParseError");
-    }
+    RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(expected).hasMessageContaining("ParseError");
   }
 
   @Test
@@ -174,14 +170,8 @@ public final class JaxbConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("hello"));
 
     Call<Contact> call = service.getXml();
-    try {
-      Response<Contact> response = call.execute();
-      response.body();
-      fail();
-    } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("ParseError");
-    }
-
+    RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(expected).hasMessageContaining("ParseError");
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
 
@@ -207,14 +197,8 @@ public final class JaxbConverterFactoryTest {
                     + "<!ENTITY secret \"hello\">"));
 
     Call<Contact> call = service.getXml();
-    try {
-      Response<Contact> response = call.execute();
-      response.body();
-      fail();
-    } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("ParseError");
-    }
-
+    RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(expected).hasMessageContaining("ParseError");
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
 }
