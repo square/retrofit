@@ -15,14 +15,15 @@
  */
 package retrofit2.converter.jaxb;
 
-import java.io.IOException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
@@ -40,11 +41,13 @@ final class JaxbResponseConverter<T> implements Converter<ResponseBody, T> {
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     try {
       Unmarshaller unmarshaller = context.createUnmarshaller();
       XMLStreamReader streamReader = xmlInputFactory.createXMLStreamReader(value.charStream());
       return unmarshaller.unmarshal(streamReader, type).getValue();
+    } catch (UnmarshalException e) {
+      throw new ConversionException(e);
     } catch (JAXBException | XMLStreamException e) {
       throw new RuntimeException(e);
     } finally {

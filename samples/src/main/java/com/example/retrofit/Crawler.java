@@ -38,6 +38,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -146,13 +147,17 @@ public final class Crawler {
         };
 
     @Override
-    public Page convert(ResponseBody responseBody) throws IOException {
-      Document document = Jsoup.parse(responseBody.string());
-      List<String> links = new ArrayList<>();
-      for (Element element : document.select("a[href]")) {
-        links.add(element.attr("href"));
+    public Page convert(ResponseBody responseBody) throws ConversionException {
+      try {
+        Document document = Jsoup.parse(responseBody.string());
+        List<String> links = new ArrayList<>();
+        for (Element element : document.select("a[href]")) {
+          links.add(element.attr("href"));
+        }
+        return new Page(document.title(), Collections.unmodifiableList(links));
+      } catch (IOException e) {
+        throw new ConversionException(e);
       }
-      return new Page(document.title(), Collections.unmodifiableList(links));
     }
   }
 }

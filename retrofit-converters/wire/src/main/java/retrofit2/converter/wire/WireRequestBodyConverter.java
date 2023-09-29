@@ -21,6 +21,7 @@ import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class WireRequestBodyConverter<T extends Message<T, ?>> implements Converter<T, RequestBody> {
@@ -33,9 +34,13 @@ final class WireRequestBodyConverter<T extends Message<T, ?>> implements Convert
   }
 
   @Override
-  public RequestBody convert(T value) throws IOException {
+  public RequestBody convert(T value) throws ConversionException {
     Buffer buffer = new Buffer();
-    adapter.encode(buffer, value);
+    try {
+      adapter.encode(buffer, value);
+    } catch (IOException e) {
+      throw new ConversionException(e);
+    }
     return RequestBody.create(MEDIA_TYPE, buffer.snapshot());
   }
 }

@@ -16,8 +16,8 @@
 package retrofit.converter.guava;
 
 import com.google.common.base.Optional;
-import java.io.IOException;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class OptionalConverter<T> implements Converter<ResponseBody, Optional<T>> {
@@ -28,7 +28,7 @@ final class OptionalConverter<T> implements Converter<ResponseBody, Optional<T>>
   }
 
   @Override
-  public Optional<T> convert(ResponseBody value) throws IOException {
+  public Optional<T> convert(ResponseBody value) throws ConversionException {
     return Optional.fromNullable(delegate.convert(value));
   }
 }

@@ -21,6 +21,7 @@ import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class MoshiRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -33,10 +34,14 @@ final class MoshiRequestBodyConverter<T> implements Converter<T, RequestBody> {
   }
 
   @Override
-  public RequestBody convert(T value) throws IOException {
+  public RequestBody convert(T value) throws ConversionException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonWriter.of(buffer);
-    adapter.toJson(writer, value);
+    try {
+      adapter.toJson(writer, value);
+    } catch (IOException e) {
+      throw new ConversionException(e);
+    }
     return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
   }
 }

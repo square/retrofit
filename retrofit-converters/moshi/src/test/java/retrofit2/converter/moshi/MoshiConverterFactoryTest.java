@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.Call;
+import retrofit2.ConversionException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
@@ -235,8 +236,10 @@ public final class MoshiConverterFactoryTest {
     server.enqueue(malformedResponse);
 
     Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
-    IOException e = catchThrowableOfType(call::execute, IOException.class);
-    assertThat(e)
+    ConversionException e = catchThrowableOfType(call::execute, ConversionException.class);
+    assertThat(e).hasCauseInstanceOf(IOException.class);
+    IOException ioException = (IOException) e.getCause();
+    assertThat(ioException)
         .hasMessage("Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
 
     Call<AnImplementation> call2 = serviceLenient.anImplementation(new AnImplementation("value"));

@@ -15,11 +15,13 @@
  */
 package retrofit2.adapter.guava;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
@@ -27,7 +29,13 @@ final class StringConverterFactory extends Converter.Factory {
   @Override
   public Converter<ResponseBody, String> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
-    return ResponseBody::string;
+    return (ResponseBody responseBody) -> {
+      try {
+        return responseBody.string();
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
+    };
   }
 
   @Override

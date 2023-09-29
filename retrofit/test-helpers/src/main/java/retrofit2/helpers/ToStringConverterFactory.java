@@ -15,12 +15,14 @@
  */
 package retrofit2.helpers;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
@@ -31,7 +33,13 @@ public class ToStringConverterFactory extends Converter.Factory {
   public @Nullable Converter<ResponseBody, String> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
     if (String.class.equals(type)) {
-      return ResponseBody::string;
+      return (ResponseBody responseBody) -> {
+        try {
+          return responseBody.string();
+        } catch (IOException e) {
+          throw new ConversionException(e);
+        }
+      };
     }
     return null;
   }

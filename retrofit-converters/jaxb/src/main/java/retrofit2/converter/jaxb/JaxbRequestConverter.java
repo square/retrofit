@@ -15,15 +15,16 @@
  */
 package retrofit2.converter.jaxb;
 
-import java.io.IOException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.MarshalException;
 import javax.xml.bind.Marshaller;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import okhttp3.RequestBody;
 import okio.Buffer;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
@@ -37,7 +38,7 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
   }
 
   @Override
-  public RequestBody convert(final T value) throws IOException {
+  public RequestBody convert(final T value) throws ConversionException {
     Buffer buffer = new Buffer();
     try {
       Marshaller marshaller = context.createMarshaller();
@@ -46,6 +47,8 @@ final class JaxbRequestConverter<T> implements Converter<T, RequestBody> {
           xmlOutputFactory.createXMLStreamWriter(
               buffer.outputStream(), JaxbConverterFactory.XML.charset().name());
       marshaller.marshal(value, xmlWriter);
+    } catch (MarshalException e) {
+      throw new ConversionException(e);
     } catch (JAXBException | XMLStreamException e) {
       throw new RuntimeException(e);
     }

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -31,8 +32,12 @@ final class JacksonRequestBodyConverter<T> implements Converter<T, RequestBody> 
   }
 
   @Override
-  public RequestBody convert(T value) throws IOException {
-    byte[] bytes = adapter.writeValueAsBytes(value);
-    return RequestBody.create(MEDIA_TYPE, bytes);
+  public RequestBody convert(T value) throws ConversionException {
+    try {
+      byte[] bytes = adapter.writeValueAsBytes(value);
+      return RequestBody.create(MEDIA_TYPE, bytes);
+    } catch (IOException e) {
+      throw new ConversionException(e);
+    }
   }
 }

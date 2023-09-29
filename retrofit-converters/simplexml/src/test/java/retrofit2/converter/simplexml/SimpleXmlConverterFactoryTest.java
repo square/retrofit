@@ -34,6 +34,7 @@ import org.simpleframework.xml.stream.Format;
 import org.simpleframework.xml.stream.HyphenStyle;
 import org.simpleframework.xml.stream.Verbosity;
 import retrofit2.Call;
+import retrofit2.ConversionException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
@@ -127,7 +128,9 @@ public class SimpleXmlConverterFactoryTest {
             .setBody("<my-object><message>hello world</message><count>10</count></my-object>"));
 
     Call<?> call = service.wrongClass();
-    RuntimeException e = catchThrowableOfType(call::execute, RuntimeException.class);
-    assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
+    ConversionException e = catchThrowableOfType(call::execute, ConversionException.class);
+    assertThat(e).hasCauseInstanceOf(IOException.class);
+    IOException ioException = (IOException) e.getCause();
+    assertThat(ioException).hasMessage("Could not deserialize body as class java.lang.String");
   }
 }

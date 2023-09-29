@@ -16,7 +16,6 @@
 package retrofit2;
 
 import android.annotation.TargetApi;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -50,7 +49,7 @@ final class OptionalConverterFactory extends Converter.Factory {
     }
 
     @Override
-    public Optional<T> convert(ResponseBody value) throws IOException {
+    public Optional<T> convert(ResponseBody value) throws ConversionException {
       return Optional.ofNullable(delegate.convert(value));
     }
   }

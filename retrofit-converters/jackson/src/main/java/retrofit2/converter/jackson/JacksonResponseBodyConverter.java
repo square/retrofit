@@ -18,6 +18,7 @@ package retrofit2.converter.jackson;
 import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.IOException;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
@@ -28,9 +29,11 @@ final class JacksonResponseBodyConverter<T> implements Converter<ResponseBody, T
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     try {
       return adapter.readValue(value.charStream());
+    } catch (IOException e) {
+      throw new ConversionException(e);
     } finally {
       value.close();
     }

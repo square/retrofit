@@ -22,6 +22,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import java.io.IOException;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
@@ -34,7 +35,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     JsonReader jsonReader = gson.newJsonReader(value.charStream());
     try {
       T result = adapter.read(jsonReader);
@@ -42,6 +43,8 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
         throw new JsonIOException("JSON document was not fully consumed.");
       }
       return result;
+    } catch (IOException e) {
+      throw new ConversionException(e);
     } finally {
       value.close();
     }

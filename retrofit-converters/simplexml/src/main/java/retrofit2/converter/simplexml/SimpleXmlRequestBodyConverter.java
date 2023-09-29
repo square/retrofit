@@ -21,6 +21,7 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
 import org.simpleframework.xml.Serializer;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class SimpleXmlRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -34,14 +35,16 @@ final class SimpleXmlRequestBodyConverter<T> implements Converter<T, RequestBody
   }
 
   @Override
-  public RequestBody convert(T value) throws IOException {
+  public RequestBody convert(T value) throws ConversionException {
     Buffer buffer = new Buffer();
     try {
       OutputStreamWriter osw = new OutputStreamWriter(buffer.outputStream(), CHARSET);
       serializer.write(value, osw);
       osw.flush();
-    } catch (RuntimeException | IOException e) {
+    } catch (RuntimeException e) {
       throw e;
+    } catch (IOException e) {
+      throw new ConversionException(e);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

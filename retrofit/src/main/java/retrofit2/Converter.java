@@ -15,7 +15,6 @@
  */
 package retrofit2;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -40,7 +39,7 @@ import retrofit2.http.QueryMap;
  */
 public interface Converter<F, T> {
   @Nullable
-  T convert(F value) throws IOException;
+  T convert(F value) throws ConversionException;
 
   /** Creates {@link Converter} instances based on a type and target usage. */
   abstract class Factory {

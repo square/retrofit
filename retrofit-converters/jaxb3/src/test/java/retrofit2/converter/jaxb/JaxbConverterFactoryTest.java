@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.Call;
+import retrofit2.ConversionException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
@@ -129,7 +130,7 @@ public final class JaxbConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("This is not XML"));
 
     Call<Contact> call = service.getXml();
-    RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    ConversionException expected = catchThrowableOfType(call::execute, ConversionException.class);
     assertThat(expected).hasCauseInstanceOf(UnmarshalException.class);
     assertThat(expected).hasMessageContaining("ParseError");
   }
@@ -172,7 +173,7 @@ public final class JaxbConverterFactoryTest {
     server.enqueue(new MockResponse().setBody("hello"));
 
     Call<Contact> call = service.getXml();
-    RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    ConversionException expected = catchThrowableOfType(call::execute, ConversionException.class);
     assertThat(expected).hasCauseInstanceOf(UnmarshalException.class);
     assertThat(expected).hasMessageContaining("ParseError");
     assertThat(server.getRequestCount()).isEqualTo(1);
@@ -200,7 +201,7 @@ public final class JaxbConverterFactoryTest {
                     + "<!ENTITY secret \"hello\">"));
 
     Call<Contact> call = service.getXml();
-    RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    ConversionException expected = catchThrowableOfType(call::execute, ConversionException.class);
     assertThat(expected).hasCauseInstanceOf(UnmarshalException.class);
     assertThat(expected).hasMessageContaining("ParseError");
     assertThat(server.getRequestCount()).isEqualTo(1);

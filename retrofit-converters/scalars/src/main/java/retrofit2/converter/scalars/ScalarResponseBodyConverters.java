@@ -17,6 +17,7 @@ package retrofit2.converter.scalars;
 
 import java.io.IOException;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class ScalarResponseBodyConverters {
@@ -26,8 +27,12 @@ final class ScalarResponseBodyConverters {
     static final StringResponseBodyConverter INSTANCE = new StringResponseBodyConverter();
 
     @Override
-    public String convert(ResponseBody value) throws IOException {
-      return value.string();
+    public String convert(ResponseBody value) throws ConversionException {
+      try {
+        return value.string();
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -35,8 +40,12 @@ final class ScalarResponseBodyConverters {
     static final BooleanResponseBodyConverter INSTANCE = new BooleanResponseBodyConverter();
 
     @Override
-    public Boolean convert(ResponseBody value) throws IOException {
-      return Boolean.valueOf(value.string());
+    public Boolean convert(ResponseBody value) throws ConversionException {
+      try {
+        return Boolean.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -44,8 +53,12 @@ final class ScalarResponseBodyConverters {
     static final ByteResponseBodyConverter INSTANCE = new ByteResponseBodyConverter();
 
     @Override
-    public Byte convert(ResponseBody value) throws IOException {
-      return Byte.valueOf(value.string());
+    public Byte convert(ResponseBody value) throws ConversionException {
+      try {
+        return Byte.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -53,10 +66,15 @@ final class ScalarResponseBodyConverters {
     static final CharacterResponseBodyConverter INSTANCE = new CharacterResponseBodyConverter();
 
     @Override
-    public Character convert(ResponseBody value) throws IOException {
-      String body = value.string();
+    public Character convert(ResponseBody value) throws ConversionException {
+      String body;
+      try {
+        body = value.string();
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
       if (body.length() != 1) {
-        throw new IOException(
+        throw new ConversionException(
             "Expected body of length 1 for Character conversion but was " + body.length());
       }
       return body.charAt(0);
@@ -67,8 +85,12 @@ final class ScalarResponseBodyConverters {
     static final DoubleResponseBodyConverter INSTANCE = new DoubleResponseBodyConverter();
 
     @Override
-    public Double convert(ResponseBody value) throws IOException {
-      return Double.valueOf(value.string());
+    public Double convert(ResponseBody value) throws ConversionException {
+      try {
+        return Double.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -76,8 +98,12 @@ final class ScalarResponseBodyConverters {
     static final FloatResponseBodyConverter INSTANCE = new FloatResponseBodyConverter();
 
     @Override
-    public Float convert(ResponseBody value) throws IOException {
-      return Float.valueOf(value.string());
+    public Float convert(ResponseBody value) throws ConversionException {
+      try {
+        return Float.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -85,8 +111,12 @@ final class ScalarResponseBodyConverters {
     static final IntegerResponseBodyConverter INSTANCE = new IntegerResponseBodyConverter();
 
     @Override
-    public Integer convert(ResponseBody value) throws IOException {
-      return Integer.valueOf(value.string());
+    public Integer convert(ResponseBody value) throws ConversionException {
+      try {
+        return Integer.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -94,8 +124,12 @@ final class ScalarResponseBodyConverters {
     static final LongResponseBodyConverter INSTANCE = new LongResponseBodyConverter();
 
     @Override
-    public Long convert(ResponseBody value) throws IOException {
-      return Long.valueOf(value.string());
+    public Long convert(ResponseBody value) throws ConversionException {
+      try {
+        return Long.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 
@@ -103,8 +137,12 @@ final class ScalarResponseBodyConverters {
     static final ShortResponseBodyConverter INSTANCE = new ShortResponseBodyConverter();
 
     @Override
-    public Short convert(ResponseBody value) throws IOException {
-      return Short.valueOf(value.string());
+    public Short convert(ResponseBody value) throws ConversionException {
+      try {
+        return Short.valueOf(value.string());
+      } catch (IOException e) {
+        throw new ConversionException(e);
+      }
     }
   }
 }

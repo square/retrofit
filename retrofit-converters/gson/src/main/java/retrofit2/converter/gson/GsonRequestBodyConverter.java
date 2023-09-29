@@ -26,6 +26,7 @@ import java.io.Writer;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -40,12 +41,16 @@ final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
   }
 
   @Override
-  public RequestBody convert(T value) throws IOException {
-    Buffer buffer = new Buffer();
-    Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
-    JsonWriter jsonWriter = gson.newJsonWriter(writer);
-    adapter.write(jsonWriter, value);
-    jsonWriter.close();
-    return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
+  public RequestBody convert(T value) throws ConversionException {
+    try {
+      Buffer buffer = new Buffer();
+      Writer writer = new OutputStreamWriter(buffer.outputStream(), UTF_8);
+      JsonWriter jsonWriter = gson.newJsonWriter(writer);
+      adapter.write(jsonWriter, value);
+      jsonWriter.close();
+      return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
+    } catch (IOException e) {
+      throw new ConversionException(e);
+    }
   }
 }

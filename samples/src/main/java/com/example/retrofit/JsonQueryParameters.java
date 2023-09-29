@@ -29,6 +29,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import okio.Buffer;
 import retrofit2.Call;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -71,9 +72,13 @@ public final class JsonQueryParameters {
       }
 
       @Override
-      public String convert(T value) throws IOException {
+      public String convert(T value) throws ConversionException {
         Buffer buffer = new Buffer();
-        delegate.convert(value).writeTo(buffer);
+        try {
+          delegate.convert(value).writeTo(buffer);
+        } catch (IOException e) {
+          throw new ConversionException(e);
+        }
         return buffer.readUtf8();
       }
     }

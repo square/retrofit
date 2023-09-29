@@ -22,6 +22,7 @@ import java.io.IOException;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
 import okio.ByteString;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> {
@@ -34,7 +35,7 @@ final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> 
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     BufferedSource source = value.source();
     try {
       // Moshi has no document-level API so the responsibility of BOM skipping falls to whatever
@@ -48,6 +49,8 @@ final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> 
         throw new JsonDataException("JSON document was not fully consumed.");
       }
       return result;
+    } catch (IOException e) {
+      throw new ConversionException(e);
     } finally {
       value.close();
     }

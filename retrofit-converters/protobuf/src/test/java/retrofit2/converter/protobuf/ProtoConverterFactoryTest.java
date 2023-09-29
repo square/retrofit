@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.Call;
+import retrofit2.ConversionException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
@@ -176,7 +177,7 @@ public final class ProtoConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
     Call<?> call = service.get();
-    RuntimeException e = catchThrowableOfType(call::execute, RuntimeException.class);
+    ConversionException e = catchThrowableOfType(call::execute, ConversionException.class);
     assertThat(e.getCause())
         .isInstanceOf(InvalidProtocolBufferException.class)
         .hasMessageContaining("input ended unexpectedly");

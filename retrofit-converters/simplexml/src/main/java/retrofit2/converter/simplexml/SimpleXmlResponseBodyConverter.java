@@ -18,6 +18,7 @@ package retrofit2.converter.simplexml;
 import java.io.IOException;
 import okhttp3.ResponseBody;
 import org.simpleframework.xml.Serializer;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class SimpleXmlResponseBodyConverter<T> implements Converter<ResponseBody, T> {
@@ -32,15 +33,17 @@ final class SimpleXmlResponseBodyConverter<T> implements Converter<ResponseBody,
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     try {
       T read = serializer.read(cls, value.charStream(), strict);
       if (read == null) {
-        throw new IllegalStateException("Could not deserialize body as " + cls);
+        throw new ConversionException("Could not deserialize body as " + cls);
       }
       return read;
-    } catch (RuntimeException | IOException e) {
+    } catch (RuntimeException e) {
       throw e;
+    } catch (IOException e) {
+      throw new ConversionException(e);
     } catch (Exception e) {
       throw new RuntimeException(e);
     } finally {

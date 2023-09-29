@@ -19,6 +19,7 @@ import com.squareup.wire.Message;
 import com.squareup.wire.ProtoAdapter;
 import java.io.IOException;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class WireResponseBodyConverter<T extends Message<T, ?>>
@@ -30,9 +31,11 @@ final class WireResponseBodyConverter<T extends Message<T, ?>>
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     try {
       return adapter.decode(value.source());
+    } catch (IOException e) {
+      throw new ConversionException(e);
     } finally {
       value.close();
     }

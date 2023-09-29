@@ -19,9 +19,9 @@ import com.google.protobuf.ExtensionRegistryLite;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import java.io.IOException;
 import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class ProtoResponseBodyConverter<T extends MessageLite>
@@ -35,13 +35,13 @@ final class ProtoResponseBodyConverter<T extends MessageLite>
   }
 
   @Override
-  public T convert(ResponseBody value) throws IOException {
+  public T convert(ResponseBody value) throws ConversionException {
     try {
       return registry == null
           ? parser.parseFrom(value.byteStream())
           : parser.parseFrom(value.byteStream(), registry);
     } catch (InvalidProtocolBufferException e) {
-      throw new RuntimeException(e); // Despite extending IOException, this is data mismatch.
+      throw new ConversionException(e); // Despite extending IOException, this is data mismatch.
     } finally {
       value.close();
     }

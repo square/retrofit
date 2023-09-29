@@ -483,10 +483,14 @@ public final class CallTest {
                   public Converter<ResponseBody, String> responseBodyConverter(
                       Type type, Annotation[] annotations, Retrofit retrofit) {
                     return value -> {
-                      String prefix = value.source().readUtf8(2);
-                      value.source().skip(20_000 - 4);
-                      String suffix = value.source().readUtf8();
-                      return prefix + suffix;
+                      try {
+                        String prefix = value.source().readUtf8(2);
+                        value.source().skip(20_000 - 4);
+                        String suffix = value.source().readUtf8();
+                        return prefix + suffix;
+                      } catch (IOException e) {
+                        throw new ConversionException(e);
+                      }
                     };
                   }
                 })
@@ -558,7 +562,10 @@ public final class CallTest {
 
     Call<ResponseBody> buffered = example.getBody();
     // When buffering we will detect all socket problems before returning the Response.
-    IOException e = catchThrowableOfType(buffered::execute, IOException.class);
+    ConversionException conversionException =
+        catchThrowableOfType(buffered::execute, ConversionException.class);
+    assertThat(conversionException).hasCauseInstanceOf(IOException.class);
+    IOException e = (IOException) conversionException.getCause();
     assertThat(e).hasMessage("unexpected end of stream");
   }
 

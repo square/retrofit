@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Square, Inc.
+ * Copyright (C) 2023 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit.converter.java8;
+package retrofit2;
 
-import java.util.Optional;
-import okhttp3.ResponseBody;
-import retrofit2.ConversionException;
-import retrofit2.Converter;
+import java.io.IOException;
 
-final class OptionalConverter<T> implements Converter<ResponseBody, Optional<T>> {
-  private final Converter<ResponseBody, T> delegate;
-
-  OptionalConverter(Converter<ResponseBody, T> delegate) {
-    this.delegate = delegate;
+/** Exception converting an http response body. */
+public class ConversionException extends IOException {
+  public ConversionException(String message, Throwable cause) {
+    super(message, cause);
   }
 
-  @Override
-  public Optional<T> convert(ResponseBody value) throws ConversionException {
-    return Optional.ofNullable(delegate.convert(value));
+  public ConversionException(String message) {
+    super(message);
+  }
+
+  public ConversionException(Throwable cause) {
+    super(cause);
   }
 }

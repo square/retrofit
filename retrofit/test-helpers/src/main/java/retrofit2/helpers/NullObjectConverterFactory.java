@@ -15,9 +15,9 @@
  */
 package retrofit2.helpers;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
@@ -28,7 +28,7 @@ public final class NullObjectConverterFactory extends Converter.Factory {
       Type type, Annotation[] annotations, Retrofit retrofit) {
     return new Converter<Object, String>() {
       @Override
-      public String convert(Object value) throws IOException {
+      public String convert(Object value) throws ConversionException {
         return null;
       }
     };

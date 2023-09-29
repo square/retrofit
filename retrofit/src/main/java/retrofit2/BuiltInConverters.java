@@ -99,10 +99,12 @@ final class BuiltInConverters extends Converter.Factory {
     static final BufferingResponseBodyConverter INSTANCE = new BufferingResponseBodyConverter();
 
     @Override
-    public ResponseBody convert(ResponseBody value) throws IOException {
+    public ResponseBody convert(ResponseBody value) throws ConversionException {
       try {
         // Buffer the entire body to avoid future I/O.
         return Utils.buffer(value);
+      } catch (IOException e) {
+        throw new ConversionException(e);
       } finally {
         value.close();
       }

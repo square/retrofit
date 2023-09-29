@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.Call;
+import retrofit2.ConversionException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
@@ -147,6 +148,7 @@ public final class WireConverterFactoryTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(encoded)));
 
     Call<?> call = service.get();
-    assertThat(catchThrowableOfType(call::execute, EOFException.class)).isNotNull();
+    assertThat(catchThrowableOfType(call::execute, ConversionException.class))
+        .hasCauseInstanceOf(EOFException.class);
   }
 }

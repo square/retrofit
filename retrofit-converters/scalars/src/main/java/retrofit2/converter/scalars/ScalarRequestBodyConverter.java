@@ -15,9 +15,9 @@
  */
 package retrofit2.converter.scalars;
 
-import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import retrofit2.ConversionException;
 import retrofit2.Converter;
 
 final class ScalarRequestBodyConverter<T> implements Converter<T, RequestBody> {
@@ -27,7 +27,7 @@ final class ScalarRequestBodyConverter<T> implements Converter<T, RequestBody> {
   private ScalarRequestBodyConverter() {}
 
   @Override
-  public RequestBody convert(T value) throws IOException {
+  public RequestBody convert(T value) throws ConversionException {
     return RequestBody.create(MEDIA_TYPE, String.valueOf(value));
   }
 }
