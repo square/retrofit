@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.UnmarshalException;
 import java.util.Collections;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -129,6 +130,7 @@ public final class JaxbConverterFactoryTest {
 
     Call<Contact> call = service.getXml();
     RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(expected).hasCauseInstanceOf(UnmarshalException.class);
     assertThat(expected).hasMessageContaining("ParseError");
   }
 
@@ -171,6 +173,7 @@ public final class JaxbConverterFactoryTest {
 
     Call<Contact> call = service.getXml();
     RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(expected).hasCauseInstanceOf(UnmarshalException.class);
     assertThat(expected).hasMessageContaining("ParseError");
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
@@ -198,6 +201,7 @@ public final class JaxbConverterFactoryTest {
 
     Call<Contact> call = service.getXml();
     RuntimeException expected = catchThrowableOfType(call::execute, RuntimeException.class);
+    assertThat(expected).hasCauseInstanceOf(UnmarshalException.class);
     assertThat(expected).hasMessageContaining("ParseError");
     assertThat(server.getRequestCount()).isEqualTo(1);
   }
