@@ -22,7 +22,7 @@ kotlinx-serialization = "1.6.0"
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-dokka = { id = "org.jetbrains.dokka", version = "1.9.0" }
+dokka = { id = "org.jetbrains.dokka", version = "1.9.10" }
 errorprone = { id = "net.ltgt.errorprone", version = "3.1.0" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
 protobuf = { id = "com.google.protobuf", version = "0.9.4" }
