@@ -17,6 +17,7 @@ android {
       }
     }
 
+    //noinspection ExpiredTargetSdkVersion
     targetSdkVersion 29
     testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   }

@@ -16,6 +16,7 @@
 package retrofit2;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import okhttp3.Headers;
@@ -94,6 +95,17 @@ public final class ResponseTest {
     assertThat(response.isSuccessful()).isTrue();
     assertThat(response.body()).isSameAs(body);
     assertThat(response.errorBody()).isNull();
+  }
+
+  @Test
+  public void testSuccessWithErrorCodeThrowsExpection() {
+    Object body = new Object();
+    try {
+      Response.success(400, body);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("code < 200 or >= 300: 400");
+    }
   }
 
   @Test
