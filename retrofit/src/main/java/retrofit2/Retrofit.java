@@ -163,7 +163,7 @@ public final class Retrofit {
                 Platform platform = Platform.get();
                 return platform.isDefaultMethod(method)
                     ? platform.invokeDefaultMethod(method, service, proxy, args)
-                    : loadServiceMethod(service,method).invoke(args);
+                    : loadServiceMethod(service, method).invoke(args);
               }
             });
   }
