@@ -15,6 +15,7 @@
  */
 package retrofit2;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -123,7 +124,12 @@ final class RequestBuilder {
       // The relative URL is cleared when the first query parameter is set.
       throw new AssertionError();
     }
-    String replacement = canonicalizeForPath(value, encoded);
+    String replacement;
+    try {
+      replacement = canonicalizeForPath(value, encoded);
+    } catch (EOFException e) {
+      throw new RuntimeException(e);
+    }
     String newRelativeUrl = relativeUrl.replace("{" + name + "}", replacement);
     if (PATH_TRAVERSAL.matcher(newRelativeUrl).matches()) {
       throw new IllegalArgumentException(
@@ -132,7 +138,7 @@ final class RequestBuilder {
     relativeUrl = newRelativeUrl;
   }
 
-  private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
+  private static String canonicalizeForPath(String input, boolean alreadyEncoded) throws EOFException {
     int codePoint;
     for (int i = 0, limit = input.length(); i < limit; i += Character.charCount(codePoint)) {
       codePoint = input.codePointAt(i);
@@ -153,7 +159,7 @@ final class RequestBuilder {
   }
 
   private static void canonicalizeForPath(
-      Buffer out, String input, int pos, int limit, boolean alreadyEncoded) {
+      Buffer out, String input, int pos, int limit, boolean alreadyEncoded) throws EOFException {
     Buffer utf8Buffer = null; // Lazily allocated.
     int codePoint;
     for (int i = pos; i < limit; i += Character.charCount(codePoint)) {
