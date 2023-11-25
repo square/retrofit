@@ -133,7 +133,7 @@ public final class GsonConverterFactoryTest {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(server.url("/"))
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(GsonConverterFactory.createGsonInstance(gson))
             .build();
     service = retrofit.create(Service.class);
   }

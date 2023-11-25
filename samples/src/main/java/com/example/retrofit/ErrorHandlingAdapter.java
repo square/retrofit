@@ -172,7 +172,7 @@ public final class ErrorHandlingAdapter {
         new Retrofit.Builder()
             .baseUrl("http://httpbin.org")
             .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.createGsonInstance())
             .build();
 
     HttpBinService service = retrofit.create(HttpBinService.class);

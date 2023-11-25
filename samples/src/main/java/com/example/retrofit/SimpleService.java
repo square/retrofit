@@ -46,7 +46,7 @@ public final class SimpleService {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(API_URL)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.createGsonInstance())
             .build();
 
     // Create an instance of our GitHub API interface.

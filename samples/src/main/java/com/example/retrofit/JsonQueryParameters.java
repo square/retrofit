@@ -101,7 +101,7 @@ public final class JsonQueryParameters {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(server.url("/"))
-            .addConverterFactory(new JsonStringConverterFactory(GsonConverterFactory.create()))
+            .addConverterFactory(new JsonStringConverterFactory(GsonConverterFactory.createGsonInstance()))
             .build();
     Service service = retrofit.create(Service.class);
 

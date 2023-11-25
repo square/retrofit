@@ -54,7 +54,7 @@ public final class DeserializeErrorBody {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(server.url("/"))
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.createGsonInstance())
             .build();
     Service service = retrofit.create(Service.class);
 

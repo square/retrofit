@@ -139,7 +139,7 @@ final class AnnotatedConverters {
     com.squareup.moshi.Moshi moshi = new com.squareup.moshi.Moshi.Builder().build();
     com.google.gson.Gson gson = new GsonBuilder().create();
     MoshiConverterFactory moshiConverterFactory = MoshiConverterFactory.create(moshi);
-    GsonConverterFactory gsonConverterFactory = GsonConverterFactory.create(gson);
+    GsonConverterFactory gsonConverterFactory = GsonConverterFactory.createGsonInstance(gson);
     SimpleXmlConverterFactory simpleXmlConverterFactory = SimpleXmlConverterFactory.create();
     Retrofit retrofit =
         new Retrofit.Builder()

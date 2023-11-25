@@ -119,7 +119,7 @@ public final class JsonAndXmlConverters {
             .baseUrl(server.url("/"))
             .addConverterFactory(
                 new QualifiedTypeConverterFactory(
-                    GsonConverterFactory.create(), SimpleXmlConverterFactory.create()))
+                    GsonConverterFactory.createGsonInstance(), SimpleXmlConverterFactory.create()))
             .build();
     Service service = retrofit.create(Service.class);
 
