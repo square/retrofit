@@ -184,15 +184,7 @@ final class RequestBuilder {
   }
 
   void addQueryParam(String name, @Nullable String value, boolean encoded) {
-    if (relativeUrl != null) {
-      // Do a one-time combination of the built relative URL and the base URL.
-      urlBuilder = baseUrl.newBuilder(relativeUrl);
-      if (urlBuilder == null) {
-        throw new IllegalArgumentException(
-            "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
-      }
-      relativeUrl = null;
-    }
+    relativeUrlPlusBaseUrlBuilder();
 
     if (encoded) {
       //noinspection ConstantConditions Checked to be non-null by above 'if' block.
@@ -200,6 +192,18 @@ final class RequestBuilder {
     } else {
       //noinspection ConstantConditions Checked to be non-null by above 'if' block.
       urlBuilder.addQueryParameter(name, value);
+    }
+  }
+
+  void relativeUrlPlusBaseUrlBuilder() {
+    if (relativeUrl != null) {
+      // Do a one-time combination of the built relative URL and the base URL.
+      urlBuilder = baseUrl.newBuilder(relativeUrl);
+      if (urlBuilder == null) {
+        throw new IllegalArgumentException(
+          "Malformed URL. Base: " + baseUrl + ", Relative: " + relativeUrl);
+      }
+      relativeUrl = null;
     }
   }
 
