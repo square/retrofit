@@ -13,11 +13,11 @@
 # limitations under the License.
 
 [versions]
-kotlin = "1.9.20"
+kotlin = "1.9.21"
 okhttp = "3.14.9"
-protobuf = "3.24.4"
+protobuf = "3.25.1"
 robovm = "2.3.14"
-kotlinx-serialization = "1.6.0"
+kotlinx-serialization = "1.6.1"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -52,7 +52,7 @@ rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.8" }
 reactiveStreams = { module = "org.reactivestreams:reactive-streams", version = "1.0.4" }
 scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.12" }
 gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
-jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.15.3" }
+jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.16.0" }
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
 jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version = "4.0.4" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "3.0.1" }

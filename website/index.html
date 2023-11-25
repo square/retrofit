@@ -123,7 +123,7 @@ Call&lt;User> getUser(@Header("Authorization") String authorization)</pre>
               <p>Similar to query parameters, for complex header combinations, a <code>Map</code> can be used.
 			  <pre class="prettyprint">@GET("user")
 Call&lt;User> getUser(@HeaderMap Map&lt;String, String&gt; headers)</pre>
-              <p>Headers that need to be added to every request can be specified using an <a href="https://github.com/square/okhttp/wiki/Interceptors">OkHttp interceptor</a>.
+              <p>Headers that need to be added to every request can be specified using an <a href="https://square.github.io/okhttp/features/interceptors/">OkHttp interceptor</a>.
 
               <h4>Synchronous vs. Asynchronous</h4>
               <p><code>Call</code> instances can be executed either synchronously or asynchronously. Each instance can only be used once, but calling <code>clone()</code> will create a new instance that can be used.</p>
