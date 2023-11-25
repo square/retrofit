@@ -16,7 +16,7 @@
 package retrofit2;
 
 import static retrofit2.Utils.getRawType;
-import static retrofit2.Utils.methodError;
+import static retrofit2.ErrorsUtils.methodError;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

@@ -15,8 +15,8 @@
  */
 package retrofit2;
 
-import static retrofit2.Utils.methodError;
-import static retrofit2.Utils.parameterError;
+import static retrofit2.ErrorsUtils.methodError;
+import static retrofit2.ErrorsUtils.parameterError;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
