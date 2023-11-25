@@ -48,7 +48,8 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
       Type responseType =
           Utils.getParameterLowerBound(
               0, (ParameterizedType) parameterTypes[parameterTypes.length - 1]);
-      if (getRawType(responseType) == Response.class && responseType instanceof ParameterizedType) {
+      boolean isResponseParameterizedType = getRawType(responseType) == Response.class && responseType instanceof ParameterizedType;
+      if (isResponseParameterizedType) {
         // Unwrap the actual body type from Response<T>.
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
