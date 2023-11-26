@@ -16,6 +16,7 @@
 package retrofit2;
 
 import static java.util.Collections.unmodifiableList;
+import static retrofit2.ErrorsUtils.methodError;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -205,7 +206,7 @@ public final class Retrofit {
     synchronized (service) {
       result = serviceMethodCache.get(method);
       if (result == null) {
-        result = ServiceMethod.parseAnnotations(this, method);
+        result = HttpServiceMethod.parseAnnotations(this, method);
         serviceMethodCache.put(method, result);
       }
     }

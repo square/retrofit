@@ -114,6 +114,23 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     }
   }
 
+  static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
+    RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
+
+    Type returnType = method.getGenericReturnType();
+    if (Utils.hasUnresolvableType(returnType)) {
+      throw methodError(
+        method,
+        "Method return type must not include a type variable or wildcard: %s",
+        returnType);
+    }
+    if (returnType == void.class) {
+      throw methodError(method, "Service methods cannot return void.");
+    }
+
+    return HttpServiceMethod.parseAnnotations(retrofit, method, requestFactory);
+  }
+
   private static <ResponseT, ReturnT> CallAdapter<ResponseT, ReturnT> createCallAdapter(
       Retrofit retrofit, Method method, Type returnType, Annotation[] annotations) {
     try {
