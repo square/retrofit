@@ -62,7 +62,7 @@ protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protob
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
 wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
-jsoup = { module = "org.jsoup:jsoup", version = "1.16.2" }
+jsoup = { module = "org.jsoup:jsoup", version = "1.17.1" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
