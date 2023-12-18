@@ -27,12 +27,10 @@ jar {
 
 // Create a test task for each supported JDK.
 (8..19).each { majorVersion ->
-  // Adoptium JDK 9 cannot extract on Linux or Mac OS.
-  if (majorVersion == 9) return
-
   def jdkTest = tasks.register("testJdk$majorVersion", Test) {
     javaLauncher = javaToolchains.launcherFor {
       languageVersion = JavaLanguageVersion.of(majorVersion)
+      vendor = JvmVendorSpec.AZUL
     }
 
     description = "Runs the test suite on JDK $majorVersion"
