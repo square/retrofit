@@ -360,10 +360,11 @@ class KotlinSuspendTest {
         .baseUrl(server.url("/"))
         .addConverterFactory(ToStringConverterFactory())
         .build()
+    val example = retrofit.create(Service::class.java)
 
     try {
-      val example = retrofit.create(Service::class.java)
       runBlocking { example.bodyWithCallType() }
+      fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage(
           "Suspend functions should not return Call, as they already execute asynchronously.\n" +
