@@ -56,6 +56,8 @@ class KotlinSuspendTest {
         @Path("b") b: String,
         @Path("c") c: String
     ): String
+
+    @GET("/") suspend fun bodyWithCallType(): Call<String>
   }
 
   @Test fun body() {
@@ -350,6 +352,23 @@ class KotlinSuspendTest {
           // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
         }
       }
+    }
+  }
+
+  @Test fun rejectCallReturnTypeWhenUsingSuspend() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+
+    try {
+      val example = retrofit.create(Service::class.java)
+      runBlocking { example.bodyWithCallType() }
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage(
+          "Unable to create call adapter for suspend function with Call return type.\n" +
+            "    for method Service.bodyWithCallType"
+      )
     }
   }
 

@@ -53,6 +53,12 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
       } else {
+        if (getRawType(responseType) == Call.class) {
+          throw methodError(
+              method,
+              "Unable to create call adapter for suspend function with Call return type.");
+        }
+
         continuationIsUnit = Utils.isUnit(responseType);
         // TODO figure out if type is nullable or not
         // Metadata metadata = method.getDeclaringClass().getAnnotation(Metadata.class)
