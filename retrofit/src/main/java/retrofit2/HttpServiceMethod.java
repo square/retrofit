@@ -56,7 +56,8 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         if (getRawType(responseType) == Call.class) {
           throw methodError(
               method,
-              "Unable to create call adapter for suspend function with Call return type.");
+              "Suspend functions should not return Call, as they already execute asynchronously.\n" +
+                "Change its return type to %s", Utils.getParameterUpperBound(0, (ParameterizedType) responseType));
         }
 
         continuationIsUnit = Utils.isUnit(responseType);

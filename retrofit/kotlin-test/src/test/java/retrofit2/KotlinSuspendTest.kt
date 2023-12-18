@@ -366,7 +366,8 @@ class KotlinSuspendTest {
       runBlocking { example.bodyWithCallType() }
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage(
-          "Unable to create call adapter for suspend function with Call return type.\n" +
+          "Suspend functions should not return Call, as they already execute asynchronously.\n" +
+            "Change its return type to class java.lang.String\n" +
             "    for method Service.bodyWithCallType"
       )
     }
