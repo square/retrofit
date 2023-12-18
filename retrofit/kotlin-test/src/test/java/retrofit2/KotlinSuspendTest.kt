@@ -56,6 +56,8 @@ class KotlinSuspendTest {
         @Path("b") b: String,
         @Path("c") c: String
     ): String
+
+    @GET("/") suspend fun bodyWithCallType(): Call<String>
   }
 
   @Test fun body() {
@@ -350,6 +352,25 @@ class KotlinSuspendTest {
           // We expect IOException, the bad behavior will wrap this in UndeclaredThrowableException.
         }
       }
+    }
+  }
+
+  @Test fun rejectCallReturnTypeWhenUsingSuspend() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl(server.url("/"))
+        .addConverterFactory(ToStringConverterFactory())
+        .build()
+    val example = retrofit.create(Service::class.java)
+
+    try {
+      runBlocking { example.bodyWithCallType() }
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage(
+          "Suspend functions should not return Call, as they already execute asynchronously.\n" +
+            "Change its return type to class java.lang.String\n" +
+            "    for method Service.bodyWithCallType"
+      )
     }
   }
 

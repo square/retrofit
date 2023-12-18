@@ -53,6 +53,13 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
       } else {
+        if (getRawType(responseType) == Call.class) {
+          throw methodError(
+              method,
+              "Suspend functions should not return Call, as they already execute asynchronously.\n" +
+                "Change its return type to %s", Utils.getParameterUpperBound(0, (ParameterizedType) responseType));
+        }
+
         continuationIsUnit = Utils.isUnit(responseType);
         // TODO figure out if type is nullable or not
         // Metadata metadata = method.getDeclaringClass().getAnnotation(Metadata.class)
