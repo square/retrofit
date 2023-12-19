@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.Future;
 import javax.annotation.Nullable;
 import kotlin.Unit;
 import kotlin.coroutines.Continuation;
@@ -53,11 +54,14 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
       } else {
-        if (getRawType(responseType) == Call.class) {
+        Class<?> rawType = getRawType(responseType);
+        if (rawType == Call.class || Future.class.isAssignableFrom(rawType)) {
           throw methodError(
               method,
-              "Suspend functions should not return Call, as they already execute asynchronously.\n" +
-                "Change its return type to %s", Utils.getParameterUpperBound(0, (ParameterizedType) responseType));
+              "Suspend functions should not return %s, as they already execute asynchronously.\n" +
+                "Change its return type to %s",
+            rawType,
+            Utils.getParameterUpperBound(0, (ParameterizedType) responseType));
         }
 
         continuationIsUnit = Utils.isUnit(responseType);

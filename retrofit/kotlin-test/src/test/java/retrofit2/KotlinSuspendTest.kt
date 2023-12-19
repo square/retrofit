@@ -38,6 +38,7 @@ import retrofit2.http.Path
 import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.CoroutineContext
 
 class KotlinSuspendTest {
@@ -58,6 +59,7 @@ class KotlinSuspendTest {
     ): String
 
     @GET("/") suspend fun bodyWithCallType(): Call<String>
+    @GET("/") suspend fun bodyWithFutureType(): CompletableFuture<String>
   }
 
   @Test fun body() {
@@ -367,9 +369,28 @@ class KotlinSuspendTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage(
-          "Suspend functions should not return Call, as they already execute asynchronously.\n" +
+          "Suspend functions should not return interface retrofit2.Call, as they already execute asynchronously.\n" +
             "Change its return type to class java.lang.String\n" +
             "    for method Service.bodyWithCallType"
+      )
+    }
+  }
+
+  @Test fun rejectFutureReturnTypeWhenUsingSuspend() {
+    val retrofit = Retrofit.Builder()
+      .baseUrl(server.url("/"))
+      .addConverterFactory(ToStringConverterFactory())
+      .build()
+    val example = retrofit.create(Service::class.java)
+
+    try {
+      runBlocking { example.bodyWithFutureType() }
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage(
+        "Suspend functions should not return class java.util.concurrent.CompletableFuture, as they already execute asynchronously.\n" +
+          "Change its return type to class java.lang.String\n" +
+          "    for method Service.bodyWithFutureType"
       )
     }
   }
