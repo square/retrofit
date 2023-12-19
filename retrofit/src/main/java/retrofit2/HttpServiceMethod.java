@@ -61,10 +61,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         }
 
         continuationIsUnit = Utils.isUnit(responseType);
-        // TODO figure out if type is nullable or not
-        // Metadata metadata = method.getDeclaringClass().getAnnotation(Metadata.class)
-        // Find the entry for method
-        // Determine if return type is nullable or not
+        continuationBodyNullable = KotlinMetadata.isReturnTypeNullable(method);
       }
 
       adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
