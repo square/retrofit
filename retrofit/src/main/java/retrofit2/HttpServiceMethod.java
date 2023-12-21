@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
+import kotlin.Result;
 import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 import okhttp3.ResponseBody;
@@ -42,7 +43,7 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
     boolean continuationIsUnit = false;
 
     Annotation[] annotations = method.getAnnotations();
-    Type adapterType;
+    final Type adapterType;
     if (isKotlinSuspendFunction) {
       Type[] parameterTypes = method.getGenericParameterTypes();
       Type responseType =
@@ -52,13 +53,21 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         // Unwrap the actual body type from Response<T>.
         responseType = Utils.getParameterUpperBound(0, (ParameterizedType) responseType);
         continuationWantsResponse = true;
+        adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
       } else {
-        if (getRawType(responseType) == Call.class) {
+        Class<?> rawType = getRawType(responseType);
+        if (rawType == Call.class) {
           throw methodError(
               method,
               "Suspend functions should not return Call, as they already execute asynchronously.\n"
                   + "Change its return type to %s",
               Utils.getParameterUpperBound(0, (ParameterizedType) responseType));
+        }
+
+        if (rawType == Result.class) {
+          adapterType = responseType;
+        } else {
+          adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
         }
 
         continuationIsUnit = Utils.isUnit(responseType);
@@ -67,8 +76,6 @@ abstract class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<Retur
         // Find the entry for method
         // Determine if return type is nullable or not
       }
-
-      adapterType = new Utils.ParameterizedTypeImpl(null, Call.class, responseType);
       annotations = SkipCallbackExecutorImpl.ensurePresent(annotations);
     } else {
       adapterType = method.getGenericReturnType();
