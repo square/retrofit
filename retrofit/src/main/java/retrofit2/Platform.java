@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 class Platform {
+
   private static final Platform PLATFORM = findPlatform();
 
   static Platform get() {
@@ -93,7 +94,8 @@ class Platform {
     return hasJava8Types ? 1 : 0;
   }
 
-  @IgnoreJRERequirement // Only called on API 24+.
+  @IgnoreJRERequirement
+    // Only called on API 24+.
   boolean isDefaultMethod(Method method) {
     return hasJava8Types && method.isDefault();
   }
@@ -110,8 +112,9 @@ class Platform {
   }
 
   static final class Android extends Platform {
+
     Android() {
-      super(Build.VERSION.SDK_INT >= 24);
+      super(Build.VERSION.SDK_INT >= 26);
     }
 
     @Override
@@ -131,6 +134,7 @@ class Platform {
     }
 
     static final class MainThreadExecutor implements Executor {
+
       private final Handler handler = new Handler(Looper.getMainLooper());
 
       @Override

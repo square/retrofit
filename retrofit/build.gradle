@@ -1,6 +1,7 @@
 apply plugin: 'java-library'
 apply plugin: 'org.jetbrains.kotlin.jvm'
 apply plugin: 'com.vanniktech.maven.publish'
+apply plugin: "maven-publish"
 
 dependencies {
   api deps.okhttp
@@ -23,6 +24,33 @@ dependencies {
 
 jar {
   manifest {
-    attributes  'Automatic-Module-Name': 'retrofit2'
+    attributes 'Automatic-Module-Name': 'retrofit2'
+  }
+}
+
+group = 'android.common.retrofit2'
+version = '2.9.1'
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+    }
+  }
+  repositories {
+    maven {
+      name "p1cn"
+      url "http://maven.p1.cn/publish/"
+      allowInsecureProtocol true
+      credentials {
+        username "maven"
+        password "maven@p1cn"
+      }
+    }
+    maven {
+      name "test"
+      url "file://${rootProject.layout.buildDirectory.get()}/maven"
+    }
+    mavenLocal()
   }
 }
