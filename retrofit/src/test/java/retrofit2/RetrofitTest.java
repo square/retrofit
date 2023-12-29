@@ -58,6 +58,7 @@ import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public final class RetrofitTest {
@@ -169,6 +170,14 @@ public final class RetrofitTest {
   interface MutableParameters {
     @GET("/")
     Call<String> method(@Query("i") AtomicInteger value);
+  }
+
+  interface EncodingPath {
+    @GET("/user/{name}")
+    Call<ResponseBody> encoded(@Path("name") String name);
+
+    @GET("/user/{name}")
+    Call<ResponseBody> notEncoded(@Path(value = "name", encoded = true) String name);
   }
 
   // We are explicitly testing this behavior.
@@ -1688,5 +1697,21 @@ public final class RetrofitTest {
     assertEquals("b", response2.body());
 
     assertEquals("/?i=201", server.takeRequest().getPath());
+  }
+
+  @Test
+  public void encodingPath() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(new ToStringConverterFactory())
+            .build();
+    EncodingPath service = retrofit.create(EncodingPath.class);
+
+    String encodedUrl = service.encoded("John+Doe").request().url().toString();
+    assertThat(encodedUrl.endsWith("/user/John%2BDoe")).isEqualTo(true);
+
+    String notEncodedUrl = service.notEncoded("John+Doe").request().url().toString();
+    assertThat(notEncodedUrl.endsWith("/user/John+Doe")).isEqualTo(true);
   }
 }
