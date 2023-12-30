@@ -5,6 +5,7 @@ plugins {
 rootProject.name = 'retrofit-root'
 
 include ':retrofit'
+include ':retrofit-bom'
 include ':retrofit:android-test'
 include ':retrofit:kotlin-test'
 include ':retrofit:robovm-test'
