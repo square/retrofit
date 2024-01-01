@@ -27,7 +27,7 @@ errorprone = { id = "net.ltgt.errorprone", version = "3.1.0" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
 protobuf = { id = "com.google.protobuf", version = "0.9.4" }
 animalsniffer = { id = "ru.vyarus.animalsniffer", version = "1.7.1" }
-googleJavaFormat = { id = "com.github.sherter.google-java-format", version = "0.9" }
+spotless = "com.diffplug.spotless:6.23.3"
 
 [libraries]
 androidPlugin = { module = "com.android.tools.build:gradle", version = "4.2.2" }
@@ -66,3 +66,4 @@ jsoup = { module = "org.jsoup:jsoup", version = "1.17.1" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
+googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.19.1"

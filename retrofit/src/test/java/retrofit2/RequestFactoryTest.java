@@ -612,7 +612,8 @@ public final class RequestFactoryTest {
   public void headerMapMustBeAMapOrHeaders() {
     class Example {
       @GET("/")
-      Call<ResponseBody> method(@HeaderMap okhttp3.Headers headers, @HeaderMap List<String> headerMap) {
+      Call<ResponseBody> method(
+          @HeaderMap okhttp3.Headers headers, @HeaderMap List<String> headerMap) {
         return null;
       }
     }

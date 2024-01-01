@@ -119,7 +119,8 @@ final class Utils {
       Object ownerB = pb.getOwnerType();
       boolean ownersAreEqual = ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB));
       boolean rawTypesAreEqual = pa.getRawType().equals(pb.getRawType());
-      boolean typeArgumentsAreEqual = Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+      boolean typeArgumentsAreEqual =
+          Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
       return ownersAreEqual && rawTypesAreEqual && typeArgumentsAreEqual;
 
