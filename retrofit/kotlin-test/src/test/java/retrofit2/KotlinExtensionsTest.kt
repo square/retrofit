@@ -27,8 +27,8 @@ class KotlinExtensionsTest {
 
   @Test fun reifiedCreate() {
     val retrofit = Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .build()
+      .baseUrl(server.url("/"))
+      .build()
 
     assertNotNull(retrofit.create<Empty>())
   }

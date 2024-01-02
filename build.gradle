@@ -22,7 +22,7 @@ plugins {
   alias(libs.plugins.mavenPublish) apply false
   alias(libs.plugins.protobuf) apply false
   alias(libs.plugins.animalsniffer) apply false
-  alias(libs.plugins.googleJavaFormat) apply false
+  alias(libs.plugins.spotless) apply false
 }
 
 subprojects {
@@ -89,28 +89,17 @@ subprojects {
       }
     }
 
-    // google-java-format only works on JDK 11 to JDK 15 (without wild flags).
-    if (Jvm.current().javaVersion.isJava11Compatible() && !Jvm.current().javaVersion.isCompatibleWith(JavaVersion.VERSION_16)) {
-      project.apply plugin: 'com.github.sherter.google-java-format'
-      googleJavaFormat {
-        toolVersion = '1.18.1'
-
-        // By default, the GJF plugin includes all Java folders inside the project directory. This
-        // does not work well with nested projects, especially when you want to exclude them.
-        source = sourceSets*.allJava
+    plugins.apply(libs.plugins.spotless.get().pluginId)
+    spotless {
+      java {
+        googleJavaFormat(libs.googleJavaFormat.get().version)
+          .formatJavadoc(false)
+        removeUnusedImports()
+        target 'src/*/java/**/*.java'
       }
-      afterEvaluate {
-        def verify = tasks.getByName('verifyGoogleJavaFormat')
-        tasks.getByName('check').dependsOn(verify)
-        def prompt = tasks.create('promptGoogleJavaFormat') {
-          doLast {
-            println()
-            println('To automatically format, run "./gradlew googleJavaFormat"')
-            println()
-          }
-          onlyIf { verify.state.failure != null }
-        }
-        verify.finalizedBy(prompt)
+      kotlin {
+        ktlint(libs.ktlint.get().version)
+        target 'src/**/*.kt'
       }
     }
   }
