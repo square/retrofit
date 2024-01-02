@@ -89,7 +89,6 @@ subprojects {
       }
     }
 
-    // Spotless only works on JDK 11 or newer currently.
     plugins.apply(libs.plugins.spotless.get().pluginId)
     spotless {
       java {
