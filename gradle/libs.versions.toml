@@ -67,3 +67,4 @@ robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.19.1"
+ktlint = "com.pinterest.ktlint:ktlint-cli:1.1.0"

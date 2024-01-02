@@ -98,6 +98,10 @@ subprojects {
         removeUnusedImports()
         target 'src/*/java/**/*.java'
       }
+      kotlin {
+        ktlint(libs.ktlint.get().version)
+        target('**/*.kt')
+      }
     }
   }
 
