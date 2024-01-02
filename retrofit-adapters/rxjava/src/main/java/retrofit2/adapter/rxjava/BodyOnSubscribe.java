@@ -39,6 +39,7 @@ final class BodyOnSubscribe<T> implements OnSubscribe<T> {
 
   private static class BodySubscriber<R> extends Subscriber<Response<R>> {
     private final Subscriber<? super R> subscriber;
+
     /** Indicates whether a terminal event has been sent to {@link #subscriber}. */
     private boolean subscriberTerminated;
 

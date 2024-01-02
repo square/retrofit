@@ -163,7 +163,7 @@ public final class Retrofit {
                 Platform platform = Platform.get();
                 return platform.isDefaultMethod(method)
                     ? platform.invokeDefaultMethod(method, service, proxy, args)
-                    : loadServiceMethod(method).invoke(args);
+                    : loadServiceMethod(service, method).invoke(args);
               }
             });
   }
@@ -194,17 +194,17 @@ public final class Retrofit {
         if (!platform.isDefaultMethod(method)
             && !Modifier.isStatic(method.getModifiers())
             && !method.isSynthetic()) {
-          loadServiceMethod(method);
+          loadServiceMethod(service, method);
         }
       }
     }
   }
 
-  ServiceMethod<?> loadServiceMethod(Method method) {
+  ServiceMethod<?> loadServiceMethod(Class<?> service, Method method) {
     ServiceMethod<?> result = serviceMethodCache.get(method);
     if (result != null) return result;
 
-    synchronized (serviceMethodCache) {
+    synchronized (service) {
       result = serviceMethodCache.get(method);
       if (result == null) {
         result = ServiceMethod.parseAnnotations(this, method);

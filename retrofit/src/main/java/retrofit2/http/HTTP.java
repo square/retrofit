@@ -47,6 +47,7 @@ import okhttp3.HttpUrl;
 @Retention(RUNTIME)
 public @interface HTTP {
   String method();
+
   /**
    * A relative or absolute path, or full URL of the endpoint. This value is optional if the first
    * parameter of the method is annotated with {@link Url @Url}.

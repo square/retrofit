@@ -15,16 +15,16 @@
  */
 package retrofit2.mock
 
+import java.io.IOException
+import java.util.Random
+import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.NANOSECONDS
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 import retrofit2.Retrofit
-import java.io.IOException
-import java.util.Random
-import java.util.concurrent.TimeUnit.MILLISECONDS
-import java.util.concurrent.TimeUnit.NANOSECONDS
 
 class BehaviorDelegateKotlinTest {
   internal interface DoWorkService {
@@ -40,11 +40,11 @@ class BehaviorDelegateKotlinTest {
 
   @Before fun before() {
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://example.com")
-        .build()
+      .baseUrl("http://example.com")
+      .build()
     val mockRetrofit = MockRetrofit.Builder(retrofit)
-        .networkBehavior(behavior)
-        .build()
+      .networkBehavior(behavior)
+      .build()
     val delegate = mockRetrofit.create<DoWorkService>()
 
     service = object : DoWorkService {

@@ -1,6 +1,11 @@
+plugins {
+  id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+}
+
 rootProject.name = 'retrofit-root'
 
 include ':retrofit'
+include ':retrofit-bom'
 include ':retrofit:android-test'
 include ':retrofit:kotlin-test'
 include ':retrofit:robovm-test'
@@ -21,6 +26,7 @@ include ':retrofit-converters:jackson'
 include ':retrofit-converters:java8'
 include ':retrofit-converters:jaxb'
 include ':retrofit-converters:jaxb3'
+include ':retrofit-converters:kotlinx-serialization'
 include ':retrofit-converters:moshi'
 include ':retrofit-converters:protobuf'
 include ':retrofit-converters:scalars'

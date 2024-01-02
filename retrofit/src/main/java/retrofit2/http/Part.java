@@ -62,6 +62,7 @@ public @interface Part {
    * okhttp3.MultipartBody.Part}.
    */
   String value() default "";
+
   /** The {@code Content-Transfer-Encoding} of this part. */
   String encoding() default "binary";
 }

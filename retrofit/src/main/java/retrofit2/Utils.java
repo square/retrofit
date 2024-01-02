@@ -117,9 +117,12 @@ final class Utils {
       ParameterizedType pb = (ParameterizedType) b;
       Object ownerA = pa.getOwnerType();
       Object ownerB = pb.getOwnerType();
-      return (ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB)))
-          && pa.getRawType().equals(pb.getRawType())
-          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+      boolean ownersAreEqual = ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB));
+      boolean rawTypesAreEqual = pa.getRawType().equals(pb.getRawType());
+      boolean typeArgumentsAreEqual =
+          Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+
+      return ownersAreEqual && rawTypesAreEqual && typeArgumentsAreEqual;
 
     } else if (a instanceof GenericArrayType) {
       if (!(b instanceof GenericArrayType)) return false;
