@@ -41,10 +41,7 @@ suspend fun <T : Any> Call<T>.await(): T {
             val invocation = call.request().tag(Invocation::class.java)!!
             val method = invocation.method()
             val e = KotlinNullPointerException(
-              "Response from " +
-                method.declaringClass.name +
-                '.' +
-                method.name +
+              "Response from ${method.declaringClass.name}.${method.name}" +
                 " was null but response body type was declared as non-null",
             )
             continuation.resumeWithException(e)
