@@ -90,15 +90,13 @@ subprojects {
     }
 
     // Spotless only works on JDK 11 or newer currently.
-    if (Jvm.current().javaVersion.isJava11Compatible()) {
-      plugins.apply(libs.plugins.spotless.get().pluginId)
-      spotless {
-        java {
-          googleJavaFormat(libs.googleJavaFormat.get().version)
-            .formatJavadoc(false)
-          removeUnusedImports()
-          target 'src/*/java/**/*.java'
-        }
+    plugins.apply(libs.plugins.spotless.get().pluginId)
+    spotless {
+      java {
+        googleJavaFormat(libs.googleJavaFormat.get().version)
+          .formatJavadoc(false)
+        removeUnusedImports()
+        target 'src/*/java/**/*.java'
       }
     }
   }

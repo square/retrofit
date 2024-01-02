@@ -39,7 +39,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
 
       - uses: gradle/gradle-build-action@v2
 
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
 
       - uses: gradle/gradle-build-action@v2
 
