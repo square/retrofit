@@ -30,7 +30,7 @@ animalsniffer = { id = "ru.vyarus.animalsniffer", version = "1.7.1" }
 spotless = "com.diffplug.spotless:6.23.3"
 
 [libraries]
-androidPlugin = { module = "com.android.tools.build:gradle", version = "4.2.2" }
+androidPlugin = "com.android.tools.build:gradle:7.0.0"
 robovmPlugin = { module = "com.mobidevelop.robovm:robovm-gradle-plugin", version.ref = "robovm" }
 kotlinStdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.7.3" }
