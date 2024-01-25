@@ -6,7 +6,7 @@ dependencies {
   api libs.okhttp
 
   compileOnly libs.android
-  compileOnly libs.kotlinStdLib
+  compileOnly libs.kotlin.stdLib
   compileOnly libs.kotlinCoroutines
 
   compileOnly libs.animalSnifferAnnotations

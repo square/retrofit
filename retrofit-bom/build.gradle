@@ -1,7 +1,5 @@
-plugins {
-  id 'java-platform'
-  alias libs.plugins.mavenPublish
-}
+apply plugin: 'java-platform'
+apply plugin: 'com.vanniktech.maven.publish'
 
 // TODO: This could be simplified after updating maven publish plugin, see https://vanniktech.github.io/gradle-maven-publish-plugin/what/#java-platform.
 publishing {
@@ -15,7 +13,7 @@ publishing {
 dependencies {
   constraints {
     rootProject.subprojects { subproject ->
-      subproject.plugins.withId(libs.plugins.mavenPublish.get().pluginId) {
+      subproject.plugins.withId('com.vanniktech.maven.publish') {
         // Exclude self project from BOM.
         if (subproject != this.project) {
           api subproject

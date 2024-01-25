@@ -5,23 +5,20 @@ buildscript {
   dependencies {
     classpath libs.androidPlugin
     classpath libs.robovmPlugin
+    classpath libs.kotlin.gradlePlugin
+    classpath libs.kotlin.serializationPlugin
+    classpath libs.dokkaPlugin
+    classpath libs.gradleMavenPublishPlugin
+    classpath libs.spotlessPlugin
+    classpath libs.errorpronePlugin
+    classpath libs.animalSnifferPlugin
+    classpath libs.protobufPlugin
   }
   repositories {
     mavenCentral()
     google()
     gradlePluginPortal()
   }
-}
-
-plugins {
-  alias(libs.plugins.kotlin.jvm) apply false
-  alias(libs.plugins.kotlin.serialization) apply false
-  alias(libs.plugins.dokka) apply false
-  alias(libs.plugins.errorprone) apply false
-  alias(libs.plugins.mavenPublish) apply false
-  alias(libs.plugins.protobuf) apply false
-  alias(libs.plugins.animalsniffer) apply false
-  alias(libs.plugins.spotless) apply false
 }
 
 subprojects {
@@ -87,7 +84,7 @@ subprojects {
       }
     }
 
-    plugins.apply(libs.plugins.spotless.get().pluginId)
+    plugins.apply('com.diffplug.spotless')
     spotless {
       java {
         googleJavaFormat(libs.googleJavaFormat.get().version)
