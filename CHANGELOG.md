@@ -1,8 +1,9 @@
-Change Log
-==========
+# Change Log
 
-Version 2.9.0 *(2020-05-20)*
-----------------------------
+## [Unreleased]
+
+
+## [2.9.0] - 2020-05-20
 
  * New: RxJava 3 adapter!
 
@@ -11,8 +12,7 @@ Version 2.9.0 *(2020-05-20)*
    Unlike the RxJava 1 and RxJava 2 adapters, the RxJava 3 adapter's `create()` method will produce asynchronous HTTP requests by default. For synchronous requests use `createSynchronous()` and for synchronous on a scheduler use `createWithScheduler(..)`.
 
 
-Version 2.8.2 *(2020-05-18)*
-----------------------------
+## [2.8.2] - 2020-05-18
 
  * Fix: Detect running on the Android platform by using system property rather than the presence of classes.
    This ensures that even when you're running on the JVM with Android classes present on the classpath you
@@ -20,15 +20,13 @@ Version 2.8.2 *(2020-05-18)*
  * Fix: Update to OkHttp 3.14.9 which contains an associated Android platform detection fix.
 
 
-Version 2.8.1 *(2020-03-25)*
-----------------------------
+## [2.8.1] - 2020-03-25
 
  * Fix: Do not access `MethodHandles.Lookup` on Android API 24 and 25. The class is only available
    on Android API 26 and higher.
 
 
-Version 2.8.0 *(2020-03-23)*
-----------------------------
+## [2.8.0] - 2020-03-23
 
  * New: Add `Call.timeout()` which returns the `okio.Timeout` of the full call.
  * Fix: Change `Call.awaitResponse()` to accept a nullable response type.
@@ -36,20 +34,17 @@ Version 2.8.0 *(2020-03-23)*
    Java. That bug was fixed in Java 14, and the fix broke our workaround.
 
 
-Version 2.7.2 *(2020-02-24)*
-----------------------------
+## [2.7.2] - 2020-02-24
 
  * Fix: Update to OkHttp 3.14.7 for compatibility with Android R (API 30).
 
 
-Version 2.7.1 *(2020-01-02)*
-----------------------------
+## [2.7.1] - 2020-01-02
 
  * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
 
 
-Version 2.7.0 *(2019-12-09)*
-----------------------------
+## [2.7.0] - 2019-12-09
 
 **This release changes the minimum requirements to Java 8+ or Android 5+.**
 See [this blog post](https://cashapp.github.io/2019-02-05/okhttp-3-13-requires-android-5) for more information on the change.
@@ -59,36 +54,31 @@ See [this blog post](https://cashapp.github.io/2019-02-05/okhttp-3-13-requires-a
  * Fix: Ensure a non-null body is returned by `Response.error`.
 
 
-Version 2.6.4 *(2020-01-02)*
-----------------------------
+## [2.6.4] - 2020-01-02
 
  * Fix: Support 'suspend' functions in services interfaces when using 'retrofit-mock' artifact.
 
 
-Version 2.6.3 *(2019-12-09)*
-----------------------------
+## [2.6.3] - 2019-12-09
 
  * Fix: Change mechanism for avoiding `UndeclaredThrowableException` in rare cases from using `yield`
    an explicit dispatch which ensures that it will work even on dispatchers which do not support yielding.
 
 
-Version 2.6.2 *(2019-09-23)*
-----------------------------
+## [2.6.2] - 2019-09-23
 
  * Fix: Avoid `IOException`s being wrapped in `UndeclaredThrowableException` in rare cases when using
    `Response<..>` as a return type for Kotlin 'suspend' functions.
 
 
-Version 2.6.1 *(2019-07-31)*
-----------------------------
+## [2.6.1] - 2019-07-31
 
  * Fix: Avoid `IOException`s being wrapped in `UndeclaredThrowableException` in rare cases.
  * Fix: Include no-content `ResponseBody` for responses created by `Response.error`.
  * Fix: Update embedded R8/ProGuard rules to not warn about nested classes used for Kotlin extensions.
 
 
-Version 2.6.0 *(2019-06-05)*
-----------------------------
+## [2.6.0] - 2019-06-05
 
  * New: Support `suspend` modifier on functions for Kotlin! This allows you to express the asynchrony of HTTP requests
    in an idiomatic fashion for the language.
@@ -126,8 +116,7 @@ Version 2.6.0 *(2019-06-05)*
    instance. Prior to the fix, intermediate buffering would cause response data to be lost.
 
 
-Version 2.5.0 *(2018-11-18)*
-----------------------------
+## [2.5.0] - 2018-11-18
 
  * New: Built-in support for Kotlin's `Unit` type. This behaves the same as Java's `Void` where the body
    content is ignored and immediately discarded.
@@ -160,8 +149,7 @@ Version 2.5.0 *(2018-11-18)*
  * Update OkHttp dependency to 3.12.
 
 
-Version 2.4.0 *(2018-03-14)*
-----------------------------
+## [2.4.0] - 2018-03-14
 
  * New: `Retrofit.Builder` exposes mutable lists of the added converter and call adapter factories.
  * New: Call adapter added for Scala's `Future`.
@@ -176,8 +164,7 @@ Version 2.4.0 *(2018-03-14)*
    the Rx stream.
 
 
-Version 2.3.0 *(2017-05-13)*
-----------------------------
+## [2.3.0] - 2017-05-13
 
  *  **Retrofit now uses `@Nullable` to annotate all possibly-null values.** We've
     added a compile-time dependency on the JSR 305 annotations. This is a
@@ -203,8 +190,7 @@ Version 2.3.0 *(2017-05-13)*
  * Fix: `NoSuchElementException` thrown when unsubscribing from an RxJava 1.x `Single`.
 
 
-Version 2.2.0 *(2017-02-21)*
-----------------------------
+## [2.2.0] - 2017-02-21
 
  * RxJava 2.x is now supported with a first-party 'adapter-rxjava2' artifact.
  * New: `@QueryName` annotation allows creating a query parameter with no '=' separator or value.
@@ -231,8 +217,7 @@ Version 2.2.0 *(2017-02-21)*
  * Fix: Skip a UTF-8 BOM (if present) when using the converter for Moshi.
 
 
-Version 2.1.0 *(2016-06-15)*
-----------------------------
+## [2.1.0] - 2016-06-15
 
  * New: `@HeaderMap` annotation and support for supplying an arbitrary number of headers to an endpoint.
  * New: `@JsonAdapter` annotations on the `@Body` parameter and on the method will be propagated to Moshi
@@ -243,8 +228,7 @@ Version 2.1.0 *(2016-06-15)*
  * Fix: Eagerly catch malformed `Content-Type` headers supplied via `@Header` or `@Headers`.
 
 
-Version 2.0.2 *(2016-04-14)*
-----------------------------
+## [2.0.2] - 2016-04-14
 
  * New: `ProtoConverterFactory.createWithRegistry()` method accepts an extension registry to be used
    when deserializing protos.
@@ -253,16 +237,14 @@ Version 2.0.2 *(2016-04-14)*
  * Fix: Reduce the per-request allocation overhead for the RxJava call adapter.
 
 
-Version 2.0.1 *(2016-03-30)*
-----------------------------
+## [2.0.1] - 2016-03-30
 
  * New: Support OkHttp's `HttpUrl` as a `@Url` parameter type.
  * New: Support iterable and array `@Part` parameters using OkHttp's `MultipartBody.Part`.
  * Fix: Honor backpressure in `Observable`s created from the RxJavaCallAdapterFactory.
 
 
-Version 2.0.0 *(2016-03-11)*
-----------------------------
+## [2.0.0] - 2016-03-11
 
 Retrofit 2 is a major release focused on extensibility. The API changes are numerous but solve
 shortcomings of the previous version and provide a path for future enhancement.
@@ -278,25 +260,25 @@ Updates](http://jakewharton.com/java-interoperability-policy-for-major-version-u
    request/response pair so it can only be used once, but you can `clone()` it for re-use.
    Invoking `cancel()` will cancel in-flight requests or prevent the request from even being
    performed if it has not already.
- 
+
  * **Multiple converters for multiple serialization formats.** API calls returning different
   formats (like JSON, protocol buffers, and plain text) no longer need to be separated into
   separate service interfaces. Combine them together and add multiple converters. Converters are
   chosen based on the response type you declare. Gson is no longer included by default, so you will
   always need to add a converter for any serialization support. OkHttp's `RequestBody` and
   `ResponseBody` types can always be used without adding one, however.
-   
+
  * **Call adapters allow different execution mechanisms.** While `Call` is the built-in mechanism,
    support for additional ones can be added similar to how different converters can be added.
    RxJava's `Observable` support has moved into a separate artifact as a result, and support for
    Java 8's `CompletableFuture` and Guava's `ListenableFuture` are also provided as additional
    artifacts.
-   
+
  * **Generic response type includes HTTP information and deserialized body.** You no longer have to
    choose between the deserialized body and reading HTTP information. Every `Call` automatically
    receives both via the `Response<T>` type and the RxJava, Guava, and Java 8 call adapters also
    support it.
-   
+
  * **@Url for hypermedia-like APIs.** When your API returns links for pagination, additional
    resources, or updated content they can now be used with a service method whose first parameter
    is annotated with `@Url`.
@@ -325,8 +307,7 @@ Changes from beta 4:
    callbacks to ensure they happen on the appropriate thread for the platform (e.g., Android).
 
 
-Version 2.0.0-beta4 *(2016-02-04)*
-----------------------------------
+## [2.0.0-beta4] - 2016-02-04
 
  * New: `Call` instance is now passed to both `onResponse` and `onFailure` methods of `Callback`. This aids
    in detecting when `onFailure` is called as a result of `Call.cancel()` by checking `Call.isCanceled()`.
@@ -351,8 +332,7 @@ Version 2.0.0-beta4 *(2016-02-04)*
  * Fix: Do not encode `/` characters in `@Path` replacements when `encoded = true`.
 
 
-Version 2.0.0-beta3 *(2016-01-05)*
-----------------------------------
+## [2.0.0-beta3] - 2016-01-05
 
  * New: All classes have been migrated to the `retrofit2.*` package name. The Maven groupId is now
    `com.squareup.retrofit2`. This is in accordance with the
@@ -398,8 +378,7 @@ Version 2.0.0-beta3 *(2016-01-05)*
    manually or implement a custom `CallAdapter.Factory` does so automatically.
 
 
-Version 2.0.0-beta2 *(2015-09-28)*
-----------------------------------
+## [2.0.0-beta2] - 2015-09-28
 
  * New: Using a response type of `Void` (e.g., `Call<Void>`) will ignore and discard the response body. This
    can be used when there will be no response body (such as in a 201 response) or whenever the body is not
@@ -430,8 +409,7 @@ Version 2.0.0-beta2 *(2015-09-28)*
    serializing null values, the default).
 
 
-Version 2.0.0-beta1 *(2015-08-27)*
-----------------------------------
+## [2.0.0-beta1] - 2015-08-27
 
  * New: `Call` encapsulates a single request/response HTTP call. A call can by run synchronously
    via `execute()` or asynchronously via `enqueue()` and can be canceled with `cancel()`.
@@ -449,8 +427,7 @@ Version 2.0.0-beta1 *(2015-08-27)*
  * Hello Droidcon NYC 2015!
 
 
-Version 1.9.0 *(2015-01-07)*
-----------------------------
+## [1.9.0] - 2015-01-07
 
  * Update to OkHttp 2.x's native API. If you are using OkHttp you must use version 2.0 or newer (the latest
    is 2.2 at time of writing) and you no longer need to use the `okhttp-urlconnection` shim.
@@ -460,21 +437,18 @@ Version 1.9.0 *(2015-01-07)*
  * Fix: Remove query parameters from thread name when running background requests for asynchronous use.
 
 
-Version 1.8.0 *(2014-11-18)*
-----------------------------
+## [1.8.0] - 2014-11-18
 
  * Update to RxJava 1.0. This comes with the project's 'groupId' change from `com.netflix.rxjava` to
    `io.reactivex` which is why the minor version was bumped.
 
 
-Version 1.7.1 *(2014-10-23)*
-----------------------------
+## [1.7.1] - 2014-10-23
 
  * Fix: Correctly log `null` request arguments for `HEADERS_AND_ARGS` log level.
 
 
-Version 1.7.0 *(2014-10-08)*
-----------------------------
+## [1.7.0] - 2014-10-08
 
  * New: `RetrofitError`'s `getKind()` now disambiguates the type of error represented.
  * New: `HEADERS_AND_ARGS` log level displays parameters passed to method invocation along with normal
@@ -496,8 +470,7 @@ Version 1.7.0 *(2014-10-08)*
  * Experimental RxJava support updated for v0.20.
 
 
-Version 1.6.1 *(2014-07-02)*
-----------------------------
+## [1.6.1] - 2014-07-02
 
  * Fix: Add any explicitly-specified 'Content-Type' header (via annotation or param) to the request even
    if there is no request body (e.g., DELETE).
@@ -505,8 +478,7 @@ Version 1.6.1 *(2014-07-02)*
  * Fix: Allow `null` mock exception bodies and use the success type from the declared service interface.
 
 
-Version 1.6.0 *(2014-06-06)*
-----------------------------
+## [1.6.0] - 2014-06-06
 
  * New: `@Streaming` on a `Response` type will skip buffering the body to a `byte[]` before delivering.
  * When using OkHttp, version 1.6.0 or newer (including 2.0.0+) is now required.
@@ -523,16 +495,14 @@ Version 1.6.0 *(2014-06-06)*
    should revert to adding these headers based on the `TypedInput` body of the `Request`.
 
 
-Version 1.5.1 *(2014-05-08)*
-----------------------------
+## [1.5.1] - 2014-05-08
 
  * New: `@PartMap` annotation accepts a `Map` of key/value pairs for multi-part.
  * Fix: `MockRestAdpater` uses the `ErrorHandler` from its parent `RestAdapter`.
  * Experimental RxJava support updated for v0.18 and is now lazily initialized.
 
 
-Version 1.5.0 *(2014-03-20)*
-----------------------------
+## [1.5.0] - 2014-03-20
 
  * New: Support for AppEngine's [URL Fetch](https://developers.google.com/appengine/docs/java/urlfetch/)
    HTTP client.
@@ -548,15 +518,13 @@ Version 1.5.0 *(2014-03-20)*
    as part of the standard `Request` header list.
 
 
-Version 1.4.1 *(2014-02-01)*
-----------------------------
+## [1.4.1] - 2014-02-01
 
  * Fix: `@QueryMap`, `@EncodedFieldMap`, and `@FieldMap` now correctly detect `Map`-based parameter
    types.
 
 
-Version 1.4.0 *(2014-01-31)*
-----------------------------
+## [1.4.0] - 2014-01-31
 
  * New: `@Query` and `@EncodedQuery` now accept `List` or arrays for multiple values.
  * New: `@QueryMap` and `@EncodedQueryMap` accept a `Map` of key/value pairs for query parameters.
@@ -572,8 +540,7 @@ Version 1.4.0 *(2014-01-31)*
  * Fix: Properly detect and reject interfaces which extend from other interfaces.
 
 
-Version 1.3.0 *(2013-11-25)*
-----------------------------
+## [1.3.0] - 2013-11-25
 
  * New: Converter module for SimpleXML.
  * New: Mock module which allows simulating real network behavior for local service interface
@@ -585,21 +552,18 @@ Version 1.3.0 *(2013-11-25)*
  * Log chunking to 4000 characters now only happens on the Android platform.
 
 
-Version 1.2.2 *(2013-09-12)*
-----------------------------
+## [1.2.2] - 2013-09-12
 
  * Fix: Respect connection and read timeouts on supplied `OkHttpClient` instances.
  * Fix: Ensure connection is closed on non-200 responses.
 
 
-Version 1.2.1 *(2013-08-30)*
-----------------------------
+## [1.2.1] - 2013-08-30
 
  * New: Converter for [Wire protocol buffers](https://github.com/square/wire)!
 
 
-Version 1.2.0 *(2013-08-23)*
-----------------------------
+## [1.2.0] - 2013-08-23
 
  * New: Additional first-party converters for Jackson and Protocol Buffers! These are provided
    as separate modules that you can include and pass to `RestAdapter.Builder`'s `setConverter`.
@@ -613,8 +577,7 @@ Version 1.2.0 *(2013-08-23)*
  * Query parameters can now be added in a request interceptor.
 
 
-Version 1.1.1 *(2013-06-25)*
-----------------------------
+## [1.1.1] - 2013-06-25
 
  * Fix: Ensure `@Headers`-defined headers are correctly added to requests.
  * Fix: Supply reasonable connection and read timeouts for default clients.
@@ -622,8 +585,7 @@ Version 1.1.1 *(2013-06-25)*
    request body.
 
 
-Version 1.1.0 *(2013-06-20)*
-----------------------------
+## [1.1.0] - 2013-06-20
 
  * Introduce `RequestInterceptor` to replace `RequestHeaders`. An interceptor provided to the
    `RestAdapter.Builder` will be called for every request and allow setting both headers and
@@ -633,8 +595,7 @@ Version 1.1.0 *(2013-06-20)*
  * Properly parse responses which erroneously omit the "Content-Type" header.
 
 
-Version 1.0.2 *(2013-05-23)*
-----------------------------
+## [1.0.2] - 2013-05-23
 
  * Allow uppercase letters in path replacement identifiers.
  * Fix: Static query parameters in the URL are now correctly appended with a separating '?'.
@@ -647,16 +608,59 @@ Version 1.0.2 *(2013-05-23)*
    * `@Header` - Allowed
 
 
-Version 1.0.1 *(2013-05-13)*
-----------------------------
+## [1.0.1] - 2013-05-13
 
  * Fix: Correct bad regex behavior on Android.
 
 
-Version 1.0.0 *(2013-05-13)*
-----------------------------
+## [1.0.0] - 2013-05-13
 
 Initial release.
 
 
- [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
+
+[Unreleased]: https://github.com/square/retrofit/compare/2.9.0...HEAD
+[2.9.0]: https://github.com/square/retrofit/releases/tag/2.9.0
+[2.8.2]: https://github.com/square/retrofit/releases/tag/2.8.2
+[2.8.1]: https://github.com/square/retrofit/releases/tag/parent-2.8.1
+[2.8.0]: https://github.com/square/retrofit/releases/tag/parent-2.8.0
+[2.7.2]: https://github.com/square/retrofit/releases/tag/parent-2.7.2
+[2.7.1]: https://github.com/square/retrofit/releases/tag/parent-2.7.1
+[2.7.0]: https://github.com/square/retrofit/releases/tag/parent-2.7.0
+[2.6.4]: https://github.com/square/retrofit/releases/tag/parent-2.6.4
+[2.6.3]: https://github.com/square/retrofit/releases/tag/parent-2.6.3
+[2.6.2]: https://github.com/square/retrofit/releases/tag/parent-2.6.2
+[2.6.1]: https://github.com/square/retrofit/releases/tag/parent-2.6.1
+[2.6.0]: https://github.com/square/retrofit/releases/tag/parent-2.6.0
+[2.5.0]: https://github.com/square/retrofit/releases/tag/parent-2.5.0
+[2.4.0]: https://github.com/square/retrofit/releases/tag/parent-2.4.0
+[2.3.0]: https://github.com/square/retrofit/releases/tag/parent-2.3.0
+[2.2.0]: https://github.com/square/retrofit/releases/tag/parent-2.2.0
+[2.1.0]: https://github.com/square/retrofit/releases/tag/parent-2.1.0
+[2.0.2]: https://github.com/square/retrofit/releases/tag/parent-2.0.2
+[2.0.1]: https://github.com/square/retrofit/releases/tag/parent-2.0.1
+[2.0.0]: https://github.com/square/retrofit/releases/tag/parent-2.0.0
+[2.0.0-beta4]: https://github.com/square/retrofit/releases/tag/parent-2.0.0-beta4
+[2.0.0-beta3]: https://github.com/square/retrofit/releases/tag/parent-2.0.0-beta3
+[2.0.0-beta2]: https://github.com/square/retrofit/releases/tag/parent-2.0.0-beta2
+[2.0.0-beta1]: https://github.com/square/retrofit/releases/tag/parent-2.0.0-beta1
+[1.9.0]: https://github.com/square/retrofit/releases/tag/parent-1.9.0
+[1.8.0]: https://github.com/square/retrofit/releases/tag/parent-1.8.0
+[1.7.1]: https://github.com/square/retrofit/releases/tag/parent-1.7.1
+[1.7.0]: https://github.com/square/retrofit/releases/tag/parent-1.7.0
+[1.6.1]: https://github.com/square/retrofit/releases/tag/parent-1.6.1
+[1.6.0]: https://github.com/square/retrofit/releases/tag/parent-1.6.0
+[1.5.1]: https://github.com/square/retrofit/releases/tag/parent-1.5.1
+[1.5.0]: https://github.com/square/retrofit/releases/tag/parent-1.5.0
+[1.4.1]: https://github.com/square/retrofit/releases/tag/parent-1.4.1
+[1.4.0]: https://github.com/square/retrofit/releases/tag/parent-1.4.0
+[1.3.0]: https://github.com/square/retrofit/releases/tag/parent-1.3.0
+[1.2.2]: https://github.com/square/retrofit/releases/tag/parent-1.2.2
+[1.2.1]: https://github.com/square/retrofit/releases/tag/parent-1.2.1
+[1.2.0]: https://github.com/square/retrofit/releases/tag/parent-1.2.0
+[1.1.1]: https://github.com/square/retrofit/releases/tag/parent-1.1.1
+[1.1.0]: https://github.com/square/retrofit/releases/tag/parent-1.1.0
+[1.0.2]: https://github.com/square/retrofit/releases/tag/parent-1.0.2
+[1.0.1]: https://github.com/square/retrofit/releases/tag/parent-1.0.1
+[1.0.0]: https://github.com/square/retrofit/releases/tag/parent-1.0.0
+[maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
