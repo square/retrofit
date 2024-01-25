@@ -75,7 +75,7 @@ class BehaviorDelegateKotlinTest {
     val result = runBlocking { service.body() }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isAtLeast(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(result).isEqualTo("Response!")
   }
 
@@ -94,7 +94,7 @@ class BehaviorDelegateKotlinTest {
     }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isAtLeast(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(exception).isSameInstanceAs(behavior.failureException())
   }
 
@@ -113,7 +113,7 @@ class BehaviorDelegateKotlinTest {
     }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isAtLeast(100)
+    assertThat(tookMs).isAtLeast(100L)
     // Coroutines break referential transparency on exceptions so compare type and message.
     assertThat(exception.javaClass).isEqualTo(mockFailure.javaClass)
     assertThat(exception).hasMessageThat().isEqualTo(mockFailure.message)
@@ -128,7 +128,7 @@ class BehaviorDelegateKotlinTest {
     val result = runBlocking { service.response() }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isAtLeast(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(result.body()).isEqualTo("Response!")
   }
 
@@ -147,7 +147,7 @@ class BehaviorDelegateKotlinTest {
     }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isAtLeast(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(exception).isSameInstanceAs(behavior.failureException())
   }
 
@@ -160,7 +160,7 @@ class BehaviorDelegateKotlinTest {
     val result = runBlocking { service.responseWildcard() }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isAtLeast(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(result.body()).isEqualTo("Response!")
   }
 }
