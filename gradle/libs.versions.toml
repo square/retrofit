@@ -20,7 +20,7 @@ robovm = "2.3.14"
 kotlinx-serialization = "1.6.2"
 
 [libraries]
-androidPlugin = { module = "com.android.tools.build:gradle", version = "8.2.0" }
+androidPlugin = { module = "com.android.tools.build:gradle", version = "8.2.2" }
 robovmPlugin = { module = "com.mobidevelop.robovm:robovm-gradle-plugin", version.ref = "robovm" }
 dokkaPlugin = "org.jetbrains.dokka:dokka-gradle-plugin:1.9.10"
 gradleMavenPublishPlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
