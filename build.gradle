@@ -97,10 +97,4 @@ subprojects {
       }
     }
   }
-
-  pluginManager.withPlugin("com.vanniktech.maven.publish") {
-    mavenPublish {
-      sonatypeHost = "S01"
-    }
-  }
 }
