@@ -26,7 +26,7 @@ jar {
 }
 
 // Create a test task for each supported JDK.
-(8..19).each { majorVersion ->
+(8..21).each { majorVersion ->
   def jdkTest = tasks.register("testJdk$majorVersion", Test) {
     javaLauncher = javaToolchains.launcherFor {
       languageVersion = JavaLanguageVersion.of(majorVersion)
