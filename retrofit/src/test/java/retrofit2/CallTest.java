@@ -15,9 +15,9 @@
  */
 package retrofit2;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static retrofit2.TestingUtils.repeat;
@@ -44,11 +44,7 @@ import okio.Okio;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Streaming;
+import retrofit2.http.*;
 
 public final class CallTest {
   @Rule public final MockWebServer server = new MockWebServer();
@@ -254,7 +250,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("I am broken!");
+      assertThat(e).hasMessageThat().isEqualTo("I am broken!");
     }
   }
 
@@ -298,9 +294,9 @@ public final class CallTest {
             });
     assertTrue(latch.await(10, SECONDS));
 
-    assertThat(failureRef.get())
-        .isInstanceOf(UnsupportedOperationException.class)
-        .hasMessage("I am broken!");
+    Throwable failure = failureRef.get();
+    assertThat(failure).isInstanceOf(UnsupportedOperationException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("I am broken!");
   }
 
   @Test
@@ -328,7 +324,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("I am broken!");
+      assertThat(e).hasMessageThat().isEqualTo("I am broken!");
     }
   }
 
@@ -384,7 +380,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("cause");
+      assertThat(e).hasMessageThat().isEqualTo("cause");
     }
   }
 
@@ -427,9 +423,9 @@ public final class CallTest {
             });
     assertTrue(latch.await(10, SECONDS));
 
-    assertThat(failureRef.get())
-        .isInstanceOf(UnsupportedOperationException.class)
-        .hasMessage("I am broken!");
+    Throwable failure = failureRef.get();
+    assertThat(failure).isInstanceOf(UnsupportedOperationException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("I am broken!");
   }
 
   @Test
@@ -528,7 +524,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Already executed.");
+      assertThat(e).hasMessageThat().isEqualTo("Already executed.");
     }
   }
 
@@ -580,7 +576,7 @@ public final class CallTest {
       buffered.execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("unexpected end of stream");
+      assertThat(e).hasMessageThat().isEqualTo("unexpected end of stream");
     }
   }
 
@@ -604,7 +600,7 @@ public final class CallTest {
       streamedBody.string();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("unexpected end of stream");
+      assertThat(e).hasMessageThat().isEqualTo("unexpected end of stream");
     }
   }
 
@@ -628,7 +624,9 @@ public final class CallTest {
       rawBody.source();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Cannot read raw response body of a converted body.");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Cannot read raw response body of a converted body.");
     }
   }
 
@@ -710,7 +708,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("Canceled");
+      assertThat(e).hasMessageThat().isEqualTo("Canceled");
     }
   }
 
@@ -743,7 +741,7 @@ public final class CallTest {
           }
         });
     assertTrue(latch.await(10, SECONDS));
-    assertThat(failureRef.get()).hasMessage("Canceled");
+    assertThat(failureRef.get()).hasMessageThat().isEqualTo("Canceled");
   }
 
   @Test
@@ -798,7 +796,9 @@ public final class CallTest {
     assertThat(call.isCanceled()).isTrue();
 
     assertTrue(latch.await(10, SECONDS));
-    assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
+    Throwable failure = failureRef.get();
+    assertThat(failure).isInstanceOf(IOException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("Canceled");
   }
 
   @Test
@@ -837,7 +837,9 @@ public final class CallTest {
     assertThat(call.isCanceled()).isTrue();
 
     assertTrue(latch.await(10, SECONDS));
-    assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
+    Throwable failure = failureRef.get();
+    assertThat(failure).isInstanceOf(IOException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("Canceled");
   }
 
   @Test
@@ -895,7 +897,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -903,7 +905,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -934,7 +936,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -942,7 +944,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -1002,7 +1004,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1010,7 +1012,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -1041,7 +1043,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1049,7 +1051,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -1120,7 +1122,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1132,7 +1134,9 @@ public final class CallTest {
 
           @Override
           public void onFailure(Call<String> call, Throwable t) {
-            assertThat(t).isExactlyInstanceOf(RuntimeException.class).hasMessage("Broken!");
+            // Exact instance check as opposed to isInstanceOf's subtype checking.
+            assertThat(t.getClass()).isEqualTo(RuntimeException.class);
+            assertThat(t).hasMessageThat().isEqualTo("Broken!");
             assertThat(writeCount.get()).isEqualTo(1);
             latch.countDown();
           }
@@ -1167,7 +1171,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1179,7 +1183,9 @@ public final class CallTest {
 
           @Override
           public void onFailure(Call<String> call, Throwable t) {
-            assertThat(t).isExactlyInstanceOf(NonFatalError.class).hasMessage("Broken!");
+            // Exact instance check as opposed to isInstanceOf's subtype checking.
+            assertThat(t.getClass()).isEqualTo(NonFatalError.class);
+            assertThat(t).hasMessageThat().isEqualTo("Broken!");
             assertThat(writeCount.get()).isEqualTo(1);
             latch.countDown();
           }
@@ -1257,7 +1263,9 @@ public final class CallTest {
 
           @Override
           public void onFailure(Call<String> call, Throwable t) {
-            assertThat(t).isExactlyInstanceOf(RuntimeException.class).hasMessage("Broken!");
+            // Exact instance check as opposed to isInstanceOf's subtype checking.
+            assertThat(t.getClass()).isEqualTo(RuntimeException.class);
+            assertThat(t).hasMessageThat().isEqualTo("Broken!");
             assertThat(writeCount.get()).isEqualTo(1);
             latch.countDown();
           }
@@ -1268,7 +1276,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -1304,7 +1312,9 @@ public final class CallTest {
 
           @Override
           public void onFailure(Call<String> call, Throwable t) {
-            assertThat(t).isExactlyInstanceOf(NonFatalError.class).hasMessage("Broken!");
+            // Exact instance check as opposed to isInstanceOf's subtype checking.
+            assertThat(t.getClass()).isEqualTo(NonFatalError.class);
+            assertThat(t).hasMessageThat().isEqualTo("Broken!");
             assertThat(writeCount.get()).isEqualTo(1);
             latch.countDown();
           }
@@ -1315,7 +1325,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (NonFatalError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
   }
@@ -1346,7 +1356,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1354,7 +1364,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
   }
@@ -1396,7 +1406,7 @@ public final class CallTest {
       assertThat(callsFailureSynchronously.get()).isFalse();
       fail();
     } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1404,7 +1414,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
   }
@@ -1435,7 +1445,7 @@ public final class CallTest {
       call.execute();
       fail();
     } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(1);
 
@@ -1443,7 +1453,7 @@ public final class CallTest {
       call.request();
       fail();
     } catch (OutOfMemoryError e) {
-      assertThat(e).hasMessage("Broken!");
+      assertThat(e).hasMessageThat().isEqualTo("Broken!");
     }
     assertThat(writeCount.get()).isEqualTo(2);
   }

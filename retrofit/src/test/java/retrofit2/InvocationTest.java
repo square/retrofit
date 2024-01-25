@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Method;
@@ -64,7 +64,7 @@ public final class InvocationTest {
       Invocation.of(null, Arrays.asList("one", "two"));
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("method == null");
+      assertThat(expected).hasMessageThat().isEqualTo("method == null");
     }
   }
 
@@ -74,7 +74,7 @@ public final class InvocationTest {
       Invocation.of(Example.class.getDeclaredMethods()[0], null);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("arguments == null");
+      assertThat(expected).hasMessageThat().isEqualTo("arguments == null");
     }
   }
 

@@ -15,14 +15,11 @@
  */
 package retrofit2;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+import static retrofit2.AnnotationArraySubject.assertThat;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -42,11 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
@@ -178,7 +171,7 @@ public final class RetrofitTest {
     Retrofit retrofit = new Retrofit.Builder().baseUrl(server.url("/")).build();
     CallMethod example = retrofit.create(CallMethod.class);
 
-    assertThat(example.hashCode()).isNotZero();
+    assertThat(example.hashCode()).isNotEqualTo(0);
     assertThat(example.equals(this)).isFalse();
     assertThat(example.toString()).isNotEmpty();
   }
@@ -194,7 +187,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage("Type parameters are unsupported on retrofit2.RetrofitTest$TypeParam");
+          .hasMessageThat()
+          .isEqualTo("Type parameters are unsupported on retrofit2.RetrofitTest$TypeParam");
     }
   }
 
@@ -220,7 +214,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Type parameters are unsupported on retrofit2.RetrofitTest$TypeParam "
                   + "which is an interface of retrofit2.RetrofitTest$ExtendingTypeParam");
     }
@@ -270,9 +265,9 @@ public final class RetrofitTest {
             .addConverterFactory(converter2)
             .build();
     assertEquals(one.callAdapterFactories().size() + 1, two.callAdapterFactories().size());
-    assertThat(two.callAdapterFactories()).contains(callAdapter, callAdapter2);
+    assertThat(two.callAdapterFactories()).containsAtLeast(callAdapter, callAdapter2);
     assertEquals(one.converterFactories().size() + 1, two.converterFactories().size());
-    assertThat(two.converterFactories()).contains(converter, converter2);
+    assertThat(two.converterFactories()).containsAtLeast(converter, converter2);
     assertSame(baseUrl, two.baseUrl());
     assertSame(executor, two.callbackExecutor());
     assertSame(callFactory, two.callFactory());
@@ -294,7 +289,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Response must include generic type (e.g., Response<String>)\n"
                   + "    for method CallMethod.badType1");
     }
@@ -309,7 +305,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "'okhttp3.Response' is not a valid response body type. Did you mean ResponseBody?\n"
                   + "    for method CallMethod.badType2");
     }
@@ -325,8 +322,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageStartingWith(
-              "Service methods cannot return void.\n    for method VoidService.nope");
+          .hasMessageThat()
+          .startsWith("Service methods cannot return void.\n    for method VoidService.nope");
     }
   }
 
@@ -357,8 +354,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageStartingWith(
-              "Service methods cannot return void.\n    for method VoidService.nope");
+          .hasMessageThat()
+          .startsWith("Service methods cannot return void.\n    for method VoidService.nope");
     }
   }
 
@@ -473,12 +470,14 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create call adapter for java.util.concurrent.Future<java.lang.String>\n"
                   + "    for method FutureMethod.method");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate call adapter for java.util.concurrent.Future<java.lang.String>.\n"
                   + "  Tried:\n"
@@ -617,12 +616,14 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create @Body converter for class java.lang.String (parameter #1)\n"
                   + "    for method CallMethod.disallowed");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate RequestBody converter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -643,12 +644,14 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create converter for class java.lang.String\n"
                   + "    for method CallMethod.disallowed");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -722,7 +725,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Method return type must not include a type variable or wildcard: "
                   + "retrofit2.Call<T>\n    for method UnresolvableResponseType.typeVariable");
     }
@@ -731,7 +735,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Method return type must not include a type variable or wildcard: "
                   + "retrofit2.Call<T>\n    for method UnresolvableResponseType.typeVariableUpperBound");
     }
@@ -740,7 +745,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Method return type must not include a type variable or wildcard: "
                   + "retrofit2.Call<java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>>>\n"
                   + "    for method UnresolvableResponseType.crazy");
@@ -750,7 +756,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Method return type must not include a type variable or wildcard: "
                   + "retrofit2.Call<?>\n    for method UnresolvableResponseType.wildcard");
     }
@@ -759,7 +766,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Method return type must not include a type variable or wildcard: "
                   + "retrofit2.Call<? extends okhttp3.ResponseBody>\n"
                   + "    for method UnresolvableResponseType.wildcardUpperBound");
@@ -780,7 +788,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Parameter type must not include a type variable or wildcard: "
                   + "T (parameter #1)\n    for method UnresolvableParameterType.typeVariable");
     }
@@ -789,7 +798,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Parameter type must not include a type variable or wildcard: "
                   + "T (parameter #1)\n    for method UnresolvableParameterType.typeVariableUpperBound");
     }
@@ -798,7 +808,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Parameter type must not include a type variable or wildcard: "
                   + "java.util.List<java.util.Map<java.lang.String, java.util.Set<T[]>>> (parameter #1)\n"
                   + "    for method UnresolvableParameterType.crazy");
@@ -808,7 +819,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Parameter type must not include a type variable or wildcard: "
                   + "java.util.List<?> (parameter #1)\n    for method UnresolvableParameterType.wildcard");
     }
@@ -817,7 +829,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Parameter type must not include a type variable or wildcard: "
                   + "java.util.List<? extends okhttp3.RequestBody> (parameter #1)\n"
                   + "    for method UnresolvableParameterType.wildcardUpperBound");
@@ -830,7 +843,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().build();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Base URL required.");
+      assertThat(e).hasMessageThat().isEqualTo("Base URL required.");
     }
   }
 
@@ -840,13 +853,13 @@ public final class RetrofitTest {
       new Retrofit.Builder().baseUrl((String) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("baseUrl == null");
+      assertThat(e).hasMessageThat().isEqualTo("baseUrl == null");
     }
     try {
       new Retrofit.Builder().baseUrl((HttpUrl) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("baseUrl == null");
+      assertThat(e).hasMessageThat().isEqualTo("baseUrl == null");
     }
   }
 
@@ -865,14 +878,14 @@ public final class RetrofitTest {
       new Retrofit.Builder().baseUrl("http://example.com/api");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("baseUrl must end in /: http://example.com/api");
+      assertThat(e).hasMessageThat().isEqualTo("baseUrl must end in /: http://example.com/api");
     }
     HttpUrl parsed = HttpUrl.get("http://example.com/api");
     try {
       new Retrofit.Builder().baseUrl(parsed);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("baseUrl must end in /: http://example.com/api");
+      assertThat(e).hasMessageThat().isEqualTo("baseUrl must end in /: http://example.com/api");
     }
   }
 
@@ -887,7 +900,7 @@ public final class RetrofitTest {
   public void baseHttpUrlPropagated() {
     HttpUrl url = HttpUrl.get("http://example.com/");
     Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
-    assertThat(retrofit.baseUrl()).isSameAs(url);
+    assertThat(retrofit.baseUrl()).isSameInstanceAs(url);
   }
 
   @Test
@@ -903,7 +916,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().client(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("client == null");
+      assertThat(e).hasMessageThat().isEqualTo("client == null");
     }
   }
 
@@ -921,7 +934,7 @@ public final class RetrofitTest {
         };
     Retrofit retrofit =
         new Retrofit.Builder().baseUrl("http://example.com/").callFactory(callFactory).build();
-    assertThat(retrofit.callFactory()).isSameAs(callFactory);
+    assertThat(retrofit.callFactory()).isSameInstanceAs(callFactory);
   }
 
   @Test
@@ -929,7 +942,7 @@ public final class RetrofitTest {
     OkHttpClient client = new OkHttpClient();
     Retrofit retrofit =
         new Retrofit.Builder().baseUrl("http://example.com/").client(client).build();
-    assertThat(retrofit.callFactory()).isSameAs(client);
+    assertThat(retrofit.callFactory()).isSameInstanceAs(client);
   }
 
   @Test
@@ -964,7 +977,7 @@ public final class RetrofitTest {
       call.execute();
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("Call.Factory returned null.");
+      assertThat(e).hasMessageThat().isEqualTo("Call.Factory returned null.");
     }
   }
 
@@ -986,7 +999,7 @@ public final class RetrofitTest {
       call.execute();
       fail();
     } catch (Exception e) {
-      assertThat(e).isSameAs(cause);
+      assertThat(e).isSameInstanceAs(cause);
     }
   }
 
@@ -996,7 +1009,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().addConverterFactory(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("factory == null");
+      assertThat(e).hasMessageThat().isEqualTo("factory == null");
     }
   }
 
@@ -1059,7 +1072,7 @@ public final class RetrofitTest {
 
     Converter<?, RequestBody> actualAdapter =
         retrofit.requestBodyConverter(String.class, new Annotation[0], new Annotation[0]);
-    assertThat(actualAdapter).isSameAs(expectedAdapter);
+    assertThat(actualAdapter).isSameInstanceAs(expectedAdapter);
   }
 
   @Test
@@ -1080,7 +1093,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate RequestBody converter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -1112,7 +1126,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate RequestBody converter for class java.lang.String.\n"
                   + "  Skipped:\n"
@@ -1152,7 +1167,7 @@ public final class RetrofitTest {
 
     Converter<ResponseBody, ?> actualAdapter =
         retrofit.responseBodyConverter(String.class, new Annotation[0]);
-    assertThat(actualAdapter).isSameAs(expectedAdapter);
+    assertThat(actualAdapter).isSameInstanceAs(expectedAdapter);
   }
 
   @Test
@@ -1173,7 +1188,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -1205,7 +1221,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for class java.lang.String.\n"
                   + "  Skipped:\n"
@@ -1245,7 +1262,7 @@ public final class RetrofitTest {
 
     Converter<?, String> actualConverter =
         retrofit.stringConverter(Object.class, new Annotation[0]);
-    assertThat(actualConverter).isSameAs(expectedConverter);
+    assertThat(actualConverter).isSameInstanceAs(expectedConverter);
   }
 
   @Test
@@ -1262,7 +1279,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().addCallAdapterFactory(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("factory == null");
+      assertThat(e).hasMessageThat().isEqualTo("factory == null");
     }
   }
 
@@ -1322,7 +1339,7 @@ public final class RetrofitTest {
             .build();
 
     CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(String.class, new Annotation[0]);
-    assertThat(actualAdapter).isSameAs(expectedAdapter);
+    assertThat(actualAdapter).isSameInstanceAs(expectedAdapter);
   }
 
   @Test
@@ -1366,7 +1383,7 @@ public final class RetrofitTest {
             .build();
 
     CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(String.class, new Annotation[0]);
-    assertThat(actualAdapter).isSameAs(expectedAdapter);
+    assertThat(actualAdapter).isSameInstanceAs(expectedAdapter);
     assertTrue(factory1called.get());
   }
 
@@ -1425,7 +1442,7 @@ public final class RetrofitTest {
             .build();
 
     CallAdapter<?, ?> actualAdapter = retrofit.callAdapter(type, annotations);
-    assertThat(actualAdapter).isSameAs(expectedAdapter);
+    assertThat(actualAdapter).isSameInstanceAs(expectedAdapter);
     assertTrue(factory1called.get());
     assertTrue(factory2called.get());
   }
@@ -1448,7 +1465,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate call adapter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -1482,7 +1500,8 @@ public final class RetrofitTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate call adapter for class java.lang.String.\n"
                   + "  Skipped:\n"
@@ -1512,7 +1531,7 @@ public final class RetrofitTest {
       new Retrofit.Builder().callbackExecutor(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("executor == null");
+      assertThat(e).hasMessageThat().isEqualTo("executor == null");
     }
   }
 
@@ -1524,7 +1543,7 @@ public final class RetrofitTest {
         };
     Retrofit retrofit =
         new Retrofit.Builder().baseUrl("http://example.com/").callbackExecutor(executor).build();
-    assertThat(retrofit.callbackExecutor()).isSameAs(executor);
+    assertThat(retrofit.callbackExecutor()).isSameInstanceAs(executor);
   }
 
   @Test

@@ -16,9 +16,9 @@
 
 package retrofit2.mock;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -83,8 +83,8 @@ public final class BehaviorDelegateTest {
       fail();
     } catch (IOException e) {
       long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-      assertThat(e).isSameAs(behavior.failureException());
-      assertThat(tookMs).isGreaterThanOrEqualTo(100);
+      assertThat(e).isSameInstanceAs(behavior.failureException());
+      assertThat(tookMs).isAtLeast(100);
     }
   }
 
@@ -116,8 +116,8 @@ public final class BehaviorDelegateTest {
         });
     assertTrue(latch.await(1, SECONDS));
 
-    assertThat(failureRef.get()).isSameAs(behavior.failureException());
-    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+    assertThat(failureRef.get()).isSameInstanceAs(behavior.failureException());
+    assertThat(tookMs.get()).isAtLeast(100);
   }
 
   @Test
@@ -133,7 +133,7 @@ public final class BehaviorDelegateTest {
     long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
 
     assertThat(response.body()).isEqualTo("Response!");
-    assertThat(tookMs).isGreaterThanOrEqualTo(100);
+    assertThat(tookMs).isAtLeast(100);
   }
 
   @Test
@@ -165,7 +165,7 @@ public final class BehaviorDelegateTest {
     assertTrue(latch.await(1, SECONDS));
 
     assertThat(actual.get()).isEqualTo("Response!");
-    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
+    assertThat(tookMs.get()).isAtLeast(100);
   }
 
   @Test
@@ -182,8 +182,8 @@ public final class BehaviorDelegateTest {
       fail();
     } catch (IOException e) {
       long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-      assertThat(tookMs).isGreaterThanOrEqualTo(100);
-      assertThat(e).isSameAs(mockFailure);
+      assertThat(tookMs).isAtLeast(100);
+      assertThat(e).isSameInstanceAs(mockFailure);
     }
   }
 
@@ -215,8 +215,8 @@ public final class BehaviorDelegateTest {
         });
     assertTrue(latch.await(1, SECONDS));
 
-    assertThat(tookMs.get()).isGreaterThanOrEqualTo(100);
-    assertThat(failureRef.get()).isSameAs(mockFailure);
+    assertThat(tookMs.get()).isAtLeast(100);
+    assertThat(failureRef.get()).isSameInstanceAs(mockFailure);
   }
 
   @Test
@@ -241,7 +241,9 @@ public final class BehaviorDelegateTest {
       call.execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
+      // Exact instance check as opposed to isInstanceOf's subtype checking.
+      assertThat(e.getClass()).isEqualTo(IOException.class);
+      assertThat(e).hasMessageThat().isEqualTo("canceled");
     }
   }
 
@@ -274,7 +276,11 @@ public final class BehaviorDelegateTest {
     call.cancel();
 
     assertTrue(latch.await(1, SECONDS));
-    assertThat(failureRef.get()).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
+
+    Throwable failure = failureRef.get();
+    // Exact instance check as opposed to isInstanceOf's subtype checking.
+    assertThat(failure.getClass()).isEqualTo(IOException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("canceled");
   }
 
   @Test
@@ -290,7 +296,9 @@ public final class BehaviorDelegateTest {
       call.execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
+      // Exact instance check as opposed to isInstanceOf's subtype checking.
+      assertThat(e.getClass()).isEqualTo(IOException.class);
+      assertThat(e).hasMessageThat().isEqualTo("canceled");
     }
   }
 
@@ -320,6 +328,10 @@ public final class BehaviorDelegateTest {
         });
 
     assertTrue(latch.await(1, SECONDS));
-    assertThat(failureRef.get()).isExactlyInstanceOf(IOException.class).hasMessage("canceled");
+
+    Throwable failure = failureRef.get();
+    // Exact instance check as opposed to isInstanceOf's subtype checking.
+    assertThat(failure.getClass()).isEqualTo(IOException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("canceled");
   }
 }

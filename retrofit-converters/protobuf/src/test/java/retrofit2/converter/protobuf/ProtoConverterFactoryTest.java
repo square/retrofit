@@ -15,7 +15,7 @@
  */
 package retrofit2.converter.protobuf;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static retrofit2.converter.protobuf.PhoneProtos.Phone;
 
@@ -129,12 +129,14 @@ public final class ProtoConverterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create converter for class java.lang.String\n"
                   + "    for method Service.wrongClass");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -154,12 +156,14 @@ public final class ProtoConverterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create converter for java.util.List<java.lang.String>\n"
                   + "    for method Service.wrongType");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for java.util.List<java.lang.String>.\n"
                   + "  Tried:\n"
@@ -179,9 +183,9 @@ public final class ProtoConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause())
-          .isInstanceOf(InvalidProtocolBufferException.class)
-          .hasMessageContaining("input ended unexpectedly");
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(InvalidProtocolBufferException.class);
+      assertThat(cause).hasMessageThat().contains("input ended unexpectedly");
     }
   }
 }

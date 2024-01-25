@@ -15,7 +15,7 @@
  */
 package retrofit2.adapter.guava;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.reflect.TypeToken;
@@ -90,7 +90,8 @@ public final class GuavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "ListenableFuture return type must be parameterized as ListenableFuture<Foo> or ListenableFuture<? extends Foo>");
     }
   }
@@ -103,7 +104,8 @@ public final class GuavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 }

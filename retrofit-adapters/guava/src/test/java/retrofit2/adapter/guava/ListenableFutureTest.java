@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.guava;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -72,10 +72,10 @@ public final class ListenableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause())
-          .isInstanceOf(HttpException.class) // Required for backwards compatibility.
-          .isInstanceOf(retrofit2.HttpException.class)
-          .hasMessage("HTTP 404 Client Error");
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(HttpException.class); // Required for backwards compatibility.
+      assertThat(cause).isInstanceOf(retrofit2.HttpException.class);
+      assertThat(cause).hasMessageThat().isEqualTo("HTTP 404 Client Error");
     }
   }
 
@@ -88,7 +88,7 @@ public final class ListenableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e).hasCauseThat().isInstanceOf(IOException.class);
     }
   }
 
@@ -121,7 +121,7 @@ public final class ListenableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e).hasCauseThat().isInstanceOf(IOException.class);
     }
   }
 }

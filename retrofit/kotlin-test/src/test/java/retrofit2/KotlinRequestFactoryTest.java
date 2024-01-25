@@ -5,7 +5,7 @@ import okhttp3.Request;
 import org.junit.Test;
 import retrofit2.http.HEAD;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static retrofit2.TestingUtils.buildRequest;
 
 public final class KotlinRequestFactoryTest {
@@ -20,7 +20,7 @@ public final class KotlinRequestFactoryTest {
 
     Request request = buildRequest(Example.class);
     assertThat(request.method()).isEqualTo("HEAD");
-    assertThat(request.headers().size()).isZero();
+    assertThat(request.headers().size()).isEqualTo(0);
     assertThat(request.url().toString()).isEqualTo("http://example.com/foo/bar/");
     assertThat(request.body()).isNull();
   }

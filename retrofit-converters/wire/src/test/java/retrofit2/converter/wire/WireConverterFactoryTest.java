@@ -15,7 +15,7 @@
  */
 package retrofit2.converter.wire;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.EOFException;
@@ -100,12 +100,14 @@ public final class WireConverterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create converter for class java.lang.String\n"
                   + "    for method Service.wrongClass");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for class java.lang.String.\n"
                   + "  Tried:\n"
@@ -125,12 +127,14 @@ public final class WireConverterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create converter for java.util.List<java.lang.String>\n"
                   + "    for method Service.wrongType");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for java.util.List<java.lang.String>.\n"
                   + "  Tried:\n"

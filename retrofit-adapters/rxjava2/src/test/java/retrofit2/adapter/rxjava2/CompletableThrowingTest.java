@@ -15,7 +15,7 @@
  */
 package retrofit2.adapter.rxjava2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -83,7 +83,9 @@ public final class CompletableThrowingTest {
               }
             });
 
-    assertThat(errorRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+    Throwable error = errorRef.get();
+    assertThat(error).isInstanceOf(UndeliverableException.class);
+    assertThat(error).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test

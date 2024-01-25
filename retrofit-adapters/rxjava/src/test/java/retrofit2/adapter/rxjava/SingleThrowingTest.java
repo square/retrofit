@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.rxjava;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -94,7 +94,7 @@ public final class SingleThrowingTest {
               }
             });
 
-    assertThat(pluginRef.get()).isSameAs(e);
+    assertThat(pluginRef.get()).isSameInstanceAs(e);
   }
 
   @Test
@@ -161,7 +161,7 @@ public final class SingleThrowingTest {
               }
             });
 
-    assertThat(pluginRef.get()).isSameAs(e);
+    assertThat(pluginRef.get()).isSameInstanceAs(e);
   }
 
   @Test
@@ -228,7 +228,7 @@ public final class SingleThrowingTest {
               }
             });
 
-    assertThat(pluginRef.get()).isSameAs(e);
+    assertThat(pluginRef.get()).isSameInstanceAs(e);
   }
 
   @Ignore("Single's contract is onNext|onError so we have no way of triggering this case")

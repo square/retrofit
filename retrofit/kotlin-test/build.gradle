@@ -4,7 +4,7 @@ dependencies {
   testImplementation projects.retrofit
   testImplementation projects.retrofit.testHelpers
   testImplementation libs.junit
-  testImplementation libs.assertj
+  testImplementation libs.truth
   testImplementation libs.mockwebserver
   testImplementation libs.kotlin.stdLib
   testImplementation libs.kotlinCoroutines

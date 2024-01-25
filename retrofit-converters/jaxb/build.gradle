@@ -8,7 +8,7 @@ dependencies {
 
   testImplementation libs.jaxbImpl
   testImplementation libs.junit
-  testImplementation libs.assertj
+  testImplementation libs.truth
   testImplementation libs.mockwebserver
   testImplementation libs.findBugsAnnotations
 }

@@ -1,6 +1,6 @@
 package retrofit2.mock;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.concurrent.ExecutorService;
@@ -19,14 +19,14 @@ public final class MockRetrofitTest {
       new MockRetrofit.Builder(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("retrofit == null");
+      assertThat(e).hasMessageThat().isEqualTo("retrofit == null");
     }
   }
 
   @Test
   public void retrofitPropagated() {
     MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit).build();
-    assertThat(mockRetrofit.retrofit()).isSameAs(retrofit);
+    assertThat(mockRetrofit.retrofit()).isSameInstanceAs(retrofit);
   }
 
   @Test
@@ -36,7 +36,7 @@ public final class MockRetrofitTest {
       builder.networkBehavior(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("behavior == null");
+      assertThat(e).hasMessageThat().isEqualTo("behavior == null");
     }
   }
 
@@ -50,7 +50,7 @@ public final class MockRetrofitTest {
   public void networkBehaviorPropagated() {
     MockRetrofit mockRetrofit =
         new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build();
-    assertThat(mockRetrofit.networkBehavior()).isSameAs(behavior);
+    assertThat(mockRetrofit.networkBehavior()).isSameInstanceAs(behavior);
   }
 
   @Test
@@ -60,7 +60,7 @@ public final class MockRetrofitTest {
       builder.backgroundExecutor(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("executor == null");
+      assertThat(e).hasMessageThat().isEqualTo("executor == null");
     }
   }
 
@@ -74,6 +74,6 @@ public final class MockRetrofitTest {
   public void backgroundExecutorPropagated() {
     MockRetrofit mockRetrofit =
         new MockRetrofit.Builder(retrofit).backgroundExecutor(executor).build();
-    assertThat(mockRetrofit.backgroundExecutor()).isSameAs(executor);
+    assertThat(mockRetrofit.backgroundExecutor()).isSameInstanceAs(executor);
   }
 }

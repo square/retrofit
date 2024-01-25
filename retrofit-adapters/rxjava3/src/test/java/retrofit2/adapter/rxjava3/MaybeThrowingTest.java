@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.rxjava3;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.MaybeObserver;
@@ -89,7 +89,7 @@ public final class MaybeThrowingTest {
               }
             });
 
-    assertThat(throwableRef.get().getCause()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
@@ -149,7 +149,7 @@ public final class MaybeThrowingTest {
               }
             });
 
-    assertThat(throwableRef.get().getCause()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
@@ -209,7 +209,7 @@ public final class MaybeThrowingTest {
               }
             });
 
-    assertThat(throwableRef.get().getCause()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Ignore("Single's contract is onNext|onError so we have no way of triggering this case")

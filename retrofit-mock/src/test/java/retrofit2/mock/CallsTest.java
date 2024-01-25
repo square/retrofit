@@ -15,12 +15,8 @@
  */
 package retrofit2.mock;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -68,7 +64,7 @@ public final class CallsTest {
       taco.execute();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Already executed");
+      assertThat(e).hasMessageThat().isEqualTo("Already executed");
     }
   }
 
@@ -109,7 +105,7 @@ public final class CallsTest {
           });
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Already executed");
+      assertThat(e).hasMessageThat().isEqualTo("Already executed");
     }
   }
 
@@ -120,7 +116,7 @@ public final class CallsTest {
       taco.enqueue(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("callback == null");
+      assertThat(e).hasMessageThat().isEqualTo("callback == null");
     }
   }
 
@@ -135,7 +131,7 @@ public final class CallsTest {
       taco.execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("canceled");
+      assertThat(e).hasMessageThat().isEqualTo("canceled");
     }
   }
 
@@ -159,7 +155,9 @@ public final class CallsTest {
             failureRef.set(t);
           }
         });
-    assertThat(failureRef.get()).isInstanceOf(IOException.class).hasMessage("canceled");
+    Throwable failure = failureRef.get();
+    assertThat(failure).isInstanceOf(IOException.class);
+    assertThat(failure).hasMessageThat().isEqualTo("canceled");
   }
 
   @Test

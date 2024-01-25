@@ -15,8 +15,8 @@
  */
 package retrofit2;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -70,10 +70,9 @@ public final class CompletableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause())
-          .isInstanceOf(HttpException.class) // Required for backwards compatibility.
-          .isInstanceOf(HttpException.class)
-          .hasMessage("HTTP 404 Client Error");
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(HttpException.class);
+      assertThat(cause).hasMessageThat().isEqualTo("HTTP 404 Client Error");
     }
   }
 
@@ -86,7 +85,7 @@ public final class CompletableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e).hasCauseThat().isInstanceOf(IOException.class);
     }
   }
 
@@ -119,7 +118,7 @@ public final class CompletableFutureTest {
       future.get();
       fail();
     } catch (ExecutionException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+      assertThat(e).hasCauseThat().isInstanceOf(IOException.class);
     }
   }
 }

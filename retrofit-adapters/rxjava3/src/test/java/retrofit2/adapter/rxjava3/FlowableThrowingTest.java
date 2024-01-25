@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.rxjava3;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.exceptions.CompositeException;
@@ -108,7 +108,7 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertAnyValue();
-    assertThat(throwableRef.get().getCause()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
@@ -188,7 +188,7 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertAnyValue();
-    assertThat(throwableRef.get().getCause()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
@@ -268,7 +268,7 @@ public final class FlowableThrowingTest {
             });
 
     subscriber.assertAnyValue();
-    assertThat(throwableRef.get().getCause()).isSameAs(e);
+    assertThat(throwableRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
