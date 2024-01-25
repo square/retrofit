@@ -70,4 +70,4 @@ wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
 jsoup = { module = "org.jsoup:jsoup", version = "1.17.2" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.19.2"
-ktlint = "com.pinterest.ktlint:ktlint-cli:1.1.0"
+ktlint = "com.pinterest.ktlint:ktlint-cli:1.1.1"
