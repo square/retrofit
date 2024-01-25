@@ -46,7 +46,8 @@ public final class KotlinSuspendRawTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Response must include generic type (e.g., Response<String>)\n"
                   + "    for method Service.body");
     }

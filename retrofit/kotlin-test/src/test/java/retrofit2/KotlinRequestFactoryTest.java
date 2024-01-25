@@ -1,12 +1,12 @@
 package retrofit2;
 
+import static com.google.common.truth.Truth.assertThat;
+import static retrofit2.TestingUtils.buildRequest;
+
 import kotlin.Unit;
 import okhttp3.Request;
 import org.junit.Test;
 import retrofit2.http.HEAD;
-
-import static com.google.common.truth.Truth.assertThat;
-import static retrofit2.TestingUtils.buildRequest;
 
 public final class KotlinRequestFactoryTest {
   @Test

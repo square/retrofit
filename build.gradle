@@ -26,13 +26,19 @@ subprojects {
     google()
   }
 
-  tasks.withType(JavaCompile).configureEach { task ->
-    task.options.encoding = 'UTF-8'
+  // This will cover both java-library and kotlin.jvm but not android.library.
+  if (project.path != ':retrofit:robovm-test') {
+    plugins.withId('java') {
+      tasks.withType(JavaCompile).configureEach { task ->
+        task.options.encoding = 'UTF-8'
+        task.options.release = 8
+      }
+    }
   }
 
-  plugins.withType(JavaBasePlugin).configureEach {
-    java.toolchain {
-      languageVersion.set(JavaLanguageVersion.of(8))
+  tasks.withType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile).configureEach { task ->
+    task.kotlinOptions {
+      jvmTarget = '1.8'
     }
   }
 
