@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -64,7 +63,19 @@ import retrofit2.http.Url;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
+  /**
+   * Method associations in this map will be in one of three states, and may only progress forward
+   * to higher-numbered states.
+   * <ol>
+   *   <li>No value - no one has started or completed parsing annotations for the method.</li>
+   *   <li>Lock object - a thread has started parsing annotations on the method. Once the lock is
+   *   available the map will have been updated with the parsed model.</li>
+   *   <li>{@code ServiceMethod} - annotations for the method have been fully parsed.</li>
+   * </ol>
+   * This map should only be accessed through {@link #loadServiceMethod} which contains the state
+   * transition logic.
+   */
+  private final ConcurrentHashMap<Method, Object> serviceMethodCache = new ConcurrentHashMap<>();
 
   final okhttp3.Call.Factory callFactory;
   final HttpUrl baseUrl;
@@ -163,7 +174,7 @@ public final class Retrofit {
                 Platform platform = Platform.get();
                 return platform.isDefaultMethod(method)
                     ? platform.invokeDefaultMethod(method, service, proxy, args)
-                    : loadServiceMethod(service, method).invoke(args);
+                    : loadServiceMethod(method).invoke(args);
               }
             });
   }
@@ -194,24 +205,46 @@ public final class Retrofit {
         if (!platform.isDefaultMethod(method)
             && !Modifier.isStatic(method.getModifiers())
             && !method.isSynthetic()) {
-          loadServiceMethod(service, method);
+          loadServiceMethod(method);
         }
       }
     }
   }
 
-  ServiceMethod<?> loadServiceMethod(Class<?> service, Method method) {
-    ServiceMethod<?> result = serviceMethodCache.get(method);
-    if (result != null) return result;
+  ServiceMethod<?> loadServiceMethod(Method method) {
+    // Note: Once we are minSdk 24 this whole method can be replaced by computeIfAbsent.
+    Object lookup = serviceMethodCache.get(method);
 
-    synchronized (service) {
-      result = serviceMethodCache.get(method);
-      if (result == null) {
-        result = ServiceMethod.parseAnnotations(this, method);
-        serviceMethodCache.put(method, result);
+    if (lookup instanceof ServiceMethod<?>) {
+      // Happy path: method is already parsed into the model.
+      return (ServiceMethod<?>) lookup;
+    }
+
+    if (lookup == null) {
+      // Map does not contain any value. Try to put in a lock for this method. We MUST synchronize
+      // on the lock before it is visible to others via the map to signal we are doing the work.
+      Object lock = new Object();
+      synchronized (lock) {
+        lookup = serviceMethodCache.putIfAbsent(method, lock);
+        if (lookup == null) {
+          // On successful lock insertion, perform the work and update the map before releasing.
+          // Other threads may be waiting on lock now and will expect the parsed model.
+          ServiceMethod<Object> result = ServiceMethod.parseAnnotations(this, method);
+          serviceMethodCache.put(method, result);
+          return result;
+        }
       }
     }
-    return result;
+
+    // Either the initial lookup or the attempt to put our lock in the map has returned someone
+    // else's lock. This means they are doing the parsing, and will update the map before releasing
+    // the lock. Once we can take the lock, the map is guaranteed to contain the model.
+    // Note: There's a chance that our effort to put a lock into the map has actually returned a
+    // finished model instead of a lock. In that case this code will perform a pointless lock and
+    // redundant lookup in the map of the same instance. This is rare, and ultimately harmless.
+    synchronized (lookup) {
+      return (ServiceMethod<?>) serviceMethodCache.get(method);
+    }
   }
 
   /**
