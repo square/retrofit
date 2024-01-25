@@ -19,20 +19,28 @@ protobuf = "3.25.1"
 robovm = "2.3.14"
 kotlinx-serialization = "1.6.2"
 
-[plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-dokka = { id = "org.jetbrains.dokka", version = "1.9.10" }
-errorprone = { id = "net.ltgt.errorprone", version = "3.1.0" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
-protobuf = { id = "com.google.protobuf", version = "0.9.4" }
-animalsniffer = { id = "ru.vyarus.animalsniffer", version = "1.7.1" }
-spotless = "com.diffplug.spotless:6.23.3"
-
 [libraries]
 androidPlugin = { module = "com.android.tools.build:gradle", version = "4.2.2" }
 robovmPlugin = { module = "com.mobidevelop.robovm:robovm-gradle-plugin", version.ref = "robovm" }
-kotlinStdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+dokkaPlugin = "org.jetbrains.dokka:dokka-gradle-plugin:1.9.10"
+gradleMavenPublishPlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
+spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:6.23.3"
+
+kotlin-stdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-serializationPlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
+
+errorpronePlugin = "net.ltgt.gradle:gradle-errorprone-plugin:3.1.0"
+errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
+errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
+
+animalSnifferPlugin = "ru.vyarus:gradle-animalsniffer-plugin:1.7.1"
+animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.23" }
+
+protobufPlugin = "com.google.protobuf:protobuf-gradle-plugin:0.9.4"
+protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
+
 kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.7.3" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -43,7 +51,6 @@ junit = { module = "junit:junit", version = "4.13.2" }
 assertj = { module = "org.assertj:assertj-core", version = "3.13.2" }
 guava = { module = "com.google.guava:guava", version = "32.1.3-jre" }
 android = { module = "com.google.android:android", version = "4.1.1.4" }
-animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.23" }
 findBugsAnnotations = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
 androidxTestRunner = { module = "androidx.test:runner", version = "1.4.0" }
 rxjava = { module = "io.reactivex:rxjava", version = "1.3.8" }
@@ -58,13 +65,9 @@ jaxbImpl = { module = "org.glassfish.jaxb:jaxb-runtime", version = "4.0.4" }
 jaxb3Api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "3.0.1" }
 jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version = "3.0.2" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.15.0" }
-protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
 wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
 jsoup = { module = "org.jsoup:jsoup", version = "1.17.1" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
-errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
-errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.19.1"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.1.0"
