@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static retrofit2.CallAdapter.Factory.getParameterUpperBound;
 import static retrofit2.CallAdapter.Factory.getRawType;
@@ -35,28 +35,32 @@ public final class CallAdapterTest {
       getParameterUpperBound(-1, listOfString);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Index -1 not in range [0,1) for java.util.List<java.lang.String>");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Index -1 not in range [0,1) for java.util.List<java.lang.String>");
     }
     try {
       getParameterUpperBound(1, listOfString);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Index 1 not in range [0,1) for java.util.List<java.lang.String>");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Index 1 not in range [0,1) for java.util.List<java.lang.String>");
     }
   }
 
   @Test
   public void parameterizedTypes() {
     ParameterizedType one = (ParameterizedType) new TypeToken<List<String>>() {}.getType();
-    assertThat(getParameterUpperBound(0, one)).isSameAs(String.class);
+    assertThat(getParameterUpperBound(0, one)).isSameInstanceAs(String.class);
 
     ParameterizedType two = (ParameterizedType) new TypeToken<Map<String, String>>() {}.getType();
-    assertThat(getParameterUpperBound(0, two)).isSameAs(String.class);
-    assertThat(getParameterUpperBound(1, two)).isSameAs(String.class);
+    assertThat(getParameterUpperBound(0, two)).isSameInstanceAs(String.class);
+    assertThat(getParameterUpperBound(1, two)).isSameInstanceAs(String.class);
 
     ParameterizedType wild =
         (ParameterizedType) new TypeToken<List<? extends CharSequence>>() {}.getType();
-    assertThat(getParameterUpperBound(0, wild)).isSameAs(CharSequence.class);
+    assertThat(getParameterUpperBound(0, wild)).isSameInstanceAs(CharSequence.class);
   }
 
   @Test
@@ -65,32 +69,32 @@ public final class CallAdapterTest {
       getRawType(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("type == null");
+      assertThat(e).hasMessageThat().isEqualTo("type == null");
     }
   }
 
   @Test
   public void rawTypes() throws NoSuchMethodException {
-    assertThat(getRawType(String.class)).isSameAs(String.class);
+    assertThat(getRawType(String.class)).isSameInstanceAs(String.class);
 
     Type listOfString = new TypeToken<List<String>>() {}.getType();
-    assertThat(getRawType(listOfString)).isSameAs(List.class);
+    assertThat(getRawType(listOfString)).isSameInstanceAs(List.class);
 
     Type stringArray = new TypeToken<String[]>() {}.getType();
-    assertThat(getRawType(stringArray)).isSameAs(String[].class);
+    assertThat(getRawType(stringArray)).isSameInstanceAs(String[].class);
 
     Type wild =
         ((ParameterizedType) new TypeToken<List<? extends CharSequence>>() {}.getType())
             .getActualTypeArguments()[0];
-    assertThat(getRawType(wild)).isSameAs(CharSequence.class);
+    assertThat(getRawType(wild)).isSameInstanceAs(CharSequence.class);
 
     Type wildParam =
         ((ParameterizedType) new TypeToken<List<? extends List<String>>>() {}.getType())
             .getActualTypeArguments()[0];
-    assertThat(getRawType(wildParam)).isSameAs(List.class);
+    assertThat(getRawType(wildParam)).isSameInstanceAs(List.class);
 
     Type typeVar = A.class.getDeclaredMethod("method").getGenericReturnType();
-    assertThat(getRawType(typeVar)).isSameAs(Object.class);
+    assertThat(getRawType(typeVar)).isSameInstanceAs(Object.class);
   }
 
   @SuppressWarnings("unused") // Used reflectively.

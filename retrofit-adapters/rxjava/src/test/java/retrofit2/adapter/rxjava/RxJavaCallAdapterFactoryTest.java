@@ -15,7 +15,7 @@
  */
 package retrofit2.adapter.rxjava;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.reflect.TypeToken;
@@ -52,7 +52,7 @@ public final class RxJavaCallAdapterFactoryTest {
       RxJavaCallAdapterFactory.createWithScheduler(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("scheduler == null");
+      assertThat(e).hasMessageThat().isEqualTo("scheduler == null");
     }
   }
 
@@ -122,7 +122,8 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
     }
 
@@ -132,7 +133,8 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Single return type must be parameterized as Single<Foo> or Single<? extends Foo>");
     }
   }
@@ -145,7 +147,8 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single<Response>>() {}.getType();
@@ -154,7 +157,8 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 
@@ -166,7 +170,8 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single<Result>>() {}.getType();
@@ -175,7 +180,8 @@ public final class RxJavaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
   }
 }

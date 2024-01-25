@@ -15,9 +15,9 @@
  */
 package retrofit2.adapter.scala;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -76,10 +76,9 @@ public final class FutureTest {
       Await.result(future, Duration.create(5, SECONDS));
       fail();
     } catch (Exception e) {
-      assertThat(e)
-          .isInstanceOf(HttpException.class) // Required for backwards compatibility.
-          .isInstanceOf(retrofit2.HttpException.class)
-          .hasMessage("HTTP 404 Client Error");
+      assertThat(e).isInstanceOf(HttpException.class); // Required for backwards compatibility.
+      assertThat(e).isInstanceOf(retrofit2.HttpException.class);
+      assertThat(e).hasMessageThat().isEqualTo("HTTP 404 Client Error");
     }
   }
 

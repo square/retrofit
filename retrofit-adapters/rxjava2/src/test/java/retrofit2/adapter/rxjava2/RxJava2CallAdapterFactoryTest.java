@@ -16,7 +16,7 @@
 
 package retrofit2.adapter.rxjava2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.reflect.TypeToken;
@@ -55,7 +55,7 @@ public class RxJava2CallAdapterFactoryTest {
       RxJava2CallAdapterFactory.createWithScheduler(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("scheduler == null");
+      assertThat(e).hasMessageThat().isEqualTo("scheduler == null");
     }
   }
 
@@ -167,7 +167,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Observable return type must be parameterized as Observable<Foo> or Observable<? extends Foo>");
     }
 
@@ -177,7 +178,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Single return type must be parameterized as Single<Foo> or Single<? extends Foo>");
     }
 
@@ -187,7 +189,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Maybe return type must be parameterized as Maybe<Foo> or Maybe<? extends Foo>");
     }
 
@@ -197,7 +200,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Flowable return type must be parameterized as Flowable<Foo> or Flowable<? extends Foo>");
     }
   }
@@ -210,7 +214,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single<Response>>() {}.getType();
@@ -219,7 +224,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
 
     Type maybeType = new TypeToken<Maybe<Response>>() {}.getType();
@@ -228,7 +234,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
 
     Type flowableType = new TypeToken<Flowable<Response>>() {}.getType();
@@ -237,7 +244,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 
@@ -249,7 +257,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
 
     Type singleType = new TypeToken<Single<Result>>() {}.getType();
@@ -258,7 +267,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
 
     Type maybeType = new TypeToken<Maybe<Result>>() {}.getType();
@@ -267,7 +277,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
 
     Type flowableType = new TypeToken<Flowable<Result>>() {}.getType();
@@ -276,7 +287,8 @@ public class RxJava2CallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Result must be parameterized as Result<Foo> or Result<? extends Foo>");
     }
   }
 }

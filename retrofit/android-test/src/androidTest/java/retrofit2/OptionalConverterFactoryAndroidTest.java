@@ -26,7 +26,7 @@ import org.junit.Test;
 import retrofit2.helpers.ObjectInstanceConverterFactory;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 @SdkSuppress(minSdkVersion = 24)
 public final class OptionalConverterFactoryAndroidTest {
@@ -57,7 +57,7 @@ public final class OptionalConverterFactoryAndroidTest {
     server.enqueue(new MockResponse());
 
     Optional<Object> optional = service.optional().execute().body();
-    assertThat(optional.get()).isSameAs(ObjectInstanceConverterFactory.VALUE);
+    assertThat(optional.get()).isSameInstanceAs(ObjectInstanceConverterFactory.VALUE);
   }
 
   @Test
@@ -65,6 +65,6 @@ public final class OptionalConverterFactoryAndroidTest {
     server.enqueue(new MockResponse());
 
     Object body = service.object().execute().body();
-    assertThat(body).isSameAs(ObjectInstanceConverterFactory.VALUE);
+    assertThat(body).isSameInstanceAs(ObjectInstanceConverterFactory.VALUE);
   }
 }

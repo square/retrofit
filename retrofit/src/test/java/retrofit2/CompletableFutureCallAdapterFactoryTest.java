@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.reflect.TypeToken;
@@ -87,7 +87,8 @@ public final class CompletableFutureCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "CompletableFuture return type must be parameterized as CompletableFuture<Foo> or CompletableFuture<? extends Foo>");
     }
   }
@@ -100,7 +101,8 @@ public final class CompletableFutureCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 }

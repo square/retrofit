@@ -15,7 +15,8 @@
  */
 package retrofit2.adapter.rxjava2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import io.reactivex.MaybeObserver;
 import io.reactivex.Notification;
@@ -63,16 +64,16 @@ final class RecordingMaybeObserver<T> implements MaybeObserver<T> {
 
   public T takeValue() {
     Notification<T> notification = takeNotification();
-    assertThat(notification.isOnNext())
-        .as("Expected onNext event but was " + notification)
+    assertWithMessage("Expected onNext event but was " + notification)
+        .that(notification.isOnNext())
         .isTrue();
     return notification.getValue();
   }
 
   public Throwable takeError() {
     Notification<T> notification = takeNotification();
-    assertThat(notification.isOnError())
-        .as("Expected onError event but was " + notification)
+    assertWithMessage("Expected onError event but was " + notification)
+        .that(notification.isOnError())
         .isTrue();
     return notification.getError();
   }
@@ -99,13 +100,13 @@ final class RecordingMaybeObserver<T> implements MaybeObserver<T> {
     Throwable throwable = takeError();
     assertThat(throwable).isInstanceOf(errorClass);
     if (message != null) {
-      assertThat(throwable).hasMessage(message);
+      assertThat(throwable).hasMessageThat().isEqualTo(message);
     }
     assertNoEvents();
   }
 
   public void assertNoEvents() {
-    assertThat(events).as("Unconsumed events found!").isEmpty();
+    assertWithMessage("Unconsumed events found!").that(events).isEmpty();
   }
 
   public static final class Rule implements TestRule {

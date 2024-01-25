@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -43,7 +43,8 @@ public final class DefaultCallAdapterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage("Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
     }
   }
 
@@ -74,7 +75,7 @@ public final class DefaultCallAdapterFactoryTest {
                 return response;
               }
             });
-    assertThat(call.execute()).isSameAs(response);
+    assertThat(call.execute()).isSameInstanceAs(response);
   }
 
   @Test
@@ -92,7 +93,7 @@ public final class DefaultCallAdapterFactoryTest {
           }
         };
     Call<String> call = adapter.adapt(delegate);
-    assertThat(call.clone()).isNotSameAs(call);
+    assertThat(call.clone()).isNotSameInstanceAs(call);
     assertTrue(cloned.get());
   }
 

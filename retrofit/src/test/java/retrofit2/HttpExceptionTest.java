@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -27,7 +27,7 @@ public final class HttpExceptionTest {
     HttpException exception = new HttpException(response);
     assertThat(exception.code()).isEqualTo(200);
     assertThat(exception.message()).isEqualTo("OK");
-    assertThat(exception.response()).isSameAs(response);
+    assertThat(exception.response()).isSameInstanceAs(response);
   }
 
   @Test
@@ -36,7 +36,7 @@ public final class HttpExceptionTest {
       new HttpException(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("response == null");
+      assertThat(e).hasMessageThat().isEqualTo("response == null");
     }
   }
 }

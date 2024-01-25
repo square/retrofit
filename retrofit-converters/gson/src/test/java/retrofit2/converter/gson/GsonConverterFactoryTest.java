@@ -15,7 +15,7 @@
  */
 package retrofit2.converter.gson;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.gson.Gson;
@@ -195,7 +195,7 @@ public final class GsonConverterFactoryTest {
       call.execute();
       fail();
     } catch (JsonIOException e) {
-      assertThat(e).hasMessage("JSON document was not fully consumed.");
+      assertThat(e).hasMessageThat().isEqualTo("JSON document was not fully consumed.");
     }
   }
 }

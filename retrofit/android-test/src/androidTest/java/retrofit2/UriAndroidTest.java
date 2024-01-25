@@ -27,7 +27,7 @@ import org.junit.Test;
 import retrofit2.http.GET;
 import retrofit2.http.Url;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 public final class UriAndroidTest {
   @Rule public final MockWebServer server1 = new MockWebServer();

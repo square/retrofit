@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -56,7 +56,7 @@ public final class OptionalConverterFactoryTest {
 
     Optional<Object> optional = service.optional().execute().body();
     assertThat(optional).isNotNull();
-    assertThat(optional.get()).isSameAs(ObjectInstanceConverterFactory.VALUE);
+    assertThat(optional.get()).isSameInstanceAs(ObjectInstanceConverterFactory.VALUE);
   }
 
   @Test
@@ -64,6 +64,6 @@ public final class OptionalConverterFactoryTest {
     server.enqueue(new MockResponse());
 
     Object body = service.object().execute().body();
-    assertThat(body).isSameAs(ObjectInstanceConverterFactory.VALUE);
+    assertThat(body).isSameInstanceAs(ObjectInstanceConverterFactory.VALUE);
   }
 }

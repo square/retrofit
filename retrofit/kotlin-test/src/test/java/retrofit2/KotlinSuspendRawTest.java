@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import kotlin.coroutines.Continuation;
@@ -46,7 +46,7 @@ public final class KotlinSuspendRawTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "Response must include generic type (e.g., Response<String>)\n"
                   + "    for method Service.body");
     }

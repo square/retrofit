@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.util.Set;
 import org.junit.Test;
@@ -44,6 +44,6 @@ public final class RequestFactoryBuilderTest {
 
   private static void expectParams(String path, String... expected) {
     Set<String> calculated = RequestFactory.Builder.parsePathParameters(path);
-    assertThat(calculated).containsExactly(expected);
+    assertThat(calculated).containsExactlyElementsIn(expected);
   }
 }

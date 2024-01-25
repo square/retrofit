@@ -8,7 +8,7 @@ dependencies {
   compileOnly libs.findBugsAnnotations
 
   testImplementation libs.junit
-  testImplementation libs.assertj
+  testImplementation libs.truth
   testImplementation libs.guava
   testImplementation libs.mockwebserver
 }

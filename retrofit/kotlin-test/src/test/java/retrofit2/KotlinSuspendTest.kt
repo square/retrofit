@@ -15,6 +15,7 @@
  */
 package retrofit2
 
+import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -29,7 +30,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST
 import okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Ignore
@@ -381,7 +381,7 @@ class KotlinSuspendTest {
       runBlocking { example.bodyWithCallType() }
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Suspend functions should not return Call, as they already execute asynchronously.\n" +
           "Change its return type to class java.lang.String\n" +
           "    for method Service.bodyWithCallType",

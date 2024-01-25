@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import okhttp3.Headers;
@@ -47,9 +47,9 @@ public final class ResponseTest {
     assertThat(response.raw()).isNotNull();
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.message()).isEqualTo("OK");
-    assertThat(response.headers().size()).isZero();
+    assertThat(response.headers().size()).isEqualTo(0);
     assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isSameAs(body);
+    assertThat(response.body()).isSameInstanceAs(body);
     assertThat(response.errorBody()).isNull();
   }
 
@@ -70,7 +70,7 @@ public final class ResponseTest {
     assertThat(response.message()).isEqualTo("OK");
     assertThat(response.headers().toMultimap()).isEqualTo(headers.toMultimap());
     assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isSameAs(body);
+    assertThat(response.body()).isSameInstanceAs(body);
     assertThat(response.errorBody()).isNull();
   }
 
@@ -80,7 +80,7 @@ public final class ResponseTest {
       Response.success("", (okhttp3.Headers) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("headers == null");
+      assertThat(e).hasMessageThat().isEqualTo("headers == null");
     }
   }
 
@@ -90,9 +90,9 @@ public final class ResponseTest {
     Response<Object> response = Response.success(204, body);
     assertThat(response.code()).isEqualTo(204);
     assertThat(response.message()).isEqualTo("Response.success()");
-    assertThat(response.headers().size()).isZero();
+    assertThat(response.headers().size()).isEqualTo(0);
     assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isSameAs(body);
+    assertThat(response.body()).isSameInstanceAs(body);
     assertThat(response.errorBody()).isNull();
   }
 
@@ -100,12 +100,12 @@ public final class ResponseTest {
   public void successWithRawResponse() {
     Object body = new Object();
     Response<Object> response = Response.success(body, successResponse);
-    assertThat(response.raw()).isSameAs(successResponse);
+    assertThat(response.raw()).isSameInstanceAs(successResponse);
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.message()).isEqualTo("OK");
-    assertThat(response.headers().size()).isZero();
+    assertThat(response.headers().size()).isEqualTo(0);
     assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isSameAs(body);
+    assertThat(response.body()).isSameInstanceAs(body);
     assertThat(response.errorBody()).isNull();
   }
 
@@ -115,7 +115,7 @@ public final class ResponseTest {
       Response.success("", (okhttp3.Response) null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("rawResponse == null");
+      assertThat(e).hasMessageThat().isEqualTo("rawResponse == null");
     }
   }
 
@@ -125,7 +125,7 @@ public final class ResponseTest {
       Response.success("", errorResponse);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("rawResponse must be successful response");
+      assertThat(e).hasMessageThat().isEqualTo("rawResponse must be successful response");
     }
   }
 
@@ -144,10 +144,10 @@ public final class ResponseTest {
     }
     assertThat(response.code()).isEqualTo(400);
     assertThat(response.message()).isEqualTo("Response.error()");
-    assertThat(response.headers().size()).isZero();
+    assertThat(response.headers().size()).isEqualTo(0);
     assertThat(response.isSuccessful()).isFalse();
     assertThat(response.body()).isNull();
-    assertThat(response.errorBody()).isSameAs(errorBody);
+    assertThat(response.errorBody()).isSameInstanceAs(errorBody);
   }
 
   @Test
@@ -156,7 +156,7 @@ public final class ResponseTest {
       Response.error(400, null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("body == null");
+      assertThat(e).hasMessageThat().isEqualTo("body == null");
     }
   }
 
@@ -167,7 +167,7 @@ public final class ResponseTest {
       Response.error(200, errorBody);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("code < 400: 200");
+      assertThat(e).hasMessageThat().isEqualTo("code < 400: 200");
     }
   }
 
@@ -175,13 +175,13 @@ public final class ResponseTest {
   public void errorWithRawResponse() {
     ResponseBody errorBody = ResponseBody.create(null, "Broken!");
     Response<?> response = Response.error(errorBody, errorResponse);
-    assertThat(response.raw()).isSameAs(errorResponse);
+    assertThat(response.raw()).isSameInstanceAs(errorResponse);
     assertThat(response.code()).isEqualTo(400);
     assertThat(response.message()).isEqualTo("Broken!");
-    assertThat(response.headers().size()).isZero();
+    assertThat(response.headers().size()).isEqualTo(0);
     assertThat(response.isSuccessful()).isFalse();
     assertThat(response.body()).isNull();
-    assertThat(response.errorBody()).isSameAs(errorBody);
+    assertThat(response.errorBody()).isSameInstanceAs(errorBody);
   }
 
   @Test
@@ -190,7 +190,7 @@ public final class ResponseTest {
       Response.error(null, errorResponse);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("body == null");
+      assertThat(e).hasMessageThat().isEqualTo("body == null");
     }
   }
 
@@ -201,7 +201,7 @@ public final class ResponseTest {
       Response.error(errorBody, null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("rawResponse == null");
+      assertThat(e).hasMessageThat().isEqualTo("rawResponse == null");
     }
   }
 
@@ -212,7 +212,7 @@ public final class ResponseTest {
       Response.error(errorBody, successResponse);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("rawResponse should not be successful response");
+      assertThat(e).hasMessageThat().isEqualTo("rawResponse should not be successful response");
     }
   }
 }

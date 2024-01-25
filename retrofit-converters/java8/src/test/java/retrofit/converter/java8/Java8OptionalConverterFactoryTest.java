@@ -15,7 +15,7 @@
  */
 package retrofit.converter.java8;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -100,6 +100,6 @@ public final class Java8OptionalConverterFactoryTest {
     Service service = retrofit.create(Service.class);
     Optional<Object> optional = service.optional().execute().body();
     assertThat(optional).isNotNull();
-    assertThat(optional.get()).isSameAs(object);
+    assertThat(optional.get()).isSameInstanceAs(object);
   }
 }

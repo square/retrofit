@@ -15,7 +15,7 @@
  */
 package retrofit2.adapter.rxjava3;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
@@ -82,7 +82,7 @@ public final class CompletableThrowingTest {
               }
             });
 
-    assertThat(errorRef.get().getCause()).isSameAs(e);
+    assertThat(errorRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test

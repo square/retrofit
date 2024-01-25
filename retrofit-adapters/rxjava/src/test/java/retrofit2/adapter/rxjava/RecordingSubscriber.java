@@ -15,7 +15,8 @@
  */
 package retrofit2.adapter.rxjava;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -66,16 +67,16 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
 
   public T takeValue() {
     Notification<T> notification = takeNotification();
-    assertThat(notification.isOnNext())
-        .overridingErrorMessage("Expected onNext event but was %s", notification)
+    assertWithMessage("Expected onNext event but was %s", notification)
+        .that(notification.isOnNext())
         .isTrue();
     return notification.getValue();
   }
 
   public Throwable takeError() {
     Notification<T> notification = takeNotification();
-    assertThat(notification.isOnError())
-        .overridingErrorMessage("Expected onError event but was %s", notification)
+    assertWithMessage("Expected onError event but was %s", notification)
+        .that(notification.isOnError())
         .isTrue();
     return notification.getThrowable();
   }
@@ -92,8 +93,8 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
 
   public void assertCompleted() {
     Notification<T> notification = takeNotification();
-    assertThat(notification.isOnCompleted())
-        .overridingErrorMessage("Expected onCompleted event but was %s", notification)
+    assertWithMessage("Expected onCompleted event but was %s", notification)
+        .that(notification.isOnCompleted())
         .isTrue();
     assertNoEvents();
   }
@@ -110,13 +111,13 @@ final class RecordingSubscriber<T> extends Subscriber<T> {
     Throwable throwable = takeError();
     assertThat(throwable).isInstanceOf(errorClass);
     if (message != null) {
-      assertThat(throwable).hasMessage(message);
+      assertThat(throwable).hasMessageThat().isEqualTo(message);
     }
     assertNoEvents();
   }
 
   public void assertNoEvents() {
-    assertThat(events).as("Unconsumed events found!").isEmpty();
+    assertWithMessage("Unconsumed events found!").that(events).isEmpty();
   }
 
   public void requestMore(long amount) {
