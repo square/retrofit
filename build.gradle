@@ -4,7 +4,6 @@ import org.gradle.internal.jvm.Jvm
 buildscript {
   dependencies {
     classpath libs.androidPlugin
-    classpath libs.robovmPlugin
     classpath libs.kotlin.gradlePlugin
     classpath libs.kotlin.serializationPlugin
     classpath libs.dokkaPlugin
@@ -96,14 +95,6 @@ subprojects {
         ktlint(libs.ktlint.get().version)
         target 'src/**/*.kt'
       }
-    }
-  }
-
-  plugins.withType(com.android.build.gradle.BasePlugin).configureEach { plugin ->
-    // Can remove this once https://issuetracker.google.com/issues/260059413 is fixed.
-    plugin.extension.compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_1_8
-      targetCompatibility = JavaVersion.VERSION_1_8
     }
   }
 

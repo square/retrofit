@@ -1,10 +1,11 @@
 apply plugin: 'com.android.library'
 
 android {
-  compileSdkVersion 29
+  compileSdk 34
+  namespace 'retrofit2.android'
 
   defaultConfig {
-    minSdkVersion 21
+    minSdk 21
 
     // We need to disable D8 desugaring of default methods for the default method tests to work
     // correctly. This works in Android Studio because it sets the minSdk automatically based on
@@ -12,12 +13,12 @@ android {
     def emulatorApiLevel = System.getenv("API_LEVEL")
     if (emulatorApiLevel != null) {
       try {
-        minSdkVersion Integer.parseInt(emulatorApiLevel)
+        minSdk Integer.parseInt(emulatorApiLevel)
       } catch (NumberFormatException ignored) {
       }
     }
 
-    targetSdkVersion 29
+    targetSdk 34
     testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   }
 

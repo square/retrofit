@@ -14,12 +14,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 19
+          java-version: 21
 
       - uses: gradle/gradle-build-action@v2
 
       - name: Test
-        run: ./gradlew build
+        run: ./gradlew build --stacktrace
 
   android:
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 21
 
       - uses: gradle/gradle-build-action@v2
 
@@ -54,7 +54,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
-          script: ./gradlew connectedCheck
+          script: ./gradlew connectedCheck --stacktrace
         env:
           API_LEVEL: ${{ matrix.api-level }}
 
@@ -67,12 +67,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 21
 
       - uses: gradle/gradle-build-action@v2
 
       - name: Run Tests
-        run: ./gradlew retrofit:robovm-test:robovmTest
+        run: ./gradlew retrofit:robovm-test:robovmTest --stacktrace
 
   publish:
     runs-on: ubuntu-latest
@@ -88,12 +88,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 19
+          java-version: 21
 
       - uses: gradle/gradle-build-action@v2
 
       - name: Upload Artifacts
-        run: ./gradlew publish
+        run: ./gradlew publish --stacktrace
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}

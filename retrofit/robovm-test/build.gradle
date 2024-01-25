@@ -1,3 +1,16 @@
+// Normally we want all buildscript classpath dependencies to be at the root so that they
+// participate in a single round of dependency resolution. However, the RoboVM plugin
+// bundles outdated dependencies like BouncyCastle that are essential to other plugins (namely, AGP)
+// without shading them into a new package. Moving it to this project works around this problem.
+buildscript {
+  dependencies {
+    classpath libs.robovmPlugin
+  }
+  repositories {
+    mavenCentral()
+  }
+}
+
 apply plugin: 'java'
 apply plugin: 'robovm'
 
