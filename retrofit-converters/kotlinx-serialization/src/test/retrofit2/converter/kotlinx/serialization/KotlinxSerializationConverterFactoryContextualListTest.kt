@@ -1,4 +1,4 @@
-package com.jakewharton.retrofit2.converter.kotlinx.serialization
+package retrofit2.converter.kotlinx.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -22,7 +22,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
-class KotlinxSerializationConverterFactoryContextualTest {
+class KotlinxSerializationConverterFactoryContextualListTest {
   @get:Rule
   val server = MockWebServer()
 
@@ -30,10 +30,10 @@ class KotlinxSerializationConverterFactoryContextualTest {
 
   interface Service {
     @GET("/")
-    fun deserialize(): Call<User>
+    fun deserialize(): Call<List<User>>
 
     @POST("/")
-    fun serialize(@Body user: User): Call<Void?>
+    fun serialize(@Body users: List<User>): Call<Void?>
   }
 
   data class User(val name: String)
@@ -71,17 +71,17 @@ class KotlinxSerializationConverterFactoryContextualTest {
 
   @Test
   fun deserialize() {
-    server.enqueue(MockResponse().setBody("""{"name":"Bob"}"""))
+    server.enqueue(MockResponse().setBody("""[{"name":"Bob"}]"""))
     val user = service.deserialize().execute().body()!!
-    assertEquals(User("Bob"), user)
+    assertEquals(listOf(User("Bob")), user)
   }
 
   @Test
   fun serialize() {
     server.enqueue(MockResponse())
-    service.serialize(User("Bob")).execute()
+    service.serialize(listOf(User("Bob"))).execute()
     val request = server.takeRequest()
-    assertEquals("""{"name":"Bob"}""", request.body.readUtf8())
+    assertEquals("""[{"name":"Bob"}]""", request.body.readUtf8())
     assertEquals("application/json; charset=utf-8", request.headers["Content-Type"])
   }
 }
