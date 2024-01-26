@@ -61,6 +61,7 @@ subprojects {
       check('UnusedMethod', CheckSeverity.ERROR)
       check('UnusedNestedClass', CheckSeverity.ERROR)
       check('UnusedVariable', CheckSeverity.ERROR)
+      check('WildcardImport', CheckSeverity.ERROR)
     }
   }
 

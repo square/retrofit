@@ -44,7 +44,11 @@ import okio.Okio;
 import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
-import retrofit2.http.*;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.http.Path;
+import retrofit2.http.Streaming;
 
 public final class CallTest {
   @Rule public final MockWebServer server = new MockWebServer();
