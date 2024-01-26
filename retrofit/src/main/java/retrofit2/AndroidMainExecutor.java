@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2013 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,15 @@
  */
 package retrofit2;
 
-public final class RoboVmPlatformTest {
-  public static void main(String[] args) {
-    Retrofit retrofit = new Retrofit.Builder()
-      .baseUrl("https://example.com")
-      .callFactory(c -> { throw new AssertionError(); })
-      .build();
+import android.os.Handler;
+import android.os.Looper;
+import java.util.concurrent.Executor;
 
-    if (retrofit.callAdapterFactories().size() > 1) {
-      // Everyone gets the callback executor adapter. If RoboVM was correctly detected it will NOT
-      // get the Java 8-supporting CompletableFuture call adapter factory.
-      System.exit(1);
-    }
-  }
+final class AndroidMainExecutor implements Executor {
+  private final Handler handler = new Handler(Looper.getMainLooper());
 
-  private RoboVmPlatformTest() {
+  @Override
+  public void execute(Runnable r) {
+    handler.post(r);
   }
 }

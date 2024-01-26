@@ -171,9 +171,9 @@ public final class Retrofit {
                   return method.invoke(this, args);
                 }
                 args = args != null ? args : emptyArgs;
-                Platform platform = Platform.get();
-                return platform.isDefaultMethod(method)
-                    ? platform.invokeDefaultMethod(method, service, proxy, args)
+                DefaultMethodSupport defaultMethodSupport = Platform.defaultMethodSupport;
+                return defaultMethodSupport.isDefaultMethod(method)
+                    ? defaultMethodSupport.invokeDefaultMethod(method, service, proxy, args)
                     : loadServiceMethod(method).invoke(args);
               }
             });
@@ -200,9 +200,9 @@ public final class Retrofit {
     }
 
     if (validateEagerly) {
-      Platform platform = Platform.get();
+      DefaultMethodSupport defaultMethodSupport = Platform.defaultMethodSupport;
       for (Method method : service.getDeclaredMethods()) {
-        if (!platform.isDefaultMethod(method)
+        if (!defaultMethodSupport.isDefaultMethod(method)
             && !Modifier.isStatic(method.getModifiers())
             && !method.isSynthetic()) {
           loadServiceMethod(method);
@@ -656,8 +656,6 @@ public final class Retrofit {
         throw new IllegalStateException("Base URL required.");
       }
 
-      Platform platform = Platform.get();
-
       okhttp3.Call.Factory callFactory = this.callFactory;
       if (callFactory == null) {
         callFactory = new OkHttpClient();
@@ -665,18 +663,20 @@ public final class Retrofit {
 
       Executor callbackExecutor = this.callbackExecutor;
       if (callbackExecutor == null) {
-        callbackExecutor = platform.defaultCallbackExecutor();
+        callbackExecutor = Platform.callbackExecutor;
       }
+
+      BuiltInFactories builtInFactories = Platform.builtInFactories;
 
       // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
       List<? extends CallAdapter.Factory> defaultCallAdapterFactories =
-          platform.createDefaultCallAdapterFactories(callbackExecutor);
+          builtInFactories.createDefaultCallAdapterFactories(callbackExecutor);
       callAdapterFactories.addAll(defaultCallAdapterFactories);
 
       // Make a defensive copy of the converters.
       List<? extends Converter.Factory> defaultConverterFactories =
-          platform.createDefaultConverterFactories();
+          builtInFactories.createDefaultConverterFactories();
       int defaultConverterFactoriesSize = defaultConverterFactories.size();
       List<Converter.Factory> converterFactories =
           new ArrayList<>(1 + this.converterFactories.size() + defaultConverterFactoriesSize);

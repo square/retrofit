@@ -6,7 +6,9 @@ rootProject.name = 'retrofit-root'
 
 include ':retrofit'
 include ':retrofit-bom'
+
 include ':retrofit:android-test'
+include ':retrofit:java-test'
 include ':retrofit:kotlin-test'
 include ':retrofit:robovm-test'
 include ':retrofit:test-helpers'
