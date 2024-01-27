@@ -18,6 +18,7 @@ package retrofit2;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -176,32 +177,53 @@ abstract class ParameterHandler<T> {
         throw Utils.parameterError(method, p, "Query map was null");
       }
 
+      boolean fail = false;
+      String entryKey = null;
+      T entryValue = null;
       for (Map.Entry<String, T> entry : value.entrySet()) {
-        String entryKey = entry.getKey();
+        entryKey = entry.getKey();
         if (entryKey == null) {
           throw Utils.parameterError(method, p, "Query map contained null key.");
         }
-        T entryValue = entry.getValue();
+        entryValue = entry.getValue();
         if (entryValue == null) {
           throw Utils.parameterError(
               method, p, "Query map contained null value for key '" + entryKey + "'.");
         }
-
-        String convertedEntryValue = valueConverter.convert(entryValue);
-        if (convertedEntryValue == null) {
-          throw Utils.parameterError(
-              method,
-              p,
-              "Query map value '"
-                  + entryValue
-                  + "' converted to null by "
-                  + valueConverter.getClass().getName()
-                  + " for key '"
-                  + entryKey
-                  + "'.");
+        String convertedEntryValue;
+        if (entryValue instanceof Iterable) {
+          Iterator i = ((Iterable) entryValue).iterator();
+          while (i.hasNext()) {
+            Object t = i.next();
+            if (t == null) {
+              fail = true;
+              break;
+            } else {
+              convertedEntryValue = valueConverter.convert((T) t);
+              builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+            }
+          }
+        } else {
+          convertedEntryValue = valueConverter.convert(entryValue);
+          if (convertedEntryValue == null) {
+            fail = true;
+            break;
+          } else {
+            builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+          }
         }
-
-        builder.addQueryParam(entryKey, convertedEntryValue, encoded);
+      }
+      if (fail) {
+        throw Utils.parameterError(
+            method,
+            p,
+            "Query map value '"
+                + entryValue
+                + "' converted to null by "
+                + valueConverter.getClass().getName()
+                + " for key '"
+                + entryKey
+                + "'.");
       }
     }
   }

@@ -25,6 +25,7 @@ import static retrofit2.TestingUtils.buildRequest;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1592,6 +1593,69 @@ public final class RequestFactoryTest {
     assertThat(request.headers().size()).isEqualTo(0);
     assertThat(request.url().toString())
         .isEqualTo("http://example.com/foo/bar/?kit=k%20t&pi%20ng=p%20g");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test
+  public void getWithQueryParamMultiValueMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap(encoded = true) Map<String, Object> query) {
+        return null;
+      }
+    }
+    Map<String, Object> map = new HashMap<>();
+    List<String> param1 = new ArrayList<>();
+    param1.add("a");
+    param1.add("b");
+    map.put("string", param1);
+    Request request = buildRequest(Example.class, map);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    HttpUrl url = request.url();
+    assertThat(url.toString()).isEqualTo("http://example.com/foo/bar/?string=a&string=b");
+    assertThat(request.body()).isNull();
+  }
+
+  @Test
+  public void getWithQueryParamMultiValueMapWithNull() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap(encoded = true) Map<String, Object> query) {
+        return null;
+      }
+    }
+    Map<String, Object> map = new HashMap<>();
+    List<String> param1 = new ArrayList<>();
+    param1.add("a");
+    param1.add("b");
+    param1.add(null);
+    map.put("string", param1);
+    try {
+      Request request = buildRequest(Example.class, map);
+      fail();
+    } catch (IllegalArgumentException e) {;
+    }
+  }
+
+  @Test
+  public void getWithEncodedQueryParamMultiValueMap() {
+    class Example {
+      @GET("/foo/bar/") //
+      Call<ResponseBody> method(@QueryMap(encoded = true) Map<String, Object> query) {
+        return null;
+      }
+    }
+    Map<String, Object> map = new HashMap<>();
+    List<String> param1 = new ArrayList<>();
+    param1.add("a%20a");
+    param1.add("b%20b");
+    map.put("string", param1);
+    Request request = buildRequest(Example.class, map);
+    assertThat(request.method()).isEqualTo("GET");
+    assertThat(request.headers().size()).isZero();
+    HttpUrl url = request.url();
+    assertThat(url.toString()).isEqualTo("http://example.com/foo/bar/?string=a%20a&string=b%20b");
     assertThat(request.body()).isNull();
   }
 
