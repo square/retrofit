@@ -76,6 +76,7 @@ final class RequestFactory {
   private final boolean hasBody;
   private final boolean isFormEncoded;
   private final boolean isMultipart;
+  private final String multipartType;
   private final ParameterHandler<?>[] parameterHandlers;
   final boolean isKotlinSuspendFunction;
 
@@ -89,6 +90,7 @@ final class RequestFactory {
     hasBody = builder.hasBody;
     isFormEncoded = builder.isFormEncoded;
     isMultipart = builder.isMultipart;
+    multipartType = builder.multipartType;
     parameterHandlers = builder.parameterHandlers;
     isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
   }
@@ -116,7 +118,8 @@ final class RequestFactory {
             contentType,
             hasBody,
             isFormEncoded,
-            isMultipart);
+            isMultipart,
+            multipartType);
 
     if (isKotlinSuspendFunction) {
       // The Continuation is the last parameter and the handlers array contains null at that index.
@@ -161,6 +164,7 @@ final class RequestFactory {
     boolean hasBody;
     boolean isFormEncoded;
     boolean isMultipart;
+    @Nullable String multipartType;
     @Nullable String relativeUrl;
     @Nullable Headers headers;
     @Nullable MediaType contentType;
@@ -252,6 +256,7 @@ final class RequestFactory {
           throw methodError(method, "Only one encoding annotation is allowed.");
         }
         isMultipart = true;
+        multipartType = ((Multipart) annotation).type();
       } else if (annotation instanceof FormUrlEncoded) {
         if (isMultipart) {
           throw methodError(method, "Only one encoding annotation is allowed.");

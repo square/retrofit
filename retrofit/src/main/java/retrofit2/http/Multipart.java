@@ -29,4 +29,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface Multipart {}
+public @interface Multipart {
+  /** Sets the type(MediaType) on MultipartBody. When calling the */
+  String type() default "multipart/form-data";
+}
