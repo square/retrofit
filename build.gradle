@@ -94,7 +94,7 @@ subprojects {
       }
       kotlin {
         ktlint(libs.ktlint.get().version)
-        target 'src/**/*.kt'
+        target '**/src/**/*.kt'
       }
     }
   }
