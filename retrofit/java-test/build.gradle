@@ -1,0 +1,34 @@
+apply plugin: 'java-library'
+
+dependencies {
+  testImplementation projects.retrofit
+  testImplementation projects.retrofit.testHelpers
+  testImplementation libs.junit
+  testImplementation libs.truth
+  testImplementation libs.guava
+  testImplementation libs.mockwebserver
+}
+
+// Create a test task for each supported JDK.
+(8..21).each { majorVersion ->
+  def jdkTest = tasks.register("testJdk$majorVersion", Test) {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(majorVersion)
+      vendor = JvmVendorSpec.AZUL
+    }
+
+    description = "Runs the test suite on JDK $majorVersion"
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+
+    // Copy inputs from normal Test task.
+    def testTask = tasks.getByName("test")
+    classpath = testTask.classpath
+    testClassesDirs = testTask.testClassesDirs
+  }
+  tasks.named("check").configure {
+    dependsOn(jdkTest)
+  }
+}
+
+// We don't need the built-in task which uses Gradle's JVM given the above variants.
+tasks.getByName('test').enabled = false

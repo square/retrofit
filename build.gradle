@@ -90,7 +90,7 @@ subprojects {
         googleJavaFormat(libs.googleJavaFormat.get().version)
           .formatJavadoc(false)
         removeUnusedImports()
-        target 'src/*/java/**/*.java'
+        target 'src/*/java*/**/*.java'
       }
       kotlin {
         ktlint(libs.ktlint.get().version)
