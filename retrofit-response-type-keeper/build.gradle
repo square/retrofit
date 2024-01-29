@@ -1,0 +1,15 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.kotlin.kapt'
+apply plugin: 'com.vanniktech.maven.publish'
+
+dependencies {
+  compileOnly libs.autoService.annotations
+  compileOnly libs.incap.runtime
+  kapt libs.autoService.compiler
+  kapt libs.incap.processor
+
+  testImplementation libs.junit
+  testImplementation libs.compileTesting
+  testImplementation libs.truth
+  testImplementation projects.retrofit
+}

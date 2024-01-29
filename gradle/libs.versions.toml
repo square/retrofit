@@ -18,6 +18,8 @@ okhttp = "3.14.9"
 protobuf = "3.25.2"
 robovm = "2.3.14"
 kotlinx-serialization = "1.6.2"
+autoService = "1.1.1"
+incap = "1.0.0"
 
 [libraries]
 androidPlugin = { module = "com.android.tools.build:gradle", version = "8.2.2" }
@@ -40,6 +42,12 @@ animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotati
 protobufPlugin = "com.google.protobuf:protobuf-gradle-plugin:0.9.4"
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
+
+incap-runtime = { module = "net.ltgt.gradle.incap:incap", version.ref = "incap" }
+incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.ref = "incap" }
+
+autoService-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
+autoService-compiler = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
 
 kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.7.3" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
@@ -71,3 +79,4 @@ jsoup = { module = "org.jsoup:jsoup", version = "1.17.2" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.19.2"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.1.1"
+compileTesting = "com.google.testing.compile:compile-testing:0.21.0"
