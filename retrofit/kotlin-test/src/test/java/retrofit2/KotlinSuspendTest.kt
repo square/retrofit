@@ -35,7 +35,6 @@ import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.helpers.ToStringConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.HEAD
@@ -61,7 +60,7 @@ class KotlinSuspendTest {
     suspend fun headUnit()
 
     @GET("user")
-    suspend fun getUser(): Result<User>
+    suspend fun getString(): Result<String>
 
     @HEAD("user")
     suspend fun headUser(): Result<Unit>
@@ -76,8 +75,6 @@ class KotlinSuspendTest {
     @GET("/")
     suspend fun bodyWithCallType(): Call<String>
   }
-
-  data class User(val id: Int, val name: String, val email: String)
 
   @Test fun body() {
     val retrofit = Retrofit.Builder()
@@ -399,27 +396,18 @@ class KotlinSuspendTest {
   }
 
   @Test fun returnResultType() = runBlocking {
-    val responseBody = """
-          {
-            "id": 1,
-            "name": "John Doe",
-            "email": "john.doe@example.com"
-          }
-    """.trimIndent()
     val retrofit = Retrofit.Builder()
       .baseUrl(server.url("/"))
       .addCallAdapterFactory(ResultCallAdapterFactory.create())
-      .addConverterFactory(GsonConverterFactory.create())
+      .addConverterFactory(ToStringConverterFactory())
       .build()
     val service = retrofit.create(Service::class.java)
 
     // Successful response with body.
-    server.enqueue(MockResponse().setBody(responseBody))
-    service.getUser().let { result ->
+    server.enqueue(MockResponse().setBody("Hello World"))
+    service.getString().let { result ->
       assertThat(result.isSuccess).isTrue()
-      assertThat(result.getOrThrow().id).isEqualTo(1)
-      assertThat(result.getOrThrow().name).isEqualTo("John Doe")
-      assertThat(result.getOrThrow().email).isEqualTo("john.doe@example.com")
+      assertThat(result.getOrThrow()).isEqualTo("Hello World")
     }
 
     // Successful response without body.
@@ -431,7 +419,7 @@ class KotlinSuspendTest {
 
     // Error response without body.
     server.enqueue(MockResponse().setResponseCode(404))
-    service.getUser().let { result ->
+    service.getString().let { result ->
       assertThat(result.isFailure).isTrue()
       assertThat(result.exceptionOrNull()).let {
         it.hasMessageThat().isEqualTo("HTTP 404 Client Error")
@@ -441,7 +429,7 @@ class KotlinSuspendTest {
 
     // Network error.
     server.shutdown()
-    service.getUser().let { result ->
+    service.getString().let { result ->
       assertThat(result.isFailure).isTrue()
       assertThat(result.exceptionOrNull()).isInstanceOf(IOException::class.java)
     }
