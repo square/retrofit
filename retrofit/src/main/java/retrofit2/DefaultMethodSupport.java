@@ -15,40 +15,36 @@
  */
 package retrofit2;
 
-import android.annotation.TargetApi;
-import android.os.Build;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
-class DefaultMethodSupport {
-  boolean isDefaultMethod(Method method) {
-    return false;
-  }
+/**
+ * From Java 8 to Java 13, the only way to invoke a default method on a proxied interface is by
+ * reflectively creating a trusted {@link Lookup} to invoke a method handle.
+ * <p>
+ * Note: This class has multi-release jar variants for newer versions of Java.
+ */
+final class DefaultMethodSupport {
+  private static @Nullable Constructor<Lookup> lookupConstructor;
 
   @Nullable
-  Object invokeDefaultMethod(
+  static Object invoke(
       Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
       throws Throwable {
-    throw new AssertionError();
+    Constructor<Lookup> constructor = lookupConstructor;
+    if (constructor == null) {
+      constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
+      constructor.setAccessible(true);
+      lookupConstructor = constructor;
+    }
+    return constructor
+        .newInstance(declaringClass, -1 /* trusted */)
+        .unreflectSpecial(method, declaringClass)
+        .bindTo(proxy)
+        .invokeWithArguments(args);
   }
 
-  /**
-   * Android does not support MR jars, so this extends the baseline JVM support which targets
-   * Java 8 APIs. Default methods and the reflection API to detect them were added to API 24
-   * as part of the initial Java 8 set. MethodHandle, our means of invoking the default method
-   * through the proxy, was not added until API 26.
-   */
-  @TargetApi(24)
-  static final class Android24 extends DefaultMethodSupportJvm {
-    @Override
-    Object invokeDefaultMethod(
-        Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
-        throws Throwable {
-      if (Build.VERSION.SDK_INT < 26) {
-        throw new UnsupportedOperationException(
-            "Calling default methods on API 24 and 25 is not supported");
-      }
-      return super.invokeDefaultMethod(method, declaringClass, proxy, args);
-    }
-  }
+  private DefaultMethodSupport() {}
 }

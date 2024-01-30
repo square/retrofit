@@ -24,15 +24,9 @@ import javax.annotation.Nullable;
  * <p>
  * https://bugs.openjdk.java.net/browse/JDK-8209005
  */
-class DefaultMethodSupportJvm extends DefaultMethodSupport {
-  @Override
-  boolean isDefaultMethod(Method method) {
-    return method.isDefault();
-  }
-
-  @Override
+final class DefaultMethodSupport {
   @Nullable
-  Object invokeDefaultMethod(
+  static Object invoke(
       Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
       throws Throwable {
     return MethodHandles.lookup()
@@ -40,4 +34,6 @@ class DefaultMethodSupportJvm extends DefaultMethodSupport {
         .bindTo(proxy)
         .invokeWithArguments(args);
   }
+
+  private DefaultMethodSupport() {}
 }
