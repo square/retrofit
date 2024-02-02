@@ -59,11 +59,13 @@ final class Utils {
 
   static RuntimeException parameterError(
       Method method, Throwable cause, int p, String message, Object... args) {
-    return methodError(method, cause, message + " (parameter #" + (p + 1) + ")", args);
+    String paramDesc = Platform.reflection.describeMethodParameter(method, p);
+    return methodError(method, cause, message + " (" + paramDesc + ")", args);
   }
 
   static RuntimeException parameterError(Method method, int p, String message, Object... args) {
-    return methodError(method, message + " (parameter #" + (p + 1) + ")", args);
+    String paramDesc = Platform.reflection.describeMethodParameter(method, p);
+    return methodError(method, message + " (" + paramDesc + ")", args);
   }
 
   static Class<?> getRawType(Type type) {

@@ -18,6 +18,7 @@ package retrofit2;
 import android.annotation.TargetApi;
 import android.os.Build;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import javax.annotation.Nullable;
 
 class Reflection {
@@ -32,6 +33,10 @@ class Reflection {
     throw new AssertionError();
   }
 
+  String describeMethodParameter(Method method, int index) {
+    return "parameter #" + (index + 1);
+  }
+
   static class Java8 extends Reflection {
     @Override
     boolean isDefaultMethod(Method method) {
@@ -44,16 +49,30 @@ class Reflection {
         throws Throwable {
       return DefaultMethodSupport.invoke(method, declaringClass, proxy, args);
     }
+
+    @Override
+    String describeMethodParameter(Method method, int index) {
+      Parameter parameter = method.getParameters()[index];
+      if (parameter.isNamePresent()) {
+        return "parameter '" + parameter.getName() + '\'';
+      }
+      return super.describeMethodParameter(method, index);
+    }
   }
 
   /**
-   * Android does not support MR jars, so this extends the Java 8 support which will use the Java 8
-   * support class. Default methods and the reflection API to detect them were added to API 24
+   * Android does not support MR jars, so this uses the Java 8 support class.
+   * Default methods and the reflection API to detect them were added to API 24
    * as part of the initial Java 8 set. MethodHandle, our means of invoking the default method
    * through the proxy, was not added until API 26.
    */
   @TargetApi(24)
-  static final class Android24 extends Java8 {
+  static final class Android24 extends Reflection {
+    @Override
+    boolean isDefaultMethod(Method method) {
+      return method.isDefault();
+    }
+
     @Override
     Object invokeDefaultMethod(
         Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
@@ -62,7 +81,7 @@ class Reflection {
         throw new UnsupportedOperationException(
             "Calling default methods on API 24 and 25 is not supported");
       }
-      return super.invokeDefaultMethod(method, declaringClass, proxy, args);
+      return DefaultMethodSupport.invoke(method, declaringClass, proxy, args);
     }
   }
 }
