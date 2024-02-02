@@ -20,17 +20,13 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 /** Java 16 finally has a public API for invoking default methods on a proxy. */
-class DefaultMethodSupportJvm extends DefaultMethodSupport {
-  @Override
-  boolean isDefaultMethod(Method method) {
-    return method.isDefault();
-  }
-
-  @Override
+final class DefaultMethodSupport {
   @Nullable
-  Object invokeDefaultMethod(
+  static Object invoke(
       Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
       throws Throwable {
     return InvocationHandler.invokeDefault(proxy, method, args);
   }
+
+  private DefaultMethodSupport() {}
 }

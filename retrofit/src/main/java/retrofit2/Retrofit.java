@@ -171,9 +171,9 @@ public final class Retrofit {
                   return method.invoke(this, args);
                 }
                 args = args != null ? args : emptyArgs;
-                DefaultMethodSupport defaultMethodSupport = Platform.defaultMethodSupport;
-                return defaultMethodSupport.isDefaultMethod(method)
-                    ? defaultMethodSupport.invokeDefaultMethod(method, service, proxy, args)
+                Reflection reflection = Platform.reflection;
+                return reflection.isDefaultMethod(method)
+                    ? reflection.invokeDefaultMethod(method, service, proxy, args)
                     : loadServiceMethod(method).invoke(args);
               }
             });
@@ -200,9 +200,9 @@ public final class Retrofit {
     }
 
     if (validateEagerly) {
-      DefaultMethodSupport defaultMethodSupport = Platform.defaultMethodSupport;
+      Reflection reflection = Platform.reflection;
       for (Method method : service.getDeclaredMethods()) {
-        if (!defaultMethodSupport.isDefaultMethod(method)
+        if (!reflection.isDefaultMethod(method)
             && !Modifier.isStatic(method.getModifiers())
             && !method.isSynthetic()) {
           loadServiceMethod(method);
