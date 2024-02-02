@@ -15,6 +15,8 @@ include ':retrofit:test-helpers'
 
 include ':retrofit-mock'
 
+include ':retrofit-response-type-keeper'
+
 include ':retrofit-adapters:guava'
 include ':retrofit-adapters:java8'
 include ':retrofit-adapters:rxjava'
