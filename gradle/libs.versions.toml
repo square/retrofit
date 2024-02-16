@@ -17,7 +17,7 @@ kotlin = "1.9.22"
 okhttp = "3.14.9"
 protobuf = "3.25.3"
 robovm = "2.3.14"
-kotlinx-serialization = "1.6.2"
+kotlinx-serialization = "1.6.3"
 autoService = "1.1.1"
 incap = "1.0.0"
 
