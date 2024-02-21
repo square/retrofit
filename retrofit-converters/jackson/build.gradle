@@ -9,6 +9,7 @@ dependencies {
   testImplementation libs.junit
   testImplementation libs.truth
   testImplementation libs.mockwebserver
+  testImplementation libs.jacksonDataformatCbor
 }
 
 jar {
