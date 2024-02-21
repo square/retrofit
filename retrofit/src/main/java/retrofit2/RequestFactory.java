@@ -63,10 +63,11 @@ import retrofit2.http.Tag;
 import retrofit2.http.Url;
 
 final class RequestFactory {
-  static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
-    return new Builder(retrofit, method).build();
+  static RequestFactory parseAnnotations(Retrofit retrofit, Class<?> service, Method method) {
+    return new Builder(retrofit, service, method).build();
   }
 
+  private final Class<?> service;
   private final Method method;
   private final HttpUrl baseUrl;
   final String httpMethod;
@@ -80,6 +81,7 @@ final class RequestFactory {
   final boolean isKotlinSuspendFunction;
 
   RequestFactory(Builder builder) {
+    service = builder.service;
     method = builder.method;
     baseUrl = builder.retrofit.baseUrl;
     httpMethod = builder.httpMethod;
@@ -93,7 +95,7 @@ final class RequestFactory {
     isKotlinSuspendFunction = builder.isKotlinSuspendFunction;
   }
 
-  okhttp3.Request create(Object[] args) throws IOException {
+  okhttp3.Request create(@Nullable Object instance, Object[] args) throws IOException {
     @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
     ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
@@ -129,7 +131,10 @@ final class RequestFactory {
       handlers[p].apply(requestBuilder, args[p]);
     }
 
-    return requestBuilder.get().tag(Invocation.class, new Invocation(method, argumentList)).build();
+    return requestBuilder
+        .get()
+        .tag(Invocation.class, new Invocation(service, instance, method, argumentList))
+        .build();
   }
 
   /**
@@ -144,6 +149,7 @@ final class RequestFactory {
     private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
 
     final Retrofit retrofit;
+    final Class<?> service;
     final Method method;
     final Annotation[] methodAnnotations;
     final Annotation[][] parameterAnnotationsArray;
@@ -168,8 +174,9 @@ final class RequestFactory {
     @Nullable ParameterHandler<?>[] parameterHandlers;
     boolean isKotlinSuspendFunction;
 
-    Builder(Retrofit retrofit, Method method) {
+    Builder(Retrofit retrofit, Class<?> service, Method method) {
       this.retrofit = retrofit;
+      this.service = service;
       this.method = method;
       this.methodAnnotations = method.getAnnotations();
       this.parameterTypes = method.getGenericParameterTypes();
