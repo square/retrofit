@@ -23,7 +23,7 @@ incap = "1.0.0"
 jackson = "2.16.1"
 
 [libraries]
-androidPlugin = { module = "com.android.tools.build:gradle", version = "8.2.2" }
+androidPlugin = { module = "com.android.tools.build:gradle", version = "8.3.0" }
 robovmPlugin = { module = "com.mobidevelop.robovm:robovm-gradle-plugin", version.ref = "robovm" }
 dokkaPlugin = "org.jetbrains.dokka:dokka-gradle-plugin:1.9.10"
 gradleMavenPublishPlugin = "com.vanniktech:gradle-maven-publish-plugin:0.27.0"
