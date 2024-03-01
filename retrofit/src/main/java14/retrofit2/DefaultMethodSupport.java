@@ -15,32 +15,21 @@
  */
 package retrofit2;
 
-import java.lang.invoke.MethodHandles.Lookup;
-import java.lang.reflect.Constructor;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 /**
- * From Java 8 to Java 13, the only way to invoke a default method on a proxied interface is by
- * reflectively creating a trusted {@link Lookup} to invoke a method handle.
+ * Java 14 allows a regular (i.e., non-trusted) lookup to succeed for invoking default methods.
  * <p>
- * Note: This class has multi-release jar variants for newer versions of Java.
+ * https://bugs.openjdk.java.net/browse/JDK-8209005
  */
 final class DefaultMethodSupport {
-  private static @Nullable Constructor<Lookup> lookupConstructor;
-
   @Nullable
   static Object invoke(
       Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
       throws Throwable {
-    Constructor<Lookup> constructor = lookupConstructor;
-    if (constructor == null) {
-      constructor = Lookup.class.getDeclaredConstructor(Class.class, int.class);
-      constructor.setAccessible(true);
-      lookupConstructor = constructor;
-    }
-    return constructor
-        .newInstance(declaringClass, -1 /* trusted */)
+    return MethodHandles.lookup()
         .unreflectSpecial(method, declaringClass)
         .bindTo(proxy)
         .invokeWithArguments(args);

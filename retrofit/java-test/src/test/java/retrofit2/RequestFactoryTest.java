@@ -158,7 +158,7 @@ public final class RequestFactoryTest {
           .hasMessageThat()
           .isEqualTo(
               "@Path parameter name must match \\{([a-zA-Z][a-zA-Z0-9_-]*)\\}."
-                  + " Found: hey! (parameter #1)\n    for method Example.method");
+                  + " Found: hey! (parameter 'thing')\n    for method Example.method");
     }
   }
 
@@ -197,7 +197,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Multiple Retrofit annotations found, only one allowed. (parameter #1)\n    for method Example.method");
+              "Multiple Retrofit annotations found, only one allowed. (parameter 'o')\n    for method Example.method");
     }
   }
 
@@ -270,7 +270,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part parameters can only be used with multipart encoding. (parameter #1)\n    for method Example.method");
+              "@Part parameters can only be used with multipart encoding. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -289,7 +289,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@PartMap parameters can only be used with multipart encoding. (parameter #1)\n    for method Example.method");
+              "@PartMap parameters can only be used with multipart encoding. (parameter 'params')\n    for method Example.method");
     }
   }
 
@@ -348,7 +348,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Field parameters can only be used with form encoding. (parameter #1)\n    for method Example.method");
+              "@Field parameters can only be used with form encoding. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -367,7 +367,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@FieldMap parameters can only be used with form encoding. (parameter #1)\n    for method Example.method");
+              "@FieldMap parameters can only be used with form encoding. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -465,7 +465,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "URL \"/{a}\" does not contain \"{b}\". (parameter #2)\n    for method Example.method");
+              "URL \"/{a}\" does not contain \"{b}\". (parameter 'b')\n    for method Example.method");
     }
   }
 
@@ -483,7 +483,8 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("No Retrofit annotation found. (parameter #1)\n    for method Example.method");
+          .isEqualTo(
+              "No Retrofit annotation found. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -520,7 +521,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@QueryMap parameter type must be Map. (parameter #1)\n    for method Example.method");
+              "@QueryMap parameter type must be Map. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -557,7 +558,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("Query map was null (parameter #1)\n" + "    for method Example.method");
+          .isEqualTo("Query map was null (parameter 'a')\n" + "    for method Example.method");
     }
   }
 
@@ -581,7 +582,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Query map contained null key. (parameter #1)\n" + "    for method Example.method");
+              "Query map contained null key. (parameter 'a')\n" + "    for method Example.method");
     }
   }
 
@@ -605,7 +606,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Query map contained null value for key 'kit'. (parameter #1)\n"
+              "Query map contained null value for key 'kit'. (parameter 'a')\n"
                   + "    for method Example.method");
     }
   }
@@ -648,7 +649,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@HeaderMap parameter type must be Map or Headers. (parameter #2)\n    for method Example.method");
+              "@HeaderMap parameter type must be Map or Headers. (parameter 'headerMap')\n    for method Example.method");
     }
   }
 
@@ -687,7 +688,8 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("Header map was null. (parameter #1)\n" + "    for method Example.method");
+          .isEqualTo(
+              "Header map was null. (parameter 'headers')\n" + "    for method Example.method");
     }
   }
 
@@ -711,7 +713,8 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Header map contained null key. (parameter #1)\n" + "    for method Example.method");
+              "Header map contained null key. (parameter 'headers')\n"
+                  + "    for method Example.method");
     }
   }
 
@@ -735,7 +738,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Header map contained null value for key 'Accept-Charset'. (parameter #1)\n"
+              "Header map contained null value for key 'Accept-Charset'. (parameter 'headers')\n"
                   + "    for method Example.method");
     }
   }
@@ -807,7 +810,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Headers parameter must not be null. (parameter #1)\n"
+              "Headers parameter must not be null. (parameter 'headers')\n"
                   + "    for method Example.method");
     }
   }
@@ -850,7 +853,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Multiple @Body method annotations found. (parameter #2)\n    for method Example.method");
+              "Multiple @Body method annotations found. (parameter 'o2')\n    for method Example.method");
     }
   }
 
@@ -870,7 +873,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Body parameters cannot be used with form or multi-part encoding. (parameter #2)\n    for method Example.method");
+              "@Body parameters cannot be used with form or multi-part encoding. (parameter 'o2')\n    for method Example.method");
     }
   }
 
@@ -1185,7 +1188,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage())
           .isEqualTo(
-              "Path parameter \"ping\" value must not be null. (parameter #1)\n"
+              "Path parameter \"ping\" value must not be null. (parameter 'ping')\n"
                   + "    for method Example.method");
     }
   }
@@ -1310,7 +1313,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "A @Path parameter must not come after a @Query. (parameter #2)\n"
+              "A @Path parameter must not come after a @Query. (parameter 'ping')\n"
                   + "    for method Example.method");
     }
   }
@@ -1331,7 +1334,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "A @Path parameter must not come after a @QueryName. (parameter #2)\n"
+              "A @Path parameter must not come after a @QueryName. (parameter 'ping')\n"
                   + "    for method Example.method");
     }
   }
@@ -1352,7 +1355,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "A @Path parameter must not come after a @QueryMap. (parameter #2)\n"
+              "A @Path parameter must not come after a @QueryMap. (parameter 'ping')\n"
                   + "    for method Example.method");
     }
   }
@@ -1722,7 +1725,8 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("@Url parameter is null. (parameter #1)\n" + "    for method Example.method");
+          .isEqualTo(
+              "@Url parameter is null. (parameter 'url')\n" + "    for method Example.method");
     }
   }
 
@@ -1743,7 +1747,7 @@ public final class RequestFactoryTest {
           .hasMessageThat()
           .isEqualTo(
               "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type."
-                  + " (parameter #1)\n"
+                  + " (parameter 'url')\n"
                   + "    for method Example.method");
     }
   }
@@ -1764,7 +1768,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Url cannot be used with @GET URL (parameter #1)\n"
+              "@Url cannot be used with @GET URL (parameter 'url')\n"
                   + "    for method Example.method");
     }
   }
@@ -1805,7 +1809,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Path parameters may not be used with @Url. (parameter #2)\n"
+              "@Path parameters may not be used with @Url. (parameter 'hey')\n"
                   + "    for method Example.method");
     }
   }
@@ -1826,7 +1830,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Path can only be used with relative url on @GET (parameter #1)\n"
+              "@Path can only be used with relative url on @GET (parameter 'hey')\n"
                   + "    for method Example.method");
     }
   }
@@ -1847,7 +1851,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "A @Url parameter must not come after a @Query. (parameter #2)\n"
+              "A @Url parameter must not come after a @Query. (parameter 'url')\n"
                   + "    for method Example.method");
     }
   }
@@ -1868,7 +1872,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "A @Url parameter must not come after a @QueryName. (parameter #2)\n"
+              "A @Url parameter must not come after a @QueryName. (parameter 'url')\n"
                   + "    for method Example.method");
     }
   }
@@ -1889,7 +1893,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "A @Url parameter must not come after a @QueryMap. (parameter #2)\n"
+              "A @Url parameter must not come after a @QueryMap. (parameter 'url')\n"
                   + "    for method Example.method");
     }
   }
@@ -1985,7 +1989,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage())
           .isEqualTo(
-              "Body parameter value must not be null. (parameter #1)\n"
+              "Body parameter value must not be null. (parameter 'body')\n"
                   + "    for method Example.method");
     }
   }
@@ -2084,7 +2088,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter #1)\n"
+              "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter 'part')\n"
                   + "    for method Example.method");
     }
   }
@@ -2106,7 +2110,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter #1)\n"
+              "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter 'part')\n"
                   + "    for method Example.method");
     }
   }
@@ -2128,7 +2132,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter #1)\n"
+              "@Part annotation must supply a name or use MultipartBody.Part parameter type. (parameter 'part')\n"
                   + "    for method Example.method");
     }
   }
@@ -2150,7 +2154,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter #1)\n"
+              "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter 'part')\n"
                   + "    for method Example.method");
     }
   }
@@ -2317,7 +2321,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter #1)\n"
+              "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter 'part')\n"
                   + "    for method Example.method");
     }
   }
@@ -2339,7 +2343,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter #1)\n"
+              "@Part parameters using the MultipartBody.Part must not include a part name in the annotation. (parameter 'part')\n"
                   + "    for method Example.method");
     }
   }
@@ -2462,7 +2466,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@PartMap keys must be of type String: class java.lang.Object (parameter #1)\n"
+              "@PartMap keys must be of type String: class java.lang.Object (parameter 'parts')\n"
                   + "    for method Example.method");
     }
   }
@@ -2484,7 +2488,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@PartMap values cannot be MultipartBody.Part. Use @Part List<Part> or a different value type instead. (parameter #1)\n"
+              "@PartMap values cannot be MultipartBody.Part. Use @Part List<Part> or a different value type instead. (parameter 'parts')\n"
                   + "    for method Example.method");
     }
   }
@@ -2505,7 +2509,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("Part map was null. (parameter #1)\n" + "    for method Example.method");
+          .isEqualTo("Part map was null. (parameter 'parts')\n" + "    for method Example.method");
     }
   }
 
@@ -2530,7 +2534,8 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Part map contained null key. (parameter #1)\n" + "    for method Example.method");
+              "Part map contained null key. (parameter 'parts')\n"
+                  + "    for method Example.method");
     }
   }
 
@@ -2555,7 +2560,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Part map contained null value for key 'kit'. (parameter #1)\n"
+              "Part map contained null value for key 'kit'. (parameter 'parts')\n"
                   + "    for method Example.method");
     }
   }
@@ -2577,7 +2582,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@PartMap parameter type must be Map. (parameter #1)\n    for method Example.method");
+              "@PartMap parameter type must be Map. (parameter 'parts')\n    for method Example.method");
     }
   }
 
@@ -2785,7 +2790,7 @@ public final class RequestFactoryTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("Field map was null. (parameter #1)\n" + "    for method Example.method");
+          .isEqualTo("Field map was null. (parameter 'a')\n" + "    for method Example.method");
     }
   }
 
@@ -2810,7 +2815,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Field map contained null key. (parameter #1)\n" + "    for method Example.method");
+              "Field map contained null key. (parameter 'a')\n" + "    for method Example.method");
     }
   }
 
@@ -2835,7 +2840,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "Field map contained null value for key 'foo'. (parameter #1)\n"
+              "Field map contained null value for key 'foo'. (parameter 'a')\n"
                   + "    for method Example.method");
     }
   }
@@ -2856,7 +2861,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@FieldMap parameter type must be Map. (parameter #1)\n    for method Example.method");
+              "@FieldMap parameter type must be Map. (parameter 'a')\n    for method Example.method");
     }
   }
 
@@ -3355,7 +3360,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Tag type java.lang.String is duplicate of parameter #1 and would always overwrite its value. (parameter #2)\n"
+              "@Tag type java.lang.String is duplicate of parameter 'one' and would always overwrite its value. (parameter 'two')\n"
                   + "    for method Example.method");
     }
   }
@@ -3376,7 +3381,7 @@ public final class RequestFactoryTest {
       assertThat(e)
           .hasMessageThat()
           .isEqualTo(
-              "@Tag type java.util.List is duplicate of parameter #1 and would always overwrite its value. (parameter #2)\n"
+              "@Tag type java.util.List is duplicate of parameter 'one' and would always overwrite its value. (parameter 'two')\n"
                   + "    for method Example.method");
     }
   }

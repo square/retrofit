@@ -15,29 +15,18 @@
  */
 package retrofit2;
 
-import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
-/**
- * Java 14 allows a regular (i.e., non-trusted) lookup to succeed for invoking default methods.
- * <p>
- * https://bugs.openjdk.java.net/browse/JDK-8209005
- */
-class DefaultMethodSupportJvm extends DefaultMethodSupport {
-  @Override
-  boolean isDefaultMethod(Method method) {
-    return method.isDefault();
-  }
-
-  @Override
+/** Java 16 finally has a public API for invoking default methods on a proxy. */
+final class DefaultMethodSupport {
   @Nullable
-  Object invokeDefaultMethod(
+  static Object invoke(
       Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
       throws Throwable {
-    return MethodHandles.lookup()
-        .unreflectSpecial(method, declaringClass)
-        .bindTo(proxy)
-        .invokeWithArguments(args);
+    return InvocationHandler.invokeDefault(proxy, method, args);
   }
+
+  private DefaultMethodSupport() {}
 }

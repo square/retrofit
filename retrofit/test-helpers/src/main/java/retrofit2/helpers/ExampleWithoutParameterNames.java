@@ -13,24 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2;
+package retrofit2.helpers;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import javax.annotation.Nullable;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.http.GET;
 
-/** Java 16 finally has a public API for invoking default methods on a proxy. */
-class DefaultMethodSupportJvm extends DefaultMethodSupport {
-  @Override
-  boolean isDefaultMethod(Method method) {
-    return method.isDefault();
-  }
-
-  @Override
-  @Nullable
-  Object invokeDefaultMethod(
-      Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)
-      throws Throwable {
-    return InvocationHandler.invokeDefault(proxy, method, args);
-  }
+/** This module is compiled without parameter names embedded in the class file. */
+public interface ExampleWithoutParameterNames {
+  @GET("/")
+  Call<ResponseBody> method(String theFirstParameter);
 }

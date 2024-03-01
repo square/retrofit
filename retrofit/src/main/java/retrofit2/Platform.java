@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 
 final class Platform {
   static final @Nullable Executor callbackExecutor;
-  static final DefaultMethodSupport defaultMethodSupport;
+  static final Reflection reflection;
   static final BuiltInFactories builtInFactories;
 
   static {
@@ -30,23 +30,23 @@ final class Platform {
       case "Dalvik":
         callbackExecutor = new AndroidMainExecutor();
         if (SDK_INT >= 24) {
-          defaultMethodSupport = new DefaultMethodSupport.Android24();
+          reflection = new Reflection.Android24();
           builtInFactories = new BuiltInFactories.Java8();
         } else {
-          defaultMethodSupport = new DefaultMethodSupport();
+          reflection = new Reflection();
           builtInFactories = new BuiltInFactories();
         }
         break;
 
       case "RoboVM":
         callbackExecutor = null;
-        defaultMethodSupport = new DefaultMethodSupport();
+        reflection = new Reflection();
         builtInFactories = new BuiltInFactories();
         break;
 
       default:
         callbackExecutor = null;
-        defaultMethodSupport = new DefaultMethodSupportJvm();
+        reflection = new Reflection.Java8();
         builtInFactories = new BuiltInFactories.Java8();
         break;
     }

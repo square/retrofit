@@ -171,10 +171,10 @@ public final class Retrofit {
                   return method.invoke(this, args);
                 }
                 args = args != null ? args : emptyArgs;
-                DefaultMethodSupport defaultMethodSupport = Platform.defaultMethodSupport;
-                return defaultMethodSupport.isDefaultMethod(method)
-                    ? defaultMethodSupport.invokeDefaultMethod(method, service, proxy, args)
-                    : loadServiceMethod(method).invoke(args);
+                Reflection reflection = Platform.reflection;
+                return reflection.isDefaultMethod(method)
+                    ? reflection.invokeDefaultMethod(method, service, proxy, args)
+                    : loadServiceMethod(service, method).invoke(proxy, args);
               }
             });
   }
@@ -200,18 +200,18 @@ public final class Retrofit {
     }
 
     if (validateEagerly) {
-      DefaultMethodSupport defaultMethodSupport = Platform.defaultMethodSupport;
+      Reflection reflection = Platform.reflection;
       for (Method method : service.getDeclaredMethods()) {
-        if (!defaultMethodSupport.isDefaultMethod(method)
+        if (!reflection.isDefaultMethod(method)
             && !Modifier.isStatic(method.getModifiers())
             && !method.isSynthetic()) {
-          loadServiceMethod(method);
+          loadServiceMethod(service, method);
         }
       }
     }
   }
 
-  ServiceMethod<?> loadServiceMethod(Method method) {
+  ServiceMethod<?> loadServiceMethod(Class<?> service, Method method) {
     // Note: Once we are minSdk 24 this whole method can be replaced by computeIfAbsent.
     Object lookup = serviceMethodCache.get(method);
 
@@ -229,7 +229,7 @@ public final class Retrofit {
         if (lookup == null) {
           // On successful lock insertion, perform the work and update the map before releasing.
           // Other threads may be waiting on lock now and will expect the parsed model.
-          ServiceMethod<Object> result = ServiceMethod.parseAnnotations(this, method);
+          ServiceMethod<Object> result = ServiceMethod.parseAnnotations(this, service, method);
           serviceMethodCache.put(method, result);
           return result;
         }

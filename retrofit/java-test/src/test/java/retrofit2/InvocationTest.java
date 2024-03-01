@@ -39,6 +39,8 @@ public final class InvocationTest {
         @Path("p1") String p1, @Query("p2") String p2, @Body RequestBody body);
   }
 
+  interface ExampleSub extends Example {}
+
   @Test
   public void invocationObjectOnCallAndRequestTag() {
     Retrofit retrofit =
@@ -59,7 +61,69 @@ public final class InvocationTest {
   }
 
   @Test
+  public void invocationCorrectlyIdentifiesServiceMethodInvocation() {
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl("http://example.com/")
+            .callFactory(new OkHttpClient())
+            .build();
+
+    ExampleSub example = retrofit.create(ExampleSub.class);
+    RequestBody requestBody = RequestBody.create(MediaType.get("text/plain"), "three");
+    Call<ResponseBody> call = example.postMethod("one", "two", requestBody);
+
+    Invocation invocation = call.request().tag(Invocation.class);
+    assertThat(invocation.service()).isEqualTo(ExampleSub.class);
+    assertThat(invocation.instance()).isSameInstanceAs(example);
+    assertThat(invocation.method().getName()).isEqualTo("postMethod");
+    assertThat(invocation.method().getDeclaringClass()).isEqualTo(Example.class);
+    assertThat(invocation.arguments()).isEqualTo(Arrays.asList("one", "two", requestBody));
+  }
+
+  @Test
+  public void nullService() {
+    try {
+      Invocation.of(
+          null, new Object(), Object.class.getDeclaredMethods()[0], Arrays.asList("one", "two"));
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("service == null");
+    }
+  }
+
+  @Test
+  public void nullInstance() {
+    try {
+      Invocation.of(
+          Object.class, null, Object.class.getDeclaredMethods()[0], Arrays.asList("one", "two"));
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("instance == null");
+    }
+  }
+
+  @Test
   public void nullMethod() {
+    try {
+      Invocation.of(Object.class, new Object(), null, Arrays.asList("one", "two"));
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("method == null");
+    }
+  }
+
+  @Test
+  public void nullArguments() {
+    try {
+      Invocation.of(Object.class, new Object(), Example.class.getDeclaredMethods()[0], null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("arguments == null");
+    }
+  }
+
+  @Test
+  public void deprecatedNullMethod() {
     try {
       Invocation.of(null, Arrays.asList("one", "two"));
       fail();
@@ -69,7 +133,7 @@ public final class InvocationTest {
   }
 
   @Test
-  public void nullArguments() {
+  public void deprecatedNullArguments() {
     try {
       Invocation.of(Example.class.getDeclaredMethods()[0], null);
       fail();

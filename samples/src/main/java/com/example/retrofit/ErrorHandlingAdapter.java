@@ -125,8 +125,8 @@ public final class ErrorHandlingAdapter {
             @Override
             public void onResponse(Call<T> call, Response<T> response) {
               // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
-              // on that executor by submitting a Runnable. This is left as an exercise for the
-              // reader.
+              //  on that executor by submitting a Runnable. This is left as an exercise for the
+              //  reader.
 
               int code = response.code();
               if (code >= 200 && code < 300) {
@@ -145,8 +145,8 @@ public final class ErrorHandlingAdapter {
             @Override
             public void onFailure(Call<T> call, Throwable t) {
               // TODO if 'callbackExecutor' is not null, the 'callback' methods should be executed
-              // on that executor by submitting a Runnable. This is left as an exercise for the
-              // reader.
+              //  on that executor by submitting a Runnable. This is left as an exercise for the
+              //  reader.
 
               if (t instanceof IOException) {
                 callback.networkError((IOException) t);
