@@ -51,6 +51,7 @@ import retrofit2.Retrofit;
  * <pre>
  * &#64;GET("/search")
  * void list(@HeaderMap(allowUnsafeNonAsciiValues=true) Map&lt;String, String&gt; headers);
+ * </pre>
  *
  * @see Header
  * @see Headers
