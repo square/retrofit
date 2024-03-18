@@ -13,38 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.jaxb;
+package retrofit2.converter.jaxb3;
 
-import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 import java.util.Arrays;
-import javax.annotation.Nullable;
+import java.util.List;
 
-final class PhoneNumber {
+@XmlRootElement(name = "contact")
+final class Contact {
   @XmlElement(required = true)
-  public final String number;
+  public final String name;
 
-  @XmlAttribute public final Type type;
+  @XmlElement(name = "phone_number")
+  public final List<PhoneNumber> phone_numbers;
 
   @SuppressWarnings("unused") // Used by JAXB.
-  private PhoneNumber() {
-    this("", Type.OTHER);
+  private Contact() {
+    this("", new ArrayList<PhoneNumber>());
   }
 
-  PhoneNumber(String number, @Nullable Type type) {
-    this.number = number;
-    this.type = type;
+  public Contact(String name, List<PhoneNumber> phoneNumbers) {
+    this.name = name;
+    this.phone_numbers = phoneNumbers;
   }
 
   @Override
   public boolean equals(Object o) {
-    return o instanceof PhoneNumber
-        && ((PhoneNumber) o).number.equals(number)
-        && ((PhoneNumber) o).type.equals(type);
+    return o instanceof Contact
+        && ((Contact) o).name.equals(name)
+        && ((Contact) o).phone_numbers.equals(phone_numbers);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.asList(number, type).hashCode();
+    return Arrays.asList(name, phone_numbers).hashCode();
   }
 }

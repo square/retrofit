@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package retrofit2.converter.jaxb;
+package retrofit2.converter.jaxb3;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.fail;
