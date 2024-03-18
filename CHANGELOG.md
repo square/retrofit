@@ -2,6 +2,51 @@
 
 ## [Unreleased]
 
+**New**
+
+ - Nothing yet!
+
+**Changed**
+
+ - Nothing yet!
+
+**Fixed**
+
+ - Nothing yet!
+
+
+## [2.10.0] - 2024-03-18
+
+**New**
+
+ - Support using `Unit` as a response type. This can be used for non-body HTTP methods like `HEAD` or body-containing HTTP methods like `GET` where the body will be discarded without deserialization.
+ - kotlinx.serialization converter!
+
+   This was imported from [github.com/JakeWharton/retrofit2-kotlinx-serialization-converter/](https://github.com/JakeWharton/retrofit2-kotlinx-serialization-converter/) and remains unchanged from its 1.0.0 release.
+
+   The Maven coordinates are `com.squareup.retrofit2:converter-kotlinx-serialization`.
+ - JAXB 3 converter!
+
+   The Maven coordinates are `com.squareup.retrofit2:converter-jaxb3`.
+ - `@Header`, `@Headers`, and `@HeaderMap` can now set non-ASCII values through the `allowUnsafeNonAsciiValues` annotation property. These are not technically compliant with the HTTP specification, but are often supported or required by services.
+ - Publish a BOM of all modules. The Maven coordinates are `com.squareup.retrofit2:retrofit-bom`.
+ - `Invocation` now exposes the service `Class<?>` and the instance on which the method was invoked. This disambiguates the source when service inheritence is used.
+ - A response type keeper annotation processor is now available for generating shrinker rules for all referenced types in your service interface. In some cases, it's impossible for static shrinker rules to keep the entirety of what Retrofit needs at runtime. This annotation processor generates those additional rules. For more info see [its README](https://github.com/square/retrofit/tree/trunk/retrofit-response-type-keeper#readme).
+
+**Changed**
+- Add shrinker rules to retain the generic signatures of built-in types (`Call`, `Response`, etc.) which are used via reflection at runtime.
+- Remove backpressure support from RxJava 2 and 3 adapters. Since we only deliver a single value and the Reactive Streams specification states that callers must request a non-zero subscription value, we never need to honor backpressure.
+- Kotlin `Retrofit.create` function now has a non-null lower bound. Even if you specified a nullable type before this function would never return null.
+- Suspend functions now capture and defer all `Throwable` subtypes (not just `Exception` subtypes) to avoid Java's `UndeclaredThrowableException` when thrown synchronously.
+- Eagerly reject `suspend fun` functions that return `Call<Body>`. These are never correct, and should declare a return type of `Body` directly.
+- Support for Java 14-specific and Java 16-specific reflection needed to invoke default methods on interfaces have been moved to separate versions of a class through a multi-release jar. This should have no observable impact other than the jar now contains classes which target Java 14 and Java 16 bytecode that might trip up some static analysis tools which are not aware of multi-release jars.
+- Parameter names are now displayed in exception messages when available in the underlying Java bytecode.
+- Jackson converter now supports binary formats by using byte streams rather than character streams in its implementation. Use the `create(ObjectMapper, MediaType)` overload to supply the value of the `Content-Type` header for your format.
+
+**Fixed**
+- Do not include synthetic methods when doing eager validation.
+- Use per-method rather than per-class locking when parsing annotations. This eliminates contention when multiple calls are made in quick succession at the beginning of the process lifetime.
+
 
 ## [2.9.0] - 2020-05-20
 
@@ -619,7 +664,8 @@ Initial release.
 
 
 
-[Unreleased]: https://github.com/square/retrofit/compare/2.9.0...HEAD
+[Unreleased]: https://github.com/square/retrofit/compare/2.10.0...HEAD
+[2.10.0]: https://github.com/square/retrofit/releases/tag/2.10.0
 [2.9.0]: https://github.com/square/retrofit/releases/tag/2.9.0
 [2.8.2]: https://github.com/square/retrofit/releases/tag/2.8.2
 [2.8.1]: https://github.com/square/retrofit/releases/tag/parent-2.8.1
