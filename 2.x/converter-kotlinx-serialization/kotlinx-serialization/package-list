@@ -1,0 +1,7 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:retrofit2.converter.kotlinx.serialization////PointingToDeclaration/kotlinx-serialization/retrofit2.converter.kotlinx.serialization/index.html
+$dokka.location:retrofit2.converter.kotlinx.serialization//asConverterFactory/kotlinx.serialization.BinaryFormat#okhttp3.MediaType/PointingToDeclaration/kotlinx-serialization/retrofit2.converter.kotlinx.serialization/as-converter-factory.html
+$dokka.location:retrofit2.converter.kotlinx.serialization//asConverterFactory/kotlinx.serialization.StringFormat#okhttp3.MediaType/PointingToDeclaration/kotlinx-serialization/retrofit2.converter.kotlinx.serialization/as-converter-factory.html
+retrofit2.converter.kotlinx.serialization
+
