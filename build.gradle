@@ -1,5 +1,4 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
-import org.gradle.internal.jvm.Jvm
 
 buildscript {
   dependencies {
@@ -66,21 +65,18 @@ subprojects {
   }
 
   plugins.withId('java-library') {
-    // Animal Sniffer only works on JDK 11 or older currently.
-    if (!Jvm.current().javaVersion.isJava12Compatible()) {
-      project.apply plugin: 'ru.vyarus.animalsniffer'
-      animalsniffer {
-        sourceSets = [sourceSets.main] // Only check main sources, ignore test code.
-      }
-      dependencies {
-        signature 'org.codehaus.mojo.signature:java18:1.0@signature'
+    project.apply plugin: 'ru.vyarus.animalsniffer'
+    animalsniffer {
+      sourceSets = [sourceSets.main] // Only check main sources, ignore test code.
+    }
+    dependencies {
+      signature 'org.codehaus.mojo.signature:java18:1.0@signature'
 
-        if (project.path != ':retrofit-converters:java8' &&
-          project.path != ':retrofit-converters:jaxb' &&
-          project.path != ':retrofit-converters:jaxb3' &&
-          project.path != ':retrofit-adapters:java8') {
-          signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
-        }
+      if (project.path != ':retrofit-converters:java8' &&
+        project.path != ':retrofit-converters:jaxb' &&
+        project.path != ':retrofit-converters:jaxb3' &&
+        project.path != ':retrofit-adapters:java8') {
+        signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
       }
     }
 
