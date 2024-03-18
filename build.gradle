@@ -20,11 +20,6 @@ buildscript {
 }
 
 subprojects {
-  repositories {
-    mavenCentral()
-    google()
-  }
-
   tasks.withType(JavaCompile).configureEach { task ->
     task.options.encoding = 'UTF-8'
   }
