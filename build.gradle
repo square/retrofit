@@ -90,3 +90,32 @@ subprojects {
     }
   }
 }
+
+tasks.create('clean', Delete) {
+  delete = layout.buildDirectory
+}
+
+tasks.create('prepareWebsite', Copy) {
+  description = 'Combines the static website along with generated documentation'
+  group = JavaBasePlugin.DOCUMENTATION_GROUP
+
+  into layout.buildDirectory.dir('docs/site')
+  from('website')
+
+  gradle.projectsEvaluated {
+    into('2.x') {
+      subprojects { subproject ->
+        if (subproject.name == 'retrofit-bom') return
+        if (!subproject.plugins.hasPlugin('com.vanniktech.maven.publish')) return
+
+        into(subproject.POM_ARTIFACT_ID) {
+          if (subproject.plugins.hasPlugin('org.jetbrains.dokka')) {
+            from subproject.tasks.named('dokkaHtml').flatMap { it.outputDirectory }
+          } else {
+            from subproject.tasks.named('javadoc').map { it.destinationDir }
+          }
+        }
+      }
+    }
+  }
+}
