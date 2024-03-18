@@ -42,6 +42,10 @@ dependencies {
   compileOnly libs.findBugsAnnotations
 }
 
+javadoc {
+  exclude('retrofit2/internal/**')
+}
+
 jar {
   manifest {
     attributes 'Automatic-Module-Name': 'retrofit2'
