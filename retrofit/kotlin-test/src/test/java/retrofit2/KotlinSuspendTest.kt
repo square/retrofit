@@ -59,6 +59,12 @@ class KotlinSuspendTest {
     @HEAD("/")
     suspend fun headUnit()
 
+    @GET("user")
+    suspend fun getString(): Result<String>
+
+    @HEAD("user")
+    suspend fun headUser(): Result<Unit>
+
     @GET("/{a}/{b}/{c}")
     suspend fun params(
       @Path("a") a: String,
@@ -387,6 +393,48 @@ class KotlinSuspendTest {
           "    for method Service.bodyWithCallType",
       )
     }
+  }
+
+  @Test fun returnResultType() = runBlocking {
+    val retrofit = Retrofit.Builder()
+      .baseUrl(server.url("/"))
+      .addCallAdapterFactory(ResultCallAdapterFactory.create())
+      .addConverterFactory(ToStringConverterFactory())
+      .build()
+    val service = retrofit.create(Service::class.java)
+
+    // Successful response with body.
+    server.enqueue(MockResponse().setBody("Hello World"))
+    service.getString().let { result ->
+      assertThat(result.isSuccess).isTrue()
+      assertThat(result.getOrThrow()).isEqualTo("Hello World")
+    }
+
+    // Successful response without body.
+    server.enqueue(MockResponse())
+    service.headUser().let { result ->
+      assertThat(result.isSuccess).isTrue()
+      assertThat(result.getOrThrow()).isEqualTo(Unit)
+    }
+
+    // Error response without body.
+    server.enqueue(MockResponse().setResponseCode(404))
+    service.getString().let { result ->
+      assertThat(result.isFailure).isTrue()
+      assertThat(result.exceptionOrNull()).let {
+        it.hasMessageThat().isEqualTo("HTTP 404 Client Error")
+        it.isInstanceOf(HttpException::class.java)
+      }
+    }
+
+    // Network error.
+    server.shutdown()
+    service.getString().let { result ->
+      assertThat(result.isFailure).isTrue()
+      assertThat(result.exceptionOrNull()).isInstanceOf(IOException::class.java)
+    }
+
+    Unit // Return type of runBlocking is Unit.
   }
 
   @Suppress("EXPERIMENTAL_OVERRIDE")
