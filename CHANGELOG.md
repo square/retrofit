@@ -8,7 +8,7 @@
 
 **Changed**
 
- - Nothing yet!
+ - The built-in `OptionalConverterFactory` is now public to allow installing it before other converters which consume all types (e.g., Moshi, Gson, Jackson, etc.).
 
 **Fixed**
 

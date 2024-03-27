@@ -25,9 +25,24 @@ import javax.annotation.Nullable;
 import okhttp3.ResponseBody;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
+/**
+ * A {@link Converter.Factory} which supports Java's {@link Optional} to wrap null values from
+ * another converter.
+ * <p>
+ * This factory is installed by default on the JVM and Android API 24+. If you are using another
+ * converter which tries to serialize all types, such as Moshi or Gson, the default installation
+ * of this factory never gets a chance to run. To work around this, you can explicitly install this
+ * factory before your serialization library converter.
+ */
 @IgnoreJRERequirement // Only added when Optional is available (Java 8+ / Android API 24+).
 @TargetApi(24)
-final class OptionalConverterFactory extends Converter.Factory {
+public final class OptionalConverterFactory extends Converter.Factory {
+  public static OptionalConverterFactory create() {
+    return new OptionalConverterFactory();
+  }
+
+  OptionalConverterFactory() {}
+
   @Override
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
@@ -43,7 +58,7 @@ final class OptionalConverterFactory extends Converter.Factory {
 
   @IgnoreJRERequirement
   static final class OptionalConverter<T> implements Converter<ResponseBody, Optional<T>> {
-    final Converter<ResponseBody, T> delegate;
+    private final Converter<ResponseBody, T> delegate;
 
     OptionalConverter(Converter<ResponseBody, T> delegate) {
       this.delegate = delegate;
