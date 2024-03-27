@@ -21,6 +21,7 @@ import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static retrofit2.AnnotationArraySubject.assertThat;
@@ -1715,5 +1716,90 @@ public final class RetrofitTest {
     assertEquals("b", response2.body());
 
     assertEquals("/?i=201", server.takeRequest().getPath());
+  }
+
+  @Test
+  public void annotationParsingFailureObservedByWaitingThreads() throws InterruptedException {
+    AtomicInteger fails = new AtomicInteger();
+    CountDownLatch startedParsing = new CountDownLatch(1);
+    CountDownLatch failParsing = new CountDownLatch(1);
+    RuntimeException failure = new RuntimeException("boom!");
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(
+                new Converter.Factory() {
+                  @Nullable
+                  @Override
+                  public Converter<ResponseBody, ?> responseBodyConverter(
+                      Type type, Annotation[] annotations, Retrofit retrofit) {
+                    startedParsing.countDown();
+                    try {
+                      failParsing.await();
+                    } catch (InterruptedException e) {
+                      throw new AssertionError(e);
+                    }
+                    fails.incrementAndGet();
+                    throw failure;
+                  }
+                })
+            .build();
+    Annotated service = retrofit.create(Annotated.class);
+
+    AtomicReference<RuntimeException> result1 = new AtomicReference<>();
+    Thread thread1 =
+        new Thread(
+            () -> {
+              try {
+                service.method();
+              } catch (RuntimeException e) {
+                result1.set(e);
+              }
+            });
+    thread1.start();
+
+    // Wait for thread1 to enter the converter. This means it has inserted and taken a lock on
+    // parsing for the method.
+    startedParsing.await();
+
+    CountDownLatch thread2Locked = new CountDownLatch(1);
+    AtomicReference<RuntimeException> result2 = new AtomicReference<>();
+    Thread thread2 =
+        new Thread(
+            () -> {
+              try {
+                thread2Locked.countDown();
+                service.method();
+              } catch (RuntimeException e) {
+                result2.set(e);
+              }
+            });
+    thread2.start();
+    thread2Locked.await();
+
+    // Wait for thread2 to lock on the shared object. This should be pretty fast after the last
+    // signal, but we have no way of knowing for sure it happened.
+    Thread.sleep(1_000);
+
+    failParsing.countDown();
+    thread1.join();
+    thread2.join();
+
+    RuntimeException failure1 = result1.get();
+    assertThat(failure1).isInstanceOf(IllegalArgumentException.class);
+    assertThat(failure1).hasCauseThat().isSameInstanceAs(failure);
+
+    RuntimeException failure2 = result2.get();
+    assertThat(failure2).isInstanceOf(IllegalArgumentException.class);
+    assertThat(failure2).hasCauseThat().isSameInstanceAs(failure);
+
+    // Importantly, even though the second thread was locked waiting on the first, failure of the
+    // first thread caused the second thread to retry parsing.
+    assertThat(fails.get()).isEqualTo(2);
+
+    // Make sure now that both threads have released the lock, new callers also retry.
+    RuntimeException failure3 = assertThrows(IllegalArgumentException.class, service::method);
+    assertThat(failure3).hasCauseThat().isSameInstanceAs(failure);
+    assertThat(fails.get()).isEqualTo(3);
   }
 }
