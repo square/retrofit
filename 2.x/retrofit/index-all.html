@@ -214,6 +214,8 @@
 <dd>
 <div class="block">Returns an unmodifiable list of the factories tried when creating a <a href="retrofit2/Retrofit.html#requestBodyConverter-java.lang.reflect.Type-java.lang.annotation.Annotation:A-java.lang.annotation.Annotation:A-">request body converter</a>, a <a href="retrofit2/Retrofit.html#responseBodyConverter-java.lang.reflect.Type-java.lang.annotation.Annotation:A-">response body converter</a>, or a <a href="retrofit2/Retrofit.html#stringConverter-java.lang.reflect.Type-java.lang.annotation.Annotation:A-">string converter</a>.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="retrofit2/OptionalConverterFactory.html#create--">create()</a></span> - Static method in class retrofit2.<a href="retrofit2/OptionalConverterFactory.html" title="class in retrofit2">OptionalConverterFactory</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="retrofit2/Retrofit.html#create-java.lang.Class-">create(Class&lt;T&gt;)</a></span> - Method in class retrofit2.<a href="retrofit2/Retrofit.html" title="class in retrofit2">Retrofit</a></dt>
 <dd>
 <div class="block">Create an implementation of the API endpoints defined by the <code>service</code> interface.</div>
@@ -434,6 +436,11 @@
 <dd>
 <div class="block">Invoked for a received HTTP response.</div>
 </dd>
+<dt><a href="retrofit2/OptionalConverterFactory.html" title="class in retrofit2"><span class="typeNameLink">OptionalConverterFactory</span></a> - Class in <a href="retrofit2/package-summary.html">retrofit2</a></dt>
+<dd>
+<div class="block">A <a href="retrofit2/Converter.Factory.html" title="class in retrofit2"><code>Converter.Factory</code></a> which supports Java's <code>Optional</code> to wrap null values from
+ another converter.</div>
+</dd>
 <dt><a href="retrofit2/http/OPTIONS.html" title="annotation in retrofit2.http"><span class="typeNameLink">OPTIONS</span></a> - Annotation Type in <a href="retrofit2/http/package-summary.html">retrofit2.http</a></dt>
 <dd>
 <div class="block">Make an OPTIONS request.</div>
@@ -523,6 +530,8 @@
 <div class="block">Returns a <a href="retrofit2/Converter.html" title="interface in retrofit2"><code>Converter</code></a> for converting an HTTP response body to <code>type</code>, or null if
  <code>type</code> cannot be handled by this factory.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="retrofit2/OptionalConverterFactory.html#responseBodyConverter-java.lang.reflect.Type-java.lang.annotation.Annotation:A-retrofit2.Retrofit-">responseBodyConverter(Type, Annotation[], Retrofit)</a></span> - Method in class retrofit2.<a href="retrofit2/OptionalConverterFactory.html" title="class in retrofit2">OptionalConverterFactory</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="retrofit2/Retrofit.html#responseBodyConverter-java.lang.reflect.Type-java.lang.annotation.Annotation:A-">responseBodyConverter(Type, Annotation[])</a></span> - Method in class retrofit2.<a href="retrofit2/Retrofit.html" title="class in retrofit2">Retrofit</a></dt>
 <dd>
 <div class="block">Returns a <a href="retrofit2/Converter.html" title="interface in retrofit2"><code>Converter</code></a> for <code>ResponseBody</code> to <code>type</code> from the available
