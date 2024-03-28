@@ -8,6 +8,17 @@
 
 **Changed**
 
+ - Nothing yet!
+
+**Fixed**
+
+ - Nothing yet!
+
+
+## [2.11.0] - 2024-03-28
+
+**New**
+
  - The built-in `OptionalConverterFactory` is now public to allow installing it before other converters which consume all types (e.g., Moshi, Gson, Jackson, etc.).
 
 **Fixed**
@@ -664,7 +675,8 @@ Initial release.
 
 
 
-[Unreleased]: https://github.com/square/retrofit/compare/2.10.0...HEAD
+[Unreleased]: https://github.com/square/retrofit/compare/2.11.0...HEAD
+[2.11.0]: https://github.com/square/retrofit/releases/tag/2.11.0
 [2.10.0]: https://github.com/square/retrofit/releases/tag/2.10.0
 [2.9.0]: https://github.com/square/retrofit/releases/tag/2.9.0
 [2.8.2]: https://github.com/square/retrofit/releases/tag/2.8.2
