@@ -79,6 +79,6 @@ simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
 wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
 jsoup = { module = "org.jsoup:jsoup", version = "1.17.2" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
-googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.21.0"
+googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.22.0"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.2.1"
 compileTesting = "com.google.testing.compile:compile-testing:0.21.0"
