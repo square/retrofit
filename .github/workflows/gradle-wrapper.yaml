@@ -5,11 +5,11 @@ on:
     paths:
       - 'gradlew'
       - 'gradlew.bat'
-      - 'gradle/wrapper/'
+      - 'gradle/wrapper/**'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: gradle/wrapper-validation-action@v3
+      - uses: gradle/actions/wrapper-validation@v3
