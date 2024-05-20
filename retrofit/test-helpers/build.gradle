@@ -1,7 +1,0 @@
-apply plugin: 'java-library'
-
-dependencies {
-  api projects.retrofit
-
-  compileOnly libs.findBugsAnnotations
-}
