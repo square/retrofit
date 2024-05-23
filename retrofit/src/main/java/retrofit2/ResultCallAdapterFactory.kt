@@ -12,13 +12,32 @@ class ResultCallAdapterFactory private constructor() : CallAdapter.Factory() {
     annotations: Array<Annotation>,
     retrofit: Retrofit,
   ): CallAdapter<*, *>? {
-    if (getRawType(returnType) != Result::class.java) return null
-
-    check(returnType is ParameterizedType) {
-      "Result must have a generic type (e.g., Result<T>)"
+    val rawReturnType = getRawType(returnType)
+    // suspend functions wrap the response type in `Call`
+    if (Call::class.java != rawReturnType && Result::class.java != rawReturnType) {
+      return null
     }
 
-    return ResultCallAdapter<Any>(getParameterUpperBound(0, returnType))
+    // check first that the return type is `ParameterizedType`
+    check(returnType is ParameterizedType) {
+      "return type must be parameterized as Call<Result<Foo>>, Call<Result<out Foo>>, " +
+        "Result<Foo> or Result<out Foo>"
+    }
+
+    // get the response type inside the `Call` or `NetworkResult` type
+    val responseType = getParameterUpperBound(0, returnType)
+
+    // if the response type is not NetworkResult then we can't handle this type, so we return null
+    if (getRawType(responseType) != Result::class.java) {
+      return null
+    }
+
+    // the response type is Result and should be parameterized
+    check(responseType is ParameterizedType) { "Response must be parameterized as Result<Foo> or Result<out Foo>" }
+
+    val successBodyType = getParameterUpperBound(0, responseType)
+
+    return ResultCallAdapter<Any>(successBodyType)
   }
 
   companion object {
