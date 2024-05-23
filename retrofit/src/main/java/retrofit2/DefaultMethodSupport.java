@@ -19,6 +19,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /**
  * From Java 8 to Java 13, the only way to invoke a default method on a proxied interface is by
@@ -29,6 +30,7 @@ import javax.annotation.Nullable;
 final class DefaultMethodSupport {
   private static @Nullable Constructor<Lookup> lookupConstructor;
 
+  @IgnoreJRERequirement // Only used on JVM or Android API 24+.
   @Nullable
   static Object invoke(
       Method method, Class<?> declaringClass, Object proxy, @Nullable Object[] args)

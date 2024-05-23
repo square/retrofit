@@ -1,5 +1,4 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
-import org.gradle.internal.jvm.Jvm
 
 buildscript {
   dependencies {
@@ -21,11 +20,6 @@ buildscript {
 }
 
 subprojects {
-  repositories {
-    mavenCentral()
-    google()
-  }
-
   tasks.withType(JavaCompile).configureEach { task ->
     task.options.encoding = 'UTF-8'
   }
@@ -66,21 +60,18 @@ subprojects {
   }
 
   plugins.withId('java-library') {
-    // Animal Sniffer only works on JDK 11 or older currently.
-    if (!Jvm.current().javaVersion.isJava12Compatible()) {
-      project.apply plugin: 'ru.vyarus.animalsniffer'
-      animalsniffer {
-        sourceSets = [sourceSets.main] // Only check main sources, ignore test code.
-      }
-      dependencies {
-        signature 'org.codehaus.mojo.signature:java18:1.0@signature'
+    project.apply plugin: 'ru.vyarus.animalsniffer'
+    animalsniffer {
+      sourceSets = [sourceSets.main] // Only check main sources, ignore test code.
+    }
+    dependencies {
+      signature 'org.codehaus.mojo.signature:java18:1.0@signature'
 
-        if (project.path != ':retrofit-converters:java8' &&
-          project.path != ':retrofit-converters:jaxb' &&
-          project.path != ':retrofit-converters:jaxb3' &&
-          project.path != ':retrofit-adapters:java8') {
-          signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
-        }
+      if (project.path != ':retrofit-converters:java8' &&
+        project.path != ':retrofit-converters:jaxb' &&
+        project.path != ':retrofit-converters:jaxb3' &&
+        project.path != ':retrofit-adapters:java8') {
+        signature 'net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature'
       }
     }
 
@@ -95,6 +86,35 @@ subprojects {
       kotlin {
         ktlint(libs.ktlint.get().version)
         target '**/src/**/*.kt'
+      }
+    }
+  }
+}
+
+tasks.create('clean', Delete) {
+  delete = layout.buildDirectory
+}
+
+tasks.create('prepareWebsite', Copy) {
+  description = 'Combines the static website along with generated documentation'
+  group = JavaBasePlugin.DOCUMENTATION_GROUP
+
+  into layout.buildDirectory.dir('docs/site')
+  from('website')
+
+  gradle.projectsEvaluated {
+    into('2.x') {
+      subprojects { subproject ->
+        if (subproject.name == 'retrofit-bom') return
+        if (!subproject.plugins.hasPlugin('com.vanniktech.maven.publish')) return
+
+        into(subproject.POM_ARTIFACT_ID) {
+          if (subproject.plugins.hasPlugin('org.jetbrains.dokka')) {
+            from subproject.tasks.named('dokkaHtml').flatMap { it.outputDirectory }
+          } else {
+            from subproject.tasks.named('javadoc').map { it.destinationDir }
+          }
+        }
       }
     }
   }

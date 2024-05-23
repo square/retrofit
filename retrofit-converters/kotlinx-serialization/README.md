@@ -7,7 +7,7 @@ create a `Converter.Factory`. You will need to supply a `MediaType` for use as t
 `Content-Type` header for request bodies.
 
 ```kotlin
-val api = Retrofit.Builder()
+val retrofit = Retrofit.Builder()
     .baseUrl("https://example.com/")
     .addConverterFactory(
         Json.asConverterFactory(
