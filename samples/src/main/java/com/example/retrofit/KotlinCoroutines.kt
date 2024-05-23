@@ -7,7 +7,14 @@ import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-data class Contributor(val login: String, val contributions: Int)
+class Contributor(
+  val login: String,
+  val contributions: Int,
+) {
+  override fun toString(): String {
+    return "Contributor(login='$login', contributions=$contributions)"
+  }
+}
 
 interface GitHub {
   @GET("/repos/{owner}/{repo}/contributors")
