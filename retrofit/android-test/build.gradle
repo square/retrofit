@@ -47,6 +47,6 @@ dependencies {
   androidTestImplementation projects.retrofit.testHelpers
   androidTestImplementation libs.junit
   androidTestImplementation libs.truth
-  androidTestImplementation libs.mockwebserver
+  androidTestImplementation libs.okhttp.mockwebserver
   androidTestImplementation libs.androidxTestRunner
 }

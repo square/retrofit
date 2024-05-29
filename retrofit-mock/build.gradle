@@ -10,7 +10,7 @@ dependencies {
   testImplementation libs.junit
   testImplementation libs.truth
   testImplementation libs.kotlin.stdLib
-  testImplementation libs.kotlinCoroutines
+  testImplementation libs.kotlinx.coroutines
 }
 
 jar {

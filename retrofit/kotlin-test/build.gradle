@@ -5,6 +5,6 @@ dependencies {
   testImplementation projects.retrofit.testHelpers
   testImplementation libs.junit
   testImplementation libs.truth
-  testImplementation libs.mockwebserver
-  testImplementation libs.kotlinCoroutines
+  testImplementation libs.okhttp.mockwebserver
+  testImplementation libs.kotlinx.coroutines
 }

@@ -6,7 +6,7 @@ dependencies {
   testImplementation libs.junit
   testImplementation libs.truth
   testImplementation libs.guava
-  testImplementation libs.mockwebserver
+  testImplementation libs.okhttp.mockwebserver
 }
 
 tasks.withType(JavaCompile).configureEach {
