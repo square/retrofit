@@ -8,7 +8,7 @@ dependencies {
   api libs.kotlinx.serialization.core
 
   testImplementation libs.junit
-  testImplementation libs.mockwebserver
+  testImplementation libs.okhttp.mockwebserver
   testImplementation libs.kotlinx.serialization.proto
   testImplementation libs.kotlinx.serialization.json
 }

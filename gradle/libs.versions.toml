@@ -50,12 +50,13 @@ incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.re
 autoService-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-compiler = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
 
-kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.8.1" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.8.1" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-proto = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
+okhttp-client = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-loggingInterceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
 junit = { module = "junit:junit", version = "4.13.2" }
 truth = "com.google.truth:truth:1.4.2"
 guava = { module = "com.google.guava:guava", version = "33.2.0-jre" }

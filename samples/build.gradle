@@ -1,4 +1,4 @@
-apply plugin: 'java-library'
+apply plugin: 'org.jetbrains.kotlin.jvm'
 
 dependencies {
   implementation projects.retrofit
@@ -7,7 +7,10 @@ dependencies {
   implementation projects.retrofitConverters.gson
   implementation projects.retrofitConverters.simplexml
   implementation projects.retrofitAdapters.rxjava
-  implementation libs.mockwebserver
+  implementation libs.okhttp.loggingInterceptor
+  implementation libs.okhttp.mockwebserver
+  implementation libs.kotlin.stdLib
+  implementation libs.kotlinx.coroutines
   implementation libs.guava
   implementation libs.jsoup
   compileOnly libs.findBugsAnnotations
