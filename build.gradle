@@ -85,6 +85,10 @@ subprojects {
       }
       kotlin {
         ktlint(libs.ktlint.get().version)
+          .editorConfigOverride([
+            // Making something an expression body should be a choice around readability.
+            'ktlint_standard_function-expression-body': 'disabled',
+          ])
         target 'src/**/*.kt'
       }
     }
