@@ -1,5 +1,6 @@
 package retrofit2.converter.kotlinx.serialization.json
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.MockResponse
@@ -14,6 +15,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
+@OptIn(ExperimentalSerializationApi::class)
 class KotlinxSerializationJsonConverterFactoryTest {
   @get:Rule val server = MockWebServer()
 
