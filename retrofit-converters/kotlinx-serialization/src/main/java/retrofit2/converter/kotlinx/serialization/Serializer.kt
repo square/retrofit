@@ -12,7 +12,7 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 
-internal sealed class Serializer {
+abstract class Serializer {
   abstract fun <T> fromResponseBody(loader: DeserializationStrategy<T>, body: ResponseBody): T
   abstract fun <T> toRequestBody(contentType: MediaType, saver: SerializationStrategy<T>, value: T): RequestBody
 
