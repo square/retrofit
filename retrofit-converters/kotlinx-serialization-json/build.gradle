@@ -7,7 +7,7 @@ dependencies {
   implementation project(':retrofit-converters:kotlinx-serialization')
 
   api projects.retrofit
-  api libs.kotlinx.serialization.json
+  api libs.kotlinx.serialization.jsonOkio
 
   testImplementation libs.junit
   testImplementation libs.okhttp.mockwebserver
