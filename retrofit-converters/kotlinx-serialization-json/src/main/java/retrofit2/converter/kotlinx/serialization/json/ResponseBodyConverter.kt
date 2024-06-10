@@ -13,7 +13,7 @@ class ResponseBodyConverter<T>(
   private val loader: DeserializationStrategy<T>,
 ) : Converter<ResponseBody, T> {
 
-  override fun convert(value: ResponseBody): T? {
+  override fun convert(value: ResponseBody): T {
     val source = value.source()
     return json.decodeFromBufferedSource(loader, source)
   }
