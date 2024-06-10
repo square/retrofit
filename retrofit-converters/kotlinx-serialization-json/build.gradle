@@ -4,8 +4,6 @@ apply plugin: 'com.vanniktech.maven.publish'
 apply plugin: 'org.jetbrains.dokka'
 
 dependencies {
-  implementation project(':retrofit-converters:kotlinx-serialization')
-
   api projects.retrofit
   api libs.kotlinx.serialization.jsonOkio
 

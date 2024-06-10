@@ -13,7 +13,7 @@ import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 
-class Factory(
+internal class Factory(
   private val contentType: MediaType,
   private val serializer: Serializer
 ) : Converter.Factory() {
