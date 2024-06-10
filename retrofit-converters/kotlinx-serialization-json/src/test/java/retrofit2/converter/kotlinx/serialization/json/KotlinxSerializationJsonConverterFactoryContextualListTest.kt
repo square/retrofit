@@ -23,7 +23,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 @OptIn(ExperimentalSerializationApi::class)
-class KotlinxJsonSerializationConverterFactoryContextualListTest {
+class KotlinxSerializationJsonConverterFactoryContextualListTest {
   @get:Rule
   val server = MockWebServer()
 
