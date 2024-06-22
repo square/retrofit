@@ -33,7 +33,7 @@ kotlin-stdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-serializationPlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 
-errorpronePlugin = "net.ltgt.gradle:gradle-errorprone-plugin:4.0.0"
+errorpronePlugin = "net.ltgt.gradle:gradle-errorprone-plugin:4.0.1"
 errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
 
