@@ -38,7 +38,7 @@ errorproneCore = { module = "com.google.errorprone:error_prone_core", version = 
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
 
 animalSnifferPlugin = "ru.vyarus:gradle-animalsniffer-plugin:1.7.1"
-animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.23" }
+animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.24" }
 
 protobufPlugin = "com.google.protobuf:protobuf-gradle-plugin:0.9.4"
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
