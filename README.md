@@ -23,7 +23,7 @@ If you are using R8 the shrinking and obfuscation rules are included automatical
 
 ProGuard users must manually add the options from
 [retrofit2.pro][proguard file].
-You might also need [rules for OkHttp][okhttp proguard] and [Okio][okio proguard] which are dependencies of this library.
+You might also need [rules for OkHttp][okhttp proguard] which is a dependency of this library.
 
 
 License
