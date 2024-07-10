@@ -78,7 +78,7 @@ jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version = "3.0.2" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.15.1" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
 wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
-jsoup = { module = "org.jsoup:jsoup", version = "1.17.2" }
+jsoup = { module = "org.jsoup:jsoup", version = "1.18.1" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.22.0"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.3.1"
