@@ -66,6 +66,10 @@ import retrofit2.Retrofit;
 public @interface Field {
   String value();
 
-  /** Specifies whether the {@linkplain #value() name} and value are already URL encoded. */
+  /**
+   * Specifies whether the {@linkplain #value() name} and value are already URL encoded.
+   *
+   * @return True if the field is already encoded, false otherwise.
+   */
   boolean encoded() default false;
 }
