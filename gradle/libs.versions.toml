@@ -59,7 +59,7 @@ okhttp-loggingInterceptor = { module = "com.squareup.okhttp3:logging-interceptor
 okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
 junit = { module = "junit:junit", version = "4.13.2" }
 truth = "com.google.truth:truth:1.4.4"
-guava = { module = "com.google.guava:guava", version = "33.2.1-jre" }
+guava = { module = "com.google.guava:guava", version = "33.3.0-jre" }
 android = { module = "com.google.android:android", version = "4.1.1.4" }
 findBugsAnnotations = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
 androidxTestRunner = { module = "androidx.test:runner", version = "1.4.0" }
