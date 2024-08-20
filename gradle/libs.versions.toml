@@ -13,32 +13,32 @@
 # limitations under the License.
 
 [versions]
-kotlin = "1.9.23"
+kotlin = "2.0.10"
 okhttp = "3.14.9"
-protobuf = "3.25.3"
+protobuf = "3.25.4"
 robovm = "2.3.14"
-kotlinx-serialization = "1.6.3"
+kotlinx-serialization = "1.7.1"
 autoService = "1.1.1"
 incap = "1.0.0"
-jackson = "2.17.0"
+jackson = "2.17.2"
 
 [libraries]
-androidPlugin = { module = "com.android.tools.build:gradle", version = "8.3.2" }
+androidPlugin = { module = "com.android.tools.build:gradle", version = "8.5.2" }
 robovmPlugin = { module = "com.mobidevelop.robovm:robovm-gradle-plugin", version.ref = "robovm" }
 dokkaPlugin = "org.jetbrains.dokka:dokka-gradle-plugin:1.9.20"
-gradleMavenPublishPlugin = "com.vanniktech:gradle-maven-publish-plugin:0.28.0"
+gradleMavenPublishPlugin = "com.vanniktech:gradle-maven-publish-plugin:0.29.0"
 spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
 
 kotlin-stdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-serializationPlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 
-errorpronePlugin = "net.ltgt.gradle:gradle-errorprone-plugin:3.1.0"
+errorpronePlugin = "net.ltgt.gradle:gradle-errorprone-plugin:4.0.1"
 errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
 
 animalSnifferPlugin = "ru.vyarus:gradle-animalsniffer-plugin:1.7.1"
-animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.23" }
+animalSnifferAnnotations = { module = "org.codehaus.mojo:animal-sniffer-annotations", version = "1.24" }
 
 protobufPlugin = "com.google.protobuf:protobuf-gradle-plugin:0.9.4"
 protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
@@ -50,24 +50,25 @@ incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.re
 autoService-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-compiler = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
 
-kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.8.0" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.8.1" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-proto = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
+okhttp-client = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-loggingInterceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
 junit = { module = "junit:junit", version = "4.13.2" }
-truth = "com.google.truth:truth:1.4.2"
-guava = { module = "com.google.guava:guava", version = "33.1.0-jre" }
+truth = "com.google.truth:truth:1.4.4"
+guava = { module = "com.google.guava:guava", version = "33.3.0-jre" }
 android = { module = "com.google.android:android", version = "4.1.1.4" }
 findBugsAnnotations = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
 androidxTestRunner = { module = "androidx.test:runner", version = "1.4.0" }
 rxjava = { module = "io.reactivex:rxjava", version = "1.3.8" }
 rxjava2 = { module = "io.reactivex.rxjava2:rxjava", version = "2.2.21" }
-rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.8" }
+rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.9" }
 reactiveStreams = { module = "org.reactivestreams:reactive-streams", version = "1.0.4" }
-scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.13" }
-gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
+scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.14" }
+gson = { module = "com.google.code.gson:gson", version = "2.11.0" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatCbor = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor", version.ref = "jackson" }
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
@@ -77,8 +78,8 @@ jaxb3Impl = { module = "com.sun.xml.bind:jaxb-impl", version = "3.0.2" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.15.1" }
 simpleXml = { module = "org.simpleframework:simple-xml", version = "2.7.1" }
 wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "2.2.0" }
-jsoup = { module = "org.jsoup:jsoup", version = "1.17.2" }
+jsoup = { module = "org.jsoup:jsoup", version = "1.18.1" }
 robovm = { module = "com.mobidevelop.robovm:robovm-rt", version.ref = "robovm" }
-googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.22.0"
-ktlint = "com.pinterest.ktlint:ktlint-cli:1.2.1"
+googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.23.0"
+ktlint = "com.pinterest.ktlint:ktlint-cli:1.3.1"
 compileTesting = "com.google.testing.compile:compile-testing:0.21.0"

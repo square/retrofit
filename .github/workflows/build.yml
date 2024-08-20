@@ -22,7 +22,7 @@ jobs:
           distribution: 'zulu'
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Test
         run: ./gradlew build --stacktrace
@@ -53,7 +53,7 @@ jobs:
           distribution: 'zulu'
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Run Tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -64,7 +64,7 @@ jobs:
           API_LEVEL: ${{ matrix.api-level }}
 
   robovm:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - uses: actions/checkout@v4
@@ -73,7 +73,7 @@ jobs:
           distribution: 'zulu'
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Run Tests
         run: ./gradlew retrofit:robovm-test:robovmTest --stacktrace
@@ -93,7 +93,7 @@ jobs:
           distribution: 'zulu'
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Upload Artifacts
         run: ./gradlew publish --stacktrace
