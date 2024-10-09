@@ -147,7 +147,7 @@ See [this blog post](https://cashapp.github.io/2019-02-05/okhttp-3-13-requires-a
    Behind the scenes this behaves as if defined as `fun user(...): Call<User>` and then invoked with `Call.enqueue`.
    You can also return `Response<User>` for access to the response metadata.
 
-   Currently this integration only supports non-null response body types. Follow
+   **IMPORTANT**: Currently this integration **doesn't support nullable** response body types. **HTTP 204 and 205 responses always return a null body**, bypassing converters, so these are not supported either. Follow
    [issue 3075](https://github.com/square/retrofit/issues/3075) for nullable type support.
 
  * New: **`@Tag`** parameter annotation for setting tags on the underlying OkHttp `Request` object. These can be read
