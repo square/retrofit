@@ -15,7 +15,7 @@
  */
 package retrofit2.converter.scalars;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -120,7 +120,9 @@ public final class ScalarsConverterPrimitivesFactoryTest {
       service.charPrimitive();
       fail();
     } catch (DirectCallIOException e) {
-      assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 0");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Expected body of length 1 for Character conversion but was 0");
     }
 
     server.enqueue(new MockResponse().setBody("bb"));
@@ -128,7 +130,9 @@ public final class ScalarsConverterPrimitivesFactoryTest {
       service.charPrimitive();
       fail();
     } catch (DirectCallIOException e) {
-      assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 2");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Expected body of length 1 for Character conversion but was 2");
     }
 
     server.enqueue(new MockResponse().setBody("13.13"));

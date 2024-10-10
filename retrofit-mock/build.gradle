@@ -4,13 +4,13 @@ apply plugin: 'com.vanniktech.maven.publish'
 
 dependencies {
   api projects.retrofit
-  compileOnly libs.kotlinStdLib
+  compileOnly libs.kotlin.stdLib
   compileOnly libs.findBugsAnnotations
 
   testImplementation libs.junit
-  testImplementation libs.assertj
-  testImplementation libs.kotlinStdLib
-  testImplementation libs.kotlinCoroutines
+  testImplementation libs.truth
+  testImplementation libs.kotlin.stdLib
+  testImplementation libs.kotlinx.coroutines
 }
 
 jar {

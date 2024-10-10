@@ -151,6 +151,7 @@ public final class BehaviorDelegate<T> {
 
   static class ServiceMethodAdapterInfo {
     final boolean isSuspend;
+
     /**
      * Whether the suspend function return type was {@code Response<T>}. Only meaningful if {@link
      * #isSuspend} is true.

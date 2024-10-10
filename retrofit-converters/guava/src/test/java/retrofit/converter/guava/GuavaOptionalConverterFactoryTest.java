@@ -15,7 +15,7 @@
  */
 package retrofit.converter.guava;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Optional;
 import java.io.IOException;
@@ -100,6 +100,6 @@ public final class GuavaOptionalConverterFactoryTest {
     Service service = retrofit.create(Service.class);
     Optional<Object> optional = service.optional().execute().body();
     assertThat(optional).isNotNull();
-    assertThat(optional.get()).isSameAs(object);
+    assertThat(optional.get()).isSameInstanceAs(object);
   }
 }

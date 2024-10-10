@@ -17,8 +17,12 @@ package retrofit2;
 
 public final class RoboVmPlatformTest {
   public static void main(String[] args) {
-    Platform platform = Platform.get();
-    if (platform.createDefaultCallAdapterFactories(null).size() > 1) {
+    Retrofit retrofit = new Retrofit.Builder()
+      .baseUrl("https://example.com")
+      .callFactory(c -> { throw new AssertionError(); })
+      .build();
+
+    if (retrofit.callAdapterFactories().size() > 1) {
       // Everyone gets the callback executor adapter. If RoboVM was correctly detected it will NOT
       // get the Java 8-supporting CompletableFuture call adapter factory.
       System.exit(1);

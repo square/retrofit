@@ -15,7 +15,7 @@
  */
 package retrofit2.converter.simplexml;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -81,7 +81,7 @@ public class SimpleXmlConverterFactoryTest {
 
     RecordedRequest request = server.takeRequest();
     assertThat(request.getBody().readUtf8())
-        .isIn(
+        .isAnyOf(
             "<my-object><message>hello world</message><count>10</count></my-object>",
             "<my-object><count>10</count><message>hello world</message></my-object>");
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/xml; charset=UTF-8");
@@ -112,9 +112,11 @@ public class SimpleXmlConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause())
-          .isInstanceOf(ElementException.class)
-          .hasMessageStartingWith(
+      Throwable cause = e.getCause();
+      assertThat(cause).isInstanceOf(ElementException.class);
+      assertThat(cause)
+          .hasMessageThat()
+          .startsWith(
               "Element 'foo' does not have a match in class retrofit2.converter.simplexml.MyObject");
     }
   }
@@ -130,7 +132,9 @@ public class SimpleXmlConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e).hasMessage("Could not deserialize body as class java.lang.String");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Could not deserialize body as class java.lang.String");
     }
   }
 }

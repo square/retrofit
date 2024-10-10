@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.rxjava2;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -109,7 +109,10 @@ public final class ObservableThrowingTest {
             });
 
     observer.assertAnyValue();
-    assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+
+    Throwable throwable = throwableRef.get();
+    assertThat(throwable).isInstanceOf(UndeliverableException.class);
+    assertThat(throwable).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
@@ -189,7 +192,10 @@ public final class ObservableThrowingTest {
             });
 
     observer.assertAnyValue();
-    assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+
+    Throwable throwable = throwableRef.get();
+    assertThat(throwable).isInstanceOf(UndeliverableException.class);
+    assertThat(throwable).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test
@@ -269,7 +275,10 @@ public final class ObservableThrowingTest {
             });
 
     observer.assertAnyValue();
-    assertThat(throwableRef.get()).isInstanceOf(UndeliverableException.class).hasCause(e);
+
+    Throwable throwable = throwableRef.get();
+    assertThat(throwable).isInstanceOf(UndeliverableException.class);
+    assertThat(throwable).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test

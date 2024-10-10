@@ -55,7 +55,7 @@ public final class InvocationMetrics {
       if (invocation != null) {
         System.out.printf(
             "%s.%s %s HTTP %s (%.0f ms)%n",
-            invocation.method().getDeclaringClass().getSimpleName(),
+            invocation.service().getSimpleName(),
             invocation.method().getName(),
             invocation.arguments(),
             response.code(),

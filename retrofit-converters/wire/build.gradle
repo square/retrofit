@@ -10,8 +10,8 @@ dependencies {
   compileOnly libs.findBugsAnnotations
 
   testImplementation libs.junit
-  testImplementation libs.assertj
-  testImplementation libs.mockwebserver
+  testImplementation libs.truth
+  testImplementation libs.okhttp.mockwebserver
 }
 
 jar {

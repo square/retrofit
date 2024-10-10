@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -64,7 +63,19 @@ import retrofit2.http.Url;
  * @author Jake Wharton (jw@squareup.com)
  */
 public final class Retrofit {
-  private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
+  /**
+   * Method associations in this map will be in one of three states, and may only progress forward
+   * to higher-numbered states.
+   * <ol>
+   *   <li>No value - no one has started or completed parsing annotations for the method.</li>
+   *   <li>Lock object - a thread has started parsing annotations on the method. Once the lock is
+   *   available the map will have been updated with the parsed model.</li>
+   *   <li>{@code ServiceMethod} - annotations for the method have been fully parsed.</li>
+   * </ol>
+   * This map should only be accessed through {@link #loadServiceMethod} which contains the state
+   * transition logic.
+   */
+  private final ConcurrentHashMap<Method, Object> serviceMethodCache = new ConcurrentHashMap<>();
 
   final okhttp3.Call.Factory callFactory;
   final HttpUrl baseUrl;
@@ -160,10 +171,10 @@ public final class Retrofit {
                   return method.invoke(this, args);
                 }
                 args = args != null ? args : emptyArgs;
-                Platform platform = Platform.get();
-                return platform.isDefaultMethod(method)
-                    ? platform.invokeDefaultMethod(method, service, proxy, args)
-                    : loadServiceMethod(method).invoke(args);
+                Reflection reflection = Platform.reflection;
+                return reflection.isDefaultMethod(method)
+                    ? reflection.invokeDefaultMethod(method, service, proxy, args)
+                    : loadServiceMethod(service, method).invoke(proxy, args);
               }
             });
   }
@@ -189,27 +200,66 @@ public final class Retrofit {
     }
 
     if (validateEagerly) {
-      Platform platform = Platform.get();
+      Reflection reflection = Platform.reflection;
       for (Method method : service.getDeclaredMethods()) {
-        if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
-          loadServiceMethod(method);
+        if (!reflection.isDefaultMethod(method)
+            && !Modifier.isStatic(method.getModifiers())
+            && !method.isSynthetic()) {
+          loadServiceMethod(service, method);
         }
       }
     }
   }
 
-  ServiceMethod<?> loadServiceMethod(Method method) {
-    ServiceMethod<?> result = serviceMethodCache.get(method);
-    if (result != null) return result;
+  ServiceMethod<?> loadServiceMethod(Class<?> service, Method method) {
+    while (true) {
+      // Note: Once we are minSdk 24 this whole method can be replaced by computeIfAbsent.
+      Object lookup = serviceMethodCache.get(method);
 
-    synchronized (serviceMethodCache) {
-      result = serviceMethodCache.get(method);
-      if (result == null) {
-        result = ServiceMethod.parseAnnotations(this, method);
-        serviceMethodCache.put(method, result);
+      if (lookup instanceof ServiceMethod<?>) {
+        // Happy path: method is already parsed into the model.
+        return (ServiceMethod<?>) lookup;
+      }
+
+      if (lookup == null) {
+        // Map does not contain any value. Try to put in a lock for this method. We MUST synchronize
+        // on the lock before it is visible to others via the map to signal we are doing the work.
+        Object lock = new Object();
+        synchronized (lock) {
+          lookup = serviceMethodCache.putIfAbsent(method, lock);
+          if (lookup == null) {
+            // On successful lock insertion, perform the work and update the map before releasing.
+            // Other threads may be waiting on lock now and will expect the parsed model.
+            ServiceMethod<Object> result;
+            try {
+              result = ServiceMethod.parseAnnotations(this, service, method);
+            } catch (Throwable e) {
+              // Remove the lock on failure. Any other locked threads will retry as a result.
+              serviceMethodCache.remove(method);
+              throw e;
+            }
+            serviceMethodCache.put(method, result);
+            return result;
+          }
+        }
+      }
+
+      // Either the initial lookup or the attempt to put our lock in the map has returned someone
+      // else's lock. This means they are doing the parsing, and will update the map before
+      // releasing
+      // the lock. Once we can take the lock, the map is guaranteed to contain the model or null.
+      // Note: There's a chance that our effort to put a lock into the map has actually returned a
+      // finished model instead of a lock. In that case this code will perform a pointless lock and
+      // redundant lookup in the map of the same instance. This is rare, and ultimately harmless.
+      synchronized (lookup) {
+        Object result = serviceMethodCache.get(method);
+        if (result == null) {
+          // The other thread failed its parsing. We will retry (and probably also fail).
+          continue;
+        }
+        return (ServiceMethod<?>) result;
       }
     }
-    return result;
   }
 
   /**
@@ -621,8 +671,6 @@ public final class Retrofit {
         throw new IllegalStateException("Base URL required.");
       }
 
-      Platform platform = Platform.get();
-
       okhttp3.Call.Factory callFactory = this.callFactory;
       if (callFactory == null) {
         callFactory = new OkHttpClient();
@@ -630,18 +678,20 @@ public final class Retrofit {
 
       Executor callbackExecutor = this.callbackExecutor;
       if (callbackExecutor == null) {
-        callbackExecutor = platform.defaultCallbackExecutor();
+        callbackExecutor = Platform.callbackExecutor;
       }
+
+      BuiltInFactories builtInFactories = Platform.builtInFactories;
 
       // Make a defensive copy of the adapters and add the default Call adapter.
       List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
       List<? extends CallAdapter.Factory> defaultCallAdapterFactories =
-          platform.createDefaultCallAdapterFactories(callbackExecutor);
+          builtInFactories.createDefaultCallAdapterFactories(callbackExecutor);
       callAdapterFactories.addAll(defaultCallAdapterFactories);
 
       // Make a defensive copy of the converters.
       List<? extends Converter.Factory> defaultConverterFactories =
-          platform.createDefaultConverterFactories();
+          builtInFactories.createDefaultConverterFactories();
       int defaultConverterFactoriesSize = defaultConverterFactories.size();
       List<Converter.Factory> converterFactories =
           new ArrayList<>(1 + this.converterFactories.size() + defaultConverterFactoriesSize);

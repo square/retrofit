@@ -15,9 +15,9 @@
  */
 package retrofit2.mock;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -34,9 +34,9 @@ public final class NetworkBehaviorTest {
   @Test
   public void defaultThrowable() {
     Throwable t = behavior.failureException();
-    assertThat(t)
-        .isInstanceOf(IOException.class)
-        .isExactlyInstanceOf(MockRetrofitIOException.class);
+    assertThat(t).isInstanceOf(IOException.class);
+    // Exact instance check as opposed to isInstanceOf's subtype checking.
+    assertThat(t.getClass()).isEqualTo(MockRetrofitIOException.class);
     assertThat(t.getStackTrace()).isEmpty();
   }
 
@@ -46,7 +46,7 @@ public final class NetworkBehaviorTest {
       behavior.setDelay(-1, SECONDS);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Amount must be positive value.");
+      assertThat(e).hasMessageThat().isEqualTo("Amount must be positive value.");
     }
   }
 
@@ -56,13 +56,13 @@ public final class NetworkBehaviorTest {
       behavior.setVariancePercent(-13);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Variance percentage must be between 0 and 100.");
+      assertThat(e).hasMessageThat().isEqualTo("Variance percentage must be between 0 and 100.");
     }
     try {
       behavior.setVariancePercent(174);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Variance percentage must be between 0 and 100.");
+      assertThat(e).hasMessageThat().isEqualTo("Variance percentage must be between 0 and 100.");
     }
   }
 
@@ -72,13 +72,13 @@ public final class NetworkBehaviorTest {
       behavior.setFailurePercent(-13);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Failure percentage must be between 0 and 100.");
+      assertThat(e).hasMessageThat().isEqualTo("Failure percentage must be between 0 and 100.");
     }
     try {
       behavior.setFailurePercent(174);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Failure percentage must be between 0 and 100.");
+      assertThat(e).hasMessageThat().isEqualTo("Failure percentage must be between 0 and 100.");
     }
   }
 
@@ -88,7 +88,7 @@ public final class NetworkBehaviorTest {
       behavior.setFailureException(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("exception == null");
+      assertThat(e).hasMessageThat().isEqualTo("exception == null");
     }
   }
 
@@ -98,13 +98,13 @@ public final class NetworkBehaviorTest {
       behavior.setErrorPercent(-13);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Error percentage must be between 0 and 100.");
+      assertThat(e).hasMessageThat().isEqualTo("Error percentage must be between 0 and 100.");
     }
     try {
       behavior.setErrorPercent(174);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Error percentage must be between 0 and 100.");
+      assertThat(e).hasMessageThat().isEqualTo("Error percentage must be between 0 and 100.");
     }
   }
 
@@ -114,7 +114,7 @@ public final class NetworkBehaviorTest {
       behavior.setErrorFactory(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("errorFactory == null");
+      assertThat(e).hasMessageThat().isEqualTo("errorFactory == null");
     }
   }
 
@@ -125,7 +125,7 @@ public final class NetworkBehaviorTest {
       behavior.createErrorResponse();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Error factory returned null.");
+      assertThat(e).hasMessageThat().isEqualTo("Error factory returned null.");
     }
   }
 
@@ -140,8 +140,8 @@ public final class NetworkBehaviorTest {
       behavior.createErrorResponse();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Error factory threw an exception.");
-      assertThat(e.getCause()).isSameAs(broken);
+      assertThat(e).hasMessageThat().isEqualTo("Error factory threw an exception.");
+      assertThat(e).hasCauseThat().isSameInstanceAs(broken);
     }
   }
 
@@ -152,7 +152,7 @@ public final class NetworkBehaviorTest {
       behavior.createErrorResponse();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Error factory returned successful response.");
+      assertThat(e).hasMessageThat().isEqualTo("Error factory returned successful response.");
     }
   }
 

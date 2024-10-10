@@ -15,7 +15,7 @@
  */
 package retrofit2.adapter.rxjava;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -88,7 +88,7 @@ public final class CompletableThrowingSafeSubscriberTest {
               }
             });
 
-    assertThat(pluginRef.get().getCause()).isSameAs(e);
+    assertThat(pluginRef.get()).hasCauseThat().isSameInstanceAs(e);
   }
 
   @Test

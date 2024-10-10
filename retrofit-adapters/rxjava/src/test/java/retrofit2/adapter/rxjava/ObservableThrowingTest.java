@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.rxjava;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -111,7 +111,7 @@ public final class ObservableThrowingTest {
             });
 
     observer.assertAnyValue();
-    assertThat(pluginRef.get()).isSameAs(e);
+    assertThat(pluginRef.get()).isSameInstanceAs(e);
   }
 
   @Test
@@ -198,7 +198,7 @@ public final class ObservableThrowingTest {
             });
 
     observer.assertAnyValue();
-    assertThat(pluginRef.get()).isSameAs(e);
+    assertThat(pluginRef.get()).isSameInstanceAs(e);
   }
 
   @Test
@@ -285,7 +285,7 @@ public final class ObservableThrowingTest {
             });
 
     observer.assertAnyValue();
-    assertThat(pluginRef.get()).isSameAs(e);
+    assertThat(pluginRef.get()).isSameInstanceAs(e);
   }
 
   @Test

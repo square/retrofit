@@ -15,16 +15,16 @@
  */
 package retrofit2.mock
 
-import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.Before
-import org.junit.Test
-import retrofit2.Response
-import retrofit2.Retrofit
+import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import java.util.Random
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.NANOSECONDS
+import kotlinx.coroutines.runBlocking
+import org.junit.Before
+import org.junit.Test
+import retrofit2.Response
+import retrofit2.Retrofit
 
 class BehaviorDelegateKotlinTest {
   internal interface DoWorkService {
@@ -40,11 +40,11 @@ class BehaviorDelegateKotlinTest {
 
   @Before fun before() {
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://example.com")
-        .build()
+      .baseUrl("http://example.com")
+      .build()
     val mockRetrofit = MockRetrofit.Builder(retrofit)
-        .networkBehavior(behavior)
-        .build()
+      .networkBehavior(behavior)
+      .build()
     val delegate = mockRetrofit.create<DoWorkService>()
 
     service = object : DoWorkService {
@@ -75,7 +75,7 @@ class BehaviorDelegateKotlinTest {
     val result = runBlocking { service.body() }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isGreaterThanOrEqualTo(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(result).isEqualTo("Response!")
   }
 
@@ -94,8 +94,8 @@ class BehaviorDelegateKotlinTest {
     }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isGreaterThanOrEqualTo(100)
-    assertThat(exception).isSameAs(behavior.failureException())
+    assertThat(tookMs).isAtLeast(100L)
+    assertThat(exception).isSameInstanceAs(behavior.failureException())
   }
 
   @Test fun failure() {
@@ -113,10 +113,10 @@ class BehaviorDelegateKotlinTest {
     }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isGreaterThanOrEqualTo(100)
+    assertThat(tookMs).isAtLeast(100L)
     // Coroutines break referential transparency on exceptions so compare type and message.
-    assertThat(exception).isExactlyInstanceOf(mockFailure.javaClass)
-    assertThat(exception).hasMessage(mockFailure.message)
+    assertThat(exception.javaClass).isEqualTo(mockFailure.javaClass)
+    assertThat(exception).hasMessageThat().isEqualTo(mockFailure.message)
   }
 
   @Test fun response() {
@@ -128,7 +128,7 @@ class BehaviorDelegateKotlinTest {
     val result = runBlocking { service.response() }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isGreaterThanOrEqualTo(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(result.body()).isEqualTo("Response!")
   }
 
@@ -147,8 +147,8 @@ class BehaviorDelegateKotlinTest {
     }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isGreaterThanOrEqualTo(100)
-    assertThat(exception).isSameAs(behavior.failureException())
+    assertThat(tookMs).isAtLeast(100L)
+    assertThat(exception).isSameInstanceAs(behavior.failureException())
   }
 
   @Test fun responseWildcard() {
@@ -160,7 +160,7 @@ class BehaviorDelegateKotlinTest {
     val result = runBlocking { service.responseWildcard() }
     val tookMs = NANOSECONDS.toMillis(System.nanoTime() - startNanos)
 
-    assertThat(tookMs).isGreaterThanOrEqualTo(100)
+    assertThat(tookMs).isAtLeast(100L)
     assertThat(result.body()).isEqualTo("Response!")
   }
 }

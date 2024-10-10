@@ -1,0 +1,21 @@
+import com.vanniktech.maven.publish.JavaPlatform
+
+apply plugin: 'java-platform'
+apply plugin: 'com.vanniktech.maven.publish'
+
+mavenPublishing {
+  configure(new JavaPlatform())
+}
+
+dependencies {
+  constraints {
+    rootProject.subprojects { subproject ->
+      subproject.plugins.withId('com.vanniktech.maven.publish') {
+        // Exclude self project from BOM.
+        if (subproject != this.project) {
+          api subproject
+        }
+      }
+    }
+  }
+}

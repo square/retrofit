@@ -49,8 +49,8 @@ import retrofit2.Retrofit;
  * Call&lt;ResponseBody&gt; notEncoded(@Path(value="name", encoded=true) String name);
  * </code></pre>
  *
- * Calling {@code foo.encoded("John+Doe")} yields {@code /user/John%2BDoe} whereas {@code
- * foo.notEncoded("John+Doe")} yields {@code /user/John+Doe}.
+ * Calling {@code foo.encoded("John%Doe")} yields {@code /user/John%25Doe} whereas {@code
+ * foo.notEncoded("John%Doe")} yields {@code /user/John%Doe}.
  *
  * <p>Path parameters may not be {@code null}.
  */

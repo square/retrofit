@@ -15,7 +15,7 @@
  */
 package retrofit2.adapter.scala;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.reflect.TypeToken;
@@ -88,7 +88,8 @@ public final class ScalaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Future return type must be parameterized as Future<Foo> or Future<? extends Foo>");
     }
   }
@@ -101,7 +102,8 @@ public final class ScalaCallAdapterFactoryTest {
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
-          .hasMessage("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
+          .hasMessageThat()
+          .isEqualTo("Response must be parameterized as Response<Foo> or Response<? extends Foo>");
     }
   }
 }

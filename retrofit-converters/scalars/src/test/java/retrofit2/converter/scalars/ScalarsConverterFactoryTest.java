@@ -15,7 +15,7 @@
  */
 package retrofit2.converter.scalars;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -141,12 +141,14 @@ public final class ScalarsConverterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create @Body converter for class java.lang.Object (parameter #1)\n"
                   + "    for method Service.object");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate RequestBody converter for class java.lang.Object.\n"
                   + "  Tried:\n"
@@ -287,12 +289,14 @@ public final class ScalarsConverterFactoryTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Unable to create converter for class java.lang.Object\n"
                   + "    for method Service.object");
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               ""
                   + "Could not locate ResponseBody converter for class java.lang.Object.\n"
                   + "  Tried:\n"
@@ -325,7 +329,9 @@ public final class ScalarsConverterFactoryTest {
       service.charObject().execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 0");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Expected body of length 1 for Character conversion but was 0");
     }
 
     server.enqueue(new MockResponse().setBody("bb"));
@@ -333,7 +339,9 @@ public final class ScalarsConverterFactoryTest {
       service.charObject().execute();
       fail();
     } catch (IOException e) {
-      assertThat(e).hasMessage("Expected body of length 1 for Character conversion but was 2");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Expected body of length 1 for Character conversion but was 2");
     }
 
     server.enqueue(new MockResponse().setBody("13.13"));

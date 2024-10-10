@@ -15,8 +15,8 @@
  */
 package retrofit2.converter.jaxb;
 
+import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 import javax.xml.bind.JAXBContext;
@@ -132,7 +132,7 @@ public final class JaxbConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("ParseError");
+      assertThat(expected).hasMessageThat().contains("ParseError");
     }
   }
 
@@ -179,7 +179,7 @@ public final class JaxbConverterFactoryTest {
       response.body();
       fail();
     } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("ParseError");
+      assertThat(expected).hasMessageThat().contains("ParseError");
     }
 
     assertThat(server.getRequestCount()).isEqualTo(1);
@@ -212,7 +212,7 @@ public final class JaxbConverterFactoryTest {
       response.body();
       fail();
     } catch (RuntimeException expected) {
-      assertThat(expected).hasMessageContaining("ParseError");
+      assertThat(expected).hasMessageThat().contains("ParseError");
     }
 
     assertThat(server.getRequestCount()).isEqualTo(1);

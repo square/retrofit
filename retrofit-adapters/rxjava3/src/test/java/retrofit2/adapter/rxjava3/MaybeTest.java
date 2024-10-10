@@ -15,8 +15,8 @@
  */
 package retrofit2.adapter.rxjava3;
 
+import static com.google.common.truth.Truth.assertThat;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.reactivex.rxjava3.core.Maybe;
 import java.io.IOException;

@@ -59,11 +59,13 @@ final class Utils {
 
   static RuntimeException parameterError(
       Method method, Throwable cause, int p, String message, Object... args) {
-    return methodError(method, cause, message + " (parameter #" + (p + 1) + ")", args);
+    String paramDesc = Platform.reflection.describeMethodParameter(method, p);
+    return methodError(method, cause, message + " (" + paramDesc + ")", args);
   }
 
   static RuntimeException parameterError(Method method, int p, String message, Object... args) {
-    return methodError(method, message + " (parameter #" + (p + 1) + ")", args);
+    String paramDesc = Platform.reflection.describeMethodParameter(method, p);
+    return methodError(method, message + " (" + paramDesc + ")", args);
   }
 
   static Class<?> getRawType(Type type) {
@@ -117,9 +119,12 @@ final class Utils {
       ParameterizedType pb = (ParameterizedType) b;
       Object ownerA = pa.getOwnerType();
       Object ownerB = pb.getOwnerType();
-      return (ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB)))
-          && pa.getRawType().equals(pb.getRawType())
-          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+      boolean ownersAreEqual = ownerA == ownerB || (ownerA != null && ownerA.equals(ownerB));
+      boolean rawTypesAreEqual = pa.getRawType().equals(pb.getRawType());
+      boolean typeArgumentsAreEqual =
+          Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+
+      return ownersAreEqual && rawTypesAreEqual && typeArgumentsAreEqual;
 
     } else if (a instanceof GenericArrayType) {
       if (!(b instanceof GenericArrayType)) return false;

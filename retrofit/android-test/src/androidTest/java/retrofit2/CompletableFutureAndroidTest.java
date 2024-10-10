@@ -25,7 +25,7 @@ import org.junit.Test;
 import retrofit2.helpers.ToStringConverterFactory;
 import retrofit2.http.GET;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 @SdkSuppress(minSdkVersion = 24)
 public final class CompletableFutureAndroidTest {

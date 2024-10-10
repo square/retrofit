@@ -15,7 +15,7 @@
  */
 package retrofit2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import kotlin.Unit;
@@ -46,7 +46,7 @@ public final class KotlinUnitTest {
 
     Response<Unit> response = example.empty().execute();
     assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isSameAs(Unit.INSTANCE);
+    assertThat(response.body()).isSameInstanceAs(Unit.INSTANCE);
   }
 
   @Test
@@ -58,6 +58,6 @@ public final class KotlinUnitTest {
 
     Response<Unit> response = example.head().execute();
     assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isSameAs(Unit.INSTANCE);
+    assertThat(response.body()).isSameInstanceAs(Unit.INSTANCE);
   }
 }

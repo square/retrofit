@@ -15,8 +15,8 @@
  */
 package retrofit2.converter.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -268,7 +268,7 @@ public final class MoshiConverterFactoryTest {
       call.execute();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.taco");
+      assertThat(e).hasMessageThat().isEqualTo("Cannot skip unexpected NAME at $.taco");
     }
   }
 
@@ -311,7 +311,7 @@ public final class MoshiConverterFactoryTest {
       call.execute();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("JSON document was not fully consumed.");
+      assertThat(e).hasMessageThat().isEqualTo("JSON document was not fully consumed.");
     }
   }
 }
