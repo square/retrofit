@@ -449,16 +449,30 @@ final class RequestFactory {
           }
           ParameterizedType parameterizedType = (ParameterizedType) type;
           Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
-          Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
-          return new ParameterHandler.Query<>(name, converter, encoded).iterable();
+          try {
+            Converter<?, String> converter = retrofit.stringConverter(iterableType, annotations);
+            return new ParameterHandler.Query<>(name, converter, encoded).iterable();
+          } catch (RuntimeException e) {
+            // Wide exception range because factories are user code.
+            throw parameterError(method, e, p, "Unable to create @Query converter for %s", type);
+          }
         } else if (rawParameterType.isArray()) {
           Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
-          Converter<?, String> converter =
-              retrofit.stringConverter(arrayComponentType, annotations);
-          return new ParameterHandler.Query<>(name, converter, encoded).array();
+          try {
+            Converter<?, String> converter =
+                retrofit.stringConverter(arrayComponentType, annotations);
+            return new ParameterHandler.Query<>(name, converter, encoded).array();
+          } catch (RuntimeException e) {
+            throw parameterError(method, e, p, "Unable to create @Query converter for %s", type);
+          }
         } else {
-          Converter<?, String> converter = retrofit.stringConverter(type, annotations);
-          return new ParameterHandler.Query<>(name, converter, encoded);
+          try {
+            Converter<?, String> converter = retrofit.stringConverter(type, annotations);
+            return new ParameterHandler.Query<>(name, converter, encoded);
+          } catch (RuntimeException e) {
+            // Wide exception range because factories are user code.
+            throw parameterError(method, e, p, "Unable to create @Query converter for %s", type);
+          }
         }
 
       } else if (annotation instanceof QueryName) {
