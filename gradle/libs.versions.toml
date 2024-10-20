@@ -34,7 +34,7 @@ kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", ve
 kotlin-serializationPlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 
 errorpronePlugin = "net.ltgt.gradle:gradle-errorprone-plugin:4.1.0"
-errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.10.0" }
+errorproneCore = { module = "com.google.errorprone:error_prone_core", version = "2.34.0" }
 errorproneJavac = { module = "com.google.errorprone:javac", version = "9+181-r4173-1" }
 
 animalSnifferPlugin = "ru.vyarus:gradle-animalsniffer-plugin:1.7.1"
