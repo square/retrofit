@@ -13,25 +13,49 @@ tasks.withType(JavaCompile).configureEach {
   options.compilerArgs << '-parameters'
 }
 
-// Create a test task for each supported JDK.
-(8..21).each { majorVersion ->
-  def jdkTest = tasks.register("testJdk$majorVersion", Test) {
+ext {
+  testSrcDirs = sourceSets.named('test').get().java.getSourceDirectories().asPath
+}
+
+def addTestTaskFor(int jdkVersion) {
+  def testTaskName = "testJdk$jdkVersion"
+  // Set up a new source set for the test task
+  def testSourceSet = sourceSets.create(testTaskName)
+  // Its srcDir is the same as the built-in test task
+  testSourceSet.java.srcDir(testSrcDirs)
+  // It requires all the same dependencies that the built-in tests have
+  // Thus, use 'extendsFrom testImplementation' to make all the declared dependencies of
+  // the built-in tests also become dependencies of this task
+  configurations.getByName("${testTaskName}Implementation").extendsFrom(configurations.getByName('testImplementation'))
+  // it use javaCompiler for the specified jdkVersion to compile srdDir
+  tasks.named("compileTestJdk${jdkVersion}Java", JavaCompile) {
+    javaCompiler = javaToolchains.compilerFor {
+      languageVersion = JavaLanguageVersion.of(jdkVersion)
+      vendor = JvmVendorSpec.AZUL
+    }
+  }
+  // Create test task
+  tasks.register(testTaskName, Test) {
+    description = "Runs the test suite on JDK $jdkVersion"
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+
     javaLauncher = javaToolchains.launcherFor {
-      languageVersion = JavaLanguageVersion.of(majorVersion)
+      languageVersion = JavaLanguageVersion.of(jdkVersion)
       vendor = JvmVendorSpec.AZUL
     }
 
-    description = "Runs the test suite on JDK $majorVersion"
-    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    testClassesDirs = sourceSets.named(testTaskName).get().output.classesDirs
+    classpath = sourceSets.named(testTaskName).get().runtimeClasspath
+  }
 
-    // Copy inputs from normal Test task.
-    def testTask = tasks.getByName("test")
-    classpath = testTask.classpath
-    testClassesDirs = testTask.testClassesDirs
+  tasks.named('check') {
+    dependsOn(testTaskName)
   }
-  tasks.named("check").configure {
-    dependsOn(jdkTest)
-  }
+}
+
+// Create a test task for each supported JDK.
+(8..21).each { majorVersion ->
+  addTestTaskFor(majorVersion)
 }
 
 // We don't need the built-in task which uses Gradle's JVM given the above variants.
