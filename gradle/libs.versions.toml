@@ -20,6 +20,7 @@ kotlinx-serialization = "1.11.0"
 autoService = "1.1.1"
 incap = "1.0.0"
 jackson = "2.22.3"
+jacksonAnnotations = "2.22"
 
 [libraries]
 androidPlugin = "com.android.tools.build:gradle:9.4.1"
@@ -61,6 +62,7 @@ rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.12" }
 reactiveStreams = { module = "org.reactivestreams:reactive-streams", version = "1.0.4" }
 scalaLibrary = { module = "org.scala-lang:scala-library", version = "2.13.18" }
 gson = { module = "com.google.code.gson:gson", version = "2.14.0" }
+jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jacksonAnnotations" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatCbor = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor", version.ref = "jackson" }
 jaxbApi = { module = "javax.xml.bind:jaxb-api", version = "2.3.1" }
