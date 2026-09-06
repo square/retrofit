@@ -19,8 +19,9 @@ import static retrofit2.Utils.throwIfFatal;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
@@ -37,16 +38,11 @@ final class OkHttpCall<T> implements Call<T> {
   private final okhttp3.Call.Factory callFactory;
   private final Converter<ResponseBody, T> responseConverter;
 
-  private volatile boolean canceled;
-
-  @GuardedBy("this")
-  private @Nullable okhttp3.Call rawCall;
-
-  @GuardedBy("this") // Either a RuntimeException, non-fatal Error, or IOException.
-  private @Nullable Throwable creationFailure;
-
-  @GuardedBy("this")
-  private boolean executed;
+  private final AtomicBoolean canceled = new AtomicBoolean(false);
+  private final AtomicBoolean executed = new AtomicBoolean(false);
+  private final AtomicReference<okhttp3.Call> rawCallRef = new AtomicReference<>();
+  // Either a RuntimeException, non-fatal Error, or IOException.
+  private final AtomicReference<Throwable> creationFailureRef = new AtomicReference<>();
 
   OkHttpCall(
       RequestFactory requestFactory,
@@ -68,7 +64,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override
-  public synchronized Request request() {
+  public Request request() {
     try {
       return getRawCall().request();
     } catch (IOException e) {
@@ -77,7 +73,7 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override
-  public synchronized Timeout timeout() {
+  public Timeout timeout() {
     try {
       return getRawCall().timeout();
     } catch (IOException e) {
@@ -89,12 +85,12 @@ final class OkHttpCall<T> implements Call<T> {
    * Returns the raw call, initializing it if necessary. Throws if initializing the raw call throws,
    * or has thrown in previous attempts to create it.
    */
-  @GuardedBy("this")
   private okhttp3.Call getRawCall() throws IOException {
-    okhttp3.Call call = rawCall;
+    okhttp3.Call call = rawCallRef.get();
     if (call != null) return call;
 
     // Re-throw previous failures if this isn't the first attempt.
+    Throwable creationFailure = creationFailureRef.get();
     if (creationFailure != null) {
       if (creationFailure instanceof IOException) {
         throw (IOException) creationFailure;
@@ -107,10 +103,12 @@ final class OkHttpCall<T> implements Call<T> {
 
     // Create and remember either the success or the failure.
     try {
-      return rawCall = createRawCall();
+      final okhttp3.Call newCall = createRawCall();
+      rawCallRef.compareAndSet(null, newCall);
+      return rawCallRef.get();
     } catch (RuntimeException | Error | IOException e) {
       throwIfFatal(e); // Do not assign a fatal error to creationFailure.
-      creationFailure = e;
+      creationFailureRef.set(e);
       throw e;
     }
   }
@@ -119,22 +117,19 @@ final class OkHttpCall<T> implements Call<T> {
   public void enqueue(final Callback<T> callback) {
     Objects.requireNonNull(callback, "callback == null");
 
-    okhttp3.Call call;
-    Throwable failure;
+    if (!executed.compareAndSet(false, true)) throw new IllegalStateException("Already executed.");
 
-    synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed.");
-      executed = true;
+    okhttp3.Call call = rawCallRef.get();
+    Throwable failure = creationFailureRef.get();
 
-      call = rawCall;
-      failure = creationFailure;
-      if (call == null && failure == null) {
-        try {
-          call = rawCall = createRawCall();
-        } catch (Throwable t) {
-          throwIfFatal(t);
-          failure = creationFailure = t;
-        }
+    if (call == null && failure == null) {
+      try {
+        call = createRawCall();
+        rawCallRef.compareAndSet(null, call);
+      } catch (Throwable t) {
+        throwIfFatal(t);
+        creationFailureRef.compareAndSet(null, t);
+        failure = t;
       }
     }
 
@@ -143,7 +138,7 @@ final class OkHttpCall<T> implements Call<T> {
       return;
     }
 
-    if (canceled) {
+    if (canceled.get()) {
       call.cancel();
     }
 
@@ -185,22 +180,19 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   @Override
-  public synchronized boolean isExecuted() {
-    return executed;
+  public boolean isExecuted() {
+    return executed.get();
   }
 
   @Override
   public Response<T> execute() throws IOException {
-    okhttp3.Call call;
-
-    synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed.");
-      executed = true;
-
-      call = getRawCall();
+    if (!executed.compareAndSet(false, true)) {
+      throw new IllegalStateException("Already executed.");
     }
 
-    if (canceled) {
+    okhttp3.Call call = getRawCall();
+
+    if (canceled.get()) {
       call.cancel();
     }
 
@@ -255,12 +247,9 @@ final class OkHttpCall<T> implements Call<T> {
 
   @Override
   public void cancel() {
-    canceled = true;
+    canceled.set(true);
 
-    okhttp3.Call call;
-    synchronized (this) {
-      call = rawCall;
-    }
+    okhttp3.Call call = rawCallRef.get();
     if (call != null) {
       call.cancel();
     }
@@ -268,12 +257,11 @@ final class OkHttpCall<T> implements Call<T> {
 
   @Override
   public boolean isCanceled() {
-    if (canceled) {
+    if (canceled.get()) {
       return true;
     }
-    synchronized (this) {
-      return rawCall != null && rawCall.isCanceled();
-    }
+    okhttp3.Call call = rawCallRef.get();
+    return call != null && call.isCanceled();
   }
 
   static final class NoContentResponseBody extends ResponseBody {
