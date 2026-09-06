@@ -18,6 +18,7 @@ package retrofit2.converter.jaxb3;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import javax.annotation.Nullable;
@@ -59,7 +60,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
       Annotation[] parameterAnnotations,
       Annotation[] methodAnnotations,
       Retrofit retrofit) {
-    if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
+    if (type instanceof Class && isJaxbAnnotated((Class<?>) type)) {
       return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type);
     }
     return null;
@@ -68,10 +69,15 @@ public final class JaxbConverterFactory extends Converter.Factory {
   @Override
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
-    if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
+    if (type instanceof Class && isJaxbAnnotated((Class<?>) type)) {
       return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type);
     }
     return null;
+  }
+
+  private static boolean isJaxbAnnotated(Class<?> type) {
+    return type.isAnnotationPresent(XmlRootElement.class)
+        || type.isAnnotationPresent(XmlJavaTypeAdapter.class);
   }
 
   private JAXBContext contextForType(Class<?> type) {

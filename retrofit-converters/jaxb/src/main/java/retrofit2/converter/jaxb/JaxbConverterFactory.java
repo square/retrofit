@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -59,7 +60,7 @@ public final class JaxbConverterFactory extends Converter.Factory {
       Annotation[] parameterAnnotations,
       Annotation[] methodAnnotations,
       Retrofit retrofit) {
-    if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
+    if (type instanceof Class && isJaxbAnnotated((Class<?>) type)) {
       return new JaxbRequestConverter<>(contextForType((Class<?>) type), (Class<?>) type);
     }
     return null;
@@ -68,10 +69,15 @@ public final class JaxbConverterFactory extends Converter.Factory {
   @Override
   public @Nullable Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
-    if (type instanceof Class && ((Class<?>) type).isAnnotationPresent(XmlRootElement.class)) {
+    if (type instanceof Class && isJaxbAnnotated((Class<?>) type)) {
       return new JaxbResponseConverter<>(contextForType((Class<?>) type), (Class<?>) type);
     }
     return null;
+  }
+
+  private static boolean isJaxbAnnotated(Class<?> type) {
+    return type.isAnnotationPresent(XmlRootElement.class)
+        || type.isAnnotationPresent(XmlJavaTypeAdapter.class);
   }
 
   private JAXBContext contextForType(Class<?> type) {
