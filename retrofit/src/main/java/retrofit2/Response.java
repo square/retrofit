@@ -147,12 +147,22 @@ public final class Response<T> {
     return rawResponse.isSuccessful();
   }
 
-  /** The deserialized response body of a {@linkplain #isSuccessful() successful} response. */
+  /**
+   * The deserialized response body of a {@linkplain #isSuccessful() successful} response.
+   *
+   * <p>If the body is of type {@link ResponseBody}, {@link ResponseBody#close()} must always be
+   * called to avoid leaking resources
+   */
   public @Nullable T body() {
     return body;
   }
 
-  /** The raw response body of an {@linkplain #isSuccessful() unsuccessful} response. */
+  /**
+   * The raw response body of an {@linkplain #isSuccessful() unsuccessful} response.
+   *
+   * <p>Calling {@link ResponseBody#close close} on the response body is unnecessary since it is
+   * closed internally by Retrofit.
+   */
   public @Nullable ResponseBody errorBody() {
     return errorBody;
   }
