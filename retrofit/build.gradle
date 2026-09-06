@@ -31,21 +31,31 @@ def addMultiReleaseSourceSet(int version) {
 addMultiReleaseSourceSet(14)
 addMultiReleaseSourceSet(16)
 
+def extra = sourceSets.create('extra') {
+  java.srcDir('src/main/extra')
+}
+
 dependencies {
   api libs.okhttp.client
+  api extra.output
 
   compileOnly libs.android
   compileOnly libs.kotlinx.coroutines
 
   compileOnly libs.animalSnifferAnnotations
   compileOnly libs.findBugsAnnotations
+
+  // Can't extend extraCompileOnly from compileOnly due to the circular dependencies.
+  extraCompileOnly libs.okhttp.client
 }
 
 javadoc {
   exclude('retrofit2/internal/**')
 }
 
-jar {
+tasks.named('jar', Jar) {
+  from(extra.output)
+
   manifest {
     attributes 'Automatic-Module-Name': 'retrofit2'
     attributes 'Multi-Release': 'true'

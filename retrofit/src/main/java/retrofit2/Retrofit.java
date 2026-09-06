@@ -111,8 +111,9 @@ public final class Retrofit {
    * <p>The relative path for a given method is obtained from an annotation on the method describing
    * the request type. The built-in methods are {@link retrofit2.http.GET GET}, {@link
    * retrofit2.http.PUT PUT}, {@link retrofit2.http.POST POST}, {@link retrofit2.http.PATCH PATCH},
-   * {@link retrofit2.http.HEAD HEAD}, {@link retrofit2.http.DELETE DELETE} and {@link
-   * retrofit2.http.OPTIONS OPTIONS}. You can use a custom HTTP method with {@link HTTP @HTTP}. For
+   * {@link retrofit2.http.HEAD HEAD}, {@link retrofit2.http.DELETE DELETE},
+   * {@link retrofit2.http.OPTIONS OPTIONS}, and {@link retrofit2.http.QUERY QUERY}.
+   * You can use a custom HTTP method with {@link HTTP @HTTP}. For
    * a dynamic URL, omit the path on the annotation and annotate the first parameter with {@link
    * Url @Url}.
    *

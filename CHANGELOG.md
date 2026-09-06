@@ -8,6 +8,7 @@
  - Add explicit keep rules for RxJava `Result` types to prevent their generic information from being removed.
  - Add `allowoptimization` flags for most kept types.
  - Add `Invocation.annotationUrl` which returns the original URL from the method annotation.
+ - Support `QUERY` method.
 
 **Changed**
 
