@@ -212,21 +212,26 @@ public final class Retrofit {
   }
 
   ServiceMethod<?> loadServiceMethod(Class<?> service, Method method) {
+    // Note: Once we are minSdk 24 this whole method can be replaced by computeIfAbsent.
+    Object lookup = serviceMethodCache.get(method);
+    if (lookup instanceof ServiceMethod<?>) {
+      // Happy path: method is already parsed into the model.
+      return (ServiceMethod<?>) lookup;
+    }
+    // Invariant: lookup is null or someone else's lock
     while (true) {
-      // Note: Once we are minSdk 24 this whole method can be replaced by computeIfAbsent.
-      Object lookup = serviceMethodCache.get(method);
-
-      if (lookup instanceof ServiceMethod<?>) {
-        // Happy path: method is already parsed into the model.
-        return (ServiceMethod<?>) lookup;
-      }
-
       if (lookup == null) {
         // Map does not contain any value. Try to put in a lock for this method. We MUST synchronize
         // on the lock before it is visible to others via the map to signal we are doing the work.
         Object lock = new Object();
         synchronized (lock) {
           lookup = serviceMethodCache.putIfAbsent(method, lock);
+          // Other threads may have successfully parsed the model and updated the map now.
+          // Thus, check whether lookup is a finished model again.
+          if (lookup instanceof ServiceMethod<?>) {
+            // Happy path: method is already parsed into the model.
+            return (ServiceMethod<?>) lookup;
+          }
           if (lookup == null) {
             // On successful lock insertion, perform the work and update the map before releasing.
             // Other threads may be waiting on lock now and will expect the parsed model.
@@ -244,27 +249,27 @@ public final class Retrofit {
         }
       }
 
-      // Either the initial lookup or the attempt to put our lock in the map has returned someone
-      // else's lock. This means they are doing the parsing, and will update the map before
-      // releasing
+      // Either the initial lookup of this iteration or the attempt to put our lock in the map has
+      // returned someone else's lock.
+      // This means they are doing the parsing, and will update the map before releasing
       // the lock. Once we can take the lock, the map is guaranteed to contain the model or null.
-      // Note: There's a chance that our effort to put a lock into the map has actually returned a
-      // finished model instead of a lock. In that case this code will perform a pointless lock and
-      // redundant lookup in the map of the same instance. This is rare, and ultimately harmless.
-      synchronized (lookup) {
-        Object result = serviceMethodCache.get(method);
-        if (result == null) {
-          // The other thread failed its parsing. We will retry (and probably also fail).
-          continue;
+      Object lock = lookup;
+      synchronized (lock) {
+        lookup = serviceMethodCache.get(method);
+        if (lookup instanceof ServiceMethod<?>) {
+          return (ServiceMethod<?>) lookup;
         }
-        return (ServiceMethod<?>) result;
       }
+      // The thread the lock of which we are taking failed its parsing.
+      // Another thread may have detected this failure and put its lock into the map.
+      // Now, lookup is null or someone else's lock.
+      // We will retry (and probably also fail).
     }
   }
 
   /**
    * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
-   * Typically an instance of {@link OkHttpClient}.
+   * Typically, an instance of {@link OkHttpClient}.
    */
   public okhttp3.Call.Factory callFactory() {
     return callFactory;

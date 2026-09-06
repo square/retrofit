@@ -1802,4 +1802,126 @@ public final class RetrofitTest {
     assertThat(failure3).hasCauseThat().isSameInstanceAs(failure);
     assertThat(fails.get()).isEqualTo(3);
   }
+
+  @Test
+  public void annotationParsingFailureObservedByMultipleWaitingThreads()
+      throws InterruptedException {
+    AtomicInteger fails = new AtomicInteger();
+    CountDownLatch startedParsing = new CountDownLatch(1);
+    CountDownLatch failParsing = new CountDownLatch(1);
+    RuntimeException failure = new RuntimeException("boom!");
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(
+                new Converter.Factory() {
+                  @Nullable
+                  @Override
+                  public Converter<ResponseBody, ?> responseBodyConverter(
+                      Type type, Annotation[] annotations, Retrofit retrofit) {
+                    startedParsing.countDown();
+                    try {
+                      failParsing.await();
+                      // To guarantee that the lock inserted by current thread may stay in the map
+                      // at
+                      // least 2 seconds to increase the probability that other threads get this
+                      // lock.
+                      Thread.sleep(2_000);
+                    } catch (InterruptedException e) {
+                      throw new AssertionError(e);
+                    }
+                    fails.incrementAndGet();
+                    throw failure;
+                  }
+                })
+            .build();
+    Annotated service = retrofit.create(Annotated.class);
+
+    AtomicReference<RuntimeException> result1 = new AtomicReference<>();
+    Thread thread1 =
+        new Thread(
+            () -> {
+              try {
+                service.method();
+              } catch (RuntimeException e) {
+                result1.set(e);
+              }
+            });
+    thread1.start();
+
+    // Wait for thread1 to enter the converter. This means it has inserted and taken a lock on
+    // parsing for the method.
+    startedParsing.await();
+
+    CountDownLatch thread2Locked = new CountDownLatch(1);
+    AtomicReference<RuntimeException> result2 = new AtomicReference<>();
+    Thread thread2 =
+        new Thread(
+            () -> {
+              try {
+                thread2Locked.countDown();
+                service.method();
+              } catch (RuntimeException e) {
+                result2.set(e);
+              }
+            });
+    thread2.start();
+    thread2Locked.await();
+    // Wait for thread2 to lock on the shared object inserted by thread1. This should be pretty fast
+    // after the last signal, but we have no way of knowing for sure it happened.
+    Thread.sleep(1_000);
+
+    CountDownLatch thread3Locked = new CountDownLatch(1);
+    AtomicReference<RuntimeException> result3 = new AtomicReference<>();
+    Thread thread3 =
+        new Thread(
+            () -> {
+              try {
+                thread3Locked.countDown();
+                service.method();
+              } catch (RuntimeException e) {
+                result3.set(e);
+              }
+            });
+    thread3.start();
+    thread3Locked.await();
+    // Wait for thread3 to lock on the shared object inserted by thread1. This should be pretty fast
+    // after the last signal, but we have no way of knowing for sure it happened.
+    Thread.sleep(1_000);
+
+    failParsing.countDown();
+    // After 2_000 ms, thread1 failed its parsing and released the lock.
+    // Thread2 and thread3 try to synchronize this lock and put their own locks.
+    // Let's say that thread2 took the lock before thread3, then thread3 taking the lock,
+    // the object thread3 got from the map might be null or a lock inserted by thread2.
+    // If null, thread3 should compete with thread2 to put its own lock and parse the model.
+    // Otherwise, wait for thread2 to finish model parsing(and its doomed failure).
+    thread1.join();
+    thread2.join();
+    thread3.join();
+
+    RuntimeException failure1 = result1.get();
+    assertThat(failure1).isInstanceOf(IllegalArgumentException.class);
+    assertThat(failure1).hasCauseThat().isSameInstanceAs(failure);
+
+    RuntimeException failure2 = result2.get();
+    assertThat(failure2).isInstanceOf(IllegalArgumentException.class);
+    assertThat(failure2).hasCauseThat().isSameInstanceAs(failure);
+
+    RuntimeException failure3 = result3.get();
+    assertThat(failure3).isInstanceOf(IllegalArgumentException.class);
+    assertThat(failure3).hasCauseThat().isSameInstanceAs(failure);
+
+    // Importantly, even though the second and the third threads were locked waiting on the first,
+    // failure of the
+    // first thread caused the second thread to retry parsing. And the failure of the second(or the
+    // third) one
+    // caused the third(or the second) thread to retry parsing.
+    assertThat(fails.get()).isEqualTo(3);
+
+    // Make sure now that all the threads have released the lock, new callers also retry.
+    RuntimeException failure4 = assertThrows(IllegalArgumentException.class, service::method);
+    assertThat(failure4).hasCauseThat().isSameInstanceAs(failure);
+    assertThat(fails.get()).isEqualTo(4);
+  }
 }
