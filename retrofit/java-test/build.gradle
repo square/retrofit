@@ -28,6 +28,11 @@ tasks.withType(JavaCompile).configureEach {
     // Wire directly to the test source set outputs for proper task dependencies.
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+
+    // Run one JDK's test worker at a time to avoid Gradle worker bootstrap failures.
+    if (majorVersion > 8) {
+      mustRunAfter("testJdk${majorVersion - 1}")
+    }
   }
   tasks.named("check").configure {
     dependsOn(jdkTest)
