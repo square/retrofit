@@ -8,6 +8,7 @@
  - Add explicit keep rules for RxJava `Result` types to prevent their generic information from being removed.
  - Add `allowoptimization` flags for most kept types.
  - Add `Invocation.annotationUrl` which returns the original URL from the method annotation.
+ - Add an optional `RetrofitService` marker interface to keep service interfaces available after R8 shrinking, even when they have no remaining HTTP methods.
 
 **Changed**
 
