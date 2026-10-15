@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [versions]
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 okhttp = "5.5.0"
 protobuf = "4.36.2"
 kotlinx-serialization = "1.11.0"
