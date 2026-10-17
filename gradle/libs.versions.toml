@@ -73,5 +73,5 @@ wireRuntime = { module = "com.squareup.wire:wire-runtime", version = "7.1.0" }
 jsoup = { module = "org.jsoup:jsoup", version = "1.23.2" }
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.36.1"
 ktfmt = "com.facebook:ktfmt:0.64"
-compileTesting = "com.google.testing.compile:compile-testing:0.23.0"
+compileTesting = "com.google.testing.compile:compile-testing:0.24.0"
 testParameterInjector = "com.google.testparameterinjector:test-parameter-injector:1.24"
