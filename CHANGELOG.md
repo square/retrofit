@@ -9,6 +9,7 @@
  - Add `allowoptimization` flags for most kept types.
  - Add `Invocation.annotationUrl` which returns the original URL from the method annotation.
  - Support `QUERY` method.
+ - Add a converter for Jackson 3.
 
 **Changed**
 
