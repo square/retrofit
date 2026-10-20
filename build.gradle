@@ -45,7 +45,6 @@ subprojects {
   apply plugin: 'net.ltgt.errorprone'
 
   dependencies {
-    errorproneJavac libs.errorproneJavac
     errorprone libs.errorproneCore
   }
 
