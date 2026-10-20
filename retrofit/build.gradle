@@ -46,8 +46,13 @@ dependencies {
   extraCompileOnly libs.okhttp.client
 }
 
-javadoc {
+tasks.named('javadoc', SourceTask) {
+  source(extra.allJava)
   exclude('retrofit2/internal/**')
+}
+
+tasks.named { it == 'sourcesJar' }.configureEach {
+  (it as Jar).from(extra.allSource)
 }
 
 tasks.named('jar', Jar) {
