@@ -52,7 +52,7 @@ tasks.named('javadoc', SourceTask) {
 }
 
 tasks.named { it == 'sourcesJar' }.configureEach {
-  (it as Jar).from extra.allSource
+  (it as Jar).from(extra.allSource)
 }
 
 tasks.named('jar', Jar) {
