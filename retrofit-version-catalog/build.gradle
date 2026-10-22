@@ -1,0 +1,37 @@
+import com.vanniktech.maven.publish.VersionCatalog
+
+apply plugin: 'version-catalog'
+apply plugin: 'com.vanniktech.maven.publish'
+
+mavenPublishing {
+  configure(new VersionCatalog())
+}
+
+catalog {
+  versionCatalog { vc ->
+
+    def versionAlias = version('retrofit', VERSION_NAME)
+
+    library('retrofit', GROUP, 'retrofit').versionRef(versionAlias)
+    library('retrofit-mock', GROUP, 'retrofit-mock').versionRef(versionAlias)
+    library('retrofit-response-type-keeper', GROUP, 'response-type-keeper').versionRef(versionAlias)
+    library('retrofit-adapter-guava', GROUP, 'adapter-guava').versionRef(versionAlias)
+    library('retrofit-adapter-java8', GROUP, 'adapter-java8').versionRef(versionAlias)
+    library('retrofit-adapter-rxjava', GROUP, 'adapter-rxjava').versionRef(versionAlias)
+    library('retrofit-adapter-rxjava2', GROUP, 'adapter-rxjava2').versionRef(versionAlias)
+    library('retrofit-adapter-rxjava3', GROUP, 'adapter-rxjava3').versionRef(versionAlias)
+    library('retrofit-adapter-scala', GROUP, 'adapter-scala').versionRef(versionAlias)
+    library('retrofit-converter-gson', GROUP, 'converter-gson').versionRef(versionAlias)
+    library('retrofit-converter-guava', GROUP, 'converter-guava').versionRef(versionAlias)
+    library('retrofit-converter-jackson', GROUP, 'converter-jackson').versionRef(versionAlias)
+    library('retrofit-converter-java8', GROUP, 'converter-java8').versionRef(versionAlias)
+    library('retrofit-converter-jaxb', GROUP, 'converter-jaxb').versionRef(versionAlias)
+    library('retrofit-converter-jaxb3', GROUP, 'converter-jaxb3').versionRef(versionAlias)
+    library('retrofit-converter-kotlinxSerialization', GROUP, 'converter-kotlinx-serialization').versionRef(versionAlias)
+    library('retrofit-converter-moshi', GROUP, 'converter-moshi').versionRef(versionAlias)
+    library('retrofit-converter-protobuf', GROUP, 'converter-protobuf').versionRef(versionAlias)
+    library('retrofit-converter-scalars', GROUP, 'converter-scalars').versionRef(versionAlias)
+    library('retrofit-converter-simplexml', GROUP, 'converter-simplexml').versionRef(versionAlias)
+    library('retrofit-converter-wire', GROUP, 'converter-wire').versionRef(versionAlias)
+  }
+}

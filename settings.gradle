@@ -13,6 +13,7 @@ rootProject.name = 'retrofit-root'
 
 include ':retrofit'
 include ':retrofit-bom'
+include ':retrofit-version-catalog'
 
 include ':retrofit:android-test'
 include ':retrofit:java-test'

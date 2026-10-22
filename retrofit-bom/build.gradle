@@ -11,8 +11,8 @@ dependencies {
   constraints {
     rootProject.subprojects { subproject ->
       subproject.plugins.withId('com.vanniktech.maven.publish') {
-        // Exclude self project from BOM.
-        if (subproject != this.project) {
+        // Exclude self project and Version Catalog from BOM.
+        if (subproject != this.project && subproject.name != 'retrofit-version-catalog') {
           api subproject
         }
       }
