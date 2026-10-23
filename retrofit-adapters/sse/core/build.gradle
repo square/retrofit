@@ -1,0 +1,21 @@
+apply plugin: 'java-library'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.vanniktech.maven.publish'
+apply plugin: 'org.jetbrains.dokka'
+
+dependencies {
+  api projects.retrofit
+  api libs.okhttp.sse
+  compileOnly libs.findBugsAnnotations
+
+  testImplementation libs.junit
+  testImplementation libs.truth
+  testImplementation libs.okhttp.mockwebserver
+  testImplementation projects.retrofitConverters.scalars
+}
+
+jar {
+  manifest {
+    attributes 'Automatic-Module-Name': 'retrofit2.adapter.sse-core'
+  }
+}
