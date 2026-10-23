@@ -17,7 +17,7 @@
 
 **Fixed**
 
- - Nothing yet!
+ - Preserve `RequestBody.isOneShot()` and `isDuplex()` when overriding the `Content-Type` header.
 
 
 ## [3.0.0] - 2025-05-15

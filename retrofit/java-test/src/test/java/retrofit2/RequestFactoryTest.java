@@ -38,6 +38,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okio.Buffer;
+import okio.BufferedSink;
 import org.junit.Ignore;
 import org.junit.Test;
 import retrofit2.helpers.NullObjectConverterFactory;
@@ -3068,6 +3069,64 @@ public final class RequestFactoryTest {
     RequestBody body = RequestBody.create(TEXT_PLAIN, "hi");
     Request request = buildRequest(Example.class, body);
     assertThat(request.body().contentType().toString()).isEqualTo("text/not-plain");
+  }
+
+  @Test
+  public void contentTypeAnnotationHeaderPreservesOneShot() {
+    class Example {
+      @POST("/") //
+      @Headers("Content-Type: text/not-plain") //
+      Call<ResponseBody> method(@Body RequestBody body) {
+        return null;
+      }
+    }
+    RequestBody body =
+        new RequestBody() {
+          @Override
+          public MediaType contentType() {
+            return TEXT_PLAIN;
+          }
+
+          @Override
+          public void writeTo(BufferedSink sink) throws IOException {}
+
+          @Override
+          public boolean isOneShot() {
+            return true;
+          }
+        };
+
+    Request request = buildRequest(Example.class, body);
+    assertThat(request.body().isOneShot()).isTrue();
+  }
+
+  @Test
+  public void contentTypeAnnotationHeaderPreservesDuplex() {
+    class Example {
+      @POST("/") //
+      @Headers("Content-Type: text/not-plain") //
+      Call<ResponseBody> method(@Body RequestBody body) {
+        return null;
+      }
+    }
+    RequestBody body =
+        new RequestBody() {
+          @Override
+          public MediaType contentType() {
+            return TEXT_PLAIN;
+          }
+
+          @Override
+          public void writeTo(BufferedSink sink) throws IOException {}
+
+          @Override
+          public boolean isDuplex() {
+            return true;
+          }
+        };
+
+    Request request = buildRequest(Example.class, body);
+    assertThat(request.body().isDuplex()).isTrue();
   }
 
   @Test

@@ -291,6 +291,16 @@ final class RequestBuilder {
     }
 
     @Override
+    public boolean isOneShot() {
+      return delegate.isOneShot();
+    }
+
+    @Override
+    public boolean isDuplex() {
+      return delegate.isDuplex();
+    }
+
+    @Override
     public void writeTo(BufferedSink sink) throws IOException {
       delegate.writeTo(sink);
     }
