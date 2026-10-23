@@ -186,6 +186,28 @@ public final class JaxbConverterFactoryTest {
   }
 
   @Test
+  public void xmlJavaTypeAdapterIsRecognizedForRequestBody() throws Exception {
+    // A class annotated with @XmlJavaTypeAdapter (without @XmlRootElement) should be recognized
+    // by the factory and result in a non-null converter. Previously the factory only checked for
+    // @XmlRootElement and returned null for such types.
+    JaxbConverterFactory factory = JaxbConverterFactory.create();
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    assertThat(retrofit.requestBodyConverter(ImmutablePoint.class, new java.lang.annotation.Annotation[0], new java.lang.annotation.Annotation[0])).isNotNull();
+  }
+
+  @Test
+  public void xmlJavaTypeAdapterIsRecognizedForResponseBody() throws Exception {
+    // A class annotated with @XmlJavaTypeAdapter (without @XmlRootElement) should be recognized
+    // by the factory and result in a non-null converter. Previously the factory only checked for
+    // @XmlRootElement and returned null for such types.
+    JaxbConverterFactory factory = JaxbConverterFactory.create();
+    Retrofit retrofit =
+        new Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(factory).build();
+    assertThat(retrofit.responseBodyConverter(ImmutablePoint.class, new java.lang.annotation.Annotation[0])).isNotNull();
+  }
+
+  @Test
   public void externalDtd() throws Exception {
     server.enqueue(
         new MockResponse()
