@@ -82,7 +82,7 @@ final class CallEnqueueObservable<T> extends Observable<Response<T>> {
 
     @Override
     public void onFailure(Call<T> call, Throwable t) {
-      if (call.isCanceled()) return;
+      if (disposed) return;
 
       try {
         observer.onError(t);

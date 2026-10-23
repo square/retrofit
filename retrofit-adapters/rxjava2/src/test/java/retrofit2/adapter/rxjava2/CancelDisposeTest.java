@@ -21,7 +21,12 @@ import static org.junit.Assert.assertTrue;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.TestObserver;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockWebServer;
@@ -78,5 +83,15 @@ public final class CancelDisposeTest {
     assertEquals(1, calls.size());
     calls.get(0).cancel();
     assertFalse(disposable.isDisposed());
+  }
+
+  @Test
+  public void cancelSetsError() throws InterruptedException {
+    TestObserver<?> testObserver = service.go().test();
+    List<Call> calls = client.dispatcher().runningCalls();
+    assertEquals(1, calls.size());
+    calls.get(0).cancel();
+    testObserver.await(10, TimeUnit.SECONDS);
+    testObserver.assertError(e -> e instanceof IOException && "Canceled".equals(e.getMessage()));
   }
 }

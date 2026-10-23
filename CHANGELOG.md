@@ -17,7 +17,7 @@
 
 **Fixed**
 
- - Nothing yet!
+ - Propagate timeouts and other external cancels in retrofit-adapter for rxjava2 and rxjava3
 
 
 ## [3.0.0] - 2025-05-15
